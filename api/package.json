@@ -1,0 +1,22 @@
+{
+  "name": "grand-stack-starter-api",
+  "version": "0.0.1",
+  "description": "API app for GRANDstack",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --exec babel-node src/index.js"
+  },
+  "author": "William Lyon",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server": "^2.0.0-beta.3",
+    "graphql": "^0.13.2",
+    "neo4j-driver": "^1.6.1",
+    "neo4j-graphql-js": "^0.1.19"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.7.0",
+    "nodemon": "^1.17.5"
+  }
+}
