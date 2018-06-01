@@ -23,10 +23,8 @@ This will start the GraphQL API in the foreground, so in another terminal sessio
 cd ./ui && npm start
 ```
 
-## `/api`
+## [`/api`](./api)
+![](api/img/graphql-playground.png)
 
-## `/ui`
-
-## TODO
-
-* [ ]  Handle Neo4j download
+## [`/ui`](./ui)
+![](ui/img/default-app.png)
