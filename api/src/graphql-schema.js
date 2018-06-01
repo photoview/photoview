@@ -12,12 +12,6 @@ type Query {
 
 export const resolvers = {
   Query: {
-    users: () => {
-      return [
-        {
-          name: "Bob Loblaw"
-        }
-      ];
-    }
+    users: neo4jgraphql
   }
 };

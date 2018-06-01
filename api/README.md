@@ -19,6 +19,18 @@ This will start the GraphQL service (by default on localhost:4000) where you can
 
 ![GraphQL Playground](img/graphql-playground.png)
 
+## Configure
+
+Set your Neo4j connection string and credentials in `.env`. For example:
+
+*.env*
+
+```
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=letmein
+```
+
 ## Deployment
 
 You can deploy to any service that hosts Node.js apps, but [Zeit Now](https://zeit.co/now) is a great easy to use service for hosting your app that has an easy to use free plan for small projects. 
