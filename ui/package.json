@@ -1,16 +1,22 @@
 {
-  "name": "ui",
-  "version": "0.1.0",
-  "private": true,
+  "name": "grand-stack-starter-ui",
+  "version": "0.0.1",
+  "description": "UI app for GRANDstack",
   "dependencies": {
+    "apollo-boost": "^0.1.7",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
     "react": "^16.4.0",
+    "react-apollo": "^2.1.4",
     "react-dom": "^16.4.0",
-    "react-scripts": "1.1.4"
+    "react-scripts": "1.1.4",
+    "serve": "^7.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "now-start": "serve build/"
   }
 }
