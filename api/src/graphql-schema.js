@@ -5,6 +5,7 @@ type User {
   id: ID!
   name: String
   friends(first: Int = 10, offset: Int = 0): [User] @relation(name: "FRIENDS", direction: "BOTH")
+  reviews(first: Int = 10, offset: Int = 0): [Review] @relation(name: "WROTE", direction: "OUT")
 }
 
 type Business {
