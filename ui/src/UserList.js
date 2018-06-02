@@ -7,7 +7,7 @@ const UserList = () => (
   <Query
     query={gql`
       {
-        users {
+        users(first: 10) {
           name
         }
       }
