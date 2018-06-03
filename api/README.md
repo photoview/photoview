@@ -42,3 +42,11 @@ now
 ```
 
 to deploy your GraphQL service on Zeit Now. Once deployed you'll be given a fresh URL that represents the current state of your application where you can access your GraphQL endpoint and GgraphQL Playgound. For example: https://grand-stack-starter-api-pqdeodpvok.now.sh/
+
+## Seeding The Database
+
+Optionally you can seed the GraphQL service by executing mutations that will write sample data to the database:
+
+```
+npm run seedDb
+```

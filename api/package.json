@@ -6,16 +6,22 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec babel-node src/index.js",
-    "seedDb": "node src/seed-db.js"
+    "seedDb": "babel-node src/seed-db.js"
   },
   "author": "William Lyon",
   "license": "MIT",
   "dependencies": {
+    "apollo-boost": "^0.1.7",
+    "apollo-cache-inmemory": "^1.2.2",
+    "apollo-client": "^2.3.2",
+    "apollo-link-http": "^1.5.4",
     "apollo-server": "^2.0.0-beta.3",
     "dotenv": "^5.0.1",
     "graphql": "git://github.com/graphql/graphql-js.git#npm",
+    "graphql-tag": "^2.9.2",
     "neo4j-driver": "^1.6.1",
-    "neo4j-graphql-js": "^0.1.21"
+    "neo4j-graphql-js": "^0.1.21",
+    "node-fetch": "^2.1.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
