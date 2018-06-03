@@ -6,6 +6,7 @@ type User {
   name: String
   friends(first: Int = 10, offset: Int = 0): [User] @relation(name: "FRIENDS", direction: "BOTH")
   reviews(first: Int = 10, offset: Int = 0): [Review] @relation(name: "WROTE", direction: "OUT")
+  avgStars: Float @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))")
 }
 
 type Business {
@@ -36,7 +37,6 @@ type Query {
     businesses(id: ID, name: String, first: Int = 10, offset: Int = 0): [Business]
     reviews(id: ID, stars: Int, first: Int = 10, offset: Int = 0): [Review]
     category(name: ID!): Category
-    reviewsWithText(text: String, first: Int = 10, offset: Int = 0): [Review]
 }
 `;
 

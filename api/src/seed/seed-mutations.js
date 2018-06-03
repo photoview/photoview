@@ -148,12 +148,12 @@ export default `mutation {
     a10: AddBusinessCategory(businessid: "b9", categoryname:"Brewery"){id}
     a11:AddBusinessCategory(businessid:"b10", categoryname:"Library"){id}
     
-    r1:CreateReview(id:"r1", stars: 4, text: ""){id}
+    r1:CreateReview(id:"r1", stars: 4, text: "Great IPA selection!"){id}
     ar1:AddUserReview(userid:"u1",reviewid:"r1"){id}
     ab1:AddReviewBusiness(reviewid:"r1", businessid:"b1"){id}
     
     r2:CreateReview(id:"r2", stars: 5, text: ""){id}
-    ar2:AddUserReview(userid:"u1",reviewid:"r2"){id}
+    ar2:AddUserReview(userid:"u3",reviewid:"r2"){id}
     ab2:AddReviewBusiness(reviewid:"r2", businessid:"b1"){id}
     
     r3:CreateReview(id:"r3", stars: 3, text: ""){id}
@@ -164,7 +164,7 @@ export default `mutation {
     ar4:AddUserReview(userid:"u3",reviewid:"r4"){id}
     ab4:AddReviewBusiness(reviewid:"r4", businessid:"b3"){id}
     
-    r5:CreateReview(id:"r5", stars: 4, text: ""){id}
+    r5:CreateReview(id:"r5", stars: 4, text: "Best breakfast sandwich at the Farmer's Market. Always get the works."){id}
     ar5:AddUserReview(userid:"u1",reviewid:"r5"){id}
     ab5:AddReviewBusiness(reviewid:"r5", businessid:"b3"){id}
     
@@ -172,7 +172,7 @@ export default `mutation {
     ar6:AddUserReview(userid:"u2",reviewid:"r6"){id}
     ab6:AddReviewBusiness(reviewid:"r6", businessid:"b4"){id}
     
-    r7:CreateReview(id:"r7", stars: 3, text: ""){id}
+    r7:CreateReview(id:"r7", stars: 3, text: "Not a great selection of books, but fortunately the inter-library loan system is good. Wifi is quite slow. Not many comfortable places to site and read. Looking forward to the new building across the street in 2020!"){id}
     ar7:AddUserReview(userid:"u1",reviewid:"r7"){id}
     ab7:AddReviewBusiness(reviewid:"r7", businessid:"b5"){id}
     
