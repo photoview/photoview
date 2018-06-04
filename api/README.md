@@ -43,7 +43,7 @@ To deploy your GraphQL service on Zeit Now, first install [Now Desktop](https://
 now
 ```
 
-to deploy your GraphQL service on Zeit Now. Once deployed you'll be given a fresh URL that represents the current state of your application where you can access your GraphQL endpoint and GgraphQL Playgound. For example: https://grand-stack-starter-api-pqdeodpvok.now.sh/
+to deploy your GraphQL service on Zeit Now. Once deployed you'll be given a fresh URL that represents the current state of your application where you can access your GraphQL endpoint and GraphQL Playgound. For example: https://grand-stack-starter-api-pqdeodpvok.now.sh/
 
 ## Seeding The Database
 
