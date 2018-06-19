@@ -28,3 +28,6 @@ cd ./ui && npm start
 
 ## [`/ui`](./ui)
 ![](ui/img/default-app.png)
+
+This project is licensed under the Apache License v2.
+Copyright (c) 2018 Neo4j, Inc.
