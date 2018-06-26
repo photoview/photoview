@@ -31,6 +31,6 @@ const server = new ApolloServer({
   schema: augmentedSchema
 });
 
-server.listen().then(({ url }) => {
-  console.log(`GraphQL API read at ${url}`);
+server.listen(process.env.GRAPHQL_LISTEN_PORT, '0.0.0.0').then(({ url }) => {
+  console.log(`GraphQL API ready at ${url}`);
 });
