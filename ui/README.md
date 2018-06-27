@@ -64,6 +64,10 @@ now
 this will deploy your React app to Zeit Now and give you a unqiue URL for your app. For example: https://grand-stack-starter-ui-pwntmhvvwr.now.sh
 
 
+## Material-UI
+
+[Material-UI](https://material-ui.com/) components are included. See [the docs](https://material-ui.com/getting-started/usage/) for an overview of the components included. This starter example makes use of the Material-UI data Table (and related) components.
+
 ## Create React App
 
 
