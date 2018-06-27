@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "UI app for GRANDstack",
   "dependencies": {
+    "@material-ui/core": "^1.3.0",
+    "@material-ui/icons": "^1.1.0",
     "apollo-boost": "^0.1.7",
     "graphql": "^0.13.2",
     "graphql-tag": "^2.9.2",
