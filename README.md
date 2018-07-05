@@ -4,6 +4,14 @@ This project is a starter for building a [GRANDstack](https://grandstack.io) (Gr
 
 ## Quickstart
 
+### Neo4j
+
+You need a Neo4j instance, e.g. a [Neo4j Sandbox](http://neo4j.com/sandbox), a local instance via [Neo4j Desktop](https://neo4j.com/download), [Docker](http://hub.docker.com/_/neo4j) or a [Neo4j instance on AWS, Azure or GCP](http://neo4j.com/developer/guide-cloud-deployment) or [Neo4j Cloud](http://neo4j.com/cloud)
+
+For schemas using the  `@cypher` directive, you need to have the [APOC library](https://github.com/neo4j-contrib/neo4j-apoc-procedures) installed, which is automatic in Sandbox, Cloud and a single click install in Neo4j Desktop.
+
+### [`/api`](./api)
+
 *Install dependencies*
 
 ```
@@ -16,6 +24,10 @@ This project is a starter for building a [GRANDstack](https://grandstack.io) (Gr
 cd ./api && npm start
 ```
 
+![](api/img/graphql-playground.png)
+
+### [`/ui`](./ui)
+
 This will start the GraphQL API in the foreground, so in another terminal session start the UI development server:
 
 *Start UI server*
@@ -23,10 +35,6 @@ This will start the GraphQL API in the foreground, so in another terminal sessio
 cd ./ui && npm start
 ```
 
-## [`/api`](./api)
-![](api/img/graphql-playground.png)
-
-## [`/ui`](./ui)
 ![](ui/img/default-app.png)
 
 This project is licensed under the Apache License v2.
