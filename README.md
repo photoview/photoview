@@ -8,7 +8,7 @@ This project is a starter for building a [GRANDstack](https://grandstack.io) (Gr
 
 You need a Neo4j instance, e.g. a [Neo4j Sandbox](http://neo4j.com/sandbox), a local instance via [Neo4j Desktop](https://neo4j.com/download), [Docker](http://hub.docker.com/_/neo4j) or a [Neo4j instance on AWS, Azure or GCP](http://neo4j.com/developer/guide-cloud-deployment) or [Neo4j Cloud](http://neo4j.com/cloud)
 
-For schemas using the  `@cypher` directive, you need to have the [APOC library](https://github.com/neo4j-contrib/neo4j-apoc-procedures) installed, which is automatic in Sandbox, Cloud and a single click install in Neo4j Desktop.
+For schemas using the  `@cypher` directive via [`neo4j-graphql-js`](https://github.com/neo4j-graphql/neo4j-graphql-js), you need to have the [APOC library](https://github.com/neo4j-contrib/neo4j-apoc-procedures) installed, which is automatic in Sandbox, Cloud and a single click install in Neo4j Desktop. 
 
 ### [`/api`](./api)
 
