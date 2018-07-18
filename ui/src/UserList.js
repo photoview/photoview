@@ -143,7 +143,7 @@ class UserList extends React.Component {
                           <TableCell component="th" scope="row">
                             {n.name}
                           </TableCell>
-                          <TableCell numeric>{n.avgStars}</TableCell>
+                          <TableCell numeric>{n.avgStars.toFixed(2)}</TableCell>
                           <TableCell numeric>{n.numReviews}</TableCell>
                         </TableRow>
                       );
