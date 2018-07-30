@@ -33,8 +33,17 @@ type Category {
   businesses(first: Int = 10, offset: Int = 0): [Business] @relation(name: "IN_CATEGORY", direction: "IN")
 }
 
+enum _UserOrdering {
+  name_asc
+  name_desc
+  avgStars_asc
+  avgStars_desc
+  numReviews_asc
+  numReviews_desc
+}
+
 type Query {
-    users(id: ID, name: String, first: Int = 10, offset: Int = 0): [User]
+    users(id: ID, name: String, first: Int = 10, offset: Int = 0, orderBy: _UserOrdering): [User]
     businesses(id: ID, name: String, first: Int = 10, offset: Int = 0): [Business]
     reviews(id: ID, stars: Int, first: Int = 10, offset: Int = 0): [Review]
     category(name: ID!): Category

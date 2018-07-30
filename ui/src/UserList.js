@@ -3,14 +3,16 @@ import { Query } from "react-apollo";
 import gql from "graphql-tag";
 import "./UserList.css";
 import { withStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import Tooltip from "@material-ui/core/Tooltip";
-import Paper from "@material-ui/core/Paper";
-import { TableSortLabel } from "@material-ui/core";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Paper,
+  TableSortLabel
+} from "@material-ui/core";
 
 const styles = theme => ({
   root: {
@@ -24,19 +26,15 @@ const styles = theme => ({
   }
 });
 
-function getSorting(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => (b[orderBy] < a[orderBy] ? -1 : 1)
-    : (a, b) => (a[orderBy] < b[orderBy] ? -1 : 1);
-}
-
 class UserList extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
       order: "asc",
-      orderBy: "avgStars"
+      orderBy: "name",
+      page: 0,
+      rowsPerPage: 10
     };
   }
 
@@ -56,8 +54,12 @@ class UserList extends React.Component {
     return (
       <Query
         query={gql`
-          {
-            users(first: 10, offset: 0) {
+          query usersPaginateQuery(
+            $first: Int
+            $offset: Int
+            $orderBy: _UserOrdering
+          ) {
+            users(first: $first, offset: $offset, orderBy: $orderBy) {
               id
               name
               avgStars
@@ -65,6 +67,11 @@ class UserList extends React.Component {
             }
           }
         `}
+        variables={{
+          first: this.state.rowsPerPage,
+          offset: this.state.rowsPerPage * this.state.page,
+          orderBy: this.state.orderBy + "_" + this.state.order
+        }}
       >
         {({ loading, error, data }) => {
           if (loading) return <p>Loading...</p>;
@@ -134,20 +141,17 @@ class UserList extends React.Component {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.users
-                    .slice()
-                    .sort(getSorting(order, orderBy))
-                    .map(n => {
-                      return (
-                        <TableRow key={n.id}>
-                          <TableCell component="th" scope="row">
-                            {n.name}
-                          </TableCell>
-                          <TableCell numeric>{n.avgStars.toFixed(2)}</TableCell>
-                          <TableCell numeric>{n.numReviews}</TableCell>
-                        </TableRow>
-                      );
-                    })}
+                  {data.users.map(n => {
+                    return (
+                      <TableRow key={n.id}>
+                        <TableCell component="th" scope="row">
+                          {n.name}
+                        </TableCell>
+                        <TableCell numeric>{n.avgStars.toFixed(2)}</TableCell>
+                        <TableCell numeric>{n.numReviews}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </Paper>
