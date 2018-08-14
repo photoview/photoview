@@ -4,6 +4,29 @@ This project is a starter for building a [GRANDstack](https://grandstack.io) (Gr
 
 ## Quickstart
 
+### Docker Compose
+
+To use docker-compose to quickly start please make the following changes
+
+api/.env:
+```
+NEO4J_URI=bolt://neo4j:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=letmein
+GRAPHQL_LISTEN_PORT=4000
+GRAPHQL_URI=http://api:4000
+```
+
+Now you can quickly start via:
+```
+docker-compose up -d
+```
+
+If you want to load the example DB after the services have been started:
+```
+docker-compose run api npm run seedDb
+```
+
 ### Neo4j
 
 You need a Neo4j instance, e.g. a [Neo4j Sandbox](http://neo4j.com/sandbox), a local instance via [Neo4j Desktop](https://neo4j.com/download), [Docker](http://hub.docker.com/_/neo4j) or a [Neo4j instance on AWS, Azure or GCP](http://neo4j.com/developer/guide-cloud-deployment) or [Neo4j Cloud](http://neo4j.com/cloud)
