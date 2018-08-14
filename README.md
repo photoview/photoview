@@ -6,7 +6,18 @@ This project is a starter for building a [GRANDstack](https://grandstack.io) (Gr
 
 ### Docker Compose
 
-You can quickly start via:
+To use docker-compose to quickly start please make the following changes
+
+api/.env:
+```
+NEO4J_URI=bolt://neo4j:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=letmein
+GRAPHQL_LISTEN_PORT=4000
+GRAPHQL_URI=http://api:4000
+```
+
+Now you can quickly start via:
 ```
 docker-compose up -d
 ```
