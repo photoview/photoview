@@ -76,5 +76,7 @@ cd ./ui && npm start
 
 ![](ui/img/default-app.png)
 
+See [the project releases](https://github.com/grand-stack/grand-stack-starter/releases) for the changelog.
+
 This project is licensed under the Apache License v2.
 Copyright (c) 2018 Neo4j, Inc.
