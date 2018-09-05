@@ -59,7 +59,7 @@ class UserList extends React.Component {
             $offset: Int
             $orderBy: _UserOrdering
           ) {
-            users(first: $first, offset: $offset, orderBy: $orderBy) {
+            User(first: $first, offset: $offset, orderBy: $orderBy) {
               id
               name
               avgStars
@@ -141,7 +141,7 @@ class UserList extends React.Component {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.users.map(n => {
+                  {data.User.map(n => {
                     return (
                       <TableRow key={n.id}>
                         <TableCell component="th" scope="row">
