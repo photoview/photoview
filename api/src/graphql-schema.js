@@ -4,8 +4,8 @@ export const typeDefs = `
 type User {
   id: ID!
   name: String
-  friends(first: Int = 10, offset: Int = 0): [User] @relation(name: "FRIENDS", direction: "BOTH")
-  reviews(first: Int = 10, offset: Int = 0): [Review] @relation(name: "WROTE", direction: "OUT")
+  friends: [User] @relation(name: "FRIENDS", direction: "BOTH")
+  reviews: [Review] @relation(name: "WROTE", direction: "OUT")
   avgStars: Float @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))")
   numReviews: Int @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
 }
@@ -16,8 +16,8 @@ type Business {
   address: String
   city: String
   state: String
-  reviews(first: Int = 10, offset: Int = 0): [Review] @relation(name: "REVIEWS", direction: "IN")
-  categories(first: Int = 10, offset: Int =0): [Category] @relation(name: "IN_CATEGORY", direction: "OUT")
+  reviews: [Review] @relation(name: "REVIEWS", direction: "IN")
+  categories: [Category] @relation(name: "IN_CATEGORY", direction: "OUT")
 }
 
 type Review {
@@ -30,33 +30,16 @@ type Review {
 
 type Category {
   name: ID!
-  businesses(first: Int = 10, offset: Int = 0): [Business] @relation(name: "IN_CATEGORY", direction: "IN")
-}
-
-enum _UserOrdering {
-  name_asc
-  name_desc
-  avgStars_asc
-  avgStars_desc
-  numReviews_asc
-  numReviews_desc
+  businesses: [Business] @relation(name: "IN_CATEGORY", direction: "IN")
 }
 
 type Query {
-    users(id: ID, name: String, first: Int = 10, offset: Int = 0, orderBy: _UserOrdering): [User]
-    businesses(id: ID, name: String, first: Int = 10, offset: Int = 0): [Business]
-    reviews(id: ID, stars: Int, first: Int = 10, offset: Int = 0): [Review]
-    category(name: ID!): Category
     usersBySubstring(substring: String, first: Int = 10, offset: Int = 0): [User] @cypher(statement: "MATCH (u:User) WHERE u.name CONTAINS $substring RETURN u")
 }
 `;
 
 export const resolvers = {
   Query: {
-    users: neo4jgraphql,
-    businesses: neo4jgraphql,
-    reviews: neo4jgraphql,
-    category: neo4jgraphql,
     usersBySubstring: neo4jgraphql
   }
 };
