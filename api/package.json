@@ -19,7 +19,7 @@
     "dotenv": "^5.0.1",
     "graphql-tag": "^2.9.2",
     "neo4j-driver": "^1.6.1",
-    "neo4j-graphql-js": "^0.1.32",
+    "neo4j-graphql-js": "^0.2.0",
     "node-fetch": "^2.1.2"
   },
   "devDependencies": {

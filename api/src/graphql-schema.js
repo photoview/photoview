@@ -8,10 +8,6 @@ export const typeDefs =
 
 export const resolvers = {
   Query: {
-    users: neo4jgraphql,
-    businesses: neo4jgraphql,
-    reviews: neo4jgraphql,
-    category: neo4jgraphql,
     usersBySubstring: neo4jgraphql
   }
 };
