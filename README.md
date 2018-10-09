@@ -2,7 +2,7 @@
 
 This project is a starter for building a [GRANDstack](https://grandstack.io) (GraphQL, React, Apollo, Neo4j Database) application. There are two components to the starter, the UI application (a React app) and the API app (GraphQL server).
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/rPC71lUhK_I" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+[![Hands On With The GRANDstack Starter](http://img.youtube.com/vi/rPC71lUhK_I/0.jpg)](http://www.youtube.com/watch?v=rPC71lUhK_I "Hands On With The GRANDstack Starter")
 
 ## Quickstart
 
