@@ -9,9 +9,9 @@
     "graphql": "^0.13.2",
     "graphql-tag": "^2.10.0",
     "prettier": "^1.15.2",
-    "react": "^16.6.1",
+    "react": "^16.6.3",
     "react-apollo": "^2.2.4",
-    "react-dom": "^16.6.1",
+    "react-dom": "^16.6.3",
     "react-scripts": "1.1.4",
     "serve": "^7.2.0"
   },
