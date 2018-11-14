@@ -8,6 +8,7 @@
     "apollo-boost": "^0.1.20",
     "graphql": "^0.13.2",
     "graphql-tag": "^2.10.0",
+    "prettier": "^1.15.2",
     "react": "^16.6.1",
     "react-apollo": "^2.2.4",
     "react-dom": "^16.6.1",
@@ -20,5 +21,20 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "now-start": "serve build/"
+  },
+  "devDependencies": {
+    "husky": "^1.1.4",
+    "lint-staged": "^8.0.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,json,css,md,graphql}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
