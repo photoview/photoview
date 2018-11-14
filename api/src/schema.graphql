@@ -3,8 +3,12 @@ type User {
   name: String
   friends: [User] @relation(name: "FRIENDS", direction: "BOTH")
   reviews: [Review] @relation(name: "WROTE", direction: "OUT")
-  avgStars: Float @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))")
-  numReviews: Int @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
+  avgStars: Float
+    @cypher(
+      statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))"
+    )
+  numReviews: Int
+    @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
 }
 
 type Business {
@@ -31,5 +35,8 @@ type Category {
 }
 
 type Query {
-    usersBySubstring(substring: String, first: Int = 10, offset: Int = 0): [User] @cypher(statement: "MATCH (u:User) WHERE u.name CONTAINS $substring RETURN u")
+  usersBySubstring(substring: String): [User]
+    @cypher(
+      statement: "MATCH (u:User) WHERE u.name CONTAINS $substring RETURN u"
+    )
 }
