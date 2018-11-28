@@ -3,14 +3,14 @@
   "version": "0.0.1",
   "description": "UI app for GRANDstack",
   "dependencies": {
-    "@material-ui/core": "^3.5.1",
+    "@material-ui/core": "^3.6.0",
     "@material-ui/icons": "^3.0.1",
-    "apollo-boost": "^0.1.20",
+    "apollo-boost": "^0.1.22",
     "graphql": "^14.0.2",
     "graphql-tag": "^2.10.0",
     "prettier": "^1.15.2",
     "react": "^16.6.3",
-    "react-apollo": "^2.2.4",
+    "react-apollo": "^2.3.2",
     "react-dom": "^16.6.3",
     "react-scripts": "^2.1.1",
     "serve": "^10.1.1"
@@ -23,8 +23,8 @@
     "now-start": "serve build/"
   },
   "devDependencies": {
-    "husky": "^1.1.4",
-    "lint-staged": "^8.0.4"
+    "husky": "^1.2.0",
+    "lint-staged": "^8.1.0"
   },
   "husky": {
     "hooks": {
