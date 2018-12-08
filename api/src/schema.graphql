@@ -25,6 +25,7 @@ type Review {
   id: ID!
   stars: Int
   text: String
+  date: Date
   business: Business @relation(name: "REVIEWS", direction: "OUT")
   user: User @relation(name: "WROTE", direction: "IN")
 }
