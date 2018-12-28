@@ -4,7 +4,7 @@ import path from "path";
 
 /*
  * Check for GRAPHQL_SCHEMA environment variable to specify schema file
- * fallback to schema.graphql is GRAPHQL_SCHEMA environment variable is not set
+ * fallback to schema.graphql if GRAPHQL_SCHEMA environment variable is not set
  */
 
 export const typeDefs = fs
