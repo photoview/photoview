@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "./node_modules/.bin/nodemon --exec babel-node src/index.js",
+    "build": "babel src -d build; cp .env build; cp src/schema.graphql build",
     "seedDb": "./node_modules/.bin/babel-node src/seed/seed-db.js"
   },
   "author": "William Lyon",
