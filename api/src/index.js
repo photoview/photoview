@@ -38,11 +38,19 @@ const driver = neo4j.driver(
  * instance into the context object so it is available in the
  * generated resolvers to connect to the database.
  */
+
+// Introspection and playground need to be set to true otherwise you can't use GraphiQL
+// in the Now function, they can be removed for production
 const server = new ApolloServer({
   context: { driver },
-  schema: schema
+  schema: schema,
+  introspection: true,
+  playground: true
 });
 
-server.listen(process.env.GRAPHQL_LISTEN_PORT, "0.0.0.0").then(({ url }) => {
+// Port cannot be hard coded for Now lambda function
+const port = process.env.GRAPHQL_LISTEN_PORT || 4000;
+
+server.listen(port, "0.0.0.0").then(({ url }) => {
   console.log(`GraphQL API ready at ${url}`);
 });
