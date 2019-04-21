@@ -1,11 +1,14 @@
 import { typeDefs } from "./graphql-schema";
-import { ApolloServer } from "apollo-server";
+import { ApolloServer } from "apollo-server-express";
+import express from "express";
 import { v1 as neo4j } from "neo4j-driver";
 import { makeAugmentedSchema } from "neo4j-graphql-js";
 import dotenv from "dotenv";
 
 // set environment variables from ../.env
 dotenv.config();
+
+const app = express();
 
 /*
  * Create an executable GraphQL schema object from GraphQL type definitions
@@ -38,9 +41,6 @@ const driver = neo4j.driver(
  * instance into the context object so it is available in the
  * generated resolvers to connect to the database.
  */
-
-// Introspection and playground need to be set to true otherwise you can't use GraphiQL
-// in the Now function, they can be removed for production
 const server = new ApolloServer({
   context: { driver },
   schema: schema,
@@ -48,9 +48,16 @@ const server = new ApolloServer({
   playground: true
 });
 
-// Port cannot be hard coded for Now lambda function
-const port = process.env.GRAPHQL_LISTEN_PORT || 4000;
+// Specify port and path for GraphQL endpoint
+const port = process.env.GRAPHQL_LISTEN_PORT || 4001;
+const path = "/graphql";
 
-server.listen(port, "0.0.0.0").then(({ url }) => {
-  console.log(`GraphQL API ready at ${url}`);
+/*
+* Optionally, apply Express middleware for authentication, etc
+* This also also allows us to specify a path for the GraphQL endpoint
+*/
+server.applyMiddleware({app, path});
+
+app.listen({port, path}, () => {
+  console.log(`GraphQL server ready at http://localhost:${port}${path}`);
 });

@@ -57,7 +57,7 @@ class UserList extends React.Component {
           query usersPaginateQuery(
             $first: Int
             $offset: Int
-            $orderBy: _UserOrdering
+            $orderBy: [_UserOrdering]
           ) {
             User(first: $first, offset: $offset, orderBy: $orderBy) {
               id
