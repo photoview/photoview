@@ -63,7 +63,7 @@ See [the project releases](https://github.com/grand-stack/grand-stack-starter/re
 
 ### Zeit Now v2
 
-Zeit Now v2 can be used with monorepos such as grand-stack-starter. `now.json` defines the configuration for deploying with Zeit Now v2.
+Zeit Now v2 can be used with monorepos such as grand-stack-starter. [`now.json`](https://github.com/grand-stack/grand-stack-starter/blob/master/now.json) defines the configuration for deploying with Zeit Now v2.
 
 1. Set the now secrets for your Neo4j instance:
 
