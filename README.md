@@ -1,3 +1,5 @@
+[![Deploy to now](https://deploy.now.sh/static/button.svg)](https://deploy.now.sh/?repo=https://github.com/grand-stack/grand-stack-starter&env=NEO4J_USER&env=NEO4J_URI&env=NEO4J_PASSWORD)
+
 # GRANDstack Starter
 
 This project is a starter for building a [GRANDstack](https://grandstack.io) (GraphQL, React, Apollo, Neo4j Database) application. There are two components to the starter, the UI application (a React app) and the API app (GraphQL server).
@@ -61,7 +63,7 @@ See [the project releases](https://github.com/grand-stack/grand-stack-starter/re
 
 ### Zeit Now v2
 
-Zeit Now v2 can be used with monorepos such as grand-stack-starter. `now.json` defines the configuration for deploying with Zeit Now v2.
+Zeit Now v2 can be used with monorepos such as grand-stack-starter. [`now.json`](https://github.com/grand-stack/grand-stack-starter/blob/master/now.json) defines the configuration for deploying with Zeit Now v2.
 
 1. Set the now secrets for your Neo4j instance:
 
