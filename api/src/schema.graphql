@@ -9,6 +9,7 @@ type User {
     )
   numReviews: Int
     @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
+  recommendations(first: Int = 3): [Business] @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review)-[:REVIEWS]->(:Business)<-[:REVIEWS]-(:Review)<-[:WROTE]-(:User)-[:WROTE]->(:Review)-[:REVIEWS]->(rec:Business) WHERE NOT EXISTS( (this)-[:WROTE]->(:Review)-[:REVIEWS]->(rec) )WITH rec, COUNT(*) AS num ORDER BY num DESC LIMIT $first RETURN rec")
 }
 
 type Business {
@@ -17,6 +18,7 @@ type Business {
   address: String
   city: String
   state: String
+  avgStars: Float @cypher(statement: "MATCH (this)<-[:REVIEWS]-(r:Review) RETURN coalesce(avg(r.stars),0.0)")
   reviews: [Review] @relation(name: "REVIEWS", direction: "IN")
   categories: [Category] @relation(name: "IN_CATEGORY", direction: "OUT")
 }
