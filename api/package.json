@@ -18,11 +18,11 @@
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
     "apollo-link-http": "^1.5.14",
-    "apollo-server": "^2.4.8",
+    "apollo-server": "^2.6.2",
     "dotenv": "^7.0.0",
     "graphql-tag": "^2.10.1",
     "neo4j-driver": "^1.7.3",
-    "neo4j-graphql-js": "^2.5.0",
+    "neo4j-graphql-js": "^2.6.3",
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {
