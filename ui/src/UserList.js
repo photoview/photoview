@@ -11,7 +11,9 @@ import {
   TableRow,
   Tooltip,
   Paper,
-  TableSortLabel
+  TableSortLabel,
+  Typography,
+  TextField
 } from "@material-ui/core";
 
 const styles = theme => ({
@@ -23,6 +25,11 @@ const styles = theme => ({
   },
   table: {
     minWidth: 700
+  },
+  textField: {
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    minWidth: 300
   }
 });
 
@@ -34,7 +41,8 @@ class UserList extends React.Component {
       order: "asc",
       orderBy: "name",
       page: 0,
-      rowsPerPage: 10
+      rowsPerPage: 10,
+      usernameFilter: ""
     };
   }
 
@@ -49,36 +57,75 @@ class UserList extends React.Component {
     this.setState({ order, orderBy });
   };
 
+  getFilter = () => {
+    return this.state.usernameFilter.length > 0
+      ? { name_contains: this.state.usernameFilter }
+      : {};
+  };
+
+  handleFilterChange = filterName => event => {
+    const val = event.target.value;
+
+    this.setState({
+      [filterName]: val
+    });
+  };
+
   render() {
     const { order, orderBy } = this.state;
+    const { classes } = this.props;
     return (
-      <Query
-        query={gql`
-          query usersPaginateQuery(
-            $first: Int
-            $offset: Int
-            $orderBy: [_UserOrdering]
-          ) {
-            User(first: $first, offset: $offset, orderBy: $orderBy) {
-              id
-              name
-              avgStars
-              numReviews
-            }
-          }
-        `}
-        variables={{
-          first: this.state.rowsPerPage,
-          offset: this.state.rowsPerPage * this.state.page,
-          orderBy: this.state.orderBy + "_" + this.state.order
-        }}
-      >
-        {({ loading, error, data }) => {
-          if (loading) return <p>Loading...</p>;
-          if (error) return <p>Error</p>;
+      <Paper className={classes.root}>
+        <Typography variant="h2" gutterBottom>
+          User List
+        </Typography>
+        <TextField
+          id="search"
+          label="User Name Contains"
+          className={classes.textField}
+          value={this.state.usernameFilter}
+          onChange={this.handleFilterChange("usernameFilter")}
+          margin="normal"
+          variant="outlined"
+          type="text"
+          InputProps={{
+            className: classes.input
+          }}
+        />
 
-          return (
-            <Paper className={this.props.classes.root}>
+        <Query
+          query={gql`
+            query usersPaginateQuery(
+              $first: Int
+              $offset: Int
+              $orderBy: [_UserOrdering]
+              $filter: _UserFilter
+            ) {
+              User(
+                first: $first
+                offset: $offset
+                orderBy: $orderBy
+                filter: $filter
+              ) {
+                id
+                name
+                avgStars
+                numReviews
+              }
+            }
+          `}
+          variables={{
+            first: this.state.rowsPerPage,
+            offset: this.state.rowsPerPage * this.state.page,
+            orderBy: this.state.orderBy + "_" + this.state.order,
+            filter: this.getFilter()
+          }}
+        >
+          {({ loading, error, data }) => {
+            if (loading) return <p>Loading...</p>;
+            if (error) return <p>Error</p>;
+
+            return (
               <Table className={this.props.classes.table}>
                 <TableHead>
                   <TableRow>
@@ -156,10 +203,10 @@ class UserList extends React.Component {
                   })}
                 </TableBody>
               </Table>
-            </Paper>
-          );
-        }}
-      </Query>
+            );
+          }}
+        </Query>
+      </Paper>
     );
   }
 }
