@@ -1,0 +1,59 @@
+enum Role {
+  Admin
+  User
+}
+
+type Todo @isAuthenticated {
+  id: ID!
+  title: String
+}
+
+type Mutation {
+  authorizeUser(name: String!): String
+}
+
+# type User {
+#   id: ID!
+#   name: String
+#   friends: [User] @relation(name: "FRIENDS", direction: "BOTH")
+#   reviews: [Review] @relation(name: "WROTE", direction: "OUT")
+#   avgStars: Float
+#     @cypher(
+#       statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))"
+#     )
+#   numReviews: Int
+#     @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
+#   recommendations(first: Int = 3): [Business] @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review)-[:REVIEWS]->(:Business)<-[:REVIEWS]-(:Review)<-[:WROTE]-(:User)-[:WROTE]->(:Review)-[:REVIEWS]->(rec:Business) WHERE NOT EXISTS( (this)-[:WROTE]->(:Review)-[:REVIEWS]->(rec) )WITH rec, COUNT(*) AS num ORDER BY num DESC LIMIT $first RETURN rec")
+# }
+
+# type Business {
+#   id: ID!
+#   name: String
+#   address: String
+#   city: String
+#   state: String
+#   avgStars: Float @cypher(statement: "MATCH (this)<-[:REVIEWS]-(r:Review) RETURN coalesce(avg(r.stars),0.0)")
+#   reviews: [Review] @relation(name: "REVIEWS", direction: "IN")
+#   categories: [Category] @relation(name: "IN_CATEGORY", direction: "OUT")
+# }
+
+# type Review {
+#   id: ID!
+#   stars: Int
+#   text: String
+#   date: Date
+#   business: Business @relation(name: "REVIEWS", direction: "OUT")
+#   user: User @relation(name: "WROTE", direction: "IN")
+# }
+
+# type Category {
+#   name: ID!
+#   businesses: [Business] @relation(name: "IN_CATEGORY", direction: "IN")
+# }
+
+# type Query {
+#   usersBySubstring(substring: String): [User]
+#     @cypher(
+#       statement: "MATCH (u:User) WHERE u.name CONTAINS $substring RETURN u"
+#     )
+# }

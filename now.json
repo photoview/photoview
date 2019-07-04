@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "name": "grand-stack-starter",
+  "builds": [
+    { "src": "api/src/index.js", "use": "@now/node-server" },
+    {
+      "src": "ui/package.json",
+      "use": "@now/static-build",
+      "config": {"distDir": "build"}
+    }
+  ],
+  "routes": [
+    { "src": "/graphql(.*)", "dest": "api/src/index.js" },
+    {
+      "src": "/static/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000,immutable" },
+      "dest": "ui/static/$1"
+    },
+    { "src": "/favicon.ico", "dest": "ui/favicon.ico" },
+    { "src": "/img/(.*)", "dest": "ui/img/$1"},
+    { "src": "/asset-manifest.json", "dest": "ui/asset-manifest.json" },
+    { "src": "/manifest.json", "dest": "ui/manifest.json" },
+    { "src": "/precache-manifest.(.*)", "dest": "ui/precache-manifest.$1" },
+    {
+      "src": "/service-worker.js",
+      "headers": { "cache-control": "s-maxage=0" },
+      "dest": "ui/service-worker.js"
+    },
+    {
+      "src": "^(.*)$",
+      "headers": { "cache-control": "s-maxage=0" },
+      "dest": "/ui/index.html"
+    }
+  ],
+  "env": {
+    "REACT_APP_GRAPHQL_URI": "/graphql",
+    "NEO4J_URI": "@neo4j_uri",
+    "NEO4J_USER": "@neo4j_user",
+    "NEO4J_PASSWORD": "@neo4j_password"
+  }
+}
