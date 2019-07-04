@@ -1,14 +1,17 @@
 import { typeDefs } from "./graphql-schema";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
+import bodyParser from "body-parser"
 import { v1 as neo4j } from "neo4j-driver";
 import { makeAugmentedSchema } from "neo4j-graphql-js";
 import dotenv from "dotenv";
+import jwt from 'jsonwebtoken'
 
 // set environment variables from ../.env
 dotenv.config();
 
 const app = express();
+app.use(bodyParser.json())
 
 /*
  * Create an executable GraphQL schema object from GraphQL type definitions
@@ -19,7 +22,21 @@ const app = express();
  */
 
 const schema = makeAugmentedSchema({
-  typeDefs
+  typeDefs,
+  config: {
+    auth: {
+      isAuthenticated: true,
+      hasRole: true
+    }
+  },
+  resolvers: {
+    Mutation: {
+      authorizeUser(root, args, context, info) {
+        const token = jwt.sign({name: args.name}, process.env.JWT_SECRET)
+        return token
+      }
+    }
+  }
 });
 
 /*
@@ -31,7 +48,7 @@ const driver = neo4j.driver(
   process.env.NEO4J_URI || "bolt://localhost:7687",
   neo4j.auth.basic(
     process.env.NEO4J_USER || "neo4j",
-    process.env.NEO4J_PASSWORD || "neo4j"
+    process.env.NEO4J_PASSWORD || "letmein"
   )
 );
 
@@ -42,7 +59,7 @@ const driver = neo4j.driver(
  * generated resolvers to connect to the database.
  */
 const server = new ApolloServer({
-  context: { driver },
+  context: ({ req }) => Object.assign(req, {driver}),
   schema: schema,
   introspection: true,
   playground: true
