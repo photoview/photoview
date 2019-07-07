@@ -6,6 +6,7 @@ import { v1 as neo4j } from "neo4j-driver";
 import { makeAugmentedSchema } from "neo4j-graphql-js";
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken'
+import uuid from 'uuid'
 
 // set environment variables from ../.env
 dotenv.config();
@@ -27,13 +28,62 @@ const schema = makeAugmentedSchema({
     auth: {
       isAuthenticated: true,
       hasRole: true
-    }
+    },
+    mutation: false
   },
   resolvers: {
     Mutation: {
-      authorizeUser(root, args, context, info) {
-        const token = jwt.sign({name: args.name}, process.env.JWT_SECRET)
-        return token
+      async authorizeUser(root, args, ctx, info) {
+        let {username, password} = args
+
+        let session = ctx.driver.session()
+
+        let result = await session.run("MATCH (usr:User {username: {username}, password: {password} }) RETURN usr.id", {username, password})
+
+        if (result.records.length == 0) {
+          return {
+            success: false,
+            status: "Username or password was invalid",
+            token: null
+          }
+        }
+
+        const record = result.records[0]
+
+        const userId = record.get('usr.id')
+
+        const token = jwt.sign({id: userId}, process.env.JWT_SECRET)
+
+        return {
+          success: true,
+          status: "Authorized",
+          token
+        }
+      },
+      async registerUser(root, args, ctx, info) {
+
+        let {username, password} = args
+
+        let session = ctx.driver.session()
+        let result = await session.run("MATCH (usr:User {username: {username} }) RETURN usr", {username})
+
+        if (result.records.length > 0) {
+          return {
+            success: false,
+            status: "Username is already taken",
+            token: null
+          }
+        }
+
+        await session.run("CREATE (n:User { username: {username}, password: {password}, id: {id} }) return n", {username, password, id: uuid()})
+
+        session.close()
+
+        return {
+          success: true,
+          status: "User created",
+          token: "yay"
+        }
       }
     }
   }

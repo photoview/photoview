@@ -1,32 +1,23 @@
-import React, { Component } from "react";
-import gql from 'graphql-tag'
-import { Query } from 'react-apollo'
+import React, { Component } from 'react'
+import { Redirect } from 'react-router-dom'
+
+import Routes from './Routes'
 
 class App extends Component {
   render() {
-    return (
-      <div>
-        <h1>Todo App</h1>
-        <Query query={gql`
-          query Todos {
-            Todo {
-              id
-              title
-            }
-          }
-        `}>
-          {({data, loading, error}) => {
-            if (loading) return <div>Loading todos...</div>
-            if (error) return <div>Error</div>
+    const token = localStorage.getItem('token')
 
-            let todos = data.Todo.map(todo => <li key={todo.id}>{todo.title}</li>)
+    if (!token) {
+      return (
+        <>
+          <Redirect to="/login" />
+          <Routes />
+        </>
+      )
+    }
 
-            return <ul>{todos}</ul>
-          }}
-        </Query>
-      </div>
-    );
+    return <Routes />
   }
 }
 
-export default App;
+export default App

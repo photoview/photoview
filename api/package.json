@@ -25,7 +25,8 @@
     "jsonwebtoken": "^8.5.1",
     "neo4j-driver": "^1.7.3",
     "neo4j-graphql-js": "^2.6.3",
-    "node-fetch": "^2.3.0"
+    "node-fetch": "^2.3.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

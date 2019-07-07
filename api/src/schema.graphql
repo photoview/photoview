@@ -3,13 +3,35 @@ enum Role {
   User
 }
 
-type Todo @isAuthenticated {
+type User @isAuthenticated {
+  id: ID!
+  username: String!
+  albums: [Album] @relation(name: "OWNS", direction: "OUT")
+}
+
+type Album @isAuthenticated {
   id: ID!
   title: String
+  photos: [Photo] @relation(name: "CONTAINS", direction: "OUT")
+  owner: User! @ relation(name: "OWNS", direction: "IN")
+}
+
+type Photo @isAuthenticated {
+  id: ID!
+  title: String
+  path: String!
+  album: Album! @relation(name: "CONTAINS", direction: "IN")
+}
+
+type AuthorizeResult {
+  success: Boolean!
+  status: String
+  token: String
 }
 
 type Mutation {
-  authorizeUser(name: String!): String
+  authorizeUser(username: String!, password: String!): AuthorizeResult!
+  registerUser(username: String!, password: String!): AuthorizeResult!
 }
 
 # type User {
