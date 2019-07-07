@@ -1,20 +1,18 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import registerServiceWorker from "./registerServiceWorker";
-import ApolloClient from "apollo-boost";
-import { ApolloProvider } from "react-apollo";
-
-const client = new ApolloClient({
-  uri: process.env.REACT_APP_GRAPHQL_URI
-});
+import React from 'react'
+import ReactDOM from 'react-dom'
+import App from './App'
+import registerServiceWorker from './registerServiceWorker'
+import client from './apolloClient'
+import { ApolloProvider } from 'react-apollo'
+import { BrowserRouter as Router } from 'react-router-dom'
 
 const Main = () => (
   <ApolloProvider client={client}>
-    <App />
+    <Router>
+      <App />
+    </Router>
   </ApolloProvider>
-);
+)
 
-ReactDOM.render(<Main />, document.getElementById("root"));
-registerServiceWorker();
+ReactDOM.render(<Main />, document.getElementById('root'))
+registerServiceWorker()
