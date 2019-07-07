@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import gql from 'graphql-tag'
 import { Mutation } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
+import { Button, Form, Message, Container, Header } from 'semantic-ui-react'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -45,51 +46,53 @@ class LoginPage extends Component {
 
     return (
       <div>
-        <h1>Welcome</h1>
-        <Mutation
-          mutation={authorizeMutation}
-          onCompleted={data => {
-            const { success, token } = data.authorizeUser
+        <Container>
+          <Header as="h1" textAlign="center">
+            Welcome
+          </Header>
+          <Mutation
+            mutation={authorizeMutation}
+            onCompleted={data => {
+              const { success, token } = data.authorizeUser
 
-            if (success) {
-              localStorage.setItem('token', token)
-              window.location = '/'
-            }
-          }}
-        >
-          {(authorize, { loading, error, data }) => {
-            let signInBtn = <input type="submit" value="Sign in" />
+              if (success) {
+                localStorage.setItem('token', token)
+                window.location = '/'
+              }
+            }}
+          >
+            {(authorize, { loading, error, data }) => {
+              let errorMessage = null
+              if (data) {
+                if (!data.authorizeUser.success)
+                  errorMessage = data.authorizeUser.status
+              }
 
-            if (loading) signInBtn = <span>Signing in...</span>
-
-            let status = ''
-            if (data) {
-              if (!data.authorizeUser.success)
-                status = data.authorizeUser.status
-            }
-
-            return (
-              <form onSubmit={e => this.signIn(e, authorize)}>
-                <label htmlFor="username-field">Username:</label>
-                <input
-                  id="username-field"
-                  onChange={e => this.handleChange(e, 'username')}
-                />
-                <br />
-                <label htmlFor="password-field">Password:</label>
-                <input
-                  id="password-field"
-                  type="password"
-                  onChange={e => this.handleChange(e, 'password')}
-                />
-                <br />
-                {signInBtn}
-                <br />
-                <span>{status}</span>
-              </form>
-            )
-          }}
-        </Mutation>
+              return (
+                <Form
+                  style={{ width: 500, margin: 'auto' }}
+                  error={!!errorMessage}
+                  onSubmit={e => this.signIn(e, authorize)}
+                  loading={loading || (data && data.authorizeUser.success)}
+                >
+                  <Form.Field>
+                    <label>Username</label>
+                    <input onChange={e => this.handleChange(e, 'username')} />
+                  </Form.Field>
+                  <Form.Field>
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      onChange={e => this.handleChange(e, 'password')}
+                    />
+                  </Form.Field>
+                  <Message error content={errorMessage} />
+                  <Button type="submit">Sign in</Button>
+                </Form>
+              )
+            }}
+          </Mutation>
+        </Container>
       </div>
     )
   }

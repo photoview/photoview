@@ -3,33 +3,36 @@
   "version": "0.0.1",
   "description": "UI app for GRANDstack",
   "dependencies": {
-    "@material-ui/core": "^3.9.3",
-    "@material-ui/icons": "^3.0.2",
+    "@babel/preset-env": "^7.5.0",
     "apollo-cache-inmemory": "^1.6.2",
     "apollo-client": "^2.6.3",
     "apollo-link": "^1.2.12",
     "apollo-link-context": "^1.0.18",
     "apollo-link-error": "^1.1.11",
     "apollo-link-http": "^1.5.15",
+    "babel-plugin-styled-components": "^1.10.6",
     "graphql": "^14.2.1",
     "graphql-tag": "^2.10.1",
+    "parcel-bundler": "^1.12.3",
     "prettier": "^1.18.2",
     "react": "^16.8.6",
     "react-apollo": "^2.5.5",
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.1",
-    "react-scripts": "^3.0.0"
+    "semantic-ui-react": "^0.87.2",
+    "styled-components": "^4.3.2"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "parcel start src/index.html",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "now-build": "react-scripts build"
   },
   "devDependencies": {
-    "husky": "^2.0.0",
-    "lint-staged": "^8.1.5"
+    "@babel/core": "^7.5.0",
+    "husky": "^3.0.0",
+    "lint-staged": "^9.1.0"
   },
   "husky": {
     "hooks": {
@@ -41,6 +44,19 @@
     "tabWidth": 2,
     "semi": false,
     "singleQuote": true
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "useBuiltIns": "entry"
+        }
+      ]
+    ],
+    "plugins": [
+      "babel-plugin-styled-components"
+    ]
   },
   "lint-staged": {
     "*.{js,json,css,md,graphql}": [

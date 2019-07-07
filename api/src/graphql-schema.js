@@ -1,4 +1,3 @@
-import { neo4jgraphql } from "neo4j-graphql-js";
 import fs from "fs";
 import path from "path";
 
