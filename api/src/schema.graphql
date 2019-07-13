@@ -15,7 +15,7 @@ type Album @isAuthenticated {
   id: ID!
   title: String
   photos: [Photo] @relation(name: "CONTAINS", direction: "OUT")
-  owner: User! @ relation(name: "OWNS", direction: "IN")
+  owner: User! @relation(name: "OWNS", direction: "IN")
 }
 
 type Photo @isAuthenticated {
@@ -36,9 +36,22 @@ type AuthorizeResult {
   token: String
 }
 
+type ScannerResult {
+  finished: Boolean!
+  error: Boolean!
+  errorMessage: String
+  progress: Float
+}
+
+type Subscription {
+  scannerStatusUpdate: ScannerResult
+}
+
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
   registerUser(username: String!, password: String!): AuthorizeResult!
+
+  scanAll: ScannerResult! @isAuthenticated
 }
 
 type Query {

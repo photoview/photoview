@@ -36,12 +36,12 @@ const mutation = {
     let { username, password } = args
 
     let session = ctx.driver.session()
-    let result = await session.run(
+    let findResult = await session.run(
       'MATCH (usr:User {username: {username} }) RETURN usr',
       { username }
     )
 
-    if (result.records.length > 0) {
+    if (findResult.records.length > 0) {
       return {
         success: false,
         status: 'Username is already taken',
@@ -49,17 +49,21 @@ const mutation = {
       }
     }
 
-    await session.run(
-      'CREATE (n:User { username: {username}, password: {password}, id: {id} }) return n',
+    const registerResult = await session.run(
+      'CREATE (n:User { username: {username}, password: {password}, id: {id} }) return n.id',
       { username, password, id: uuid() }
     )
+
+    let id = registerResult.records[0].get('n.id')
+
+    const token = jwt.sign({ id }, process.env.JWT_SECRET)
 
     session.close()
 
     return {
       success: true,
       status: 'User created',
-      token: 'yay',
+      token: token,
     }
   },
 }

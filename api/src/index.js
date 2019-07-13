@@ -1,10 +1,15 @@
-import { typeDefs } from './graphql-schema'
+import fs from 'fs'
+import path from 'path'
 import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import bodyParser from 'body-parser'
 import { v1 as neo4j } from 'neo4j-driver'
 import { makeAugmentedSchema } from 'neo4j-graphql-js'
 import dotenv from 'dotenv'
+import http from 'http'
+import PhotoScanner from './Scanner'
+
+import { getUserFromToken, getTokenFromBearer } from './token'
 
 // set environment variables from ../.env
 dotenv.config()
@@ -20,7 +25,14 @@ app.use(bodyParser.json())
  * https://grandstack.io/docs/neo4j-graphql-js-api.html#makeaugmentedschemaoptions-graphqlschema
  */
 
-import users from './resolvers/users'
+const typeDefs = fs
+  .readFileSync(
+    process.env.GRAPHQL_SCHEMA || path.join(__dirname, 'schema.graphql')
+  )
+  .toString('utf-8')
+
+import usersResolver from './resolvers/users'
+import scannerResolver from './resolvers/scanner'
 
 const schema = makeAugmentedSchema({
   typeDefs,
@@ -30,10 +42,17 @@ const schema = makeAugmentedSchema({
       hasRole: true,
     },
     mutation: false,
+    query: {
+      exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription'],
+    },
   },
   resolvers: {
     Mutation: {
-      ...users.mutation,
+      ...usersResolver.mutation,
+      ...scannerResolver.mutation,
+    },
+    Subscription: {
+      ...scannerResolver.subscription,
     },
   },
 })
@@ -51,6 +70,8 @@ const driver = neo4j.driver(
   )
 )
 
+const scanner = new PhotoScanner(driver)
+
 /*
  * Create a new ApolloServer instance, serving the GraphQL schema
  * created using makeAugmentedSchema above and injecting the Neo4j driver
@@ -58,22 +79,50 @@ const driver = neo4j.driver(
  * generated resolvers to connect to the database.
  */
 const server = new ApolloServer({
-  context: ({ req }) => Object.assign(req, { driver }),
+  context: async function({ req }) {
+    let user = null
+
+    if (req && req.headers.authorization) {
+      const token = getTokenFromBearer(req.headers.authorization)
+      user = await getUserFromToken(token, driver)
+    }
+
+    return { ...req, driver, scanner, user }
+  },
   schema: schema,
   introspection: true,
   playground: true,
+  subscriptions: {
+    onConnect: async (connectionParams, webSocket) => {
+      const token = getTokenFromBearer(connectionParams.Authorization)
+      const user = await getUserFromToken(token, driver)
+
+      return {
+        token,
+        user,
+      }
+    },
+  },
 })
 
 // Specify port and path for GraphQL endpoint
 const port = process.env.GRAPHQL_LISTEN_PORT || 4001
-const path = '/graphql'
+const graphPath = '/graphql'
 
 /*
  * Optionally, apply Express middleware for authentication, etc
  * This also also allows us to specify a path for the GraphQL endpoint
  */
-server.applyMiddleware({ app, path })
+server.applyMiddleware({ app, graphPath })
 
-app.listen({ port, path }, () => {
-  console.log(`GraphQL server ready at http://localhost:${port}${path}`)
+const httpServer = http.createServer(app)
+server.installSubscriptionHandlers(httpServer)
+
+httpServer.listen({ port, graphPath }, () => {
+  console.log(
+    `🚀 GraphQL endpoint ready at http://localhost:${port}${server.graphqlPath}`
+  )
+  console.log(
+    `🚀 Subscriptions ready at ws://localhost:${port}${server.subscriptionsPath}`
+  )
 })
