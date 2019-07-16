@@ -6,28 +6,42 @@ enum Role {
 type User @isAuthenticated {
   id: ID!
   username: String!
+  #: password: String
   albums: [Album] @relation(name: "OWNS", direction: "OUT")
   rootPath: String! @hasRole(roles: [Admin])
   admin: Boolean
 }
 
-type Album @isAuthenticated {
+type Album {
   id: ID!
   title: String
   photos: [Photo] @relation(name: "CONTAINS", direction: "OUT")
   owner: User! @relation(name: "OWNS", direction: "IN")
+  path: String
 }
 
-type Photo @isAuthenticated {
+type UnimportedAlbum {
+  id: ID!
+  relativePath: String
+}
+
+type PhotoURL {
+  path: String
+  width: Int
+  height: Int
+}
+
+type Photo {
   id: ID!
   title: String
-  path: String!
+  original: PhotoURL @neo4j_ignore
+  thumbnail: PhotoURL @neo4j_ignore
   album: Album! @relation(name: "CONTAINS", direction: "IN")
 }
 
 type SiteInfo {
   signupEnabled: Boolean!
-  firstSignup: Boolean!
+  initialSetup: Boolean!
 }
 
 type AuthorizeResult {
@@ -49,18 +63,15 @@ type Subscription {
 
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
+    @neo4j_ignore
   registerUser(username: String!, password: String!): AuthorizeResult!
+    @neo4j_ignore
 
-  scanAll: ScannerResult! @isAuthenticated
+  scanAll: ScannerResult! @isAuthenticated @neo4j_ignore
 }
 
 type Query {
   siteInfo: SiteInfo
-}
 
-# type Query {
-#   usersBySubstring(substring: String): [User]
-#     @cypher(
-#       statement: "MATCH (u:User) WHERE u.name CONTAINS $substring RETURN u"
-#     )
-# }
+  myAlbums: [Album] @isAuthenticated
+}

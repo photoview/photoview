@@ -11,6 +11,7 @@
     "apollo-link-error": "^1.1.11",
     "apollo-link-http": "^1.5.15",
     "babel-plugin-styled-components": "^1.10.6",
+    "cookie": "^0.4.0",
     "graphql": "^14.2.1",
     "graphql-tag": "^2.10.1",
     "parcel-bundler": "^1.12.3",

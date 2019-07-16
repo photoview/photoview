@@ -1,6 +1,6 @@
 import { EVENT_SCANNER_PROGRESS } from '../scanner'
 
-const mutation = {
+const Mutation = {
   async scanAll(root, args, ctx, info) {
     if (ctx.scanner.isRunning) {
       return {
@@ -20,7 +20,7 @@ const mutation = {
   },
 }
 
-const subscription = {
+const Subscription = {
   scannerStatusUpdate: {
     subscribe(root, args, ctx, info) {
       return ctx.scanner.pubsub.asyncIterator([EVENT_SCANNER_PROGRESS])
@@ -29,6 +29,6 @@ const subscription = {
 }
 
 export default {
-  mutation,
-  subscription,
+  Mutation,
+  Subscription,
 }
