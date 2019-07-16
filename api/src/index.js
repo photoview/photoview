@@ -1,13 +1,16 @@
-import fs from 'fs'
+import fs from 'fs-extra'
 import path from 'path'
 import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import bodyParser from 'body-parser'
+import cookieParser from 'cookie-parser'
 import { v1 as neo4j } from 'neo4j-driver'
 import { makeAugmentedSchema } from 'neo4j-graphql-js'
 import dotenv from 'dotenv'
 import http from 'http'
 import PhotoScanner from './Scanner'
+import _ from 'lodash'
+import config from './config'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
 
@@ -16,6 +19,7 @@ dotenv.config()
 
 const app = express()
 app.use(bodyParser.json())
+app.use(cookieParser())
 
 /*
  * Create an executable GraphQL schema object from GraphQL type definitions
@@ -33,6 +37,9 @@ const typeDefs = fs
 
 import usersResolver from './resolvers/users'
 import scannerResolver from './resolvers/scanner'
+import photosResolver from './resolvers/photos'
+
+const resolvers = [usersResolver, scannerResolver, photosResolver]
 
 const schema = makeAugmentedSchema({
   typeDefs,
@@ -42,19 +49,12 @@ const schema = makeAugmentedSchema({
       hasRole: true,
     },
     mutation: false,
-    query: {
-      exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription'],
-    },
+    query: false,
+    // query: {
+    //   exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription'],
+    // },
   },
-  resolvers: {
-    Mutation: {
-      ...usersResolver.mutation,
-      ...scannerResolver.mutation,
-    },
-    Subscription: {
-      ...scannerResolver.subscription,
-    },
-  },
+  resolvers: resolvers.reduce((prev, curr) => _.merge(prev, curr), {}),
 })
 
 /*
@@ -72,6 +72,10 @@ const driver = neo4j.driver(
 
 const scanner = new PhotoScanner(driver)
 
+// Specify port and path for GraphQL endpoint
+const port = process.env.GRAPHQL_LISTEN_PORT || 4001
+const graphPath = '/graphql'
+
 /*
  * Create a new ApolloServer instance, serving the GraphQL schema
  * created using makeAugmentedSchema above and injecting the Neo4j driver
@@ -81,13 +85,21 @@ const scanner = new PhotoScanner(driver)
 const server = new ApolloServer({
   context: async function({ req }) {
     let user = null
+    let token = null
 
     if (req && req.headers.authorization) {
-      const token = getTokenFromBearer(req.headers.authorization)
+      token = getTokenFromBearer(req.headers.authorization)
       user = await getUserFromToken(token, driver)
     }
 
-    return { ...req, driver, scanner, user }
+    return {
+      ...req,
+      driver,
+      scanner,
+      user,
+      token,
+      endpoint: `http://localhost:${port}`,
+    }
   },
   schema: schema,
   introspection: true,
@@ -105,15 +117,58 @@ const server = new ApolloServer({
   },
 })
 
-// Specify port and path for GraphQL endpoint
-const port = process.env.GRAPHQL_LISTEN_PORT || 4001
-const graphPath = '/graphql'
-
-/*
- * Optionally, apply Express middleware for authentication, etc
- * This also also allows us to specify a path for the GraphQL endpoint
- */
 server.applyMiddleware({ app, graphPath })
+
+app.use('/images/:id/:image', async function(req, res) {
+  const { id, image } = req.params
+
+  console.log('image', image)
+
+  if (image != 'original.jpg' && image != 'thumbnail.jpg') {
+    return res.status(404).send('Image not found')
+  }
+
+  let user = null
+
+  try {
+    const token = req.cookies.token
+    user = await getUserFromToken(token, driver)
+  } catch (err) {
+    return res.status(401).send(err.message)
+  }
+
+  const session = driver.session()
+
+  const result = await session.run(
+    'MATCH (p:Photo { id: {id} }) MATCH (p)<-[:CONTAINS]-(:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId',
+    {
+      id,
+    }
+  )
+
+  if (result.records.length == 0) {
+    return res.status(404).send(`Image not found`)
+  }
+
+  const userId = result.records[0].get('userId')
+  const photo = result.records[0].get('photo')
+
+  if (userId != user.id) {
+    return res.status(401).send(`Image not owned by you`)
+  }
+
+  session.close()
+
+  const imagePath = path.resolve(config.cachePath, 'images', id, image)
+  const imageFound = await fs.exists(imagePath)
+
+  if (!imageFound) {
+    console.log('Image not found', imagePath)
+    await scanner.processImage(id)
+  }
+
+  res.sendFile(imagePath)
+})
 
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)

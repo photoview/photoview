@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken'
 import uuid from 'uuid'
 
-const mutation = {
+const Mutation = {
   async authorizeUser(root, args, ctx, info) {
+    console.log('Authorize user')
     let { username, password } = args
 
     let session = ctx.driver.session()
@@ -69,5 +70,5 @@ const mutation = {
 }
 
 export default {
-  mutation,
+  Mutation,
 }

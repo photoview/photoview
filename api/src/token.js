@@ -14,10 +14,10 @@ export const getUserFromToken = async function(token, driver) {
   )
 
   if (userResult.records.length == 0) {
-    throw new Error(`User doesn't exist anymore`)
+    throw new Error(`User was not found`)
   }
 
-  const user = userResult.records[0].toObject()
+  let user = userResult.records[0].toObject().u.properties
 
   session.close()
 
