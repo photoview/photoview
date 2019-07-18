@@ -91,10 +91,13 @@ class AlbumPage extends Component {
             })
 
             return (
-              <Gallery>
-                {photos}
-                <PhotoFiller />
-              </Gallery>
+              <div>
+                <h1>{data.album.title}</h1>
+                <Gallery>
+                  {photos}
+                  <PhotoFiller />
+                </Gallery>
+              </div>
             )
           }}
         </Query>

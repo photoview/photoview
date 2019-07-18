@@ -19,6 +19,13 @@ const getAlbumsQuery = gql`
   }
 `
 
+const Container = styled.div`
+  margin: -10px;
+  margin-top: 20px;
+  position: relative;
+  min-height: 500px;
+`
+
 const AlbumBoxLink = styled(Link)`
   width: 240px;
   height: 240px;
@@ -41,7 +48,7 @@ const AlbumBoxImage = styled.div`
 class Albums extends Component {
   render() {
     return (
-      <div style={{ position: 'relative', minHeight: '500px' }}>
+      <Container>
         <Query query={getAlbumsQuery}>
           {({ loading, error, data }) => {
             // if (loading) return <Loader active />
@@ -52,7 +59,9 @@ class Albums extends Component {
             if (data && data.myAlbums) {
               albums = data.myAlbums.map(album => (
                 <AlbumBoxLink key={album.id} to={`/album/${album.id}`}>
-                  <AlbumBoxImage image={album.photos[0].thumbnail.path} />
+                  <AlbumBoxImage
+                    image={album.photos[0] && album.photos[0].thumbnail.path}
+                  />
                   <p>{album.title}</p>
                 </AlbumBoxLink>
               ))
@@ -76,7 +85,7 @@ class Albums extends Component {
             )
           }}
         </Query>
-      </div>
+      </Container>
     )
   }
 }
