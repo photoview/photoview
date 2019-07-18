@@ -21,6 +21,7 @@
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.1",
     "semantic-ui-react": "^0.87.2",
+    "semantic-ui": "^2.4.2",
     "styled-components": "^4.3.2"
   },
   "scripts": {
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@babel/core": "^7.5.0",
     "husky": "^3.0.0",
+    "isarray": "^2.0.5",
     "lint-staged": "^9.1.0"
   },
   "husky": {

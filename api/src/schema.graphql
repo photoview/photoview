@@ -74,4 +74,5 @@ type Query {
   siteInfo: SiteInfo
 
   myAlbums: [Album] @isAuthenticated
+  album(id: ID): Album @isAuthenticated
 }
