@@ -2,13 +2,30 @@ import fs from 'fs-extra'
 import path from 'path'
 import { resolve as pathResolve, basename as pathBasename } from 'path'
 import { PubSub } from 'apollo-server'
-import imgType from 'img-type'
 import uuid from 'uuid'
 import { exiftool } from 'exiftool-vendored'
 import sharp from 'sharp'
+import readChunk from 'read-chunk'
+import imageType from 'image-type'
 import config from './config'
 
 export const EVENT_SCANNER_PROGRESS = 'SCANNER_PROGRESS'
+
+const isImage = async path => {
+  const buffer = await readChunk(path, 0, 12)
+  const type = imageType(buffer)
+
+  return type != null
+}
+
+const isRawImage = async path => {
+  const buffer = await readChunk(path, 0, 12)
+  const { ext } = imageType(buffer)
+
+  const rawTypes = ['cr2', 'arw', 'crw', 'dng']
+
+  return rawTypes.includes(ext)
+}
 
 class PhotoScanner {
   constructor(driver) {
@@ -146,7 +163,7 @@ class PhotoScanner {
           continue
         }
 
-        if (!foundImage && (await imgType.isImg(itemPath))) {
+        if (!foundImage && (await isImage(itemPath))) {
           foundImage = true
         }
       }
@@ -167,7 +184,7 @@ class PhotoScanner {
     for (const item of list) {
       const itemPath = pathResolve(path, item)
 
-      if (await imgType.isImg(itemPath)) {
+      if (await isImage(itemPath)) {
         const session = this.driver.session()
 
         const photoResult = await session.run(
@@ -217,13 +234,9 @@ class PhotoScanner {
     await fs.remove(imagePath)
     await fs.mkdirp(imagePath)
 
-    const type = await imgType.getType(photo.path)
-
     let resizeBaseImg = photo.path
 
-    const rawTypes = ['cr2', 'arw', 'crw', 'dng']
-
-    if (rawTypes.includes(type)) {
+    if (await isRawImage(photo.path)) {
       console.log('Processing RAW image')
 
       const extractedPath = path.resolve(imagePath, 'extracted.jpg')

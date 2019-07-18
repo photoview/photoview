@@ -6,7 +6,7 @@ class HomePage extends Component {
   render() {
     return (
       <Layout>
-        <h1>Home</h1>
+        <h1>Albums</h1>
         <Albums />
       </Layout>
     )
