@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
-import Albums from '../Albums'
+import Albums from './Albums'
+import Layout from '../../Layout'
 
 class HomePage extends Component {
   render() {
     return (
-      <div>
+      <Layout>
         <h1>Home</h1>
         <Albums />
-      </div>
+      </Layout>
     )
   }
 }
