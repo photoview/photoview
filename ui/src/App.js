@@ -1,22 +1,23 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
+import { createGlobalStyle } from 'styled-components'
+
+const GlobalStyle = createGlobalStyle`
+  #root, body {
+    height: 100%;
+    margin: 0;
+  }
+`
 
 import Routes from './Routes'
 
 class App extends Component {
   render() {
-    const token = localStorage.getItem('token')
-
-    if (!token) {
-      return (
-        <>
-          <Redirect to="/login" />
-          <Routes />
-        </>
-      )
-    }
-
-    return <Routes />
+    return (
+      <>
+        <GlobalStyle />
+        <Routes />
+      </>
+    )
   }
 }
 
