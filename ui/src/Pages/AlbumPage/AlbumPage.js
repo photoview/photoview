@@ -1,16 +1,9 @@
 import React, { Component } from 'react'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
-import {
-  Gallery,
-  Photo,
-  PhotoFiller,
-  PhotoContainer,
-  PhotoOverlay,
-} from './styledElements'
 import Layout from '../../Layout'
-import { Loader } from 'semantic-ui-react'
 import AlbumSidebar from './AlbumSidebar'
+import PhotoGallery from '../../PhotoGallery'
 
 const albumQuery = gql`
   query albumQuery($id: ID) {
@@ -34,12 +27,12 @@ class AlbumPage extends Component {
 
     this.state = {
       activeImage: -1,
+      activeImageId: null,
     }
 
     this.setActiveImage = this.setActiveImage.bind(this)
 
     this.photoAmount = 1
-    this.previousActive = false
 
     this.keyDownEvent = e => {
       const activeImage = this.state.activeImage
@@ -67,16 +60,10 @@ class AlbumPage extends Component {
     document.removeEventListener('keydown', this.keyDownEvent)
   }
 
-  setActiveImage(index) {
-    this.previousActive = this.state.activeImage != -1
+  setActiveImage(index, id) {
     this.setState({
       activeImage: index,
-    })
-  }
-
-  dismissPopup() {
-    this.setState({
-      activeImage: -1,
+      activeImageId: id,
     })
   }
 
@@ -89,44 +76,22 @@ class AlbumPage extends Component {
           {({ loading, error, data }) => {
             if (error) return <div>Error</div>
 
-            let photos = null
             if (data.album) {
               this.photoAmount = data.album.photos.length
-
-              const { activeImage } = this.state
-
-              photos = data.album.photos.map((photo, index) => {
-                const active = activeImage == index
-
-                return (
-                  <PhotoContainer
-                    key={photo.id}
-                    onClick={() => {
-                      this.setActiveImage(index)
-                    }}
-                  >
-                    <Photo src={photo.thumbnail.path} />
-                    <PhotoOverlay active={active} />
-                  </PhotoContainer>
-                )
-              })
             }
 
             return (
               <div>
-                <h1>{data.album ? data.album.title : ''}</h1>
-                <Gallery>
-                  <Loader active={loading}>Loading images</Loader>
-                  {photos}
-                  <PhotoFiller />
-                </Gallery>
-                <AlbumSidebar
-                  imageId={
-                    this.state.activeImage != -1
-                      ? data.album.photos[this.state.activeImage].id
-                      : null
-                  }
+                <PhotoGallery
+                  loading={loading}
+                  title={data.album && data.album.title}
+                  photos={data.album && data.album.photos}
+                  activeIndex={this.state.activeImage}
+                  onSelectImage={index => {
+                    this.setActiveImage(index, data.album.photos[index].id)
+                  }}
                 />
+                <AlbumSidebar imageId={this.state.activeImageId} />
               </div>
             )
           }}
