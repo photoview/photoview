@@ -75,4 +75,7 @@ type Query {
 
   myAlbums: [Album] @isAuthenticated
   album(id: ID): Album @isAuthenticated
+
+  myPhotos: [Photo] @isAuthenticated
+  photo(id: ID): Photo @isAuthenticated
 }
