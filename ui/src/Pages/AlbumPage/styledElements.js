@@ -6,19 +6,32 @@ export const Gallery = styled.div`
   align-items: center;
 `
 
-export const Photo = styled.img`
+export const PhotoContainer = styled.div`
+  flex-grow: 1;
+  height: 200px;
   margin: 4px;
   background-color: #eee;
+  position: relative;
+`
+
+export const Photo = styled.img`
   height: 200px;
-  flex-grow: 1;
+  min-width: 100%;
+  position: relative;
   object-fit: cover;
+`
+
+export const PhotoOverlay = styled.div`
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 
   ${props =>
     props.active &&
     `
-      will-change: transform;
-      position: relative;
-      z-index: 999;
+      border: 4px solid rgba(65, 131, 196, 0.6);
     `}
 `
 

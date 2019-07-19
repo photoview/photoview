@@ -3,7 +3,7 @@ import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
-import { Dimmer, Loader } from 'semantic-ui-react'
+import { Loader } from 'semantic-ui-react'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {

@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { Icon } from 'semantic-ui-react'
 
 const Container = styled.div`
   height: 100%;
+  margin-right: 500px;
   /* display: grid;
   grid-template-columns: 80px 1fr 500px; */
 `
@@ -17,31 +19,42 @@ const LeftSidebar = styled.div`
   padding-top: 10px;
 `
 
-const RightSidebar = styled.div`
-  height: 100%;
-  width: 500px;
-  position: fixed;
-  right: 0;
-  top: 60px;
-  background-color: white;
-`
-
 const Content = styled.div`
   margin-top: 60px;
   margin-left: 80px;
-  margin-right: 500px;
   padding: 12px 8px 0;
 `
 
-const SideButton = styled(Link)`
-  border: 1px solid #eee;
-  text-align: center;
-  padding-top: 17px;
-  border-radius: 50%;
-  display: block;
-  width: 60px;
-  height: 60px;
-  margin: 10px;
+const SideButton = props => {
+  const StyledLink = styled(NavLink)`
+    text-align: center;
+    padding-top: 8px;
+    padding-left: 2px;
+    display: block;
+    width: 60px;
+    height: 60px;
+    margin: 10px;
+
+    font-size: 28px;
+
+    color: #888;
+
+    transition: transform 200ms, box-shadow 200ms;
+
+    :hover {
+      transform: scale(1.02);
+    }
+  `
+
+  return (
+    <StyledLink {...props} activeStyle={{ color: '#4183c4' }}>
+      {props.children}
+    </StyledLink>
+  )
+}
+
+const SideButtonLabel = styled.div`
+  font-size: 16px;
 `
 
 const Header = styled.div`
@@ -64,10 +77,12 @@ class Layout extends Component {
     return (
       <Container>
         <LeftSidebar>
-          <SideButton to="/">Albums</SideButton>
+          <SideButton to="/" exact>
+            <Icon name="images outline" />
+            <SideButtonLabel>Albums</SideButtonLabel>
+          </SideButton>
         </LeftSidebar>
         <Content>{this.props.children}</Content>
-        <RightSidebar>Right</RightSidebar>
         <Header>
           <Title>Photoview</Title>
         </Header>
