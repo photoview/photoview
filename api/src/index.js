@@ -72,6 +72,8 @@ const driver = neo4j.driver(
 
 const scanner = new PhotoScanner(driver)
 
+setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
+
 // Specify port and path for GraphQL endpoint
 const port = process.env.GRAPHQL_LISTEN_PORT || 4001
 const graphPath = '/graphql'

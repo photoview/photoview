@@ -3,6 +3,7 @@ import { promisify } from 'util'
 import fs from 'fs-extra'
 import path from 'path'
 import config from '../config'
+import { isRawImage } from '../Scanner'
 
 const imageSize = promisify(require('image-size'))
 
@@ -147,7 +148,53 @@ function photoResolver(image) {
 }
 
 const Photo = {
-  original: photoResolver('original.jpg'),
+  // TODO: Make original point to the right path
+  original: async (root, args, ctx, info) => {
+    async function getPath(retryAfterScan = false) {
+      let imgPath = path.resolve(
+        config.cachePath,
+        'images',
+        root.id,
+        'extracted.jpg'
+      )
+
+      if (!(await fs.exists(imgPath))) {
+        imgPath = root.path
+
+        if (!imgPath) {
+          const session = ctx.driver.session()
+
+          const result = await session.run(
+            'MATCH (p:Photo { id: {id} }) return p.path as path',
+            {
+              id: root.id,
+            }
+          )
+
+          imgPath = result.get('path')
+          session.close()
+        }
+
+        if (!(await fs.exists(imgPath)) || (await isRawImage(imgPath))) {
+          if (retryAfterScan)
+            throw new Error('Could not find image after rescan')
+          await ctx.scanner.processImage(root.id)
+          return getPath(true)
+        }
+      }
+
+      return imgPath
+    }
+
+    const imgPath = await getPath()
+
+    const { width, height } = await imageSize(imgPath)
+    return {
+      path: `${ctx.endpoint}/images/${root.id}/${path.basename(imgPath)}`,
+      width,
+      height,
+    }
+  },
   thumbnail: photoResolver('thumbnail.jpg'),
 }
 
