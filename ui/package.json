@@ -10,6 +10,7 @@
     "apollo-link-context": "^1.0.18",
     "apollo-link-error": "^1.1.11",
     "apollo-link-http": "^1.5.15",
+    "apollo-link-ws": "^1.0.18",
     "babel-plugin-styled-components": "^1.10.6",
     "cookie": "^0.4.0",
     "graphql": "^14.2.1",
@@ -24,7 +25,8 @@
     "react-spring": "^8.0.27",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.2",
-    "styled-components": "^4.3.2"
+    "styled-components": "^4.3.2",
+    "subscriptions-transport-ws": "^0.9.16"
   },
   "scripts": {
     "start": "parcel start src/index.html",

@@ -82,7 +82,7 @@ class Layout extends Component {
             <Icon name="image outline" />
             <SideButtonLabel>Photos</SideButtonLabel>
           </SideButton>
-          <SideButton to="/" exact>
+          <SideButton to="/albums" exact>
             <Icon name="images outline" />
             <SideButtonLabel>Albums</SideButtonLabel>
           </SideButton>

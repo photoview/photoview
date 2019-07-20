@@ -9,6 +9,7 @@ const GlobalStyle = createGlobalStyle`
 `
 
 import Routes from './Routes'
+import Messages from './Messages'
 
 class App extends Component {
   render() {
@@ -16,6 +17,7 @@ class App extends Component {
       <>
         <GlobalStyle />
         <Routes />
+        <Messages />
       </>
     )
   }

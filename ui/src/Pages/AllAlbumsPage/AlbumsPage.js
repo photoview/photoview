@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import Albums from './Albums'
 import Layout from '../../Layout'
 
-class HomePage extends Component {
+class AlbumsPage extends Component {
   render() {
     return (
       <Layout>
@@ -13,4 +13,4 @@ class HomePage extends Component {
   }
 }
 
-export default HomePage
+export default AlbumsPage
