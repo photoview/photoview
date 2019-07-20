@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, useState } from 'react'
 import styled from 'styled-components'
 import { Message, Progress } from 'semantic-ui-react'
 import gql from 'graphql-tag'
@@ -47,10 +47,24 @@ const MessageProgress = ({ header, content, percent, ...props }) => {
 }
 
 class Messages extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      showSyncMessage: true,
+    }
+  }
+
   render() {
     return (
       <Container>
-        <Subscription subscription={syncSubscription} shouldResubscribe>
+        <Subscription
+          subscription={syncSubscription}
+          shouldResubscribe
+          onSubscriptionData={() => {
+            this.setState({ showSyncMessage: true })
+          }}
+        >
           {({ loading, error, data }) => {
             if (error) return <div>error {error.message}</div>
             if (loading) return null
@@ -60,6 +74,10 @@ class Messages extends Component {
 
             return (
               <MessageProgress
+                hidden={!this.state.showSyncMessage}
+                onDismiss={() => {
+                  this.setState({ showSyncMessage: false })
+                }}
                 header={update.finished ? 'Synced' : 'Syncing'}
                 content={
                   update.finished ? 'Finished syncing' : 'Syncing in progress'

@@ -6,8 +6,8 @@ enum Role {
 type User @isAuthenticated {
   id: ID!
   username: String!
-  #: password: String
   albums: [Album] @relation(name: "OWNS", direction: "OUT")
+  # Local filepath for the user's photos
   rootPath: String! @hasRole(roles: [Admin])
   admin: Boolean
 }
@@ -20,22 +20,25 @@ type Album {
   path: String
 }
 
-type UnimportedAlbum {
-  id: ID!
-  relativePath: String
-}
-
 type PhotoURL {
+  # URL for the image
   path: String
+  # Width of the image in pixels
   width: Int
+  # Height of the image in pixels
   height: Int
 }
 
 type Photo {
   id: ID!
   title: String
+  # Local filepath for the photo
+  path: String
+  # URL to display the photo in full resolution
   original: PhotoURL @neo4j_ignore
+  # URL to display the photo in a smaller resolution
   thumbnail: PhotoURL @neo4j_ignore
+  # The album that holds the photo
   album: Album! @relation(name: "CONTAINS", direction: "IN")
 }
 

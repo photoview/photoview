@@ -18,7 +18,7 @@ const isImage = async path => {
   return type != null
 }
 
-const isRawImage = async path => {
+export const isRawImage = async path => {
   const buffer = await readChunk(path, 0, 12)
   const { ext } = imageType(buffer)
 
@@ -37,6 +37,9 @@ class PhotoScanner {
     this.scanAlbum = this.scanAlbum.bind(this)
     this.scanUser = this.scanUser.bind(this)
     this.processImage = this.processImage.bind(this)
+
+    this.imagesToProgress = 0
+    this.finishedImages = 0
   }
 
   async scanAll() {
@@ -53,6 +56,8 @@ class PhotoScanner {
 
     let session = this.driver.session()
 
+    let allUserScans = []
+
     session.run('MATCH (u:User) return u').subscribe({
       onNext: record => {
         const user = record.toObject().u.properties
@@ -64,23 +69,38 @@ class PhotoScanner {
           return
         }
 
-        this.scanUser(user)
+        allUserScans.push(this.scanUser(user))
 
         console.log(`Scanning ${user.username}...`)
       },
       onCompleted: () => {
         session.close()
         this.isRunning = false
-        console.log('Done scanning')
 
-        this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-          scannerStatusUpdate: {
-            progress: 100,
-            finished: true,
-            error: false,
-            errorMessage: '',
-          },
-        })
+        Promise.all(allUserScans)
+          .then(() => {
+            console.log(
+              `Done scanning ${this.finishedImages} of ${this.imagesToProgress}`
+            )
+            this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+              scannerStatusUpdate: {
+                progress: 100,
+                finished: true,
+                error: false,
+                errorMessage: '',
+              },
+            })
+          })
+          .catch(error => {
+            this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+              scannerStatusUpdate: {
+                progress: 0,
+                finished: false,
+                error: true,
+                errorMessage: error.message,
+              },
+            })
+          })
       },
       onError: error => {
         console.error(error)
@@ -187,6 +207,8 @@ class PhotoScanner {
       if (await isImage(itemPath)) {
         const session = this.driver.session()
 
+        this.imagesToProgress++
+
         const photoResult = await session.run(
           `MATCH (p:Photo {path: {imgPath} })<--(a:Album {id: {albumId}}) RETURN p`,
           {
@@ -197,6 +219,20 @@ class PhotoScanner {
 
         if (photoResult.records.length != 0) {
           console.log(`Photo already exists ${item}`)
+
+          const id = photoResult.records[0].get('p').properties.id
+
+          const thumbnailPath = pathResolve(
+            config.cachePath,
+            id,
+            'thumbnail.jpg'
+          )
+
+          if (!(await fs.exists(thumbnailPath))) {
+            this.processImage(id)
+          } else {
+            this.finishedImages++
+          }
         } else {
           console.log(`Found new image at ${itemPath}`)
           const imageId = uuid()
@@ -248,16 +284,23 @@ class PhotoScanner {
     // Resize image
     console.log('Resizing image', resizeBaseImg)
     await sharp(resizeBaseImg)
+      .jpeg({ quality: 80 })
       .resize(1440, 1080, { fit: 'inside', withoutEnlargement: true })
       .toFile(path.resolve(imagePath, 'thumbnail.jpg'))
-
-    await sharp(resizeBaseImg)
-      .jpeg({ quality: 85 })
-      .toFile(path.resolve(imagePath, 'original.jpg'))
 
     session.close()
 
     console.log('Processing done')
+    this.finishedImages++
+
+    this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+      scannerStatusUpdate: {
+        progress: this.finishedImages / this.imagesToProgress,
+        finished: false,
+        error: false,
+        errorMessage: '',
+      },
+    })
   }
 }
 
