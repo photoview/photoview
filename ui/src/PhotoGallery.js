@@ -1,14 +1,16 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
+import { useSpring, animated } from 'react-spring'
+import LazyLoad from 'react-lazyload'
 
-export const Gallery = styled.div`
+const Gallery = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
 `
 
-export const PhotoContainer = styled.div`
+const PhotoContainer = styled.div`
   flex-grow: 1;
   height: 200px;
   margin: 4px;
@@ -16,14 +18,30 @@ export const PhotoContainer = styled.div`
   position: relative;
 `
 
-export const Photo = styled.img`
-  height: 200px;
-  min-width: 100%;
-  position: relative;
-  object-fit: cover;
-`
+const Photo = photoProps => {
+  const StyledPhoto = styled(animated.img)`
+    height: 200px;
+    min-width: 100%;
+    position: relative;
+    object-fit: cover;
+  `
 
-export const PhotoOverlay = styled.div`
+  const [props, set, stop] = useSpring(() => ({ opacity: 0 }))
+
+  return (
+    <LazyLoad>
+      <StyledPhoto
+        {...photoProps}
+        style={props}
+        onLoad={() => {
+          set({ opacity: 1 })
+        }}
+      />
+    </LazyLoad>
+  )
+}
+
+const PhotoOverlay = styled.div`
   width: 100%;
   height: 100%;
   position: absolute;
@@ -37,7 +55,7 @@ export const PhotoOverlay = styled.div`
     `}
 `
 
-export const PhotoFiller = styled.div`
+const PhotoFiller = styled.div`
   height: 200px;
   flex-grow: 999999;
 `
@@ -54,10 +72,17 @@ const PhotoGallery = ({
     photoElements = photos.map((photo, index) => {
       const active = activeIndex == index
 
+      const minWidth = Math.floor(
+        (photo.thumbnail.width / photo.thumbnail.height) * 200
+      )
+
       return (
         <PhotoContainer
           key={photo.id}
-          style={{ cursor: onSelectImage && 'pointer' }}
+          style={{
+            cursor: onSelectImage ? 'pointer' : null,
+            minWidth: `${minWidth}px`,
+          }}
           onClick={() => {
             onSelectImage && onSelectImage(index)
           }}
