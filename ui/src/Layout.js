@@ -34,6 +34,7 @@ const SideButton = props => {
     width: 60px;
     height: 60px;
     margin: 10px;
+    margin-bottom: 24px;
 
     font-size: 28px;
 
@@ -77,6 +78,10 @@ class Layout extends Component {
     return (
       <Container>
         <LeftSidebar>
+          <SideButton to="/photos" exact>
+            <Icon name="image outline" />
+            <SideButtonLabel>Photos</SideButtonLabel>
+          </SideButton>
           <SideButton to="/" exact>
             <Icon name="images outline" />
             <SideButtonLabel>Albums</SideButtonLabel>
