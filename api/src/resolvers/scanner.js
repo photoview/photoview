@@ -1,4 +1,4 @@
-import { EVENT_SCANNER_PROGRESS } from '../scanner'
+import { EVENT_SCANNER_PROGRESS } from '../scanner/Scanner'
 
 const Mutation = {
   async scanAll(root, args, ctx, info) {

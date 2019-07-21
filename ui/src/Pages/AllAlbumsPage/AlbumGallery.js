@@ -4,10 +4,8 @@ import { Loader } from 'semantic-ui-react'
 import { AlbumBox } from './AlbumBox'
 
 const Container = styled.div`
-  margin: -10px;
-  margin-top: 20px;
+  margin: 20px -10px;
   position: relative;
-  min-height: 500px;
 `
 
 const AlbumGallery = ({ loading, error, albums }) => {

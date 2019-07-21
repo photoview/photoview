@@ -60,13 +60,7 @@ const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
-const PhotoGallery = ({
-  activeIndex = -1,
-  photos,
-  loading,
-  title,
-  onSelectImage,
-}) => {
+const PhotoGallery = ({ activeIndex = -1, photos, loading, onSelectImage }) => {
   let photoElements = null
   if (photos) {
     photoElements = photos.map((photo, index) => {
@@ -96,7 +90,6 @@ const PhotoGallery = ({
 
   return (
     <div>
-      <h1>{title}</h1>
       <Gallery>
         <Loader active={loading}>Loading images</Loader>
         {photoElements}
