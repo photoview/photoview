@@ -8,7 +8,7 @@ const photoQuery = gql`
     photo(id: $id) {
       title
       original {
-        path
+        url
         width
         height
       }
@@ -57,7 +57,7 @@ class AlbumSidebar extends Component {
 
             return (
               <div>
-                <PreviewImage src={photo.original.path} />
+                <PreviewImage src={photo.original.url} />
                 <Name>{photo.title}</Name>
               </div>
             )

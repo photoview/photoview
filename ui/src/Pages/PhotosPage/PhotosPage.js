@@ -10,7 +10,7 @@ const photoQuery = gql`
       id
       title
       thumbnail {
-        path
+        url
         width
         height
       }

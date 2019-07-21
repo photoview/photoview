@@ -1,11 +1,5 @@
 import { cypherQuery } from 'neo4j-graphql-js'
-import { promisify } from 'util'
-import fs from 'fs-extra'
-import path from 'path'
 import config from '../config'
-import { isRawImage } from '../Scanner'
-
-const imageSize = promisify(require('image-size'))
 
 function injectAt(query, index, injection) {
   return query.substr(0, index) + injection + query.substr(index)
@@ -130,75 +124,13 @@ const Query = {
   },
 }
 
-function photoResolver(image) {
-  return async (root, args, ctx, info) => {
-    const imgPath = path.resolve(config.cachePath, 'images', root.id, image)
-
-    if (!(await fs.exists(imgPath))) {
-      await ctx.scanner.processImage(root.id)
-    }
-
-    const { width, height } = await imageSize(imgPath)
-    return {
-      path: `${ctx.endpoint}/images/${root.id}/${image}`,
-      width,
-      height,
-    }
-  }
-}
-
-const Photo = {
-  // TODO: Make original point to the right path
-  original: async (root, args, ctx, info) => {
-    async function getPath(retryAfterScan = false) {
-      let imgPath = path.resolve(
-        config.cachePath,
-        'images',
-        root.id,
-        'extracted.jpg'
-      )
-
-      if (!(await fs.exists(imgPath))) {
-        imgPath = root.path
-
-        if (!imgPath) {
-          const session = ctx.driver.session()
-
-          const result = await session.run(
-            'MATCH (p:Photo { id: {id} }) return p.path as path',
-            {
-              id: root.id,
-            }
-          )
-
-          imgPath = result.get('path')
-          session.close()
-        }
-
-        if (!(await fs.exists(imgPath)) || (await isRawImage(imgPath))) {
-          if (retryAfterScan)
-            throw new Error('Could not find image after rescan')
-          await ctx.scanner.processImage(root.id)
-          return getPath(true)
-        }
-      }
-
-      return imgPath
-    }
-
-    const imgPath = await getPath()
-
-    const { width, height } = await imageSize(imgPath)
-    return {
-      path: `${ctx.endpoint}/images/${root.id}/${path.basename(imgPath)}`,
-      width,
-      height,
-    }
+const PhotoURL = {
+  url(root, args, ctx, info) {
+    return new URL(root.url, config.host).href
   },
-  thumbnail: photoResolver('thumbnail.jpg'),
 }
 
 export default {
   Query,
-  Photo,
+  PhotoURL,
 }

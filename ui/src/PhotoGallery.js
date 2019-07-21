@@ -87,7 +87,7 @@ const PhotoGallery = ({
             onSelectImage && onSelectImage(index)
           }}
         >
-          <Photo src={photo.thumbnail.path} />
+          <Photo src={photo.thumbnail.url} />
           <PhotoOverlay active={active} />
         </PhotoContainer>
       )

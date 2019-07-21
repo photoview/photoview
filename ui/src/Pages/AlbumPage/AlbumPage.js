@@ -9,10 +9,19 @@ const albumQuery = gql`
   query albumQuery($id: ID) {
     album(id: $id) {
       title
+      subAlbums {
+        id
+        title
+        photos {
+          thumbnail {
+            url
+          }
+        }
+      }
       photos {
         id
         thumbnail {
-          path
+          url
           width
           height
         }
