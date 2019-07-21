@@ -16,13 +16,15 @@ type Album {
   id: ID!
   title: String
   photos: [Photo] @relation(name: "CONTAINS", direction: "OUT")
+  subAlbums: [Album] @relation(name: "SUBALBUM", direction: "OUT")
+  parentAlbum: Album @relation(name: "SUBALBUM", direction: "IN")
   owner: User! @relation(name: "OWNS", direction: "IN")
   path: String
 }
 
 type PhotoURL {
   # URL for the image
-  path: String
+  url: String
   # Width of the image in pixels
   width: Int
   # Height of the image in pixels
@@ -35,9 +37,9 @@ type Photo {
   # Local filepath for the photo
   path: String
   # URL to display the photo in full resolution
-  original: PhotoURL @neo4j_ignore
+  original: PhotoURL @relation(name: "ORIGINAL_URL", direction: "OUT")
   # URL to display the photo in a smaller resolution
-  thumbnail: PhotoURL @neo4j_ignore
+  thumbnail: PhotoURL @relation(name: "THUMBNAIL_URL", direction: "OUT")
   # The album that holds the photo
   album: Album! @relation(name: "CONTAINS", direction: "IN")
 }

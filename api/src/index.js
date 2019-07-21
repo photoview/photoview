@@ -126,10 +126,6 @@ app.use('/images/:id/:image', async function(req, res) {
 
   console.log('image', image)
 
-  if (image != 'original.jpg' && image != 'thumbnail.jpg') {
-    return res.status(404).send('Image not found')
-  }
-
   let user = null
 
   try {
@@ -142,7 +138,7 @@ app.use('/images/:id/:image', async function(req, res) {
   const session = driver.session()
 
   const result = await session.run(
-    'MATCH (p:Photo { id: {id} }) MATCH (p)<-[:CONTAINS]-(:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId',
+    'MATCH (p:Photo { id: {id} })<-[:CONTAINS]-(:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId',
     {
       id,
     }
@@ -153,7 +149,7 @@ app.use('/images/:id/:image', async function(req, res) {
   }
 
   const userId = result.records[0].get('userId')
-  const photo = result.records[0].get('photo')
+  const photo = result.records[0].get('photo').properties
 
   if (userId != user.id) {
     return res.status(401).send(`Image not owned by you`)
@@ -161,7 +157,12 @@ app.use('/images/:id/:image', async function(req, res) {
 
   session.close()
 
-  const imagePath = path.resolve(config.cachePath, 'images', id, image)
+  let imagePath = path.resolve(config.cachePath, 'images', id, image)
+
+  if (image != 'extracted.jpg' && image != 'thumbnail.jpg') {
+    imagePath = photo.path
+  }
+
   const imageFound = await fs.exists(imagePath)
 
   if (!imageFound) {

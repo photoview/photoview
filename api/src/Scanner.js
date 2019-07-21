@@ -7,7 +7,10 @@ import { exiftool } from 'exiftool-vendored'
 import sharp from 'sharp'
 import readChunk from 'read-chunk'
 import imageType from 'image-type'
+import { promisify } from 'util'
 import config from './config'
+
+const imageSize = promisify(require('image-size'))
 
 export const EVENT_SCANNER_PROGRESS = 'SCANNER_PROGRESS'
 
@@ -125,10 +128,11 @@ class PhotoScanner {
 
     let foundAlbumIds = []
 
-    async function scanPath(path) {
+    async function scanPath(path, parentAlbum) {
       const list = fs.readdirSync(path)
 
       let foundImage = false
+      let newAlbums = []
 
       for (const item of list) {
         const itemPath = pathResolve(path, item)
@@ -136,33 +140,38 @@ class PhotoScanner {
         const stat = fs.statSync(itemPath)
 
         if (stat.isDirectory()) {
-          // console.log(`Entering directory ${itemPath}`)
-          const imagesInDirectory = await scanPath(itemPath)
+          const session = driver.session()
+          let nextParentAlbum = null
+
+          const findAlbumResult = await session.run(
+            'MATCH (a:Album { path: {path} }) RETURN a',
+            {
+              path: itemPath,
+            }
+          )
+
+          session.close()
+
+          if (findAlbumResult.records.length != 0) {
+            const album = findAlbumResult.records[0].toObject().a.properties
+            console.log('Found existing album', album.title)
+
+            foundAlbumIds.push(album.id)
+
+            nextParentAlbum = album.id
+            scanAlbum(album)
+
+            continue
+          }
+
+          const {
+            foundImage: imagesInDirectory,
+            newAlbums: childAlbums,
+          } = await scanPath(itemPath, nextParentAlbum)
 
           if (imagesInDirectory) {
-            console.log(`Found album at ${itemPath}`)
+            console.log(`Found new album at ${itemPath}`)
             const session = driver.session()
-
-            const findAlbumResult = await session.run(
-              'MATCH (a:Album { path: {path} }) RETURN a',
-              {
-                path: itemPath,
-              }
-            )
-
-            console.log('FIND ALBUM RESULT', findAlbumResult.records)
-
-            if (findAlbumResult.records.length != 0) {
-              console.log('Album already exists')
-
-              const album = findAlbumResult.records[0].toObject().a.properties
-
-              foundAlbumIds.push(album.id)
-
-              scanAlbum(album)
-
-              continue
-            }
 
             console.log('Adding album')
             const albumId = uuid()
@@ -179,7 +188,36 @@ class PhotoScanner {
               }
             )
 
+            foundAlbumIds.push(albumId)
+            newAlbums.push(albumId)
             const album = albumResult.records[0].toObject().a.properties
+
+            if (parentAlbum) {
+              console.log('Linking parent album for', album.title)
+              await session.run(
+                `MATCH (parent:Album { id: {parentId} })
+                MATCH (child:Album { id: {childId} })
+                CREATE (parent)-[:SUBALBUM]->(child)`,
+                {
+                  childId: albumId,
+                  parentId: parentAlbum,
+                }
+              )
+            }
+
+            console.log(`Linking ${childAlbums.length} child albums`)
+            for (let childAlbum of childAlbums) {
+              await session.run(
+                `MATCH (parent:Album { id: {parentId} })
+                MATCH (child:Album { id: {childId} })
+                CREATE (parent)-[:SUBALBUM]->(child)`,
+                {
+                  parentId: albumId,
+                  childId: childAlbum,
+                }
+              )
+            }
+
             scanAlbum(album)
 
             session.close()
@@ -193,7 +231,7 @@ class PhotoScanner {
         }
       }
 
-      return foundImage
+      return { foundImage, newAlbums }
     }
 
     await scanPath(user.rootPath)
@@ -203,7 +241,7 @@ class PhotoScanner {
     const session = this.driver.session()
 
     const userAlbumsResult = await session.run(
-      'MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album) WHERE NOT a.id IN {foundAlbums} DETACH DELETE a return a',
+      'MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album)-[:CONTAINS]->(p:Photo) WHERE NOT a.id IN {foundAlbums} DETACH DELETE a, p RETURN a',
       { userId: user.id, foundAlbums: foundAlbumIds }
     )
 
@@ -276,22 +314,29 @@ class PhotoScanner {
   }
 
   async processImage(id) {
-    console.log('Processing image')
     const session = this.driver.session()
 
-    const result = await session.run('MATCH (p:Photo { id: {id} }) return p', {
+    const result = await session.run(`MATCH (p:Photo { id: {id} }) RETURN p`, {
       id,
     })
+
+    await session.run(
+      `MATCH (p:Photo { id: {id} })-[rel]->(url:PhotoURL) DELETE url, rel`,
+      { id }
+    )
+
+    console.log('PROCESS IMAGE RESULT', result)
+
     const photo = result.records[0].get('p').properties
 
-    console.log('PHOTO', photo.path)
+    console.log('Processing photo', photo.path)
 
     const imagePath = path.resolve(config.cachePath, 'images', id)
 
     await fs.remove(imagePath)
     await fs.mkdirp(imagePath)
 
-    let resizeBaseImg = photo.path
+    let originalPath = photo.path
 
     if (await isRawImage(photo.path)) {
       console.log('Processing RAW image')
@@ -299,15 +344,40 @@ class PhotoScanner {
       const extractedPath = path.resolve(imagePath, 'extracted.jpg')
       await exiftool.extractPreview(photo.path, extractedPath)
 
-      resizeBaseImg = extractedPath
+      originalPath = extractedPath
     }
 
     // Resize image
-    console.log('Resizing image', resizeBaseImg)
-    await sharp(resizeBaseImg)
+    const thumbnailPath = path.resolve(imagePath, 'thumbnail.jpg')
+    await sharp(originalPath)
       .jpeg({ quality: 80 })
       .resize(1440, 1080, { fit: 'inside', withoutEnlargement: true })
-      .toFile(path.resolve(imagePath, 'thumbnail.jpg'))
+      .toFile(thumbnailPath)
+
+    const { width: originalWidth, height: originalHeight } = await imageSize(
+      originalPath
+    )
+    const { width: thumbnailWidth, height: thumbnailHeight } = await imageSize(
+      thumbnailPath
+    )
+
+    await session.run(
+      `MATCH (p:Photo { id: {id} })
+      CREATE (thumbnail:PhotoURL { url: {thumbnailUrl}, width: {thumbnailWidth}, height: {thumbnailHeight} })
+      CREATE (original:PhotoURL { url: {originalUrl}, width: {originalWidth}, height: {originalHeight} })
+      CREATE (p)-[:THUMBNAIL_URL]->(thumbnail)
+      CREATE (p)-[:ORIGINAL_URL]->(original)
+      `,
+      {
+        id,
+        thumbnailUrl: `/images/${id}/${path.basename(thumbnailPath)}`,
+        thumbnailWidth,
+        thumbnailHeight,
+        originalUrl: `/images/${id}/${path.basename(originalPath)}`,
+        originalWidth,
+        originalHeight,
+      }
+    )
 
     session.close()
 
