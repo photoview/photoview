@@ -69,9 +69,8 @@ class PhotoScanner {
           return
         }
 
-        allUserScans.push(this.scanUser(user))
-
         console.log(`Scanning ${user.username}...`)
+        allUserScans.push(this.scanUser(user))
       },
       onCompleted: () => {
         session.close()
@@ -92,6 +91,7 @@ class PhotoScanner {
             })
           })
           .catch(error => {
+            console.log('SYNC ERROR', JSON.stringify(error))
             this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
               scannerStatusUpdate: {
                 progress: 0,
@@ -122,6 +122,8 @@ class PhotoScanner {
 
     const driver = this.driver
     const scanAlbum = this.scanAlbum
+
+    let foundAlbumIds = []
 
     async function scanPath(path) {
       const list = fs.readdirSync(path)
@@ -154,6 +156,9 @@ class PhotoScanner {
               console.log('Album already exists')
 
               const album = findAlbumResult.records[0].toObject().a.properties
+
+              foundAlbumIds.push(album.id)
+
               scanAlbum(album)
 
               continue
@@ -192,6 +197,22 @@ class PhotoScanner {
     }
 
     await scanPath(user.rootPath)
+
+    console.log('Found album ids', foundAlbumIds)
+
+    const session = this.driver.session()
+
+    const userAlbumsResult = await session.run(
+      'MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album) WHERE NOT a.id IN {foundAlbums} DETACH DELETE a return a',
+      { userId: user.id, foundAlbums: foundAlbumIds }
+    )
+
+    console.log(
+      `Deleted ${userAlbumsResult.records.length} albums from ${user.username} that was not found locally`
+    )
+
+    session.close()
+
     console.log('User scan complete')
   }
 
