@@ -4,6 +4,7 @@ import { Query } from 'react-apollo'
 import Layout from '../../Layout'
 import AlbumSidebar from './AlbumSidebar'
 import PhotoGallery from '../../PhotoGallery'
+import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
 
 const albumQuery = gql`
   query albumQuery($id: ID) {
@@ -85,15 +86,31 @@ class AlbumPage extends Component {
           {({ loading, error, data }) => {
             if (error) return <div>Error</div>
 
+            let subAlbumElement = null
+
             if (data.album) {
               this.photoAmount = data.album.photos.length
+
+              if (data.album.subAlbums.length > 0) {
+                subAlbumElement = (
+                  <AlbumGallery
+                    loading={loading}
+                    error={error}
+                    albums={data.album.subAlbums}
+                  />
+                )
+              }
             }
 
             return (
               <div>
+                <h1>{data.album && data.album.title}</h1>
+                {subAlbumElement}
+                {data.album && data.album.subAlbums.length > 0 && (
+                  <h2>Images</h2>
+                )}
                 <PhotoGallery
                   loading={loading}
-                  title={data.album && data.album.title}
                   photos={data.album && data.album.photos}
                   activeIndex={this.state.activeImage}
                   onSelectImage={index => {

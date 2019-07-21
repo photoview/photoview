@@ -8,7 +8,7 @@ import { v1 as neo4j } from 'neo4j-driver'
 import { makeAugmentedSchema } from 'neo4j-graphql-js'
 import dotenv from 'dotenv'
 import http from 'http'
-import PhotoScanner from './Scanner'
+import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
 import config from './config'
 
@@ -123,8 +123,6 @@ server.applyMiddleware({ app, graphPath })
 
 app.use('/images/:id/:image', async function(req, res) {
   const { id, image } = req.params
-
-  console.log('image', image)
 
   let user = null
 
