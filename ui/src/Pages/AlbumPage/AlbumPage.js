@@ -10,7 +10,7 @@ const albumQuery = gql`
   query albumQuery($id: ID) {
     album(id: $id) {
       title
-      subAlbums {
+      subAlbums(orderBy: title_asc) {
         id
         title
         photos {
@@ -19,7 +19,7 @@ const albumQuery = gql`
           }
         }
       }
-      photos {
+      photos(orderBy: title_desc) {
         id
         thumbnail {
           url

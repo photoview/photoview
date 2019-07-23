@@ -6,7 +6,7 @@ import PhotoGallery from '../../PhotoGallery'
 
 const photoQuery = gql`
   query allPhotosPage {
-    myPhotos {
+    myPhotos(orderBy: title_desc) {
       id
       title
       thumbnail {

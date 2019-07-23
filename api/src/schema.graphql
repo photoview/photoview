@@ -3,7 +3,7 @@ enum Role {
   User
 }
 
-type User @hasRole(roles: [Admin]) {
+type User {
   id: ID!
   username: String!
   albums: [Album] @relation(name: "OWNS", direction: "OUT")
@@ -12,7 +12,7 @@ type User @hasRole(roles: [Admin]) {
   admin: Boolean
 }
 
-type Album @hasRole(roles: [Admin]) {
+type Album {
   id: ID!
   title: String
   photos: [Photo] @relation(name: "CONTAINS", direction: "OUT")
@@ -31,7 +31,7 @@ type PhotoURL {
   height: Int
 }
 
-type Photo @hasRole(roles: [Admin]) {
+type Photo {
   id: ID!
   title: String
   # Local filepath for the photo
