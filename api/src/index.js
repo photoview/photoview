@@ -38,7 +38,7 @@ const typeDefs = fs
 import usersResolver from './resolvers/users'
 import scannerResolver from './resolvers/scanner'
 import photosResolver from './resolvers/photos'
-import { isRawImage } from './scanner/utils'
+import { isRawImage, getImageCachePath } from './scanner/utils'
 
 const resolvers = [usersResolver, scannerResolver, photosResolver]
 
@@ -137,7 +137,7 @@ app.use('/images/:id/:image', async function(req, res) {
   const session = driver.session()
 
   const result = await session.run(
-    'MATCH (p:Photo { id: {id} })<-[:CONTAINS]-(:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId',
+    'MATCH (p:Photo { id: {id} })<-[:CONTAINS]-(a:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId, a.id as albumId',
     {
       id,
     }
@@ -148,6 +148,7 @@ app.use('/images/:id/:image', async function(req, res) {
   }
 
   const userId = result.records[0].get('userId')
+  const albumId = result.records[0].get('albumId')
   const photo = result.records[0].get('photo').properties
 
   if (userId != user.id) {
@@ -156,7 +157,7 @@ app.use('/images/:id/:image', async function(req, res) {
 
   session.close()
 
-  let imagePath = path.resolve(config.cachePath, 'images', id, image)
+  let imagePath = path.resolve(getImageCachePath(id, albumId), image)
 
   if (!(await fs.exists(imagePath))) {
     if (image == 'thumbnail.jpg') {

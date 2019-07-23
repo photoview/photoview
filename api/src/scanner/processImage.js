@@ -15,7 +15,7 @@ export default async function processImage({ driver, addFinishedImage }, id) {
   )
 
   await session.run(
-    `MATCH (p:Photo { id: {id} })-[rel]->(url:PhotoURL) DELETE url, rel`,
+    `MATCH (p:Photo { id: {id} })-->(urls:PhotoURL) DETACH DELETE urls`,
     { id }
   )
 
