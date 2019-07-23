@@ -66,9 +66,12 @@ const PhotoGallery = ({ activeIndex = -1, photos, loading, onSelectImage }) => {
     photoElements = photos.map((photo, index) => {
       const active = activeIndex == index
 
-      const minWidth = Math.floor(
-        (photo.thumbnail.width / photo.thumbnail.height) * 200
-      )
+      let minWidth = 100
+      if (photo.thumbnail) {
+        minWidth = Math.floor(
+          (photo.thumbnail.width / photo.thumbnail.height) * 200
+        )
+      }
 
       return (
         <PhotoContainer

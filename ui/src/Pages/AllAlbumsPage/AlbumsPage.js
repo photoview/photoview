@@ -6,7 +6,7 @@ import { Query } from 'react-apollo'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {
-    myAlbums(filter: { parentAlbum: null }) {
+    myAlbums(filter: { parentAlbum: null }, orderBy: title_asc) {
       id
       title
       photos {
