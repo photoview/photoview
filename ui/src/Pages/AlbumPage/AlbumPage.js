@@ -43,31 +43,6 @@ class AlbumPage extends Component {
     this.setActiveImage = this.setActiveImage.bind(this)
 
     this.photoAmount = 1
-
-    this.keyDownEvent = e => {
-      const activeImage = this.state.activeImage
-      if (activeImage != -1) {
-        if (e.key == 'ArrowRight') {
-          this.setActiveImage((activeImage + 1) % this.photoAmount)
-        }
-
-        if (e.key == 'ArrowLeft') {
-          if (activeImage <= 0) {
-            this.setActiveImage(this.photoAmount - 1)
-          } else {
-            this.setActiveImage(activeImage - 1)
-          }
-        }
-      }
-    }
-  }
-
-  componentDidMount() {
-    document.addEventListener('keydown', this.keyDownEvent)
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.keyDownEvent)
   }
 
   setActiveImage(index, id) {
