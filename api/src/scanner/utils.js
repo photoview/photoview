@@ -2,6 +2,8 @@ import fs from 'fs-extra'
 import readChunk from 'read-chunk'
 import imageType from 'image-type'
 import { promisify } from 'util'
+import path from 'path'
+import config from '../config'
 
 export const isImage = async path => {
   if ((await fs.stat(path)).isDirectory()) {
@@ -31,3 +33,6 @@ export const isRawImage = async path => {
 }
 
 export const imageSize = promisify(require('image-size'))
+
+export const getImageCachePath = id =>
+  path.resolve(config.cachePath, 'images', id)

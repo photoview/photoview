@@ -2,8 +2,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { exiftool } from 'exiftool-vendored'
 import sharp from 'sharp'
-import { isRawImage, imageSize } from './utils'
-import config from '../config'
+import { isRawImage, imageSize, getImageCachePath } from './utils'
 
 export default async function processImage({ driver, addFinishedImage }, id) {
   const session = driver.session()
@@ -19,9 +18,9 @@ export default async function processImage({ driver, addFinishedImage }, id) {
 
   const photo = result.records[0].get('p').properties
 
-  console.log('Processing photo', photo.path)
+  // console.log('Processing photo', photo.path)
 
-  const imagePath = path.resolve(config.cachePath, 'images', id)
+  const imagePath = getImageCachePath(id)
 
   await fs.remove(imagePath)
   await fs.mkdirp(imagePath)
@@ -34,7 +33,37 @@ export default async function processImage({ driver, addFinishedImage }, id) {
     const extractedPath = path.resolve(imagePath, 'extracted.jpg')
     await exiftool.extractPreview(photo.path, extractedPath)
 
-    originalPath = extractedPath
+    const rawTags = await exiftool.read(photo.path)
+    // ISO, FNumber, Model, ExposureTime, FocalLength, LensType
+    // console.log(rawTags)
+
+    let rotateAngle = null
+    switch (rawTags.Orientation) {
+      case 8:
+        rotateAngle = -90
+        break
+      case 3:
+        rotateAngle = 180
+        break
+      case 6:
+        rotateAngle = 90
+    }
+
+    // Replace extension with .jpg
+    let processedBase = path.basename(photo.path).match(/(.*)(\..*)/)
+    processedBase =
+      processedBase == null ? path.basename(photo.path) : processedBase[1]
+    processedBase += '.jpg'
+
+    const processedPath = path.resolve(imagePath, processedBase)
+    await sharp(extractedPath)
+      .jpeg({ quality: 80 })
+      .rotate(rotateAngle)
+      .toFile(processedPath)
+
+    fs.remove(extractedPath)
+
+    originalPath = processedPath
   }
 
   // Resize image
