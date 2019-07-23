@@ -18,7 +18,7 @@ const PhotoContainer = styled.div`
   position: relative;
 `
 
-const Photo = photoProps => {
+const PhotoImg = photoProps => {
   const StyledPhoto = styled(animated.img)`
     height: 200px;
     min-width: 100%;
@@ -29,16 +29,28 @@ const Photo = photoProps => {
   const [props, set, stop] = useSpring(() => ({ opacity: 0 }))
 
   return (
-    <LazyLoad>
-      <StyledPhoto
-        {...photoProps}
-        style={props}
-        onLoad={() => {
-          set({ opacity: 1 })
-        }}
-      />
-    </LazyLoad>
+    <StyledPhoto
+      {...photoProps}
+      style={props}
+      onLoad={() => {
+        set({ opacity: 1 })
+      }}
+    />
   )
+}
+
+class Photo extends React.Component {
+  shouldComponentUpdate(nextProps) {
+    return nextProps.src != this.props.src
+  }
+
+  render() {
+    return (
+      <LazyLoad>
+        <PhotoImg {...this.props} />
+      </LazyLoad>
+    )
+  }
 }
 
 const PhotoOverlay = styled.div`
@@ -60,46 +72,81 @@ const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
-const PhotoGallery = ({ activeIndex = -1, photos, loading, onSelectImage }) => {
-  let photoElements = null
-  if (photos) {
-    photoElements = photos.map((photo, index) => {
-      const active = activeIndex == index
+class PhotoGallery extends React.Component {
+  constructor(props) {
+    super(props)
 
-      let minWidth = 100
-      if (photo.thumbnail) {
-        minWidth = Math.floor(
-          (photo.thumbnail.width / photo.thumbnail.height) * 200
-        )
-      }
+    // this.keyDownEvent = e => {
+    //   if (!this.props.onSelectImage) {
+    //     return
+    //   }
 
-      return (
-        <PhotoContainer
-          key={photo.id}
-          style={{
-            cursor: onSelectImage ? 'pointer' : null,
-            minWidth: `${minWidth}px`,
-          }}
-          onClick={() => {
-            onSelectImage && onSelectImage(index)
-          }}
-        >
-          <Photo src={photo.thumbnail.url} />
-          <PhotoOverlay active={active} />
-        </PhotoContainer>
-      )
-    })
+    //   const activeImage = this.state.activeImage
+    //   if (activeImage != -1) {
+    //     if (e.key == 'ArrowRight') {
+    //       this.setActiveImage((activeImage + 1) % this.photoAmount)
+    //     }
+
+    //     if (e.key == 'ArrowLeft') {
+    //       if (activeImage <= 0) {
+    //         this.setActiveImage(this.photoAmount - 1)
+    //       } else {
+    //         this.setActiveImage(activeImage - 1)
+    //       }
+    //     }
+    //   }
+    // }
   }
 
-  return (
-    <div>
-      <Gallery>
-        <Loader active={loading}>Loading images</Loader>
-        {photoElements}
-        <PhotoFiller />
-      </Gallery>
-    </div>
-  )
-}
+  // componentDidMount() {
+  //   document.addEventListener('keydown', this.keyDownEvent)
+  // }
 
+  // componentWillUnmount() {
+  //   document.removeEventListener('keydown', this.keyDownEvent)
+  // }
+
+  render() {
+    const { activeIndex = -1, photos, loading, onSelectImage } = this.props
+    let photoElements = null
+    if (photos) {
+      photoElements = photos.map((photo, index) => {
+        const active = activeIndex == index
+
+        let minWidth = 100
+        if (photo.thumbnail) {
+          minWidth = Math.floor(
+            (photo.thumbnail.width / photo.thumbnail.height) * 200
+          )
+        }
+
+        return (
+          <PhotoContainer
+            key={photo.id}
+            style={{
+              cursor: onSelectImage ? 'pointer' : null,
+              minWidth: `${minWidth}px`,
+            }}
+            onClick={() => {
+              onSelectImage && onSelectImage(index)
+            }}
+          >
+            <Photo src={photo.thumbnail.url} />
+            <PhotoOverlay active={active} />
+          </PhotoContainer>
+        )
+      })
+    }
+
+    return (
+      <div>
+        <Gallery>
+          <Loader active={loading}>Loading images</Loader>
+          {photoElements}
+          <PhotoFiller />
+        </Gallery>
+      </div>
+    )
+  }
+}
 export default PhotoGallery
