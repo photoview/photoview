@@ -50,10 +50,10 @@ const schema = makeAugmentedSchema({
       hasRole: true,
     },
     mutation: false,
-    query: false,
-    // query: {
-    //   exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription'],
-    // },
+    query: true,
+    query: {
+      exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription', 'PhotoURL'],
+    },
   },
   resolvers: resolvers.reduce((prev, curr) => _.merge(prev, curr), {}),
 })
