@@ -35,15 +35,15 @@ export default async function scanAlbum(
       if (photoResult.records.length != 0) {
         // console.log(`Photo already exists ${item}`)
 
-        const id = photoResult.records[0].get('p').properties.id
+        const photoId = photoResult.records[0].get('p').properties.id
 
         const thumbnailPath = path.resolve(
-          getImageCachePath(id),
+          getImageCachePath(photoId, id),
           'thumbnail.jpg'
         )
 
         if (!(await fs.exists(thumbnailPath))) {
-          processingImagePromises.push(processImage(id))
+          processingImagePromises.push(processImage(photoId))
         } else {
           markFinishedImage()
         }
@@ -86,7 +86,7 @@ export default async function scanAlbum(
   )
 
   for (const imageId of deletedImages) {
-    await fs.remove(getImageCachePath(imageId))
+    await fs.remove(getImageCachePath(imageId, id))
   }
 
   console.log(`Deleted ${deletedImages.length} images from album ${title}`)

@@ -7,9 +7,12 @@ import { isRawImage, imageSize, getImageCachePath } from './utils'
 export default async function processImage({ driver, addFinishedImage }, id) {
   const session = driver.session()
 
-  const result = await session.run(`MATCH (p:Photo { id: {id} }) RETURN p`, {
-    id,
-  })
+  const result = await session.run(
+    `MATCH (p:Photo { id: {id} })<-[:CONTAINS]-(a:Album) RETURN p, a.id`,
+    {
+      id,
+    }
+  )
 
   await session.run(
     `MATCH (p:Photo { id: {id} })-[rel]->(url:PhotoURL) DELETE url, rel`,
@@ -17,10 +20,11 @@ export default async function processImage({ driver, addFinishedImage }, id) {
   )
 
   const photo = result.records[0].get('p').properties
+  const albumId = result.records[0].get('a.id')
 
   // console.log('Processing photo', photo.path)
 
-  const imagePath = getImageCachePath(id)
+  const imagePath = getImageCachePath(id, albumId)
 
   await fs.remove(imagePath)
   await fs.mkdirp(imagePath)

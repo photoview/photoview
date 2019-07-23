@@ -34,5 +34,8 @@ export const isRawImage = async path => {
 
 export const imageSize = promisify(require('image-size'))
 
-export const getImageCachePath = id =>
+export const getAlbumCachePath = id =>
   path.resolve(config.cachePath, 'images', id)
+
+export const getImageCachePath = (imageId, albumId) =>
+  path.resolve(getAlbumCachePath(albumId), imageId)
