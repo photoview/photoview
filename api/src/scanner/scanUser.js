@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import { resolve as pathResolve } from 'path'
 import uuid from 'uuid'
-import { isImage } from './utils'
+import { isImage, getAlbumCachePath } from './utils'
 
 export default async function scanUser({ driver, scanAlbum }, user) {
   console.log('Scanning user', user.username, 'at', user.path)
@@ -123,14 +123,24 @@ export default async function scanUser({ driver, scanAlbum }, user) {
 
   await scanPath(user.rootPath)
 
-  console.log('Found album ids', foundAlbumIds)
-
   const session = driver.session()
 
   const userAlbumsResult = await session.run(
-    'MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album)-[:CONTAINS]->(p:Photo) WHERE NOT a.id IN {foundAlbums} DETACH DELETE a, p RETURN a',
+    `MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album)-[:CONTAINS]->(p:Photo)
+    WHERE NOT a.id IN {foundAlbums}
+    WITH a, p, a.id AS albumId
+    DETACH DELETE a, p
+    RETURN albumId`,
     { userId: user.id, foundAlbums: foundAlbumIds }
   )
+
+  const deletedAlbumIds = userAlbumsResult.records.map(record =>
+    record.get('albumId')
+  )
+
+  for (const albumId of deletedAlbumIds) {
+    await fs.remove(getAlbumCachePath(albumId))
+  }
 
   console.log(
     `Deleted ${userAlbumsResult.records.length} albums from ${user.username} that was not found locally`
