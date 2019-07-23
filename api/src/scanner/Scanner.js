@@ -1,13 +1,5 @@
-import fs from 'fs-extra'
-import path from 'path'
-import { resolve as pathResolve, basename as pathBasename } from 'path'
 import { PubSub } from 'apollo-server'
-import uuid from 'uuid'
-import { exiftool } from 'exiftool-vendored'
-import sharp from 'sharp'
-import { isImage, isRawImage } from './utils'
-import { promisify } from 'util'
-import config from '../config'
+import _ from 'lodash'
 import _scanUser from './scanUser'
 import _scanAlbum from './scanAlbum'
 import _processImage from './processImage'
@@ -29,13 +21,27 @@ class PhotoScanner {
     this.imagesToProgress = 0
     this.finishedImages = 0
 
-    this.addImageToProgress = () => {
+    this.markImageToProgress = () => {
       this.imagesToProgress++
     }
 
-    this.addFinishedImage = () => {
+    this.markFinishedImage = () => {
       this.finishedImages++
     }
+
+    this.broadcastProgress = _.debounce(() => {
+      console.log(
+        `Progress: ${(this.finishedImages / this.imagesToProgress) * 100}`
+      )
+      this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+        scannerStatusUpdate: {
+          progress: (this.finishedImages / this.imagesToProgress) * 100,
+          finished: false,
+          error: false,
+          errorMessage: '',
+        },
+      })
+    }, 250)
   }
 
   async scanUser(user) {
@@ -46,31 +52,24 @@ class PhotoScanner {
     await _scanAlbum(
       {
         driver: this.driver,
-        addImageToProgress: this.addImageToProgress,
-        addFinishedImage: this.addFinishedImage,
+        markImageToProgress: this.markImageToProgress,
+        markFinishedImage: this.markFinishedImage,
         processImage: this.processImage,
       },
       album
     )
-
-    this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-      scannerStatusUpdate: {
-        progress: this.finishedImages / this.imagesToProgress,
-        finished: false,
-        error: false,
-        errorMessage: '',
-      },
-    })
   }
 
   async processImage(id) {
     await _processImage(
       {
         driver: this.driver,
-        addFinishedImage: this.addFinishedImage,
+        addFinishedImage: this.markFinishedImage,
       },
       id
     )
+
+    this.broadcastProgress()
   }
 
   async scanAll() {
@@ -100,6 +99,7 @@ class PhotoScanner {
     console.log(
       `Done scanning ${this.finishedImages} of ${this.imagesToProgress}`
     )
+
     this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
       scannerStatusUpdate: {
         progress: 100,

@@ -38,6 +38,7 @@ const typeDefs = fs
 import usersResolver from './resolvers/users'
 import scannerResolver from './resolvers/scanner'
 import photosResolver from './resolvers/photos'
+import { isRawImage } from './scanner/utils'
 
 const resolvers = [usersResolver, scannerResolver, photosResolver]
 
@@ -157,15 +158,32 @@ app.use('/images/:id/:image', async function(req, res) {
 
   let imagePath = path.resolve(config.cachePath, 'images', id, image)
 
-  if (image != 'extracted.jpg' && image != 'thumbnail.jpg') {
+  if (!(await fs.exists(imagePath))) {
+    if (image == 'thumbnail.jpg') {
+      console.log('Thumbnail not found, generating', photo.path)
+      await scanner.processImage(id)
+
+      if (!(await fs.exists(imagePath))) {
+        throw new Error('Thumbnail not found after image processing')
+      }
+
+      return res.sendFile(imagePath)
+    }
+
     imagePath = photo.path
   }
 
-  const imageFound = await fs.exists(imagePath)
-
-  if (!imageFound) {
-    console.log('Image not found', imagePath)
+  if (await isRawImage(imagePath)) {
+    console.log('RAW preview image not found, generating', imagePath)
     await scanner.processImage(id)
+
+    imagePath = path.resolve(config.cachePath, 'images', id, image)
+
+    if (!(await fs.exists(imagePath))) {
+      throw new Error('RAW preview not found after image processing')
+    }
+
+    return res.sendFile(imagePath)
   }
 
   res.sendFile(imagePath)
