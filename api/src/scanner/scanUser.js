@@ -13,7 +13,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
     console.log('SCAN PATH', path)
     const list = fs.readdirSync(path)
 
-    let foundImage = false
+    let foundImageOrAlbum = false
     let newAlbums = []
 
     for (const item of list) {
@@ -49,6 +49,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           const album = findAlbumResult.records[0].toObject().a.properties
           console.log('Found existing album', album.title)
 
+          foundImageOrAlbum = true
           nextParentAlbum = album.id
           foundAlbumIds.push(album.id)
           albumScanPromises.push(scanAlbum(album))
@@ -58,6 +59,8 @@ export default async function scanUser({ driver, scanAlbum }, user) {
 
         if (imagesInDirectory) {
           console.log(`Found new album at ${itemPath}`)
+          foundImageOrAlbum = true
+
           const session = driver.session()
 
           console.log('Adding album')
@@ -113,12 +116,12 @@ export default async function scanUser({ driver, scanAlbum }, user) {
         continue
       }
 
-      if (!foundImage && (await isImage(itemPath))) {
-        foundImage = true
+      if (!foundImageOrAlbum && (await isImage(itemPath))) {
+        foundImageOrAlbum = true
       }
     }
 
-    return { foundImage, newAlbums }
+    return { foundImage: foundImageOrAlbum, newAlbums }
   }
 
   await scanPath(user.rootPath)
@@ -126,14 +129,16 @@ export default async function scanUser({ driver, scanAlbum }, user) {
   const session = driver.session()
 
   const userAlbumsResult = await session.run(
-    `MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album)-[:CONTAINS]->(p:Photo)
+    `MATCH (u:User { id: {userId} })-[:OWNS]->(a:Album)
     WHERE NOT a.id IN {foundAlbums}
-    WITH a, p, a.id AS albumId
-    DETACH DELETE a, p
+    OPTIONAL MATCH (a)-[:CONTAINS]->(p:Photo)-->(photoTail)
+    WITH a, p, photoTail, a.id AS albumId
+    DETACH DELETE a, p, photoTail
     RETURN albumId`,
     { userId: user.id, foundAlbums: foundAlbumIds }
   )
 
+  console.log('FOUND ALBUM IDS', foundAlbumIds)
   const deletedAlbumIds = userAlbumsResult.records.map(record =>
     record.get('albumId')
   )
