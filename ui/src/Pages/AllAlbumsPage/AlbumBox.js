@@ -32,7 +32,13 @@ export const AlbumBox = ({ album, ...props }) => {
 
   return (
     <AlbumBoxLink {...props} to={`/album/${album.id}`}>
-      <AlbumBoxImage image={album.photos[0] && album.photos[0].thumbnail.url} />
+      <AlbumBoxImage
+        image={
+          album.photos[0] &&
+          album.photos[0].thumbnail &&
+          album.photos[0].thumbnail.url
+        }
+      />
       <p>{album.title}</p>
     </AlbumBoxLink>
   )

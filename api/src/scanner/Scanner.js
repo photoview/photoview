@@ -64,7 +64,7 @@ class PhotoScanner {
     await _processImage(
       {
         driver: this.driver,
-        addFinishedImage: this.markFinishedImage,
+        markFinishedImage: this.markFinishedImage,
       },
       id
     )

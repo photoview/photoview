@@ -42,11 +42,7 @@ export default async function scanAlbum(
           'thumbnail.jpg'
         )
 
-        if (!(await fs.exists(thumbnailPath))) {
-          processingImagePromises.push(processImage(photoId))
-        } else {
-          markFinishedImage()
-        }
+        processingImagePromises.push(processImage(photoId))
       } else {
         console.log(`Found new image at ${itemPath}`)
         const imageId = uuid()

@@ -31,6 +31,20 @@ type PhotoURL {
   height: Int
 }
 
+type PhotoEXIF {
+  photo: Photo @relation(name: "EXIF", direction: "IN")
+  camera: String
+  maker: String
+  lens: String
+  dateShot: DateTime
+  fileSize: String
+  exposure: String
+  aperture: Float
+  iso: Int
+  focalLength: String
+  flash: String
+}
+
 type Photo {
   id: ID!
   title: String
@@ -42,6 +56,7 @@ type Photo {
   thumbnail: PhotoURL @relation(name: "THUMBNAIL_URL", direction: "OUT")
   # The album that holds the photo
   album: Album! @relation(name: "CONTAINS", direction: "IN")
+  exif: PhotoEXIF @relation(name: "EXIF", direction: "OUT")
 }
 
 type SiteInfo {
