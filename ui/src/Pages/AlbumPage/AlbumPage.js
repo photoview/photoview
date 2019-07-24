@@ -3,7 +3,7 @@ import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import Layout from '../../Layout'
 import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
-import PhotoGallery from '../../PhotoGallery'
+import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
 
 const albumQuery = gql`
