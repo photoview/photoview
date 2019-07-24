@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import { SidebarItem } from './SidebarItem'
+import { Loader } from 'semantic-ui-react'
 
 const photoQuery = gql`
   query sidebarPhoto($id: ID) {
@@ -79,41 +80,44 @@ class AlbumSidebar extends Component {
       <RightSidebar>
         <Query query={photoQuery} variables={{ id: imageId }}>
           {({ loading, error, data }) => {
-            if (loading) return 'Loading...'
             if (error) return error
 
             const { photo } = data
-
             let exifItems = []
 
-            if (photo.exif) {
-              let exifKeys = Object.keys(photo.exif).filter(
-                x => !!photo.exif[x] && x != '__typename'
-              )
+            if (data.photo) {
+              if (photo.exif) {
+                let exifKeys = Object.keys(photo.exif).filter(
+                  x => !!photo.exif[x] && x != '__typename'
+                )
 
-              let exif = exifKeys.reduce(
-                (prev, curr) => ({
-                  ...prev,
-                  [curr]: photo.exif[curr],
-                }),
-                {}
-              )
+                let exif = exifKeys.reduce(
+                  (prev, curr) => ({
+                    ...prev,
+                    [curr]: photo.exif[curr],
+                  }),
+                  {}
+                )
 
-              exif.dateShot = exif.dateShot.formatted
+                exif.dateShot = exif.dateShot.formatted
 
-              exifItems = exifKeys.map(key => (
-                <SidebarItem
-                  key={key}
-                  name={exifNameLookup[key]}
-                  value={exif[key]}
-                />
-              ))
+                exifItems = exifKeys.map(key => (
+                  <SidebarItem
+                    key={key}
+                    name={exifNameLookup[key]}
+                    value={exif[key]}
+                  />
+                ))
+              }
             }
 
             return (
               <div>
-                <PreviewImage src={photo.original && photo.original.url} />
-                <Name>{photo.title}</Name>
+                <Loader active={loading} />
+                <PreviewImage
+                  src={photo && photo.original && photo.original.url}
+                />
+                <Name>{photo && photo.title}</Name>
                 <div>{exifItems}</div>
               </div>
             )

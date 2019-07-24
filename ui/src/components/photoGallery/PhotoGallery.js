@@ -1,8 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
-import { useSpring, animated } from 'react-spring'
-import LazyLoad from 'react-lazyload'
+import { Photo } from './Photo'
+import PresentView from './PresentView'
 
 const Gallery = styled.div`
   display: flex;
@@ -10,67 +10,15 @@ const Gallery = styled.div`
   align-items: center;
 `
 
-const PhotoContainer = styled.div`
-  flex-grow: 1;
-  height: 200px;
-  margin: 4px;
-  background-color: #eee;
-  position: relative;
-`
-
-const PhotoImg = photoProps => {
-  const StyledPhoto = styled(animated.img)`
-    height: 200px;
-    min-width: 100%;
-    position: relative;
-    object-fit: cover;
-  `
-
-  const [props, set, stop] = useSpring(() => ({ opacity: 0 }))
-
-  return (
-    <StyledPhoto
-      {...photoProps}
-      style={props}
-      onLoad={() => {
-        set({ opacity: 1 })
-      }}
-    />
-  )
-}
-
-class Photo extends React.Component {
-  shouldComponentUpdate(nextProps) {
-    return nextProps.src != this.props.src
-  }
-
-  render() {
-    return (
-      <LazyLoad>
-        <PhotoImg {...this.props} />
-      </LazyLoad>
-    )
-  }
-}
-
-const PhotoOverlay = styled.div`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  ${props =>
-    props.active &&
-    `
-      border: 4px solid rgba(65, 131, 196, 0.6);
-    `}
-`
-
 const PhotoFiller = styled.div`
   height: 200px;
   flex-grow: 999999;
 `
+
+const presentIdFromHash = hash => {
+  let match = hash.match(/present=([a-z0-9\-]+)/)
+  return match && match[1]
+}
 
 class PhotoGallery extends React.Component {
   constructor(props) {
@@ -121,22 +69,19 @@ class PhotoGallery extends React.Component {
         }
 
         return (
-          <PhotoContainer
+          <Photo
             key={photo.id}
-            style={{
-              cursor: onSelectImage ? 'pointer' : null,
-              minWidth: `${minWidth}px`,
-            }}
-            onClick={() => {
-              onSelectImage && onSelectImage(index)
-            }}
-          >
-            <Photo src={photo.thumbnail && photo.thumbnail.url} />
-            <PhotoOverlay active={active} />
-          </PhotoContainer>
+            photo={photo}
+            onSelectImage={onSelectImage}
+            minWidth={minWidth}
+            index={index}
+            active={active}
+          />
         )
       })
     }
+
+    console.log(presentIdFromHash(location.hash))
 
     return (
       <div>
@@ -145,6 +90,7 @@ class PhotoGallery extends React.Component {
           {photoElements}
           <PhotoFiller />
         </Gallery>
+        <PresentView image={presentIdFromHash(location.hash)} />
       </div>
     )
   }

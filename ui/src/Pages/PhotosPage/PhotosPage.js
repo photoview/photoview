@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
-import PhotoGallery from '../../PhotoGallery'
+import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 
 const photoQuery = gql`
