@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import Layout from '../../Layout'
-import AlbumSidebar from './AlbumSidebar'
+import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 import PhotoGallery from '../../PhotoGallery'
 import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
 
@@ -92,7 +92,7 @@ class AlbumPage extends Component {
                     this.setActiveImage(index, data.album.photos[index].id)
                   }}
                 />
-                <AlbumSidebar imageId={this.state.activeImageId} />
+                <PhotoSidebar imageId={this.state.activeImageId} />
               </div>
             )
           }}

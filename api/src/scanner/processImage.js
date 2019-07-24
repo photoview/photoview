@@ -3,8 +3,48 @@ import path from 'path'
 import { exiftool } from 'exiftool-vendored'
 import sharp from 'sharp'
 import { isRawImage, imageSize, getImageCachePath } from './utils'
+import { DateTime as NeoDateTime } from 'neo4j-driver/lib/v1/temporal-types.js'
 
-export default async function processImage({ driver, addFinishedImage }, id) {
+async function addExifTags({ session, photo }) {
+  const exifResult = await session.run(
+    'MATCH (p:Photo { id: {id} })-[:EXIF]->(exif:PhotoEXIF) RETURN exif',
+    {
+      id: photo.id,
+    }
+  )
+
+  if (exifResult.records.length > 0) return
+
+  const rawTags = await exiftool.read(photo.path)
+
+  const photoExif = {
+    camera: rawTags.Model,
+    maker: rawTags.Make,
+    lens: rawTags.LensType,
+    dateShot:
+      rawTags.DateTimeOriginal &&
+      NeoDateTime.fromStandardDate(rawTags.DateTimeOriginal.toDate()),
+    fileSize: rawTags.FileSize,
+    exposure: rawTags.ShutterSpeedValue,
+    aperture: rawTags.ApertureValue,
+    iso: rawTags.ISO,
+    focalLength: rawTags.FocalLength,
+    flash: rawTags.Flash,
+  }
+
+  const result = await session.run(
+    `MATCH (p:Photo { id: {id} })
+      CREATE (p)-[:EXIF]->(exif:PhotoEXIF {exifProps})`,
+    {
+      id: photo.id,
+      exifProps: photoExif,
+    }
+  )
+
+  console.log('Added exif tags to photo', photo.path)
+}
+
+export default async function processImage({ driver, markFinishedImage }, id) {
   const session = driver.session()
 
   const result = await session.run(
@@ -14,17 +54,31 @@ export default async function processImage({ driver, addFinishedImage }, id) {
     }
   )
 
+  const photo = result.records[0].get('p').properties
+  const albumId = result.records[0].get('a.id')
+
+  const imagePath = getImageCachePath(id, albumId)
+
+  // Verify that processing is needed
+  if (await fs.exists(path.resolve(imagePath, 'thumbnail.jpg'))) {
+    const urlResult = await session.run(
+      `MATCH (p:Photo { id: {id} })-->(urls:PhotoURL) RETURN urls`,
+      { id }
+    )
+
+    if (urlResult.records.length == 2) {
+      markFinishedImage()
+
+      console.log('Skipping image', photo.path)
+      return
+    }
+  }
+
+  // Begin processing
   await session.run(
     `MATCH (p:Photo { id: {id} })-->(urls:PhotoURL) DETACH DELETE urls`,
     { id }
   )
-
-  const photo = result.records[0].get('p').properties
-  const albumId = result.records[0].get('a.id')
-
-  // console.log('Processing photo', photo.path)
-
-  const imagePath = getImageCachePath(id, albumId)
 
   await fs.remove(imagePath)
   await fs.mkdirp(imagePath)
@@ -106,7 +160,9 @@ export default async function processImage({ driver, addFinishedImage }, id) {
     console.log('Create photo url failed', e)
   }
 
+  await addExifTags({ session, photo })
+
   session.close()
 
-  addFinishedImage()
+  markFinishedImage()
 }

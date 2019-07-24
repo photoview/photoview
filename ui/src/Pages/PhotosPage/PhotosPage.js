@@ -3,7 +3,7 @@ import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import PhotoGallery from '../../PhotoGallery'
-import AlbumSidebar from '../AlbumPage/AlbumSidebar'
+import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 
 const photoQuery = gql`
   query allPhotosPage {
@@ -79,7 +79,7 @@ class PhotosPage extends Component {
             return (
               <div>
                 {galleryGroups}
-                <AlbumSidebar imageId={activeImage} />
+                <PhotoSidebar imageId={activeImage} />
               </div>
             )
           }}

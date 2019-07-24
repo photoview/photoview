@@ -134,7 +134,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
     OPTIONAL MATCH (a)-[:CONTAINS]->(p:Photo)-->(photoTail)
     WITH a, p, photoTail, a.id AS albumId
     DETACH DELETE a, p, photoTail
-    RETURN albumId`,
+    RETURN DISTINCT albumId`,
     { userId: user.id, foundAlbums: foundAlbumIds }
   )
 

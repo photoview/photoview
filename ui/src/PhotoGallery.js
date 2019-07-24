@@ -131,7 +131,7 @@ class PhotoGallery extends React.Component {
               onSelectImage && onSelectImage(index)
             }}
           >
-            <Photo src={photo.thumbnail.url} />
+            <Photo src={photo.thumbnail && photo.thumbnail.url} />
             <PhotoOverlay active={active} />
           </PhotoContainer>
         )
