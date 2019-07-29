@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { Component } from 'react'
 import styled from 'styled-components'
 import { Message, Progress } from 'semantic-ui-react'
 import gql from 'graphql-tag'

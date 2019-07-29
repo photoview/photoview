@@ -31,7 +31,7 @@
   },
   "scripts": {
     "start": "parcel start src/index.html",
-    "build": "react-scripts build",
+    "build": "parcel build src/index.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "now-build": "react-scripts build"
