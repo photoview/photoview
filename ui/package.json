@@ -17,6 +17,7 @@
     "graphql-tag": "^2.10.1",
     "parcel-bundler": "^1.12.3",
     "prettier": "^1.18.2",
+    "prop-types": "^15.7.2",
     "react": "^0.14.0 || ^15.0.0 || ^16.0.0",
     "react-apollo": "^2.5.5",
     "react-dom": "^0.14.0 || ^15.0.0 || ^16.0.0",
