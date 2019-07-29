@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { createGlobalStyle } from 'styled-components'
+import Routes from './Routes'
+import Messages from './Messages'
 
 const GlobalStyle = createGlobalStyle`
   #root, body {
@@ -7,9 +9,6 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
   }
 `
-
-import Routes from './Routes'
-import Messages from './Messages'
 
 class App extends Component {
   render() {
