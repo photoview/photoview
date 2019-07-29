@@ -124,6 +124,8 @@ export default async function scanUser({ driver, scanAlbum }, user) {
     return { foundImage: foundImageOrAlbum, newAlbums }
   }
 
+  await fs.mkdirp(user.rootPath)
+
   await scanPath(user.rootPath)
 
   const session = driver.session()
