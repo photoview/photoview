@@ -3,7 +3,9 @@ import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import Layout from '../../Layout'
 import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
-import PhotoGallery from '../../components/photoGallery/PhotoGallery'
+import PhotoGallery, {
+  presentIndexFromHash,
+} from '../../components/photoGallery/PhotoGallery'
 import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
 
 const albumQuery = gql`
@@ -37,18 +39,63 @@ class AlbumPage extends Component {
 
     this.state = {
       activeImage: -1,
-      activeImageId: null,
+      presenting: false,
+    }
+
+    const presentIndex = presentIndexFromHash(location.hash)
+    if (presentIndex) {
+      this.state.activeImage = presentIndex
+      this.state.presenting = true
     }
 
     this.setActiveImage = this.setActiveImage.bind(this)
+    this.nextImage = this.nextImage.bind(this)
+    this.previousImage = this.previousImage.bind(this)
+    this.setPresenting = this.setPresenting.bind(this)
 
-    this.photoAmount = 1
+    this.photos = []
   }
 
-  setActiveImage(index, id) {
+  setActiveImage(index) {
     this.setState({
       activeImage: index,
-      activeImageId: id,
+    })
+  }
+
+  nextImage() {
+    this.setState({
+      activeImage: (this.state.activeImage + 1) % this.photos.length,
+    })
+  }
+
+  previousImage() {
+    if (this.state.activeImage <= 0) {
+      this.setState({
+        activeImage: this.photos.length - 1,
+      })
+    } else {
+      this.setState({
+        activeImage: this.state.activeImage - 1,
+      })
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.presenting) {
+      history.replaceState(
+        null,
+        null,
+        document.location.pathname + '#' + `present=${this.state.activeImage}`
+      )
+    } else if (presentIndexFromHash(location.hash)) {
+      history.replaceState(null, null, document.location.pathname.split('#')[0])
+    }
+  }
+
+  setPresenting(presenting) {
+    console.log('Presenting', presenting, this)
+    this.setState({
+      presenting,
     })
   }
 
@@ -64,7 +111,7 @@ class AlbumPage extends Component {
             let subAlbumElement = null
 
             if (data.album) {
-              this.photoAmount = data.album.photos.length
+              this.photos = data.album.photos
 
               if (data.album.subAlbums.length > 0) {
                 subAlbumElement = (
@@ -88,11 +135,21 @@ class AlbumPage extends Component {
                   loading={loading}
                   photos={data.album && data.album.photos}
                   activeIndex={this.state.activeImage}
+                  presenting={this.state.presenting}
                   onSelectImage={index => {
-                    this.setActiveImage(index, data.album.photos[index].id)
+                    this.setActiveImage(index)
                   }}
+                  setPresenting={this.setPresenting}
+                  nextImage={this.nextImage}
+                  previousImage={this.previousImage}
                 />
-                <PhotoSidebar imageId={this.state.activeImageId} />
+                <PhotoSidebar
+                  imageId={
+                    this.photos.length > 0 && this.state.activeImage != -1
+                      ? this.photos[this.state.activeImage].id
+                      : null
+                  }
+                />
               </div>
             )
           }}

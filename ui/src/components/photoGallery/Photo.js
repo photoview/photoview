@@ -58,6 +58,11 @@ const PhotoOverlay = styled.div`
     props.active &&
     `
       border: 4px solid rgba(65, 131, 196, 0.6);
+
+      & ${HoverIcon} {
+        top: -4px !important;
+        left: -4px !important;
+      }
     `}
 `
 
@@ -67,6 +72,7 @@ const HoverIcon = styled(Icon)`
   color: white !important;
   text-shadow: 0 0 4px black;
   opacity: 0 !important;
+  position: relative;
 
   border-radius: 50%;
   width: 34px !important;
@@ -84,7 +90,14 @@ const HoverIcon = styled(Icon)`
   transition: opacity 100ms, background-color 100ms;
 `
 
-export const Photo = ({ photo, onSelectImage, minWidth, index, active }) => (
+export const Photo = ({
+  photo,
+  onSelectImage,
+  minWidth,
+  index,
+  active,
+  setPresenting,
+}) => (
   <PhotoContainer
     key={photo.id}
     style={{
@@ -100,7 +113,8 @@ export const Photo = ({ photo, onSelectImage, minWidth, index, active }) => (
       <HoverIcon
         name="expand"
         onClick={() => {
-          window.location.hash = `present=${photo.id}`
+          // window.location.hash = `present=${photo.id}`
+          setPresenting(true)
         }}
       />
       <HoverIcon name="heart outline" />

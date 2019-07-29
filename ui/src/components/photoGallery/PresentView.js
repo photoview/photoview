@@ -43,9 +43,9 @@ const PresentImage = styled.img`
 
 export default class PresentView extends React.Component {
   render() {
-    const { image } = this.props
+    const { image, presenting } = this.props
 
-    if (!image) {
+    if (!image || !presenting) {
       return null
     }
 

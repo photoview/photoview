@@ -10,7 +10,7 @@ const photoQuery = gql`
     myAlbums(orderBy: title_asc) {
       title
       id
-      photos(orderBy: title_desc) {
+      photos(orderBy: title_desc, first: 12) {
         id
         title
         thumbnail {
@@ -28,16 +28,54 @@ class PhotosPage extends Component {
     super(props)
 
     this.state = {
-      activeAlbum: null,
-      activeIndex: null,
+      activeAlbumIndex: -1,
+      activePhotoIndex: -1,
+      presenting: false,
+    }
+
+    this.setPresenting = this.setPresenting.bind(this)
+    this.nextImage = this.nextImage.bind(this)
+    this.previousImage = this.previousImage.bind(this)
+
+    this.albums = []
+  }
+
+  setActiveImage(album, photo) {
+    this.setState({
+      activePhotoIndex: photo,
+      activeAlbumIndex: album,
+    })
+  }
+
+  setPresenting(presenting, index) {
+    if (presenting) {
+      this.setState({
+        presenting: index,
+      })
+    } else {
+      this.setState({
+        presenting: false,
+      })
     }
   }
 
-  setActiveImage(album, index) {
-    this.setState({
-      activeIndex: index,
-      activeAlbum: album,
-    })
+  nextImage() {
+    const albumImageCount = this.albums[this.state.activeAlbumIndex].photos
+      .length
+
+    if (this.state.activePhotoIndex + 1 < albumImageCount) {
+      this.setState({
+        activePhotoIndex: this.state.activePhotoIndex + 1,
+      })
+    }
+  }
+
+  previousImage() {
+    if (this.state.activePhotoIndex > 0) {
+      this.setState({
+        activePhotoIndex: this.state.activePhotoIndex - 1,
+      })
+    }
   }
 
   render() {
@@ -49,31 +87,40 @@ class PhotosPage extends Component {
 
             let galleryGroups = []
 
+            this.albums = data.myAlbums
+
             if (data.myAlbums) {
-              galleryGroups = data.myAlbums.map(album => (
+              galleryGroups = data.myAlbums.map((album, index) => (
                 <div key={album.id}>
                   <h1>{album.title}</h1>
                   <PhotoGallery
-                    onSelectImage={index => {
-                      this.setActiveImage(album.id, index)
+                    onSelectImage={photoIndex => {
+                      this.setActiveImage(index, photoIndex)
                     }}
                     activeIndex={
-                      this.state.activeAlbum == album.id
-                        ? this.state.activeIndex
+                      this.state.activeAlbumIndex == index
+                        ? this.state.activePhotoIndex
                         : -1
+                    }
+                    presenting={this.state.presenting === index}
+                    setPresenting={presenting =>
+                      this.setPresenting(presenting, index)
                     }
                     loading={loading}
                     photos={album.photos}
+                    nextImage={this.nextImage}
+                    previousImage={this.previousImage}
                   />
                 </div>
               ))
             }
 
             let activeImage = null
-            if (this.state.activeAlbum) {
-              activeImage = data.myAlbums.find(
-                album => album.id == this.state.activeAlbum
-              ).photos[this.state.activeIndex].id
+            if (this.state.activeAlbumIndex != -1) {
+              activeImage =
+                data.myAlbums[this.state.activeAlbumIndex].photos[
+                  this.state.activePhotoIndex
+                ].id
             }
 
             return (
