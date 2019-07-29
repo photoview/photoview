@@ -63,7 +63,10 @@ export default class PresentView extends React.Component {
 
             return (
               <div>
-                <PresentImage src={photo && photo.original.url} />
+                <PresentImage
+                  src={photo && photo.original.url}
+                  onLoad={this.props.imageLoaded && this.props.imageLoaded()}
+                />
               </div>
             )
           }}

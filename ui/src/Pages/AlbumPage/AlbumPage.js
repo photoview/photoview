@@ -28,6 +28,9 @@ const albumQuery = gql`
           width
           height
         }
+        original {
+          url
+        }
       }
     }
   }
@@ -82,13 +85,13 @@ class AlbumPage extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.state.presenting) {
-      document.history.replaceState(
+      window.history.replaceState(
         null,
         null,
         document.location.pathname + '#' + `present=${this.state.activeImage}`
       )
     } else if (presentIndexFromHash(document.location.hash)) {
-      document.history.replaceState(
+      window.history.replaceState(
         null,
         null,
         document.location.pathname.split('#')[0]
