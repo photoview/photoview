@@ -62,6 +62,7 @@ type Photo {
 type SiteInfo {
   signupEnabled: Boolean!
   initialSetup: Boolean!
+  defaultRoot: String! @hasRole(roles: [Admin])
 }
 
 type AuthorizeResult {
@@ -72,7 +73,7 @@ type AuthorizeResult {
 
 type ScannerResult {
   finished: Boolean!
-  error: Boolean!
+  success: Boolean!
   errorMessage: String
   progress: Float
 }
@@ -88,6 +89,12 @@ type Mutation {
     @neo4j_ignore
 
   scanAll: ScannerResult! @isAuthenticated @neo4j_ignore
+
+  initialSetupWizard(
+    username: String!
+    password: String!
+    defaultRoot: String!
+  ): AuthorizeResult @neo4j_ignore
 }
 
 type Query {

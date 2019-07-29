@@ -38,9 +38,15 @@ const typeDefs = fs
 import usersResolver from './resolvers/users'
 import scannerResolver from './resolvers/scanner'
 import photosResolver from './resolvers/photos'
+import siteInfoResolver from './resolvers/siteInfo'
 import { isRawImage, getImageCachePath } from './scanner/utils'
 
-const resolvers = [usersResolver, scannerResolver, photosResolver]
+const resolvers = [
+  usersResolver,
+  scannerResolver,
+  photosResolver,
+  siteInfoResolver,
+]
 
 const schema = makeAugmentedSchema({
   typeDefs,
@@ -52,7 +58,13 @@ const schema = makeAugmentedSchema({
     mutation: false,
     query: true,
     query: {
-      exclude: ['ScannerResult', 'AuthorizeResult', 'Subscription', 'PhotoURL'],
+      exclude: [
+        'ScannerResult',
+        'AuthorizeResult',
+        'Subscription',
+        'PhotoURL',
+        'SiteInfo',
+      ],
     },
   },
   resolvers: resolvers.reduce((prev, curr) => _.merge(prev, curr), {}),
