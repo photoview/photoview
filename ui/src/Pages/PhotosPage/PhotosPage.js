@@ -18,6 +18,9 @@ const photoQuery = gql`
           width
           height
         }
+        original {
+          url
+        }
       }
     }
   }

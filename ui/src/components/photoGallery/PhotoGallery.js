@@ -42,6 +42,8 @@ class PhotoGallery extends React.Component {
         this.props.setPresenting(false)
       }
     }
+
+    this.preloadImages = this.preloadImages.bind(this)
   }
 
   componentDidMount() {
@@ -52,8 +54,39 @@ class PhotoGallery extends React.Component {
     document.removeEventListener('keydown', this.keyDownEvent)
   }
 
+  preloadImages() {
+    function preloadImage(url) {
+      var img = new Image()
+      img.src = url
+    }
+
+    const { activeIndex = -1, photos } = this.props
+
+    if (activeIndex != -1 && photos) {
+      let previousIndex = null
+      let nextIndex = null
+
+      if (activeIndex > 0) {
+        previousIndex = activeIndex - 1
+      } else {
+        previousIndex = photos.length - 1
+      }
+
+      nextIndex = (activeIndex + 1) % photos.length
+
+      preloadImage(photos[nextIndex].original.url)
+      preloadImage(photos[previousIndex].original.url)
+    }
+  }
+
   render() {
-    const { activeIndex = -1, photos, loading, onSelectImage } = this.props
+    const {
+      activeIndex = -1,
+      photos,
+      loading,
+      onSelectImage,
+      presenting,
+    } = this.props
 
     const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
@@ -91,8 +124,9 @@ class PhotoGallery extends React.Component {
           <PhotoFiller />
         </Gallery>
         <PresentView
-          presenting={this.props.presenting}
+          presenting={presenting}
           image={activeImage && activeImage.id}
+          imageLoaded={this.preloadImages()}
         />
       </div>
     )

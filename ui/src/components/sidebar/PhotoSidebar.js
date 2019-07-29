@@ -99,7 +99,9 @@ class AlbumSidebar extends Component {
                   {}
                 )
 
-                exif.dateShot = exif.dateShot.formatted
+                exif.dateShot = new Date(
+                  exif.dateShot.formatted
+                ).toLocaleString()
 
                 exifItems = exifKeys.map(key => (
                   <SidebarItem
