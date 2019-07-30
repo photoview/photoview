@@ -8,7 +8,7 @@ const syncSubscription = gql`
   subscription syncSubscription {
     scannerStatusUpdate {
       finished
-      error
+      success
       errorMessage
       progress
     }
@@ -56,6 +56,10 @@ class Messages extends Component {
   }
 
   render() {
+    if (!localStorage.getItem('token')) {
+      return null
+    }
+
     return (
       <Container>
         <Subscription

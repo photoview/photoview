@@ -1,4 +1,6 @@
 import { neo4jgraphql } from 'neo4j-graphql-js'
+import jwt from 'jsonwebtoken'
+import { registerUser } from './users'
 
 async function initialSetup(driver) {
   const session = driver.session()
@@ -8,8 +10,6 @@ async function initialSetup(driver) {
     {
       initialSettings: {
         initialSetup: true,
-        signupEnabled: false,
-        defaultRoot: '/tmp',
       },
     }
   )
@@ -43,24 +43,26 @@ const Mutation = {
       }
     }
 
-    session.close()
+    const userResult = await registerUser(root, args, ctx, info)
 
-    await session.run(
-      `MERGE (info:SiteInfo) ON CREATE SET info = {initialSettings}`,
-      {
-        initialSettings: {
-          initialSetup: true,
-          signupEnabled: false,
-        },
-      }
-    )
+    if (!userResult.success) {
+      return userResult
+    }
+
+    const userId = jwt.decode(userResult.token).id
+
+    await session.run(`MATCH (u:User { id: {id} }) SET u.admin = true`, {
+      id: userId,
+    })
+
+    await session.run(`MATCH (i:SiteInfo) SET i.initialSetup = false`)
 
     session.close()
 
     return {
       success: true,
-      status: 'Setup successful',
-      token: null,
+      status: 'Initial setup successful',
+      token: userResult.token,
     }
   },
 }

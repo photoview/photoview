@@ -43,8 +43,10 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     )
-  if (networkError)
+  if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
+    localStorage.removeItem('token')
+  }
 })
 
 const authLink = setContext((_, { headers }) => {
