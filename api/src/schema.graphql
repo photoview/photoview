@@ -1,6 +1,6 @@
 enum Role {
-  Admin
-  User
+  admin
+  user
 }
 
 type User {
@@ -8,7 +8,7 @@ type User {
   username: String!
   albums: [Album] @relation(name: "OWNS", direction: "OUT")
   # Local filepath for the user's photos
-  rootPath: String! @hasRole(roles: [Admin])
+  rootPath: String! @hasRole(roles: [admin])
   admin: Boolean
 }
 
@@ -60,9 +60,7 @@ type Photo {
 }
 
 type SiteInfo {
-  signupEnabled: Boolean!
   initialSetup: Boolean!
-  defaultRoot: String! @hasRole(roles: [Admin])
 }
 
 type AuthorizeResult {
@@ -78,6 +76,11 @@ type ScannerResult {
   progress: Float
 }
 
+type Result {
+  success: Boolean!
+  errorMessage: String
+}
+
 type Subscription {
   scannerStatusUpdate: ScannerResult
 }
@@ -85,7 +88,15 @@ type Subscription {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
     @neo4j_ignore
-  registerUser(username: String!, password: String!): AuthorizeResult!
+
+  registerUser(
+    username: String!
+    password: String!
+    rootPath: String!
+  ): AuthorizeResult! @hasRole(roles: [admin]) @neo4j_ignore
+
+  setAdmin(userId: ID!, admin: Boolean!): Result!
+    @hasRole(roles: [admin])
     @neo4j_ignore
 
   scanAll: ScannerResult! @isAuthenticated @neo4j_ignore
@@ -93,7 +104,7 @@ type Mutation {
   initialSetupWizard(
     username: String!
     password: String!
-    defaultRoot: String!
+    rootPath: String!
   ): AuthorizeResult @neo4j_ignore
 }
 

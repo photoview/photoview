@@ -6,12 +6,14 @@ import AlbumsPage from './Pages/AllAlbumsPage/AlbumsPage'
 import AlbumPage from './Pages/AlbumPage/AlbumPage'
 import AuthorizedRoute from './AuthorizedRoute'
 import PhotosPage from './Pages/PhotosPage/PhotosPage'
+import InitialSetupPage from './Pages/InitialSetupPage'
 
 class Routes extends Component {
   render() {
     return (
       <Switch>
         <Route path="/login" component={LoginPage} />
+        <Route path="/initialSetup" component={InitialSetupPage} />
         <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
         <AuthorizedRoute path="/album/:id" component={AlbumPage} />
         <AuthorizedRoute path="/photos" component={PhotosPage} />

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import uuid from 'uuid'
+import fs from 'fs-extra'
 
 const Mutation = {
   async authorizeUser(root, args, ctx, info) {
@@ -9,7 +10,7 @@ const Mutation = {
     let session = ctx.driver.session()
 
     let result = await session.run(
-      'MATCH (usr:User {username: {username}, password: {password} }) RETURN usr.id',
+      'MATCH (usr:User {username: {username}, password: {password} }) RETURN usr.id, usr.admin',
       { username, password }
     )
 
@@ -24,8 +25,15 @@ const Mutation = {
     const record = result.records[0]
 
     const userId = record.get('usr.id')
+    const userAdmin = record.get('usr.admin')
 
-    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET)
+    let roles = []
+
+    if (userAdmin) {
+      roles.push('admin')
+    }
+
+    const token = jwt.sign({ id: userId, roles }, process.env.JWT_SECRET)
 
     return {
       success: true,
@@ -34,7 +42,7 @@ const Mutation = {
     }
   },
   async registerUser(root, args, ctx, info) {
-    let { username, password } = args
+    let { username, password, rootPath } = args
 
     let session = ctx.driver.session()
     let findResult = await session.run(
@@ -50,14 +58,22 @@ const Mutation = {
       }
     }
 
+    if (!(await fs.exists(rootPath))) {
+      return {
+        success: false,
+        status: 'Root path does not exist on the server',
+        token: null,
+      }
+    }
+
     const registerResult = await session.run(
-      'CREATE (n:User { username: {username}, password: {password}, id: {id} }) return n.id',
-      { username, password, id: uuid() }
+      'CREATE (n:User { username: {username}, password: {password}, id: {id}, admin: false, rootPath: {rootPath} }) return n.id',
+      { username, password, id: uuid(), rootPath }
     )
 
     let id = registerResult.records[0].get('n.id')
 
-    const token = jwt.sign({ id }, process.env.JWT_SECRET)
+    const token = jwt.sign({ id, roles: [] }, process.env.JWT_SECRET)
 
     session.close()
 
@@ -68,6 +84,8 @@ const Mutation = {
     }
   },
 }
+
+export const registerUser = Mutation.registerUser
 
 export default {
   Mutation,

@@ -3,10 +3,19 @@ import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
 import { Button, Form, Message, Container, Header } from 'semantic-ui-react'
+import { login, checkInitialSetupQuery } from './LoginPage'
 
-const authorizeMutation = gql`
-  mutation Authorize($username: String!, $password: String!) {
-    authorizeUser(username: $username, password: $password) {
+const initialSetupMutation = gql`
+  mutation InitialSetup(
+    $username: String!
+    $password: String!
+    $rootPath: String!
+  ) {
+    initialSetupWizard(
+      username: $username
+      password: $password
+      rootPath: $rootPath
+    ) {
       success
       status
       token
@@ -14,34 +23,14 @@ const authorizeMutation = gql`
   }
 `
 
-export const checkInitialSetupQuery = gql`
-  query CheckInitialSetup {
-    siteInfo {
-      initialSetup
-    }
-  }
-`
-
-function setCookie(cname, cvalue, exdays) {
-  var d = new Date()
-  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000)
-  var expires = 'expires=' + d.toUTCString()
-  document.cookie = cname + '=' + cvalue + ';' + expires + ';path=/'
-}
-
-export function login(token) {
-  localStorage.setItem('token', token)
-  setCookie('token', token, 360)
-  window.location = '/'
-}
-
-class LoginPage extends Component {
+class InitialSetupPage extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
       username: '',
       password: '',
+      rootPath: '',
     }
   }
 
@@ -56,6 +45,7 @@ class LoginPage extends Component {
       variables: {
         username: this.state.username,
         password: this.state.password,
+        rootPath: this.state.rootPath,
       },
     })
   }
@@ -69,21 +59,21 @@ class LoginPage extends Component {
       <div>
         <Container>
           <Header as="h1" textAlign="center">
-            Welcome
+            Initial Setup
           </Header>
           <Query query={checkInitialSetupQuery}>
             {({ loading, error, data }) => {
               if (data && data.siteInfo && data.siteInfo.initialSetup) {
-                return <Redirect to="/initialSetup" />
+                return null
               }
 
-              return null
+              return <Redirect to="/" />
             }}
           </Query>
           <Mutation
-            mutation={authorizeMutation}
+            mutation={initialSetupMutation}
             onCompleted={data => {
-              const { success, token } = data.authorizeUser
+              const { success, token } = data.initialSetupWizard
 
               if (success) {
                 login(token)
@@ -93,8 +83,8 @@ class LoginPage extends Component {
             {(authorize, { loading, error, data }) => {
               let errorMessage = null
               if (data) {
-                if (!data.authorizeUser.success)
-                  errorMessage = data.authorizeUser.status
+                if (!data.initialSetupWizard.success)
+                  errorMessage = data.initialSetupWizard.status
               }
 
               return (
@@ -102,7 +92,7 @@ class LoginPage extends Component {
                   style={{ width: 500, margin: 'auto' }}
                   error={!!errorMessage}
                   onSubmit={e => this.signIn(e, authorize)}
-                  loading={loading || (data && data.authorizeUser.success)}
+                  loading={loading || (data && data.initialSetupWizard.success)}
                 >
                   <Form.Field>
                     <label>Username</label>
@@ -115,8 +105,16 @@ class LoginPage extends Component {
                       onChange={e => this.handleChange(e, 'password')}
                     />
                   </Form.Field>
+                  <Form.Field>
+                    <label>Photo Path</label>
+                    <input
+                      placeholder="/path/to/photos"
+                      type="text"
+                      onChange={e => this.handleChange(e, 'rootPath')}
+                    />
+                  </Form.Field>
                   <Message error content={errorMessage} />
-                  <Button type="submit">Sign in</Button>
+                  <Button type="submit">Setup Photoview</Button>
                 </Form>
               )
             }}
@@ -127,4 +125,4 @@ class LoginPage extends Component {
   }
 }
 
-export default LoginPage
+export default InitialSetupPage
