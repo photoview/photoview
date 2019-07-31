@@ -4,6 +4,7 @@ import Layout from '../../Layout'
 import { Button, Icon } from 'semantic-ui-react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
+import UsersTable from './UsersTable'
 
 const scanMutation = gql`
   mutation scanAllMutation {
@@ -18,7 +19,7 @@ const SettingsPage = () => (
   <Layout>
     <h1>Settings</h1>
     <Mutation mutation={scanMutation}>
-      {(scan, { data }) => (
+      {(scan, { data, called }) => (
         <>
           <h2>Scanner</h2>
           <Button
@@ -27,15 +28,15 @@ const SettingsPage = () => (
             onClick={() => {
               scan()
             }}
-            disabled={data && data.scanAll && data.scanAll.success}
+            disabled={called}
           >
             <Icon name="sync" />
             Scan All
           </Button>
-          <p>Scan for new images for all users</p>
         </>
       )}
     </Mutation>
+    <UsersTable />
   </Layout>
 )
 
