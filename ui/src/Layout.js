@@ -2,6 +2,16 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
+import { Query } from 'react-apollo'
+import gql from 'graphql-tag'
+
+const adminQuery = gql`
+  query adminQuery {
+    myUser {
+      admin
+    }
+  }
+`
 
 const Container = styled.div`
   height: 100%;
@@ -86,6 +96,20 @@ class Layout extends Component {
             <Icon name="images outline" />
             <SideButtonLabel>Albums</SideButtonLabel>
           </SideButton>
+          <Query query={adminQuery}>
+            {({ loading, error, data }) => {
+              if (data && data.myUser && data.myUser.admin) {
+                return (
+                  <SideButton to="/settings" exact>
+                    <Icon name="settings" />
+                    <SideButtonLabel>Settings</SideButtonLabel>
+                  </SideButton>
+                )
+              }
+
+              return null
+            }}
+          </Query>
         </LeftSidebar>
         <Content>{this.props.children}</Content>
         <Header>

@@ -37,7 +37,7 @@ class PhotoScanner {
         scannerStatusUpdate: {
           progress: (this.finishedImages / this.imagesToProgress) * 100,
           finished: false,
-          error: false,
+          success: true,
           errorMessage: '',
         },
       })
@@ -77,7 +77,7 @@ class PhotoScanner {
       scannerStatusUpdate: {
         progress: 0,
         finished: false,
-        error: false,
+        success: true,
         errorMessage: '',
       },
     })
@@ -89,7 +89,7 @@ class PhotoScanner {
         scannerStatusUpdate: {
           progress: 0,
           finished: false,
-          error: true,
+          success: false,
           errorMessage: error.message,
         },
       })
@@ -104,7 +104,7 @@ class PhotoScanner {
       scannerStatusUpdate: {
         progress: 100,
         finished: true,
-        error: false,
+        success: true,
         errorMessage: '',
       },
     })

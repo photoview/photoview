@@ -7,7 +7,7 @@ import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 
 const photoQuery = gql`
   query allPhotosPage {
-    myAlbums(orderBy: title_asc) {
+    myAlbums(orderBy: title_asc, filter: { photos_not: null }) {
       title
       id
       photos(orderBy: title_desc, first: 12) {

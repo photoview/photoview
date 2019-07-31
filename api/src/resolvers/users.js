@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import uuid from 'uuid'
 import fs from 'fs-extra'
+import { neo4jgraphql } from 'neo4j-graphql-js'
 
 const Mutation = {
   async authorizeUser(root, args, ctx, info) {
@@ -87,6 +88,20 @@ const Mutation = {
 
 export const registerUser = Mutation.registerUser
 
+const Query = {
+  myUser(root, args, ctx, info) {
+    let customArgs = {
+      filter: {},
+      ...args,
+    }
+
+    customArgs.filter.id = ctx.user.id
+
+    return neo4jgraphql(root, customArgs, ctx, info)
+  },
+}
+
 export default {
   Mutation,
+  Query,
 }
