@@ -3,19 +3,11 @@ import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
 import { Button, Form, Message, Container, Header } from 'semantic-ui-react'
-import { login, checkInitialSetupQuery } from './LoginPage'
+import { checkInitialSetupQuery, login } from './loginUtilFunctions'
 
-const initialSetupMutation = gql`
-  mutation InitialSetup(
-    $username: String!
-    $password: String!
-    $rootPath: String!
-  ) {
-    initialSetupWizard(
-      username: $username
-      password: $password
-      rootPath: $rootPath
-    ) {
+const authorizeMutation = gql`
+  mutation Authorize($username: String!, $password: String!) {
+    authorizeUser(username: $username, password: $password) {
       success
       status
       token
@@ -23,14 +15,13 @@ const initialSetupMutation = gql`
   }
 `
 
-class InitialSetupPage extends Component {
+class LoginPage extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
       username: '',
       password: '',
-      rootPath: '',
     }
   }
 
@@ -45,7 +36,6 @@ class InitialSetupPage extends Component {
       variables: {
         username: this.state.username,
         password: this.state.password,
-        rootPath: this.state.rootPath,
       },
     })
   }
@@ -59,21 +49,21 @@ class InitialSetupPage extends Component {
       <div>
         <Container>
           <Header as="h1" textAlign="center">
-            Initial Setup
+            Welcome
           </Header>
           <Query query={checkInitialSetupQuery}>
             {({ loading, error, data }) => {
               if (data && data.siteInfo && data.siteInfo.initialSetup) {
-                return null
+                return <Redirect to="/initialSetup" />
               }
 
-              return <Redirect to="/" />
+              return null
             }}
           </Query>
           <Mutation
-            mutation={initialSetupMutation}
+            mutation={authorizeMutation}
             onCompleted={data => {
-              const { success, token } = data.initialSetupWizard
+              const { success, token } = data.authorizeUser
 
               if (success) {
                 login(token)
@@ -83,8 +73,8 @@ class InitialSetupPage extends Component {
             {(authorize, { loading, error, data }) => {
               let errorMessage = null
               if (data) {
-                if (!data.initialSetupWizard.success)
-                  errorMessage = data.initialSetupWizard.status
+                if (!data.authorizeUser.success)
+                  errorMessage = data.authorizeUser.status
               }
 
               return (
@@ -92,7 +82,7 @@ class InitialSetupPage extends Component {
                   style={{ width: 500, margin: 'auto' }}
                   error={!!errorMessage}
                   onSubmit={e => this.signIn(e, authorize)}
-                  loading={loading || (data && data.initialSetupWizard.success)}
+                  loading={loading || (data && data.authorizeUser.success)}
                 >
                   <Form.Field>
                     <label>Username</label>
@@ -105,16 +95,8 @@ class InitialSetupPage extends Component {
                       onChange={e => this.handleChange(e, 'password')}
                     />
                   </Form.Field>
-                  <Form.Field>
-                    <label>Photo Path</label>
-                    <input
-                      placeholder="/path/to/photos"
-                      type="text"
-                      onChange={e => this.handleChange(e, 'rootPath')}
-                    />
-                  </Form.Field>
                   <Message error content={errorMessage} />
-                  <Button type="submit">Setup Photoview</Button>
+                  <Button type="submit">Sign in</Button>
                 </Form>
               )
             }}
@@ -125,4 +107,4 @@ class InitialSetupPage extends Component {
   }
 }
 
-export default InitialSetupPage
+export default LoginPage
