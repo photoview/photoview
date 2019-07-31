@@ -84,9 +84,30 @@ const Mutation = {
       token: token,
     }
   },
+  async updateUser(root, args, ctx, info) {
+    if (args.rootPath) {
+      if (!(await fs.exists(args.rootPath))) {
+        throw Error('New root path not found in server filesystem')
+      }
+    }
+
+    return neo4jgraphql(root, args, ctx, info)
+  },
+  async createUser(root, args, ctx, info) {
+    if (args.rootPath) {
+      if (!(await fs.exists(args.rootPath))) {
+        throw Error('Root path not found in server filesystem')
+      }
+    }
+
+    args.id = uuid()
+
+    return neo4jgraphql(root, args, ctx, info)
+  },
 }
 
 export const registerUser = Mutation.registerUser
+export const authorizeUser = Mutation.authorizeUser
 
 const Query = {
   myUser(root, args, ctx, info) {

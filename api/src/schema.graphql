@@ -106,6 +106,12 @@ type Mutation {
     password: String!
     rootPath: String!
   ): AuthorizeResult @neo4j_ignore
+
+  updateUser(id: ID!, username: String, rootPath: String, admin: Boolean): User
+    @hasRole(roles: [admin])
+  createUser(id: ID, username: String, rootPath: String, admin: Boolean): User
+    @hasRole(roles: [admin])
+  deleteUser(id: ID!): User @hasRole(roles: [admin])
 }
 
 type Query {

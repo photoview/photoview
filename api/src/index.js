@@ -56,7 +56,6 @@ const schema = makeAugmentedSchema({
       hasRole: true,
     },
     mutation: false,
-    query: true,
     query: {
       exclude: [
         'ScannerResult',

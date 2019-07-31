@@ -1,6 +1,6 @@
 import { neo4jgraphql } from 'neo4j-graphql-js'
 import jwt from 'jsonwebtoken'
-import { registerUser } from './users'
+import { registerUser, authorizeUser } from './users'
 
 async function initialSetup(driver) {
   const session = driver.session()
@@ -59,10 +59,12 @@ const Mutation = {
 
     session.close()
 
+    const token = (await authorizeUser(root, args, ctx, info)).token
+
     return {
       success: true,
       status: 'Initial setup successful',
-      token: userResult.token,
+      token,
     }
   },
 }
