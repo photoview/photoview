@@ -5,7 +5,7 @@ const Mutation = {
     if (ctx.scanner.isRunning) {
       return {
         finished: false,
-        error: true,
+        success: false,
         errorMessage: 'Scanner already running',
       }
     }
@@ -14,8 +14,9 @@ const Mutation = {
 
     return {
       finished: false,
-      error: false,
+      success: true,
       progress: 0,
+      errorMessage: null,
     }
   },
 }
