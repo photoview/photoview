@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { Table, Loader, Button } from 'semantic-ui-react'
+import { Table, Loader, Button, Icon } from 'semantic-ui-react'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import UserRow from './UserRow'
@@ -61,9 +61,11 @@ const UsersTable = () => {
                   <Table.HeaderCell colSpan="4">
                     <Button
                       positive
+                      disabled={showAddUser}
                       floated="right"
                       onClick={e => setShowAddUser(true)}
                     >
+                      <Icon name="add" />
                       New user
                     </Button>
                   </Table.HeaderCell>

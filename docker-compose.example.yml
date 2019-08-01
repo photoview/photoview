@@ -20,6 +20,9 @@ services:
     - neo4j
     environment:
       - NEO4J_URI=bolt://neo4j:7687
+    volumes:
+      # Change This: Link photo paths from the host machine
+      - ./photos_path:/photos
 
   ui:
     build:

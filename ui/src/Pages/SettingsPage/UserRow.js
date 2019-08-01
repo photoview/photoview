@@ -1,6 +1,14 @@
 import React, { useState } from 'react'
 import { Mutation } from 'react-apollo'
-import { Table, Icon, Button, Input, Checkbox, Modal } from 'semantic-ui-react'
+import {
+  Table,
+  Icon,
+  Button,
+  Input,
+  Checkbox,
+  Modal,
+  Form,
+} from 'semantic-ui-react'
 import gql from 'graphql-tag'
 
 const updateUserMutation = gql`
@@ -33,6 +41,65 @@ const deleteUserMutation = gql`
   }
 `
 
+const changeUserPasswordMutation = gql`
+  mutation changeUserPassword($userId: ID!, $password: String!) {
+    changeUserPassword(id: $userId, newPassword: $password) {
+      success
+      errorMessage
+    }
+  }
+`
+
+const ChangePasswordModal = ({ onClose, user, ...props }) => {
+  const [passwordInput, setPasswordInput] = useState('')
+
+  return (
+    <Mutation
+      mutation={changeUserPasswordMutation}
+      onCompleted={() => {
+        onClose()
+      }}
+    >
+      {(changePassword, { data }) => (
+        <Modal {...props}>
+          <Modal.Header>Change password</Modal.Header>
+          <Modal.Content>
+            <p>
+              Change password for <b>{user.username}</b>
+            </p>
+            <Form>
+              <Form.Field>
+                <label>New password</label>
+                <Input
+                  placeholder="password"
+                  onChange={e => setPasswordInput(e.target.value)}
+                  type="password"
+                />
+              </Form.Field>
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button onClick={() => onClose()}>Cancel</Button>
+            <Button
+              positive
+              onClick={() => {
+                changePassword({
+                  variables: {
+                    userId: user.id,
+                    password: passwordInput,
+                  },
+                })
+              }}
+            >
+              Change password
+            </Button>
+          </Modal.Actions>
+        </Modal>
+      )}
+    </Mutation>
+  )
+}
+
 const UserRow = ({ user, refetchUsers }) => {
   const [state, setState] = useState({
     ...user,
@@ -40,6 +107,7 @@ const UserRow = ({ user, refetchUsers }) => {
   })
 
   const [showComfirmDelete, setConfirmDelete] = useState(false)
+  const [showChangePassword, setChangePassword] = useState(false)
 
   function updateInput(event, key) {
     setState({
@@ -149,6 +217,15 @@ const UserRow = ({ user, refetchUsers }) => {
                 <Icon name="edit" />
                 Edit
               </Button>
+              <Button onClick={() => setChangePassword(true)}>
+                <Icon name="key" />
+                Change password
+              </Button>
+              <ChangePasswordModal
+                user={user}
+                open={showChangePassword}
+                onClose={() => setChangePassword(false)}
+              />
               <Button
                 negative
                 onClick={() => {

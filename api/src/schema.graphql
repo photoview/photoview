@@ -112,6 +112,9 @@ type Mutation {
   createUser(id: ID, username: String, rootPath: String, admin: Boolean): User
     @hasRole(roles: [admin])
   deleteUser(id: ID!): User @hasRole(roles: [admin])
+
+  changeUserPassword(id: ID!, newPassword: String!): Result
+    @hasRole(roles: [admin])
 }
 
 type Query {
