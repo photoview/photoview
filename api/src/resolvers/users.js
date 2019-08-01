@@ -104,6 +104,26 @@ const Mutation = {
 
     return neo4jgraphql(root, args, ctx, info)
   },
+  async changeUserPassword(root, args, ctx, info) {
+    const { newPassword, id } = args
+
+    const session = ctx.driver.session()
+
+    await session.run(
+      `MATCH (u:User { id: {id} }) SET u.password = {newPassword}`,
+      {
+        id,
+        newPassword,
+      }
+    )
+
+    session.close
+
+    return {
+      success: true,
+      errorMessage: null,
+    }
+  },
 }
 
 export const registerUser = Mutation.registerUser
