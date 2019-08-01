@@ -1,8 +1,8 @@
 # Build the app
 FROM node:10
 
-ARG endpoint
-ENV REACT_APP_GRAPHQL_URI=${endpoint}
+ARG GRAPHQL_ENDPOINT
+ENV REACT_APP_GRAPHQL_URI=${GRAPHQL_ENDPOINT}
 
 RUN mkdir -p /app
 WORKDIR /app

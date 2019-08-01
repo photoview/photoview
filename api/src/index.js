@@ -10,7 +10,6 @@ import dotenv from 'dotenv'
 import http from 'http'
 import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
-import config from './config'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
 
@@ -39,7 +38,6 @@ import usersResolver from './resolvers/users'
 import scannerResolver from './resolvers/scanner'
 import photosResolver from './resolvers/photos'
 import siteInfoResolver from './resolvers/siteInfo'
-import { isRawImage, getImageCachePath } from './scanner/utils'
 
 const resolvers = [
   usersResolver,
@@ -87,8 +85,12 @@ const scanner = new PhotoScanner(driver)
 setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 
 // Specify port and path for GraphQL endpoint
-const port = process.env.GRAPHQL_LISTEN_PORT || 4001
 const graphPath = '/graphql'
+
+const endpointUrl = new URL(
+  process.env.GRAPHQL_LISTEN_HOST || 'http://localhost/'
+)
+endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001
 
 /*
  * Create a new ApolloServer instance, serving the GraphQL schema
@@ -112,7 +114,7 @@ const server = new ApolloServer({
       scanner,
       user,
       token,
-      endpoint: `http://localhost:${port}`,
+      endpoint: endpointUrl.toString(),
     }
   },
   schema: schema,
@@ -133,82 +135,25 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app, graphPath })
 
-app.use('/images/:id/:image', async function(req, res) {
-  const { id, image } = req.params
+import loadImageRoutes from './routes/images'
 
-  let user = null
-
-  try {
-    const token = req.cookies.token
-    user = await getUserFromToken(token, driver)
-  } catch (err) {
-    return res.status(401).send(err.message)
-  }
-
-  const session = driver.session()
-
-  const result = await session.run(
-    'MATCH (p:Photo { id: {id} })<-[:CONTAINS]-(a:Album)<-[:OWNS]-(u:User) RETURN p as photo, u.id as userId, a.id as albumId',
-    {
-      id,
-    }
-  )
-
-  if (result.records.length == 0) {
-    return res.status(404).send(`Image not found`)
-  }
-
-  const userId = result.records[0].get('userId')
-  const albumId = result.records[0].get('albumId')
-  const photo = result.records[0].get('photo').properties
-
-  if (userId != user.id) {
-    return res.status(401).send(`Image not owned by you`)
-  }
-
-  session.close()
-
-  let imagePath = path.resolve(getImageCachePath(id, albumId), image)
-
-  if (!(await fs.exists(imagePath))) {
-    if (image == 'thumbnail.jpg') {
-      console.log('Thumbnail not found, generating', photo.path)
-      await scanner.processImage(id)
-
-      if (!(await fs.exists(imagePath))) {
-        throw new Error('Thumbnail not found after image processing')
-      }
-
-      return res.sendFile(imagePath)
-    }
-
-    imagePath = photo.path
-  }
-
-  if (await isRawImage(imagePath)) {
-    console.log('RAW preview image not found, generating', imagePath)
-    await scanner.processImage(id)
-
-    imagePath = path.resolve(config.cachePath, 'images', id, image)
-
-    if (!(await fs.exists(imagePath))) {
-      throw new Error('RAW preview not found after image processing')
-    }
-
-    return res.sendFile(imagePath)
-  }
-
-  res.sendFile(imagePath)
-})
+loadImageRoutes({ app, driver })
 
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)
 
-httpServer.listen({ port, graphPath }, () => {
+httpServer.listen({ port: endpointUrl.port, graphPath }, () => {
   console.log(
-    `🚀 GraphQL endpoint ready at http://localhost:${port}${server.graphqlPath}`
+    `🚀 GraphQL endpoint ready at ${new URL(server.graphqlPath, endpointUrl)}`
   )
+
+  let subscriptionUrl = endpointUrl
+  subscriptionUrl.protocol = 'ws'
+
   console.log(
-    `🚀 Subscriptions ready at ws://localhost:${port}${server.subscriptionsPath}`
+    `🚀 Subscriptions ready at ${new URL(
+      server.subscriptionsPath,
+      endpointUrl
+    )}`
   )
 })

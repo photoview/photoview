@@ -20,6 +20,9 @@ services:
     - neo4j
     environment:
       - NEO4J_URI=bolt://neo4j:7687
+      # Change This: The publicly exposed url for the api
+      - GRAPHQL_LISTEN_HOST=http://localhost/
+      - GRAPHQL_LISTEN_PORT=4001
     volumes:
       # Change This: Link photo paths from the host machine
       - ./photos_path:/photos
@@ -28,8 +31,8 @@ services:
     build:
       context: ./ui
       args:
-        # Change This: The publicly exposed url for the api
-        endpoint: http://localhost:4001/graphql
+        # Change This: The publicly exposed url for the graphql api
+        GRAPHQL_ENDPOINT: http://localhost:4001/graphql
     ports:
       - 3000:80
     depends_on:
