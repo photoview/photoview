@@ -8,12 +8,17 @@ import { ApolloLink, split } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
 
 const httpLink = new HttpLink({
-  uri: process.env.REACT_APP_GRAPHQL_URI,
+  uri: process.env.GRAPHQL_ENDPOINT,
   credentials: 'same-origin',
 })
 
+console.log('GRAPHQL ENDPOINT', process.env.GRAPHQL_ENDPOINT)
+
+let websocketUri = new URL(process.env.GRAPHQL_ENDPOINT)
+websocketUri.protocol = 'ws'
+
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:4001/graphql`,
+  uri: websocketUri,
   credentials: 'same-origin',
   options: {
     reconnect: true,
