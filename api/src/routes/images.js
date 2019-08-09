@@ -3,20 +3,22 @@ import path from 'path'
 import _ from 'lodash'
 import config from '../config'
 import { isRawImage, getImageCachePath } from '../scanner/utils'
-import { getUserFromToken } from '../token'
+import { getUserFromToken, getTokenFromBearer } from '../token'
 
-function loadImageRoutes({ app, driver }) {
+function loadImageRoutes({ app, driver, scanner }) {
   app.use('/images/:id/:image', async function(req, res) {
     const { id, image } = req.params
 
     let user = null
 
     try {
-      const token = req.cookies.token
+      const token = getTokenFromBearer(req.headers.authorization)
       user = await getUserFromToken(token, driver)
     } catch (err) {
       return res.status(401).send(err.message)
     }
+
+    console.log('Getting image for user', user.username)
 
     const session = driver.session()
 

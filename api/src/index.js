@@ -3,7 +3,7 @@ import path from 'path'
 import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import bodyParser from 'body-parser'
-import cookieParser from 'cookie-parser'
+import cors from 'cors'
 import { v1 as neo4j } from 'neo4j-driver'
 import { makeAugmentedSchema } from 'neo4j-graphql-js'
 import dotenv from 'dotenv'
@@ -18,7 +18,7 @@ dotenv.config()
 
 const app = express()
 app.use(bodyParser.json())
-app.use(cookieParser())
+app.use(cors())
 
 /*
  * Create an executable GraphQL schema object from GraphQL type definitions
@@ -137,7 +137,7 @@ server.applyMiddleware({ app, graphPath })
 
 import loadImageRoutes from './routes/images'
 
-loadImageRoutes({ app, driver })
+loadImageRoutes({ app, driver, scanner })
 
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)

@@ -1,6 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
+import ProtectedImage from '../../components/photoGallery/ProtectedImage'
+import { Icon } from 'semantic-ui-react'
 
 const AlbumBoxLink = styled(Link)`
   width: 240px;
@@ -10,16 +12,30 @@ const AlbumBoxLink = styled(Link)`
   color: #222;
 `
 
-const AlbumBoxImage = styled.div`
-  width: 220px;
-  height: 220px;
-  margin: auto;
-  border-radius: 4%;
-  background-image: url('${props => props.image}');
-  background-color: #eee;
-  background-size: cover;
-  background-position: center;
-`
+const AlbumBoxImage = ({ src, ...props }) => {
+  const Image = styled(ProtectedImage)`
+    width: 220px;
+    height: 220px;
+    margin: auto;
+    border-radius: 4%;
+    object-fit: cover;
+    object-position: center;
+  `
+
+  const Placeholder = styled.div`
+    width: 220px;
+    height: 220px;
+    border-radius: 4%;
+    margin: auto;
+    background: linear-gradient(#f7f7f7 0%, #eee 100%);
+  `
+
+  if (src) {
+    return <Image {...props} src={src} />
+  }
+
+  return <Placeholder />
+}
 
 export const AlbumBox = ({ album, ...props }) => {
   if (!album) {
@@ -33,7 +49,7 @@ export const AlbumBox = ({ album, ...props }) => {
   return (
     <AlbumBoxLink {...props} to={`/album/${album.id}`}>
       <AlbumBoxImage
-        image={
+        src={
           album.photos[0] &&
           album.photos[0].thumbnail &&
           album.photos[0].thumbnail.url

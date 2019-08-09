@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useSpring, animated } from 'react-spring'
 import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
+import ProtectedImage from './ProtectedImage'
 
 const PhotoContainer = styled.div`
   flex-grow: 1;
@@ -13,7 +14,7 @@ const PhotoContainer = styled.div`
 `
 
 const PhotoImg = photoProps => {
-  const StyledPhoto = styled(animated.img)`
+  const StyledPhoto = styled(animated(ProtectedImage))`
     height: 200px;
     min-width: 100%;
     position: relative;

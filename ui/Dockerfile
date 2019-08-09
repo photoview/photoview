@@ -17,5 +17,6 @@ RUN npm run build
 FROM nginx:stable
 
 COPY --from=0 /app/dist /usr/share/nginx/html
+COPY ./docker-nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

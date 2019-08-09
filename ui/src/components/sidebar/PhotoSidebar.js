@@ -4,6 +4,7 @@ import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import { SidebarItem } from './SidebarItem'
 import { Loader } from 'semantic-ui-react'
+import ProtectedImage from '../photoGallery/ProtectedImage'
 
 const photoQuery = gql`
   query sidebarPhoto($id: ID) {
@@ -43,7 +44,7 @@ const RightSidebar = styled.div`
   border-left: 1px solid #eee;
 `
 
-const PreviewImage = styled.img`
+const PreviewImage = styled(ProtectedImage)`
   width: 100%;
   height: 333px;
   object-fit: contain;

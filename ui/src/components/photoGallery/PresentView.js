@@ -2,6 +2,7 @@ import React from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
+import ProtectedImage from './ProtectedImage'
 
 const PresentContainer = styled.div`
   position: fixed;
@@ -34,7 +35,7 @@ const imageQuery = gql`
   }
 `
 
-const PresentImage = styled.img`
+const PresentImage = styled(ProtectedImage)`
   width: 100vw;
   height: 100vh;
   object-fit: contain;
