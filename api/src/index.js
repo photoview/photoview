@@ -10,6 +10,7 @@ import dotenv from 'dotenv'
 import http from 'http'
 import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
+import config from './config'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
 
@@ -87,9 +88,7 @@ setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 // Specify port and path for GraphQL endpoint
 const graphPath = '/graphql'
 
-const endpointUrl = new URL(
-  process.env.GRAPHQL_LISTEN_HOST || 'http://localhost:4001/'
-)
+const endpointUrl = config.host
 // endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001
 
 /*
