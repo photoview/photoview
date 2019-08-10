@@ -88,9 +88,9 @@ setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 const graphPath = '/graphql'
 
 const endpointUrl = new URL(
-  process.env.GRAPHQL_LISTEN_HOST || 'http://localhost/'
+  process.env.GRAPHQL_LISTEN_HOST || 'http://localhost:4001/'
 )
-endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001
+// endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001
 
 /*
  * Create a new ApolloServer instance, serving the GraphQL schema
@@ -142,18 +142,21 @@ loadImageRoutes({ app, driver, scanner })
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)
 
-httpServer.listen({ port: endpointUrl.port, path: graphPath }, () => {
-  console.log(
-    `🚀 GraphQL endpoint ready at ${new URL(server.graphqlPath, endpointUrl)}`
-  )
+httpServer.listen(
+  { port: process.env.GRAPHQL_LISTEN_PORT, path: graphPath },
+  () => {
+    console.log(
+      `🚀 GraphQL endpoint ready at ${new URL(server.graphqlPath, endpointUrl)}`
+    )
 
-  let subscriptionUrl = endpointUrl
-  subscriptionUrl.protocol = 'ws'
+    let subscriptionUrl = endpointUrl
+    subscriptionUrl.protocol = 'ws'
 
-  console.log(
-    `🚀 Subscriptions ready at ${new URL(
-      server.subscriptionsPath,
-      endpointUrl
-    )}`
-  )
-})
+    console.log(
+      `🚀 Subscriptions ready at ${new URL(
+        server.subscriptionsPath,
+        endpointUrl
+      )}`
+    )
+  }
+)

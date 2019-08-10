@@ -21,7 +21,7 @@ services:
     environment:
       - NEO4J_URI=bolt://neo4j:7687
       # Change This: The publicly exposed url for the api
-      - GRAPHQL_LISTEN_HOST=http://localhost/
+      - API_ENDPOINT=http://localhost:4001/
       - GRAPHQL_LISTEN_PORT=4001
     volumes:
       # Change This: Link photo paths from the host machine
