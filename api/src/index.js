@@ -133,7 +133,7 @@ const server = new ApolloServer({
   },
 })
 
-server.applyMiddleware({ app, graphPath })
+server.applyMiddleware({ app, path: graphPath })
 
 import loadImageRoutes from './routes/images'
 
@@ -142,7 +142,7 @@ loadImageRoutes({ app, driver, scanner })
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)
 
-httpServer.listen({ port: endpointUrl.port, graphPath }, () => {
+httpServer.listen({ port: endpointUrl.port, path: graphPath }, () => {
   console.log(
     `🚀 GraphQL endpoint ready at ${new URL(server.graphqlPath, endpointUrl)}`
   )

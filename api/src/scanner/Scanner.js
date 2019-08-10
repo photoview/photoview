@@ -30,6 +30,8 @@ class PhotoScanner {
     }
 
     this.broadcastProgress = _.debounce(() => {
+      if (imagesToProgress == 0) return
+
       console.log(
         `Progress: ${(this.finishedImages / this.imagesToProgress) * 100}`
       )
