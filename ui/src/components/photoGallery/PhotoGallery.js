@@ -127,6 +127,7 @@ class PhotoGallery extends React.Component {
         <PresentView
           presenting={presenting}
           image={activeImage && activeImage.id}
+          thumbnail={activeImage && activeImage.thumbnail.url}
           imageLoaded={this.preloadImages()}
         />
       </div>

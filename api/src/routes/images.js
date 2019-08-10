@@ -18,8 +18,6 @@ function loadImageRoutes({ app, driver, scanner }) {
       return res.status(401).send(err.message)
     }
 
-    console.log('Getting image for user', user.username)
-
     const session = driver.session()
 
     const result = await session.run(

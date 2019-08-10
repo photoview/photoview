@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
@@ -42,37 +42,44 @@ const PresentImage = styled(ProtectedImage)`
   object-position: center;
 `
 
-export default class PresentView extends React.Component {
-  render() {
-    const { image, presenting } = this.props
-
-    if (!image || !presenting) {
-      return null
-    }
-
-    return (
-      <PresentContainer>
-        <PreventScroll />
-        <Query query={imageQuery} variables={{ id: image }}>
-          {({ loading, error, data }) => {
-            if (loading) return 'Loading...'
-            if (error) return error
-
-            const { photo } = data
-
-            console.log(photo)
-
-            return (
-              <div>
-                <PresentImage
-                  src={photo && photo.original.url}
-                  onLoad={this.props.imageLoaded && this.props.imageLoaded()}
-                />
-              </div>
-            )
-          }}
-        </Query>
-      </PresentContainer>
-    )
+const PresentView = ({
+  image,
+  presenting,
+  thumbnail,
+  imageLoaded: imageLoadedCallback,
+}) => {
+  if (!image || !presenting) {
+    return null
   }
+
+  return (
+    <PresentContainer>
+      <PreventScroll />
+      <Query query={imageQuery} variables={{ id: image }}>
+        {({ loading, error, data }) => {
+          if (error) return error
+
+          let original = null
+          if (!loading) {
+            const { photo } = data
+            original = (
+              <PresentImage
+                src={photo && photo.original.url}
+                onLoad={imageLoadedCallback && imageLoadedCallback()}
+              />
+            )
+          }
+
+          return (
+            <div>
+              <PresentImage src={thumbnail} />
+              {original}
+            </div>
+          )
+        }}
+      </Query>
+    </PresentContainer>
+  )
 }
+
+export default PresentView

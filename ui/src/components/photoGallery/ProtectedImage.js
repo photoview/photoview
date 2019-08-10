@@ -5,7 +5,6 @@ let imageCache = {}
 export async function fetchProtectedImage(src) {
   if (src) {
     if (imageCache[src]) {
-      console.log('Found image from cache', src)
       return imageCache[src]
     }
 
@@ -18,11 +17,6 @@ export async function fetchProtectedImage(src) {
     image = await image.blob()
     const url = URL.createObjectURL(image)
 
-    console.log(
-      `Saved image to cache, ${src}. New cache size: ${
-        Object.keys(imageCache).length
-      }`
-    )
     imageCache[src] = url
 
     return url
