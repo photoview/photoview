@@ -5,6 +5,9 @@ import { promisify } from 'util'
 import path from 'path'
 import config from '../config'
 
+const rawTypes = ['cr2', 'arw', 'crw', 'dng']
+const imageTypes = [...rawTypes, 'jpg', 'png', 'gif', 'bmp']
+
 export const isImage = async path => {
   if ((await fs.stat(path)).isDirectory()) {
     return false
@@ -13,7 +16,8 @@ export const isImage = async path => {
   try {
     const buffer = await readChunk(path, 0, 12)
     const type = imageType(buffer)
-    return type != null
+
+    return type && imageTypes.includes(type.ext)
   } catch (e) {
     throw new Error(`isImage error at ${path}: ${JSON.stringify(e)}`)
   }
@@ -23,8 +27,6 @@ export const isRawImage = async path => {
   try {
     const buffer = await readChunk(path, 0, 12)
     const { ext } = imageType(buffer)
-
-    const rawTypes = ['cr2', 'arw', 'crw', 'dng']
 
     return rawTypes.includes(ext)
   } catch (e) {
