@@ -88,7 +88,7 @@ setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 // Specify port and path for GraphQL endpoint
 const graphPath = '/graphql'
 
-const endpointUrl = config.host
+const endpointUrl = new URL(config.host)
 // endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001
 
 /*
@@ -148,7 +148,7 @@ httpServer.listen(
       `🚀 GraphQL endpoint ready at ${new URL(server.graphqlPath, endpointUrl)}`
     )
 
-    let subscriptionUrl = endpointUrl
+    let subscriptionUrl = new URL(endpointUrl)
     subscriptionUrl.protocol = 'ws'
 
     console.log(
