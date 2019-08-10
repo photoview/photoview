@@ -1,5 +1,34 @@
 import React, { useState, useEffect } from 'react'
 
+let imageCache = {}
+
+export async function fetchProtectedImage(src) {
+  if (src) {
+    if (imageCache[src]) {
+      console.log('Found image from cache', src)
+      return imageCache[src]
+    }
+
+    let image = await fetch(src, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+
+    image = await image.blob()
+    const url = URL.createObjectURL(image)
+
+    console.log(
+      `Saved image to cache, ${src}. New cache size: ${
+        Object.keys(imageCache).length
+      }`
+    )
+    imageCache[src] = url
+
+    return url
+  }
+}
+
 /**
  * An image that needs a authorization header to load
  */
@@ -20,28 +49,17 @@ class ProtectedImage extends React.Component {
     return true
   }
 
-  async fetchImage() {
-    if (this.props.src && this.shouldRefresh) {
+  render() {
+    if (this.shouldRefresh) {
       this.shouldRefresh = false
 
-      let image = await fetch(this.props.src, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-
-      image = await image.blob()
-      const url = URL.createObjectURL(image)
-
-      this.setState({
-        imgSrc: url,
-        loadedSrc: this.props.src,
+      fetchProtectedImage(this.props.src).then(imgSrc => {
+        this.setState({
+          imgSrc,
+        })
       })
     }
-  }
 
-  render() {
-    this.fetchImage()
     return <img {...this.props} src={this.state.imgSrc} />
   }
 }

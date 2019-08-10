@@ -4,6 +4,7 @@ import { Loader } from 'semantic-ui-react'
 import { Photo } from './Photo'
 import PresentView from './PresentView'
 import PropTypes from 'prop-types'
+import { fetchProtectedImage } from './ProtectedImage'
 
 const Gallery = styled.div`
   display: flex;
@@ -55,9 +56,9 @@ class PhotoGallery extends React.Component {
   }
 
   preloadImages() {
-    function preloadImage(url) {
+    async function preloadImage(url) {
       var img = new Image()
-      img.src = url
+      img.src = await fetchProtectedImage(url)
     }
 
     const { activeIndex = -1, photos } = this.props
