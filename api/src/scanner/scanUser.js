@@ -7,7 +7,6 @@ export default async function scanUser({ driver, scanAlbum }, user) {
   console.log('Scanning user', user.username, 'at', user.path)
 
   let foundAlbumIds = []
-  let albumScanPromises = []
 
   async function scanPath(path, parentAlbum) {
     console.log('SCAN PATH', path)
@@ -52,7 +51,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           foundImageOrAlbum = true
           nextParentAlbum = album.id
           foundAlbumIds.push(album.id)
-          albumScanPromises.push(scanAlbum(album))
+          await scanAlbum(album)
 
           continue
         }
@@ -108,7 +107,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           }
 
           foundAlbumIds.push(album.id)
-          albumScanPromises.push(scanAlbum(album))
+          await scanAlbum(album)
 
           session.close()
         }
@@ -154,8 +153,6 @@ export default async function scanUser({ driver, scanAlbum }, user) {
   )
 
   session.close()
-
-  await Promise.all(albumScanPromises)
 
   console.log('User scan complete')
 }
