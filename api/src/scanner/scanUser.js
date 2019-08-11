@@ -145,7 +145,11 @@ export default async function scanUser({ driver, scanAlbum }, user) {
   )
 
   for (const albumId of deletedAlbumIds) {
-    await fs.remove(getAlbumCachePath(albumId))
+    try {
+      await fs.remove(getAlbumCachePath(albumId))
+    } catch (e) {
+      console.error('Error while trying to delete album from cache', e, e.stack)
+    }
   }
 
   console.log(

@@ -69,6 +69,8 @@ export default async function processImage({ driver, markFinishedImage }, id) {
     if (urlResult.records.length == 2) {
       markFinishedImage()
 
+      session.close()
+
       console.log('Skipping image', photo.path)
       return
     }
@@ -80,8 +82,12 @@ export default async function processImage({ driver, markFinishedImage }, id) {
     { id }
   )
 
-  await fs.remove(imagePath)
-  await fs.mkdirp(imagePath)
+  try {
+    await fs.remove(imagePath)
+    await fs.mkdirp(imagePath)
+  } catch (e) {
+    console.error('Could not remove old image, and make directory', e, e.stack)
+  }
 
   let originalPath = photo.path
 
