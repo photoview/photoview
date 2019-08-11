@@ -17,6 +17,16 @@ async function addExifTags({ session, photo }) {
 
   const rawTags = await exiftool.read(photo.path)
 
+  let iso = rawTags.ISO
+  if (typeof iso != 'Number') {
+    try {
+      iso = parseInt(iso)
+    } catch (e) {
+      console.log('Could not parse ISO as int', e, e.stack)
+      iso = undefined
+    }
+  }
+
   const photoExif = {
     camera: rawTags.Model,
     maker: rawTags.Make,
@@ -27,7 +37,7 @@ async function addExifTags({ session, photo }) {
     fileSize: rawTags.FileSize,
     exposure: rawTags.ShutterSpeedValue,
     aperture: rawTags.ApertureValue,
-    iso: rawTags.ISO,
+    iso,
     focalLength: rawTags.FocalLength,
     flash: rawTags.Flash,
   }
