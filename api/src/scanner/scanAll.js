@@ -2,7 +2,7 @@ export default function scanAll({ driver, scanUser }) {
   return new Promise((resolve, reject) => {
     let session = driver.session()
 
-    let allUserScans = []
+    let usersToScan = []
 
     session.run('MATCH (u:User) return u').subscribe({
       onNext: record => {
@@ -13,21 +13,21 @@ export default function scanAll({ driver, scanUser }) {
           return
         }
 
-        allUserScans.push(
-          scanUser(user).catch(reason => {
+        usersToScan.push(user)
+      },
+      onCompleted: async () => {
+        session.close()
+
+        for (let user of usersToScan) {
+          try {
+            await scanUser(user)
+          } catch (reason) {
             console.log(
               `User scan exception for user ${user.username} ${reason}`
             )
             reject(reason)
-          })
-        )
-      },
-      onCompleted: () => {
-        session.close()
-
-        Promise.all(allUserScans).then(() => {
-          resolve()
-        })
+          }
+        }
       },
       onError: error => {
         session.close()
