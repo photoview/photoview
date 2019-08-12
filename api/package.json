@@ -1,5 +1,5 @@
 {
-  "name": "grand-stack-starter-api",
+  "name": "photoview-api",
   "version": "0.0.1",
   "description": "API app for GRANDstack",
   "main": "src/index.js",
@@ -11,8 +11,8 @@
     "start": "npm run build && node build/index.js",
     "seedDb": "./node_modules/.bin/babel-node src/seed/seed-db.js"
   },
-  "author": "William Lyon",
-  "license": "MIT",
+  "author": "Viktor Strate",
+  "license": "GPL-3.0",
   "dependencies": {
     "@babel/node": "^7.5.5",
     "@babel/plugin-transform-spread": "^7.2.2",
