@@ -97,7 +97,9 @@ class PhotosPage extends Component {
               galleryGroups = data.myAlbums.map((album, index) => (
                 <div key={album.id}>
                   <Link to={`/album/${album.id}`}>
-                    <h1>{album.title}</h1>
+                    <h1 style={{ color: 'black', margin: '24px 0 12px 0' }}>
+                      {album.title}
+                    </h1>
                   </Link>
                   <PhotoGallery
                     onSelectImage={photoIndex => {

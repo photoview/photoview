@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import uuid from 'uuid'
+import generateID from '../id-generator'
 import fs from 'fs-extra'
 import { neo4jgraphql } from 'neo4j-graphql-js'
 
@@ -69,7 +69,7 @@ const Mutation = {
 
     const registerResult = await session.run(
       'CREATE (n:User { username: {username}, password: {password}, id: {id}, admin: false, rootPath: {rootPath} }) return n.id',
-      { username, password, id: uuid(), rootPath }
+      { username, password, id: generateID(), rootPath }
     )
 
     let id = registerResult.records[0].get('n.id')
@@ -100,7 +100,7 @@ const Mutation = {
       }
     }
 
-    args.id = uuid()
+    args.id = generateID()
 
     return neo4jgraphql(root, args, ctx, info)
   },

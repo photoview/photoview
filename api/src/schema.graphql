@@ -10,6 +10,7 @@ type User {
   # Local filepath for the user's photos
   rootPath: String! @hasRole(roles: [admin])
   admin: Boolean
+  shareTokens: [ShareToken] @relation(name: "SHARE_TOKEN", direction: "OUT")
 }
 
 type Album {
@@ -20,6 +21,8 @@ type Album {
   parentAlbum: Album @relation(name: "SUBALBUM", direction: "IN")
   owner: User! @relation(name: "OWNS", direction: "IN")
   path: String
+
+  shares: [ShareToken] @relation(name: "SHARES", direction: "OUT")
 }
 
 type PhotoURL {
@@ -57,6 +60,20 @@ type Photo {
   # The album that holds the photo
   album: Album! @relation(name: "CONTAINS", direction: "IN")
   exif: PhotoEXIF @relation(name: "EXIF", direction: "OUT")
+
+  shares: [ShareToken] @relation(name: "SHARES", direction: "OUT")
+}
+
+type ShareToken {
+  token: ID!
+  owner: User @relation(name: "SHARE_TOKEN", direction: "IN")
+  # Optional expire date
+  expire: Date
+  # Optional password
+  password: String
+
+  album: Album @relation(name: "SHARES", direction: "IN")
+  photo: Photo @relation(name: "SHARES", direction: "IN")
 }
 
 type SiteInfo {
@@ -95,6 +112,11 @@ type Mutation {
     rootPath: String!
   ): AuthorizeResult! @hasRole(roles: [admin]) @neo4j_ignore
 
+  shareAlbum(albumId: ID!, expire: Date, password: String): ShareToken
+    @isAuthenticated
+  sharePhoto(photoId: ID!, expire: Date, password: String): ShareToken
+    @isAuthenticated
+
   setAdmin(userId: ID!, admin: Boolean!): Result!
     @hasRole(roles: [admin])
     @neo4j_ignore
@@ -126,5 +148,8 @@ type Query {
   album(id: ID): Album @isAuthenticated
 
   myPhotos: [Photo] @isAuthenticated
-  photo(id: ID): Photo @isAuthenticated
+  photo(id: ID!): Photo @isAuthenticated
+
+  albumShares(id: ID!, password: String): [ShareToken] @isAuthenticated
+  photoShares(id: ID!, password: String): [ShareToken] @isAuthenticated
 }

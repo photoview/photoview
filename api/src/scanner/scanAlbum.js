@@ -1,6 +1,6 @@
 import fs from 'fs-extra'
 import path from 'path'
-import uuid from 'uuid'
+import generateID from '../id-generator'
 import { isImage, getImageCachePath } from './utils'
 
 export default async function scanAlbum(
@@ -45,7 +45,7 @@ export default async function scanAlbum(
         processingImagePromises.push(processImage(photoId))
       } else {
         console.log(`Found new image at ${itemPath}`)
-        const imageId = uuid()
+        const imageId = generateID()
         await session.run(
           `MATCH (a:Album { id: {albumId} })
           CREATE (p:Photo {id: {id}, path: {path}, title: {title} })

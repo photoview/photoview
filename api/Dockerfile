@@ -1,5 +1,7 @@
 FROM node:10
 
+ENV PRODUCTION=1
+
 RUN mkdir -p /app
 WORKDIR /app
 

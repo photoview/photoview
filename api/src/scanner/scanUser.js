@@ -1,6 +1,6 @@
 import fs from 'fs-extra'
 import { resolve as pathResolve } from 'path'
-import uuid from 'uuid'
+import generateID from '../id-generator'
 import { isImage, getAlbumCachePath } from './utils'
 
 export default async function scanUser({ driver, scanAlbum }, user) {
@@ -9,7 +9,6 @@ export default async function scanUser({ driver, scanAlbum }, user) {
   let foundAlbumIds = []
 
   async function scanPath(path, parentAlbum) {
-    console.log('SCAN PATH', path)
     const list = fs.readdirSync(path)
 
     let foundImageOrAlbum = false
@@ -63,7 +62,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           const session = driver.session()
 
           console.log('Adding album')
-          const albumId = uuid()
+          const albumId = generateID()
           const albumResult = await session.run(
             `MATCH (u:User { id: {userId} })
             CREATE (a:Album { id: {id}, title: {title}, path: {path} })

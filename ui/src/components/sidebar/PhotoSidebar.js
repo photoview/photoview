@@ -5,10 +5,12 @@ import gql from 'graphql-tag'
 import { SidebarItem } from './SidebarItem'
 import { Loader } from 'semantic-ui-react'
 import ProtectedImage from '../photoGallery/ProtectedImage'
+import SidebarShare from './Sharing'
 
 const photoQuery = gql`
-  query sidebarPhoto($id: ID) {
+  query sidebarPhoto($id: ID!) {
     photo(id: $id) {
+      id
       title
       original {
         url
@@ -122,6 +124,7 @@ class AlbumSidebar extends Component {
                 />
                 <Name>{photo && photo.title}</Name>
                 <div>{exifItems}</div>
+                <SidebarShare photo={photo} />
               </div>
             )
           }}
