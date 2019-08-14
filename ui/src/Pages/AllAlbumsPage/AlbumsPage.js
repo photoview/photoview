@@ -9,9 +9,16 @@ const getAlbumsQuery = gql`
     myAlbums(filter: { parentAlbum: null }, orderBy: title_asc) {
       id
       title
-      photos {
+      photos(first: 1) {
         thumbnail {
           url
+        }
+      }
+      subAlbums(first: 1) {
+        photos(first: 1) {
+          thumbnail {
+            url
+          }
         }
       }
     }

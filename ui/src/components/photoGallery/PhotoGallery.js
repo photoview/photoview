@@ -93,6 +93,8 @@ class PhotoGallery extends React.Component {
 
     let photoElements = null
     if (photos) {
+      photos.filter(photo => photo.thumbnail)
+
       photoElements = photos.map((photo, index) => {
         const active = activeIndex == index
 

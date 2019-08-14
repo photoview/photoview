@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
+import { Link } from 'react-router-dom'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 
@@ -95,7 +96,9 @@ class PhotosPage extends Component {
             if (data.myAlbums) {
               galleryGroups = data.myAlbums.map((album, index) => (
                 <div key={album.id}>
-                  <h1>{album.title}</h1>
+                  <Link to={`/album/${album.id}`}>
+                    <h1>{album.title}</h1>
+                  </Link>
                   <PhotoGallery
                     onSelectImage={photoIndex => {
                       this.setActiveImage(index, photoIndex)
