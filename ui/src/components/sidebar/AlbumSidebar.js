@@ -1,6 +1,7 @@
 import React from 'react'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
+import SidebarShare from './Sharing'
 
 const albumQuery = gql`
   query getAlbumSidebar($id: ID!) {
@@ -20,7 +21,14 @@ const AlbumSidebar = ({ albumId }) => {
           if (loading) return <div>Loading...</div>
           if (error) return <div>{error.message}</div>
 
-          return <h1>{data.album.title}</h1>
+          console.log('ALBUM', data.album)
+
+          return (
+            <div>
+              <h1>{data.album.title}</h1>
+              <SidebarShare album={data.album} />
+            </div>
+          )
         }}
       </Query>
     </div>

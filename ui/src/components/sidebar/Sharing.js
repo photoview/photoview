@@ -3,21 +3,41 @@ import { Query, Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Table, Button, Icon, Dropdown } from 'semantic-ui-react'
 
-const shareQuery = gql`
-  query sidbarGetShares($photoId: ID!) {
-    photoShares(id: $photoId) {
+const sharePhotoQuery = gql`
+  query sidbarGetPhotoShares($id: ID!) {
+    photoShares(id: $id) {
       token
     }
   }
 `
 
-const addShareMutation = gql`
-  mutation sidebarAddShare(
-    $photoId: ID!
+const shareAlbumQuery = gql`
+  query sidbarGetAlbumShares($id: ID!) {
+    albumShares(id: $id) {
+      token
+    }
+  }
+`
+
+const addPhotoShareMutation = gql`
+  mutation sidebarPhotoAddShare(
+    $id: ID!
     $password: String
     $expire: _Neo4jDateInput
   ) {
-    sharePhoto(photoId: $photoId, password: $password, expire: $expire) {
+    sharePhoto(photoId: $id, password: $password, expire: $expire) {
+      token
+    }
+  }
+`
+
+const addAlbumShareMutation = gql`
+  mutation sidebarAlbumAddShare(
+    $id: ID!
+    $password: String
+    $expire: _Neo4jDateInput
+  ) {
+    shareAlbum(albumId: $id, password: $password, expire: $expire) {
       token
     }
   }
@@ -31,18 +51,28 @@ const deleteShareMutation = gql`
   }
 `
 
-const SidebarShare = ({ photo }) => {
-  if (!photo || !photo.id) return null
+const SidebarShare = ({ photo, album }) => {
+  if ((!photo || !photo.id) && (!album || !album.id)) return null
+
+  const isPhoto = !!photo
+  const id = isPhoto ? photo.id : album.id
+
+  const query = isPhoto ? sharePhotoQuery : shareAlbumQuery
+  const addShareMutation = isPhoto
+    ? addPhotoShareMutation
+    : addAlbumShareMutation
 
   return (
     <div>
       <h2>Sharing options</h2>
-      <Query query={shareQuery} variables={{ photoId: photo.id }}>
+      <Query query={query} variables={{ id }}>
         {({ loading, error, data, refetch }) => {
           if (loading) return <div>Loading...</div>
           if (error) return <div>Error: {error}</div>
 
-          const rows = data.photoShares.map(share => (
+          let shares = isPhoto ? data.photoShares : data.albumShares
+
+          const rows = shares.map(share => (
             <Table.Row key={share.token}>
               <Table.Cell>
                 <b>Public Link</b> {share.token}
@@ -122,7 +152,7 @@ const SidebarShare = ({ photo }) => {
                               onClick={() => {
                                 sharePhoto({
                                   variables: {
-                                    photoId: photo.id,
+                                    id,
                                   },
                                 })
                               }}

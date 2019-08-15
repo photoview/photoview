@@ -5,8 +5,40 @@ import config from '../config'
 import { isRawImage, getImageCachePath } from '../scanner/utils'
 import { getUserFromToken, getTokenFromBearer } from '../token'
 
+async function sendImage({ imagePath, photo, res }) {
+  if (!(await fs.exists(imagePath))) {
+    if (image == 'thumbnail.jpg') {
+      console.log('Thumbnail not found, generating', photo.path)
+      await scanner.processImage(photo.id)
+
+      if (!(await fs.exists(imagePath))) {
+        throw new Error('Thumbnail not found after image processing')
+      }
+
+      return res.sendFile(imagePath)
+    }
+
+    imagePath = photo.path
+  }
+
+  if (await isRawImage(imagePath)) {
+    console.log('RAW preview image not found, generating', imagePath)
+    await scanner.processImage(id)
+
+    imagePath = path.resolve(config.cachePath, 'images', id, image)
+
+    if (!(await fs.exists(imagePath))) {
+      throw new Error('RAW preview not found after image processing')
+    }
+
+    return res.sendFile(imagePath)
+  }
+
+  res.sendFile(imagePath)
+}
+
 function loadImageRoutes({ app, driver, scanner }) {
-  app.use('/images/:id/:image', async function(req, res) {
+  app.use('/images/:id/:image', async (req, res) => {
     const { id, image } = req.params
 
     let user = null
@@ -43,36 +75,12 @@ function loadImageRoutes({ app, driver, scanner }) {
 
     let imagePath = path.resolve(getImageCachePath(id, albumId), image)
 
-    if (!(await fs.exists(imagePath))) {
-      if (image == 'thumbnail.jpg') {
-        console.log('Thumbnail not found, generating', photo.path)
-        await scanner.processImage(id)
-
-        if (!(await fs.exists(imagePath))) {
-          throw new Error('Thumbnail not found after image processing')
-        }
-
-        return res.sendFile(imagePath)
-      }
-
-      imagePath = photo.path
-    }
-
-    if (await isRawImage(imagePath)) {
-      console.log('RAW preview image not found, generating', imagePath)
-      await scanner.processImage(id)
-
-      imagePath = path.resolve(config.cachePath, 'images', id, image)
-
-      if (!(await fs.exists(imagePath))) {
-        throw new Error('RAW preview not found after image processing')
-      }
-
-      return res.sendFile(imagePath)
-    }
-
-    res.sendFile(imagePath)
+    sendImage({ imagePath, photo, res })
   })
+
+  // app.use('/share/:token/:image', async (req, res) => {
+  //   const { token } = req.params
+  // })
 }
 
 export default loadImageRoutes
