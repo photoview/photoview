@@ -86,60 +86,51 @@ class PhotosPage extends Component {
   render() {
     return (
       <Layout>
-        <SidebarConsumer>
-          {({ updateSidebar }) => (
-            <Query query={photoQuery}>
-              {({ loading, error, data }) => {
-                if (error) return error
+        <Query query={photoQuery}>
+          {({ loading, error, data }) => {
+            if (error) return error
 
-                let galleryGroups = []
+            let galleryGroups = []
 
-                this.albums = data.myAlbums
+            this.albums = data.myAlbums
 
-                if (data.myAlbums) {
-                  galleryGroups = data.myAlbums.map((album, index) => (
-                    <div key={album.id}>
-                      <AlbumTitle album={album} />
-                      <PhotoGallery
-                        onSelectImage={photoIndex => {
-                          updateSidebar(
-                            <PhotoSidebar
-                              imageId={album.photos[photoIndex].id}
-                            />
-                          )
-                          this.setActiveImage(index, photoIndex)
-                        }}
-                        activeIndex={
-                          this.state.activeAlbumIndex == index
-                            ? this.state.activePhotoIndex
-                            : -1
-                        }
-                        presenting={this.state.presenting === index}
-                        setPresenting={presenting =>
-                          this.setPresenting(presenting, index)
-                        }
-                        loading={loading}
-                        photos={album.photos}
-                        nextImage={this.nextImage}
-                        previousImage={this.previousImage}
-                      />
-                    </div>
-                  ))
-                }
+            if (data.myAlbums) {
+              galleryGroups = data.myAlbums.map((album, index) => (
+                <div key={album.id}>
+                  <AlbumTitle album={album} />
+                  <PhotoGallery
+                    onSelectImage={photoIndex => {
+                      this.setActiveImage(index, photoIndex)
+                    }}
+                    activeIndex={
+                      this.state.activeAlbumIndex == index
+                        ? this.state.activePhotoIndex
+                        : -1
+                    }
+                    presenting={this.state.presenting === index}
+                    setPresenting={presenting =>
+                      this.setPresenting(presenting, index)
+                    }
+                    loading={loading}
+                    photos={album.photos}
+                    nextImage={this.nextImage}
+                    previousImage={this.previousImage}
+                  />
+                </div>
+              ))
+            }
 
-                let activeImage = null
-                if (this.state.activeAlbumIndex != -1) {
-                  activeImage =
-                    data.myAlbums[this.state.activeAlbumIndex].photos[
-                      this.state.activePhotoIndex
-                    ].id
-                }
+            let activeImage = null
+            if (this.state.activeAlbumIndex != -1) {
+              activeImage =
+                data.myAlbums[this.state.activeAlbumIndex].photos[
+                  this.state.activePhotoIndex
+                ].id
+            }
 
-                return <div>{galleryGroups}</div>
-              }}
-            </Query>
-          )}
-        </SidebarConsumer>
+            return <div>{galleryGroups}</div>
+          }}
+        </Query>
       </Layout>
     )
   }

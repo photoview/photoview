@@ -5,6 +5,8 @@ import { Photo } from './Photo'
 import PresentView from './PresentView'
 import PropTypes from 'prop-types'
 import { fetchProtectedImage } from './ProtectedImage'
+import { SidebarConsumer } from '../sidebar/Sidebar'
+import PhotoSidebar from '../sidebar/PhotoSidebar'
 
 const Gallery = styled.div`
   display: flex;
@@ -91,48 +93,59 @@ class PhotoGallery extends React.Component {
 
     const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
-    let photoElements = null
-    if (photos) {
-      photos.filter(photo => photo.thumbnail)
+    const getPhotoElements = updateSidebar => {
+      let photoElements = null
+      if (photos) {
+        photos.filter(photo => photo.thumbnail)
 
-      photoElements = photos.map((photo, index) => {
-        const active = activeIndex == index
+        photoElements = photos.map((photo, index) => {
+          const active = activeIndex == index
 
-        let minWidth = 100
-        if (photo.thumbnail) {
-          minWidth = Math.floor(
-            (photo.thumbnail.width / photo.thumbnail.height) * 200
+          let minWidth = 100
+          if (photo.thumbnail) {
+            minWidth = Math.floor(
+              (photo.thumbnail.width / photo.thumbnail.height) * 200
+            )
+          }
+
+          return (
+            <Photo
+              key={photo.id}
+              photo={photo}
+              onSelectImage={index => {
+                updateSidebar(<PhotoSidebar imageId={photo.id} />)
+                onSelectImage(index)
+              }}
+              setPresenting={this.props.setPresenting}
+              minWidth={minWidth}
+              index={index}
+              active={active}
+            />
           )
-        }
+        })
+      }
 
-        return (
-          <Photo
-            key={photo.id}
-            photo={photo}
-            onSelectImage={onSelectImage}
-            setPresenting={this.props.setPresenting}
-            minWidth={minWidth}
-            index={index}
-            active={active}
-          />
-        )
-      })
+      return photoElements
     }
 
     return (
-      <div>
-        <Gallery>
-          <Loader active={loading}>Loading images</Loader>
-          {photoElements}
-          <PhotoFiller />
-        </Gallery>
-        <PresentView
-          presenting={presenting}
-          image={activeImage && activeImage.id}
-          thumbnail={activeImage && activeImage.thumbnail.url}
-          imageLoaded={this.preloadImages()}
-        />
-      </div>
+      <SidebarConsumer>
+        {({ updateSidebar }) => (
+          <div>
+            <Gallery>
+              <Loader active={loading}>Loading images</Loader>
+              {getPhotoElements(updateSidebar)}
+              <PhotoFiller />
+            </Gallery>
+            <PresentView
+              presenting={presenting}
+              image={activeImage && activeImage.id}
+              thumbnail={activeImage && activeImage.thumbnail.url}
+              imageLoaded={this.preloadImages()}
+            />
+          </div>
+        )}
+      </SidebarConsumer>
     )
   }
 }

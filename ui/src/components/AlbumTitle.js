@@ -3,10 +3,18 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 import { SidebarConsumer } from './sidebar/Sidebar'
+import AlbumSidebar from './sidebar/AlbumSidebar'
 
 const Header = styled.h1`
-  color: black;
-  margin: 24px 0 12px 0;
+  margin: 28px 0 12px 0 !important;
+
+  & a {
+    color: black;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 `
 
 const SettingsIcon = props => {
@@ -21,7 +29,7 @@ const SettingsIcon = props => {
     }
   `
 
-  return <StyledIcon name="edit outline" size="small" {...props} />
+  return <StyledIcon name="settings" size="small" {...props} />
 }
 
 const AlbumTitle = ({ album, disableLink = false }) => {
@@ -40,7 +48,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
           {title}
           <SettingsIcon
             onClick={() => {
-              updateSidebar(<div>Title stuff {album.title}</div>)
+              updateSidebar(<AlbumSidebar albumId={album.id} />)
             }}
           />
         </Header>

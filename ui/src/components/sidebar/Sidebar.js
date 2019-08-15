@@ -25,10 +25,13 @@ class Sidebar extends React.Component {
     super(props)
 
     this.state = {
-      content: 'Start value',
+      content: null,
     }
 
-    this.update = content => this.setState({ content })
+    this.update = content => {
+      console.log('Updating sidebar', content)
+      this.setState({ content })
+    }
   }
 
   render() {
