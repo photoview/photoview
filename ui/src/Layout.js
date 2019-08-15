@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
+import Sidebar from './components/sidebar/Sidebar'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 
@@ -20,7 +21,7 @@ const Container = styled.div`
   grid-template-columns: 80px 1fr 500px; */
 `
 
-const LeftSidebar = styled.div`
+const SideMenu = styled.div`
   height: 100%;
   width: 80px;
   position: fixed;
@@ -87,7 +88,7 @@ class Layout extends Component {
   render() {
     return (
       <Container>
-        <LeftSidebar>
+        <SideMenu>
           <SideButton to="/photos" exact>
             <Icon name="image outline" />
             <SideButtonLabel>Photos</SideButtonLabel>
@@ -110,8 +111,10 @@ class Layout extends Component {
               return null
             }}
           </Query>
-        </LeftSidebar>
-        <Content>{this.props.children}</Content>
+        </SideMenu>
+        <Sidebar>
+          <Content>{this.props.children}</Content>
+        </Sidebar>
         <Header>
           <Title>Photoview</Title>
         </Header>

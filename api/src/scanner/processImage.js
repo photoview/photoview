@@ -143,8 +143,8 @@ export default async function processImage({ driver, markFinishedImage }, id) {
   // Resize image
   const thumbnailPath = path.resolve(imagePath, 'thumbnail.jpg')
   await sharp(originalPath)
-    .jpeg({ quality: 80 })
-    .resize(1440, 1080, { fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 70 })
+    .resize(720, 480, { fit: 'inside', withoutEnlargement: true })
     .toFile(thumbnailPath)
 
   try {

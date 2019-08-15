@@ -7,10 +7,13 @@ import PhotoGallery, {
   presentIndexFromHash,
 } from '../../components/photoGallery/PhotoGallery'
 import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
+import AlbumTitle from '../../components/AlbumTitle'
+import { SidebarConsumer } from '../../components/sidebar/Sidebar'
 
 const albumQuery = gql`
-  query albumQuery($id: ID) {
+  query albumQuery($id: ID!) {
     album(id: $id) {
+      id
       title
       subAlbums(orderBy: title_asc) {
         id
@@ -111,56 +114,56 @@ class AlbumPage extends Component {
 
     return (
       <Layout>
-        <Query query={albumQuery} variables={{ id: albumId }}>
-          {({ loading, error, data }) => {
-            if (error) return <div>Error</div>
+        <SidebarConsumer>
+          {({ updateSidebar }) => (
+            <Query query={albumQuery} variables={{ id: albumId }}>
+              {({ loading, error, data }) => {
+                if (error) return <div>Error</div>
 
-            let subAlbumElement = null
+                let subAlbumElement = null
 
-            if (data.album) {
-              this.photos = data.album.photos
+                if (data.album) {
+                  this.photos = data.album.photos
 
-              if (data.album.subAlbums.length > 0) {
-                subAlbumElement = (
-                  <AlbumGallery
-                    loading={loading}
-                    error={error}
-                    albums={data.album.subAlbums}
-                  />
-                )
-              }
-            }
-
-            return (
-              <div>
-                <h1>{data.album && data.album.title}</h1>
-                {subAlbumElement}
-                {data.album && data.album.subAlbums.length > 0 && (
-                  <h2>Images</h2>
-                )}
-                <PhotoGallery
-                  loading={loading}
-                  photos={data.album && data.album.photos}
-                  activeIndex={this.state.activeImage}
-                  presenting={this.state.presenting}
-                  onSelectImage={index => {
-                    this.setActiveImage(index)
-                  }}
-                  setPresenting={this.setPresenting}
-                  nextImage={this.nextImage}
-                  previousImage={this.previousImage}
-                />
-                <PhotoSidebar
-                  imageId={
-                    this.photos.length > 0 && this.state.activeImage != -1
-                      ? this.photos[this.state.activeImage].id
-                      : null
+                  if (data.album.subAlbums.length > 0) {
+                    subAlbumElement = (
+                      <AlbumGallery
+                        loading={loading}
+                        error={error}
+                        albums={data.album.subAlbums}
+                      />
+                    )
                   }
-                />
-              </div>
-            )
-          }}
-        </Query>
+                }
+
+                return (
+                  <div>
+                    <AlbumTitle album={data && data.album} disableLink />
+                    {subAlbumElement}
+                    {data.album && data.album.subAlbums.length > 0 && (
+                      <h2>Images</h2>
+                    )}
+                    <PhotoGallery
+                      loading={loading}
+                      photos={data.album && data.album.photos}
+                      activeIndex={this.state.activeImage}
+                      presenting={this.state.presenting}
+                      onSelectImage={index => {
+                        updateSidebar(
+                          <PhotoSidebar imageId={this.photos[index].id} />
+                        )
+                        this.setActiveImage(index)
+                      }}
+                      setPresenting={this.setPresenting}
+                      nextImage={this.nextImage}
+                      previousImage={this.previousImage}
+                    />
+                  </div>
+                )
+              }}
+            </Query>
+          )}
+        </SidebarConsumer>
       </Layout>
     )
   }

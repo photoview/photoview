@@ -23,8 +23,9 @@ const PreventScroll = createGlobalStyle`
 `
 
 const imageQuery = gql`
-  query presentImage($id: ID) {
+  query presentImage($id: ID!) {
     photo(id: $id) {
+      id
       title
       original {
         width
@@ -57,23 +58,30 @@ const PresentView = ({
       <PreventScroll />
       <Query query={imageQuery} variables={{ id: image }}>
         {({ loading, error, data }) => {
-          if (error) return error
+          if (error) {
+            alert(error)
+            return <div>{error.message}</div>
+          }
 
           let original = null
           if (!loading) {
             const { photo } = data
             original = (
               <PresentImage
+                // style={{ display: 'none' }}
                 src={photo && photo.original.url}
-                onLoad={imageLoadedCallback && imageLoadedCallback()}
+                onLoad={e => {
+                  // e.target.style.display = 'initial'
+                  imageLoadedCallback && imageLoadedCallback()
+                }}
               />
             )
           }
 
           return (
             <div>
-              <PresentImage src={thumbnail} />
               {original}
+              <PresentImage src={thumbnail} />
             </div>
           )
         }}

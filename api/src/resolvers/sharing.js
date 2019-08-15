@@ -1,3 +1,4 @@
+import { neo4jgraphql } from 'neo4j-graphql-js'
 import generateID from '../id-generator'
 import { replaceMatch } from './neo4j-helpers'
 
@@ -93,6 +94,27 @@ const Mutation = {
       password: null,
       ...createResult.records[0].get('share').properties,
     }
+  },
+  async deleteShareToken(root, args, ctx, info) {
+    if (!ctx.user.admin) {
+      const session = ctx.driver.session()
+      const result = await session.run(
+        `MATCH (u:User { id: {userId} })-[:SHARE_TOKEN]->(token:ShareToken { token: {token} })
+         RETURN token`,
+        {
+          userId: ctx.user.id,
+          token: args.token,
+        }
+      )
+
+      session.close()
+
+      if (result.records.length == 0) {
+        throw new Error('User is not allowed to delete this share')
+      }
+    }
+
+    return neo4jgraphql(root, args, ctx, info)
   },
 }
 

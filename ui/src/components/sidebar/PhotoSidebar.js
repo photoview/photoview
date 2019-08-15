@@ -35,17 +35,6 @@ const photoQuery = gql`
   }
 `
 
-const RightSidebar = styled.div`
-  height: 100%;
-  width: 500px;
-  position: fixed;
-  right: 0;
-  top: 60px;
-  background-color: white;
-  padding: 12px;
-  border-left: 1px solid #eee;
-`
-
 const PreviewImage = styled(ProtectedImage)`
   width: 100%;
   height: 333px;
@@ -71,16 +60,16 @@ const exifNameLookup = {
   flash: 'Flash',
 }
 
-class AlbumSidebar extends Component {
+class PhotoSidebar extends Component {
   render() {
     const { imageId } = this.props
 
     if (!imageId) {
-      return <RightSidebar />
+      return null
     }
 
     return (
-      <RightSidebar>
+      <div>
         <Query query={photoQuery} variables={{ id: imageId }}>
           {({ loading, error, data }) => {
             if (error) return error
@@ -129,9 +118,9 @@ class AlbumSidebar extends Component {
             )
           }}
         </Query>
-      </RightSidebar>
+      </div>
     )
   }
 }
 
-export default AlbumSidebar
+export default PhotoSidebar

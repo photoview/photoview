@@ -2,9 +2,10 @@ import React, { Component } from 'react'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
-import { Link } from 'react-router-dom'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
+import AlbumTitle from '../../components/AlbumTitle'
+import { SidebarConsumer } from '../../components/sidebar/Sidebar'
 
 const photoQuery = gql`
   query allPhotosPage {
@@ -85,60 +86,60 @@ class PhotosPage extends Component {
   render() {
     return (
       <Layout>
-        <Query query={photoQuery}>
-          {({ loading, error, data }) => {
-            if (error) return error
+        <SidebarConsumer>
+          {({ updateSidebar }) => (
+            <Query query={photoQuery}>
+              {({ loading, error, data }) => {
+                if (error) return error
 
-            let galleryGroups = []
+                let galleryGroups = []
 
-            this.albums = data.myAlbums
+                this.albums = data.myAlbums
 
-            if (data.myAlbums) {
-              galleryGroups = data.myAlbums.map((album, index) => (
-                <div key={album.id}>
-                  <Link to={`/album/${album.id}`}>
-                    <h1 style={{ color: 'black', margin: '24px 0 12px 0' }}>
-                      {album.title}
-                    </h1>
-                  </Link>
-                  <PhotoGallery
-                    onSelectImage={photoIndex => {
-                      this.setActiveImage(index, photoIndex)
-                    }}
-                    activeIndex={
-                      this.state.activeAlbumIndex == index
-                        ? this.state.activePhotoIndex
-                        : -1
-                    }
-                    presenting={this.state.presenting === index}
-                    setPresenting={presenting =>
-                      this.setPresenting(presenting, index)
-                    }
-                    loading={loading}
-                    photos={album.photos}
-                    nextImage={this.nextImage}
-                    previousImage={this.previousImage}
-                  />
-                </div>
-              ))
-            }
+                if (data.myAlbums) {
+                  galleryGroups = data.myAlbums.map((album, index) => (
+                    <div key={album.id}>
+                      <AlbumTitle album={album} />
+                      <PhotoGallery
+                        onSelectImage={photoIndex => {
+                          updateSidebar(
+                            <PhotoSidebar
+                              imageId={album.photos[photoIndex].id}
+                            />
+                          )
+                          this.setActiveImage(index, photoIndex)
+                        }}
+                        activeIndex={
+                          this.state.activeAlbumIndex == index
+                            ? this.state.activePhotoIndex
+                            : -1
+                        }
+                        presenting={this.state.presenting === index}
+                        setPresenting={presenting =>
+                          this.setPresenting(presenting, index)
+                        }
+                        loading={loading}
+                        photos={album.photos}
+                        nextImage={this.nextImage}
+                        previousImage={this.previousImage}
+                      />
+                    </div>
+                  ))
+                }
 
-            let activeImage = null
-            if (this.state.activeAlbumIndex != -1) {
-              activeImage =
-                data.myAlbums[this.state.activeAlbumIndex].photos[
-                  this.state.activePhotoIndex
-                ].id
-            }
+                let activeImage = null
+                if (this.state.activeAlbumIndex != -1) {
+                  activeImage =
+                    data.myAlbums[this.state.activeAlbumIndex].photos[
+                      this.state.activePhotoIndex
+                    ].id
+                }
 
-            return (
-              <div>
-                {galleryGroups}
-                <PhotoSidebar imageId={activeImage} />
-              </div>
-            )
-          }}
-        </Query>
+                return <div>{galleryGroups}</div>
+              }}
+            </Query>
+          )}
+        </SidebarConsumer>
       </Layout>
     )
   }

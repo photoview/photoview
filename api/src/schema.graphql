@@ -117,6 +117,8 @@ type Mutation {
   sharePhoto(photoId: ID!, expire: Date, password: String): ShareToken
     @isAuthenticated
 
+  deleteShareToken(token: ID!): ShareToken @isAuthenticated
+
   setAdmin(userId: ID!, admin: Boolean!): Result!
     @hasRole(roles: [admin])
     @neo4j_ignore
