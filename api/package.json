@@ -45,6 +45,8 @@
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "babel-eslint": "^10.0.2",
+    "eslint": "^6.1.0",
     "husky": "^3.0.3",
     "lint-staged": "^9.2.1",
     "nodemon": "^1.18.11",
