@@ -44,7 +44,8 @@
     "eslint-plugin-react": "^7.14.3",
     "husky": "^3.0.2",
     "isarray": "^2.0.5",
-    "lint-staged": "^9.2.1"
+    "lint-staged": "^9.2.1",
+    "react-router-prop-types": "^1.0.4"
   },
   "husky": {
     "hooks": {

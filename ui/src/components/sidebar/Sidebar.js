@@ -1,6 +1,6 @@
 import React, { createContext } from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Route } from 'react-router-dom'
 
 const SidebarContainer = styled.div`
   height: 100%;
@@ -46,6 +46,10 @@ class Sidebar extends React.Component {
       </Provider>
     )
   }
+}
+
+Sidebar.propTypes = {
+  children: PropTypes.element,
 }
 
 export default Sidebar

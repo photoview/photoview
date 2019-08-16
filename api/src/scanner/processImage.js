@@ -18,7 +18,7 @@ async function addExifTags({ session, photo }) {
   const rawTags = await exiftool.read(photo.path)
 
   let iso = rawTags.ISO
-  if (typeof iso != 'Number') {
+  if (typeof iso != 'number') {
     try {
       iso = parseInt(iso)
     } catch (e) {

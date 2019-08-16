@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
@@ -55,6 +56,11 @@ const AlbumTitle = ({ album, disableLink = false }) => {
       )}
     </SidebarConsumer>
   )
+}
+
+AlbumTitle.propTypes = {
+  album: PropTypes.object.isRequired,
+  disableLink: PropTypes.bool,
 }
 
 export default AlbumTitle

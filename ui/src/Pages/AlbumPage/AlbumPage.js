@@ -1,14 +1,13 @@
 import React, { Component } from 'react'
+import ReactRouterPropTypes from 'react-router-prop-types'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import Layout from '../../Layout'
-import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 import PhotoGallery, {
   presentIndexFromHash,
 } from '../../components/photoGallery/PhotoGallery'
 import AlbumGallery from '../AllAlbumsPage/AlbumGallery'
 import AlbumTitle from '../../components/AlbumTitle'
-import { SidebarConsumer } from '../../components/sidebar/Sidebar'
 
 const albumQuery = gql`
   query albumQuery($id: ID!) {
@@ -160,6 +159,10 @@ class AlbumPage extends Component {
       </Layout>
     )
   }
+}
+
+AlbumPage.propTypes = {
+  ...ReactRouterPropTypes,
 }
 
 export default AlbumPage

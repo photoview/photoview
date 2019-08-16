@@ -6,7 +6,8 @@
   "extends": ["eslint:recommended", "plugin:react/recommended"],
   "globals": {
     "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
+    "SharedArrayBuffer": "readonly",
+    "process": "readonly"
   },
   "parserOptions": {
     "ecmaFeatures": {
@@ -16,6 +17,8 @@
     "sourceType": "module"
   },
   "plugins": ["react"],
-  "rules": {},
+  "rules": {
+    "no-unused-vars": "off"
+  },
   "parser": "babel-eslint"
 }

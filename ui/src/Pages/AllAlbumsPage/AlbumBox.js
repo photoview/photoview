@@ -1,8 +1,8 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import ProtectedImage from '../../components/photoGallery/ProtectedImage'
-import { Icon } from 'semantic-ui-react'
 
 const AlbumBoxLink = styled(Link)`
   width: 240px;
@@ -37,6 +37,10 @@ const AlbumBoxImage = ({ src, ...props }) => {
   return <Placeholder />
 }
 
+AlbumBoxImage.propTypes = {
+  src: PropTypes.string.isRequired,
+}
+
 export const AlbumBox = ({ album, ...props }) => {
   if (!album) {
     return (
@@ -63,4 +67,8 @@ export const AlbumBox = ({ album, ...props }) => {
       <p>{album.title}</p>
     </AlbumBoxLink>
   )
+}
+
+AlbumBox.propTypes = {
+  album: PropTypes.object.isRequired,
 }

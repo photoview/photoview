@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 
 let imageCache = {}
 
@@ -56,6 +57,10 @@ class ProtectedImage extends React.Component {
 
     return <img {...this.props} src={this.state.imgSrc} />
   }
+}
+
+ProtectedImage.propTypes = {
+  src: PropTypes.string.isRequired,
 }
 
 export default ProtectedImage

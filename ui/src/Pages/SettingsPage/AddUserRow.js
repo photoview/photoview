@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { Mutation } from 'react-apollo'
 import { Table, Button, Input, Checkbox } from 'semantic-ui-react'
 import gql from 'graphql-tag'
@@ -99,6 +100,12 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
       )}
     </Mutation>
   )
+}
+
+AddUserRow.propTypes = {
+  setShow: PropTypes.func.isRequired,
+  show: PropTypes.bool.isRequired,
+  onUserAdded: PropTypes.func.isRequired,
 }
 
 export default AddUserRow

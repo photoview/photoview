@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import SidebarShare from './Sharing'
@@ -33,6 +34,10 @@ const AlbumSidebar = ({ albumId }) => {
       </Query>
     </div>
   )
+}
+
+AlbumSidebar.propTypes = {
+  albumId: PropTypes.string.isRequired,
 }
 
 export default AlbumSidebar

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { Mutation } from 'react-apollo'
 import {
   Table,
@@ -57,7 +58,7 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
     <Mutation
       mutation={changeUserPasswordMutation}
       onCompleted={() => {
-        onClose()
+        onClose && onClose()
       }}
     >
       {(changePassword, { data }) => (
@@ -79,7 +80,7 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
             </Form>
           </Modal.Content>
           <Modal.Actions>
-            <Button onClick={() => onClose()}>Cancel</Button>
+            <Button onClick={() => onClose && onClose()}>Cancel</Button>
             <Button
               positive
               onClick={() => {
@@ -98,6 +99,11 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
       )}
     </Mutation>
   )
+}
+
+ChangePasswordModal.propTypes = {
+  onClose: PropTypes.func,
+  user: PropTypes.object.isRequired,
 }
 
 const UserRow = ({ user, refetchUsers }) => {
@@ -269,6 +275,11 @@ const UserRow = ({ user, refetchUsers }) => {
       )}
     </Mutation>
   )
+}
+
+UserRow.propTypes = {
+  user: PropTypes.object.isRequired,
+  refetchUsers: PropTypes.func.isRequired,
 }
 
 export default UserRow

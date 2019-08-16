@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
@@ -65,6 +66,10 @@ const SideButton = props => {
   )
 }
 
+SideButton.propTypes = {
+  children: PropTypes.element,
+}
+
 const SideButtonLabel = styled.div`
   font-size: 16px;
 `
@@ -121,6 +126,10 @@ class Layout extends Component {
       </Container>
     )
   }
+}
+
+Layout.propTypes = {
+  children: PropTypes.element.isRequired,
 }
 
 export default Layout

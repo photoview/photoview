@@ -5,7 +5,9 @@ import config from '../config'
 import { isRawImage, getImageCachePath } from '../scanner/utils'
 import { getUserFromToken, getTokenFromBearer } from '../token'
 
-async function sendImage({ imagePath, photo, res }) {
+async function sendImage({ photo, res, id, albumId, image, scanner }) {
+  let imagePath = path.resolve(getImageCachePath(id, albumId), image)
+
   if (!(await fs.exists(imagePath))) {
     if (image == 'thumbnail.jpg') {
       console.log('Thumbnail not found, generating', photo.path)
@@ -73,9 +75,7 @@ function loadImageRoutes({ app, driver, scanner }) {
 
     session.close()
 
-    let imagePath = path.resolve(getImageCachePath(id, albumId), image)
-
-    sendImage({ imagePath, photo, res })
+    sendImage({ photo, res, id, albumId, image, scanner })
   })
 
   // app.use('/share/:token/:image', async (req, res) => {

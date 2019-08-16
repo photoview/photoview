@@ -3,6 +3,7 @@
     "es6": true,
     "node": true
   },
+  "extends": "eslint:recommended",
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -11,6 +12,8 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "rules": {},
+  "rules": {
+    "no-unused-vars": "off"
+  },
   "parser": "babel-eslint"
 }

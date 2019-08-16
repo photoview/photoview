@@ -100,6 +100,7 @@ const Mutation = {
       }
     }
 
+    // eslint-disable-next-line require-atomic-updates
     args.id = generateID()
 
     return neo4jgraphql(root, args, ctx, info)

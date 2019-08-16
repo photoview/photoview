@@ -1,7 +1,8 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Query, Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
-import { Table, Button, Icon, Dropdown } from 'semantic-ui-react'
+import { Table, Button, Dropdown } from 'semantic-ui-react'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: ID!) {
@@ -170,6 +171,11 @@ const SidebarShare = ({ photo, album }) => {
       </Query>
     </div>
   )
+}
+
+SidebarShare.propTypes = {
+  photo: PropTypes.object,
+  album: PropTypes.object,
 }
 
 export default SidebarShare

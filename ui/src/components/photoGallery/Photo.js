@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useSpring, animated } from 'react-spring'
 import LazyLoad from 'react-lazyload'
@@ -46,6 +47,10 @@ class LazyPhoto extends React.Component {
       </LazyLoad>
     )
   }
+}
+
+LazyPhoto.propTypes = {
+  src: PropTypes.string,
 }
 
 const PhotoOverlay = styled.div`
@@ -122,3 +127,12 @@ export const Photo = ({
     </PhotoOverlay>
   </PhotoContainer>
 )
+
+Photo.propTypes = {
+  photo: PropTypes.object.isRequired,
+  onSelectImage: PropTypes.func,
+  minWidth: PropTypes.number.isRequired,
+  index: PropTypes.number.isRequired,
+  active: PropTypes.bool.isRequired,
+  setPresenting: PropTypes.func.isRequired,
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import styled, { createGlobalStyle } from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
@@ -88,6 +89,13 @@ const PresentView = ({
       </Query>
     </PresentContainer>
   )
+}
+
+PresentView.propTypes = {
+  image: PropTypes.string.isRequired,
+  presenting: PropTypes.bool,
+  thumbnail: PropTypes.string.isRequired,
+  imageLoaded: PropTypes.func.isRequired,
 }
 
 export default PresentView

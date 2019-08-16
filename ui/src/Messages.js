@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Message, Progress } from 'semantic-ui-react'
 import gql from 'graphql-tag'
@@ -22,7 +23,7 @@ const Container = styled.div`
   width: 500px;
 `
 
-const MessageProgress = ({ header, content, percent, ...props }) => {
+const MessageProgress = ({ header, content, percent = 0, ...props }) => {
   const StyledProgress = styled(Progress)`
     position: absolute !important;
     bottom: 0;
@@ -44,6 +45,12 @@ const MessageProgress = ({ header, content, percent, ...props }) => {
       </Message.Content>
     </Message>
   )
+}
+
+MessageProgress.propTypes = {
+  header: PropTypes.string,
+  content: PropTypes.element,
+  percent: PropTypes.number,
 }
 
 class Messages extends Component {

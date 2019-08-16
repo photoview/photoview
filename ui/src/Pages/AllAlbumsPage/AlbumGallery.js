@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { AlbumBox } from './AlbumBox'
@@ -29,6 +30,12 @@ const AlbumGallery = ({ loading, error, albums }) => {
       {albumElements}
     </Container>
   )
+}
+
+AlbumGallery.propTypes = {
+  loading: PropTypes.bool.isRequired,
+  error: PropTypes.object,
+  albums: PropTypes.array,
 }
 
 export default AlbumGallery

@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
 const ItemName = styled.div`
@@ -15,9 +16,16 @@ const ItemValue = styled.div`
   display: inline-block;
 `
 
-export const SidebarItem = ({ name, value }) => (
+const SidebarItem = ({ name, value }) => (
   <div>
     <ItemName>{name}</ItemName>
     <ItemValue>{value}</ItemValue>
   </div>
 )
+
+SidebarItem.propTypes = {
+  name: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+}
+
+export default SidebarItem
