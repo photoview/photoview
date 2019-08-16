@@ -25,20 +25,20 @@ const typeDefs = fs
 
 let productionExcludes = []
 
-if (process.env.PRODUCTION == true) {
-  productionExcludes = [
-    'ScannerResult',
-    'AuthorizeResult',
-    'PhotoURL',
-    'SiteInfo',
-    'User',
-    'Album',
-    'PhotoEXIF',
-    'Photo',
-    'ShareToken',
-    'Result',
-  ]
-}
+// if (process.env.PRODUCTION == true) {
+//   productionExcludes = [
+//     'ScannerResult',
+//     'AuthorizeResult',
+//     'PhotoURL',
+//     'SiteInfo',
+//     'User',
+//     'Album',
+//     'PhotoEXIF',
+//     'Photo',
+//     'ShareToken',
+//     'Result',
+//   ]
+// }
 
 const schema = makeAugmentedSchema({
   typeDefs,
