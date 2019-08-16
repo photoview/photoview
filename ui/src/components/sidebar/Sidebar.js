@@ -29,7 +29,6 @@ class Sidebar extends React.Component {
     }
 
     this.update = content => {
-      console.log('Updating sidebar', content)
       this.setState({ content })
     }
   }

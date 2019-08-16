@@ -117,7 +117,7 @@ export const PresentPhoto = ({
 
 PresentPhoto.propTypes = {
   photo: PropTypes.object,
-  thumbnail: PropTypes.string.isRequired,
+  thumbnail: PropTypes.string,
   imageLoaded: PropTypes.func,
   photoId: PropTypes.string,
 }

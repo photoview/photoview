@@ -59,7 +59,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
 }
 
 AlbumTitle.propTypes = {
-  album: PropTypes.object.isRequired,
+  album: PropTypes.object,
   disableLink: PropTypes.bool,
 }
 

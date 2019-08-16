@@ -144,8 +144,8 @@ const PhotoGallery = ({
               <Transition {...presentViewTransitionConfig}>
                 {item => props => (
                   <PresentPhoto
-                    thumbnail={item.thumbnail.url}
-                    photoId={item.id}
+                    thumbnail={item && item.thumbnail.url}
+                    photoId={item && item.id}
                     style={props}
                   />
                 )}
