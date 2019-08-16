@@ -16,9 +16,10 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["react"],
+  "plugins": ["react", "react-hooks"],
   "rules": {
-    "no-unused-vars": "off"
+    "no-unused-vars": "off",
+    "react/display-name": "off"
   },
   "parser": "babel-eslint"
 }

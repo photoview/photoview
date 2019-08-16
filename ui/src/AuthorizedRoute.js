@@ -52,7 +52,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
 }
 
 AuthorizedRoute.propTypes = {
-  component: PropTypes.element.isRequired,
+  component: PropTypes.object.isRequired,
   admin: PropTypes.bool,
 }
 

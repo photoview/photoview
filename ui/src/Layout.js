@@ -67,7 +67,7 @@ const SideButton = props => {
 }
 
 SideButton.propTypes = {
-  children: PropTypes.element,
+  children: PropTypes.any,
 }
 
 const SideButtonLabel = styled.div`

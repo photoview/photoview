@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { animated } from 'react-spring'
+import { Transition } from 'react-spring/renderprops'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { Photo } from './Photo'
-import PresentView from './PresentView'
+import { PresentContainer, PresentPhoto } from './PresentView'
 import PropTypes from 'prop-types'
-import { fetchProtectedImage } from './ProtectedImage'
 import { SidebarConsumer } from '../sidebar/Sidebar'
 import PhotoSidebar from '../sidebar/PhotoSidebar'
 
@@ -24,130 +25,138 @@ export const presentIndexFromHash = hash => {
   return match && parseInt(match[1])
 }
 
-class PhotoGallery extends React.Component {
-  constructor(props) {
-    super(props)
-
-    this.keyDownEvent = e => {
-      if (!this.props.onSelectImage || this.props.activeIndex == -1) {
+const PhotoGallery = ({
+  activeIndex = -1,
+  photos,
+  loading,
+  onSelectImage,
+  presenting,
+  setPresenting,
+  nextImage,
+  previousImage,
+}) => {
+  useEffect(() => {
+    const keyDownEvent = e => {
+      if (!onSelectImage || activeIndex == -1) {
         return
       }
 
       if (e.key == 'ArrowRight') {
-        this.props.nextImage && this.props.nextImage()
+        setMoveDirection('right')
+        nextImage && nextImage()
       }
 
       if (e.key == 'ArrowLeft') {
-        this.props.nextImage && this.props.previousImage()
+        setMoveDirection('left')
+        nextImage && previousImage()
       }
 
       if (e.key == 'Escape') {
-        this.props.setPresenting(false)
+        setMoveDirection(null)
+        setPresenting(false)
       }
     }
 
-    this.preloadImages = this.preloadImages.bind(this)
-  }
+    document.addEventListener('keydown', keyDownEvent)
 
-  componentDidMount() {
-    document.addEventListener('keydown', this.keyDownEvent)
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.keyDownEvent)
-  }
-
-  preloadImages() {
-    async function preloadImage(url) {
-      var img = new Image()
-      img.src = await fetchProtectedImage(url)
+    return function cleanup() {
+      document.removeEventListener('keydown', keyDownEvent)
     }
+  })
 
-    const { activeIndex = -1, photos } = this.props
+  const [moveDirection, setMoveDirection] = useState(null)
 
-    if (activeIndex != -1 && photos) {
-      let previousIndex = null
-      let nextIndex = null
+  const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
-      if (activeIndex > 0) {
-        previousIndex = activeIndex - 1
-      } else {
-        previousIndex = photos.length - 1
-      }
+  const getPhotoElements = updateSidebar => {
+    let photoElements = null
+    if (photos) {
+      photos.filter(photo => photo.thumbnail)
 
-      nextIndex = (activeIndex + 1) % photos.length
+      photoElements = photos.map((photo, index) => {
+        const active = activeIndex == index
 
-      preloadImage(photos[nextIndex].original.url)
-      preloadImage(photos[previousIndex].original.url)
-    }
-  }
-
-  render() {
-    const {
-      activeIndex = -1,
-      photos,
-      loading,
-      onSelectImage,
-      presenting,
-    } = this.props
-
-    const activeImage = photos && activeIndex != -1 && photos[activeIndex]
-
-    const getPhotoElements = updateSidebar => {
-      let photoElements = null
-      if (photos) {
-        photos.filter(photo => photo.thumbnail)
-
-        photoElements = photos.map((photo, index) => {
-          const active = activeIndex == index
-
-          let minWidth = 100
-          if (photo.thumbnail) {
-            minWidth = Math.floor(
-              (photo.thumbnail.width / photo.thumbnail.height) * 200
-            )
-          }
-
-          return (
-            <Photo
-              key={photo.id}
-              photo={photo}
-              onSelectImage={index => {
-                updateSidebar(<PhotoSidebar imageId={photo.id} />)
-                onSelectImage(index)
-              }}
-              setPresenting={this.props.setPresenting}
-              minWidth={minWidth}
-              index={index}
-              active={active}
-            />
+        let minWidth = 100
+        if (photo.thumbnail) {
+          minWidth = Math.floor(
+            (photo.thumbnail.width / photo.thumbnail.height) * 200
           )
-        })
-      }
+        }
 
-      return photoElements
+        return (
+          <Photo
+            key={photo.id}
+            photo={photo}
+            onSelectImage={index => {
+              updateSidebar(<PhotoSidebar imageId={photo.id} />)
+              onSelectImage(index)
+            }}
+            setPresenting={setPresenting}
+            minWidth={minWidth}
+            index={index}
+            active={active}
+          />
+        )
+      })
     }
 
-    return (
-      <SidebarConsumer>
-        {({ updateSidebar }) => (
-          <div>
+    return photoElements
+  }
+
+  let transformDirectionIndex = 0
+  if (moveDirection == 'right') transformDirectionIndex = 1
+  if (moveDirection == 'left') transformDirectionIndex = 2
+
+  const presentViewTransitionConfig = {
+    items: activeImage,
+    keys: x => x,
+    config: {
+      tension: 220,
+    },
+    from: {
+      opacity: 0,
+      transform: [
+        'translate(0%, 0)',
+        'translate(12%, 0)',
+        'translate(-12%, 0)',
+      ][transformDirectionIndex],
+    },
+    enter: {
+      opacity: 1,
+      transform: 'translate(0%, 0)',
+    },
+  }
+
+  const AnimatedPresentPhoto = animated(PresentPhoto)
+
+  return (
+    <SidebarConsumer>
+      {({ updateSidebar }) => (
+        <div>
+          {!presenting ? (
             <Gallery>
               <Loader active={loading}>Loading images</Loader>
               {getPhotoElements(updateSidebar)}
               <PhotoFiller />
             </Gallery>
-            <PresentView
-              presenting={presenting}
-              image={activeImage && activeImage.id}
-              thumbnail={activeImage && activeImage.thumbnail.url}
-              imageLoaded={this.preloadImages()}
-            />
-          </div>
-        )}
-      </SidebarConsumer>
-    )
-  }
+          ) : (
+            <PresentContainer>
+              <Transition {...presentViewTransitionConfig}>
+                {item => props => (
+                  <PresentPhoto
+                    thumbnail={item.thumbnail.url}
+                    photoId={item.id}
+                    style={props}
+                  />
+                )}
+              </Transition>
+            </PresentContainer>
+          )}
+        </div>
+      )}
+    </SidebarConsumer>
+  )
+  // }
 }
 
 PhotoGallery.propTypes = {

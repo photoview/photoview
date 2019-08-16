@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
-import { SidebarItem } from './SidebarItem'
+import SidebarItem from './SidebarItem'
 import { Loader } from 'semantic-ui-react'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import SidebarShare from './Sharing'
@@ -78,32 +78,28 @@ class PhotoSidebar extends Component {
             const { photo } = data
             let exifItems = []
 
-            if (data.photo) {
-              if (photo.exif) {
-                let exifKeys = Object.keys(photo.exif).filter(
-                  x => !!photo.exif[x] && x != '__typename'
-                )
+            if (photo && photo.exif) {
+              let exifKeys = Object.keys(photo.exif).filter(
+                x => !!photo.exif[x] && x != '__typename'
+              )
 
-                let exif = exifKeys.reduce(
-                  (prev, curr) => ({
-                    ...prev,
-                    [curr]: photo.exif[curr],
-                  }),
-                  {}
-                )
+              let exif = exifKeys.reduce(
+                (prev, curr) => ({
+                  ...prev,
+                  [curr]: photo.exif[curr],
+                }),
+                {}
+              )
 
-                exif.dateShot = new Date(
-                  exif.dateShot.formatted
-                ).toLocaleString()
+              exif.dateShot = new Date(exif.dateShot.formatted).toLocaleString()
 
-                exifItems = exifKeys.map(key => (
-                  <SidebarItem
-                    key={key}
-                    name={exifNameLookup[key]}
-                    value={exif[key]}
-                  />
-                ))
-              }
+              exifItems = exifKeys.map(key => (
+                <SidebarItem
+                  key={key}
+                  name={exifNameLookup[key]}
+                  value={exif[key]}
+                />
+              ))
             }
 
             return (
@@ -125,7 +121,7 @@ class PhotoSidebar extends Component {
 }
 
 PhotoSidebar.propTypes = {
-  imageId: PropTypes.string,
+  imageId: PropTypes.string.isRequired,
 }
 
 export default PhotoSidebar

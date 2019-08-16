@@ -25,7 +25,7 @@ const SidebarItem = ({ name, value }) => (
 
 SidebarItem.propTypes = {
   name: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.any.isRequired,
 }
 
 export default SidebarItem

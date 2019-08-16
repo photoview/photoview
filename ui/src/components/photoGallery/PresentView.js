@@ -1,20 +1,33 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import styled, { createGlobalStyle } from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import ProtectedImage from './ProtectedImage'
 
-const PresentContainer = styled.div`
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  background-color: black;
-  color: white;
-  top: 0;
-  left: 0;
-  z-index: 100;
-`
+export const PresentContainer = ({ children, ...otherProps }) => {
+  const StyledContainer = styled.div`
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    color: white;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  `
+
+  return (
+    <StyledContainer {...otherProps}>
+      <PreventScroll />
+      {children}
+    </StyledContainer>
+  )
+}
+
+PresentContainer.propTypes = {
+  children: PropTypes.element,
+}
 
 const PreventScroll = createGlobalStyle`
   body {
@@ -37,65 +50,74 @@ const imageQuery = gql`
   }
 `
 
-const PresentImage = styled(ProtectedImage)`
+const StyledPhoto = styled(ProtectedImage)`
   width: 100vw;
   height: 100vh;
   object-fit: contain;
   object-position: center;
 `
 
-const PresentView = ({
-  image,
-  presenting,
+export const PresentPhoto = ({
+  photo,
   thumbnail,
-  imageLoaded: imageLoadedCallback,
+  imageLoaded,
+  photoId,
+  ...otherProps
 }) => {
-  if (!image || !presenting) {
-    return null
-  }
+  let [originalPhoto, setOriginalPhoto] = useState(null)
+  useEffect(() => {
+    if (!photoId) return
+
+    function loadOriginalPhoto() {
+      const originalPhoto = (
+        <Query query={imageQuery} variables={{ id: photoId }}>
+          {({ loading, error, data }) => {
+            if (error) {
+              alert(error)
+              return null
+            }
+
+            if (data && data.photo) {
+              const photo = data.photo
+
+              return (
+                <StyledPhoto
+                  style={{ display: 'none' }}
+                  src={photo.original.url}
+                  onLoad={e => {
+                    e.target.style.display = 'initial'
+                    imageLoaded && imageLoaded()
+                  }}
+                />
+              )
+            }
+
+            return null
+          }}
+        </Query>
+      )
+
+      setOriginalPhoto(originalPhoto)
+    }
+
+    const timeoutHandle = setTimeout(loadOriginalPhoto, 500)
+
+    return function cleanup() {
+      clearTimeout(timeoutHandle)
+    }
+  }, [])
 
   return (
-    <PresentContainer>
-      <PreventScroll />
-      <Query query={imageQuery} variables={{ id: image }}>
-        {({ loading, error, data }) => {
-          if (error) {
-            alert(error)
-            return <div>{error.message}</div>
-          }
-
-          let original = null
-          if (!loading) {
-            const { photo } = data
-            original = (
-              <PresentImage
-                // style={{ display: 'none' }}
-                src={photo && photo.original.url}
-                onLoad={e => {
-                  // e.target.style.display = 'initial'
-                  imageLoadedCallback && imageLoadedCallback()
-                }}
-              />
-            )
-          }
-
-          return (
-            <div>
-              {original}
-              <PresentImage src={thumbnail} />
-            </div>
-          )
-        }}
-      </Query>
-    </PresentContainer>
+    <div {...otherProps}>
+      {originalPhoto}
+      <StyledPhoto src={thumbnail} />
+    </div>
   )
 }
 
-PresentView.propTypes = {
-  image: PropTypes.string.isRequired,
-  presenting: PropTypes.bool,
+PresentPhoto.propTypes = {
+  photo: PropTypes.object,
   thumbnail: PropTypes.string.isRequired,
-  imageLoaded: PropTypes.func.isRequired,
+  imageLoaded: PropTypes.func,
+  photoId: PropTypes.string,
 }
-
-export default PresentView

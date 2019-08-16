@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 
 let imageCache = {}
 
-export async function fetchProtectedImage(src) {
+export async function fetchProtectedImage(src, { signal } = { signal: null }) {
   if (src) {
     if (imageCache[src]) {
       return imageCache[src]
@@ -13,11 +13,13 @@ export async function fetchProtectedImage(src) {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
+      signal,
     })
 
     image = await image.blob()
     const url = URL.createObjectURL(image)
 
+    // eslint-disable-next-line require-atomic-updates
     imageCache[src] = url
 
     return url
@@ -27,40 +29,36 @@ export async function fetchProtectedImage(src) {
 /**
  * An image that needs a authorization header to load
  */
-class ProtectedImage extends React.Component {
-  constructor(props) {
-    super(props)
+const ProtectedImage = ({ src, ...props }) => {
+  const [imgSrc, setImgSrc] = useState(null)
 
-    this.state = {
-      imgSrc: null,
-    }
+  useEffect(() => {
+    if (imageCache[src]) return
 
-    this.shouldRefresh = true
-  }
+    const fetchController = new AbortController()
+    let canceled = false
 
-  shouldComponentUpdate(newProps) {
-    if (newProps.src != this.props.src) this.shouldRefresh = true
-
-    return true
-  }
-
-  render() {
-    if (this.shouldRefresh) {
-      this.shouldRefresh = false
-
-      fetchProtectedImage(this.props.src).then(imgSrc => {
-        this.setState({
-          imgSrc,
-        })
+    fetchProtectedImage(src, { signal: fetchController.signal })
+      .then(newSrc => {
+        if (!canceled) {
+          setImgSrc(newSrc)
+        }
       })
-    }
+      .catch(error => {
+        console.log('Fetch image error', error.message)
+      })
 
-    return <img {...this.props} src={this.state.imgSrc} />
-  }
+    return function cleanup() {
+      canceled = true
+      fetchController.abort()
+    }
+  }, [src])
+
+  return <img {...props} src={imageCache[src] || imgSrc} />
 }
 
 ProtectedImage.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
 }
 
 export default ProtectedImage
