@@ -11,6 +11,8 @@ services:
       - NEO4J_apoc_import_file_enabled=true
       - NEO4J_apoc_export_file_enabled=true
       - NEO4J_dbms_shell_enabled=true
+    volumes:
+      - db_data:/data
 
   api:
     build: ./api
@@ -20,12 +22,14 @@ services:
     - neo4j
     environment:
       - NEO4J_URI=bolt://neo4j:7687
+      - PHOTO_CACHE=/app/cache
       # Change This: The publicly exposed url for the api
       - API_ENDPOINT=http://localhost:4001/
       - GRAPHQL_LISTEN_PORT=4001
     volumes:
       # Change This: Link photo paths from the host machine
       - ./photos_path:/photos
+      - api_cache:/app/cache
 
   ui:
     build:
@@ -37,3 +41,7 @@ services:
       - 3000:80
     depends_on:
     - api
+
+volumes:
+  db_data:
+  api_cache:
