@@ -6,6 +6,7 @@ import { Icon } from 'semantic-ui-react'
 import Sidebar from './components/sidebar/Sidebar'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
+import { Authorized } from './AuthorizedRoute'
 
 const adminQuery = gql`
   query adminQuery {
@@ -93,30 +94,32 @@ class Layout extends Component {
   render() {
     return (
       <Container>
-        <SideMenu>
-          <SideButton to="/photos" exact>
-            <Icon name="image outline" />
-            <SideButtonLabel>Photos</SideButtonLabel>
-          </SideButton>
-          <SideButton to="/albums" exact>
-            <Icon name="images outline" />
-            <SideButtonLabel>Albums</SideButtonLabel>
-          </SideButton>
-          <Query query={adminQuery}>
-            {({ loading, error, data }) => {
-              if (data && data.myUser && data.myUser.admin) {
-                return (
-                  <SideButton to="/settings" exact>
-                    <Icon name="settings" />
-                    <SideButtonLabel>Settings</SideButtonLabel>
-                  </SideButton>
-                )
-              }
+        <Authorized>
+          <SideMenu>
+            <SideButton to="/photos" exact>
+              <Icon name="image outline" />
+              <SideButtonLabel>Photos</SideButtonLabel>
+            </SideButton>
+            <SideButton to="/albums" exact>
+              <Icon name="images outline" />
+              <SideButtonLabel>Albums</SideButtonLabel>
+            </SideButton>
+            <Query query={adminQuery}>
+              {({ loading, error, data }) => {
+                if (data && data.myUser && data.myUser.admin) {
+                  return (
+                    <SideButton to="/settings" exact>
+                      <Icon name="settings" />
+                      <SideButtonLabel>Settings</SideButtonLabel>
+                    </SideButton>
+                  )
+                }
 
-              return null
-            }}
-          </Query>
-        </SideMenu>
+                return null
+              }}
+            </Query>
+          </SideMenu>
+        </Authorized>
         <Sidebar>
           <Content>{this.props.children}</Content>
         </Sidebar>
@@ -129,7 +132,7 @@ class Layout extends Component {
 }
 
 Layout.propTypes = {
-  children: PropTypes.element.isRequired,
+  children: PropTypes.any.isRequired,
 }
 
 export default Layout

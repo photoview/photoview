@@ -88,7 +88,7 @@ const PhotoGallery = ({
             key={photo.id}
             photo={photo}
             onSelectImage={index => {
-              updateSidebar(<PhotoSidebar imageId={photo.id} />)
+              updateSidebar(<PhotoSidebar photo={photo} />)
               onSelectImage(index)
             }}
             setPresenting={setPresenting}
@@ -142,10 +142,10 @@ const PhotoGallery = ({
           ) : (
             <PresentContainer>
               <Transition {...presentViewTransitionConfig}>
-                {item => props => (
+                {photo => props => (
                   <PresentPhoto
-                    thumbnail={item && item.thumbnail.url}
-                    photoId={item && item.id}
+                    thumbnail={photo && photo.thumbnail.url}
+                    photo={photo}
                     style={props}
                   />
                 )}

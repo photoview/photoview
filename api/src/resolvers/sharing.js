@@ -27,7 +27,7 @@ const Mutation = {
       MATCH (u:User { id: {userId} })
       MATCH (a:Album { id: {albumId} })
       CREATE (share:ShareToken {shareToken} )
-      CREATE (u)-[:SHARE_TOKEN]->(share)<-[:SHARES]-(a)
+      CREATE (u)-[:SHARE_TOKEN]->(share)-[:SHARES]->(a)
       RETURN share
     `,
       {
@@ -73,7 +73,7 @@ const Mutation = {
       MATCH (u:User { id: {userId} })
       MATCH (p:Photo { id: {photoId} })
       CREATE (share:ShareToken {shareToken} )
-      CREATE (u)-[:SHARE_TOKEN]->(share)<-[:SHARES]-(p)
+      CREATE (u)-[:SHARE_TOKEN]->(share)-[:SHARES]->(p)
       RETURN share
     `,
       {
@@ -125,7 +125,7 @@ const Query = {
       `
       MATCH (u:User { id: {userId} })
       MATCH (u)-[:OWNS]->(a:Album { id: {albumId} })
-      MATCH (a)-[:SHARES]->(shareToken:ShareToken)
+      MATCH (a)<-[:SHARES]-(shareToken:ShareToken)
     `
     )
 
@@ -149,7 +149,7 @@ const Query = {
       `
       MATCH (u:User { id: {userId} })
       MATCH (u)-[:OWNS]->(a:Album)-[:CONTAINS]->(p:Photo {id: {photoId} })
-      MATCH (p)-[:SHARES]->(shareToken:ShareToken)
+      MATCH (p)<-[:SHARES]-(shareToken:ShareToken)
     `
     )
 
@@ -166,6 +166,10 @@ const Query = {
     const tokens = queryResult.records.map(token => token.get('shareToken'))
 
     return tokens
+  },
+  shareToken(root, args, ctx, info) {
+    ctx.shareToken = args.token
+    return neo4jgraphql(root, args, ctx, info)
   },
 }
 

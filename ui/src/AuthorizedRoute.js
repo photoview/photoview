@@ -12,6 +12,12 @@ const adminQuery = gql`
   }
 `
 
+export const Authorized = ({ children }) => {
+  const token = localStorage.getItem('token')
+
+  return token ? children : null
+}
+
 const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
   const token = localStorage.getItem('token')
 

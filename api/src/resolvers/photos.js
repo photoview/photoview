@@ -126,7 +126,9 @@ const Query = {
 
 const PhotoURL = {
   url(root, args, ctx, info) {
-    return new URL(root.url, config.host).href
+    let url = new URL(root.url, config.host)
+    if (ctx.shareToken) url.search = `?token=${ctx.shareToken}`
+    return url.href
   },
 }
 

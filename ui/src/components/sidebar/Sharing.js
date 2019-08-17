@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Query, Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Table, Button, Dropdown } from 'semantic-ui-react'
+import copy from 'copy-to-clipboard'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: ID!) {
@@ -54,6 +55,7 @@ const deleteShareMutation = gql`
 
 const SidebarShare = ({ photo, album }) => {
   if ((!photo || !photo.id) && (!album || !album.id)) return null
+  if (!localStorage.getItem('token')) return null
 
   const isPhoto = !!photo
   const id = isPhoto ? photo.id : album.id
@@ -80,7 +82,13 @@ const SidebarShare = ({ photo, album }) => {
               </Table.Cell>
               <Table.Cell>
                 <Button.Group>
-                  <Button icon="chain" content="Copy" />
+                  <Button
+                    icon="chain"
+                    content="Copy link"
+                    onClick={() => {
+                      copy(`${location.origin}/share/${share.token}`)
+                    }}
+                  />
                   <Dropdown button text="More">
                     <Dropdown.Menu>
                       <Mutation

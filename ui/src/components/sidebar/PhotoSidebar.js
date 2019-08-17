@@ -7,6 +7,7 @@ import SidebarItem from './SidebarItem'
 import { Loader } from 'semantic-ui-react'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import SidebarShare from './Sharing'
+import { SidebarConsumer } from './Sidebar'
 
 const photoQuery = gql`
   query sidebarPhoto($id: ID!) {
@@ -61,57 +62,72 @@ const exifNameLookup = {
   flash: 'Flash',
 }
 
+const SidebarContent = ({ photo, hidePreview }) => {
+  let exifItems = []
+
+  if (photo && photo.exif) {
+    let exifKeys = Object.keys(photo.exif).filter(
+      x => !!photo.exif[x] && x != '__typename'
+    )
+
+    let exif = exifKeys.reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: photo.exif[curr],
+      }),
+      {}
+    )
+
+    exif.dateShot = new Date(exif.dateShot.formatted).toLocaleString()
+
+    exifItems = exifKeys.map(key => (
+      <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
+    ))
+  }
+
+  let previewUrl = null
+  if (photo) {
+    if (photo.original) previewUrl = photo.original.url
+    else if (photo.thumbnail) previewUrl = photo.thumbnail.url
+  }
+
+  return (
+    <div>
+      {!hidePreview && <PreviewImage src={previewUrl} />}
+      <Name>{photo && photo.title}</Name>
+      <div>{exifItems}</div>
+      <SidebarShare photo={photo} />
+    </div>
+  )
+}
+
+SidebarContent.propTypes = {
+  photo: PropTypes.object,
+  hidePreview: PropTypes.bool,
+}
+
 class PhotoSidebar extends Component {
   render() {
-    const { imageId } = this.props
+    const { photo, hidePreview } = this.props
 
-    if (!imageId) {
-      return null
+    if (!photo) return null
+
+    if (!localStorage.getItem('token')) {
+      return <SidebarContent photo={photo} hidePreview={hidePreview} />
     }
 
     return (
       <div>
-        <Query query={photoQuery} variables={{ id: imageId }}>
+        <Query query={photoQuery} variables={{ id: photo.id }}>
           {({ loading, error, data }) => {
             if (error) return error
 
-            const { photo } = data
-            let exifItems = []
-
-            if (photo && photo.exif) {
-              let exifKeys = Object.keys(photo.exif).filter(
-                x => !!photo.exif[x] && x != '__typename'
-              )
-
-              let exif = exifKeys.reduce(
-                (prev, curr) => ({
-                  ...prev,
-                  [curr]: photo.exif[curr],
-                }),
-                {}
-              )
-
-              exif.dateShot = new Date(exif.dateShot.formatted).toLocaleString()
-
-              exifItems = exifKeys.map(key => (
-                <SidebarItem
-                  key={key}
-                  name={exifNameLookup[key]}
-                  value={exif[key]}
-                />
-              ))
+            if (loading) {
+              return <SidebarContent photo={photo} hidePreview={hidePreview} />
             }
 
             return (
-              <div>
-                <Loader active={loading} />
-                <PreviewImage
-                  src={photo && photo.original && photo.original.url}
-                />
-                <Name>{photo && photo.title}</Name>
-                <div>{exifItems}</div>
-                <SidebarShare photo={photo} />
-              </div>
+              <SidebarContent photo={data.photo} hidePreview={hidePreview} />
             )
           }}
         </Query>
@@ -121,7 +137,8 @@ class PhotoSidebar extends Component {
 }
 
 PhotoSidebar.propTypes = {
-  imageId: PropTypes.string.isRequired,
+  photo: PropTypes.object.isRequired,
+  hidePreview: PropTypes.bool,
 }
 
 export default PhotoSidebar

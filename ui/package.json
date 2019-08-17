@@ -13,6 +13,7 @@
     "apollo-link-http": "^1.5.15",
     "apollo-link-ws": "^1.0.18",
     "babel-plugin-styled-components": "^1.10.6",
+    "copy-to-clipboard": "^3.2.0",
     "graphql": "^14.2.1",
     "graphql-tag": "^2.10.1",
     "parcel-bundler": "^1.12.3",

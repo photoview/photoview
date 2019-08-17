@@ -61,41 +61,55 @@ export const PresentPhoto = ({
   photo,
   thumbnail,
   imageLoaded,
-  photoId,
   ...otherProps
 }) => {
   let [originalPhoto, setOriginalPhoto] = useState(null)
   useEffect(() => {
-    if (!photoId) return
+    if (!(photo && photo.id)) return
 
     function loadOriginalPhoto() {
-      const originalPhoto = (
-        <Query query={imageQuery} variables={{ id: photoId }}>
-          {({ loading, error, data }) => {
-            if (error) {
-              alert(error)
+      let originalPhoto = null
+
+      if (photo && photo.original && photo.original.url) {
+        originalPhoto = (
+          <StyledPhoto
+            style={{ display: 'none' }}
+            src={photo.original.url}
+            onLoad={e => {
+              e.target.style.display = 'initial'
+              imageLoaded && imageLoaded()
+            }}
+          />
+        )
+      } else {
+        originalPhoto = (
+          <Query query={imageQuery} variables={{ id: photo.id }}>
+            {({ loading, error, data }) => {
+              if (error) {
+                alert(error)
+                return null
+              }
+
+              if (data && data.photo) {
+                const photo = data.photo
+
+                return (
+                  <StyledPhoto
+                    style={{ display: 'none' }}
+                    src={photo.original.url}
+                    onLoad={e => {
+                      e.target.style.display = 'initial'
+                      imageLoaded && imageLoaded()
+                    }}
+                  />
+                )
+              }
+
               return null
-            }
-
-            if (data && data.photo) {
-              const photo = data.photo
-
-              return (
-                <StyledPhoto
-                  style={{ display: 'none' }}
-                  src={photo.original.url}
-                  onLoad={e => {
-                    e.target.style.display = 'initial'
-                    imageLoaded && imageLoaded()
-                  }}
-                />
-              )
-            }
-
-            return null
-          }}
-        </Query>
-      )
+            }}
+          </Query>
+        )
+      }
 
       setOriginalPhoto(originalPhoto)
     }
@@ -119,5 +133,4 @@ PresentPhoto.propTypes = {
   photo: PropTypes.object,
   thumbnail: PropTypes.string,
   imageLoaded: PropTypes.func,
-  photoId: PropTypes.string,
 }

@@ -22,7 +22,7 @@ type Album {
   owner: User! @relation(name: "OWNS", direction: "IN")
   path: String
 
-  shares: [ShareToken] @relation(name: "SHARES", direction: "OUT")
+  shares: [ShareToken] @relation(name: "SHARES", direction: "IN")
 }
 
 type PhotoURL {
@@ -61,7 +61,7 @@ type Photo {
   album: Album! @relation(name: "CONTAINS", direction: "IN")
   exif: PhotoEXIF @relation(name: "EXIF", direction: "OUT")
 
-  shares: [ShareToken] @relation(name: "SHARES", direction: "OUT")
+  shares: [ShareToken] @relation(name: "SHARES", direction: "IN")
 }
 
 type ShareToken {
@@ -70,10 +70,10 @@ type ShareToken {
   # Optional expire date
   expire: Date
   # Optional password
-  password: String
+  # password: String
 
-  album: Album @relation(name: "SHARES", direction: "IN")
-  photo: Photo @relation(name: "SHARES", direction: "IN")
+  album: Album @relation(name: "SHARES", direction: "OUT")
+  photo: Photo @relation(name: "SHARES", direction: "OUT")
 }
 
 type SiteInfo {
@@ -151,6 +151,8 @@ type Query {
 
   myPhotos: [Photo] @isAuthenticated
   photo(id: ID!): Photo @isAuthenticated
+
+  shareToken(token: ID!): ShareToken
 
   albumShares(id: ID!, password: String): [ShareToken] @isAuthenticated
   photoShares(id: ID!, password: String): [ShareToken] @isAuthenticated
