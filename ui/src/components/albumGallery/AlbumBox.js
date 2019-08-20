@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
-import ProtectedImage from '../../components/photoGallery/ProtectedImage'
+import ProtectedImage from '../photoGallery/ProtectedImage'
 
 const AlbumBoxLink = styled(Link)`
   width: 240px;
@@ -38,10 +38,10 @@ const AlbumBoxImage = ({ src, ...props }) => {
 }
 
 AlbumBoxImage.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
 }
 
-export const AlbumBox = ({ album, ...props }) => {
+export const AlbumBox = ({ album, customLink, ...props }) => {
   if (!album) {
     return (
       <AlbumBoxLink {...props} to="#">
@@ -62,7 +62,7 @@ export const AlbumBox = ({ album, ...props }) => {
       album.subAlbums[0].photos[0].thumbnail.url)
 
   return (
-    <AlbumBoxLink {...props} to={`/album/${album.id}`}>
+    <AlbumBoxLink {...props} to={customLink || `/album/${album.id}`}>
       <AlbumBoxImage src={thumbnail} />
       <p>{album.title}</p>
     </AlbumBoxLink>
@@ -70,5 +70,6 @@ export const AlbumBox = ({ album, ...props }) => {
 }
 
 AlbumBox.propTypes = {
-  album: PropTypes.object.isRequired,
+  album: PropTypes.object,
+  customLink: PropTypes.string,
 }

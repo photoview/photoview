@@ -11,15 +11,25 @@ const tokenQuery = gql`
     shareToken(token: $token) {
       token
       album {
-        id
-        title
-        photos(orderBy: title_desc) {
-          ...PhotoProps
+        ...AlbumProps
+        subAlbums {
+          ...AlbumProps
+          subAlbums {
+            ...AlbumProps
+          }
         }
       }
       photo {
         ...PhotoProps
       }
+    }
+  }
+
+  fragment AlbumProps on Album {
+    id
+    title
+    photos(orderBy: title_desc) {
+      ...PhotoProps
     }
   }
 
@@ -62,7 +72,9 @@ const SharePage = ({ match }) => {
               if (loading) return 'Loading...'
 
               if (data.shareToken.album) {
-                return <AlbumSharePage album={data.shareToken.album} />
+                return (
+                  <AlbumSharePage album={data.shareToken.album} match={match} />
+                )
               }
 
               if (data.shareToken.photo) {

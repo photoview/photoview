@@ -47,11 +47,13 @@ const AlbumTitle = ({ album, disableLink = false }) => {
       {({ updateSidebar }) => (
         <Header>
           {title}
-          <SettingsIcon
-            onClick={() => {
-              updateSidebar(<AlbumSidebar albumId={album.id} />)
-            }}
-          />
+          {localStorage.getItem('token') && (
+            <SettingsIcon
+              onClick={() => {
+                updateSidebar(<AlbumSidebar albumId={album.id} />)
+              }}
+            />
+          )}
         </Header>
       )}
     </SidebarConsumer>

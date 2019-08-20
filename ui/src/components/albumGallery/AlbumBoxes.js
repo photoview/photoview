@@ -9,14 +9,18 @@ const Container = styled.div`
   position: relative;
 `
 
-const AlbumGallery = ({ loading, error, albums }) => {
+const AlbumBoxes = ({ loading, error, albums, getCustomLink }) => {
   if (error) return <div>Error {error.message}</div>
 
   let albumElements = []
 
   if (albums) {
     albumElements = albums.map(album => (
-      <AlbumBox key={album.id} album={album} />
+      <AlbumBox
+        key={album.id}
+        album={album}
+        customLink={getCustomLink ? getCustomLink(album.id) : null}
+      />
     ))
   } else {
     for (let i = 0; i < 8; i++) {
@@ -32,10 +36,11 @@ const AlbumGallery = ({ loading, error, albums }) => {
   )
 }
 
-AlbumGallery.propTypes = {
+AlbumBoxes.propTypes = {
   loading: PropTypes.bool.isRequired,
   error: PropTypes.object,
   albums: PropTypes.array,
+  getCustomLink: PropTypes.func,
 }
 
-export default AlbumGallery
+export default AlbumBoxes

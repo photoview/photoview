@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import AlbumGallery from './AlbumGallery'
+import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
@@ -32,7 +32,7 @@ class AlbumsPage extends Component {
         <h1>Albums</h1>
         <Query query={getAlbumsQuery}>
           {({ loading, error, data }) => (
-            <AlbumGallery
+            <AlbumBoxes
               loading={loading}
               error={error}
               albums={data && data.myAlbums}
