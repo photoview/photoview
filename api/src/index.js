@@ -3,16 +3,12 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { v1 as neo4j } from 'neo4j-driver'
-import dotenv from 'dotenv'
 import http from 'http'
 import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
 import config from './config'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
-
-// set environment variables from ../.env
-dotenv.config()
 
 const app = express()
 app.use(bodyParser.json())

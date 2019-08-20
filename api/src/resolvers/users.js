@@ -1,18 +1,20 @@
 import jwt from 'jsonwebtoken'
 import generateID from '../id-generator'
 import fs from 'fs-extra'
+import bcrypt from 'bcrypt'
 import { neo4jgraphql } from 'neo4j-graphql-js'
+import config from '../config'
 
 const Mutation = {
   async authorizeUser(root, args, ctx, info) {
     console.log('Authorize user')
-    let { username, password } = args
+    let { username } = args
 
     let session = ctx.driver.session()
 
     let result = await session.run(
-      'MATCH (usr:User {username: {username}, password: {password} }) RETURN usr.id, usr.admin',
-      { username, password }
+      'MATCH (user:User {username: {username}}) RETURN user',
+      { username }
     )
 
     if (result.records.length == 0) {
@@ -25,16 +27,23 @@ const Mutation = {
 
     const record = result.records[0]
 
-    const userId = record.get('usr.id')
-    const userAdmin = record.get('usr.admin')
+    const user = record.get('user').properties
+
+    if ((await bcrypt.compare(args.password, user.password)) == false) {
+      return {
+        success: false,
+        status: 'Username or password was invalid',
+        token: null,
+      }
+    }
 
     let roles = []
 
-    if (userAdmin) {
+    if (user.admin) {
       roles.push('admin')
     }
 
-    const token = jwt.sign({ id: userId, roles }, process.env.JWT_SECRET)
+    const token = jwt.sign({ id: user.id, roles }, process.env.JWT_SECRET)
 
     return {
       success: true,
@@ -43,7 +52,7 @@ const Mutation = {
     }
   },
   async registerUser(root, args, ctx, info) {
-    let { username, password, rootPath } = args
+    let { username, rootPath } = args
 
     let session = ctx.driver.session()
     let findResult = await session.run(
@@ -67,9 +76,14 @@ const Mutation = {
       }
     }
 
+    const hashedPassword = await bcrypt.hash(
+      args.password,
+      config.encryptionSaltRounds
+    )
+
     const registerResult = await session.run(
       'CREATE (n:User { username: {username}, password: {password}, id: {id}, admin: false, rootPath: {rootPath} }) return n.id',
-      { username, password, id: generateID(), rootPath }
+      { username, password: hashedPassword, id: generateID(), rootPath }
     )
 
     let id = registerResult.records[0].get('n.id')
@@ -91,6 +105,12 @@ const Mutation = {
       }
     }
 
+    if (args.password)
+      args.password = await bcrypt.hash(
+        args.password,
+        config.encryptionSaltRounds
+      )
+
     return neo4jgraphql(root, args, ctx, info)
   },
   async createUser(root, args, ctx, info) {
@@ -103,6 +123,12 @@ const Mutation = {
     // eslint-disable-next-line require-atomic-updates
     args.id = generateID()
 
+    if (args.password)
+      args.password = await bcrypt.hash(
+        args.password,
+        config.encryptionSaltRounds
+      )
+
     return neo4jgraphql(root, args, ctx, info)
   },
   async changeUserPassword(root, args, ctx, info) {
@@ -110,11 +136,16 @@ const Mutation = {
 
     const session = ctx.driver.session()
 
+    const hashedPassword = await bcrypt.hash(
+      newPassword,
+      config.encryptionSaltRounds
+    )
+
     await session.run(
-      `MATCH (u:User { id: {id} }) SET u.password = {newPassword}`,
+      `MATCH (u:User { id: {id} }) SET u.password = {password}`,
       {
         id,
-        newPassword,
+        password: hashedPassword,
       }
     )
 

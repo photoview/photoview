@@ -22,6 +22,7 @@
     "apollo-link-http": "^1.5.14",
     "apollo-server": "^2.8.1",
     "babel-runtime": "^6.26.0",
+    "bcrypt": "^3.0.6",
     "body-parser": "^1.19.0",
     "core-js": "^3.2.0",
     "dotenv": "^8.0.0",

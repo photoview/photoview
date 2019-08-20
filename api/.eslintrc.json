@@ -13,7 +13,8 @@
     "sourceType": "module"
   },
   "rules": {
-    "no-unused-vars": "off"
+    "no-unused-vars": "off",
+    "require-atomic-updates": "off"
   },
   "parser": "babel-eslint"
 }
