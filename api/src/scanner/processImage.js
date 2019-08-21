@@ -33,6 +33,7 @@ async function addExifTags({ session, photo }) {
     lens: rawTags.LensType,
     dateShot:
       rawTags.DateTimeOriginal &&
+      typeof rawTags.DateTimeOriginal.toDate == 'function' &&
       NeoDateTime.fromStandardDate(rawTags.DateTimeOriginal.toDate()),
     fileSize: rawTags.FileSize,
     exposure: rawTags.ShutterSpeedValue,
