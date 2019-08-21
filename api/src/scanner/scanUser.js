@@ -11,7 +11,7 @@ export default async function scanUser(scanner, user) {
 
   let foundAlbumIds = []
 
-  async function scanPath(path, parentAlbum) {
+  async function scanPath(path) {
     const list = fs.readdirSync(path)
 
     let foundImageOrAlbum = false
@@ -30,7 +30,6 @@ export default async function scanUser(scanner, user) {
 
       if (stat && stat.isDirectory()) {
         const session = driver.session()
-        let nextParentAlbum = null
 
         const findAlbumResult = await session.run(
           'MATCH (a:Album { path: {path} }) RETURN a',
@@ -44,14 +43,13 @@ export default async function scanUser(scanner, user) {
         const {
           foundImage: imagesInDirectory,
           newAlbums: childAlbums,
-        } = await scanPath(itemPath, nextParentAlbum)
+        } = await scanPath(itemPath)
 
         if (findAlbumResult.records.length > 0) {
           const album = findAlbumResult.records[0].toObject().a.properties
           console.log('Found existing album', album.title)
 
           foundImageOrAlbum = true
-          nextParentAlbum = album.id
           foundAlbumIds.push(album.id)
           await _scanAlbum(scanner, album)
 
@@ -82,20 +80,9 @@ export default async function scanUser(scanner, user) {
           newAlbums.push(albumId)
           const album = albumResult.records[0].toObject().a.properties
 
-          if (parentAlbum) {
-            console.log('Linking parent album for', album.title)
-            await session.run(
-              `MATCH (parent:Album { id: {parentId} })
-              MATCH (child:Album { id: {childId} })
-              MERGE (parent)-[:SUBALBUM]->(child)`,
-              {
-                childId: albumId,
-                parentId: parentAlbum,
-              }
-            )
-          }
-
-          console.log(`Linking ${childAlbums.length} child albums`)
+          console.log(
+            `Linking ${childAlbums.length} child albums for ${album.title}`
+          )
           for (let childAlbum of childAlbums) {
             await session.run(
               `MATCH (parent:Album { id: {parentId} })
