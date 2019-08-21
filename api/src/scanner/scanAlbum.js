@@ -3,6 +3,7 @@ import path from 'path'
 import generateID from '../id-generator'
 import { isImage, getImageCachePath } from './utils'
 import _processImage from './processImage'
+import { EVENT_SCANNER_PROGRESS } from './Scanner'
 
 export default async function scanAlbum(scanner, album) {
   const { driver, markImageToProgress } = scanner
@@ -91,7 +92,17 @@ export default async function scanAlbum(scanner, album) {
 
   session.close()
 
-  await Promise.all(processingImagePromises)
+  await Promise.all(processingImagePromises).catch(e => {
+    console.error(`Error processing image: ${e.stack}`)
+    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+      scannerStatusUpdate: {
+        progress: 0,
+        finished: false,
+        success: false,
+        message: `Error processing image: ${e.message}`,
+      },
+    })
+  })
   console.log('Done processing album', album.title)
 
   scanner.broadcastProgress()
