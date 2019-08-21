@@ -1,4 +1,7 @@
-export default function scanAll({ driver, scanUser }) {
+import _scanUser from './scanUser'
+
+export default function scanAll(scanner) {
+  const { driver } = scanner
   return new Promise((resolve, reject) => {
     let session = driver.session()
 
@@ -20,7 +23,7 @@ export default function scanAll({ driver, scanUser }) {
 
         for (let user of usersToScan) {
           try {
-            await scanUser(user)
+            await _scanUser(scanner, user)
           } catch (reason) {
             console.log(
               `User scan exception for user ${user.username} ${reason}`
@@ -28,6 +31,8 @@ export default function scanAll({ driver, scanUser }) {
             reject(reason)
           }
         }
+
+        resolve()
       },
       onError: error => {
         session.close()

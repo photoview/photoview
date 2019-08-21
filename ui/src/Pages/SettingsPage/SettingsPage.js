@@ -10,7 +10,7 @@ const scanMutation = gql`
   mutation scanAllMutation {
     scanAll {
       success
-      errorMessage
+      message
     }
   }
 `

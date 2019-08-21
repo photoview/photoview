@@ -95,8 +95,8 @@ type AuthorizeResult {
 type ScannerResult {
   finished: Boolean!
   success: Boolean!
-  errorMessage: String
   progress: Float
+  message: String
 }
 
 type Result {

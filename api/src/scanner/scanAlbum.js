@@ -2,12 +2,12 @@ import fs from 'fs-extra'
 import path from 'path'
 import generateID from '../id-generator'
 import { isImage, getImageCachePath } from './utils'
+import _processImage from './processImage'
 
-export default async function scanAlbum(
-  { driver, markImageToProgress, markFinishedImage, processImage },
-  album
-) {
+export default async function scanAlbum(scanner, album) {
+  const { driver, markImageToProgress } = scanner
   const { title, path: albumPath, id } = album
+
   console.log('Scanning album', title)
 
   let processedImages = []
@@ -22,8 +22,6 @@ export default async function scanAlbum(
     if (await isImage(itemPath)) {
       const session = driver.session()
 
-      markImageToProgress()
-
       const photoResult = await session.run(
         `MATCH (p:Photo {path: {imgPath} })<--(a:Album {id: {albumId}}) RETURN p`,
         {
@@ -36,29 +34,33 @@ export default async function scanAlbum(
         // console.log(`Photo already exists ${item}`)
 
         const photoId = photoResult.records[0].get('p').properties.id
+        markImageToProgress(photoId)
 
         const thumbnailPath = path.resolve(
           getImageCachePath(photoId, id),
           'thumbnail.jpg'
         )
 
-        processingImagePromises.push(processImage(photoId))
+        processingImagePromises.push(_processImage(scanner, photoId))
       } else {
         console.log(`Found new image at ${itemPath}`)
-        const imageId = generateID()
+
+        const photoId = generateID()
+        markImageToProgress(photoId)
+
         await session.run(
           `MATCH (a:Album { id: {albumId} })
           CREATE (p:Photo {id: {id}, path: {path}, title: {title} })
           CREATE (a)-[:CONTAINS]->(p)`,
           {
-            id: imageId,
+            id: photoId,
             path: itemPath,
             title: item,
             albumId: id,
           }
         )
 
-        processingImagePromises.push(processImage(imageId))
+        processingImagePromises.push(_processImage(scanner, photoId))
       }
     }
   }
@@ -91,4 +93,6 @@ export default async function scanAlbum(
 
   await Promise.all(processingImagePromises)
   console.log('Done processing album', album.title)
+
+  scanner.broadcastProgress()
 }

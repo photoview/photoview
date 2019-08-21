@@ -10,7 +10,7 @@ const syncSubscription = gql`
     scannerStatusUpdate {
       finished
       success
-      errorMessage
+      message
       progress
     }
   }
@@ -49,7 +49,7 @@ const MessageProgress = ({ header, content, percent = 0, ...props }) => {
 
 MessageProgress.propTypes = {
   header: PropTypes.string,
-  content: PropTypes.element,
+  content: PropTypes.any,
   percent: PropTypes.number,
 }
 
@@ -90,9 +90,7 @@ class Messages extends Component {
                   this.setState({ showSyncMessage: false })
                 }}
                 header={update.finished ? 'Synced' : 'Syncing'}
-                content={
-                  update.finished ? 'Finished syncing' : 'Syncing in progress'
-                }
+                content={update.message}
                 percent={update.progress}
               />
             )

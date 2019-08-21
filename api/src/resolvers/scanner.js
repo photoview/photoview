@@ -2,21 +2,13 @@ import { EVENT_SCANNER_PROGRESS } from '../scanner/Scanner'
 
 const Mutation = {
   async scanAll(root, args, ctx, info) {
-    if (ctx.scanner.isRunning) {
-      return {
-        finished: false,
-        success: false,
-        errorMessage: 'Scanner already running',
-      }
-    }
-
     ctx.scanner.scanAll()
 
     return {
       finished: false,
       success: true,
       progress: 0,
-      errorMessage: null,
+      message: 'Starting scanner',
     }
   },
 }

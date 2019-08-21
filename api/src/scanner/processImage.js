@@ -54,7 +54,8 @@ async function addExifTags({ session, photo }) {
   console.log('Added exif tags to photo', photo.path)
 }
 
-export default async function processImage({ driver, markFinishedImage }, id) {
+export default async function processImage(scanner, id) {
+  const { driver, markFinishedImage } = scanner
   const session = driver.session()
 
   const result = await session.run(
@@ -77,7 +78,7 @@ export default async function processImage({ driver, markFinishedImage }, id) {
     )
 
     if (urlResult.records.length == 2) {
-      markFinishedImage()
+      markFinishedImage(id)
 
       session.close()
 
@@ -196,5 +197,5 @@ export default async function processImage({ driver, markFinishedImage }, id) {
 
   session.close()
 
-  markFinishedImage()
+  markFinishedImage(id)
 }

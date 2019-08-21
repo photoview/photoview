@@ -2,9 +2,12 @@ import fs from 'fs-extra'
 import { resolve as pathResolve } from 'path'
 import generateID from '../id-generator'
 import { isImage, getAlbumCachePath } from './utils'
+import _scanAlbum from './scanAlbum'
 
-export default async function scanUser({ driver, scanAlbum }, user) {
-  console.log('Scanning user', user.username, 'at', user.path)
+export default async function scanUser(scanner, user) {
+  const { driver } = scanner
+
+  console.log('Scanning user', user.username, 'at', user.rootPath)
 
   let foundAlbumIds = []
 
@@ -50,7 +53,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           foundImageOrAlbum = true
           nextParentAlbum = album.id
           foundAlbumIds.push(album.id)
-          await scanAlbum(album)
+          await _scanAlbum(scanner, album)
 
           continue
         }
@@ -106,7 +109,7 @@ export default async function scanUser({ driver, scanAlbum }, user) {
           }
 
           foundAlbumIds.push(album.id)
-          await scanAlbum(album)
+          await _scanAlbum(scanner, album)
 
           session.close()
         }

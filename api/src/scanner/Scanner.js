@@ -7,6 +7,66 @@ import _scanAll from './scanAll'
 
 export const EVENT_SCANNER_PROGRESS = 'SCANNER_PROGRESS'
 
+async function _execScan(scanner, scanFunction) {
+  try {
+    if (scanner.isRunning) throw new Error('Scanner already running')
+    scanner.isRunning = true
+    scanner.imageProgress = {}
+
+    const session = scanner.driver.session()
+    const photoResult = await session.run(
+      'MATCH (photo:Photo) RETURN photo.id as photoId'
+    )
+    session.close()
+
+    photoResult.records
+      .map(x => x.get('photoId'))
+      .forEach(id => {
+        scanner.markImageToProgress(id)
+      })
+
+    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+      scannerStatusUpdate: {
+        progress: 0,
+        finished: false,
+        success: true,
+        message: 'Scan started',
+      },
+    })
+
+    console.log('Calling scan function')
+    await scanFunction()
+    console.log('Scan function ended')
+
+    console.log(
+      `Done scanning ${Object.keys(scanner.imageProgress).length} photos`
+    )
+
+    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+      scannerStatusUpdate: {
+        progress: 100,
+        finished: true,
+        success: true,
+        message: `Done scanning ${
+          Object.keys(scanner.imageProgress).length
+        } photos`,
+      },
+    })
+  } catch (e) {
+    console.error(`SCANNER ERROR: ${e.message}\n${e.stack}`)
+    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+      scannerStatusUpdate: {
+        progress: 0,
+        finished: true,
+        success: false,
+        message: `Scanner error: ${e.message}`,
+      },
+    })
+  } finally {
+    scanner.isRunning = false
+  }
+}
+
 class PhotoScanner {
   constructor(driver) {
     this.driver = driver
@@ -18,97 +78,67 @@ class PhotoScanner {
     this.scanUser = this.scanUser.bind(this)
     this.scanAll = this.scanAll.bind(this)
 
-    this.imagesToProgress = 0
-    this.finishedImages = 0
+    this.imageProgress = {}
 
-    this.markImageToProgress = () => {
-      this.imagesToProgress++
+    this.markImageToProgress = imageId => {
+      if (!this.imageProgress[imageId]) this.imageProgress[imageId] = false
     }
 
-    this.markFinishedImage = () => {
-      this.finishedImages++
+    this.markFinishedImage = imageId => {
+      this.imageProgress[imageId] = true
+      this.broadcastProgress()
     }
+
+    this.finishedImages = () =>
+      Object.values(this.imageProgress).reduce((prev, x) => {
+        x ? prev++ : prev
+        return prev
+      }, 0)
 
     this.broadcastProgress = _.debounce(() => {
-      if (this.imagesToProgress == 0) return
+      if (!this.isRunning) return
+      if (Object.keys(this.imageProgress).length == 0) return
 
-      console.log(
-        `Progress: ${(this.finishedImages / this.imagesToProgress) * 100}`
-      )
+      let progress =
+        (this.finishedImages() / Object.keys(this.imageProgress).length) * 100
+
+      console.log(`Progress: ${progress}`)
       this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
         scannerStatusUpdate: {
-          progress: (this.finishedImages / this.imagesToProgress) * 100,
+          progress,
           finished: false,
           success: true,
-          errorMessage: '',
+          message: `${this.finishedImages()} photos scanned`,
         },
       })
     }, 250)
+
+    this.markImageToProgress = this.markImageToProgress.bind(this)
+    this.markFinishedImage = this.markFinishedImage.bind(this)
+    this.finishedImages = this.finishedImages.bind(this)
   }
 
   async scanUser(user) {
-    await _scanUser({ driver: this.driver, scanAlbum: this.scanAlbum }, user)
+    await _execScan(this, async () => {
+      await _scanUser({ driver: this.driver, scanAlbum: this.scanAlbum }, user)
+    })
   }
 
   async scanAlbum(album) {
-    await _scanAlbum(
-      {
-        driver: this.driver,
-        markImageToProgress: this.markImageToProgress,
-        markFinishedImage: this.markFinishedImage,
-        processImage: this.processImage,
-      },
-      album
-    )
+    await _execScan(this, async () => {
+      await _scanAlbum(this, album)
+    })
   }
 
   async processImage(id) {
-    await _processImage(
-      {
-        driver: this.driver,
-        markFinishedImage: this.markFinishedImage,
-      },
-      id
-    )
-
-    this.broadcastProgress()
+    await _execScan(this, async () => {
+      await _processImage(this, id)
+    })
   }
 
   async scanAll() {
-    this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-      scannerStatusUpdate: {
-        progress: 0,
-        finished: false,
-        success: true,
-        errorMessage: '',
-      },
-    })
-
-    try {
-      await _scanAll({ driver: this.driver, scanUser: this.scanUser })
-    } catch (error) {
-      this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-        scannerStatusUpdate: {
-          progress: 0,
-          finished: false,
-          success: false,
-          errorMessage: error.message,
-        },
-      })
-      throw error
-    }
-
-    console.log(
-      `Done scanning ${this.finishedImages} of ${this.imagesToProgress}`
-    )
-
-    this.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-      scannerStatusUpdate: {
-        progress: 100,
-        finished: true,
-        success: true,
-        errorMessage: '',
-      },
+    await _execScan(this, async () => {
+      await _scanAll(this)
     })
   }
 }
