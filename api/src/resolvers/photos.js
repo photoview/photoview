@@ -124,7 +124,7 @@ const Query = {
   },
 }
 
-const PhotoURL = {
+const urlResolve = {
   url(root, args, ctx, info) {
     let url = new URL(root.url, config.host)
     if (ctx.shareToken) url.search = `?token=${ctx.shareToken}`
@@ -134,5 +134,6 @@ const PhotoURL = {
 
 export default {
   Query,
-  PhotoURL,
+  PhotoURL: urlResolve,
+  PhotoDownload: urlResolve,
 }

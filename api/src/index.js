@@ -29,6 +29,12 @@ const driver = neo4j.driver(
 
 const scanner = new PhotoScanner(driver)
 
+app.use((req, res, next) => {
+  req.driver = driver
+  req.scanner = scanner
+  next()
+})
+
 // Every 4th hour
 setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 
@@ -85,8 +91,10 @@ const server = new ApolloServer({
 server.applyMiddleware({ app, path: graphPath })
 
 import loadImageRoutes from './routes/images'
+import loadDownloadRoutes from './routes/downloads'
 
-loadImageRoutes({ app, driver, scanner })
+loadImageRoutes(app)
+loadDownloadRoutes(app)
 
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)

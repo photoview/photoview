@@ -26,12 +26,17 @@ type Album {
 }
 
 type PhotoURL {
-  # URL for the image
+  # URL for previewing the image
   url: String
   # Width of the image in pixels
   width: Int
   # Height of the image in pixels
   height: Int
+}
+
+type PhotoDownload {
+  title: String
+  url: String
 }
 
 type PhotoEXIF {
@@ -62,6 +67,7 @@ type Photo {
   exif: PhotoEXIF @relation(name: "EXIF", direction: "OUT")
 
   shares: [ShareToken] @relation(name: "SHARES", direction: "IN")
+  downloads: [PhotoDownload] @relation(name: "DOWNLOAD", direction: "OUT")
 }
 
 type ShareToken {

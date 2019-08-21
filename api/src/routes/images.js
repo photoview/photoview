@@ -5,49 +5,90 @@ import config from '../config'
 import { isRawImage, getImageCachePath } from '../scanner/utils'
 import { getUserFromToken, getTokenFromBearer } from '../token'
 
-class RequestError extends Error {
+export class RequestError extends Error {
   constructor(httpCode, message) {
     super(message)
     this.httpCode = httpCode
   }
 }
 
-async function sendImage({ photo, res, id, albumId, image, scanner }) {
-  let imagePath = path.resolve(getImageCachePath(id, albumId), image)
+export async function getImageFromRequest(req, res, next) {
+  const { id, image } = req.params
+  const driver = req.driver
 
-  if (!(await fs.exists(imagePath))) {
-    if (image == 'thumbnail.jpg') {
+  const shareToken = req.query.token
+
+  let photo, albumId
+
+  try {
+    let verify = null
+
+    if (shareToken) {
+      verify = await verifyShareToken({ shareToken, id, driver })
+    }
+
+    if (!verify) {
+      verify = await verifyUser(req, id)
+    }
+
+    if (verify == null) throw RequestError(500, 'Unable to verify request')
+
+    photo = verify.photo
+    albumId = verify.albumId
+  } catch (error) {
+    return res.status(error.status || 500).send(error.message)
+  }
+
+  let cachePath = path.resolve(getImageCachePath(id, albumId), image)
+  req.cachePath = cachePath
+  req.photo = photo
+
+  next()
+}
+
+async function sendImage(req, res) {
+  let { photo, cachePath } = req
+  const photoBasename = path.basename(cachePath)
+
+  if (!(await fs.exists(cachePath))) {
+    if (photoBasename == 'thumbnail.jpg') {
       console.log('Thumbnail not found, generating', photo.path)
-      await scanner.processImage(photo.id)
+      await req.scanner.processImage(photo.id)
 
-      if (!(await fs.exists(imagePath))) {
+      if (!(await fs.exists(cachePath))) {
         throw new Error('Thumbnail not found after image processing')
       }
 
-      return res.sendFile(imagePath)
+      return res.sendFile(cachePath)
     }
 
-    imagePath = photo.path
+    cachePath = photo.path
   }
 
-  if (await isRawImage(imagePath)) {
-    console.log('RAW preview image not found, generating', imagePath)
-    await scanner.processImage(id)
+  if (await isRawImage(cachePath)) {
+    console.log('RAW preview image not found, generating', cachePath)
+    await req.scanner.processImage(photo.id)
 
-    imagePath = path.resolve(config.cachePath, 'images', id, image)
+    cachePath = path.resolve(
+      config.cachePath,
+      'images',
+      photo.id,
+      photoBasename
+    )
 
-    if (!(await fs.exists(imagePath))) {
+    if (!(await fs.exists(cachePath))) {
       throw new Error('RAW preview not found after image processing')
     }
 
-    return res.sendFile(imagePath)
+    return res.sendFile(cachePath)
   }
 
-  res.sendFile(imagePath)
+  res.sendFile(cachePath)
 }
 
-async function verifyUser({ req, driver, id }) {
+async function verifyUser(req, id) {
   let user = null
+  const { driver } = req
 
   try {
     const token = getTokenFromBearer(req.headers.authorization)
@@ -136,39 +177,9 @@ async function verifyShareToken({ shareToken, id, driver }) {
   }
 }
 
-function loadImageRoutes({ app, driver, scanner }) {
-  app.use('/images/:id/:image', async (req, res) => {
-    const { id, image } = req.params
-
-    const shareToken = req.query.token
-
-    let photo, albumId
-
-    try {
-      let verify = null
-
-      if (shareToken) {
-        verify = await verifyShareToken({ shareToken, id, driver })
-      }
-
-      if (!verify) {
-        verify = await verifyUser({
-          req,
-          driver,
-          id,
-        })
-      }
-
-      if (verify == null) throw RequestError(500, 'Unable to verify request')
-
-      photo = verify.photo
-      albumId = verify.albumId
-    } catch (error) {
-      return res.status(error.status || 500).send(error.message)
-    }
-
-    sendImage({ photo, res, id, albumId, image, scanner })
-  })
+function loadImageRoutes(app) {
+  app.use('/images/:id/:image', getImageFromRequest)
+  app.use('/images/:id/:image', sendImage)
 }
 
 export default loadImageRoutes

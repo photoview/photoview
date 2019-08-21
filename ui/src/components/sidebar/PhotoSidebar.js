@@ -4,10 +4,9 @@ import styled from 'styled-components'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import SidebarItem from './SidebarItem'
-import { Loader } from 'semantic-ui-react'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import SidebarShare from './Sharing'
-import { SidebarConsumer } from './Sidebar'
+import SidebarDownload from './SidebarDownload'
 
 const photoQuery = gql`
   query sidebarPhoto($id: ID!) {
@@ -96,6 +95,7 @@ const SidebarContent = ({ photo, hidePreview }) => {
       {!hidePreview && <PreviewImage src={previewUrl} />}
       <Name>{photo && photo.title}</Name>
       <div>{exifItems}</div>
+      <SidebarDownload photoId={photo.id} />
       <SidebarShare photo={photo} />
     </div>
   )

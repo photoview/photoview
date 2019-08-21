@@ -157,19 +157,35 @@ export default async function processImage({ driver, markFinishedImage }, id) {
 
     await session.run(
       `MATCH (p:Photo { id: {id} })
-    CREATE (thumbnail:PhotoURL { url: {thumbnailUrl}, width: {thumbnailWidth}, height: {thumbnailHeight} })
-    CREATE (original:PhotoURL { url: {originalUrl}, width: {originalWidth}, height: {originalHeight} })
-    CREATE (p)-[:THUMBNAIL_URL]->(thumbnail)
-    CREATE (p)-[:ORIGINAL_URL]->(original)
+    CREATE (p)-[:THUMBNAIL_URL]->(thumbnail:PhotoURL { thumbnail })
+    CREATE (p)-[:ORIGINAL_URL]->(original:PhotoURL { original })
     `,
       {
         id,
-        thumbnailUrl: `/images/${id}/${path.basename(thumbnailPath)}`,
-        thumbnailWidth,
-        thumbnailHeight,
-        originalUrl: `/images/${id}/${path.basename(originalPath)}`,
-        originalWidth,
-        originalHeight,
+        thumbnail: {
+          url: `/images/${id}/${path.basename(thumbnailPath)}`,
+          width: thumbnailWidth,
+          height: thumbnailHeight,
+        },
+        original: {
+          url: `/images/${id}/${path.basename(originalPath)}`,
+          width: originalWidth,
+          height: originalHeight,
+        },
+      }
+    )
+
+    await session.run(
+      `
+      MATCH (p:Photo { id: {id} })
+      CREATE (p)-[:DOWNLOAD]->(original:PhotoDownload {original})
+    `,
+      {
+        id,
+        original: {
+          title: 'Original',
+          url: `/download/${id}/${path.basename(photo.path)}`,
+        },
       }
     )
   } catch (e) {
