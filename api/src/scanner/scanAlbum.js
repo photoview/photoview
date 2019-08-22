@@ -21,13 +21,15 @@ export default async function scanAlbum(scanner, album) {
 
     processingImagePromises.push(
       _processImage(scanner, photo.id).catch(e => {
-        console.error(`Error processing image (${e.path}): ${e.stack}`)
+        console.error(
+          `Error processing image (${JSON.stringify(photo)}): ${e.stack}`
+        )
         scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
           scannerStatusUpdate: {
             progress: 0,
             finished: false,
             success: false,
-            message: `Error processing image at ${e.path}: ${e.message}`,
+            message: `Error processing image at ${photo.path}: ${e.message}`,
           },
         })
       })
