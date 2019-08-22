@@ -34,15 +34,6 @@ async function _execScan(scanner, scanFunction) {
       },
     })
 
-    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-      scannerStatusUpdate: {
-        progress: 0,
-        finished: false,
-        success: false,
-        message: 'Dummy error',
-      },
-    })
-
     console.log('Calling scan function')
     await scanFunction()
     console.log('Scan function ended')
@@ -59,16 +50,6 @@ async function _execScan(scanner, scanFunction) {
         message: `Done scanning ${
           Object.keys(scanner.imageProgress).length
         } photos`,
-      },
-    })
-
-    scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
-      scannerStatusUpdate: {
-        progress: 0,
-        finished: false,
-        success: false,
-        message:
-          'Another dummy error, that is very long, and wraps multiple lines. Theirefore it is longer yay',
       },
     })
   } catch (e) {
