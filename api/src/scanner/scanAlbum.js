@@ -16,6 +16,24 @@ export default async function scanAlbum(scanner, album) {
   const list = await fs.readdir(albumPath)
   let processingImagePromises = []
 
+  const addPhotoToProcess = photo => {
+    markImageToProgress(photo.id)
+
+    processingImagePromises.push(
+      _processImage(scanner, photo.id).catch(e => {
+        console.error(`Error processing image (${e.path}): ${e.stack}`)
+        scanner.pubsub.publish(EVENT_SCANNER_PROGRESS, {
+          scannerStatusUpdate: {
+            progress: 0,
+            finished: false,
+            success: false,
+            message: `Error processing image at ${e.path}: ${e.message}`,
+          },
+        })
+      })
+    )
+  }
+
   for (const item of list) {
     const itemPath = path.resolve(albumPath, item)
     processedImages.push(itemPath)
@@ -34,34 +52,29 @@ export default async function scanAlbum(scanner, album) {
       if (photoResult.records.length != 0) {
         // console.log(`Photo already exists ${item}`)
 
-        const photoId = photoResult.records[0].get('p').properties.id
-        markImageToProgress(photoId)
+        const photo = photoResult.records[0].get('p').properties
 
-        const thumbnailPath = path.resolve(
-          getImageCachePath(photoId, id),
-          'thumbnail.jpg'
-        )
-
-        processingImagePromises.push(_processImage(scanner, photoId))
+        addPhotoToProcess(photo)
       } else {
         console.log(`Found new image at ${itemPath}`)
 
-        const photoId = generateID()
-        markImageToProgress(photoId)
+        const photo = {
+          id: generateID(),
+          path: itemPath,
+          title: item,
+        }
 
         await session.run(
           `MATCH (a:Album { id: {albumId} })
-          CREATE (p:Photo {id: {id}, path: {path}, title: {title} })
+          CREATE (p:Photo {photo})
           CREATE (a)-[:CONTAINS]->(p)`,
           {
-            id: photoId,
-            path: itemPath,
-            title: item,
+            photo,
             albumId: id,
           }
         )
 
-        processingImagePromises.push(_processImage(scanner, photoId))
+        addPhotoToProcess(photo)
       }
     }
   }

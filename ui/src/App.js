@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { createGlobalStyle } from 'styled-components'
 import Routes from './Routes'
-import Messages from './Messages'
+import Messages from './components/messages/Messages'
 
 const GlobalStyle = createGlobalStyle`
   #root, body {
