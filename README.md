@@ -1,7 +1,5 @@
 # PhotoView
 
-> NOTE: This software should not be used in production yet, since it is in early development, and still contains security holes.
-
 [Follow the development progress here](https://www.notion.so/e8a95059eaa74fd7b8b69f8c949c9d08?v=c999e954941b43f4bf5fcec8451a789a)
 
 ![screenshot](/screenshot.png)

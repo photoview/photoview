@@ -130,6 +130,7 @@ type Mutation {
     @neo4j_ignore
 
   scanAll: ScannerResult! @isAuthenticated @neo4j_ignore
+  scanUser(userId: ID!): ScannerResult! @isAuthenticated @neo4j_ignore
 
   initialSetupWizard(
     username: String!
@@ -151,6 +152,7 @@ type Query {
   siteInfo: SiteInfo
 
   myUser: User @isAuthenticated
+  user: [User] @hasRole(roles: [admin])
 
   myAlbums: [Album] @isAuthenticated
   album(id: ID): Album @isAuthenticated

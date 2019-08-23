@@ -51,6 +51,14 @@ const changeUserPasswordMutation = gql`
   }
 `
 
+const scanUserMutation = gql`
+  mutation scanUser($userId: ID!) {
+    scanUser(userId: $userId) {
+      success
+    }
+  }
+`
+
 const ChangePasswordModal = ({ onClose, user, ...props }) => {
   const [passwordInput, setPasswordInput] = useState('')
 
@@ -223,6 +231,17 @@ const UserRow = ({ user, refetchUsers }) => {
                 <Icon name="edit" />
                 Edit
               </Button>
+              <Mutation mutation={scanUserMutation}>
+                {(scanUser, { data, called }) => (
+                  <Button
+                    disabled={called}
+                    onClick={() => scanUser({ variables: { userId: user.id } })}
+                  >
+                    <Icon name="sync" />
+                    Scan
+                  </Button>
+                )}
+              </Mutation>
               <Button onClick={() => setChangePassword(true)}>
                 <Icon name="key" />
                 Change password

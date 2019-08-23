@@ -8,7 +8,7 @@ import AddUserRow from './AddUserRow'
 
 const usersQuery = gql`
   query settingsUsersQuery {
-    User {
+    user {
       id
       username
       rootPath
@@ -24,8 +24,8 @@ const UsersTable = () => {
     <Query query={usersQuery}>
       {({ loading, error, data, refetch }) => {
         let userRows = []
-        if (data && data.User) {
-          userRows = data.User.map(user => (
+        if (data && data.user) {
+          userRows = data.user.map(user => (
             <UserRow user={user} refetchUsers={refetch} key={user.id} />
           ))
         }

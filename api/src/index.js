@@ -7,6 +7,7 @@ import http from 'http'
 import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
 import config from './config'
+import gql from 'graphql-tag'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
 
@@ -32,6 +33,7 @@ const scanner = new PhotoScanner(driver)
 app.use((req, res, next) => {
   req.driver = driver
   req.scanner = scanner
+
   next()
 })
 
@@ -40,6 +42,30 @@ setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 
 // Specify port and path for GraphQL endpoint
 const graphPath = '/graphql'
+
+app.use(graphPath, (req, res, next) => {
+  if (req.body.query) {
+    const query = gql(req.body.query)
+    const defs = query.definitions.filter(x => x.kind == 'OperationDefinition')
+
+    const selections = defs.reduce((prev, curr) => {
+      return prev.concat(curr.selectionSet.selections)
+    }, [])
+
+    const names = selections.map(x => x.name.value)
+    const illegalNames = names.filter(
+      name => name.substr(0, 1) == name.substr(0, 1).match(/[A-Z]/)
+    )
+
+    if (illegalNames.length > 0) {
+      return res
+        .status(403)
+        .send({ error: `Illegal query, types not allowed: ${illegalNames}` })
+    }
+  }
+
+  next()
+})
 
 const endpointUrl = new URL(config.host)
 // endpointUrl.port = process.env.GRAPHQL_LISTEN_PORT || 4001

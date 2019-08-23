@@ -120,7 +120,7 @@ class PhotoScanner {
 
   async scanUser(user) {
     await _execScan(this, async () => {
-      await _scanUser({ driver: this.driver, scanAlbum: this.scanAlbum }, user)
+      await _scanUser(this, user)
     })
   }
 
