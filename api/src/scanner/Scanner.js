@@ -95,7 +95,7 @@ class PhotoScanner {
         return prev
       }, 0)
 
-    this.broadcastProgress = _.debounce(() => {
+    this.broadcastProgress = _.throttle(() => {
       if (!this.isRunning) return
       if (Object.keys(this.imageProgress).length == 0) return
 
