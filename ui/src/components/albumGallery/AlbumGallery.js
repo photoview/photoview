@@ -32,21 +32,22 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
   }, [])
 
   // On update
-  useEffect(() => {
-    if (presenting) {
-      window.history.replaceState(
-        null,
-        null,
-        document.location.pathname + '#' + `present=${activeImage}`
-      )
-    } else if (presentIndexFromHash(document.location.hash)) {
-      window.history.replaceState(
-        null,
-        null,
-        document.location.pathname.split('#')[0]
-      )
-    }
-  })
+  // TODO: Fix hash
+  // useEffect(() => {
+  //   if (presenting) {
+  //     window.history.replaceState(
+  //       null,
+  //       null,
+  //       document.location.pathname + '#' + `present=${activeImage}`
+  //     )
+  //   } else if (presentIndexFromHash(document.location.hash)) {
+  //     window.history.replaceState(
+  //       null,
+  //       null,
+  //       document.location.pathname.split('#')[0]
+  //     )
+  //   }
+  // })
 
   useEffect(() => {
     setActiveImage(-1)

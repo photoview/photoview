@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import { animated } from 'react-spring'
-import { Transition } from 'react-spring/renderprops'
+import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { Photo } from './Photo'
@@ -42,17 +40,14 @@ const PhotoGallery = ({
       }
 
       if (e.key == 'ArrowRight') {
-        setMoveDirection('right')
         nextImage && nextImage()
       }
 
       if (e.key == 'ArrowLeft') {
-        setMoveDirection('left')
         nextImage && previousImage()
       }
 
       if (e.key == 'Escape') {
-        setMoveDirection(null)
         setPresenting(false)
       }
     }
@@ -63,8 +58,6 @@ const PhotoGallery = ({
       document.removeEventListener('keydown', keyDownEvent)
     }
   })
-
-  const [moveDirection, setMoveDirection] = useState(null)
 
   const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
@@ -103,60 +96,24 @@ const PhotoGallery = ({
     return photoElements
   }
 
-  let transformDirectionIndex = 0
-  if (moveDirection == 'right') transformDirectionIndex = 1
-  if (moveDirection == 'left') transformDirectionIndex = 2
-
-  const presentViewTransitionConfig = {
-    items: activeImage,
-    keys: x => x,
-    config: {
-      tension: 220,
-    },
-    from: {
-      opacity: 0,
-      transform: [
-        'translate(0%, 0)',
-        'translate(12%, 0)',
-        'translate(-12%, 0)',
-      ][transformDirectionIndex],
-    },
-    enter: {
-      opacity: 1,
-      transform: 'translate(0%, 0)',
-    },
-  }
-
-  const AnimatedPresentPhoto = animated(PresentPhoto)
-
   return (
     <SidebarConsumer>
       {({ updateSidebar }) => (
         <div>
-          {!presenting ? (
-            <Gallery>
-              <Loader active={loading}>Loading images</Loader>
-              {getPhotoElements(updateSidebar)}
-              <PhotoFiller />
-            </Gallery>
-          ) : (
+          <Gallery>
+            <Loader active={loading}>Loading images</Loader>
+            {getPhotoElements(updateSidebar)}
+            <PhotoFiller />
+          </Gallery>
+          {presenting && (
             <PresentContainer>
-              <Transition {...presentViewTransitionConfig}>
-                {photo => props => (
-                  <PresentPhoto
-                    thumbnail={photo && photo.thumbnail.url}
-                    photo={photo}
-                    style={props}
-                  />
-                )}
-              </Transition>
+              <PresentPhoto photo={activeImage} />
             </PresentContainer>
           )}
         </div>
       )}
     </SidebarConsumer>
   )
-  // }
 }
 
 PhotoGallery.propTypes = {
