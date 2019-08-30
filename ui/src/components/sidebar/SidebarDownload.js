@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Menu, Dropdown, Button } from 'semantic-ui-react'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
+import download from 'downloadjs'
 
 const downloadQuery = gql`
   query sidebarDownloadQuery($photoId: ID!) {
@@ -24,12 +25,9 @@ const downloadPhoto = async url => {
   })
 
   const content = await request.blob()
-  const contentUrl = URL.createObjectURL(content)
+  const filename = url.match(/[^/]*$/)[0]
 
-  var downloadAnchor = document.createElement('a', contentUrl)
-  downloadAnchor.setAttribute('href', contentUrl)
-  downloadAnchor.setAttribute('download', url.match(/[^/]*$/)[0])
-  downloadAnchor.click()
+  download(content, filename)
 }
 
 const SidebarDownload = ({ photoId }) => {
