@@ -18,9 +18,9 @@ async function sendDownload(req, res) {
   throw new RequestError(404, 'Image could not be found')
 }
 
-const loadDownloadRoutes = app => {
-  app.use('/download/:id/:image', getImageFromRequest)
-  app.use('/download/:id/:image', sendDownload)
+const loadDownloadRoutes = router => {
+  router.use('/download/:id/:image', getImageFromRequest)
+  router.use('/download/:id/:image', sendDownload)
 }
 
 export default loadDownloadRoutes

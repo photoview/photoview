@@ -1,5 +1,5 @@
 import { ApolloServer } from 'apollo-server-express'
-import express from 'express'
+import express, { Router } from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { v1 as neo4j } from 'neo4j-driver'
@@ -8,6 +8,7 @@ import PhotoScanner from './scanner/Scanner'
 import _ from 'lodash'
 import config from './config'
 import gql from 'graphql-tag'
+import path from 'path'
 
 import { getUserFromToken, getTokenFromBearer } from './token'
 
@@ -41,7 +42,8 @@ app.use((req, res, next) => {
 setInterval(scanner.scanAll, 1000 * 60 * 60 * 4)
 
 // Specify port and path for GraphQL endpoint
-const graphPath = '/graphql'
+const graphPath = new URL(path.join(config.host.toString(), '/graphql'))
+  .pathname
 
 app.use(graphPath, (req, res, next) => {
   if (req.body.query) {
@@ -102,6 +104,7 @@ const server = new ApolloServer({
   introspection: true,
   playground: !process.env.PRODUCTION,
   subscriptions: {
+    path: graphPath,
     onConnect: async (connectionParams, webSocket) => {
       const token = getTokenFromBearer(connectionParams.Authorization)
       const user = await getUserFromToken(token, driver)
@@ -115,12 +118,15 @@ const server = new ApolloServer({
 })
 
 server.applyMiddleware({ app, path: graphPath })
+const router = new Router()
 
 import loadImageRoutes from './routes/images'
 import loadDownloadRoutes from './routes/downloads'
 
-loadImageRoutes(app)
-loadDownloadRoutes(app)
+loadImageRoutes(router)
+loadDownloadRoutes(router)
+
+app.use(config.host.pathname, router)
 
 const httpServer = http.createServer(app)
 server.installSubscriptionHandlers(httpServer)

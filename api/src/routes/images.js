@@ -177,9 +177,9 @@ async function verifyShareToken({ shareToken, id, driver }) {
   }
 }
 
-function loadImageRoutes(app) {
-  app.use('/images/:id/:image', getImageFromRequest)
-  app.use('/images/:id/:image', sendImage)
+function loadImageRoutes(router) {
+  router.use('/images/:id/:image', getImageFromRequest)
+  router.use('/images/:id/:image', sendImage)
 }
 
 export default loadImageRoutes

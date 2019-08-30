@@ -1,4 +1,5 @@
 import { cypherQuery } from 'neo4j-graphql-js'
+import path from 'path'
 import config from '../config'
 
 function injectAt(query, index, injection) {
@@ -126,7 +127,8 @@ const Query = {
 
 const urlResolve = {
   url(root, args, ctx, info) {
-    let url = new URL(root.url, config.host)
+    let url = new URL(path.join(config.host.href, root.url))
+
     if (ctx.shareToken) url.search = `?token=${ctx.shareToken}`
     return url.href
   },

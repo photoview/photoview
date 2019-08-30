@@ -1,8 +1,10 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 /api/src/cache/
-/docker-compose.yml
 /photos_path
+
+# docker
+docker-compose.yml
 
 # dependencies
 node_modules/
