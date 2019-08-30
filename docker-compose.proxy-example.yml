@@ -24,11 +24,17 @@ services:
       - NEO4J_URI=bolt://neo4j:7687
       - PHOTO_CACHE=/app/cache
       # Change This: The publicly exposed url for the api
+      # For example if the server is available from the domain example.com,
+      # change this value to http://example.com/api
       - API_ENDPOINT=http://localhost:8080/api
       - GRAPHQL_LISTEN_PORT=80
     volumes:
       # Change This: Link photo paths from the host machine
-      - ./photos_path:/photos
+      # Change this to the directory where your photos are located on your server.
+      # If the photos are located at `/home/user/photos`, then change this value
+      # to the following: `/home/user/photos:/photos:ro`.
+      # You can mount multiple paths, if your photos are spread across multiple directories.
+      - ./photos_path:/photos:ro
       - api_cache:/app/cache
 
   ui:
@@ -36,6 +42,8 @@ services:
       context: ./ui
       args:
         # Change This: The publicly exposed url for the graphql api
+        # For example if the server is available from the domain example.com,
+        # change this value to http://example.com/api/graphql
         GRAPHQL_ENDPOINT: http://localhost:8080/api/graphql
     expose:
       - 80
@@ -47,6 +55,7 @@ services:
     volumes:
       - ./docker/nginx-proxy/default.conf:/etc/nginx/conf.d/default.conf
     ports:
+      # Change This: Replace 8080 with the port you want photoview to be accessible at
       - 8080:80
     depends_on:
       - api
