@@ -49,7 +49,7 @@ const schema = makeAugmentedSchema({
     },
     mutation: false,
     query: {
-      exclude: ['Subscription', ...productionExcludes],
+      exclude: [...productionExcludes],
     },
   },
   resolvers: resolvers.reduce((prev, curr) => _.merge(prev, curr), {}),
