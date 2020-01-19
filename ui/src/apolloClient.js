@@ -15,7 +15,8 @@ const httpLink = new HttpLink({
 console.log('GRAPHQL ENDPOINT', process.env.GRAPHQL_ENDPOINT)
 
 let websocketUri = new URL(process.env.GRAPHQL_ENDPOINT)
-websocketUri.protocol = 'ws'
+websocketUri.protocol =
+  process.env.GRAPHQL_ENDPOINT.protocol === 'https:' ? 'wss:' : 'ws:'
 
 const wsLink = new WebSocketLink({
   uri: websocketUri,
