@@ -90,6 +90,8 @@ class PhotosPage extends Component {
           {({ loading, error, data }) => {
             if (error) return error
 
+            if (loading) return null
+
             let galleryGroups = []
 
             this.albums = data.myAlbums
