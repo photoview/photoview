@@ -1,8 +1,12 @@
 # PhotoView
 
-[Follow the development progress here](https://www.notion.so/e8a95059eaa74fd7b8b69f8c949c9d08?v=c999e954941b43f4bf5fcec8451a789a)
-
 ![screenshot](/screenshots/main-window.png)
+
+## Demo site
+Visit: [photos.qpqp.dk](http://photos.qpqp.dk/)
+
+Username: __demo__
+Password: __demo__
 
 ## Aim of the project
 
