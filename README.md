@@ -3,7 +3,7 @@
 ![screenshot](/screenshots/main-window.png)
 
 ## Demo site
-Visit: [photos.qpqp.dk](http://photos.qpqp.dk/)
+Visit https://photos.qpqp.dk/
 
 Username: __demo__
 Password: __demo__
