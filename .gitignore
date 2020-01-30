@@ -3,6 +3,8 @@
 cache/
 /photos_path
 
+.env
+
 # docker
 docker-compose.yml
 
