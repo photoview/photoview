@@ -5,17 +5,28 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
+
+	"github.com/viktorstrate/photoview/api/database"
+
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
 )
 
-const defaultPort = "8080"
+const defaultPort = "4001"
 
 func main() {
-	port := os.Getenv("PORT")
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	port := os.Getenv("API_PORT")
 	if port == "" {
 		port = defaultPort
 	}
+
+	database.SetupDatabase()
 
 	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	http.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(photoview_graphql.Config{Resolvers: &photoview_graphql.Resolver{}})))
