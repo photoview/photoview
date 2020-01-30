@@ -1,0 +1,26 @@
+type Query {
+  users: [User!]!
+}
+
+type Mutation {
+  authorizeUser(username: String!, password: String!): AuthorizeResult!
+
+  # Add rootPath later
+  registerUser(username: String!, password: String!): AuthorizeResult!
+}
+
+type AuthorizeResult {
+  success: Boolean!
+  status: String!
+  token: String
+}
+
+type User {
+  id: ID!
+  username: String!
+  #albums: [Album]
+  # Local filepath for the user's photos
+  rootPath: String!
+  admin: Boolean!
+  #shareTokens: [ShareToken]
+}
