@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS users;
+DROP TABLE IF NOT EXISTS access_tokens;

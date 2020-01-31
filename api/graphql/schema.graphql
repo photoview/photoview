@@ -1,3 +1,5 @@
+scalar Time
+
 type Query {
   users: [User!]!
 }
@@ -5,8 +7,11 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  # Add rootPath later
-  registerUser(username: String!, password: String!): AuthorizeResult!
+  registerUser(
+    username: String!
+    password: String!
+    rootPath: String!
+  ): AuthorizeResult!
 }
 
 type AuthorizeResult {

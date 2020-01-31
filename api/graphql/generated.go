@@ -50,7 +50,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser func(childComplexity int, username string, password string) int
-		RegisterUser  func(childComplexity int, username string, password string) int
+		RegisterUser  func(childComplexity int, username string, password string, rootPath string) int
 	}
 
 	Query struct {
@@ -67,7 +67,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*AuthorizeResult, error)
-	RegisterUser(ctx context.Context, username string, password string) (*AuthorizeResult, error)
+	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*AuthorizeResult, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*User, error)
@@ -131,7 +131,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RegisterUser(childComplexity, args["username"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.RegisterUser(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -230,15 +230,20 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "graphql/schema.graphql", Input: `type Query {
+	&ast.Source{Name: "graphql/schema.graphql", Input: `scalar Time
+
+type Query {
   users: [User!]!
 }
 
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  # Add rootPath later
-  registerUser(username: String!, password: String!): AuthorizeResult!
+  registerUser(
+    username: String!
+    password: String!
+    rootPath: String!
+  ): AuthorizeResult!
 }
 
 type AuthorizeResult {
@@ -304,6 +309,14 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 		}
 	}
 	args["password"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["rootPath"]; ok {
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["rootPath"] = arg2
 	return args, nil
 }
 
@@ -535,7 +548,7 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RegisterUser(rctx, args["username"].(string), args["password"].(string))
+		return ec.resolvers.Mutation().RegisterUser(rctx, args["username"].(string), args["password"].(string), args["rootPath"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
