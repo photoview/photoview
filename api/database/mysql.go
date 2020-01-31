@@ -3,22 +3,34 @@ package database
 import (
 	"database/sql"
 	"log"
+	"net/url"
 	"os"
 
 	// Load mysql driver
-	// _ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 
-	// Load postgres driver
-	_ "github.com/lib/pq"
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/mysql"
+	// Migrate from file
+	_ "github.com/golang-migrate/migrate/source/file"
 )
 
 // SetupDatabase connects to the database using environment variables
 func SetupDatabase() *sql.DB {
 
-	address := os.Getenv("POSTGRES_URL")
+	address, err := url.Parse(os.Getenv("MYSQL_URL"))
+	if err != nil {
+		log.Fatalf("Could not parse mysql url: %s\n", err)
+	}
+
+	queryValues := address.Query()
+	queryValues.Add("multiStatements", "true")
+
+	address.RawQuery = queryValues.Encode()
+
 	log.Printf("Connecting to database: %s", address)
 
-	db, err := sql.Open("postgres", address)
+	db, err := sql.Open("mysql", address.String())
 	if err != nil {
 		log.Fatalf("Could not connect to database: %s\n", err.Error())
 	}
@@ -28,4 +40,32 @@ func SetupDatabase() *sql.DB {
 	}
 
 	return db
+}
+
+func MigrateDatabase(db *sql.DB) error {
+	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://database/migrations",
+		"mysql",
+		driver,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Up(); err != nil {
+		if err.Error() == "no change" {
+			log.Println("Database is up to date")
+		} else {
+			return err
+		}
+	} else {
+		log.Println("Database migrated")
+	}
+
+	return nil
 }

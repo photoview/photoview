@@ -26,10 +26,18 @@ func main() {
 		port = defaultPort
 	}
 
-	database.SetupDatabase()
+	db := database.SetupDatabase()
+	defer db.Close()
+
+	// Migrate database
+	if err := database.MigrateDatabase(db); err != nil {
+		log.Fatalf("Could not migrate database: %s\n", err)
+	}
+
+	graphqlResolver := photoview_graphql.Resolver{Database: db}
 
 	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
-	http.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(photoview_graphql.Config{Resolvers: &photoview_graphql.Resolver{}})))
+	http.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(photoview_graphql.Config{Resolvers: &graphqlResolver})))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
