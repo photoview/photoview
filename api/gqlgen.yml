@@ -13,6 +13,6 @@ resolver:
   filename: graphql/resolver.go
   type: Resolver
 autobind: []
-# models:
-#   Todo:
-#     model: github.com/viktorstrate/photoview/api.Todo
+models:
+  User:
+    model: github.com/viktorstrate/photoview/api/graphql/models.User

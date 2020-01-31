@@ -1,7 +1,11 @@
+directive @isAdmin on FIELD_DEFINITION
+
 scalar Time
 
 type Query {
-  users: [User!]!
+  users: [User!]! @isAdmin
+
+  myUser: User
 }
 
 type Mutation {
@@ -25,7 +29,7 @@ type User {
   username: String!
   #albums: [Album]
   # Local filepath for the user's photos
-  rootPath: String!
+  rootPath: String! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }

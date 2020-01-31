@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 
 	"github.com/viktorstrate/photoview/api/database"
+	"github.com/viktorstrate/photoview/api/graphql/auth"
 
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
@@ -34,11 +36,21 @@ func main() {
 		log.Fatalf("Could not migrate database: %s\n", err)
 	}
 
-	graphqlResolver := photoview_graphql.Resolver{Database: db}
+	router := chi.NewRouter()
+	router.Use(auth.Middleware(db))
 
-	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
-	http.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(photoview_graphql.Config{Resolvers: &graphqlResolver})))
+	graphqlResolver := photoview_graphql.Resolver{Database: db}
+	graphqlDirective := photoview_graphql.DirectiveRoot{}
+	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
+
+	graphqlConfig := photoview_graphql.Config{
+		Resolvers:  &graphqlResolver,
+		Directives: graphqlDirective,
+	}
+
+	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
+	router.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

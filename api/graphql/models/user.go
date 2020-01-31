@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,25 +20,43 @@ type User struct {
 	Admin    bool
 }
 
+func (u *User) ID() string {
+	return strconv.Itoa(u.UserID)
+}
+
 type AccessToken struct {
 	Value  string
 	Expire time.Time
 }
 
-var UserInvalidCredentialsError = errors.New("invalid credentials")
+var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 
 func NewUserFromRow(row *sql.Row) (*User, error) {
 	user := User{}
 
 	if err := row.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, UserInvalidCredentialsError
+			return nil, ErrorInvalidUserCredentials
 		} else {
 			return nil, err
 		}
 	}
 
 	return &user, nil
+}
+
+func NewUsersFromRows(rows *sql.Rows) ([]*User, error) {
+	users := make([]*User, 0)
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
 
 func AuthorizeUser(database *sql.DB, username string, password string) (*User, error) {
@@ -49,7 +69,7 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return nil, UserInvalidCredentialsError
+			return nil, ErrorInvalidUserCredentials
 		} else {
 			return nil, err
 		}
@@ -71,7 +91,7 @@ func RegisterUser(database *sql.DB, username string, password string, rootPath s
 
 	row := database.QueryRow("SELECT * FROM users WHERE username = ?", username)
 	if row == nil {
-		return nil, UserInvalidCredentialsError
+		return nil, ErrorInvalidUserCredentials
 	}
 
 	user, err := NewUserFromRow(row)
@@ -106,4 +126,28 @@ func (user *User) GenerateAccessToken(database *sql.DB) (*AccessToken, error) {
 	}
 
 	return &token, nil
+}
+
+func VerifyTokenAndGetUser(database *sql.DB, token string) (*User, error) {
+
+	now := time.Now().UTC().Format("2006-01-02 15:04:05")
+
+	row := database.QueryRow("SELECT (user_id) FROM access_tokens WHERE expire > ? AND value = ?", now, token)
+
+	var userId string
+
+	if err := row.Scan(&userId); err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
+	fmt.Printf("Userid: %s\n", userId)
+
+	row = database.QueryRow("SELECT * FROM users WHERE user_id = ?", userId)
+	user, err := NewUserFromRow(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

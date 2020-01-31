@@ -7,10 +7,3 @@ type AuthorizeResult struct {
 	Status  string  `json:"status"`
 	Token   *string `json:"token"`
 }
-
-type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	RootPath string `json:"rootPath"`
-	Admin    bool   `json:"admin"`
-}
