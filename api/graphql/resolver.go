@@ -18,13 +18,6 @@ func (r *Resolver) Query() QueryResolver {
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*AuthorizeResult, error) {
-	panic("not implemented")
-}
-func (r *mutationResolver) RegisterUser(ctx context.Context, username string, password string) (*AuthorizeResult, error) {
-	panic("not implemented")
-}
-
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*User, error) {
