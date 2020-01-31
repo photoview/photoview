@@ -5,14 +5,20 @@
 
 schema:
   - graphql/schema.graphql
+
 exec:
   filename: graphql/generated.go
+
 model:
-  filename: graphql/models_gen.go
+  filename: graphql/models/generated.go
+  package: models
+
 resolver:
   filename: graphql/resolver.go
   type: Resolver
+
 autobind: []
+
 models:
   User:
     model: github.com/viktorstrate/photoview/api/graphql/models.User

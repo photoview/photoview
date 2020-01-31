@@ -40,16 +40,13 @@ func Middleware(db *sql.DB) func(http.Handler) http.Handler {
 			}
 
 			token := matches[1]
-			log.Printf("Access token: %s\n", token)
 
 			user, err := models.VerifyTokenAndGetUser(db, token)
 			if err != nil {
-				log.Printf("Invalid token")
+				log.Printf("Invalid token: %s\n", err)
 				http.Error(w, "Invalid authorization token", http.StatusForbidden)
 				return
 			}
-
-			log.Printf("Found user '%s', from token\n", user.Username)
 
 			// put it in context
 			ctx := context.WithValue(r.Context(), userCtxKey, user)

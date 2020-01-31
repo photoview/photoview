@@ -70,8 +70,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	AuthorizeUser(ctx context.Context, username string, password string) (*AuthorizeResult, error)
-	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*AuthorizeResult, error)
+	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
+	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
@@ -386,7 +386,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *AuthorizeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -423,7 +423,7 @@ func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field 
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AuthorizeResult_status(ctx context.Context, field graphql.CollectedField, obj *AuthorizeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _AuthorizeResult_status(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -460,7 +460,7 @@ func (ec *executionContext) _AuthorizeResult_status(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field graphql.CollectedField, obj *AuthorizeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -532,10 +532,10 @@ func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*AuthorizeResult)
+	res := resTmp.(*models.AuthorizeResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚐAuthorizeResult(ctx, field.Selections, res)
+	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -576,10 +576,10 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*AuthorizeResult)
+	res := resTmp.(*models.AuthorizeResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚐAuthorizeResult(ctx, field.Selections, res)
+	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2077,7 +2077,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 var authorizeResultImplementors = []string{"AuthorizeResult"}
 
-func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.SelectionSet, obj *AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.SelectionSet, obj *models.AuthorizeResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, authorizeResultImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2487,11 +2487,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
 	return ec._AuthorizeResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

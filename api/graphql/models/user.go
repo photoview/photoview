@@ -141,8 +141,6 @@ func VerifyTokenAndGetUser(database *sql.DB, token string) (*User, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Userid: %s\n", userId)
-
 	row = database.QueryRow("SELECT * FROM users WHERE user_id = ?", userId)
 	user, err := NewUserFromRow(row)
 	if err != nil {

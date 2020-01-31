@@ -23,10 +23,10 @@ func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 	return user, nil
 }
 
-func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*AuthorizeResult, error) {
+func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error) {
 	user, err := models.AuthorizeUser(r.Database, username, password)
 	if err != nil {
-		return &AuthorizeResult{
+		return &models.AuthorizeResult{
 			Success: false,
 			Status:  err.Error(),
 		}, nil
@@ -39,16 +39,16 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 		return nil, err
 	}
 
-	return &AuthorizeResult{
+	return &models.AuthorizeResult{
 		Success: true,
 		Status:  "ok",
 		Token:   &token.Value,
 	}, nil
 }
-func (r *mutationResolver) RegisterUser(ctx context.Context, username string, password string, rootPath string) (*AuthorizeResult, error) {
+func (r *mutationResolver) RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
 	user, err := models.RegisterUser(r.Database, username, password, rootPath)
 	if err != nil {
-		return &AuthorizeResult{
+		return &models.AuthorizeResult{
 			Success: false,
 			Status:  err.Error(),
 		}, nil
@@ -59,7 +59,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, username string, pa
 		return nil, err
 	}
 
-	return &AuthorizeResult{
+	return &models.AuthorizeResult{
 		Success: true,
 		Status:  "ok",
 		Token:   &token.Value,
