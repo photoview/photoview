@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -70,11 +71,26 @@ type ComplexityRoot struct {
 
 	Photo struct {
 		Album     func(childComplexity int) int
+		Exif      func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Original  func(childComplexity int) int
 		Path      func(childComplexity int) int
 		Thumbnail func(childComplexity int) int
 		Title     func(childComplexity int) int
+	}
+
+	PhotoExif struct {
+		Aperture    func(childComplexity int) int
+		Camera      func(childComplexity int) int
+		DateShot    func(childComplexity int) int
+		Exposure    func(childComplexity int) int
+		FileSize    func(childComplexity int) int
+		Flash       func(childComplexity int) int
+		FocalLength func(childComplexity int) int
+		Iso         func(childComplexity int) int
+		Lens        func(childComplexity int) int
+		Maker       func(childComplexity int) int
+		Photo       func(childComplexity int) int
 	}
 
 	PhotoURL struct {
@@ -257,6 +273,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Photo.Album(childComplexity), true
 
+	case "Photo.exif":
+		if e.complexity.Photo.Exif == nil {
+			break
+		}
+
+		return e.complexity.Photo.Exif(childComplexity), true
+
 	case "Photo.id":
 		if e.complexity.Photo.ID == nil {
 			break
@@ -291,6 +314,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Photo.Title(childComplexity), true
+
+	case "PhotoEXIF.aperture":
+		if e.complexity.PhotoExif.Aperture == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Aperture(childComplexity), true
+
+	case "PhotoEXIF.camera":
+		if e.complexity.PhotoExif.Camera == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Camera(childComplexity), true
+
+	case "PhotoEXIF.dateShot":
+		if e.complexity.PhotoExif.DateShot == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.DateShot(childComplexity), true
+
+	case "PhotoEXIF.exposure":
+		if e.complexity.PhotoExif.Exposure == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Exposure(childComplexity), true
+
+	case "PhotoEXIF.fileSize":
+		if e.complexity.PhotoExif.FileSize == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.FileSize(childComplexity), true
+
+	case "PhotoEXIF.flash":
+		if e.complexity.PhotoExif.Flash == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Flash(childComplexity), true
+
+	case "PhotoEXIF.focalLength":
+		if e.complexity.PhotoExif.FocalLength == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.FocalLength(childComplexity), true
+
+	case "PhotoEXIF.iso":
+		if e.complexity.PhotoExif.Iso == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Iso(childComplexity), true
+
+	case "PhotoEXIF.lens":
+		if e.complexity.PhotoExif.Lens == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Lens(childComplexity), true
+
+	case "PhotoEXIF.maker":
+		if e.complexity.PhotoExif.Maker == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Maker(childComplexity), true
+
+	case "PhotoEXIF.photo":
+		if e.complexity.PhotoExif.Photo == nil {
+			break
+		}
+
+		return e.complexity.PhotoExif.Photo(childComplexity), true
 
 	case "PhotoURL.height":
 		if e.complexity.PhotoURL.Height == nil {
@@ -574,10 +674,34 @@ type Photo {
   thumbnail: PhotoURL
   "The album that holds the photo"
   album: Album!
-  # exif: PhotoEXIF
+  exif: PhotoEXIF
 
   # shares: [ShareToken]
   # downloads: [PhotoDownload]
+}
+
+"EXIF metadata from the camera"
+type PhotoEXIF {
+  photo: Photo
+  "The model name of the camera"
+  camera: String
+  "The maker of the camera"
+  maker: String
+  "The name of the lens"
+  lens: String
+  dateShot: Time
+  "The formatted filesize of the image"
+  fileSize: String
+  "The exposure time of the image"
+  exposure: String
+  "The aperature stops of the image"
+  aperture: Float
+  "The ISO setting of the image"
+  iso: Int
+  "The focal length of the lens, when the image was taken"
+  focalLength: String
+  "A formatted description of the flash settings, when the image was taken"
+  flash: String
 }
 `},
 )
@@ -1459,6 +1583,414 @@ func (ec *executionContext) _Photo_album(ctx context.Context, field graphql.Coll
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Photo_exif(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Photo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Exif, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.PhotoExif)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoExif(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_photo(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Photo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Camera, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_maker(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Maker, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_lens(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lens, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_dateShot(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DateShot, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_fileSize(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileSize, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_exposure(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Exposure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_aperture(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Aperture, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_iso(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Iso, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_focalLength(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FocalLength, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoEXIF_flash(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Flash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PhotoURL_url(ctx context.Context, field graphql.CollectedField, obj *models.PhotoURL) (ret graphql.Marshaler) {
@@ -3499,6 +4031,52 @@ func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "exif":
+			out.Values[i] = ec._Photo_exif(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var photoEXIFImplementors = []string{"PhotoEXIF"}
+
+func (ec *executionContext) _PhotoEXIF(ctx context.Context, sel ast.SelectionSet, obj *models.PhotoExif) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, photoEXIFImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PhotoEXIF")
+		case "photo":
+			out.Values[i] = ec._PhotoEXIF_photo(ctx, field, obj)
+		case "camera":
+			out.Values[i] = ec._PhotoEXIF_camera(ctx, field, obj)
+		case "maker":
+			out.Values[i] = ec._PhotoEXIF_maker(ctx, field, obj)
+		case "lens":
+			out.Values[i] = ec._PhotoEXIF_lens(ctx, field, obj)
+		case "dateShot":
+			out.Values[i] = ec._PhotoEXIF_dateShot(ctx, field, obj)
+		case "fileSize":
+			out.Values[i] = ec._PhotoEXIF_fileSize(ctx, field, obj)
+		case "exposure":
+			out.Values[i] = ec._PhotoEXIF_exposure(ctx, field, obj)
+		case "aperture":
+			out.Values[i] = ec._PhotoEXIF_aperture(ctx, field, obj)
+		case "iso":
+			out.Values[i] = ec._PhotoEXIF_iso(ctx, field, obj)
+		case "focalLength":
+			out.Values[i] = ec._PhotoEXIF_focalLength(ctx, field, obj)
+		case "flash":
+			out.Values[i] = ec._PhotoEXIF_flash(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4515,6 +5093,17 @@ func (ec *executionContext) marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Photo(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOPhotoEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoExif(ctx context.Context, sel ast.SelectionSet, v models.PhotoExif) graphql.Marshaler {
+	return ec._PhotoEXIF(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoExif(ctx context.Context, sel ast.SelectionSet, v *models.PhotoExif) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PhotoEXIF(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOPhotoURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx context.Context, sel ast.SelectionSet, v models.PhotoURL) graphql.Marshaler {
 	return ec._PhotoURL(ctx, sel, &v)
 }
@@ -4547,6 +5136,29 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	return graphql.MarshalTime(v)
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOTime2timeᚐTime(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalOUser2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {

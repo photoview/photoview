@@ -89,8 +89,32 @@ type Photo {
   thumbnail: PhotoURL
   "The album that holds the photo"
   album: Album!
-  # exif: PhotoEXIF
+  exif: PhotoEXIF
 
   # shares: [ShareToken]
   # downloads: [PhotoDownload]
+}
+
+"EXIF metadata from the camera"
+type PhotoEXIF {
+  photo: Photo
+  "The model name of the camera"
+  camera: String
+  "The maker of the camera"
+  maker: String
+  "The name of the lens"
+  lens: String
+  dateShot: Time
+  "The formatted filesize of the image"
+  fileSize: String
+  "The exposure time of the image"
+  exposure: String
+  "The aperature stops of the image"
+  aperture: Float
+  "The ISO setting of the image"
+  iso: Int
+  "The focal length of the lens, when the image was taken"
+  focalLength: String
+  "A formatted description of the flash settings, when the image was taken"
+  flash: String
 }

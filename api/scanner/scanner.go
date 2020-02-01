@@ -84,7 +84,11 @@ func scan(database *sql.DB, user *models.User) {
 			photoPath := path.Join(albumPath, item.Name())
 
 			if !item.IsDir() && isPathImage(photoPath) {
-				tx.Exec("INSERT IGNORE INTO photo (title, path, original_url, thumbnail_url, album_id)")
+				if err := ProcessImage(tx, photoPath, albumId); err != nil {
+					fmt.Printf("ERROR: Could not proccess image %s: %s", photoPath, err)
+					tx.Rollback()
+					return
+				}
 			}
 		}
 
@@ -144,6 +148,7 @@ func directoryContainsPhotos(rootPath string) bool {
 var supported_mimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
+	"image/tiff",
 	"image/x-canon-cr2",
 	"image/bmp",
 }

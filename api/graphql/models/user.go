@@ -35,11 +35,7 @@ func NewUserFromRow(row *sql.Row) (*User, error) {
 	user := User{}
 
 	if err := row.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrorInvalidUserCredentials
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return &user, nil
@@ -64,7 +60,11 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 
 	user, err := NewUserFromRow(row)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, ErrorInvalidUserCredentials
+		} else {
+			return nil, err
+		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
@@ -107,7 +107,7 @@ func (user *User) GenerateAccessToken(database *sql.DB) (*AccessToken, error) {
 	if _, err := rand.Read(bytes); err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not generate token: %s\n", err.Error()))
 	}
-	const CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	const CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	for i, b := range bytes {
 		bytes[i] = CHARACTERS[b%byte(len(CHARACTERS))]
 	}

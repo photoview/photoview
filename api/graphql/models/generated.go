@@ -2,6 +2,10 @@
 
 package models
 
+import (
+	"time"
+)
+
 type Album struct {
 	ID          string   `json:"id"`
 	Title       *string  `json:"title"`
@@ -28,7 +32,32 @@ type Photo struct {
 	// URL to display the photo in a smaller resolution
 	Thumbnail *PhotoURL `json:"thumbnail"`
 	// The album that holds the photo
-	Album *Album `json:"album"`
+	Album *Album     `json:"album"`
+	Exif  *PhotoExif `json:"exif"`
+}
+
+// EXIF metadata from the camera
+type PhotoExif struct {
+	Photo *Photo `json:"photo"`
+	// The model name of the camera
+	Camera *string `json:"camera"`
+	// The maker of the camera
+	Maker *string `json:"maker"`
+	// The name of the lens
+	Lens     *string    `json:"lens"`
+	DateShot *time.Time `json:"dateShot"`
+	// The formatted filesize of the image
+	FileSize *string `json:"fileSize"`
+	// The exposure time of the image
+	Exposure *string `json:"exposure"`
+	// The aperature stops of the image
+	Aperture *float64 `json:"aperture"`
+	// The ISO setting of the image
+	Iso *int `json:"iso"`
+	// The focal length of the lens, when the image was taken
+	FocalLength *string `json:"focalLength"`
+	// A formatted description of the flash settings, when the image was taken
+	Flash *string `json:"flash"`
 }
 
 type PhotoURL struct {
