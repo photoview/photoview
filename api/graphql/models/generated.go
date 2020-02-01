@@ -39,3 +39,10 @@ type PhotoURL struct {
 	// Height of the image in pixels
 	Height *int `json:"height"`
 }
+
+type ScannerResult struct {
+	Finished bool     `json:"finished"`
+	Success  bool     `json:"success"`
+	Progress *float64 `json:"progress"`
+	Message  *string  `json:"message"`
+}

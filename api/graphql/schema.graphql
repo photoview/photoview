@@ -27,12 +27,24 @@ type Mutation {
     password: String!
     rootPath: String!
   ): AuthorizeResult!
+
+  "Scan all users for new photos"
+  scanAll: ScannerResult!
+  "Scan a single user for new photos"
+  scanUser(userId: ID!): ScannerResult!
 }
 
 type AuthorizeResult {
   success: Boolean!
   status: String!
   token: String
+}
+
+type ScannerResult {
+  finished: Boolean!
+  success: Boolean!
+  progress: Float
+  message: String
 }
 
 type User {

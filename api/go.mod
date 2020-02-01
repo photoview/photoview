@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi v3.3.2+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/h2non/filetype v1.0.10
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
 	github.com/vektah/gqlparser v1.2.0
