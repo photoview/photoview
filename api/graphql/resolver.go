@@ -40,3 +40,16 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 
 	return users, nil
 }
+
+func (r *queryResolver) MyAlbums(ctx context.Context) ([]*models.Album, error) {
+	panic("Not implemented")
+}
+func (r *queryResolver) Album(ctx context.Context, id *string) (*models.Album, error) {
+	panic("Not implemented")
+}
+func (r *queryResolver) MyPhotos(ctx context.Context) ([]*models.Photo, error) {
+	panic("Not implemented")
+}
+func (r *queryResolver) Photo(ctx context.Context, id string) (*models.Photo, error) {
+	panic("Not implemented")
+}

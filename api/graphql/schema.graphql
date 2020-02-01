@@ -3,9 +3,20 @@ directive @isAdmin on FIELD_DEFINITION
 scalar Time
 
 type Query {
+  "List of registered users, must be admin to call"
   users: [User!]! @isAdmin
-
+  "Information about the currently logged in user"
   myUser: User
+
+  "List of albums owned by the logged in user"
+  myAlbums: [Album]
+  "Get album by id, user must own the album or be admin"
+  album(id: ID): Album
+
+  "List of photos owned by the logged in user"
+  myPhotos: [Photo]
+  "Get photo by id, user must own the photo or be admin"
+  photo(id: ID!): Photo
 }
 
 type Mutation {
@@ -28,8 +39,46 @@ type User {
   id: ID!
   username: String!
   #albums: [Album]
-  # Local filepath for the user's photos
+  "Local filepath for the user's photos"
   rootPath: String! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
+}
+
+type Album {
+  id: ID!
+  title: String
+  photos: [Photo]
+  subAlbums: [Album]
+  parentAlbum: Album
+  owner: User!
+  path: String
+
+  # shares: [ShareToken]
+}
+
+type PhotoURL {
+  "URL for previewing the image"
+  url: String
+  "Width of the image in pixels"
+  width: Int
+  "Height of the image in pixels"
+  height: Int
+}
+
+type Photo {
+  id: ID!
+  title: String
+  "Local filepath for the photo"
+  path: String
+  "URL to display the photo in full resolution"
+  original: PhotoURL
+  "URL to display the photo in a smaller resolution"
+  thumbnail: PhotoURL
+  "The album that holds the photo"
+  album: Album!
+  # exif: PhotoEXIF
+
+  # shares: [ShareToken]
+  # downloads: [PhotoDownload]
 }

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS user (
   user_id int NOT NULL AUTO_INCREMENT,
   username varchar(255) NOT NULL UNIQUE,
   password varchar(255) NOT NULL,
@@ -8,12 +8,12 @@ CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY (user_id)
 );
 
-CREATE TABLE IF NOT EXISTS access_tokens (
+CREATE TABLE IF NOT EXISTS access_token (
 	token_id int NOT NULL AUTO_INCREMENT,
   user_id int NOT NULL,
 	value char(24) NOT NULL UNIQUE,
 	expire timestamp NOT NULL,
 
 	PRIMARY KEY (token_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id)
+  FOREIGN KEY (user_id) REFERENCES user(user_id)
 );

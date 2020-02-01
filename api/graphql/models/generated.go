@@ -2,8 +2,40 @@
 
 package models
 
+type Album struct {
+	ID          string   `json:"id"`
+	Title       *string  `json:"title"`
+	Photos      []*Photo `json:"photos"`
+	SubAlbums   []*Album `json:"subAlbums"`
+	ParentAlbum *Album   `json:"parentAlbum"`
+	Owner       *User    `json:"owner"`
+	Path        *string  `json:"path"`
+}
+
 type AuthorizeResult struct {
 	Success bool    `json:"success"`
 	Status  string  `json:"status"`
 	Token   *string `json:"token"`
+}
+
+type Photo struct {
+	ID    string  `json:"id"`
+	Title *string `json:"title"`
+	// Local filepath for the photo
+	Path *string `json:"path"`
+	// URL to display the photo in full resolution
+	Original *PhotoURL `json:"original"`
+	// URL to display the photo in a smaller resolution
+	Thumbnail *PhotoURL `json:"thumbnail"`
+	// The album that holds the photo
+	Album *Album `json:"album"`
+}
+
+type PhotoURL struct {
+	// URL for previewing the image
+	URL *string `json:"url"`
+	// Width of the image in pixels
+	Width *int `json:"width"`
+	// Height of the image in pixels
+	Height *int `json:"height"`
 }

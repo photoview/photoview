@@ -60,7 +60,7 @@ func NewUsersFromRows(rows *sql.Rows) ([]*User, error) {
 }
 
 func AuthorizeUser(database *sql.DB, username string, password string) (*User, error) {
-	row := database.QueryRow("SELECT * FROM users WHERE username = ?", username)
+	row := database.QueryRow("SELECT * FROM user WHERE username = ?", username)
 
 	user, err := NewUserFromRow(row)
 	if err != nil {
@@ -85,11 +85,11 @@ func RegisterUser(database *sql.DB, username string, password string, rootPath s
 	}
 	hashedPass := string(hashedPassBytes)
 
-	if _, err := database.Exec("INSERT INTO users (username, password, root_path) VALUES (?, ?, ?)", username, hashedPass, rootPath); err != nil {
+	if _, err := database.Exec("INSERT INTO user (username, password, root_path) VALUES (?, ?, ?)", username, hashedPass, rootPath); err != nil {
 		return nil, err
 	}
 
-	row := database.QueryRow("SELECT * FROM users WHERE username = ?", username)
+	row := database.QueryRow("SELECT * FROM user WHERE username = ?", username)
 	if row == nil {
 		return nil, ErrorInvalidUserCredentials
 	}
@@ -116,7 +116,7 @@ func (user *User) GenerateAccessToken(database *sql.DB) (*AccessToken, error) {
 	expire := time.Now().Add(14 * 24 * time.Hour)
 	expireString := expire.UTC().Format("2006-01-02 15:04:05")
 
-	if _, err := database.Exec("INSERT INTO access_tokens (value, expire, user_id) VALUES (?, ?, ?)", token_value, expireString, user.UserID); err != nil {
+	if _, err := database.Exec("INSERT INTO access_token (value, expire, user_id) VALUES (?, ?, ?)", token_value, expireString, user.UserID); err != nil {
 		return nil, err
 	}
 
@@ -132,7 +132,7 @@ func VerifyTokenAndGetUser(database *sql.DB, token string) (*User, error) {
 
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 
-	row := database.QueryRow("SELECT (user_id) FROM access_tokens WHERE expire > ? AND value = ?", now, token)
+	row := database.QueryRow("SELECT (user_id) FROM access_token WHERE expire > ? AND value = ?", now, token)
 
 	var userId string
 
@@ -141,7 +141,7 @@ func VerifyTokenAndGetUser(database *sql.DB, token string) (*User, error) {
 		return nil, err
 	}
 
-	row = database.QueryRow("SELECT * FROM users WHERE user_id = ?", userId)
+	row = database.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
 	user, err := NewUserFromRow(row)
 	if err != nil {
 		return nil, err
