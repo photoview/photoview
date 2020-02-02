@@ -156,8 +156,9 @@ func directoryContainsPhotos(rootPath string) bool {
 var supported_mimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
-	// "image/tiff",
-	// "image/x-canon-cr2",
+	"image/tiff",
+	"image/webp",
+	"image/x-canon-cr2",
 	"image/bmp",
 }
 

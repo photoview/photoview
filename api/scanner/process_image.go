@@ -11,6 +11,14 @@ import (
 	"strconv"
 
 	"github.com/nfnt/resize"
+
+	// Image decoders
+	_ "golang.org/x/image/bmp"
+	// _ "golang.org/x/image/tiff"
+	_ "github.com/nf/cr2"
+	_ "golang.org/x/image/webp"
+	_ "image/gif"
+	_ "image/png"
 )
 
 func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
