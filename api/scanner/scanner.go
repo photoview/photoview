@@ -79,23 +79,31 @@ func scan(database *sql.DB, user *models.User) {
 			return
 		}
 
+		// Commit album transaction
+		if err := tx.Commit(); err != nil {
+			log.Printf("ERROR: Could not commit database transaction: %s\n", err)
+			return
+		}
+
 		// Scan for photos
 		for _, item := range dirContent {
 			photoPath := path.Join(albumPath, item.Name())
 
 			if !item.IsDir() && isPathImage(photoPath) {
+				tx, err := database.Begin()
+				if err != nil {
+					log.Printf("ERROR: Could not begin database transaction for image %s: %s\n", photoPath, err)
+					return
+				}
+
 				if err := ProcessImage(tx, photoPath, albumId); err != nil {
-					fmt.Printf("ERROR: Could not proccess image %s: %s", photoPath, err)
+					log.Printf("ERROR: processing image %s: %s", photoPath, err)
 					tx.Rollback()
 					return
 				}
-			}
-		}
 
-		// Commit album and photos transaction
-		if err := tx.Commit(); err != nil {
-			log.Printf("ERROR: Could not commit database transaction: %s\n", err)
-			return
+				tx.Commit()
+			}
 		}
 
 		// Scan for sub-albums
@@ -148,8 +156,8 @@ func directoryContainsPhotos(rootPath string) bool {
 var supported_mimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
-	"image/tiff",
-	"image/x-canon-cr2",
+	// "image/tiff",
+	// "image/x-canon-cr2",
 	"image/bmp",
 }
 
@@ -159,6 +167,7 @@ func isPathImage(path string) bool {
 		log.Printf("Could not open file %s: %s\n", path, err)
 		return false
 	}
+	defer file.Close()
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
