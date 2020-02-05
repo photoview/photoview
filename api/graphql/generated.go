@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Album() AlbumResolver
 	Mutation() MutationResolver
 	Photo() PhotoResolver
 	Query() QueryResolver
@@ -124,6 +125,12 @@ type ComplexityRoot struct {
 	}
 }
 
+type AlbumResolver interface {
+	Photos(ctx context.Context, obj *models.Album) ([]*models.Photo, error)
+	SubAlbums(ctx context.Context, obj *models.Album) ([]*models.Album, error)
+	ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error)
+	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
+}
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
@@ -874,13 +881,13 @@ func (ec *executionContext) _Album_id(ctx context.Context, field graphql.Collect
 		Object:   "Album",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.ID(), nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -926,10 +933,10 @@ func (ec *executionContext) _Album_title(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -945,13 +952,13 @@ func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.Col
 		Object:   "Album",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Photos, nil
+		return ec.resolvers.Album().Photos(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -979,13 +986,13 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 		Object:   "Album",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SubAlbums, nil
+		return ec.resolvers.Album().SubAlbums(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1013,13 +1020,13 @@ func (ec *executionContext) _Album_parentAlbum(ctx context.Context, field graphq
 		Object:   "Album",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ParentAlbum, nil
+		return ec.resolvers.Album().ParentAlbum(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1047,13 +1054,13 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 		Object:   "Album",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Owner, nil
+		return ec.resolvers.Album().Owner(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1099,10 +1106,10 @@ func (ec *executionContext) _Album_path(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -3901,21 +3908,57 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		case "id":
 			out.Values[i] = ec._Album_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "title":
 			out.Values[i] = ec._Album_title(ctx, field, obj)
 		case "photos":
-			out.Values[i] = ec._Album_photos(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_photos(ctx, field, obj)
+				return res
+			})
 		case "subAlbums":
-			out.Values[i] = ec._Album_subAlbums(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_subAlbums(ctx, field, obj)
+				return res
+			})
 		case "parentAlbum":
-			out.Values[i] = ec._Album_parentAlbum(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_parentAlbum(ctx, field, obj)
+				return res
+			})
 		case "owner":
-			out.Values[i] = ec._Album_owner(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "path":
 			out.Values[i] = ec._Album_path(ctx, field, obj)
 		default:

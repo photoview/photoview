@@ -44,7 +44,7 @@ func (r *photoResolver) Original(ctx context.Context, obj *models.Photo) (*model
 	row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.original_url = photo_url.url_id", obj.PhotoID)
 
 	var photoUrl models.PhotoURL
-	if err := row.Scan(&photoUrl.UrlId, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
+	if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
 		return nil, err
 	}
 
@@ -55,7 +55,7 @@ func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*mode
 	row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.thumbnail_url = photo_url.url_id", obj.PhotoID)
 
 	var photoUrl models.PhotoURL
-	if err := row.Scan(&photoUrl.UrlId, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
+	if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
 		return nil, err
 	}
 

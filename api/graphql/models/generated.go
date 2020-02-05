@@ -6,16 +6,6 @@ import (
 	"time"
 )
 
-type Album struct {
-	ID          string   `json:"id"`
-	Title       *string  `json:"title"`
-	Photos      []*Photo `json:"photos"`
-	SubAlbums   []*Album `json:"subAlbums"`
-	ParentAlbum *Album   `json:"parentAlbum"`
-	Owner       *User    `json:"owner"`
-	Path        *string  `json:"path"`
-}
-
 type AuthorizeResult struct {
 	Success bool    `json:"success"`
 	Status  string  `json:"status"`

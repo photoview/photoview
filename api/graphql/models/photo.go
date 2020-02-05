@@ -16,7 +16,7 @@ type Photo struct {
 }
 
 type PhotoURL struct {
-	UrlId  int
+	UrlID  int
 	Token  string
 	Width  int
 	Height int
@@ -34,6 +34,20 @@ func NewPhotoFromRow(row *sql.Row) (*Photo, error) {
 	}
 
 	return &photo, nil
+}
+
+func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
+	photos := make([]*Photo, 0)
+
+	for rows.Next() {
+		var photo Photo
+		if err := rows.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.OriginalUrl, &photo.ThumbnailUrl, &photo.AlbumId, &photo.ExifId); err != nil {
+			return nil, err
+		}
+		photos = append(photos, &photo)
+	}
+
+	return photos, nil
 }
 
 func (p *PhotoURL) URL() string {

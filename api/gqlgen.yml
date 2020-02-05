@@ -26,3 +26,5 @@ models:
     model: github.com/viktorstrate/photoview/api/graphql/models.Photo
   PhotoURL:
     model: github.com/viktorstrate/photoview/api/graphql/models.PhotoURL
+  Album:
+    model: github.com/viktorstrate/photoview/api/graphql/models.Album
