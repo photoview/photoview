@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"errors"
 
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -80,4 +81,21 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, username string, pa
 		Status:  "ok",
 		Token:   &token.Value,
 	}, nil
+}
+
+func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
+	siteInfo, err := models.GetSiteInfo(r.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := r.Database.Exec("UPDATE site_info SET initial_setup = false"); err != nil {
+		return nil, err
+	}
+
+	if !siteInfo.InitialSetup {
+		return nil, errors.New("not initial setup")
+	}
+
+	return r.RegisterUser(ctx, username, password, rootPath)
 }

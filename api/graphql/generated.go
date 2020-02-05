@@ -65,10 +65,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AuthorizeUser func(childComplexity int, username string, password string) int
-		RegisterUser  func(childComplexity int, username string, password string, rootPath string) int
-		ScanAll       func(childComplexity int) int
-		ScanUser      func(childComplexity int, userID string) int
+		AuthorizeUser      func(childComplexity int, username string, password string) int
+		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
+		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
+		ScanAll            func(childComplexity int) int
+		ScanUser           func(childComplexity int, userID string) int
 	}
 
 	Photo struct {
@@ -107,6 +108,7 @@ type ComplexityRoot struct {
 		MyPhotos func(childComplexity int) int
 		MyUser   func(childComplexity int) int
 		Photo    func(childComplexity int, id string) int
+		SiteInfo func(childComplexity int) int
 		Users    func(childComplexity int) int
 	}
 
@@ -115,6 +117,10 @@ type ComplexityRoot struct {
 		Message  func(childComplexity int) int
 		Progress func(childComplexity int) int
 		Success  func(childComplexity int) int
+	}
+
+	SiteInfo struct {
+		InitialSetup func(childComplexity int) int
 	}
 
 	User struct {
@@ -134,6 +140,7 @@ type AlbumResolver interface {
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
+	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID string) (*models.ScannerResult, error)
 }
@@ -144,6 +151,7 @@ type PhotoResolver interface {
 	Exif(ctx context.Context, obj *models.Photo) (*models.PhotoExif, error)
 }
 type QueryResolver interface {
+	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
 	Users(ctx context.Context) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
 	MyAlbums(ctx context.Context) ([]*models.Album, error)
@@ -248,6 +256,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+
+	case "Mutation.initialSetupWizard":
+		if e.complexity.Mutation.InitialSetupWizard == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_initialSetupWizard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -472,6 +492,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Photo(childComplexity, args["id"].(string)), true
 
+	case "Query.siteInfo":
+		if e.complexity.Query.SiteInfo == nil {
+			break
+		}
+
+		return e.complexity.Query.SiteInfo(childComplexity), true
+
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
 			break
@@ -506,6 +533,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ScannerResult.Success(childComplexity), true
+
+	case "SiteInfo.initialSetup":
+		if e.complexity.SiteInfo.InitialSetup == nil {
+			break
+		}
+
+		return e.complexity.SiteInfo.InitialSetup(childComplexity), true
 
 	case "User.admin":
 		if e.complexity.User.Admin == nil {
@@ -602,6 +636,8 @@ var parsedSchema = gqlparser.MustLoadSchema(
 scalar Time
 
 type Query {
+  siteInfo: SiteInfo
+
   "List of registered users, must be admin to call"
   users: [User!]! @isAdmin
   "Information about the currently logged in user"
@@ -621,11 +657,19 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
+  "Registers a new user, must be admin to call"
   registerUser(
     username: String!
     password: String!
     rootPath: String!
-  ): AuthorizeResult!
+  ): AuthorizeResult! @isAdmin
+
+  "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
+  initialSetupWizard(
+    username: String!
+    password: String!
+    rootPath: String!
+  ): AuthorizeResult
 
   "Scan all users for new photos"
   scanAll: ScannerResult!
@@ -644,6 +688,11 @@ type ScannerResult {
   success: Boolean!
   progress: Float
   message: String
+}
+
+"General public information about the site"
+type SiteInfo {
+  initialSetup: Boolean!
 }
 
 type User {
@@ -743,6 +792,36 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 		}
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["username"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["username"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["rootPath"]; ok {
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["rootPath"] = arg2
 	return args, nil
 }
 
@@ -1289,8 +1368,28 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RegisterUser(rctx, args["username"].(string), args["password"].(string), args["rootPath"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RegisterUser(rctx, args["username"].(string), args["password"].(string), args["rootPath"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAdmin == nil {
+				return nil, errors.New("directive isAdmin is not implemented")
+			}
+			return ec.directives.IsAdmin(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.AuthorizeResult); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/viktorstrate/photoview/api/graphql/models.AuthorizeResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1306,6 +1405,47 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_initialSetupWizard_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().InitialSetupWizard(rctx, args["username"].(string), args["password"].(string), args["rootPath"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.AuthorizeResult)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2109,6 +2249,40 @@ func (ec *executionContext) _PhotoURL_height(ctx context.Context, field graphql.
 	return ec.marshalOInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SiteInfo(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.SiteInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -2565,6 +2739,43 @@ func (ec *executionContext) _ScannerResult_message(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SiteInfo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InitialSetup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -4031,6 +4242,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "initialSetupWizard":
+			out.Values[i] = ec._Mutation_initialSetupWizard(ctx, field)
 		case "scanAll":
 			out.Values[i] = ec._Mutation_scanAll(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -4217,6 +4430,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "siteInfo":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_siteInfo(ctx, field)
+				return res
+			})
 		case "users":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -4326,6 +4550,33 @@ func (ec *executionContext) _ScannerResult(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._ScannerResult_progress(ctx, field, obj)
 		case "message":
 			out.Values[i] = ec._ScannerResult_message(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var siteInfoImplementors = []string{"SiteInfo"}
+
+func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet, obj *models.SiteInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, siteInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SiteInfo")
+		case "initialSetup":
+			out.Values[i] = ec._SiteInfo_initialSetup(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5036,6 +5287,17 @@ func (ec *executionContext) marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Album(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
+	return ec._AuthorizeResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AuthorizeResult(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -5199,6 +5461,17 @@ func (ec *executionContext) marshalOPhotoURL2ᚖgithubᚗcomᚋviktorstrateᚋph
 		return graphql.Null
 	}
 	return ec._PhotoURL(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSiteInfo2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v models.SiteInfo) graphql.Marshaler {
+	return ec._SiteInfo(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v *models.SiteInfo) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SiteInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

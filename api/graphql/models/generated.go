@@ -42,3 +42,8 @@ type ScannerResult struct {
 	Progress *float64 `json:"progress"`
 	Message  *string  `json:"message"`
 }
+
+// General public information about the site
+type SiteInfo struct {
+	InitialSetup bool `json:"initialSetup"`
+}
