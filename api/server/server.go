@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
+	"github.com/go-chi/cors"
 
 	"github.com/viktorstrate/photoview/api/database"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -39,6 +40,14 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(db))
 
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4001", "http://localhost:1234"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler)
+
 	graphqlResolver := photoview_graphql.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
 	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
@@ -48,8 +57,8 @@ func main() {
 		Directives: graphqlDirective,
 	}
 
-	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
-	router.Handle("/query", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
+	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
+	router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
