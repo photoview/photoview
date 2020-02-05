@@ -14,7 +14,7 @@ model:
   package: models
 
 resolver:
-  filename: graphql/resolver.go
+  filename: graphql/resolvers/root.go
   type: Resolver
 
 autobind: []
@@ -22,3 +22,7 @@ autobind: []
 models:
   User:
     model: github.com/viktorstrate/photoview/api/graphql/models.User
+  Photo:
+    model: github.com/viktorstrate/photoview/api/graphql/models.Photo
+  PhotoURL:
+    model: github.com/viktorstrate/photoview/api/graphql/models.PhotoURL

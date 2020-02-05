@@ -6,14 +6,15 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
-	"github.com/joho/godotenv"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 
 	"github.com/viktorstrate/photoview/api/database"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
+	"github.com/viktorstrate/photoview/api/graphql/resolvers"
 )
 
 const defaultPort = "4001"
@@ -45,10 +46,10 @@ func main() {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
-		Debug:            true,
+		Debug:            false,
 	}).Handler)
 
-	graphqlResolver := photoview_graphql.Resolver{Database: db}
+	graphqlResolver := resolvers.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
 	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
 
@@ -60,6 +61,6 @@ func main() {
 	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
 	router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("🚀 Graphql playground ready at http://localhost:%s/", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

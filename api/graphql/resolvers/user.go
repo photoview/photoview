@@ -1,4 +1,4 @@
-package api
+package resolvers
 
 import (
 	"context"
@@ -12,6 +12,22 @@ import (
 // }
 
 // type userResolver struct{ *Resolver }
+
+func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
+
+	rows, err := r.Database.Query("SELECT * FROM users")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users, err := models.NewUsersFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
 
 func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 

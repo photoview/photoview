@@ -22,20 +22,6 @@ type AuthorizeResult struct {
 	Token   *string `json:"token"`
 }
 
-type Photo struct {
-	ID    string  `json:"id"`
-	Title *string `json:"title"`
-	// Local filepath for the photo
-	Path *string `json:"path"`
-	// URL to display the photo in full resolution
-	Original *PhotoURL `json:"original"`
-	// URL to display the photo in a smaller resolution
-	Thumbnail *PhotoURL `json:"thumbnail"`
-	// The album that holds the photo
-	Album *Album     `json:"album"`
-	Exif  *PhotoExif `json:"exif"`
-}
-
 // EXIF metadata from the camera
 type PhotoExif struct {
 	Photo *Photo `json:"photo"`
@@ -58,15 +44,6 @@ type PhotoExif struct {
 	FocalLength *string `json:"focalLength"`
 	// A formatted description of the flash settings, when the image was taken
 	Flash *string `json:"flash"`
-}
-
-type PhotoURL struct {
-	// URL for previewing the image
-	URL *string `json:"url"`
-	// Width of the image in pixels
-	Width *int `json:"width"`
-	// Height of the image in pixels
-	Height *int `json:"height"`
 }
 
 type ScannerResult struct {
