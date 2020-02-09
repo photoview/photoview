@@ -9,10 +9,12 @@ import { SidebarConsumer } from '../../components/sidebar/Sidebar'
 
 const photoQuery = gql`
   query allPhotosPage {
-    myAlbums(orderBy: title_asc, filter: { photos_not: null }) {
+    myAlbums(filter: { order_by: "title", order_direction: ASC }) {
       title
       id
-      photos(orderBy: title_desc, first: 12) {
+      photos(
+        filter: { order_by: "photo.title", order_direction: DESC, limit: 12 }
+      ) {
         id
         title
         thumbnail {

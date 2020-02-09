@@ -3,6 +3,9 @@
 package models
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -10,6 +13,13 @@ type AuthorizeResult struct {
 	Success bool    `json:"success"`
 	Status  string  `json:"status"`
 	Token   *string `json:"token"`
+}
+
+type Filter struct {
+	OrderBy        *string         `json:"order_by"`
+	OrderDirection *OrderDirection `json:"order_direction"`
+	Limit          *int            `json:"limit"`
+	Offset         *int            `json:"offset"`
 }
 
 // EXIF metadata from the camera
@@ -46,4 +56,45 @@ type ScannerResult struct {
 // General public information about the site
 type SiteInfo struct {
 	InitialSetup bool `json:"initialSetup"`
+}
+
+type OrderDirection string
+
+const (
+	OrderDirectionAsc  OrderDirection = "ASC"
+	OrderDirectionDesc OrderDirection = "DESC"
+)
+
+var AllOrderDirection = []OrderDirection{
+	OrderDirectionAsc,
+	OrderDirectionDesc,
+}
+
+func (e OrderDirection) IsValid() bool {
+	switch e {
+	case OrderDirectionAsc, OrderDirectionDesc:
+		return true
+	}
+	return false
+}
+
+func (e OrderDirection) String() string {
+	return string(e)
+}
+
+func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrderDirection(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrderDirection", str)
+	}
+	return nil
+}
+
+func (e OrderDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

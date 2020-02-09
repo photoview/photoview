@@ -2,7 +2,9 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
+	"net/url"
+	"os"
+	"path"
 	"strconv"
 )
 
@@ -61,7 +63,12 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 }
 
 func (p *PhotoURL) URL() string {
-	return fmt.Sprintf("/photo/%s", p.PhotoName)
+	imageUrl, err := url.Parse(os.Getenv("API_ENDPOINT"))
+	if err != nil {
+		return path.Join("/photo", p.PhotoName)
+	}
+	imageUrl.Path = path.Join(imageUrl.Path, "photo", p.PhotoName)
+	return imageUrl.String()
 }
 
 func NewPhotoURLFromRow(row *sql.Row) (*PhotoURL, error) {

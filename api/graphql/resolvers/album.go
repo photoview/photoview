@@ -8,9 +8,30 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func (r *queryResolver) MyAlbums(ctx context.Context) ([]*models.Album, error) {
-	panic("Not implemented")
+func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	filterSQL, err := filter.FormatSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Database.Query("SELECT * FROM album WHERE owner_id = ? AND parent_album IS NULL"+filterSQL, user.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	albums, err := models.NewAlbumsFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return albums, nil
 }
+
 func (r *queryResolver) Album(ctx context.Context, id *string) (*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -32,8 +53,14 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Photos(ctx context.Context, obj *models.Album) ([]*models.Photo, error) {
-	photoRows, err := r.Database.Query("SELECT photo.* FROM album, photo WHERE album.album_id = ? AND photo.album_id = album.album_id", obj.AlbumID)
+func (r *albumResolver) Photos(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Photo, error) {
+
+	filterSQL, err := filter.FormatSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	photoRows, err := r.Database.Query("SELECT photo.* FROM album, photo WHERE album.album_id = ? AND photo.album_id = album.album_id"+filterSQL, obj.AlbumID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +75,17 @@ func (r *albumResolver) Photos(ctx context.Context, obj *models.Album) ([]*model
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
-	panic("not implemented")
+	rows, err := r.Database.Query("SELECT * FROM album WHERE parent_album = ?", obj.AlbumID)
+	if err != nil {
+		return nil, err
+	}
+
+	albums, err := models.NewAlbumsFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return albums, nil
 }
 
 func (r *albumResolver) ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error) {

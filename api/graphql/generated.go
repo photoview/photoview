@@ -53,7 +53,7 @@ type ComplexityRoot struct {
 		Owner       func(childComplexity int) int
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
-		Photos      func(childComplexity int) int
+		Photos      func(childComplexity int, filter *models.Filter) int
 		SubAlbums   func(childComplexity int) int
 		Title       func(childComplexity int) int
 	}
@@ -105,12 +105,12 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Album    func(childComplexity int, id *string) int
-		MyAlbums func(childComplexity int) int
-		MyPhotos func(childComplexity int) int
+		MyAlbums func(childComplexity int, filter *models.Filter) int
+		MyPhotos func(childComplexity int, filter *models.Filter) int
 		MyUser   func(childComplexity int) int
 		Photo    func(childComplexity int, id string) int
 		SiteInfo func(childComplexity int) int
-		Users    func(childComplexity int) int
+		Users    func(childComplexity int, filter *models.Filter) int
 	}
 
 	ScannerResult struct {
@@ -133,7 +133,7 @@ type ComplexityRoot struct {
 }
 
 type AlbumResolver interface {
-	Photos(ctx context.Context, obj *models.Album) ([]*models.Photo, error)
+	Photos(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Photo, error)
 	SubAlbums(ctx context.Context, obj *models.Album) ([]*models.Album, error)
 	ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error)
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
@@ -154,11 +154,11 @@ type PhotoResolver interface {
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
-	Users(ctx context.Context) ([]*models.User, error)
+	Users(ctx context.Context, filter *models.Filter) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
-	MyAlbums(ctx context.Context) ([]*models.Album, error)
+	MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error)
 	Album(ctx context.Context, id *string) (*models.Album, error)
-	MyPhotos(ctx context.Context) ([]*models.Photo, error)
+	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
 	Photo(ctx context.Context, id string) (*models.Photo, error)
 }
 
@@ -210,7 +210,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Album.Photos(childComplexity), true
+		args, err := ec.field_Album_photos_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Album.Photos(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "Album.subAlbums":
 		if e.complexity.Album.SubAlbums == nil {
@@ -473,14 +478,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity), true
+		args, err := ec.field_Query_myAlbums_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "Query.myPhotos":
 		if e.complexity.Query.MyPhotos == nil {
 			break
 		}
 
-		return e.complexity.Query.MyPhotos(childComplexity), true
+		args, err := ec.field_Query_myPhotos_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyPhotos(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -513,7 +528,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Users(childComplexity), true
+		args, err := ec.field_Query_users_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Users(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "ScannerResult.finished":
 		if e.complexity.ScannerResult.Finished == nil {
@@ -644,21 +664,33 @@ var parsedSchema = gqlparser.MustLoadSchema(
 
 scalar Time
 
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+input Filter {
+  order_by: String
+  order_direction: OrderDirection
+  limit: Int
+  offset: Int
+}
+
 type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  users: [User!]! @isAdmin
+  users(filter: Filter): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
   "List of albums owned by the logged in user"
-  myAlbums: [Album!]!
+  myAlbums(filter: Filter): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: ID): Album!
 
   "List of photos owned by the logged in user"
-  myPhotos: [Photo!]!
+  myPhotos(filter: Filter): [Photo!]!
   "Get photo by id, user must own the photo or be admin"
   photo(id: ID!): Photo!
 }
@@ -717,7 +749,7 @@ type User {
 type Album {
   id: ID!
   title: String!
-  photos: [Photo!]!
+  photos(filter: Filter): [Photo!]!
   subAlbums: [Album!]!
   parentAlbum: Album
   owner: User!
@@ -782,6 +814,20 @@ type PhotoEXIF {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Album_photos_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -907,6 +953,34 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myPhotos_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -918,6 +992,20 @@ func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
 	return args, nil
 }
 
@@ -1047,10 +1135,17 @@ func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.Col
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Album_photos_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().Photos(rctx, obj)
+		return ec.resolvers.Album().Photos(rctx, obj, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2362,11 +2457,18 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_users_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Users(rctx)
+			return ec.resolvers.Query().Users(rctx, args["filter"].(*models.Filter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -2456,10 +2558,17 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_myAlbums_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyAlbums(rctx)
+		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2537,10 +2646,17 @@ func (ec *executionContext) _Query_myPhotos(ctx context.Context, field graphql.C
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_myPhotos_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyPhotos(rctx)
+		return ec.resolvers.Query().MyPhotos(rctx, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4175,6 +4291,42 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (models.Filter, error) {
+	var it models.Filter
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "order_by":
+			var err error
+			it.OrderBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "order_direction":
+			var err error
+			it.OrderDirection, err = ec.unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "limit":
+			var err error
+			it.Limit, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "offset":
+			var err error
+			it.Offset, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -5554,6 +5706,18 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
+func (ec *executionContext) unmarshalOFilter2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (models.Filter, error) {
+	return ec.unmarshalInputFilter(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (*models.Filter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOFilter2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, v)
+	return &res, err
+}
+
 func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	return graphql.UnmarshalFloat(v)
 }
@@ -5621,6 +5785,30 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return ec.marshalOInt2int(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (models.OrderDirection, error) {
+	var res models.OrderDirection
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v models.OrderDirection) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (*models.OrderDirection, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v *models.OrderDirection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOPhoto2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx context.Context, sel ast.SelectionSet, v models.Photo) graphql.Marshaler {

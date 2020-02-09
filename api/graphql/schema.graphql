@@ -2,21 +2,33 @@ directive @isAdmin on FIELD_DEFINITION
 
 scalar Time
 
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+input Filter {
+  order_by: String
+  order_direction: OrderDirection
+  limit: Int
+  offset: Int
+}
+
 type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  users: [User!]! @isAdmin
+  users(filter: Filter): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
   "List of albums owned by the logged in user"
-  myAlbums: [Album!]!
+  myAlbums(filter: Filter): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: ID): Album!
 
   "List of photos owned by the logged in user"
-  myPhotos: [Photo!]!
+  myPhotos(filter: Filter): [Photo!]!
   "Get photo by id, user must own the photo or be admin"
   photo(id: ID!): Photo!
 }
@@ -75,7 +87,7 @@ type User {
 type Album {
   id: ID!
   title: String!
-  photos: [Photo!]!
+  photos(filter: Filter): [Photo!]!
   subAlbums: [Album!]!
   parentAlbum: Album
   owner: User!

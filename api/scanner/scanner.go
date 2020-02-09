@@ -120,8 +120,6 @@ func scan(database *sql.DB, user *models.User) {
 					return
 				}
 
-				log.Printf("Content type: %s\n", *content_type)
-
 				if err := ProcessImage(tx, photoPath, albumId, *content_type); err != nil {
 					log.Printf("ERROR: processing image %s: %s", photoPath, err)
 					tx.Rollback()

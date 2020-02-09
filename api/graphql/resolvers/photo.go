@@ -9,13 +9,18 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func (r *queryResolver) MyPhotos(ctx context.Context) ([]*models.Photo, error) {
+func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
 	}
 
-	rows, err := r.Database.Query("SELECT photo.* FROM photo, album WHERE photo.album_id = album.album_id AND album.owner_id = ?", user.UserID)
+	filterSQL, err := filter.FormatSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Database.Query("SELECT photo.* FROM photo, album WHERE photo.album_id = album.album_id AND album.owner_id = ?"+filterSQL, user.UserID)
 	if err != nil {
 		return nil, err
 	}
