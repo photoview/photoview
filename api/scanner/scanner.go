@@ -13,6 +13,22 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
+type scanner_cache map[string]interface{}
+
+func (cache *scanner_cache) insert_photo_type(path string, content_type string) {
+	(*cache)["photo_type/"+path] = content_type
+}
+
+func (cache *scanner_cache) get_photo_type(path string) *string {
+	result := (*cache)["photo_type/"+path]
+	if result == nil {
+		return nil
+	}
+
+	photo_type := result.(string)
+	return &photo_type
+}
+
 func ScanUser(database *sql.DB, userId string) error {
 
 	row := database.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
@@ -29,6 +45,8 @@ func ScanUser(database *sql.DB, userId string) error {
 }
 
 func scan(database *sql.DB, user *models.User) {
+	scanner_cache := make(scanner_cache)
+
 	type scanInfo struct {
 		path     string
 		parentId *int
@@ -89,14 +107,22 @@ func scan(database *sql.DB, user *models.User) {
 		for _, item := range dirContent {
 			photoPath := path.Join(albumPath, item.Name())
 
-			if !item.IsDir() && isPathImage(photoPath) {
+			if !item.IsDir() && isPathImage(photoPath, &scanner_cache) {
 				tx, err := database.Begin()
 				if err != nil {
 					log.Printf("ERROR: Could not begin database transaction for image %s: %s\n", photoPath, err)
 					return
 				}
 
-				if err := ProcessImage(tx, photoPath, albumId); err != nil {
+				content_type := scanner_cache.get_photo_type(photoPath)
+				if content_type == nil {
+					log.Println("Content type not found from cache")
+					return
+				}
+
+				log.Printf("Content type: %s\n", *content_type)
+
+				if err := ProcessImage(tx, photoPath, albumId, *content_type); err != nil {
 					log.Printf("ERROR: processing image %s: %s", photoPath, err)
 					tx.Rollback()
 					return
@@ -110,7 +136,7 @@ func scan(database *sql.DB, user *models.User) {
 		for _, item := range dirContent {
 			subalbumPath := path.Join(albumPath, item.Name())
 
-			if item.IsDir() && directoryContainsPhotos(subalbumPath) {
+			if item.IsDir() && directoryContainsPhotos(subalbumPath, &scanner_cache) {
 				scanQueue.PushBack(scanInfo{
 					path:     subalbumPath,
 					parentId: &albumId,
@@ -122,7 +148,7 @@ func scan(database *sql.DB, user *models.User) {
 	log.Println("Done scanning")
 }
 
-func directoryContainsPhotos(rootPath string) bool {
+func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 	scanQueue := list.New()
 	scanQueue.PushBack(rootPath)
 
@@ -142,7 +168,7 @@ func directoryContainsPhotos(rootPath string) bool {
 			if fileInfo.IsDir() {
 				scanQueue.PushBack(filePath)
 			} else {
-				if isPathImage(filePath) {
+				if isPathImage(filePath, cache) {
 					return true
 				}
 			}
@@ -162,7 +188,11 @@ var supported_mimetypes = [...]string{
 	"image/bmp",
 }
 
-func isPathImage(path string) bool {
+func isPathImage(path string, cache *scanner_cache) bool {
+	if cache.get_photo_type(path) != nil {
+		log.Printf("Image cache hit: %s\n", path)
+		return true
+	}
 	file, err := os.Open(path)
 	if err != nil {
 		log.Printf("Could not open file %s: %s\n", path, err)
@@ -183,6 +213,7 @@ func isPathImage(path string) bool {
 
 	for _, supported_mime := range supported_mimetypes {
 		if supported_mime == imgType.MIME.Value {
+			cache.insert_photo_type(path, supported_mime)
 			return true
 		}
 	}

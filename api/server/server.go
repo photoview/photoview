@@ -62,7 +62,7 @@ func main() {
 	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
 	router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
 
-	router.Mount("/image", routes.ImageRoutes())
+	router.Mount("/photo", routes.PhotoRoutes(db))
 
 	log.Printf("🚀 Graphql playground ready at http://localhost:%s/", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

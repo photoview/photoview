@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS photo_url (
   width int NOT NULL,
   height int NOT NULL,
   purpose varchar(64) NOT NULL,
+  content_type varchar(64) NOT NULL,
 
   PRIMARY KEY (url_id),
   FOREIGN KEY (photo_id) REFERENCES photo(photo_id)

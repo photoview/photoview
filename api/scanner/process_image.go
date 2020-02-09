@@ -18,13 +18,14 @@ import (
 	// Image decoders
 	_ "golang.org/x/image/bmp"
 	// _ "golang.org/x/image/tiff"
-	_ "github.com/nf/cr2"
-	_ "golang.org/x/image/webp"
 	_ "image/gif"
 	_ "image/png"
+
+	_ "github.com/nf/cr2"
+	_ "golang.org/x/image/webp"
 )
 
-func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
+func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string) error {
 
 	log.Printf("Processing image: %s\n", photoPath)
 
@@ -52,19 +53,25 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 		return err
 	}
 
-	thumbFile, err := os.Open(photoPath)
+	photo_file, err := os.Open(photoPath)
 	if err != nil {
 		return err
 	}
-	defer thumbFile.Close()
+	defer photo_file.Close()
 
-	image, _, err := image.Decode(thumbFile)
+	image, _, err := image.Decode(photo_file)
 	if err != nil {
 		log.Println("ERROR: decoding image")
 		return err
 	}
 
-	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose) VALUES (?, ?, ?, ?, ?)", photo_id, photoName, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal)
+	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
+	photoBaseExt := path.Ext(photoName)
+
+	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, generateToken())
+	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
+
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, original_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal, content_type)
 	if err != nil {
 		log.Printf("Could not insert original photo url: %d, %s\n", photo_id, photoName)
 		return err
@@ -87,26 +94,24 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 			return err
 		}
 	}
-	// Generate image token name
-	thumbnailToken := generateToken()
 
 	// Save thumbnail as jpg
-	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, thumbnailToken)
+	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, generateToken())
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
 	thumbnail_name = thumbnail_name + ".jpg"
 
-	thumbFile, err = os.Create(path.Join(albumCachePath, thumbnail_name))
+	photo_file, err = os.Create(path.Join(albumCachePath, thumbnail_name))
 	if err != nil {
 		log.Println("ERROR: Could not make thumbnail file")
 		return err
 	}
-	defer thumbFile.Close()
+	defer photo_file.Close()
 
-	jpeg.Encode(thumbFile, thumbnailImage, &jpeg.Options{Quality: 70})
+	jpeg.Encode(photo_file, thumbnailImage, &jpeg.Options{Quality: 70})
 
 	thumbSize := thumbnailImage.Bounds().Max
-	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose) VALUES (?, ?, ?, ?, ?)", photo_id, thumbnail_name, thumbSize.X, thumbSize.Y, models.PhotoThumbnail)
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, thumbnail_name, thumbSize.X, thumbSize.Y, models.PhotoThumbnail, "image/jpeg")
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"errors"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -9,7 +10,17 @@ import (
 )
 
 func (r *queryResolver) MyPhotos(ctx context.Context) ([]*models.Photo, error) {
-	panic("Not implemented")
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	rows, err := r.Database.Query("SELECT photo.* FROM photo, album WHERE photo.album_id = album.album_id AND album.owner_id = ?", user.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return models.NewPhotosFromRows(rows)
 }
 
 func (r *queryResolver) Photo(ctx context.Context, id string) (*models.Photo, error) {
@@ -45,27 +56,25 @@ func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models
 }
 
 func (r *photoResolver) Original(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	panic("not implemented")
-	// row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.original_url = photo_url.url_id", obj.PhotoID)
+	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoOriginal)
 
-	// var photoUrl models.PhotoURL
-	// if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
-	// 	return nil, err
-	// }
+	url, err := models.NewPhotoURLFromRow(row)
+	if err != nil {
+		return nil, err
+	}
 
-	// return &photoUrl, nil
+	return url, nil
 }
 
 func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	panic("not implemented")
-	// row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.thumbnail_url = photo_url.url_id", obj.PhotoID)
+	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoThumbnail)
 
-	// var photoUrl models.PhotoURL
-	// if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
-	// 	return nil, err
-	// }
+	url, err := models.NewPhotoURLFromRow(row)
+	if err != nil {
+		return nil, err
+	}
 
-	// return &photoUrl, nil
+	return url, nil
 }
 
 func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.Album, error) {
