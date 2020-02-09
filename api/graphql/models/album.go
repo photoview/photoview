@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"strconv"
 )
 
 type Album struct {
@@ -13,8 +12,8 @@ type Album struct {
 	Path        string
 }
 
-func (a *Album) ID() string {
-	return strconv.Itoa(a.AlbumID)
+func (a *Album) ID() int {
+	return a.AlbumID
 }
 
 func NewAlbumFromRow(row *sql.Row) (*Album, error) {

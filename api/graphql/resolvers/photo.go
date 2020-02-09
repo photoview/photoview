@@ -28,7 +28,7 @@ func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]
 	return models.NewPhotosFromRows(rows)
 }
 
-func (r *queryResolver) Photo(ctx context.Context, id string) (*models.Photo, error) {
+func (r *queryResolver) Photo(ctx context.Context, id int) (*models.Photo, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strconv"
 )
 
 type Photo struct {
@@ -14,6 +13,10 @@ type Photo struct {
 	Path    string
 	AlbumId int
 	ExifId  *int
+}
+
+func (p *Photo) ID() int {
+	return p.PhotoID
 }
 
 type PhotoPurpose string
@@ -32,10 +35,6 @@ type PhotoURL struct {
 	Height      int
 	Purpose     PhotoPurpose
 	ContentType string
-}
-
-func (p *Photo) ID() string {
-	return strconv.Itoa(p.PhotoID)
 }
 
 func NewPhotoFromRow(row *sql.Row) (*Photo, error) {

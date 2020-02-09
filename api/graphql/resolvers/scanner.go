@@ -11,7 +11,7 @@ import (
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
 	panic("Not implemented")
 }
-func (r *mutationResolver) ScanUser(ctx context.Context, userID string) (*models.ScannerResult, error) {
+func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error) {
 	if err := scanner.ScanUser(r.Database, userID); err != nil {
 		errorMessage := fmt.Sprintf("Error scanning user: %s", err.Error())
 		return &models.ScannerResult{

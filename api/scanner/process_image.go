@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/jpeg"
 	"log"
-	"math/rand"
 	"os"
 	"path"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/nfnt/resize"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/utils"
 
 	// Image decoders
 	_ "golang.org/x/image/bmp"
@@ -68,7 +68,7 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
 
-	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, generateToken())
+	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
 	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
 
 	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, original_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal, content_type)
@@ -96,7 +96,7 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	}
 
 	// Save thumbnail as jpg
-	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, generateToken())
+	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, utils.GenerateToken())
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
 	thumbnail_name = thumbnail_name + ".jpg"
@@ -117,15 +117,4 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	}
 
 	return nil
-}
-
-func generateToken() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const length = 8
-
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(b)
 }

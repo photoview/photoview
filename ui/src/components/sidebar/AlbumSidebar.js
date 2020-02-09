@@ -5,7 +5,7 @@ import gql from 'graphql-tag'
 import SidebarShare from './Sharing'
 
 const albumQuery = gql`
-  query getAlbumSidebar($id: ID!) {
+  query getAlbumSidebar($id: Int!) {
     album(id: $id) {
       id
       title

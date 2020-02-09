@@ -25,12 +25,15 @@ type Query {
   "List of albums owned by the logged in user"
   myAlbums(filter: Filter): [Album!]!
   "Get album by id, user must own the album or be admin"
-  album(id: ID): Album!
+  album(id: Int!): Album!
 
   "List of photos owned by the logged in user"
   myPhotos(filter: Filter): [Photo!]!
   "Get photo by id, user must own the photo or be admin"
-  photo(id: ID!): Photo!
+  photo(id: Int!): Photo!
+
+  albumShares(id: Int!, password: String): [ShareToken!]!
+  photoShares(id: Int!, password: String): [ShareToken!]!
 }
 
 type Mutation {
@@ -53,7 +56,12 @@ type Mutation {
   "Scan all users for new photos"
   scanAll: ScannerResult!
   "Scan a single user for new photos"
-  scanUser(userId: ID!): ScannerResult!
+  scanUser(userId: Int!): ScannerResult!
+
+  "Generate share token for album"
+  shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
+  "Generate share token for photo"
+  sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
 }
 
 type AuthorizeResult {
@@ -69,13 +77,28 @@ type ScannerResult {
   message: String
 }
 
+"A token used to publicly access an album or photo"
+type ShareToken {
+  id: Int!
+  token: String!
+  "The user who created the token"
+  owner: User!
+  "Optional expire date"
+  expire: Time
+
+  "The album this token shares"
+  album: Album
+  "The photo this token shares"
+  photo: Photo
+}
+
 "General public information about the site"
 type SiteInfo {
   initialSetup: Boolean!
 }
 
 type User {
-  id: ID!
+  id: Int!
   username: String!
   #albums: [Album]
   "Local filepath for the user's photos"
@@ -85,13 +108,19 @@ type User {
 }
 
 type Album {
-  id: ID!
+  id: Int!
   title: String!
+  "The photos inside this album"
   photos(filter: Filter): [Photo!]!
+  "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
+  "The album witch contains this album"
   parentAlbum: Album
+  "The user who owns this album"
   owner: User!
+  "The path on the filesystem of the server, where this album is located"
   path: String!
+  "An image in this album used for previewing this album"
   thumbnail: Photo
 
   # shares: [ShareToken]
@@ -107,7 +136,7 @@ type PhotoURL {
 }
 
 type Photo {
-  id: ID!
+  id: Int!
   title: String!
   "Local filepath for the photo"
   path: String!

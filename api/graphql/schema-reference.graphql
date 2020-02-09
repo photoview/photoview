@@ -74,9 +74,9 @@ type Photo {
 
 type ShareToken {
   token: ID!
-  owner: User
+  owner: User!
   # Optional expire date
-  expire: Time
+  expire: Time!
   # Optional password
   # password: String
 

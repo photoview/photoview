@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS album (
 CREATE TABLE IF NOT EXISTS photo (
   photo_id int NOT NULL AUTO_INCREMENT,
   title varchar(256) NOT NULL,
-  path varchar(512) NOT NULL UNIQUE,
+  path varchar(1024) NOT NULL UNIQUE,
   album_id int NOT NULL,
   exif_id int,
 
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS photo (
 CREATE TABLE IF NOT EXISTS photo_url (
   url_id int NOT NULL AUTO_INCREMENT,
   photo_id int NOT NULL,
-  photo_name varchar(256) NOT NULL,
+  photo_name varchar(512) NOT NULL,
   width int NOT NULL,
   height int NOT NULL,
   purpose varchar(64) NOT NULL,

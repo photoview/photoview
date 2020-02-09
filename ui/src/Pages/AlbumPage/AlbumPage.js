@@ -10,7 +10,7 @@ import AlbumTitle from '../../components/AlbumTitle'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 
 const albumQuery = gql`
-  query albumQuery($id: ID!) {
+  query albumQuery($id: Int!) {
     album(id: $id) {
       id
       title

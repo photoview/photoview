@@ -9,7 +9,7 @@ import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 
 const photoQuery = gql`
-  query sidebarPhoto($id: ID!) {
+  query sidebarPhoto($id: Int!) {
     photo(id: $id) {
       id
       title

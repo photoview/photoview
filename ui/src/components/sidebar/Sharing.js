@@ -6,7 +6,7 @@ import { Table, Button, Dropdown } from 'semantic-ui-react'
 import copy from 'copy-to-clipboard'
 
 const sharePhotoQuery = gql`
-  query sidbarGetPhotoShares($id: ID!) {
+  query sidbarGetPhotoShares($id: Int!) {
     photoShares(id: $id) {
       token
     }
@@ -14,7 +14,7 @@ const sharePhotoQuery = gql`
 `
 
 const shareAlbumQuery = gql`
-  query sidbarGetAlbumShares($id: ID!) {
+  query sidbarGetAlbumShares($id: Int!) {
     albumShares(id: $id) {
       token
     }
@@ -23,7 +23,7 @@ const shareAlbumQuery = gql`
 
 const addPhotoShareMutation = gql`
   mutation sidebarPhotoAddShare(
-    $id: ID!
+    $id: Int!
     $password: String
     $expire: _Neo4jDateInput
   ) {
@@ -35,7 +35,7 @@ const addPhotoShareMutation = gql`
 
 const addAlbumShareMutation = gql`
   mutation sidebarAlbumAddShare(
-    $id: ID!
+    $id: Int!
     $password: String
     $expire: _Neo4jDateInput
   ) {

@@ -29,7 +29,7 @@ func (cache *scanner_cache) get_photo_type(path string) *string {
 	return &photo_type
 }
 
-func ScanUser(database *sql.DB, userId string) error {
+func ScanUser(database *sql.DB, userId int) error {
 
 	row := database.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
 	user, err := models.NewUserFromRow(row)

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -20,8 +19,8 @@ type User struct {
 	Admin    bool
 }
 
-func (u *User) ID() string {
-	return strconv.Itoa(u.UserID)
+func (u *User) ID() int {
+	return u.UserID
 }
 
 type AccessToken struct {

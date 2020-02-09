@@ -33,7 +33,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter) ([]
 	return albums, nil
 }
 
-func (r *queryResolver) Album(ctx context.Context, id *string) (*models.Album, error) {
+func (r *queryResolver) Album(ctx context.Context, id int) (*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

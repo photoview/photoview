@@ -6,7 +6,7 @@ import gql from 'graphql-tag'
 import download from 'downloadjs'
 
 const downloadQuery = gql`
-  query sidebarDownloadQuery($photoId: ID!) {
+  query sidebarDownloadQuery($photoId: Int!) {
     photo(id: $photoId) {
       id
       downloads {

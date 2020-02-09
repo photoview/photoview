@@ -7,7 +7,7 @@ import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 
 const tokenQuery = gql`
-  query SharePageToken($token: ID!) {
+  query SharePageToken($token: Int!) {
     shareToken(token: $token) {
       token
       album {

@@ -14,7 +14,7 @@ import gql from 'graphql-tag'
 
 const updateUserMutation = gql`
   mutation updateUser(
-    $id: ID!
+    $id: Int!
     $username: String
     $rootPath: String
     $admin: Boolean
@@ -34,7 +34,7 @@ const updateUserMutation = gql`
 `
 
 const deleteUserMutation = gql`
-  mutation deleteUser($id: ID!) {
+  mutation deleteUser($id: Int!) {
     deleteUser(id: $id) {
       id
       username

@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Photo() PhotoResolver
 	Query() QueryResolver
+	ShareToken() ShareTokenResolver
 }
 
 type DirectiveRoot struct {
@@ -70,7 +71,9 @@ type ComplexityRoot struct {
 		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
 		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
 		ScanAll            func(childComplexity int) int
-		ScanUser           func(childComplexity int, userID string) int
+		ScanUser           func(childComplexity int, userID int) int
+		ShareAlbum         func(childComplexity int, albumID int, expire *time.Time, password *string) int
+		SharePhoto         func(childComplexity int, photoID int, expire *time.Time, password *string) int
 	}
 
 	Photo struct {
@@ -105,13 +108,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Album    func(childComplexity int, id *string) int
-		MyAlbums func(childComplexity int, filter *models.Filter) int
-		MyPhotos func(childComplexity int, filter *models.Filter) int
-		MyUser   func(childComplexity int) int
-		Photo    func(childComplexity int, id string) int
-		SiteInfo func(childComplexity int) int
-		Users    func(childComplexity int, filter *models.Filter) int
+		Album       func(childComplexity int, id int) int
+		AlbumShares func(childComplexity int, id int, password *string) int
+		MyAlbums    func(childComplexity int, filter *models.Filter) int
+		MyPhotos    func(childComplexity int, filter *models.Filter) int
+		MyUser      func(childComplexity int) int
+		Photo       func(childComplexity int, id int) int
+		PhotoShares func(childComplexity int, id int, password *string) int
+		SiteInfo    func(childComplexity int) int
+		Users       func(childComplexity int, filter *models.Filter) int
 	}
 
 	ScannerResult struct {
@@ -119,6 +124,15 @@ type ComplexityRoot struct {
 		Message  func(childComplexity int) int
 		Progress func(childComplexity int) int
 		Success  func(childComplexity int) int
+	}
+
+	ShareToken struct {
+		Album  func(childComplexity int) int
+		Expire func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Owner  func(childComplexity int) int
+		Photo  func(childComplexity int) int
+		Token  func(childComplexity int) int
 	}
 
 	SiteInfo struct {
@@ -146,7 +160,9 @@ type MutationResolver interface {
 	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
-	ScanUser(ctx context.Context, userID string) (*models.ScannerResult, error)
+	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
+	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error)
+	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
 }
 type PhotoResolver interface {
 	Original(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
@@ -160,9 +176,17 @@ type QueryResolver interface {
 	Users(ctx context.Context, filter *models.Filter) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
 	MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error)
-	Album(ctx context.Context, id *string) (*models.Album, error)
+	Album(ctx context.Context, id int) (*models.Album, error)
 	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
-	Photo(ctx context.Context, id string) (*models.Photo, error)
+	Photo(ctx context.Context, id int) (*models.Photo, error)
+	AlbumShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error)
+	PhotoShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error)
+}
+type ShareTokenResolver interface {
+	Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error)
+
+	Album(ctx context.Context, obj *models.ShareToken) (*models.Album, error)
+	Photo(ctx context.Context, obj *models.ShareToken) (*models.Photo, error)
 }
 
 type executableSchema struct {
@@ -320,7 +344,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(string)), true
+		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
+
+	case "Mutation.shareAlbum":
+		if e.complexity.Mutation.ShareAlbum == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_shareAlbum_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+
+	case "Mutation.sharePhoto":
+		if e.complexity.Mutation.SharePhoto == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_sharePhoto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SharePhoto(childComplexity, args["photoId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 
 	case "Photo.album":
 		if e.complexity.Photo.Album == nil {
@@ -486,7 +534,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Album(childComplexity, args["id"].(*string)), true
+		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
+
+	case "Query.albumShares":
+		if e.complexity.Query.AlbumShares == nil {
+			break
+		}
+
+		args, err := ec.field_Query_albumShares_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AlbumShares(childComplexity, args["id"].(int), args["password"].(*string)), true
 
 	case "Query.myAlbums":
 		if e.complexity.Query.MyAlbums == nil {
@@ -529,7 +589,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Photo(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Photo(childComplexity, args["id"].(int)), true
+
+	case "Query.photoShares":
+		if e.complexity.Query.PhotoShares == nil {
+			break
+		}
+
+		args, err := ec.field_Query_photoShares_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PhotoShares(childComplexity, args["id"].(int), args["password"].(*string)), true
 
 	case "Query.siteInfo":
 		if e.complexity.Query.SiteInfo == nil {
@@ -577,6 +649,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ScannerResult.Success(childComplexity), true
+
+	case "ShareToken.album":
+		if e.complexity.ShareToken.Album == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Album(childComplexity), true
+
+	case "ShareToken.expire":
+		if e.complexity.ShareToken.Expire == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Expire(childComplexity), true
+
+	case "ShareToken.id":
+		if e.complexity.ShareToken.ID == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.ID(childComplexity), true
+
+	case "ShareToken.owner":
+		if e.complexity.ShareToken.Owner == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Owner(childComplexity), true
+
+	case "ShareToken.photo":
+		if e.complexity.ShareToken.Photo == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Photo(childComplexity), true
+
+	case "ShareToken.token":
+		if e.complexity.ShareToken.Token == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Token(childComplexity), true
 
 	case "SiteInfo.initialSetup":
 		if e.complexity.SiteInfo.InitialSetup == nil {
@@ -702,12 +816,15 @@ type Query {
   "List of albums owned by the logged in user"
   myAlbums(filter: Filter): [Album!]!
   "Get album by id, user must own the album or be admin"
-  album(id: ID): Album!
+  album(id: Int!): Album!
 
   "List of photos owned by the logged in user"
   myPhotos(filter: Filter): [Photo!]!
   "Get photo by id, user must own the photo or be admin"
-  photo(id: ID!): Photo!
+  photo(id: Int!): Photo!
+
+  albumShares(id: Int!, password: String): [ShareToken!]!
+  photoShares(id: Int!, password: String): [ShareToken!]!
 }
 
 type Mutation {
@@ -730,7 +847,12 @@ type Mutation {
   "Scan all users for new photos"
   scanAll: ScannerResult!
   "Scan a single user for new photos"
-  scanUser(userId: ID!): ScannerResult!
+  scanUser(userId: Int!): ScannerResult!
+
+  "Generate share token for album"
+  shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
+  "Generate share token for photo"
+  sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
 }
 
 type AuthorizeResult {
@@ -746,13 +868,28 @@ type ScannerResult {
   message: String
 }
 
+"A token used to publicly access an album or photo"
+type ShareToken {
+  id: Int!
+  token: String!
+  "The user who created the token"
+  owner: User!
+  "Optional expire date"
+  expire: Time
+
+  "The album this token shares"
+  album: Album
+  "The photo this token shares"
+  photo: Photo
+}
+
 "General public information about the site"
 type SiteInfo {
   initialSetup: Boolean!
 }
 
 type User {
-  id: ID!
+  id: Int!
   username: String!
   #albums: [Album]
   "Local filepath for the user's photos"
@@ -762,13 +899,19 @@ type User {
 }
 
 type Album {
-  id: ID!
+  id: Int!
   title: String!
+  "The photos inside this album"
   photos(filter: Filter): [Photo!]!
+  "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
+  "The album witch contains this album"
   parentAlbum: Album
+  "The user who owns this album"
   owner: User!
+  "The path on the filesystem of the server, where this album is located"
   path: String!
+  "An image in this album used for previewing this album"
   thumbnail: Photo
 
   # shares: [ShareToken]
@@ -784,7 +927,7 @@ type PhotoURL {
 }
 
 type Photo {
-  id: ID!
+  id: Int!
   title: String!
   "Local filepath for the photo"
   path: String!
@@ -944,14 +1087,74 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 int
 	if tmp, ok := rawArgs["userId"]; ok {
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["userId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["albumId"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["albumId"] = arg0
+	var arg1 *time.Time
+	if tmp, ok := rawArgs["expire"]; ok {
+		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["expire"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_sharePhoto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["photoId"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["photoId"] = arg0
+	var arg1 *time.Time
+	if tmp, ok := rawArgs["expire"]; ok {
+		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["expire"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg2
 	return args, nil
 }
 
@@ -969,12 +1172,34 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_albumShares_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1011,12 +1236,34 @@ func (ec *executionContext) field_Query_myPhotos_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_photoShares_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1106,10 +1353,10 @@ func (ec *executionContext) _Album_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_title(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -1679,7 +1926,7 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ScanUser(rctx, args["userId"].(string))
+		return ec.resolvers.Mutation().ScanUser(rctx, args["userId"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1695,6 +1942,88 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_shareAlbum_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ShareAlbum(rctx, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_sharePhoto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_sharePhoto_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SharePhoto(rctx, args["photoId"].(int), args["expire"].(*time.Time), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Photo_id(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
@@ -1728,10 +2057,10 @@ func (ec *executionContext) _Photo_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Photo_title(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
@@ -2683,7 +3012,7 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Album(rctx, args["id"].(*string))
+		return ec.resolvers.Query().Album(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2771,7 +3100,7 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Photo(rctx, args["id"].(string))
+		return ec.resolvers.Query().Photo(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2787,6 +3116,94 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_albumShares(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_albumShares_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AlbumShares(rctx, args["id"].(int), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_photoShares(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_photoShares_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PhotoShares(rctx, args["id"].(int), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3006,6 +3423,219 @@ func (ec *executionContext) _ScannerResult_message(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_token(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_owner(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ShareToken().Owner(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.User)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_expire(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Expire, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ShareToken().Album(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Album)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_photo(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ShareToken().Photo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Photo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -3074,10 +3704,10 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -4578,6 +5208,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "shareAlbum":
+			out.Values[i] = ec._Mutation_shareAlbum(ctx, field)
+		case "sharePhoto":
+			out.Values[i] = ec._Mutation_sharePhoto(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4887,6 +5521,34 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "albumShares":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_albumShares(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "photoShares":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_photoShares(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -4927,6 +5589,76 @@ func (ec *executionContext) _ScannerResult(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._ScannerResult_progress(ctx, field, obj)
 		case "message":
 			out.Values[i] = ec._ScannerResult_message(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var shareTokenImplementors = []string{"ShareToken"}
+
+func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSet, obj *models.ShareToken) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, shareTokenImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ShareToken")
+		case "id":
+			out.Values[i] = ec._ShareToken_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "token":
+			out.Values[i] = ec._ShareToken_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "owner":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ShareToken_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "expire":
+			out.Values[i] = ec._ShareToken_expire(ctx, field, obj)
+		case "album":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ShareToken_album(ctx, field, obj)
+				return res
+			})
+		case "photo":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ShareToken_photo(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5331,20 +6063,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalID(v)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	return graphql.UnmarshalInt(v)
 }
@@ -5436,6 +6154,57 @@ func (ec *executionContext) marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrate
 		return graphql.Null
 	}
 	return ec._ScannerResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
+	return ec._ShareToken(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ShareToken(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSiteInfo2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v models.SiteInfo) graphql.Marshaler {
@@ -5823,29 +6592,6 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return ec.marshalOFloat2float64(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalID(v)
-}
-
-func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	return graphql.MarshalID(v)
-}
-
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOID2string(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOID2string(ctx, sel, *v)
-}
-
 func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
 	return graphql.UnmarshalInt(v)
 }
@@ -5913,6 +6659,17 @@ func (ec *executionContext) marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋp
 		return graphql.Null
 	}
 	return ec._PhotoEXIF(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
+	return ec._ShareToken(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ShareToken(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
