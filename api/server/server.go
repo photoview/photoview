@@ -11,6 +11,7 @@ import (
 
 	"github.com/viktorstrate/photoview/api/database"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
+	"github.com/viktorstrate/photoview/api/routes"
 
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
@@ -60,6 +61,8 @@ func main() {
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
 	router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
+
+	router.Mount("/image", routes.ImageRoutes())
 
 	log.Printf("🚀 Graphql playground ready at http://localhost:%s/", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

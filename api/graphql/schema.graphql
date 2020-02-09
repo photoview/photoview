@@ -3,22 +3,22 @@ directive @isAdmin on FIELD_DEFINITION
 scalar Time
 
 type Query {
-  siteInfo: SiteInfo
+  siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
   users: [User!]! @isAdmin
   "Information about the currently logged in user"
-  myUser: User
+  myUser: User!
 
   "List of albums owned by the logged in user"
-  myAlbums: [Album]
+  myAlbums: [Album!]!
   "Get album by id, user must own the album or be admin"
-  album(id: ID): Album
+  album(id: ID): Album!
 
   "List of photos owned by the logged in user"
-  myPhotos: [Photo]
+  myPhotos: [Photo!]!
   "Get photo by id, user must own the photo or be admin"
-  photo(id: ID!): Photo
+  photo(id: ID!): Photo!
 }
 
 type Mutation {
@@ -29,7 +29,7 @@ type Mutation {
     username: String!
     password: String!
     rootPath: String!
-  ): AuthorizeResult! @isAdmin
+  ): AuthorizeResult!
 
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
@@ -74,34 +74,35 @@ type User {
 
 type Album {
   id: ID!
-  title: String
-  photos: [Photo]
-  subAlbums: [Album]
+  title: String!
+  photos: [Photo!]!
+  subAlbums: [Album!]!
   parentAlbum: Album
   owner: User!
-  path: String
+  path: String!
 
   # shares: [ShareToken]
 }
 
 type PhotoURL {
   "URL for previewing the image"
-  url: String
+  url: String!
   "Width of the image in pixels"
-  width: Int
+  width: Int!
   "Height of the image in pixels"
-  height: Int
+  height: Int!
 }
 
 type Photo {
   id: ID!
-  title: String
+  title: String!
   "Local filepath for the photo"
-  path: String
+  path: String!
   "URL to display the photo in full resolution"
-  original: PhotoURL
+  original: PhotoURL!
   "URL to display the photo in a smaller resolution"
-  thumbnail: PhotoURL
+  thumbnail: PhotoURL!
+  highRes: PhotoURL!
   "The album that holds the photo"
   album: Album!
   exif: PhotoEXIF

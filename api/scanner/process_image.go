@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"database/sql"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"log"
@@ -9,8 +10,10 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/nfnt/resize"
+	"github.com/viktorstrate/photoview/api/graphql/models"
 
 	// Image decoders
 	_ "golang.org/x/image/bmp"
@@ -29,14 +32,24 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 
 	// Check if image already exists
 	row := tx.QueryRow("SELECT (photo_id) FROM photo WHERE path = ?", photoPath)
-	var id int
-	if err := row.Scan(&id); err != sql.ErrNoRows {
+	var photo_id int64
+	if err := row.Scan(&photo_id); err != sql.ErrNoRows {
 		if err == nil {
 			log.Printf("Image already processed: %s\n", photoPath)
 			return nil
 		} else {
 			return err
 		}
+	}
+
+	result, err := tx.Exec("INSERT INTO photo (title, path, album_id) VALUES (?, ?, ?)", photoName, photoPath, albumId)
+	if err != nil {
+		log.Printf("ERROR: Could not insert photo into database")
+		return err
+	}
+	photo_id, err = result.LastInsertId()
+	if err != nil {
+		return err
 	}
 
 	thumbFile, err := os.Open(photoPath)
@@ -50,6 +63,13 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 		log.Println("ERROR: decoding image")
 		return err
 	}
+
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose) VALUES (?, ?, ?, ?, ?)", photo_id, photoName, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal)
+	if err != nil {
+		log.Printf("Could not insert original photo url: %d, %s\n", photo_id, photoName)
+		return err
+	}
+
 	thumbnailImage := resize.Thumbnail(1024, 1024, image, resize.Bilinear)
 
 	if _, err := os.Stat("image-cache"); os.IsNotExist(err) {
@@ -69,10 +89,14 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 	}
 	// Generate image token name
 	thumbnailToken := generateToken()
-	originalToken := generateToken()
 
 	// Save thumbnail as jpg
-	thumbFile, err = os.Create(path.Join(albumCachePath, thumbnailToken+".jpg"))
+	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, thumbnailToken)
+	thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
+	thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
+	thumbnail_name = thumbnail_name + ".jpg"
+
+	thumbFile, err = os.Create(path.Join(albumCachePath, thumbnail_name))
 	if err != nil {
 		log.Println("ERROR: Could not make thumbnail file")
 		return err
@@ -82,25 +106,8 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 	jpeg.Encode(thumbFile, thumbnailImage, &jpeg.Options{Quality: 70})
 
 	thumbSize := thumbnailImage.Bounds().Max
-	thumbRes, err := tx.Exec("INSERT INTO photo_url (token, width, height) VALUES (?, ?, ?)", thumbnailToken, thumbSize.X, thumbSize.Y)
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose) VALUES (?, ?, ?, ?, ?)", photo_id, thumbnail_name, thumbSize.X, thumbSize.Y, models.PhotoThumbnail)
 	if err != nil {
-		return err
-	}
-	thumbUrlId, err := thumbRes.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	origSize := image.Bounds().Max
-	origRes, err := tx.Exec("INSERT INTO photo_url (token, width, height) VALUES (?, ?, ?)", originalToken, origSize.X, origSize.Y)
-	if err != nil {
-		return err
-	}
-	origUrlId, err := origRes.LastInsertId()
-
-	_, err = tx.Exec("INSERT INTO photo (title, path, album_id, original_url, thumbnail_url) VALUES (?, ?, ?, ?, ?)", photoName, photoPath, albumId, origUrlId, thumbUrlId)
-	if err != nil {
-		log.Printf("ERROR: Could not insert photo into database")
 		return err
 	}
 
@@ -109,7 +116,7 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int) error {
 
 func generateToken() string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const length = 24
+	const length = 8
 
 	b := make([]byte, length)
 	for i := range b {

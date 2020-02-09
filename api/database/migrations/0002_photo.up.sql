@@ -1,12 +1,3 @@
-CREATE TABLE IF NOT EXISTS photo_url (
-  url_id int NOT NULL AUTO_INCREMENT,
-  token varchar(256) NOT NULL,
-  width int NOT NULL,
-  height int NOT NULL,
-
-  PRIMARY KEY (url_id)
-);
-
 CREATE TABLE IF NOT EXISTS photo_exif (
   exif_id int NOT NULL AUTO_INCREMENT,
   camera varchar(256),
@@ -39,14 +30,22 @@ CREATE TABLE IF NOT EXISTS photo (
   photo_id int NOT NULL AUTO_INCREMENT,
   title varchar(256) NOT NULL,
   path varchar(512) NOT NULL UNIQUE,
-  original_url int NOT NULL,
-  thumbnail_url int NOT NULL,
   album_id int NOT NULL,
   exif_id int,
 
   PRIMARY KEY (photo_id),
   FOREIGN KEY (album_id) REFERENCES album(album_id),
-  FOREIGN KEY (exif_id) REFERENCES photo_exif(exif_id),
-  FOREIGN KEY (original_url) REFERENCES photo_url(url_id),
-  FOREIGN KEY (thumbnail_url) REFERENCES photo_url(url_id)
+  FOREIGN KEY (exif_id) REFERENCES photo_exif(exif_id)
+);
+
+CREATE TABLE IF NOT EXISTS photo_url (
+  url_id int NOT NULL AUTO_INCREMENT,
+  photo_id int NOT NULL,
+  photo_name varchar(256) NOT NULL,
+  width int NOT NULL,
+  height int NOT NULL,
+  purpose varchar(64) NOT NULL,
+
+  PRIMARY KEY (url_id),
+  FOREIGN KEY (photo_id) REFERENCES photo(photo_id)
 );

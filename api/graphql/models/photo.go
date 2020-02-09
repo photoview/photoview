@@ -6,20 +6,28 @@ import (
 )
 
 type Photo struct {
-	PhotoID      int
-	Title        string
-	Path         string
-	OriginalUrl  int
-	ThumbnailUrl int
-	AlbumId      int
-	ExifId       *int
+	PhotoID int
+	Title   string
+	Path    string
+	AlbumId int
+	ExifId  *int
 }
 
+type PhotoPurpose string
+
+const (
+	PhotoThumbnail PhotoPurpose = "thumbnail"
+	PhotoHighRes   PhotoPurpose = "high-res"
+	PhotoOriginal  PhotoPurpose = "original"
+)
+
 type PhotoURL struct {
-	UrlID  int
-	Token  string
-	Width  int
-	Height int
+	UrlID     int
+	PhotoId   int
+	PhotoName string
+	Width     int
+	Height    int
+	purpose   PhotoPurpose
 }
 
 func (p *Photo) ID() string {
@@ -29,7 +37,7 @@ func (p *Photo) ID() string {
 func NewPhotoFromRow(row *sql.Row) (*Photo, error) {
 	photo := Photo{}
 
-	if err := row.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.OriginalUrl, &photo.ThumbnailUrl, &photo.AlbumId, &photo.ExifId); err != nil {
+	if err := row.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId); err != nil {
 		return nil, err
 	}
 
@@ -41,7 +49,7 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 
 	for rows.Next() {
 		var photo Photo
-		if err := rows.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.OriginalUrl, &photo.ThumbnailUrl, &photo.AlbumId, &photo.ExifId); err != nil {
+		if err := rows.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId); err != nil {
 			return nil, err
 		}
 		photos = append(photos, &photo)
@@ -51,5 +59,5 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 }
 
 func (p *PhotoURL) URL() string {
-	return "URL:" + p.Token
+	return "URL:" + p.PhotoName
 }

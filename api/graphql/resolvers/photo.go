@@ -40,26 +40,32 @@ func (r *Resolver) Photo() api.PhotoResolver {
 	return &photoResolver{r}
 }
 
+func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
+	panic("not implemented")
+}
+
 func (r *photoResolver) Original(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.original_url = photo_url.url_id", obj.PhotoID)
+	panic("not implemented")
+	// row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.original_url = photo_url.url_id", obj.PhotoID)
 
-	var photoUrl models.PhotoURL
-	if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
-		return nil, err
-	}
+	// var photoUrl models.PhotoURL
+	// if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
+	// 	return nil, err
+	// }
 
-	return &photoUrl, nil
+	// return &photoUrl, nil
 }
 
 func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.thumbnail_url = photo_url.url_id", obj.PhotoID)
+	panic("not implemented")
+	// row := r.Database.QueryRow("SELECT photo_url.* FROM photo, photo_url WHERE photo.photo_id = ? AND photo.thumbnail_url = photo_url.url_id", obj.PhotoID)
 
-	var photoUrl models.PhotoURL
-	if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
-		return nil, err
-	}
+	// var photoUrl models.PhotoURL
+	// if err := row.Scan(&photoUrl.UrlID, &photoUrl.Token, &photoUrl.Width, &photoUrl.Height); err != nil {
+	// 	return nil, err
+	// }
 
-	return &photoUrl, nil
+	// return &photoUrl, nil
 }
 
 func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.Album, error) {
