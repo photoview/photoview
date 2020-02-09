@@ -14,16 +14,16 @@ const albumQuery = gql`
     album(id: $id) {
       id
       title
-      subAlbums(orderBy: title_asc) {
+      subAlbums(filter: { order_by: "title" }) {
         id
         title
-        photos {
+        thumbnail {
           thumbnail {
             url
           }
         }
       }
-      photos(orderBy: title_desc) {
+      photos(filter: { order_by: "title", order_direction: DESC }) {
         id
         thumbnail {
           url

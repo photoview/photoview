@@ -50,17 +50,7 @@ export const AlbumBox = ({ album, customLink, ...props }) => {
     )
   }
 
-  let thumbnail =
-    album.photos[0] &&
-    album.photos[0].thumbnail &&
-    album.photos[0].thumbnail.url
-
-  thumbnail =
-    thumbnail ||
-    (album.subAlbums &&
-      album.subAlbums[0] &&
-      album.subAlbums[0].photos[0] &&
-      album.subAlbums[0].photos[0].thumbnail.url)
+  let thumbnail = album.thumbnail && album.thumbnail.thumbnail.url
 
   return (
     <AlbumBoxLink {...props} to={customLink || `/album/${album.id}`}>

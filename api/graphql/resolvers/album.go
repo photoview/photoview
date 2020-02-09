@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"database/sql"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -74,8 +75,29 @@ func (r *albumResolver) Photos(ctx context.Context, obj *models.Album, filter *m
 	return photos, nil
 }
 
-func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
-	rows, err := r.Database.Query("SELECT * FROM album WHERE parent_album = ?", obj.AlbumID)
+func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error) {
+
+	row := r.Database.QueryRow("SELECT photo.* FROM album, photo WHERE album.album_id = ? AND photo.album_id = album.album_id", obj.AlbumID)
+
+	photo, err := models.NewPhotoFromRow(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return photo, nil
+}
+
+func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error) {
+	filterSQL, err := filter.FormatSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Database.Query("SELECT * FROM album WHERE parent_album = ?"+filterSQL, obj.AlbumID)
 	if err != nil {
 		return nil, err
 	}

@@ -54,7 +54,8 @@ type ComplexityRoot struct {
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
 		Photos      func(childComplexity int, filter *models.Filter) int
-		SubAlbums   func(childComplexity int) int
+		SubAlbums   func(childComplexity int, filter *models.Filter) int
+		Thumbnail   func(childComplexity int) int
 		Title       func(childComplexity int) int
 	}
 
@@ -134,9 +135,11 @@ type ComplexityRoot struct {
 
 type AlbumResolver interface {
 	Photos(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Photo, error)
-	SubAlbums(ctx context.Context, obj *models.Album) ([]*models.Album, error)
+	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
 	ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error)
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
+
+	Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error)
 }
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
@@ -222,7 +225,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Album.SubAlbums(childComplexity), true
+		args, err := ec.field_Album_subAlbums_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Album.SubAlbums(childComplexity, args["filter"].(*models.Filter)), true
+
+	case "Album.thumbnail":
+		if e.complexity.Album.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.Album.Thumbnail(childComplexity), true
 
 	case "Album.title":
 		if e.complexity.Album.Title == nil {
@@ -750,10 +765,11 @@ type Album {
   id: ID!
   title: String!
   photos(filter: Filter): [Photo!]!
-  subAlbums: [Album!]!
+  subAlbums(filter: Filter): [Album!]!
   parentAlbum: Album
   owner: User!
   path: String!
+  thumbnail: Photo
 
   # shares: [ShareToken]
 }
@@ -816,6 +832,20 @@ type PhotoEXIF {
 // region    ***************************** args.gotpl *****************************
 
 func (ec *executionContext) field_Album_photos_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
@@ -1179,10 +1209,17 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Album_subAlbums_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().SubAlbums(rctx, obj)
+		return ec.resolvers.Album().SubAlbums(rctx, obj, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1306,6 +1343,40 @@ func (ec *executionContext) _Album_path(ctx context.Context, field graphql.Colle
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Album",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Album().Thumbnail(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Photo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -4414,6 +4485,17 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "thumbnail":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_thumbnail(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -88,10 +88,11 @@ type Album {
   id: ID!
   title: String!
   photos(filter: Filter): [Photo!]!
-  subAlbums: [Album!]!
+  subAlbums(filter: Filter): [Album!]!
   parentAlbum: Album
   owner: User!
   path: String!
+  thumbnail: Photo
 
   # shares: [ShareToken]
 }
