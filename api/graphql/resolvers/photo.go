@@ -3,6 +3,7 @@ package resolvers
 import (
 	"context"
 	"errors"
+	"log"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -56,12 +57,20 @@ func (r *Resolver) Photo() api.PhotoResolver {
 	return &photoResolver{r}
 }
 
-func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	panic("not implemented")
+func (r *photoResolver) Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error) {
+	log.Println("Photo: shares not implemented")
+	shares := make([]*models.ShareToken, 0)
+	return shares, nil
 }
 
-func (r *photoResolver) Original(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoOriginal)
+func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error) {
+	log.Println("Photo: downloads not implemented")
+	downloads := make([]*models.PhotoDownload, 0)
+	return downloads, nil
+}
+
+func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
+	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoHighRes)
 
 	url, err := models.NewPhotoURLFromRow(row)
 	if err != nil {
@@ -87,5 +96,6 @@ func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.A
 }
 
 func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.PhotoExif, error) {
-	panic("not implemented")
+	log.Println("Photo: EXIF not implemented")
+	return nil, nil
 }

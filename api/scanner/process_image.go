@@ -68,15 +68,17 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
 
-	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
-	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
+	// high res
+	highres_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
+	highres_image_name = strings.ReplaceAll(highres_image_name, " ", "_") + photoBaseExt
 
-	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, original_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal, content_type)
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, highres_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoHighRes, content_type)
 	if err != nil {
-		log.Printf("Could not insert original photo url: %d, %s\n", photo_id, photoName)
+		log.Printf("Could not insert high-res photo url: %d, %s\n", photo_id, photoName)
 		return err
 	}
 
+	// Thumbnail
 	thumbnailImage := resize.Thumbnail(1024, 1024, image, resize.Bilinear)
 
 	if _, err := os.Stat("image-cache"); os.IsNotExist(err) {

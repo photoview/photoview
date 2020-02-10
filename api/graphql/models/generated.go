@@ -22,6 +22,11 @@ type Filter struct {
 	Offset         *int            `json:"offset"`
 }
 
+type PhotoDownload struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
 // EXIF metadata from the camera
 type PhotoExif struct {
 	Photo *Photo `json:"photo"`

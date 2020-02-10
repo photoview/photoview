@@ -78,13 +78,19 @@ type ComplexityRoot struct {
 
 	Photo struct {
 		Album     func(childComplexity int) int
+		Downloads func(childComplexity int) int
 		Exif      func(childComplexity int) int
 		HighRes   func(childComplexity int) int
 		ID        func(childComplexity int) int
-		Original  func(childComplexity int) int
 		Path      func(childComplexity int) int
+		Shares    func(childComplexity int) int
 		Thumbnail func(childComplexity int) int
 		Title     func(childComplexity int) int
+	}
+
+	PhotoDownload struct {
+		Title func(childComplexity int) int
+		URL   func(childComplexity int) int
 	}
 
 	PhotoExif struct {
@@ -165,11 +171,12 @@ type MutationResolver interface {
 	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
 }
 type PhotoResolver interface {
-	Original(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
 	Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
 	HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
 	Album(ctx context.Context, obj *models.Photo) (*models.Album, error)
 	Exif(ctx context.Context, obj *models.Photo) (*models.PhotoExif, error)
+	Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error)
+	Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error)
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
@@ -377,6 +384,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Photo.Album(childComplexity), true
 
+	case "Photo.downloads":
+		if e.complexity.Photo.Downloads == nil {
+			break
+		}
+
+		return e.complexity.Photo.Downloads(childComplexity), true
+
 	case "Photo.exif":
 		if e.complexity.Photo.Exif == nil {
 			break
@@ -398,19 +412,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Photo.ID(childComplexity), true
 
-	case "Photo.original":
-		if e.complexity.Photo.Original == nil {
-			break
-		}
-
-		return e.complexity.Photo.Original(childComplexity), true
-
 	case "Photo.path":
 		if e.complexity.Photo.Path == nil {
 			break
 		}
 
 		return e.complexity.Photo.Path(childComplexity), true
+
+	case "Photo.shares":
+		if e.complexity.Photo.Shares == nil {
+			break
+		}
+
+		return e.complexity.Photo.Shares(childComplexity), true
 
 	case "Photo.thumbnail":
 		if e.complexity.Photo.Thumbnail == nil {
@@ -425,6 +439,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Photo.Title(childComplexity), true
+
+	case "PhotoDownload.title":
+		if e.complexity.PhotoDownload.Title == nil {
+			break
+		}
+
+		return e.complexity.PhotoDownload.Title(childComplexity), true
+
+	case "PhotoDownload.url":
+		if e.complexity.PhotoDownload.URL == nil {
+			break
+		}
+
+		return e.complexity.PhotoDownload.URL(childComplexity), true
 
 	case "PhotoEXIF.aperture":
 		if e.complexity.PhotoExif.Aperture == nil {
@@ -926,22 +954,26 @@ type PhotoURL {
   height: Int!
 }
 
+type PhotoDownload {
+  title: String!
+  url: String!
+}
+
 type Photo {
   id: Int!
   title: String!
   "Local filepath for the photo"
   path: String!
-  "URL to display the photo in full resolution"
-  original: PhotoURL!
   "URL to display the photo in a smaller resolution"
   thumbnail: PhotoURL!
+  "URL to display the photo in full resolution"
   highRes: PhotoURL!
   "The album that holds the photo"
   album: Album!
   exif: PhotoEXIF
 
-  # shares: [ShareToken]
-  # downloads: [PhotoDownload]
+  shares: [ShareToken!]!
+  downloads: [PhotoDownload!]!
 }
 
 "EXIF metadata from the camera"
@@ -2137,43 +2169,6 @@ func (ec *executionContext) _Photo_path(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Photo_original(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Original(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.PhotoURL)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNPhotoURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Photo_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -2317,6 +2312,154 @@ func (ec *executionContext) _Photo_exif(ctx context.Context, field graphql.Colle
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoExif(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Photo_shares(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Photo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Photo().Shares(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Photo_downloads(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Photo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Photo().Downloads(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.PhotoDownload)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPhotoDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownloadᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoDownload_title(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoDownload_url(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PhotoEXIF_photo(ctx context.Context, field graphql.CollectedField, obj *models.PhotoExif) (ret graphql.Marshaler) {
@@ -5249,20 +5392,6 @@ func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "original":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_original(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "thumbnail":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5316,6 +5445,66 @@ func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, ob
 				res = ec._Photo_exif(ctx, field, obj)
 				return res
 			})
+		case "shares":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Photo_shares(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "downloads":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Photo_downloads(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var photoDownloadImplementors = []string{"PhotoDownload"}
+
+func (ec *executionContext) _PhotoDownload(ctx context.Context, sel ast.SelectionSet, obj *models.PhotoDownload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, photoDownloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PhotoDownload")
+		case "title":
+			out.Values[i] = ec._PhotoDownload_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "url":
+			out.Values[i] = ec._PhotoDownload_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6126,6 +6315,57 @@ func (ec *executionContext) marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 		return graphql.Null
 	}
 	return ec._Photo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPhotoDownload2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx context.Context, sel ast.SelectionSet, v models.PhotoDownload) graphql.Marshaler {
+	return ec._PhotoDownload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPhotoDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PhotoDownload) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPhotoDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNPhotoDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx context.Context, sel ast.SelectionSet, v *models.PhotoDownload) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PhotoDownload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPhotoURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx context.Context, sel ast.SelectionSet, v models.PhotoURL) graphql.Marshaler {

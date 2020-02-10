@@ -54,7 +54,7 @@ const SidebarDownload = ({ photoId }) => {
 }
 
 SidebarDownload.propTypes = {
-  photoId: PropTypes.string,
+  photoId: PropTypes.number,
 }
 
 export default SidebarDownload

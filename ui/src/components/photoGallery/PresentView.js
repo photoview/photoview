@@ -50,7 +50,7 @@ export const PresentPhoto = ({ photo, imageLoaded, ...otherProps }) => {
       <StyledPhoto src={photo.thumbnail.url} />
       <StyledPhoto
         style={{ display: 'none' }}
-        src={photo.original.url}
+        src={photo.highRes.url}
         onLoad={e => {
           e.target.style.display = 'initial'
           imageLoaded && imageLoaded()

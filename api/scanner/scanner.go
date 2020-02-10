@@ -177,12 +177,19 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 	return false
 }
 
-var supported_mimetypes = [...]string{
+var SupportedMimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
 	"image/tiff",
 	"image/webp",
 	"image/x-canon-cr2",
+	"image/bmp",
+}
+
+var WebMimetypes = [...]string{
+	"image/jpeg",
+	"image/png",
+	"image/webp",
 	"image/bmp",
 }
 
@@ -209,7 +216,7 @@ func isPathImage(path string, cache *scanner_cache) bool {
 		return false
 	}
 
-	for _, supported_mime := range supported_mimetypes {
+	for _, supported_mime := range SupportedMimetypes {
 		if supported_mime == imgType.MIME.Value {
 			cache.insert_photo_type(path, supported_mime)
 			return true

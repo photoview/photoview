@@ -42,7 +42,7 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 			}
 		}
 
-		if purpose == models.PhotoOriginal {
+		if purpose == models.PhotoHighRes {
 			var err error
 			file, err = os.Open(path)
 			if err != nil {

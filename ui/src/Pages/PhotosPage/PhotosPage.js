@@ -22,7 +22,7 @@ const photoQuery = gql`
           width
           height
         }
-        original {
+        highRes {
           url
         }
       }

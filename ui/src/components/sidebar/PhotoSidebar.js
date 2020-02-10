@@ -13,7 +13,7 @@ const photoQuery = gql`
     photo(id: $id) {
       id
       title
-      original {
+      highRes {
         url
         width
         height
@@ -22,9 +22,7 @@ const photoQuery = gql`
         camera
         maker
         lens
-        dateShot {
-          formatted
-        }
+        dateShot
         fileSize
         exposure
         aperture
@@ -77,7 +75,7 @@ const SidebarContent = ({ photo, hidePreview }) => {
       {}
     )
 
-    exif.dateShot = new Date(exif.dateShot.formatted).toLocaleString()
+    exif.dateShot = new Date(exif.dateShot).toLocaleString()
 
     exifItems = exifKeys.map(key => (
       <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
@@ -86,7 +84,7 @@ const SidebarContent = ({ photo, hidePreview }) => {
 
   let previewUrl = null
   if (photo) {
-    if (photo.original) previewUrl = photo.original.url
+    if (photo.highRes) previewUrl = photo.highRes.url
     else if (photo.thumbnail) previewUrl = photo.thumbnail.url
   }
 

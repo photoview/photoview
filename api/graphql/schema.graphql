@@ -135,22 +135,26 @@ type PhotoURL {
   height: Int!
 }
 
+type PhotoDownload {
+  title: String!
+  url: String!
+}
+
 type Photo {
   id: Int!
   title: String!
   "Local filepath for the photo"
   path: String!
-  "URL to display the photo in full resolution"
-  original: PhotoURL!
   "URL to display the photo in a smaller resolution"
   thumbnail: PhotoURL!
+  "URL to display the photo in full resolution"
   highRes: PhotoURL!
   "The album that holds the photo"
   album: Album!
   exif: PhotoEXIF
 
-  # shares: [ShareToken]
-  # downloads: [PhotoDownload]
+  shares: [ShareToken!]!
+  downloads: [PhotoDownload!]!
 }
 
 "EXIF metadata from the camera"

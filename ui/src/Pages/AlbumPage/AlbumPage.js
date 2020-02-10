@@ -30,7 +30,7 @@ const albumQuery = gql`
           width
           height
         }
-        original {
+        highRes {
           url
         }
       }
