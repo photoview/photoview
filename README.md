@@ -1,12 +1,15 @@
 # PhotoView
 
-![screenshot](/screenshots/main-window.png)
+**SERVER REWRITE. The api is currently being rewritten in Golang, use branch `old-nodejs-server` for the most stable release**
+
+![screenshot](./screenshots/main-window.png)
 
 ## Demo site
+
 Visit https://photos.qpqp.dk/
 
-Username: __demo__
-Password: __demo__
+Username: **demo**
+Password: **demo**
 
 ## Aim of the project
 
@@ -14,7 +17,8 @@ The aim of this project is to make a simple and user-friendly photo gallery appl
 that is easy to host on a personal server, to easily view the photos located on that server.
 
 ## Main features
-> The software is still in early development, and many of the following features, have not been implemented yet.
+
+> The software is still in early development, and many of the following features, may not have been fully implemented yet.
 
 - **Closely tied to the file system**. The website presents the images found on the local filesystem of the server, directories are mapped to albums.
 - **User management**. Each user is created along with a path on the local filesystem, photos within that path can be accessed by that user.
@@ -47,7 +51,7 @@ If the endpoint or the port hasn't been changed in the `docker-compose.yml` file
 
 If everything is setup correctly, you should be presented with an initial setup wizard, when accessing the website the first time.
 
-![Initial setup](/screenshots/initial-setup.png)
+![Initial setup](./screenshots/initial-setup.png)
 
 Enter a new username and password.
 
@@ -61,40 +65,23 @@ The photos will have to be scanned for the photos to show up, you can force a sc
 
 ## Setup development environment
 
-> This projected is based of the [GrandStack](https://grandstack.io/) starter project.
-
 ### Local setup
 
-1. [Download Neo4j Desktop](https://neo4j.com/download/)
-2. Install and open Neo4j Desktop.
-3. Create a new DB by clicking "New Graph", and clicking "create local graph".
-4. Set password to "letmein" (as suggested by `api/.env`), and click "Create".
-5. Make sure that the default credentials in `api/.env` are used. Leave them as follows: `NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=letmein`
-6.  Click "Manage".
-7. Click "Plugins".
-8. Find "APOC" and click "Install".
-9. Click the "play" button at the top of left the screen, which should start the server. _(screenshot 2)_
-10. Wait until it says "RUNNING".
-11. Proceed forward with the rest of the tutorial.
+1. Install a local mysql server, and make a new database
+2. Rename `/api/example.env` to `.env` and update the `MYSQL_URL` field
+3. Rename `/ui/example.env` to `.env`
 
 ### [`/api`](./api)
-
-#### Install dependencies
-
-```bash
-(cd ./ui && npm install)
-(cd ./api && npm install)
-```
 
 #### Start API server
 
 ```bash
-cd ./api && npm start
+cd ./api && go run server/server.go
 ```
 
 ### [`/ui`](./ui)
 
-This will start the GraphQL API in the foreground, so in another terminal session start the UI development server:
+The above command will start the GraphQL API in the foreground, so in another terminal session start the UI development server:
 
 #### Start UI server
 
@@ -103,4 +90,4 @@ cd ./ui && npm start
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
-And the graphql playground at [localhost:4001/graphql](http://localhost:4001/graphql)
+And the graphql playground at [localhost:4001](http://localhost:4001)
