@@ -7,26 +7,28 @@ import copy from 'copy-to-clipboard'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: Int!) {
-    photoShares(id: $id) {
-      token
+    photo(id: $id) {
+      id
+      shares {
+        token
+      }
     }
   }
 `
 
 const shareAlbumQuery = gql`
   query sidbarGetAlbumShares($id: Int!) {
-    albumShares(id: $id) {
-      token
+    album(id: $id) {
+      id
+      shares {
+        token
+      }
     }
   }
 `
 
 const addPhotoShareMutation = gql`
-  mutation sidebarPhotoAddShare(
-    $id: Int!
-    $password: String
-    $expire: _Neo4jDateInput
-  ) {
+  mutation sidebarPhotoAddShare($id: Int!, $password: String, $expire: Time) {
     sharePhoto(photoId: $id, password: $password, expire: $expire) {
       token
     }
@@ -34,11 +36,7 @@ const addPhotoShareMutation = gql`
 `
 
 const addAlbumShareMutation = gql`
-  mutation sidebarAlbumAddShare(
-    $id: Int!
-    $password: String
-    $expire: _Neo4jDateInput
-  ) {
+  mutation sidebarAlbumAddShare($id: Int!, $password: String, $expire: Time) {
     shareAlbum(albumId: $id, password: $password, expire: $expire) {
       token
     }
@@ -71,9 +69,9 @@ const SidebarShare = ({ photo, album }) => {
       <Query query={query} variables={{ id }}>
         {({ loading, error, data, refetch }) => {
           if (loading) return <div>Loading...</div>
-          if (error) return <div>Error: {error}</div>
+          if (error) return <div>Error: {error.message}</div>
 
-          let shares = isPhoto ? data.photoShares : data.albumShares
+          let shares = isPhoto ? data.photo.shares : data.album.shares
 
           const rows = shares.map(share => (
             <Table.Row key={share.token}>

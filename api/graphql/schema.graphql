@@ -32,8 +32,7 @@ type Query {
   "Get photo by id, user must own the photo or be admin"
   photo(id: Int!): Photo!
 
-  albumShares(id: Int!, password: String): [ShareToken!]!
-  photoShares(id: Int!, password: String): [ShareToken!]!
+  shareToken(token: String!, password: String): ShareToken!
 }
 
 type Mutation {
@@ -123,7 +122,7 @@ type Album {
   "An image in this album used for previewing this album"
   thumbnail: Photo
 
-  # shares: [ShareToken]
+  shares: [ShareToken]
 }
 
 type PhotoURL {

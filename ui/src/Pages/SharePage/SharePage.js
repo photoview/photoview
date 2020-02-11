@@ -7,7 +7,7 @@ import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 
 const tokenQuery = gql`
-  query SharePageToken($token: Int!) {
+  query SharePageToken($token: String!) {
     shareToken(token: $token) {
       token
       album {
@@ -28,7 +28,7 @@ const tokenQuery = gql`
   fragment AlbumProps on Album {
     id
     title
-    photos(orderBy: title_desc) {
+    photos(filter: { order_by: "title", order_direction: DESC }) {
       ...PhotoProps
     }
   }
@@ -41,16 +41,14 @@ const tokenQuery = gql`
       width
       height
     }
-    original {
+    highRes {
       url
     }
     exif {
       camera
       maker
       lens
-      dateShot {
-        formatted
-      }
+      dateShot
       fileSize
       exposure
       aperture

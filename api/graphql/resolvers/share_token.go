@@ -54,14 +54,22 @@ func (r *shareTokenResolver) Photo(ctx context.Context, obj *models.ShareToken) 
 	return photo, nil
 }
 
-func (r *queryResolver) AlbumShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error) {
-	log.Println("Query AlbumShares: not implemented")
+func (r *queryResolver) ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error) {
 
-	tokens := make([]*models.ShareToken, 0)
-	return tokens, nil
+	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ? AND (password = ? OR password IS NULL)", token, password)
+	result, err := models.NewShareTokenFromRow(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }
 
-func (r *queryResolver) PhotoShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error) {
+func (r *queryResolver) PhotoShares(ctx context.Context, token string, password *string) ([]*models.ShareToken, error) {
 	log.Println("Query PhotoShares: not implemented")
 
 	tokens := make([]*models.ShareToken, 0)

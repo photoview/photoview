@@ -25,6 +25,7 @@ func SetupDatabase() *sql.DB {
 
 	queryValues := address.Query()
 	queryValues.Add("multiStatements", "true")
+	queryValues.Add("parseTime", "true")
 
 	address.RawQuery = queryValues.Encode()
 

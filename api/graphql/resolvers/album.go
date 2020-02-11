@@ -117,3 +117,13 @@ func (r *albumResolver) ParentAlbum(ctx context.Context, obj *models.Album) (*mo
 func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.User, error) {
 	panic("not implemented")
 }
+
+func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error) {
+	rows, err := r.Database.Query("SELECT * FROM share_token WHERE album_id = ?", obj.ID())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return models.NewShareTokensFromRows(rows)
+}

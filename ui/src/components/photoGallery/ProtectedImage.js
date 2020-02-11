@@ -9,10 +9,13 @@ export async function fetchProtectedImage(src, { signal } = { signal: null }) {
       return imageCache[src]
     }
 
+    let headers = {}
+    if (localStorage.getItem('token')) {
+      headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`
+    }
+
     let image = await fetch(src, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
+      headers,
       signal,
     })
 

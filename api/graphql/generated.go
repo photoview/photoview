@@ -55,6 +55,7 @@ type ComplexityRoot struct {
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
 		Photos      func(childComplexity int, filter *models.Filter) int
+		Shares      func(childComplexity int) int
 		SubAlbums   func(childComplexity int, filter *models.Filter) int
 		Thumbnail   func(childComplexity int) int
 		Title       func(childComplexity int) int
@@ -114,15 +115,14 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Album       func(childComplexity int, id int) int
-		AlbumShares func(childComplexity int, id int, password *string) int
-		MyAlbums    func(childComplexity int, filter *models.Filter) int
-		MyPhotos    func(childComplexity int, filter *models.Filter) int
-		MyUser      func(childComplexity int) int
-		Photo       func(childComplexity int, id int) int
-		PhotoShares func(childComplexity int, id int, password *string) int
-		SiteInfo    func(childComplexity int) int
-		Users       func(childComplexity int, filter *models.Filter) int
+		Album      func(childComplexity int, id int) int
+		MyAlbums   func(childComplexity int, filter *models.Filter) int
+		MyPhotos   func(childComplexity int, filter *models.Filter) int
+		MyUser     func(childComplexity int) int
+		Photo      func(childComplexity int, id int) int
+		ShareToken func(childComplexity int, token string, password *string) int
+		SiteInfo   func(childComplexity int) int
+		Users      func(childComplexity int, filter *models.Filter) int
 	}
 
 	ScannerResult struct {
@@ -160,6 +160,7 @@ type AlbumResolver interface {
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
 
 	Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error)
+	Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error)
 }
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
@@ -186,8 +187,7 @@ type QueryResolver interface {
 	Album(ctx context.Context, id int) (*models.Album, error)
 	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
 	Photo(ctx context.Context, id int) (*models.Photo, error)
-	AlbumShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error)
-	PhotoShares(ctx context.Context, id int, password *string) ([]*models.ShareToken, error)
+	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 }
 type ShareTokenResolver interface {
 	Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error)
@@ -250,6 +250,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Album.Photos(childComplexity, args["filter"].(*models.Filter)), true
+
+	case "Album.shares":
+		if e.complexity.Album.Shares == nil {
+			break
+		}
+
+		return e.complexity.Album.Shares(childComplexity), true
 
 	case "Album.subAlbums":
 		if e.complexity.Album.SubAlbums == nil {
@@ -564,18 +571,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
 
-	case "Query.albumShares":
-		if e.complexity.Query.AlbumShares == nil {
-			break
-		}
-
-		args, err := ec.field_Query_albumShares_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.AlbumShares(childComplexity, args["id"].(int), args["password"].(*string)), true
-
 	case "Query.myAlbums":
 		if e.complexity.Query.MyAlbums == nil {
 			break
@@ -619,17 +614,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Photo(childComplexity, args["id"].(int)), true
 
-	case "Query.photoShares":
-		if e.complexity.Query.PhotoShares == nil {
+	case "Query.shareToken":
+		if e.complexity.Query.ShareToken == nil {
 			break
 		}
 
-		args, err := ec.field_Query_photoShares_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_shareToken_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.PhotoShares(childComplexity, args["id"].(int), args["password"].(*string)), true
+		return e.complexity.Query.ShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 
 	case "Query.siteInfo":
 		if e.complexity.Query.SiteInfo == nil {
@@ -851,8 +846,7 @@ type Query {
   "Get photo by id, user must own the photo or be admin"
   photo(id: Int!): Photo!
 
-  albumShares(id: Int!, password: String): [ShareToken!]!
-  photoShares(id: Int!, password: String): [ShareToken!]!
+  shareToken(token: String!, password: String): ShareToken!
 }
 
 type Mutation {
@@ -942,7 +936,7 @@ type Album {
   "An image in this album used for previewing this album"
   thumbnail: Photo
 
-  # shares: [ShareToken]
+  shares: [ShareToken]
 }
 
 type PhotoURL {
@@ -1204,28 +1198,6 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_albumShares_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["password"]; ok {
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1268,28 +1240,6 @@ func (ec *executionContext) field_Query_myPhotos_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_photoShares_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["password"]; ok {
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1301,6 +1251,28 @@ func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
 	return args, nil
 }
 
@@ -1656,6 +1628,40 @@ func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Album",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Album().Shares(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -3261,7 +3267,7 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 	return ec.marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_albumShares(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3278,7 +3284,7 @@ func (ec *executionContext) _Query_albumShares(ctx context.Context, field graphq
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_albumShares_args(ctx, rawArgs)
+	args, err := ec.field_Query_shareToken_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3287,7 +3293,7 @@ func (ec *executionContext) _Query_albumShares(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AlbumShares(rctx, args["id"].(int), args["password"].(*string))
+		return ec.resolvers.Query().ShareToken(rctx, args["token"].(string), args["password"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3299,54 +3305,10 @@ func (ec *executionContext) _Query_albumShares(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.ShareToken)
+	res := resTmp.(*models.ShareToken)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_photoShares(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_photoShares_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().PhotoShares(rctx, args["id"].(int), args["password"].(*string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.ShareToken)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+	return ec.marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5269,6 +5231,17 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 				res = ec._Album_thumbnail(ctx, field, obj)
 				return res
 			})
+		case "shares":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_shares(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5710,7 +5683,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "albumShares":
+		case "shareToken":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -5718,21 +5691,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_albumShares(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "photoShares":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_photoShares(ctx, field)
+				res = ec._Query_shareToken(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6903,6 +6862,46 @@ func (ec *executionContext) marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋp
 
 func (ec *executionContext) marshalOShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
 	return ec._ShareToken(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
