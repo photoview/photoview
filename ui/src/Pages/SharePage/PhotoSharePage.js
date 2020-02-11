@@ -20,7 +20,7 @@ const AlbumSharePage = ({ photo }) => {
           <>
             <h1>{photo.title}</h1>
             <DisplayPhoto
-              src={photo.original.url}
+              src={photo.highRes.url}
               onLoad={() => {
                 updateSidebar(<PhotoSidebar photo={photo} hidePreview />)
               }}

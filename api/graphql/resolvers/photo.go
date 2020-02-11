@@ -58,9 +58,12 @@ func (r *Resolver) Photo() api.PhotoResolver {
 }
 
 func (r *photoResolver) Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error) {
-	log.Println("Photo: shares not implemented")
-	shares := make([]*models.ShareToken, 0)
-	return shares, nil
+	rows, err := r.Database.Query("SELECT * FROM share_token WHERE photo_id = ?", obj.PhotoID)
+	if err != nil {
+		return nil, err
+	}
+
+	return models.NewShareTokensFromRows(rows)
 }
 
 func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error) {

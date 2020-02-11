@@ -69,6 +69,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser      func(childComplexity int, username string, password string) int
+		DeleteShareToken   func(childComplexity int, token string) int
 		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
 		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
 		ScanAll            func(childComplexity int) int
@@ -170,6 +171,7 @@ type MutationResolver interface {
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
+	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 }
 type PhotoResolver interface {
 	Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
@@ -316,6 +318,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+
+	case "Mutation.deleteShareToken":
+		if e.complexity.Mutation.DeleteShareToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteShareToken_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteShareToken(childComplexity, args["token"].(string)), true
 
 	case "Mutation.initialSetupWizard":
 		if e.complexity.Mutation.InitialSetupWizard == nil {
@@ -875,6 +889,8 @@ type Mutation {
   shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
   "Generate share token for photo"
   sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
+  "Delete a share token by it's token value"
+  deleteShareToken(token: String!): ShareToken
 }
 
 type AuthorizeResult {
@@ -1047,6 +1063,20 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 		}
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteShareToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
 	return args, nil
 }
 
@@ -2050,6 +2080,47 @@ func (ec *executionContext) _Mutation_sharePhoto(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().SharePhoto(rctx, args["photoId"].(int), args["expire"].(*time.Time), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.ShareToken)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteShareToken_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteShareToken(rctx, args["token"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5328,6 +5399,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_shareAlbum(ctx, field)
 		case "sharePhoto":
 			out.Values[i] = ec._Mutation_sharePhoto(ctx, field)
+		case "deleteShareToken":
+			out.Values[i] = ec._Mutation_deleteShareToken(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

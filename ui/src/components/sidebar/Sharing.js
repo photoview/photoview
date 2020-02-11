@@ -44,7 +44,7 @@ const addAlbumShareMutation = gql`
 `
 
 const deleteShareMutation = gql`
-  mutation sidebareDeleteShare($token: ID!) {
+  mutation sidebareDeleteShare($token: String!) {
     deleteShareToken(token: $token) {
       token
     }

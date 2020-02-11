@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 	"database/sql"
-	"log"
+	"errors"
 	"time"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
@@ -60,20 +60,13 @@ func (r *queryResolver) ShareToken(ctx context.Context, token string, password *
 	result, err := models.NewShareTokenFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, errors.New("share not found")
 		} else {
 			return nil, err
 		}
 	}
 
 	return result, nil
-}
-
-func (r *queryResolver) PhotoShares(ctx context.Context, token string, password *string) ([]*models.ShareToken, error) {
-	log.Println("Query PhotoShares: not implemented")
-
-	tokens := make([]*models.ShareToken, 0)
-	return tokens, nil
 }
 
 func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
@@ -124,5 +117,73 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 }
 
 func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error) {
-	panic("not implemented")
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	rows, err := r.Database.Query("SELECT owner_id FROM album, photo WHERE photo.photo_id = ? AND photo.album_id = album.album_id AND album.owner_id = ?", photoID, user.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Next() == false {
+		return nil, auth.ErrUnauthorized
+	}
+	rows.Close()
+
+	var hashed_password *string = nil
+	if password != nil {
+		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
+		if err != nil {
+			return nil, err
+		}
+		hashed_str := string(hashedPassBytes)
+		hashed_password = &hashed_str
+	}
+
+	token := utils.GenerateToken()
+	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, photo_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, photoID)
+	if err != nil {
+		return nil, err
+	}
+
+	token_id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ShareToken{
+		TokenID:  int(token_id),
+		Value:    token,
+		OwnerID:  user.UserID,
+		Expire:   expire,
+		Password: password,
+		AlbumID:  nil,
+		PhotoID:  &photoID,
+	}, nil
+}
+
+func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue string) (*models.ShareToken, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	row := r.Database.QueryRow(`
+		SELECT share_token.* FROM share_token, user WHERE
+		share_token.value = ? AND
+		share_token.owner_id = user.user_id AND
+		(user.user_id = ? OR user.admin = TRUE)
+	`, tokenValue, user.UserID)
+
+	token, err := models.NewShareTokenFromRow(row)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := r.Database.Exec("DELETE FROM share_token WHERE token_id = ?", token.TokenID); err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }

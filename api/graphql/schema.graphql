@@ -61,6 +61,8 @@ type Mutation {
   shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
   "Generate share token for photo"
   sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
+  "Delete a share token by it's token value"
+  deleteShareToken(token: String!): ShareToken
 }
 
 type AuthorizeResult {
