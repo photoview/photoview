@@ -16,14 +16,15 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 	router.Get("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		image_name := chi.URLParam(r, "name")
 
-		row := db.QueryRow("SELECT photo_url.purpose, photo.path, photo.album_id, photo_url.content_type FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
+		row := db.QueryRow("SELECT photo_url.purpose, photo.path, photo.photo_id, photo.album_id, photo_url.content_type FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
 
 		var purpose models.PhotoPurpose
 		var path string
 		var content_type string
 		var album_id int
+		var photo_id int
 
-		if err := row.Scan(&purpose, &path, &album_id, &content_type); err != nil {
+		if err := row.Scan(&purpose, &path, &photo_id, &album_id, &content_type); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
@@ -35,7 +36,7 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 
 		if purpose == models.PhotoThumbnail {
 			var err error
-			file, err = os.Open(fmt.Sprintf("./image-cache/%d/%s", album_id, image_name))
+			file, err = os.Open(fmt.Sprintf("./image-cache/%d/%d/%s", album_id, photo_id, image_name))
 			if err != nil {
 				w.Write([]byte("Error: " + err.Error()))
 				return

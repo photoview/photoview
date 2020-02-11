@@ -97,13 +97,22 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 		}
 	}
 
+	// Make photo cache dir
+	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(photo_id)))
+	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
+		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
+			log.Println("ERROR: Could not make photo image cache directory")
+			return err
+		}
+	}
+
 	// Save thumbnail as jpg
 	thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, utils.GenerateToken())
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
 	thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
 	thumbnail_name = thumbnail_name + ".jpg"
 
-	photo_file, err = os.Create(path.Join(albumCachePath, thumbnail_name))
+	photo_file, err = os.Create(path.Join(photoCachePath, thumbnail_name))
 	if err != nil {
 		log.Println("ERROR: Could not make thumbnail file")
 		return err
