@@ -149,7 +149,7 @@ func scan(database *sql.DB, user *models.User) {
 		}
 	}
 
-	cleanupCache(database, album_paths_scanned)
+	cleanupCache(database, album_paths_scanned, user)
 
 	log.Println("Done scanning")
 }
@@ -235,13 +235,17 @@ func isPathImage(path string, cache *scanner_cache) bool {
 	return false
 }
 
-func cleanupCache(database *sql.DB, scanned_albums []interface{}) {
+func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.User) {
 	if len(scanned_albums) == 0 {
 		return
 	}
 
+	args := make([]interface{}, 0)
+	args = append(args, user.UserID)
+	args = append(args, scanned_albums...)
+
 	albums_questions := strings.Repeat("?,", len(scanned_albums))[:len(scanned_albums)*2-1]
-	rows, err := database.Query("SELECT album_id FROM album WHERE path NOT IN ("+albums_questions+")", scanned_albums...)
+	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", args...)
 	if err != nil {
 		log.Printf("ERROR: Could not get albums from database: %s\n", err)
 		return
