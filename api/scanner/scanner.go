@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/h2non/filetype"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -45,7 +47,9 @@ func ScanUser(database *sql.DB, userId int) error {
 }
 
 func scan(database *sql.DB, user *models.User) {
+	// Start scanning
 	scanner_cache := make(scanner_cache)
+	album_paths_scanned := make([]interface{}, 0)
 
 	type scanInfo struct {
 		path     string
@@ -64,6 +68,8 @@ func scan(database *sql.DB, user *models.User) {
 
 		albumPath := albumInfo.path
 		albumParentId := albumInfo.parentId
+
+		album_paths_scanned = append(album_paths_scanned, albumPath)
 
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
@@ -142,6 +148,8 @@ func scan(database *sql.DB, user *models.User) {
 			}
 		}
 	}
+
+	cleanupCache(database, album_paths_scanned)
 
 	log.Println("Done scanning")
 }
@@ -225,4 +233,41 @@ func isPathImage(path string, cache *scanner_cache) bool {
 
 	log.Printf("Unsupported image %s of type %s\n", path, imgType.MIME.Value)
 	return false
+}
+
+func cleanupCache(database *sql.DB, scanned_albums []interface{}) {
+	if len(scanned_albums) == 0 {
+		return
+	}
+
+	albums_questions := strings.Repeat("?,", len(scanned_albums))[:len(scanned_albums)*2-1]
+	rows, err := database.Query("SELECT album_id FROM album WHERE path NOT IN ("+albums_questions+")", scanned_albums...)
+	if err != nil {
+		log.Printf("ERROR: Could not get albums from database: %s\n", err)
+		return
+	}
+
+	deleted_albums := 0
+	deleted_ids := make([]interface{}, 0)
+	for rows.Next() {
+		var album_id int
+		rows.Scan(&album_id)
+		deleted_ids = append(deleted_ids, album_id)
+		cache_path := path.Join("./image-cache", strconv.Itoa(album_id))
+		err := os.RemoveAll(cache_path)
+		if err != nil {
+			log.Printf("ERROR: Could not delete unused cache folder: %s\n%s\n", cache_path, err)
+		} else {
+			deleted_albums++
+		}
+	}
+
+	if len(deleted_ids) > 0 {
+		albums_questions = strings.Repeat("?,", len(deleted_ids))[:len(deleted_ids)*2-1]
+		if _, err := database.Exec("DELETE FROM album WHERE album_id IN ("+albums_questions+")", deleted_ids...); err != nil {
+			log.Printf("ERROR: Could not delete old albums from database:\n%s\n", err)
+		}
+	}
+
+	log.Printf("Deleted %d unused albums from cache", deleted_albums)
 }

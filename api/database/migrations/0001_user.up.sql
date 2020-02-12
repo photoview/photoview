@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS access_token (
 	expire timestamp NOT NULL,
 
 	PRIMARY KEY (token_id),
-  FOREIGN KEY (user_id) REFERENCES user(user_id)
+  FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );

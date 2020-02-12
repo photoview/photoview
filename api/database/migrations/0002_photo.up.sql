@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS album (
   path varchar(512) NOT NULL UNIQUE,
 
   PRIMARY KEY (album_id),
-  FOREIGN KEY (parent_album) REFERENCES album(album_id),
-  FOREIGN KEY (owner_id) REFERENCES user(user_id)
+  FOREIGN KEY (parent_album) REFERENCES album(album_id) ON DELETE CASCADE,
+  FOREIGN KEY (owner_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS photo (
@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS photo (
   exif_id int,
 
   PRIMARY KEY (photo_id),
-  FOREIGN KEY (album_id) REFERENCES album(album_id),
-  FOREIGN KEY (exif_id) REFERENCES photo_exif(exif_id)
+  FOREIGN KEY (album_id) REFERENCES album(album_id) ON DELETE CASCADE,
+  FOREIGN KEY (exif_id) REFERENCES photo_exif(exif_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS photo_url (
@@ -48,5 +48,5 @@ CREATE TABLE IF NOT EXISTS photo_url (
   content_type varchar(64) NOT NULL,
 
   PRIMARY KEY (url_id),
-  FOREIGN KEY (photo_id) REFERENCES photo(photo_id)
+  FOREIGN KEY (photo_id) REFERENCES photo(photo_id) ON DELETE CASCADE
 );
