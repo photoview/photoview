@@ -18,17 +18,45 @@ import (
 type scanner_cache map[string]interface{}
 
 func (cache *scanner_cache) insert_photo_type(path string, content_type string) {
-	(*cache)["photo_type/"+path] = content_type
+	(*cache)["photo_type//"+path] = content_type
 }
 
 func (cache *scanner_cache) get_photo_type(path string) *string {
-	result := (*cache)["photo_type/"+path]
-	if result == nil {
-		return nil
+	result, found := (*cache)["photo_type//"+path].(string)
+	if found {
+		// log.Printf("Image cache hit: %s\n", path)
+		return &result
 	}
 
-	photo_type := result.(string)
-	return &photo_type
+	return nil
+}
+
+// Insert single album directory in cache
+func (cache *scanner_cache) insert_album_path(path string, contains_photo bool) {
+	(*cache)["album_path//"+path] = contains_photo
+}
+
+// Insert album path and all parent directories up to the given root directory in cache
+func (cache *scanner_cache) insert_album_paths(end_path string, root string, contains_photo bool) {
+	curr_path := path.Clean(end_path)
+	root_path := path.Clean(root)
+
+	for curr_path != root_path || curr_path == "." {
+
+		cache.insert_album_path(curr_path, contains_photo)
+
+		curr_path = path.Dir(curr_path)
+	}
+}
+
+func (cache *scanner_cache) album_contains_photo(path string) *bool {
+	contains_photo, found := (*cache)["album_path//"+path].(bool)
+	if found {
+		// log.Printf("Album cache hit: %s\n", path)
+		return &contains_photo
+	}
+
+	return nil
 }
 
 func ScanUser(database *sql.DB, userId int) error {
@@ -155,13 +183,22 @@ func scan(database *sql.DB, user *models.User) {
 }
 
 func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
+
+	if contains_image := cache.album_contains_photo(rootPath); contains_image != nil {
+		return *contains_image
+	}
+
 	scanQueue := list.New()
 	scanQueue.PushBack(rootPath)
+
+	scanned_directories := make([]string, 0)
 
 	for scanQueue.Front() != nil {
 
 		dirPath := scanQueue.Front().Value.(string)
 		scanQueue.Remove(scanQueue.Front())
+
+		scanned_directories = append(scanned_directories, dirPath)
 
 		dirContent, err := ioutil.ReadDir(dirPath)
 		if err != nil {
@@ -175,6 +212,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 				scanQueue.PushBack(filePath)
 			} else {
 				if isPathImage(filePath, cache) {
+					cache.insert_album_paths(dirPath, rootPath, true)
 					return true
 				}
 			}
@@ -182,6 +220,9 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 
 	}
 
+	for _, scanned_path := range scanned_directories {
+		cache.insert_album_path(scanned_path, false)
+	}
 	return false
 }
 
@@ -203,7 +244,6 @@ var WebMimetypes = [...]string{
 
 func isPathImage(path string, cache *scanner_cache) bool {
 	if cache.get_photo_type(path) != nil {
-		log.Printf("Image cache hit: %s\n", path)
 		return true
 	}
 	file, err := os.Open(path)
