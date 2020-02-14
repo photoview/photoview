@@ -68,13 +68,13 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
 
-	// high res
-	highres_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
-	highres_image_name = strings.ReplaceAll(highres_image_name, " ", "_") + photoBaseExt
+	// original photo url
+	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
+	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
 
-	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, highres_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoHighRes, content_type)
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, original_image_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoOriginal, content_type)
 	if err != nil {
-		log.Printf("Could not insert high-res photo url: %d, %s\n", photo_id, photoName)
+		log.Printf("Could not insert original photo url: %d, %s\n", photo_id, photoName)
 		return err
 	}
 
@@ -125,6 +125,38 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, thumbnail_name, thumbSize.X, thumbSize.Y, models.PhotoThumbnail, "image/jpeg")
 	if err != nil {
 		return err
+	}
+
+	// high res
+	original_web_safe := false
+	for _, web_mime := range WebMimetypes {
+		if content_type == web_mime {
+			original_web_safe = true
+			break
+		}
+	}
+
+	// Generate high res jpeg
+	if !original_web_safe {
+		highres_name := fmt.Sprintf("highres_%s_%s", photoName, utils.GenerateToken())
+		highres_name = strings.ReplaceAll(highres_name, ".", "_")
+		highres_name = strings.ReplaceAll(highres_name, " ", "_")
+		highres_name = highres_name + ".jpg"
+
+		photo_file, err = os.Create(path.Join(photoCachePath, highres_name))
+		if err != nil {
+			log.Println("ERROR: Could not make highres file")
+			return err
+		}
+		defer photo_file.Close()
+
+		jpeg.Encode(photo_file, image, &jpeg.Options{Quality: 70})
+
+		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo_id, highres_name, image.Bounds().Max.X, image.Bounds().Max.Y, models.PhotoHighRes, "image/jpeg")
+		if err != nil {
+			log.Printf("Could not insert highres photo url: %d, %s\n", photo_id, photoName)
+			return err
+		}
 	}
 
 	return nil

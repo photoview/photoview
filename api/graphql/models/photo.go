@@ -24,6 +24,7 @@ type PhotoPurpose string
 const (
 	PhotoThumbnail PhotoPurpose = "thumbnail"
 	PhotoHighRes   PhotoPurpose = "high-res"
+	PhotoOriginal  PhotoPurpose = "original"
 )
 
 type PhotoURL struct {

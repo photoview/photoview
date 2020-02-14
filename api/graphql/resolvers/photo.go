@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/scanner"
 )
 
 func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error) {
@@ -73,7 +75,20 @@ func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*mo
 }
 
 func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoHighRes)
+	// Try high res first, then
+	web_types_questions := strings.Repeat("?,", len(scanner.WebMimetypes))[:len(scanner.WebMimetypes)*2-1]
+	args := make([]interface{}, 0)
+	args = append(args, obj.PhotoID, models.PhotoHighRes, models.PhotoOriginal)
+	for _, webtype := range scanner.WebMimetypes {
+		args = append(args, webtype)
+	}
+
+	row := r.Database.QueryRow(`
+		SELECT * FROM photo_url WHERE photo_id = ? AND
+		(
+			purpose = ? OR (purpose = ? AND content_type IN (`+web_types_questions+`))
+		) LIMIT 1
+	`, args...)
 
 	url, err := models.NewPhotoURLFromRow(row)
 	if err != nil {

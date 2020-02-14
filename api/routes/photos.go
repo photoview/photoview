@@ -34,7 +34,7 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 
 		var file *os.File
 
-		if purpose == models.PhotoThumbnail {
+		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes {
 			var err error
 			file, err = os.Open(fmt.Sprintf("./image-cache/%d/%d/%s", album_id, photo_id, image_name))
 			if err != nil {
@@ -43,7 +43,7 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 			}
 		}
 
-		if purpose == models.PhotoHighRes {
+		if purpose == models.PhotoOriginal {
 			var err error
 			file, err = os.Open(path)
 			if err != nil {
