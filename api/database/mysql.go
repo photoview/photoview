@@ -40,6 +40,8 @@ func SetupDatabase() *sql.DB {
 		log.Fatalf("Could not connect to database: %s\n", err.Error())
 	}
 
+	db.SetMaxOpenConns(24)
+
 	return db
 }
 

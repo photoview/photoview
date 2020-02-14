@@ -77,7 +77,7 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 	return user, nil
 }
 
-func RegisterUser(database *sql.DB, username string, password string, rootPath string) (*User, error) {
+func RegisterUser(database *sql.Tx, username string, password string, rootPath string) (*User, error) {
 	hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func RegisterUser(database *sql.DB, username string, password string, rootPath s
 	return user, nil
 }
 
-func (user *User) GenerateAccessToken(database *sql.DB) (*AccessToken, error) {
+func (user *User) GenerateAccessToken(database *sql.Tx) (*AccessToken, error) {
 	bytes := make([]byte, 24)
 	if _, err := rand.Read(bytes); err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not generate token: %s\n", err.Error()))

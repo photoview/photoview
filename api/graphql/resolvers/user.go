@@ -54,12 +54,20 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 		}, nil
 	}
 
-	var token *models.AccessToken
-
-	token, err = user.GenerateAccessToken(r.Database)
+	tx, err := r.Database.Begin()
 	if err != nil {
 		return nil, err
 	}
+
+	var token *models.AccessToken
+
+	token, err = user.GenerateAccessToken(tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
 
 	return &models.AuthorizeResult{
 		Success: true,
@@ -68,16 +76,27 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 	}, nil
 }
 func (r *mutationResolver) RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
-	user, err := models.RegisterUser(r.Database, username, password, rootPath)
+	tx, err := r.Database.Begin()
 	if err != nil {
+		return nil, err
+	}
+
+	user, err := models.RegisterUser(tx, username, password, rootPath)
+	if err != nil {
+		tx.Rollback()
 		return &models.AuthorizeResult{
 			Success: false,
 			Status:  err.Error(),
 		}, nil
 	}
 
-	token, err := user.GenerateAccessToken(r.Database)
+	token, err := user.GenerateAccessToken(tx)
 	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -94,13 +113,47 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 		return nil, err
 	}
 
-	if _, err := r.Database.Exec("UPDATE site_info SET initial_setup = false"); err != nil {
-		return nil, err
-	}
-
 	if !siteInfo.InitialSetup {
 		return nil, errors.New("not initial setup")
 	}
 
-	return r.RegisterUser(ctx, username, password, rootPath)
+	tx, err := r.Database.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := tx.Exec("UPDATE site_info SET initial_setup = false"); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	user, err := models.RegisterUser(tx, username, password, rootPath)
+	if err != nil {
+		tx.Rollback()
+		return &models.AuthorizeResult{
+			Success: false,
+			Status:  err.Error(),
+		}, nil
+	}
+
+	if _, err := tx.Exec("UPDATE user SET admin = true WHERE user_id = ?", user.UserID); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	token, err := user.GenerateAccessToken(tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &models.AuthorizeResult{
+		Success: true,
+		Status:  "ok",
+		Token:   &token.Value,
+	}, nil
 }

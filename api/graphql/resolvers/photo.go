@@ -92,6 +92,7 @@ func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models
 
 	url, err := models.NewPhotoURLFromRow(row)
 	if err != nil {
+		log.Printf("Error: Could not query highres: %s\n", err)
 		return nil, err
 	}
 
@@ -103,6 +104,7 @@ func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*mode
 
 	url, err := models.NewPhotoURLFromRow(row)
 	if err != nil {
+		log.Printf("Error: Could not query thumbnail: %s\n", err)
 		return nil, err
 	}
 
