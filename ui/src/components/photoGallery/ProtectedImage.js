@@ -41,6 +41,8 @@ const ProtectedImage = ({ src, ...props }) => {
     const fetchController = new AbortController()
     let canceled = false
 
+    setImgSrc('')
+
     fetchProtectedImage(src, { signal: fetchController.signal })
       .then(newSrc => {
         if (!canceled) {

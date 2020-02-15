@@ -7,7 +7,7 @@ import { SidebarConsumer } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 
 const Header = styled.h1`
-  margin: 28px 0 12px 0 !important;
+  margin: 0 0 12px 0 !important;
 
   & a {
     color: black;

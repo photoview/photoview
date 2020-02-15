@@ -42,7 +42,7 @@ class LazyPhoto extends React.Component {
 
   render() {
     return (
-      <LazyLoad>
+      <LazyLoad scrollContainer="#layout-content">
         <PhotoImg {...this.props} />
       </LazyLoad>
     )

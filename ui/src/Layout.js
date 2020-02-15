@@ -18,7 +18,8 @@ const adminQuery = gql`
 
 const Container = styled.div`
   height: 100%;
-  margin-right: 500px;
+  display: flex;
+  /* margin-right: 500px; */
   /* display: grid;
   grid-template-columns: 80px 1fr 500px; */
 `
@@ -26,16 +27,15 @@ const Container = styled.div`
 const SideMenu = styled.div`
   height: 100%;
   width: 80px;
-  position: fixed;
-  top: 60px;
   left: 0;
-  padding-top: 10px;
+  padding-top: 70px;
 `
 
 const Content = styled.div`
   margin-top: 60px;
-  margin-left: 80px;
-  padding: 12px 8px 0;
+  padding: 10px 12px 0;
+  width: 100%;
+  overflow-y: scroll;
 `
 
 const SideButton = props => {
@@ -121,7 +121,10 @@ class Layout extends Component {
           </SideMenu>
         </Authorized>
         <Sidebar>
-          <Content>{this.props.children}</Content>
+          <Content id="layout-content">
+            {this.props.children}
+            <div style={{ height: 24 }}></div>
+          </Content>
         </Sidebar>
         <Header>
           <Title>Photoview</Title>

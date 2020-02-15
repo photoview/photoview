@@ -3,15 +3,23 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
 const SidebarContainer = styled.div`
-  height: 100%;
-  width: 500px;
-  position: fixed;
+  width: 28vw;
+  max-width: 500px;
+  min-width: 300px;
+  flex-shrink: 0;
   overflow-y: scroll;
   right: 0;
-  top: 60px;
+  margin-top: 60px;
   background-color: white;
-  padding: 12px 12px 100px;
+  padding: 12px;
   border-left: 1px solid #eee;
+
+  @media (max-width: 700px) {
+    position: absolute;
+    width: 100%;
+    max-width: calc(100vw - 85px);
+    transform: translateX(100vw);
+  }
 `
 
 export const SidebarContext = createContext()
@@ -40,7 +48,12 @@ class Sidebar extends React.Component {
       >
         {this.props.children}
         <Consumer>
-          {value => <SidebarContainer>{value.content}</SidebarContainer>}
+          {value => (
+            <SidebarContainer>
+              {value.content}
+              <div style={{ height: 100 }}></div>
+            </SidebarContainer>
+          )}
         </Consumer>
       </Provider>
     )
