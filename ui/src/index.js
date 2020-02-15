@@ -19,4 +19,4 @@ const Main = () => (
 ReactDOM.render(<Main />, document.getElementById('root'))
 
 // TODO: Get Service Worker up and running
-//registerServiceWorker()
+registerServiceWorker()
