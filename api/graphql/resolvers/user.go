@@ -14,14 +14,14 @@ import (
 
 // type userResolver struct{ *Resolver }
 
-func (r *queryResolver) Users(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
+func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
 
 	filterSQL, err := filter.FormatSQL()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := r.Database.Query("SELECT * FROM users" + filterSQL)
+	rows, err := r.Database.Query("SELECT * FROM user" + filterSQL)
 	if err != nil {
 		return nil, err
 	}

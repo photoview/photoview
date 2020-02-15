@@ -123,7 +123,7 @@ type ComplexityRoot struct {
 		Photo      func(childComplexity int, id int) int
 		ShareToken func(childComplexity int, token string, password *string) int
 		SiteInfo   func(childComplexity int) int
-		Users      func(childComplexity int, filter *models.Filter) int
+		User       func(childComplexity int, filter *models.Filter) int
 	}
 
 	ScannerResult struct {
@@ -183,7 +183,7 @@ type PhotoResolver interface {
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
-	Users(ctx context.Context, filter *models.Filter) ([]*models.User, error)
+	User(ctx context.Context, filter *models.Filter) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
 	MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error)
 	Album(ctx context.Context, id int) (*models.Album, error)
@@ -647,17 +647,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.SiteInfo(childComplexity), true
 
-	case "Query.users":
-		if e.complexity.Query.Users == nil {
+	case "Query.user":
+		if e.complexity.Query.User == nil {
 			break
 		}
 
-		args, err := ec.field_Query_users_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_user_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Query.User(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "ScannerResult.finished":
 		if e.complexity.ScannerResult.Finished == nil {
@@ -846,7 +846,7 @@ type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  users(filter: Filter): [User!]! @isAdmin
+  user(filter: Filter): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
@@ -1306,7 +1306,7 @@ func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, raw
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
@@ -3061,7 +3061,7 @@ func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.C
 	return ec.marshalNSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3078,7 +3078,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_users_args(ctx, rawArgs)
+	args, err := ec.field_Query_user_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3088,7 +3088,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Users(rctx, args["filter"].(*models.Filter))
+			return ec.resolvers.Query().User(rctx, args["filter"].(*models.Filter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -5672,7 +5672,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "users":
+		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -5680,7 +5680,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_users(ctx, field)
+				res = ec._Query_user(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

@@ -18,7 +18,7 @@ type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  users(filter: Filter): [User!]! @isAdmin
+  user(filter: Filter): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
