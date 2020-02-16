@@ -1,22 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { useSubscription } from 'react-apollo'
 import { useTransition, animated } from 'react-spring'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Message } from 'semantic-ui-react'
-import gql from 'graphql-tag'
-import MessageProgress from './MessageProgress'
 
-const syncSubscription = gql`
-  subscription syncSubscription {
-    scannerStatusUpdate {
-      finished
-      success
-      message
-      progress
-    }
-  }
-`
+import MessageProgress from './MessageProgress'
+import SubscriptionsHook from './SubscriptionsHook'
 
 const Container = styled.div`
   position: fixed;
@@ -25,65 +13,26 @@ const Container = styled.div`
   width: 500px;
 `
 
+export let MessageState = {
+  set: null,
+  get: null,
+  add: message => {
+    MessageState.set(messages => [...messages, message])
+  },
+}
+
 const Messages = () => {
   if (!localStorage.getItem('token')) {
     return null
   }
 
-  const { data, error } = useSubscription(syncSubscription)
+  console.log('Rendering messages')
 
   const [messages, setMessages] = useState([])
+  MessageState.set = setMessages
+  MessageState.get = messages
+
   const [refMap] = useState(() => new WeakMap())
-
-  useEffect(() => {
-    if (error) {
-      setMessages(state => [
-        ...state,
-        {
-          key: Math.random().toString(26),
-          type: 'message',
-          props: {
-            header: 'Network error',
-            content: error.message,
-            negative: true,
-          },
-        },
-      ])
-    }
-
-    if (!data) return
-
-    const update = data.scannerStatusUpdate
-    const newMessages = [...messages]
-
-    if (update.success) {
-      newMessages[0] = {
-        key: 'primary',
-        type: 'progress',
-        props: {
-          header: update.finished ? 'Synced' : 'Syncing',
-          content: update.message,
-          percent: update.progress,
-          positive: update.finished,
-        },
-      }
-
-      if (!update.finished) newMessages[0].props.onDismiss = null
-    } else {
-      const key = Math.random().toString(26)
-      newMessages.push({
-        key,
-        type: 'message',
-        props: {
-          header: 'Sync error',
-          content: update.message,
-          negative: true,
-        },
-      })
-    }
-
-    setMessages(newMessages)
-  }, [data, error])
 
   const getMessageElement = (message, ref) => {
     const dismissMessage = key => {
@@ -119,12 +68,35 @@ const Messages = () => {
     }
   }
 
+  let refHooks = new Map()
+  messages.forEach(message => {
+    let resolveFunc = null
+
+    const waitPromise = new Promise((resolve, reject) => {
+      resolveFunc = resolve
+    })
+
+    console.log(resolveFunc, waitPromise)
+    refHooks.set(message.key, {
+      done: resolveFunc,
+      promise: waitPromise,
+    })
+  })
+
   const transitions = useTransition(messages.slice().reverse(), x => x.key, {
     from: {
       opacity: 0,
       height: '0px',
     },
     enter: item => async next => {
+      console.log('HERE', refMap, item)
+
+      const refPromise = refHooks.get(item.key).promise
+      console.log('promise', refPromise)
+
+      await refPromise
+      console.log('AFTER PROMISE', refMap, item)
+
       await next({
         opacity: 1,
         height: `${refMap.get(item).offsetHeight + 10}px`,
@@ -137,7 +109,11 @@ const Messages = () => {
     <Container>
       {transitions.map(({ item, props: style, key }) => {
         const getRef = ref => {
+          console.log('GET REF', refMap, refHooks, item.key)
           refMap.set(item, ref)
+          if (refHooks.has(item.key)) {
+            refHooks.get(item.key).done()
+          }
         }
         const MessageElement = getMessageElement(item, getRef)
 
@@ -149,6 +125,7 @@ const Messages = () => {
           </animated.div>
         )
       })}
+      <SubscriptionsHook messages={messages} setMessages={setMessages} />
     </Container>
   )
 }

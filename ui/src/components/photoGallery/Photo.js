@@ -19,7 +19,7 @@ const StyledPhoto = styled(ProtectedImage)`
   min-width: 100%;
   position: relative;
   object-fit: cover;
-  opacity: ${props => (props.loaded ? 1 : 0)};
+  opacity: ${({ loaded }) => (loaded ? 1 : 0)};
 
   transition: opacity 300ms;
 `
@@ -30,7 +30,7 @@ const PhotoImg = photoProps => {
   return (
     <StyledPhoto
       {...photoProps}
-      loaded={loaded}
+      loaded={loaded ? 1 : 0}
       onLoad={() => {
         setLoaded(true)
       }}

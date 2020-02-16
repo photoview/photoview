@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
-import { Button, Form, Message, Container, Header } from 'semantic-ui-react'
+import { Button, Form, Message, Header } from 'semantic-ui-react'
+import { Container } from './LoginPage'
 
 import { checkInitialSetupQuery, login } from './loginUtilFunctions'
 

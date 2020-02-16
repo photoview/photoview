@@ -6,6 +6,7 @@ import { onError } from 'apollo-link-error'
 import { setContext } from 'apollo-link-context'
 import { ApolloLink, split } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
+import { MessageState } from './components/messages/Messages'
 
 const httpLink = new HttpLink({
   uri: process.env.GRAPHQL_ENDPOINT,
@@ -44,7 +45,9 @@ const link = split(
 )
 
 const linkError = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors)
+  let errorMessages = []
+
+  if (graphQLErrors) {
     graphQLErrors.map(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(
@@ -52,9 +55,49 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         )} Path: ${path}`
       )
     )
+
+    if (graphQLErrors.length == 1) {
+      errorMessages.push({
+        header: 'Something went wrong',
+        content: graphQLErrors[0].message,
+      })
+    } else if (graphQLErrors.length > 1) {
+      errorMessages.push({
+        header: 'Multiple things went wrong',
+        content: `Received ${graphQLErrors.length} errors from the server. See the console for more information`,
+      })
+    }
+  }
+
   if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
     localStorage.removeItem('token')
+
+    const errors = networkError.result.errors
+
+    if (errors.length == 1) {
+      errorMessages.push({
+        header: 'Server error',
+        content: `You are being logged out in an attempt to recover.\n${errors[0].message}`,
+      })
+    } else if (errors.length > 1) {
+      errorMessages.push({
+        header: 'Multiple server errors',
+        content: `Received ${graphQLErrors.length} errors from the server. You are being logged out in an attempt to recover.`,
+      })
+    }
+  }
+
+  if (errorMessages.length > 0) {
+    const newMessages = errorMessages.map(msg => ({
+      key: Math.random().toString(26),
+      type: 'message',
+      props: {
+        negative: true,
+        ...msg,
+      },
+    }))
+    MessageState.set(messages => [...messages, ...newMessages])
   }
 })
 
