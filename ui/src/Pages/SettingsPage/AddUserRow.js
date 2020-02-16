@@ -5,7 +5,11 @@ import { Table, Button, Input, Checkbox } from 'semantic-ui-react'
 import gql from 'graphql-tag'
 
 const createUserMutation = gql`
-  mutation createUser($username: String, $rootPath: String, $admin: Boolean) {
+  mutation createUser(
+    $username: String!
+    $rootPath: String!
+    $admin: Boolean!
+  ) {
     createUser(username: $username, rootPath: $rootPath, admin: $admin) {
       id
       username

@@ -53,7 +53,7 @@ type Mutation {
   ): AuthorizeResult
 
   "Scan all users for new photos"
-  scanAll: ScannerResult!
+  scanAll: ScannerResult! @isAdmin
   "Scan a single user for new photos"
   scanUser(userId: Int!): ScannerResult!
 
@@ -63,6 +63,20 @@ type Mutation {
   sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
+
+  updateUser(
+    id: Int!
+    username: String
+    rootPath: String
+    admin: Boolean
+  ): User @isAdmin
+  createUser(
+    username: String!
+    rootPath: String!
+    password: String
+    admin: Boolean!
+  ): User @isAdmin
+  deleteUser(id: Int!): User @isAdmin
 }
 
 type AuthorizeResult {

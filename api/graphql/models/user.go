@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,7 +15,7 @@ import (
 type User struct {
 	UserID   int
 	Username string
-	Password string
+	Password *string
 	RootPath string
 	Admin    bool
 }
@@ -66,7 +67,11 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 		}
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if user.Password == nil {
+		return nil, errors.New("user does not have a password")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return nil, ErrorInvalidUserCredentials
 		} else {
@@ -77,15 +82,37 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 	return user, nil
 }
 
-func RegisterUser(database *sql.Tx, username string, password string, rootPath string) (*User, error) {
-	hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
-	if err != nil {
-		return nil, err
-	}
-	hashedPass := string(hashedPassBytes)
+var ErrorInvalidRootPath = errors.New("invalid root path")
 
-	if _, err := database.Exec("INSERT INTO user (username, password, root_path) VALUES (?, ?, ?)", username, hashedPass, rootPath); err != nil {
-		return nil, err
+func ValidRootPath(rootPath string) bool {
+	_, err := os.Stat(rootPath)
+	if err != nil {
+		log.Printf("Warn: invalid root path: '%s'\n%s\n", rootPath, err)
+		return false
+	}
+
+	return true
+}
+
+func RegisterUser(database *sql.Tx, username string, password *string, rootPath string, admin bool) (*User, error) {
+	if !ValidRootPath(rootPath) {
+		return nil, ErrorInvalidRootPath
+	}
+
+	if password != nil {
+		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
+		if err != nil {
+			return nil, err
+		}
+		hashedPass := string(hashedPassBytes)
+
+		if _, err := database.Exec("INSERT INTO user (username, password, root_path, admin) VALUES (?, ?, ?, ?)", username, hashedPass, rootPath, admin); err != nil {
+			return nil, err
+		}
+	} else {
+		if _, err := database.Exec("INSERT INTO user (username, root_path, admin) VALUES (?, ?, ?)", username, rootPath, admin); err != nil {
+			return nil, err
+		}
 	}
 
 	row := database.QueryRow("SELECT * FROM user WHERE username = ?", username)
