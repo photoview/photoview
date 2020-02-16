@@ -23,14 +23,14 @@ const AlbumBoxes = ({ loading, error, albums, getCustomLink }) => {
       />
     ))
   } else {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 4; i++) {
       albumElements.push(<AlbumBox key={i} />)
     }
   }
 
   return (
     <Container>
-      <Loader active={loading}>Loading albums</Loader>
+      {/* <Loader active={loading}>Loading albums</Loader> */}
       {albumElements}
     </Container>
   )

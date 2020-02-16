@@ -8,6 +8,7 @@ import AlbumSidebar from './sidebar/AlbumSidebar'
 
 const Header = styled.h1`
   margin: 0 0 12px 0 !important;
+  height: 36px;
 
   & a {
     color: black;
@@ -34,7 +35,7 @@ const SettingsIcon = props => {
 }
 
 const AlbumTitle = ({ album, disableLink = false }) => {
-  if (!album) return null
+  if (!album) return <div style={{ height: 36 }}></div>
 
   let title = <span>{album.title}</span>
 

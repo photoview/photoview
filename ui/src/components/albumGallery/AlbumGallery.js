@@ -65,13 +65,24 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
         />
       )
     }
+  } else {
+    subAlbumElement = <AlbumBoxes loading={loading} />
   }
 
   return (
     <Layout>
       <AlbumTitle album={album} disableLink />
       {subAlbumElement}
-      {album && album.subAlbums.length > 0 && <h2>Images</h2>}
+      {
+        <h2
+          style={{
+            opacity: loading ? 0 : 1,
+            display: album && album.subAlbums.length > 0 ? 'block' : 'none',
+          }}
+        >
+          Images
+        </h2>
+      }
       <PhotoGallery
         loading={loading}
         photos={album && album.photos}

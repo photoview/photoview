@@ -139,3 +139,12 @@ Photo.propTypes = {
   active: PropTypes.bool.isRequired,
   setPresenting: PropTypes.func.isRequired,
 }
+
+export const PhotoThumbnail = styled.div`
+  flex-grow: 1;
+  height: 200px;
+  width: 300px;
+  margin: 4px;
+  background-color: #eee;
+  position: relative;
+`

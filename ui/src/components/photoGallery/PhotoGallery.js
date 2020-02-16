@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
-import { Photo } from './Photo'
+import { Photo, PhotoThumbnail } from './Photo'
 import { PresentContainer, PresentPhoto } from './PresentView'
 import PropTypes from 'prop-types'
 import { SidebarConsumer } from '../sidebar/Sidebar'
@@ -11,6 +11,8 @@ const Gallery = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  min-height: 200px;
+  position: relative;
 `
 
 const PhotoFiller = styled.div`
@@ -62,7 +64,7 @@ const PhotoGallery = ({
   const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
   const getPhotoElements = updateSidebar => {
-    let photoElements = null
+    let photoElements = []
     if (photos) {
       photos.filter(photo => photo.thumbnail)
 
@@ -91,6 +93,10 @@ const PhotoGallery = ({
           />
         )
       })
+    } else {
+      for (let i = 0; i < 6; i++) {
+        photoElements.push(<PhotoThumbnail />)
+      }
     }
 
     return photoElements
