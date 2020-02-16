@@ -14,22 +14,25 @@ const PhotoContainer = styled.div`
   position: relative;
 `
 
-const PhotoImg = photoProps => {
-  const StyledPhoto = styled(animated(ProtectedImage))`
-    height: 200px;
-    min-width: 100%;
-    position: relative;
-    object-fit: cover;
-  `
+const StyledPhoto = styled(ProtectedImage)`
+  height: 200px;
+  min-width: 100%;
+  position: relative;
+  object-fit: cover;
+  opacity: ${props => (props.loaded ? 1 : 0)};
 
-  const [props, set, stop] = useSpring(() => ({ opacity: 0 }))
+  transition: opacity 300ms;
+`
+
+const PhotoImg = photoProps => {
+  const [loaded, setLoaded] = useState(false)
 
   return (
     <StyledPhoto
       {...photoProps}
-      style={props}
+      loaded={loaded}
       onLoad={() => {
-        set({ opacity: 1 })
+        setLoaded(true)
       }}
     />
   )
