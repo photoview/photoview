@@ -20,7 +20,11 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter) ([]
 		return nil, err
 	}
 
-	rows, err := r.Database.Query("SELECT * FROM album WHERE owner_id = ? AND parent_album IS NULL"+filterSQL, user.UserID)
+	rows, err := r.Database.Query(`
+		SELECT * FROM album WHERE owner_id = ? AND parent_album = (
+			SELECT album_id FROM album WHERE parent_album IS NULL
+		)
+	`+filterSQL, user.UserID)
 	if err != nil {
 		return nil, err
 	}

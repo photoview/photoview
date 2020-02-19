@@ -25,6 +25,10 @@ func SetupDatabase() *sql.DB {
 		log.Fatalf("Could not parse mysql url: %s\n", err)
 	}
 
+	if address.String() == "" {
+		log.Fatalln("ERROR: Environment variable MYSQL_URL missing, exiting")
+	}
+
 	queryValues := address.Query()
 	queryValues.Add("multiStatements", "true")
 	queryValues.Add("parseTime", "true")
