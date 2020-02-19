@@ -29,6 +29,8 @@ func main() {
 		log.Println("No .env file found")
 	}
 
+	devMode := os.Getenv("DEVELOPMENT") == "1"
+
 	port := os.Getenv("API_LISTEN_PORT")
 	if port == "" {
 		port = defaultPort
@@ -71,12 +73,24 @@ func main() {
 	}
 
 	router.Route(endpointURL.Path, func(router chi.Router) {
-		router.Handle("/", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
-		router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
+		if devMode {
+			router.Handle("/", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
+		} else {
+			router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+				w.Write([]byte("photoview api endpoint"))
+			})
+		}
+
+		router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig), handler.IntrospectionEnabled(devMode)))
 
 		router.Mount("/photo", routes.PhotoRoutes(db))
 	})
 
-	log.Printf("🚀 Graphql playground ready at %s", endpointURL.String())
+	if devMode {
+		log.Printf("🚀 Graphql playground ready at %s", endpointURL.String())
+	} else {
+		log.Printf("Photoview API endpoint available at %s", endpointURL.String())
+	}
+
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
