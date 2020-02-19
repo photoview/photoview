@@ -52,7 +52,7 @@ const changeUserPasswordMutation = gql`
 `
 
 const scanUserMutation = gql`
-  mutation scanUser($userId: ID!) {
+  mutation scanUser($userId: Int!) {
     scanUser(userId: $userId) {
       success
     }
