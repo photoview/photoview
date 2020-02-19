@@ -49,6 +49,7 @@
     "isarray": "^2.0.5",
     "lint-staged": "^10.0.7",
     "parcel-plugin-sw-cache": "^0.3.1",
+    "react-helmet": "^5.2.1",
     "react-router-prop-types": "^1.0.4"
   },
   "cache": {

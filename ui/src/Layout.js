@@ -7,6 +7,7 @@ import Sidebar from './components/sidebar/Sidebar'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Authorized } from './AuthorizedRoute'
+import Helmet from 'react-helmet'
 
 const adminQuery = gql`
   query adminQuery {
@@ -90,52 +91,52 @@ const Title = styled.h1`
   padding: 5px 12px;
 `
 
-class Layout extends Component {
-  render() {
-    return (
-      <Container>
-        <Authorized>
-          <SideMenu>
-            <SideButton to="/photos" exact>
-              <Icon name="image outline" />
-              <SideButtonLabel>Photos</SideButtonLabel>
-            </SideButton>
-            <SideButton to="/albums" exact>
-              <Icon name="images outline" />
-              <SideButtonLabel>Albums</SideButtonLabel>
-            </SideButton>
-            <Query query={adminQuery}>
-              {({ loading, error, data }) => {
-                if (data && data.myUser && data.myUser.admin) {
-                  return (
-                    <SideButton to="/settings" exact>
-                      <Icon name="settings" />
-                      <SideButtonLabel>Settings</SideButtonLabel>
-                    </SideButton>
-                  )
-                }
+const Layout = ({ children, title }) => (
+  <Container>
+    <Helmet>
+      <title>{title ? `${title} - Photoview` : `Photoview`}</title>
+    </Helmet>
+    <Authorized>
+      <SideMenu>
+        <SideButton to="/photos" exact>
+          <Icon name="image outline" />
+          <SideButtonLabel>Photos</SideButtonLabel>
+        </SideButton>
+        <SideButton to="/albums" exact>
+          <Icon name="images outline" />
+          <SideButtonLabel>Albums</SideButtonLabel>
+        </SideButton>
+        <Query query={adminQuery}>
+          {({ loading, error, data }) => {
+            if (data && data.myUser && data.myUser.admin) {
+              return (
+                <SideButton to="/settings" exact>
+                  <Icon name="settings" />
+                  <SideButtonLabel>Settings</SideButtonLabel>
+                </SideButton>
+              )
+            }
 
-                return null
-              }}
-            </Query>
-          </SideMenu>
-        </Authorized>
-        <Sidebar>
-          <Content id="layout-content">
-            {this.props.children}
-            <div style={{ height: 24 }}></div>
-          </Content>
-        </Sidebar>
-        <Header>
-          <Title>Photoview</Title>
-        </Header>
-      </Container>
-    )
-  }
-}
+            return null
+          }}
+        </Query>
+      </SideMenu>
+    </Authorized>
+    <Sidebar>
+      <Content id="layout-content">
+        {children}
+        <div style={{ height: 24 }}></div>
+      </Content>
+    </Sidebar>
+    <Header>
+      <Title>Photoview</Title>
+    </Header>
+  </Container>
+)
 
 Layout.propTypes = {
   children: PropTypes.any.isRequired,
+  title: PropTypes.string,
 }
 
 export default Layout

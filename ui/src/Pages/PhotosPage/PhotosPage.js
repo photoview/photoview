@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Helmet } from 'react-helmet'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
@@ -87,7 +88,7 @@ class PhotosPage extends Component {
 
   render() {
     return (
-      <Layout>
+      <Layout title="Photos">
         <Query query={photoQuery}>
           {({ loading, error, data }) => {
             if (error) return error

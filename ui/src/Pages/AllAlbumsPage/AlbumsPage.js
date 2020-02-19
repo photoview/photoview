@@ -21,7 +21,7 @@ const getAlbumsQuery = gql`
 class AlbumsPage extends Component {
   render() {
     return (
-      <Layout>
+      <Layout title="Albums">
         <h1>Albums</h1>
         <Query query={getAlbumsQuery}>
           {({ loading, error, data }) => (

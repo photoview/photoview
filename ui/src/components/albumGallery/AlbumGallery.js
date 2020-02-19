@@ -70,7 +70,7 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
   }
 
   return (
-    <Layout>
+    <Layout title={album ? album.title : 'Loading album'}>
       <AlbumTitle album={album} disableLink />
       {subAlbumElement}
       {
