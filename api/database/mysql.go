@@ -5,12 +5,14 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"time"
 
 	// Load mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/mysql"
+
 	// Migrate from file
 	_ "github.com/golang-migrate/migrate/source/file"
 )
@@ -31,13 +33,40 @@ func SetupDatabase() *sql.DB {
 
 	log.Printf("Connecting to database: %s", address)
 
-	db, err := sql.Open("mysql", address.String())
-	if err != nil {
-		log.Fatalf("Could not connect to database: %s\n", err.Error())
+	var db *sql.DB
+	tryCount := 0
+
+	for {
+		db, err = sql.Open("mysql", address.String())
+		if err != nil {
+			if tryCount < 4 {
+				tryCount++
+				log.Printf("WARN: Could not connect to database: %s. Will retry after 1 second", err.Error())
+				time.Sleep(time.Second)
+				continue
+			} else {
+				log.Fatalln("ERROR: Could not connect to database, exiting")
+			}
+		}
+
+		break
 	}
 
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Could not connect to database: %s\n", err.Error())
+	tryCount = 0
+
+	for {
+		if err := db.Ping(); err != nil {
+			if tryCount < 4 {
+				tryCount++
+				log.Printf("Could not ping database: %s. Will retry after 1 second", err.Error())
+				time.Sleep(time.Second)
+				continue
+			} else {
+				log.Fatalln("ERROR: Could not ping database, exiting")
+			}
+		}
+
+		break
 	}
 
 	db.SetMaxOpenConns(24)

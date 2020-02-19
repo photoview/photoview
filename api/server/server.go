@@ -3,9 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
@@ -26,7 +29,7 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	port := os.Getenv("API_PORT")
+	port := os.Getenv("API_LISTEN_PORT")
 	if port == "" {
 		port = defaultPort
 	}
@@ -41,6 +44,8 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(db))
+
+	router.Use(middleware.Logger)
 
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:4001", "http://localhost:1234", "*"},
@@ -59,11 +64,19 @@ func main() {
 		Directives: graphqlDirective,
 	}
 
-	router.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
-	router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
+	endpointURL, err := url.Parse(os.Getenv("API_ENDPOINT"))
+	if err != nil {
+		log.Println("WARN: Environment variable API_ENDPOINT not specified")
+		endpointURL, _ = url.Parse("/")
+	}
 
-	router.Mount("/photo", routes.PhotoRoutes(db))
+	router.Route(endpointURL.Path, func(router chi.Router) {
+		router.Handle("/", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
+		router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig)))
 
-	log.Printf("🚀 Graphql playground ready at http://localhost:%s/", port)
+		router.Mount("/photo", routes.PhotoRoutes(db))
+	})
+
+	log.Printf("🚀 Graphql playground ready at %s", endpointURL.String())
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

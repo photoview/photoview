@@ -1,33 +1,32 @@
-version: '3'
+version: "3"
 
 services:
-  neo4j:
-    build: ./docker/neo4j
-    expose:
-      - 7474
-      - 7687
+  db:
+    image: mariadb
+    restart: always
     environment:
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_dbms_shell_enabled=true
+      - MYSQL_DATABASE=photoview
+      - MYSQL_USER=photoview
+      - MYSQL_PASSWORD=photo-secret
+      - MYSQL_RANDOM_ROOT_PASSWORD=1
     volumes:
-      - db_data:/data
+      - db_data:/var/lib/mysql
 
   api:
     build: ./api
+    restart: always
     expose:
       - 80
     depends_on:
-    - neo4j
+      - db
     environment:
-      - NEO4J_URI=bolt://neo4j:7687
+      - MYSQL_URL=photoview:photo-secret@tcp(db)/photoview
       - PHOTO_CACHE=/app/cache
       # Change This: The publicly exposed url for the api
       # For example if the server is available from the domain example.com,
       # change this value to http://example.com/api
       - API_ENDPOINT=http://localhost:8080/api
-      - GRAPHQL_LISTEN_PORT=80
+      - API_LISTEN_PORT=80
     volumes:
       # Change This: Link photo paths from the host machine
       # Change this to the directory where your photos are located on your server.
@@ -45,6 +44,7 @@ services:
         # For example if the server is available from the domain example.com,
         # change this value to http://example.com/api/graphql
         GRAPHQL_ENDPOINT: http://localhost:8080/api/graphql
+    restart: always
     expose:
       - 80
     depends_on:
@@ -52,6 +52,7 @@ services:
 
   proxy:
     image: nginx
+    restart: always
     volumes:
       - ./docker/nginx-proxy/default.conf:/etc/nginx/conf.d/default.conf
     ports:
