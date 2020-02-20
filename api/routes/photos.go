@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
@@ -27,6 +28,28 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 		if err := row.Scan(&purpose, &path, &photo_id, &album_id, &content_type); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
+			return
+		}
+
+		user := auth.UserFromContext(r.Context())
+		if user != nil {
+			row := db.QueryRow("SELECT owner_id FROM album WHERE album.album_id = ?", album_id)
+			var owner_id int
+
+			if err := row.Scan(&owner_id); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				return
+			}
+
+			if owner_id != user.UserID {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("invalid credentials"))
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("unauthorized"))
 			return
 		}
 
