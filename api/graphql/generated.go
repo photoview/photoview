@@ -120,7 +120,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Album      func(childComplexity int, id int) int
-		MyAlbums   func(childComplexity int, filter *models.Filter) int
+		MyAlbums   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
 		MyPhotos   func(childComplexity int, filter *models.Filter) int
 		MyUser     func(childComplexity int) int
 		Photo      func(childComplexity int, id int) int
@@ -191,7 +191,7 @@ type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
 	User(ctx context.Context, filter *models.Filter) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
-	MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error)
+	MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool) ([]*models.Album, error)
 	Album(ctx context.Context, id int) (*models.Album, error)
 	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
 	Photo(ctx context.Context, id int) (*models.Photo, error)
@@ -637,7 +637,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool)), true
 
 	case "Query.myPhotos":
 		if e.complexity.Query.MyPhotos == nil {
@@ -892,8 +892,14 @@ type Query {
   "Information about the currently logged in user"
   myUser: User!
 
-  "List of albums owned by the logged in user"
-  myAlbums(filter: Filter): [Album!]!
+  "List of albums owned by the logged in user."
+  myAlbums(
+    filter: Filter
+    "Return only albums from the root directory of the user"
+    onlyRoot: Boolean
+    "Return also albums with no photos directly in them"
+    showEmpty: Boolean
+  ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
 
@@ -1399,6 +1405,22 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 		}
 	}
 	args["filter"] = arg0
+	var arg1 *bool
+	if tmp, ok := rawArgs["onlyRoot"]; ok {
+		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyRoot"] = arg1
+	var arg2 *bool
+	if tmp, ok := rawArgs["showEmpty"]; ok {
+		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["showEmpty"] = arg2
 	return args, nil
 }
 
@@ -3537,7 +3559,7 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter))
+		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

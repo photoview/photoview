@@ -6,7 +6,7 @@ import { Query } from 'react-apollo'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {
-    myAlbums(filter: { order_by: "title" }) {
+    myAlbums(filter: { order_by: "title" }, onlyRoot: true, showEmpty: true) {
       id
       title
       thumbnail {

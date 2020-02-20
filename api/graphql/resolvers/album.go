@@ -9,7 +9,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter) ([]*models.Album, error) {
+func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool) ([]*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -20,13 +20,27 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter) ([]
 		return nil, err
 	}
 
-	rows, err := r.Database.Query(`
-		SELECT * FROM album WHERE owner_id = ? AND parent_album = (
-			SELECT album_id FROM album WHERE parent_album IS NULL
-		)
-	`+filterSQL, user.UserID)
-	if err != nil {
-		return nil, err
+	var rows *sql.Rows
+
+	filterEmpty := " AND EXISTS (SELECT * FROM photo WHERE album_id = album.album_id) "
+	if showEmpty != nil && *showEmpty == true {
+		filterEmpty = ""
+	}
+
+	if onlyRoot == nil || *onlyRoot == false {
+		rows, err = r.Database.Query("SELECT * FROM album WHERE owner_id = ?"+filterEmpty+filterSQL, user.UserID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		rows, err = r.Database.Query(`
+			SELECT * FROM album WHERE owner_id = ? AND parent_album = (
+				SELECT album_id FROM album WHERE parent_album IS NULL
+			)
+		`+filterEmpty+filterSQL, user.UserID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	albums, err := models.NewAlbumsFromRows(rows)

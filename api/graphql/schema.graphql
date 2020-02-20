@@ -22,8 +22,14 @@ type Query {
   "Information about the currently logged in user"
   myUser: User!
 
-  "List of albums owned by the logged in user"
-  myAlbums(filter: Filter): [Album!]!
+  "List of albums owned by the logged in user."
+  myAlbums(
+    filter: Filter
+    "Return only albums from the root directory of the user"
+    onlyRoot: Boolean
+    "Return also albums with no photos directly in them"
+    showEmpty: Boolean
+  ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
 
