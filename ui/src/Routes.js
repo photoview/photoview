@@ -31,6 +31,12 @@ class Routes extends React.Component {
       >
         <Switch>
           <Route path="/login" component={LoginPage} />
+          <Route path="/logout">
+            {() => {
+              localStorage.removeItem('token')
+              location.href = '/'
+            }}
+          </Route>
           <Route path="/initialSetup" component={InitialSetupPage} />
           <Route path="/share" component={SharePage} />
           <AuthorizedRoute exact path="/albums" component={AlbumsPage} />

@@ -39,32 +39,32 @@ const Content = styled.div`
   overflow-y: scroll;
 `
 
+const SideButtonLink = styled(NavLink)`
+  text-align: center;
+  padding-top: 8px;
+  padding-left: 2px;
+  display: block;
+  width: 60px;
+  height: 60px;
+  margin: 10px;
+  margin-bottom: 24px;
+
+  font-size: 28px;
+
+  color: #888;
+
+  transition: transform 200ms, box-shadow 200ms;
+
+  :hover {
+    transform: scale(1.02);
+  }
+`
+
 const SideButton = props => {
-  const StyledLink = styled(NavLink)`
-    text-align: center;
-    padding-top: 8px;
-    padding-left: 2px;
-    display: block;
-    width: 60px;
-    height: 60px;
-    margin: 10px;
-    margin-bottom: 24px;
-
-    font-size: 28px;
-
-    color: #888;
-
-    transition: transform 200ms, box-shadow 200ms;
-
-    :hover {
-      transform: scale(1.02);
-    }
-  `
-
   return (
-    <StyledLink {...props} activeStyle={{ color: '#4183c4' }}>
+    <SideButtonLink {...props} activeStyle={{ color: '#4183c4' }}>
       {props.children}
-    </StyledLink>
+    </SideButtonLink>
   )
 }
 
@@ -120,6 +120,10 @@ const Layout = ({ children, title }) => (
             return null
           }}
         </Query>
+        <SideButton to="/logout">
+          <Icon name="lock" />
+          <SideButtonLabel>Log out</SideButtonLabel>
+        </SideButton>
       </SideMenu>
     </Authorized>
     <Sidebar>
