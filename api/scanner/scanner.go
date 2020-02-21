@@ -13,6 +13,8 @@ import (
 
 	"github.com/h2non/filetype"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/graphql/notification"
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 type scanner_cache map[string]interface{}
@@ -75,6 +77,16 @@ func ScanUser(database *sql.DB, userId int) error {
 }
 
 func scan(database *sql.DB, user *models.User) {
+
+	notifyKey := utils.GenerateToken()
+
+	notification.BroadcastNotification(&models.Notification{
+		Key:     notifyKey,
+		Type:    models.NotificationTypeMessage,
+		Header:  "User scan started",
+		Content: "Scanning has started...",
+	})
+
 	// Start scanning
 	scanner_cache := make(scanner_cache)
 	album_paths_scanned := make([]interface{}, 0)
@@ -178,6 +190,14 @@ func scan(database *sql.DB, user *models.User) {
 	}
 
 	cleanupCache(database, album_paths_scanned, user)
+
+	notification.BroadcastNotification(&models.Notification{
+		Key:      notifyKey,
+		Type:     models.NotificationTypeMessage,
+		Header:   "User scan completed",
+		Content:  "Scanning has been completed...",
+		Positive: true,
+	})
 
 	log.Println("Done scanning")
 }

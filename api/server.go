@@ -45,10 +45,9 @@ func main() {
 	}
 
 	rootRouter := mux.NewRouter()
+
 	rootRouter.Use(auth.Middleware(db))
-
-	// router.Use(middleware.Logger)
-
+	rootRouter.Use(server.LoggingMiddleware)
 	rootRouter.Use(server.CORSMiddleware(devMode))
 
 	graphqlResolver := resolvers.Resolver{Database: db}

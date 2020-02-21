@@ -38,34 +38,57 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
 
     if (!data) return
 
-    const update = data.scannerStatusUpdate
     const newMessages = [...messages]
 
-    if (update.success) {
-      newMessages[0] = {
-        key: 'primary',
-        type: 'progress',
-        props: {
-          header: update.finished ? 'Synced' : 'Syncing',
-          content: update.message,
-          percent: update.progress,
-          positive: update.finished,
-        },
-      }
+    const msg = data.notification
 
-      if (!update.finished) newMessages[0].props.onDismiss = null
-    } else {
-      const key = Math.random().toString(26)
-      newMessages.push({
-        key,
-        type: 'message',
-        props: {
-          header: 'Sync error',
-          content: update.message,
-          negative: true,
-        },
-      })
+    const newNotification = {
+      key: msg.key,
+      type: msg.type.toLowerCase(),
+      props: {
+        header: msg.header,
+        content: msg.content,
+        negative: msg.negative,
+        positive: msg.positive,
+      },
     }
+
+    const notifyIndex = newMessages.findIndex(
+      msg => msg.key == newNotification.key
+    )
+    if (notifyIndex != -1) {
+      newMessages[notifyIndex] = newNotification
+    } else {
+      newMessages.push(newNotification)
+    }
+
+    // const update = data.scannerStatusUpdate
+
+    // if (update.success) {
+    //   newMessages[0] = {
+    //     key: 'primary',
+    //     type: 'progress',
+    //     props: {
+    //       header: update.finished ? 'Synced' : 'Syncing',
+    //       content: update.message,
+    //       percent: update.progress,
+    //       positive: update.finished,
+    //     },
+    //   }
+
+    //   if (!update.finished) newMessages[0].props.onDismiss = null
+    // } else {
+    //   const key = Math.random().toString(26)
+    //   newMessages.push({
+    //     key,
+    //     type: 'message',
+    //     props: {
+    //       header: 'Sync error',
+    //       content: update.message,
+    //       negative: true,
+    //     },
+    //   })
+    // }
 
     setMessages(newMessages)
   }, [data, error])

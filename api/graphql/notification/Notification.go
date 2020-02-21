@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type NotificationChannel = <-chan *models.Notification
+type NotificationChannel = chan<- *models.Notification
 
 type NotificationListener struct {
 	listenerID int
@@ -44,6 +44,9 @@ func DeregisterListener(listenerID int) error {
 	defer notificationLock.Unlock()
 
 	for i, listener := range notificationListeners {
+
+		log.Println("Deregistering notification listener")
+
 		if listener.listenerID == listenerID {
 
 			if len(notificationListeners) > 1 {
@@ -61,4 +64,17 @@ func DeregisterListener(listenerID int) error {
 	}
 
 	return errors.New("ListenerID not found, while trying to deregister it")
+}
+
+func BroadcastNotification(notification *models.Notification) {
+
+	log.Println("Broadcasting notification")
+
+	notificationLock.Lock()
+	defer notificationLock.Unlock()
+
+	for _, listener := range notificationListeners {
+		listener.channel <- notification
+	}
+
 }
