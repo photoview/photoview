@@ -28,6 +28,11 @@ const tokenQuery = gql`
   fragment AlbumProps on Album {
     id
     title
+    thumbnail {
+      thumbnail {
+        url
+      }
+    }
     photos(filter: { order_by: "title", order_direction: DESC }) {
       ...PhotoProps
     }

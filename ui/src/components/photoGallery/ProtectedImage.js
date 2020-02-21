@@ -43,7 +43,18 @@ const ProtectedImage = ({ src, ...props }) => {
 
     setImgSrc('')
 
-    fetchProtectedImage(src, { signal: fetchController.signal })
+    const imgUrl = new URL(src)
+    if (localStorage.getItem('token') == null) {
+      // Get share token if not authorized
+
+      const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+      console.log('share token', location.pathname, token)
+      if (token) {
+        imgUrl.searchParams.set('token', token[1])
+      }
+    }
+
+    fetchProtectedImage(imgUrl.href, { signal: fetchController.signal })
       .then(newSrc => {
         if (!canceled) {
           setImgSrc(newSrc)

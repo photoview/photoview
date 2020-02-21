@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -37,6 +38,7 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 			var owner_id int
 
 			if err := row.Scan(&owner_id); err != nil {
+				log.Printf("WARN: %s", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("internal server error"))
 				return
@@ -48,9 +50,55 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 				return
 			}
 		} else {
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte("unauthorized"))
-			return
+
+			token := r.URL.Query().Get("token")
+			if token == "" {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("unauthorized"))
+				return
+			}
+
+			row := db.QueryRow("SELECT * FROM share_token WHERE value = ?", token)
+
+			shareToken, err := models.NewShareTokenFromRow(row)
+			if err != nil {
+				log.Printf("WARN: %s", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				return
+			}
+
+			if shareToken.AlbumID != nil && album_id != *shareToken.AlbumID {
+				// Check child albums
+				row := db.QueryRow(`
+					WITH recursive child_albums AS (
+						SELECT * FROM album WHERE parent_album = ?
+						UNION ALL
+						SELECT child.* FROM album child JOIN child_albums parent ON parent.album_id = child.parent_album
+					)
+					SELECT * FROM child_albums WHERE album_id = ?
+				`, *shareToken.AlbumID, album_id)
+
+				_, err := models.NewAlbumFromRow(row)
+				if err != nil {
+					if err == sql.ErrNoRows {
+						w.WriteHeader(http.StatusForbidden)
+						w.Write([]byte("unauthorized"))
+						return
+					}
+					log.Printf("WARN: %s", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("internal server error"))
+					return
+				}
+			}
+
+			if shareToken.PhotoID != nil && photo_id != *shareToken.PhotoID {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("unauthorized"))
+				return
+			}
+
 		}
 
 		w.Header().Set("Content-Type", content_type)

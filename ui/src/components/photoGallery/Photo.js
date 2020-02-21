@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { useSpring, animated } from 'react-spring'
 import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
 import ProtectedImage from './ProtectedImage'
