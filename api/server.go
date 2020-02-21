@@ -9,8 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	// "github.com/go-chi/chi/middleware"
-	// "github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
 	"github.com/viktorstrate/photoview/api/database"
@@ -53,14 +51,6 @@ func main() {
 
 	rootRouter.Use(server.CORSMiddleware(devMode))
 
-	// router.Use(cors.New(cors.Options{
-	// 	AllowedOrigins:   []string{"http://localhost:4001", "http://localhost:1234", "*"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-	// 	AllowCredentials: true,
-	// 	Debug:            false,
-	// }).Handler)
-
 	graphqlResolver := resolvers.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
 	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
@@ -86,7 +76,13 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig), handler.IntrospectionEnabled(devMode)))
+	endpointRouter.Handle("/graphql",
+		handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig),
+			handler.IntrospectionEnabled(devMode),
+			handler.WebsocketUpgrader(server.WebsocketUpgrader(devMode)),
+			handler.WebsocketInitFunc(auth.AuthWebsocketInit(db)),
+		),
+	)
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)

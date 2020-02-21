@@ -3,19 +3,22 @@ import PropTypes from 'prop-types'
 import { useSubscription } from 'react-apollo'
 import gql from 'graphql-tag'
 
-const syncSubscription = gql`
-  subscription syncSubscription {
-    scannerStatusUpdate {
-      finished
-      success
-      message
+const notificationSubscription = gql`
+  subscription notificationSubscription {
+    notification {
+      key
+      type
+      header
+      content
       progress
+      positive
+      negative
     }
   }
 `
 
 const SubscriptionsHook = ({ messages, setMessages }) => {
-  const { data, error } = useSubscription(syncSubscription)
+  const { data, error } = useSubscription(notificationSubscription)
 
   useEffect(() => {
     if (error) {

@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -15,7 +14,6 @@ func (filter *Filter) FormatSQL() (string, error) {
 	result := ""
 
 	if filter.Limit != nil {
-		log.Println("Limit")
 		offset := 0
 		if filter.Offset != nil && *filter.Offset >= 0 {
 			offset = *filter.Offset
@@ -25,7 +23,6 @@ func (filter *Filter) FormatSQL() (string, error) {
 	}
 
 	if filter.OrderBy != nil {
-		log.Println("Order by")
 		order_by := filter.OrderBy
 		match, err := regexp.MatchString("^(\\w+(,\\s*))*\\w+$", strings.TrimSpace(*filter.OrderBy))
 		if err != nil {
@@ -42,6 +39,6 @@ func (filter *Filter) FormatSQL() (string, error) {
 		}
 	}
 
-	log.Printf("Filter: " + result)
+	// log.Printf("Filter: " + result)
 	return result, nil
 }
