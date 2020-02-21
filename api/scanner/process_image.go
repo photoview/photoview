@@ -27,7 +27,7 @@ import (
 
 func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string) error {
 
-	log.Printf("Processing image: %s\n", photoPath)
+	// log.Printf("Processing image: %s\n", photoPath)
 
 	photoName := path.Base(photoPath)
 

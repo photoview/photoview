@@ -42,6 +42,8 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 
 			if req.Method != http.MethodOptions {
 				next.ServeHTTP(w, req)
+			} else {
+				w.WriteHeader(200)
 			}
 		})
 	}

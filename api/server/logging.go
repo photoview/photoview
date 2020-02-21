@@ -37,13 +37,26 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			statusColor = color.Colorize("r")
 		}
 
+		method := r.Method
+		var methodColor string
+		switch {
+		case method == http.MethodGet:
+			methodColor = color.Colorize("b")
+		case method == http.MethodPost:
+			methodColor = color.Colorize("g")
+		case method == http.MethodOptions:
+			methodColor = color.Colorize("y")
+		default:
+			methodColor = color.Colorize("r")
+		}
+
 		user := auth.UserFromContext(r.Context())
 		userText := "unauthenticated"
 		if user != nil {
 			userText = color.Sprintf("@ruser: %s", user.Username)
 		}
 
-		statusText := color.Sprintf("%s%s %d", statusColor, r.Method, status)
+		statusText := color.Sprintf("%s%s %s%d", methodColor, r.Method, statusColor, status)
 		requestText := fmt.Sprintf("%s%s", r.Host, r.URL.Path)
 		durationText := color.Sprintf("@c%s", elapsed)
 
