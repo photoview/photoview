@@ -8,15 +8,16 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi"
+	"github.com/gorilla/mux"
+
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func PhotoRoutes(db *sql.DB) chi.Router {
-	router := chi.NewRouter()
-	router.Get("/{name}", func(w http.ResponseWriter, r *http.Request) {
-		image_name := chi.URLParam(r, "name")
+func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
+
+	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
+		image_name := mux.Vars(r)["name"]
 
 		row := db.QueryRow("SELECT photo_url.purpose, photo.path, photo.photo_id, photo.album_id, photo_url.content_type FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
 
@@ -129,6 +130,4 @@ func PhotoRoutes(db *sql.DB) chi.Router {
 
 		io.Copy(w, file)
 	})
-
-	return router
 }

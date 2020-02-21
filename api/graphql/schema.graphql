@@ -85,6 +85,25 @@ type Mutation {
   deleteUser(id: Int!): User @isAdmin
 }
 
+type Subscription {
+  notification: Notification!
+}
+
+enum NotificationType {
+  Message
+  Progress
+}
+
+type Notification {
+  key: String!
+  type: NotificationType!
+  header: String!
+  content: String!
+  progress: Float
+  positive: Boolean!
+  negative: Boolean!
+}
+
 type AuthorizeResult {
   success: Boolean!
   status: String!

@@ -22,9 +22,19 @@ func (r *Resolver) Query() api.QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *Resolver) Subscription() api.SubscriptionResolver {
+	return &subscriptionResolver{
+		Resolver: r,
+	}
+}
+
 type mutationResolver struct{ *Resolver }
 
 type queryResolver struct{ *Resolver }
+
+type subscriptionResolver struct {
+	Resolver *Resolver
+}
 
 func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {
 	return models.GetSiteInfo(r.Database)

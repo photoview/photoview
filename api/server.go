@@ -7,14 +7,16 @@ import (
 	"os"
 	"path"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/cors"
+	"github.com/gorilla/mux"
+
+	// "github.com/go-chi/chi/middleware"
+	// "github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
 	"github.com/viktorstrate/photoview/api/database"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/routes"
+	"github.com/viktorstrate/photoview/api/server"
 
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
@@ -44,18 +46,20 @@ func main() {
 		log.Fatalf("Could not migrate database: %s\n", err)
 	}
 
-	router := chi.NewRouter()
-	router.Use(auth.Middleware(db))
+	rootRouter := mux.NewRouter()
+	rootRouter.Use(auth.Middleware(db))
 
-	router.Use(middleware.Logger)
+	// router.Use(middleware.Logger)
 
-	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:4001", "http://localhost:1234", "*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-		AllowCredentials: true,
-		Debug:            false,
-	}).Handler)
+	rootRouter.Use(server.CORSMiddleware(devMode))
+
+	// router.Use(cors.New(cors.Options{
+	// 	AllowedOrigins:   []string{"http://localhost:4001", "http://localhost:1234", "*"},
+	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+	// 	AllowCredentials: true,
+	// 	Debug:            false,
+	// }).Handler)
 
 	graphqlResolver := resolvers.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
@@ -72,19 +76,20 @@ func main() {
 		endpointURL, _ = url.Parse("/")
 	}
 
-	router.Route(endpointURL.Path, func(router chi.Router) {
-		if devMode {
-			router.Handle("/", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
-		} else {
-			router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-				w.Write([]byte("photoview api endpoint"))
-			})
-		}
+	endpointRouter := rootRouter.PathPrefix(endpointURL.Path).Subrouter()
 
-		router.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig), handler.IntrospectionEnabled(devMode)))
+	if devMode {
+		endpointRouter.Handle("/", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
+	} else {
+		endpointRouter.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+			w.Write([]byte("photoview api endpoint"))
+		})
+	}
 
-		router.Mount("/photo", routes.PhotoRoutes(db))
-	})
+	endpointRouter.Handle("/graphql", handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig), handler.IntrospectionEnabled(devMode)))
+
+	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
+	routes.RegisterPhotoRoutes(db, photoRouter)
 
 	if devMode {
 		log.Printf("🚀 Graphql playground ready at %s", endpointURL.String())
@@ -92,5 +97,5 @@ func main() {
 		log.Printf("Photoview API endpoint available at %s", endpointURL.String())
 	}
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(":"+port, rootRouter))
 }

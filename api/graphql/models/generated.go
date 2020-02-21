@@ -22,6 +22,16 @@ type Filter struct {
 	Offset         *int            `json:"offset"`
 }
 
+type Notification struct {
+	Key      string           `json:"key"`
+	Type     NotificationType `json:"type"`
+	Header   string           `json:"header"`
+	Content  string           `json:"content"`
+	Progress *float64         `json:"progress"`
+	Positive bool             `json:"positive"`
+	Negative bool             `json:"negative"`
+}
+
 type PhotoDownload struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
@@ -61,6 +71,47 @@ type ScannerResult struct {
 // General public information about the site
 type SiteInfo struct {
 	InitialSetup bool `json:"initialSetup"`
+}
+
+type NotificationType string
+
+const (
+	NotificationTypeMessage  NotificationType = "Message"
+	NotificationTypeProgress NotificationType = "Progress"
+)
+
+var AllNotificationType = []NotificationType{
+	NotificationTypeMessage,
+	NotificationTypeProgress,
+}
+
+func (e NotificationType) IsValid() bool {
+	switch e {
+	case NotificationTypeMessage, NotificationTypeProgress:
+		return true
+	}
+	return false
+}
+
+func (e NotificationType) String() string {
+	return string(e)
+}
+
+func (e *NotificationType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = NotificationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid NotificationType", str)
+	}
+	return nil
+}
+
+func (e NotificationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type OrderDirection string
