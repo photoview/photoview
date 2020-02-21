@@ -37,7 +37,7 @@ $ git clone https://github.com/viktorstrate/photoview
 $ cd photoview
 ```
 
-2. Duplicate `docker-compose.proxy-example.yml` and name the new file `docker-compose.yml`
+2. Duplicate `docker-compose.example.yml` and name the new file `docker-compose.yml`
 3. Edit `docker-compose.yml`, find the comments starting with `Change This:`, and change the values, to properly match your setup.
 4. Start the server by running the following command, inside the `photoview` directory
 
