@@ -48,7 +48,6 @@ const ProtectedImage = ({ src, ...props }) => {
       // Get share token if not authorized
 
       const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-      console.log('share token', location.pathname, token)
       if (token) {
         imgUrl.searchParams.set('token', token[1])
       }

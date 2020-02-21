@@ -14,11 +14,13 @@ import (
 func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
 			methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-			headers := []string{"authorization", "content-type"}
+			headers := []string{"authorization", "content-type", "content-length"}
 
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+			w.Header().Set("Access-Control-Expose-Headers", "content-length")
 
 			endpoint, err := url.Parse(os.Getenv("API_ENDPOINT"))
 			if err != nil {

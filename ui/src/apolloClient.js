@@ -59,7 +59,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors.length == 1) {
       errorMessages.push({
         header: 'Something went wrong',
-        content: graphQLErrors[0].message,
+        content: `Server error: ${graphQLErrors[0].message} at (${graphQLErrors[0].path})`,
       })
     } else if (graphQLErrors.length > 1) {
       errorMessages.push({

@@ -177,6 +177,8 @@ type PhotoURL {
 
 type PhotoDownload {
   title: String!
+  width: Int!
+  height: Int!
   url: String!
 }
 

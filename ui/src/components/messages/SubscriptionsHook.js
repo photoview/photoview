@@ -18,6 +18,10 @@ const notificationSubscription = gql`
 `
 
 const SubscriptionsHook = ({ messages, setMessages }) => {
+  if (!localStorage.getItem('token')) {
+    return null
+  }
+
   const { data, error } = useSubscription(notificationSubscription)
 
   useEffect(() => {
@@ -61,34 +65,6 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
     } else {
       newMessages.push(newNotification)
     }
-
-    // const update = data.scannerStatusUpdate
-
-    // if (update.success) {
-    //   newMessages[0] = {
-    //     key: 'primary',
-    //     type: 'progress',
-    //     props: {
-    //       header: update.finished ? 'Synced' : 'Syncing',
-    //       content: update.message,
-    //       percent: update.progress,
-    //       positive: update.finished,
-    //     },
-    //   }
-
-    //   if (!update.finished) newMessages[0].props.onDismiss = null
-    // } else {
-    //   const key = Math.random().toString(26)
-    //   newMessages.push({
-    //     key,
-    //     type: 'message',
-    //     props: {
-    //       header: 'Sync error',
-    //       content: update.message,
-    //       negative: true,
-    //     },
-    //   })
-    // }
 
     setMessages(newMessages)
   }, [data, error])

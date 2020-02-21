@@ -46,6 +46,12 @@ const tokenQuery = gql`
       width
       height
     }
+    downloads {
+      title
+      url
+      width
+      height
+    }
     highRes {
       url
     }

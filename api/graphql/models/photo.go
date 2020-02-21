@@ -79,3 +79,17 @@ func NewPhotoURLFromRow(row *sql.Row) (*PhotoURL, error) {
 
 	return &url, nil
 }
+
+func NewPhotoURLFromRows(rows *sql.Rows) ([]*PhotoURL, error) {
+	urls := make([]*PhotoURL, 0)
+
+	for rows.Next() {
+		var url PhotoURL
+		if err := rows.Scan(&url.UrlID, &url.PhotoId, &url.PhotoName, &url.Width, &url.Height, &url.Purpose, &url.ContentType); err != nil {
+			return nil, err
+		}
+		urls = append(urls, &url)
+	}
+
+	return urls, nil
+}

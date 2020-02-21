@@ -93,7 +93,7 @@ const SidebarContent = ({ photo, hidePreview }) => {
       {!hidePreview && <PreviewImage src={previewUrl} />}
       <Name>{photo && photo.title}</Name>
       <div>{exifItems}</div>
-      <SidebarDownload photoId={photo.id} />
+      <SidebarDownload photo={photo} />
       <SidebarShare photo={photo} />
     </div>
   )

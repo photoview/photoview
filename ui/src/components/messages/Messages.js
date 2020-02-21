@@ -17,17 +17,22 @@ export let MessageState = {
   set: null,
   get: null,
   add: message => {
-    MessageState.set(messages => [...messages, message])
+    MessageState.set(messages => {
+      const newMessages = messages.filter(msg => msg.key != message.key)
+      newMessages.push(message)
+
+      return newMessages
+    })
+  },
+  removeKey: key => {
+    MessageState.set(messages => {
+      const newMessages = messages.filter(msg => msg.key != key)
+      return newMessages
+    })
   },
 }
 
 const Messages = () => {
-  if (!localStorage.getItem('token')) {
-    return null
-  }
-
-  console.log('Rendering messages')
-
   const [messages, setMessages] = useState([])
   MessageState.set = setMessages
   MessageState.get = messages
@@ -76,7 +81,6 @@ const Messages = () => {
       resolveFunc = resolve
     })
 
-    console.log(resolveFunc, waitPromise)
     refHooks.set(message.key, {
       done: resolveFunc,
       promise: waitPromise,
@@ -89,13 +93,8 @@ const Messages = () => {
       height: '0px',
     },
     enter: item => async next => {
-      console.log('HERE', refMap, item)
-
       const refPromise = refHooks.get(item.key).promise
-      console.log('promise', refPromise)
-
       await refPromise
-      console.log('AFTER PROMISE', refMap, item)
 
       await next({
         opacity: 1,
@@ -109,7 +108,6 @@ const Messages = () => {
     <Container>
       {transitions.map(({ item, props: style, key }) => {
         const getRef = ref => {
-          console.log('GET REF', refMap, refHooks, item.key)
           refMap.set(item, ref)
           if (refHooks.has(item.key)) {
             refHooks.get(item.key).done()

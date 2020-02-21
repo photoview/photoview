@@ -106,8 +106,10 @@ type ComplexityRoot struct {
 	}
 
 	PhotoDownload struct {
-		Title func(childComplexity int) int
-		URL   func(childComplexity int) int
+		Height func(childComplexity int) int
+		Title  func(childComplexity int) int
+		URL    func(childComplexity int) int
+		Width  func(childComplexity int) int
 	}
 
 	PhotoExif struct {
@@ -571,6 +573,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Photo.Title(childComplexity), true
 
+	case "PhotoDownload.height":
+		if e.complexity.PhotoDownload.Height == nil {
+			break
+		}
+
+		return e.complexity.PhotoDownload.Height(childComplexity), true
+
 	case "PhotoDownload.title":
 		if e.complexity.PhotoDownload.Title == nil {
 			break
@@ -584,6 +593,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhotoDownload.URL(childComplexity), true
+
+	case "PhotoDownload.width":
+		if e.complexity.PhotoDownload.Width == nil {
+			break
+		}
+
+		return e.complexity.PhotoDownload.Width(childComplexity), true
 
 	case "PhotoEXIF.aperture":
 		if e.complexity.PhotoExif.Aperture == nil {
@@ -1151,6 +1167,8 @@ type PhotoURL {
 
 type PhotoDownload {
   title: String!
+  width: Int!
+  height: Int!
   url: String!
 }
 
@@ -3250,6 +3268,80 @@ func (ec *executionContext) _PhotoDownload_title(ctx context.Context, field grap
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoDownload_width(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PhotoDownload_height(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PhotoDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PhotoDownload_url(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
@@ -6399,6 +6491,16 @@ func (ec *executionContext) _PhotoDownload(ctx context.Context, sel ast.Selectio
 			out.Values[i] = graphql.MarshalString("PhotoDownload")
 		case "title":
 			out.Values[i] = ec._PhotoDownload_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "width":
+			out.Values[i] = ec._PhotoDownload_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "height":
+			out.Values[i] = ec._PhotoDownload_height(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

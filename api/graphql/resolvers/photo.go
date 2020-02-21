@@ -69,8 +69,39 @@ func (r *photoResolver) Shares(ctx context.Context, obj *models.Photo) ([]*model
 }
 
 func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error) {
-	log.Println("Photo: downloads not implemented")
+
+	rows, err := r.Database.Query("SELECT * FROM photo_url WHERE photo_id = ?", obj.PhotoID)
+	if err != nil {
+		return nil, err
+	}
+
+	photoUrls, err := models.NewPhotoURLFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
 	downloads := make([]*models.PhotoDownload, 0)
+
+	for _, url := range photoUrls {
+
+		var title string
+		switch {
+		case url.Purpose == models.PhotoOriginal:
+			title = "Original"
+		case url.Purpose == models.PhotoThumbnail:
+			title = "Small"
+		case url.Purpose == models.PhotoHighRes:
+			title = "Large"
+		}
+
+		downloads = append(downloads, &models.PhotoDownload{
+			Title:  title,
+			Width:  url.Width,
+			Height: url.Height,
+			URL:    url.URL(),
+		})
+	}
+
 	return downloads, nil
 }
 
