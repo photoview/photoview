@@ -1,9 +1,9 @@
 FROM golang:latest
 
-WORKDIR /go/src/app
+WORKDIR /app
 COPY . .
 
 RUN go get -d -v ./...
-RUN go install -v ./...
+RUN go build -o photoview .
 
-CMD ["server"]
+CMD ["/app/photoview"]
