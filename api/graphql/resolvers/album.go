@@ -35,9 +35,9 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	} else {
 		rows, err = r.Database.Query(`
 			SELECT * FROM album WHERE owner_id = ? AND parent_album = (
-				SELECT album_id FROM album WHERE parent_album IS NULL
+				SELECT album_id FROM album WHERE parent_album IS NULL AND owner_id = ?
 			)
-		`+filterEmpty+filterSQL, user.UserID)
+		`+filterEmpty+filterSQL, user.UserID, user.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +95,17 @@ func (r *albumResolver) Photos(ctx context.Context, obj *models.Album, filter *m
 
 func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error) {
 
-	row := r.Database.QueryRow("SELECT photo.* FROM album, photo WHERE album.album_id = ? AND photo.album_id = album.album_id", obj.AlbumID)
+	row := r.Database.QueryRow(`
+		WITH recursive sub_albums AS (
+			SELECT * FROM album AS root WHERE album_id = ?
+			UNION ALL
+			SELECT child.* FROM album AS child JOIN sub_albums ON child.parent_album = sub_albums.album_id
+		)
+
+		SELECT * FROM photo WHERE photo.album_id IN (
+			SELECT album_id FROM sub_albums
+		) LIMIT 1
+	`, obj.AlbumID)
 
 	photo, err := models.NewPhotoFromRow(row)
 	if err != nil {
