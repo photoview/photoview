@@ -7,6 +7,7 @@ import (
 
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // func (r *Resolver) User() UserResolver {
@@ -155,7 +156,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 }
 
 // Admin queries
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, rootPath *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error) {
 
 	user_rows, err := r.Database.Query("SELECT * FROM user WHERE user_id = ?", id)
 	if err != nil {
@@ -184,6 +185,16 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	if admin != nil {
 		update_str += "admin = ?, "
 		update_args = append(update_args, admin)
+	}
+	if password != nil {
+		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
+		if err != nil {
+			return nil, err
+		}
+		hashedPass := string(hashedPassBytes)
+
+		update_str += "password = ?, "
+		update_args = append(update_args, hashedPass)
 	}
 
 	if len(update_str) == 0 {

@@ -80,7 +80,7 @@ type ComplexityRoot struct {
 		ScanUser           func(childComplexity int, userID int) int
 		ShareAlbum         func(childComplexity int, albumID int, expire *time.Time, password *string) int
 		SharePhoto         func(childComplexity int, photoID int, expire *time.Time, password *string) int
-		UpdateUser         func(childComplexity int, id int, username *string, rootPath *string, admin *bool) int
+		UpdateUser         func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
 	}
 
 	Notification struct {
@@ -193,7 +193,7 @@ type MutationResolver interface {
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
-	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, admin *bool) (*models.User, error)
+	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 }
@@ -459,7 +459,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["admin"].(*bool)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["password"].(*string), args["admin"].(*bool)), true
 
 	case "Notification.content":
 		if e.complexity.Notification.Content == nil {
@@ -1064,6 +1064,7 @@ type Mutation {
     id: Int!
     username: String
     rootPath: String
+    password: String
     admin: Boolean
   ): User @isAdmin
   createUser(
@@ -1496,14 +1497,22 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 		}
 	}
 	args["rootPath"] = arg2
-	var arg3 *bool
-	if tmp, ok := rawArgs["admin"]; ok {
-		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	var arg3 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["admin"] = arg3
+	args["password"] = arg3
+	var arg4 *bool
+	if tmp, ok := rawArgs["admin"]; ok {
+		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["admin"] = arg4
 	return args, nil
 }
 
@@ -2491,7 +2500,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["admin"].(*bool))
+			return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["password"].(*string), args["admin"].(*bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {

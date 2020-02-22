@@ -74,6 +74,7 @@ type Mutation {
     id: Int!
     username: String
     rootPath: String
+    password: String
     admin: Boolean
   ): User @isAdmin
   createUser(

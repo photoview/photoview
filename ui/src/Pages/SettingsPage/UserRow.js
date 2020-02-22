@@ -43,10 +43,9 @@ const deleteUserMutation = gql`
 `
 
 const changeUserPasswordMutation = gql`
-  mutation changeUserPassword($userId: ID!, $password: String!) {
-    changeUserPassword(id: $userId, newPassword: $password) {
-      success
-      errorMessage
+  mutation changeUserPassword($userId: Int!, $password: String!) {
+    updateUser(id: $userId, password: $password) {
+      id
     }
   }
 `
