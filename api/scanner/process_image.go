@@ -81,15 +81,15 @@ func ProcessImage(tx *sql.Tx, photoPath string, albumId int, content_type string
 	// Thumbnail
 	thumbnailImage := resize.Thumbnail(1024, 1024, image, resize.Bilinear)
 
-	if _, err := os.Stat("image-cache"); os.IsNotExist(err) {
-		if err := os.Mkdir("image-cache", os.ModePerm); err != nil {
+	if _, err := os.Stat(PhotoCache()); os.IsNotExist(err) {
+		if err := os.Mkdir(PhotoCache(), os.ModePerm); err != nil {
 			log.Println("ERROR: Could not make image cache directory")
 			return err
 		}
 	}
 
 	// Make album cache dir
-	albumCachePath := path.Join("image-cache", strconv.Itoa(albumId))
+	albumCachePath := path.Join(PhotoCache(), strconv.Itoa(albumId))
 	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
 			log.Println("ERROR: Could not make album image cache directory")

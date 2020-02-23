@@ -7,11 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/scanner"
 )
 
 func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
@@ -22,12 +25,12 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 		row := db.QueryRow("SELECT photo_url.purpose, photo.path, photo.photo_id, photo.album_id, photo_url.content_type FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
 
 		var purpose models.PhotoPurpose
-		var path string
+		var photoPath string
 		var content_type string
 		var album_id int
 		var photo_id int
 
-		if err := row.Scan(&purpose, &path, &photo_id, &album_id, &content_type); err != nil {
+		if err := row.Scan(&purpose, &photoPath, &photo_id, &album_id, &content_type); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
@@ -102,13 +105,11 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		}
 
-		w.Header().Set("Content-Type", content_type)
-
 		var file *os.File
 
 		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes {
 			var err error
-			file, err = os.Open(fmt.Sprintf("./image-cache/%d/%d/%s", album_id, photo_id, image_name))
+			file, err = os.Open(path.Join(scanner.PhotoCache(), strconv.Itoa(album_id), strconv.Itoa(photo_id), image_name))
 			if err != nil {
 				w.Write([]byte("Error: " + err.Error()))
 				return
@@ -117,13 +118,14 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		if purpose == models.PhotoOriginal {
 			var err error
-			file, err = os.Open(path)
+			file, err = os.Open(photoPath)
 			if err != nil {
 				w.Write([]byte("Error: " + err.Error()))
 				return
 			}
 		}
 
+		w.Header().Set("Content-Type", content_type)
 		if stats, err := file.Stat(); err == nil {
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", stats.Size()))
 		}

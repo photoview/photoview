@@ -348,3 +348,12 @@ func ScannerError(format string, args ...interface{}) {
 		Negative: true,
 	})
 }
+
+func PhotoCache() string {
+	photoCache := os.Getenv("PHOTO_CACHE")
+	if photoCache == "" {
+		photoCache = "./photo_cache"
+	}
+
+	return photoCache
+}
