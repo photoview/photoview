@@ -7,6 +7,7 @@ import ProtectedImage from './ProtectedImage'
 
 const PhotoContainer = styled.div`
   flex-grow: 1;
+  flex-basis: 0;
   height: 200px;
   margin: 4px;
   background-color: #eee;
