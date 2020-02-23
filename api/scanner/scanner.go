@@ -114,14 +114,14 @@ func scan(database *sql.DB, user *models.User) {
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
 		if err != nil {
-			log.Printf("Could not read directory: %s\n", err.Error())
-			return
+			ScannerError("Could not read directory: %s\n", err.Error())
+			continue
 		}
 
 		tx, err := database.Begin()
 		if err != nil {
-			log.Printf("ERROR: Could not begin database transaction: %s\n", err)
-			return
+			ScannerError("Could not begin database transaction: %s\n", err)
+			continue
 		}
 
 		log.Printf("Scanning directory: %s", albumPath)
@@ -130,15 +130,15 @@ func scan(database *sql.DB, user *models.User) {
 		albumTitle := path.Base(albumPath)
 		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path) VALUES (?, ?, ?, ?)", albumTitle, albumParentId, user.UserID, albumPath)
 		if err != nil {
-			fmt.Printf("ERROR: Could not insert album into database: %s\n", err)
+			ScannerError("Could not insert album into database: %s\n", err)
 			tx.Rollback()
-			return
+			continue
 		}
 
 		row := tx.QueryRow("SELECT album_id FROM album WHERE path = ?", albumPath)
 		var albumId int
 		if err := row.Scan(&albumId); err != nil {
-			fmt.Printf("ERROR: Could not get id of album: %s\n", err)
+			ScannerError("Could not get id of album: %s\n", err)
 			tx.Rollback()
 			return
 		}
@@ -156,20 +156,20 @@ func scan(database *sql.DB, user *models.User) {
 			if !item.IsDir() && isPathImage(photoPath, &scanner_cache) {
 				tx, err := database.Begin()
 				if err != nil {
-					log.Printf("ERROR: Could not begin database transaction for image %s: %s\n", photoPath, err)
-					return
+					ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)
+					continue
 				}
 
 				content_type := scanner_cache.get_photo_type(photoPath)
 				if content_type == nil {
-					log.Println("Content type not found from cache")
-					return
+					ScannerError("Content type not found from cache\n")
+					continue
 				}
 
 				if err := ProcessImage(tx, photoPath, albumId, *content_type); err != nil {
-					log.Printf("ERROR: processing image %s: %s", photoPath, err)
+					ScannerError("processing image %s: %s", photoPath, err)
 					tx.Rollback()
-					return
+					continue
 				}
 
 				tx.Commit()
@@ -222,7 +222,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 
 		dirContent, err := ioutil.ReadDir(dirPath)
 		if err != nil {
-			log.Printf("Could not read directory: %s\n", err.Error())
+			ScannerError("Could not read directory: %s\n", err.Error())
 			return false
 		}
 
@@ -268,14 +268,14 @@ func isPathImage(path string, cache *scanner_cache) bool {
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		log.Printf("Could not open file %s: %s\n", path, err)
+		ScannerError("Could not open file %s: %s\n", path, err)
 		return false
 	}
 	defer file.Close()
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
-		log.Printf("Could not read file %s: %s\n", path, err)
+		ScannerError("Could not read file %s: %s\n", path, err)
 		return false
 	}
 
@@ -307,7 +307,7 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 	albums_questions := strings.Repeat("?,", len(scanned_albums))[:len(scanned_albums)*2-1]
 	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", args...)
 	if err != nil {
-		log.Printf("ERROR: Could not get albums from database: %s\n", err)
+		ScannerError("Could not get albums from database: %s\n", err)
 		return
 	}
 
@@ -320,7 +320,7 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 		cache_path := path.Join("./image-cache", strconv.Itoa(album_id))
 		err := os.RemoveAll(cache_path)
 		if err != nil {
-			log.Printf("ERROR: Could not delete unused cache folder: %s\n%s\n", cache_path, err)
+			ScannerError("Could not delete unused cache folder: %s\n%s\n", cache_path, err)
 		} else {
 			deleted_albums++
 		}
@@ -334,4 +334,17 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 	}
 
 	log.Printf("Deleted %d unused albums from cache", deleted_albums)
+}
+
+func ScannerError(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
+
+	log.Printf("ERROR: %s", message)
+	notification.BroadcastNotification(&models.Notification{
+		Key:      utils.GenerateToken(),
+		Type:     models.NotificationTypeMessage,
+		Header:   "Scanner error",
+		Content:  message,
+		Negative: true,
+	})
 }
