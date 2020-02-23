@@ -63,10 +63,21 @@ const downloadPhoto = async url => {
     return
   }
 
+  const reader = response.body.getReader()
+  let data = new Uint8Array(totalBytes)
+
+  let canceled = false
+  const onDismiss = () => {
+    console.log('Canceling download')
+    canceled = true
+    reader.cancel('Download canceled by user')
+  }
+
   const notifKey = Math.random().toString(26)
   MessageState.add({
     key: notifKey,
     type: 'progress',
+    onDismiss,
     props: {
       header: 'Downloading photo',
       content: `Starting download`,
@@ -74,13 +85,12 @@ const downloadPhoto = async url => {
     },
   })
 
-  const reader = response.body.getReader()
-  let data = new Uint8Array(totalBytes)
-
   let receivedBytes = 0
   let result
   do {
     result = await reader.read()
+
+    if (canceled) break
 
     if (result.value) data.set(result.value, receivedBytes)
 
@@ -89,6 +99,7 @@ const downloadPhoto = async url => {
     MessageState.add({
       key: notifKey,
       type: 'progress',
+      onDismiss,
       props: {
         header: 'Downloading photo',
         percent: (receivedBytes / totalBytes) * 100,
@@ -98,6 +109,11 @@ const downloadPhoto = async url => {
       },
     })
   } while (!result.done)
+
+  if (canceled) {
+    console.log('Download canceled returning')
+    return
+  }
 
   MessageState.add({
     key: notifKey,

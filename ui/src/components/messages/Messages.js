@@ -40,8 +40,9 @@ const Messages = () => {
   const [refMap] = useState(() => new WeakMap())
 
   const getMessageElement = (message, ref) => {
-    const dismissMessage = key => {
-      setMessages(messages => messages.filter(msg => msg.key != key))
+    const dismissMessage = message => {
+      message.onDismiss && message.onDismiss()
+      setMessages(messages => messages.filter(msg => msg.key != message.key))
     }
 
     const RefDiv = props => <div {...props} ref={x => x && ref(x)} />
@@ -52,7 +53,7 @@ const Messages = () => {
           <Message
             as={RefDiv}
             onDismiss={() => {
-              dismissMessage(message.key)
+              dismissMessage(message)
             }}
             floating
             {...message.props}
@@ -64,7 +65,7 @@ const Messages = () => {
           <MessageProgress
             as={RefDiv}
             onDismiss={() => {
-              dismissMessage(message.key)
+              dismissMessage(message)
             }}
             {...message.props}
             {...props}

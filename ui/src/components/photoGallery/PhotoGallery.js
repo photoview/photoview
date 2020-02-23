@@ -95,7 +95,7 @@ const PhotoGallery = ({
       })
     } else {
       for (let i = 0; i < 6; i++) {
-        photoElements.push(<PhotoThumbnail />)
+        photoElements.push(<PhotoThumbnail key={i} />)
       }
     }
 
