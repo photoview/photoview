@@ -9,10 +9,27 @@ Visit https://photos.qpqp.dk/
 Username: **demo**
 Password: **demo**
 
+## Contents
+
+- [Demo site](#demo-site)
+- [Aim of the project](#aim-of-the-project)
+- [Main features](#main-features)
+- [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
+- [Getting started - Setup with Docker](#getting-started---setup-with-docker)
+- [Setup development environment](#setup-development-environment)
+
 ## Aim of the project
 
 The aim of this project is to make a simple and user-friendly photo gallery application,
 that is easy to host on a personal server, to easily view the photos located on that server.
+
+## Main features
+
+- **Closely tied to the file system**. The website presents the images found on the local filesystem of the server, directories are mapped to albums.
+- **User management**. Each user is created along with a path on the local filesystem, photos within that path can be accessed by that user.
+- **Photo sharing**. Photos and albums can easily be shared with other users or publicly with a unique URL.
+- **Made for photography**. The website is ment as a way to present photographies, and thus supports **RAW** file formats, and **EXIF** parsing.
+- **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high resolution image has been fully loaded.
 
 ## Why yet another self-hosted photo gallery
 
@@ -40,14 +57,6 @@ Thus I need a solution that can do the following:
 - Be simple and fast to use
 
 All of the photo galleries can do a lot of what I need, but no single one can do it all.
-
-## Main features
-
-- **Closely tied to the file system**. The website presents the images found on the local filesystem of the server, directories are mapped to albums.
-- **User management**. Each user is created along with a path on the local filesystem, photos within that path can be accessed by that user.
-- **Photo sharing**. Photos and albums can easily be shared with other users or publicly with a unique URL.
-- **Made for photography**. The website is ment as a way to present photographies, and thus supports **RAW** file formats, and **EXIF** parsing.
-- **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high resolution image has been fully loaded.
 
 ## Getting started - Setup with Docker
 
