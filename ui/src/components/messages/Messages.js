@@ -124,7 +124,9 @@ const Messages = () => {
           </animated.div>
         )
       })}
-      <SubscriptionsHook messages={messages} setMessages={setMessages} />
+      {localStorage.getItem('token') && (
+        <SubscriptionsHook messages={messages} setMessages={setMessages} />
+      )}
     </Container>
   )
 }

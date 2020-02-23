@@ -22,23 +22,29 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		image_name := mux.Vars(r)["name"]
 
-		row := db.QueryRow("SELECT photo_url.purpose, photo.path, photo.photo_id, photo.album_id, photo_url.content_type FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
+		row := db.QueryRow("SELECT photo_url.purpose, photo_url.content_type, photo_url.photo_id FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
 
 		var purpose models.PhotoPurpose
-		var photoPath string
 		var content_type string
-		var album_id int
 		var photo_id int
 
-		if err := row.Scan(&purpose, &photoPath, &photo_id, &album_id, &content_type); err != nil {
+		if err := row.Scan(&purpose, &content_type, &photo_id); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
 		}
 
+		row = db.QueryRow("SELECT * FROM photo WHERE photo_id = ?", photo_id)
+		photo, err := models.NewPhotoFromRow(row)
+		if err != nil {
+			log.Printf("WARN: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("internal server error"))
+		}
+
 		user := auth.UserFromContext(r.Context())
 		if user != nil {
-			row := db.QueryRow("SELECT owner_id FROM album WHERE album.album_id = ?", album_id)
+			row := db.QueryRow("SELECT owner_id FROM album WHERE album.album_id = ?", photo.AlbumId)
 			var owner_id int
 
 			if err := row.Scan(&owner_id); err != nil {
@@ -72,7 +78,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 				return
 			}
 
-			if shareToken.AlbumID != nil && album_id != *shareToken.AlbumID {
+			if shareToken.AlbumID != nil && photo.AlbumId != *shareToken.AlbumID {
 				// Check child albums
 				row := db.QueryRow(`
 					WITH recursive child_albums AS (
@@ -81,7 +87,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 						SELECT child.* FROM album child JOIN child_albums parent ON parent.album_id = child.parent_album
 					)
 					SELECT * FROM child_albums WHERE album_id = ?
-				`, *shareToken.AlbumID, album_id)
+				`, *shareToken.AlbumID, photo.AlbumId)
 
 				_, err := models.NewAlbumFromRow(row)
 				if err != nil {
@@ -105,23 +111,47 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		}
 
-		var file *os.File
+		var cachedPath string
+		var file *os.File = nil
 
 		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes {
-			var err error
-			file, err = os.Open(path.Join(scanner.PhotoCache(), strconv.Itoa(album_id), strconv.Itoa(photo_id), image_name))
-			if err != nil {
-				w.Write([]byte("Error: " + err.Error()))
-				return
-			}
+			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(photo.AlbumId), strconv.Itoa(photo_id), image_name)
 		}
 
 		if purpose == models.PhotoOriginal {
-			var err error
-			file, err = os.Open(photoPath)
-			if err != nil {
-				w.Write([]byte("Error: " + err.Error()))
-				return
+			cachedPath = photo.Path
+		}
+
+		file, err = os.Open(cachedPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				tx, err := db.Begin()
+				if err != nil {
+					log.Printf("ERROR: %s\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("internal server error"))
+					return
+				}
+
+				err = scanner.ProcessPhoto(tx, photo, &content_type)
+				if err != nil {
+					log.Printf("ERROR: processing image not found in cache: %s\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("internal server error"))
+					tx.Rollback()
+					return
+				}
+
+				file, err = os.Open(cachedPath)
+				if err != nil {
+					log.Printf("ERROR: after reprocessing image not found in cache: %s\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("internal server error"))
+					tx.Rollback()
+					return
+				}
+
+				tx.Commit()
 			}
 		}
 

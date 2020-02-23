@@ -166,7 +166,7 @@ func scan(database *sql.DB, user *models.User) {
 					continue
 				}
 
-				if err := ProcessImage(tx, photoPath, albumId, *content_type); err != nil {
+				if err := ScanPhoto(tx, photoPath, albumId, content_type); err != nil {
 					ScannerError("processing image %s: %s", photoPath, err)
 					tx.Rollback()
 					continue
