@@ -88,8 +88,17 @@ const SidebarContent = ({ photo, hidePreview }) => {
     )
 
     exif.dateShot = new Date(exif.dateShot).toLocaleString()
-    if (exif.exposureProgram)
+    if (exif.exposureProgram) {
       exif.exposureProgram = exposurePrograms[exif.exposureProgram]
+    }
+
+    if (exif.aperture) {
+      exif.aperture = `f/${exif.aperture}`
+    }
+
+    if (exif.focalLength) {
+      exif.focalLength = `${exif.focalLength}mm`
+    }
 
     exif.exposureProgram = exifItems = exifKeys.map(key => (
       <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
