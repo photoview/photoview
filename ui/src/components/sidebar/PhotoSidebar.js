@@ -23,12 +23,12 @@ const photoQuery = gql`
         maker
         lens
         dateShot
-        fileSize
         exposure
         aperture
         iso
         focalLength
         flash
+        exposureProgram
       }
     }
   }
@@ -50,8 +50,8 @@ const exifNameLookup = {
   camera: 'Camera',
   maker: 'Maker',
   lens: 'Lens',
+  exposureProgram: 'Program',
   dateShot: 'Date Shot',
-  fileSize: 'File Size',
   exposure: 'Exposure',
   aperture: 'Aperture',
   iso: 'ISO',
@@ -59,11 +59,23 @@ const exifNameLookup = {
   flash: 'Flash',
 }
 
+const exposurePrograms = {
+  '0': 'Not defined',
+  '1': 'Manual',
+  '2': 'Normal program',
+  '3': 'Aperture priority',
+  '4': 'Shutter priority',
+  '5': 'Creative program',
+  '6': 'Action program',
+  '7': 'Portrait mode',
+  '8': 'Landscape mode ',
+}
+
 const SidebarContent = ({ photo, hidePreview }) => {
   let exifItems = []
 
   if (photo && photo.exif) {
-    let exifKeys = Object.keys(photo.exif).filter(
+    let exifKeys = Object.keys(exifNameLookup).filter(
       x => !!photo.exif[x] && x != '__typename'
     )
 
@@ -76,8 +88,10 @@ const SidebarContent = ({ photo, hidePreview }) => {
     )
 
     exif.dateShot = new Date(exif.dateShot).toLocaleString()
+    if (exif.exposureProgram)
+      exif.exposureProgram = exposurePrograms[exif.exposureProgram]
 
-    exifItems = exifKeys.map(key => (
+    exif.exposureProgram = exifItems = exifKeys.map(key => (
       <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
     ))
   }
