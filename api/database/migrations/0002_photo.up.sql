@@ -3,13 +3,14 @@ CREATE TABLE IF NOT EXISTS photo_exif (
   camera varchar(256),
   maker varchar(256),
   lens varchar(256),
-  dateShot timestamp,
-  file_size_bytes bigint,
+  dateShot timestamp NULL,
   exposure varchar(256),
-  aperature float,
+  aperture float,
   iso int(6),
   focal_length float,
   flash varchar(256),
+  orientation int(1),
+  exposure_program int(1),
 
   PRIMARY KEY (exif_id)
 );

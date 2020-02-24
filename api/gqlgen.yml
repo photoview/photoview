@@ -20,12 +20,16 @@ resolver:
 autobind: []
 
 models:
+  ID:
+    model: github.com/99designs/gqlgen/graphql.IntID
   User:
     model: github.com/viktorstrate/photoview/api/graphql/models.User
   Photo:
     model: github.com/viktorstrate/photoview/api/graphql/models.Photo
   PhotoURL:
     model: github.com/viktorstrate/photoview/api/graphql/models.PhotoURL
+  PhotoEXIF:
+    model: github.com/viktorstrate/photoview/api/graphql/models.PhotoEXIF
   Album:
     model: github.com/viktorstrate/photoview/api/graphql/models.Album
   ShareToken:

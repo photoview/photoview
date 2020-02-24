@@ -41,6 +41,12 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, content_type *string) 
 		return err
 	}
 
+	_, err = ScanEXIF(tx, photo)
+	if err != nil {
+		log.Printf("ERROR: ScanEXIF for %s: %s\n", photoName, err)
+		return err
+	}
+
 	if err := ProcessPhoto(tx, photo, content_type); err != nil {
 		return err
 	}

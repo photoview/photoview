@@ -49,7 +49,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo, content_type *string) error {
 
 	log.Printf("Processing photo: %s\n", photo.Path)
 
-	imageData := processImageData{
+	imageData := ProcessImageData{
 		photoPath: photo.Path,
 	}
 
@@ -249,13 +249,13 @@ func encodeImageJPEG(photoPath string, photoImage image.Image, jpegOptions *jpeg
 	return nil
 }
 
-type processImageData struct {
+type ProcessImageData struct {
 	photoPath       string
 	_photoImage     image.Image
 	_thumbnailImage image.Image
 }
 
-func (img *processImageData) PhotoImage() (image.Image, error) {
+func (img *ProcessImageData) PhotoImage() (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}
@@ -276,7 +276,7 @@ func (img *processImageData) PhotoImage() (image.Image, error) {
 	return img._photoImage, nil
 }
 
-func (img *processImageData) ThumbnailImage() (image.Image, error) {
+func (img *ProcessImageData) ThumbnailImage() (image.Image, error) {
 	photoImage, err := img.PhotoImage()
 	if err != nil {
 		return nil, err

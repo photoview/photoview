@@ -146,7 +146,7 @@ func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.A
 	panic("not implemented")
 }
 
-func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.PhotoExif, error) {
-	log.Println("Photo: EXIF not implemented")
-	return nil, nil
+func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.PhotoEXIF, error) {
+	row := r.Database.QueryRow("SELECT photo_exif.* FROM photo NATURAL JOIN photo_exif WHERE photo.photo_id = ?", obj.PhotoID)
+	return models.NewPhotoExifFromRow(row)
 }

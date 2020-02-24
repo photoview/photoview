@@ -202,6 +202,7 @@ type Photo {
 
 "EXIF metadata from the camera"
 type PhotoEXIF {
+  id: Int!
   photo: Photo
   "The model name of the camera"
   camera: String
@@ -210,8 +211,6 @@ type PhotoEXIF {
   "The name of the lens"
   lens: String
   dateShot: Time
-  "The formatted filesize of the image"
-  fileSize: String
   "The exposure time of the image"
   exposure: String
   "The aperature stops of the image"
@@ -219,7 +218,9 @@ type PhotoEXIF {
   "The ISO setting of the image"
   iso: Int
   "The focal length of the lens, when the image was taken"
-  focalLength: String
+  focalLength: Float
   "A formatted description of the flash settings, when the image was taken"
   flash: String
+  "An index describing the mode for adjusting the exposure of the image"
+  exposureProgram: Int
 }
