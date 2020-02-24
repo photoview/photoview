@@ -1,16 +1,13 @@
 import React, { Component } from 'react'
-import { Helmet } from 'react-helmet'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
-import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
 import AlbumTitle from '../../components/AlbumTitle'
-import { SidebarConsumer } from '../../components/sidebar/Sidebar'
 
 const photoQuery = gql`
   query allPhotosPage {
-    myAlbums(filter: { order_by: "title", order_direction: ASC }) {
+    myAlbums(filter: { order_by: "title", order_direction: ASC, limit: 100 }) {
       title
       id
       photos(
