@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"strings"
@@ -148,5 +149,15 @@ func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.A
 
 func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.PhotoEXIF, error) {
 	row := r.Database.QueryRow("SELECT photo_exif.* FROM photo NATURAL JOIN photo_exif WHERE photo.photo_id = ?", obj.PhotoID)
-	return models.NewPhotoExifFromRow(row)
+
+	exif, err := models.NewPhotoExifFromRow(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return exif, nil
 }
