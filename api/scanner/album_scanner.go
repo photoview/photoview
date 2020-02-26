@@ -79,6 +79,7 @@ func ScanUser(database *sql.DB, userId int) error {
 func scan(database *sql.DB, user *models.User) {
 
 	notifyKey := utils.GenerateToken()
+	processKey := utils.GenerateToken()
 
 	notification.BroadcastNotification(&models.Notification{
 		Key:     notifyKey,
@@ -166,7 +167,7 @@ func scan(database *sql.DB, user *models.User) {
 					continue
 				}
 
-				if err := ScanPhoto(tx, photoPath, albumId, content_type); err != nil {
+				if err := ScanPhoto(tx, photoPath, albumId, content_type, processKey); err != nil {
 					ScannerError("processing image %s: %s", photoPath, err)
 					tx.Rollback()
 					continue
@@ -197,6 +198,11 @@ func scan(database *sql.DB, user *models.User) {
 		Header:   "User scan completed",
 		Content:  "Scanning has been completed...",
 		Positive: true,
+	})
+
+	notification.BroadcastNotification(&models.Notification{
+		Key:  processKey,
+		Type: models.NotificationTypeClose,
 	})
 
 	log.Println("Done scanning")
@@ -317,20 +323,27 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 		var album_id int
 		rows.Scan(&album_id)
 		deleted_ids = append(deleted_ids, album_id)
+		deleted_albums++
 		cache_path := path.Join("./image-cache", strconv.Itoa(album_id))
 		err := os.RemoveAll(cache_path)
 		if err != nil {
 			ScannerError("Could not delete unused cache folder: %s\n%s\n", cache_path, err)
-		} else {
-			deleted_albums++
 		}
 	}
 
 	if len(deleted_ids) > 0 {
 		albums_questions = strings.Repeat("?,", len(deleted_ids))[:len(deleted_ids)*2-1]
+
 		if _, err := database.Exec("DELETE FROM album WHERE album_id IN ("+albums_questions+")", deleted_ids...); err != nil {
-			log.Printf("ERROR: Could not delete old albums from database:\n%s\n", err)
+			ScannerError("Could not delete old albums from database:\n%s\n", err)
 		}
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:     utils.GenerateToken(),
+			Type:    models.NotificationTypeMessage,
+			Header:  "Deleted old albums",
+			Content: fmt.Sprintf("Deleted %d albums, that was not found", len(deleted_ids)),
+		})
 	}
 
 	log.Printf("Deleted %d unused albums from cache", deleted_albums)

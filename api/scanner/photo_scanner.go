@@ -2,12 +2,15 @@ package scanner
 
 import (
 	"database/sql"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"fmt"
 	"log"
 	"path"
+
+	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/graphql/notification"
 )
 
-func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, content_type *string) error {
+func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, content_type *string, notificationKey string) error {
 
 	log.Printf("Scanning image: %s\n", photoPath)
 
@@ -24,6 +27,15 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, content_type *string) 
 			return err
 		}
 	}
+
+	notifyTimeout := 5000
+	notification.BroadcastNotification(&models.Notification{
+		Key:     notificationKey,
+		Type:    models.NotificationTypeMessage,
+		Header:  "Scanning photo",
+		Content: fmt.Sprintf("Scanning image at %s", photoPath),
+		Timeout: &notifyTimeout,
+	})
 
 	result, err := tx.Exec("INSERT INTO photo (title, path, album_id) VALUES (?, ?, ?)", photoName, photoPath, albumId)
 	if err != nil {

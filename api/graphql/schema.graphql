@@ -93,6 +93,8 @@ type Subscription {
 enum NotificationType {
   Message
   Progress
+  "Close a notification with a given key"
+  Close
 }
 
 type Notification {
@@ -103,6 +105,8 @@ type Notification {
   progress: Float
   positive: Boolean!
   negative: Boolean!
+  "Time in milliseconds before the notification will close"
+  timeout: Int
 }
 
 type AuthorizeResult {

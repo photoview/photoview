@@ -29,6 +29,8 @@ type Notification struct {
 	Progress *float64         `json:"progress"`
 	Positive bool             `json:"positive"`
 	Negative bool             `json:"negative"`
+	// Time in milliseconds before the notification will close
+	Timeout *int `json:"timeout"`
 }
 
 type PhotoDownload struct {
@@ -55,16 +57,19 @@ type NotificationType string
 const (
 	NotificationTypeMessage  NotificationType = "Message"
 	NotificationTypeProgress NotificationType = "Progress"
+	// Close a notification with a given key
+	NotificationTypeClose NotificationType = "Close"
 )
 
 var AllNotificationType = []NotificationType{
 	NotificationTypeMessage,
 	NotificationTypeProgress,
+	NotificationTypeClose,
 }
 
 func (e NotificationType) IsValid() bool {
 	switch e {
-	case NotificationTypeMessage, NotificationTypeProgress:
+	case NotificationTypeMessage, NotificationTypeProgress, NotificationTypeClose:
 		return true
 	}
 	return false

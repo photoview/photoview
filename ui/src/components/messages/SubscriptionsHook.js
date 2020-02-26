@@ -13,9 +13,12 @@ const notificationSubscription = gql`
       progress
       positive
       negative
+      timeout
     }
   }
 `
+
+let messageTimeoutHandles = new Map()
 
 const SubscriptionsHook = ({ messages, setMessages }) => {
   if (!localStorage.getItem('token')) {
@@ -46,15 +49,35 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
 
     const msg = data.notification
 
+    if (msg.type == 'Close') {
+      setMessages(messages => messages.filter(m => m.key != msg.key))
+      return
+    }
+
     const newNotification = {
       key: msg.key,
       type: msg.type.toLowerCase(),
+      timeout: msg.timeout,
       props: {
         header: msg.header,
         content: msg.content,
         negative: msg.negative,
         positive: msg.positive,
       },
+    }
+
+    if (msg.timeout) {
+      // Clear old timeout, to replace it with the new one
+      if (messageTimeoutHandles.get(msg.key)) {
+        const timeoutHandle = messageTimeoutHandles.get(msg.key)
+        clearTimeout(timeoutHandle)
+      }
+
+      const timeoutHandle = setTimeout(() => {
+        setMessages(messages => messages.filter(m => m.key != msg.key))
+      }, msg.timeout)
+
+      messageTimeoutHandles.set(msg.key, timeoutHandle)
     }
 
     const notifyIndex = newMessages.findIndex(

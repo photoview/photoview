@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 		Negative func(childComplexity int) int
 		Positive func(childComplexity int) int
 		Progress func(childComplexity int) int
+		Timeout  func(childComplexity int) int
 		Type     func(childComplexity int) int
 	}
 
@@ -503,6 +504,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Notification.Progress(childComplexity), true
+
+	case "Notification.timeout":
+		if e.complexity.Notification.Timeout == nil {
+			break
+		}
+
+		return e.complexity.Notification.Timeout(childComplexity), true
 
 	case "Notification.type":
 		if e.complexity.Notification.Type == nil {
@@ -1091,6 +1099,8 @@ type Subscription {
 enum NotificationType {
   Message
   Progress
+  "Close a notification with a given key"
+  Close
 }
 
 type Notification {
@@ -1101,6 +1111,8 @@ type Notification {
   progress: Float
   positive: Boolean!
   negative: Boolean!
+  "Time in milliseconds before the notification will close"
+  timeout: Int
 }
 
 type AuthorizeResult {
@@ -2919,6 +2931,40 @@ func (ec *executionContext) _Notification_negative(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Notification_timeout(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Notification",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timeout, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Photo_id(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
@@ -6404,6 +6450,8 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "timeout":
+			out.Values[i] = ec._Notification_timeout(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
