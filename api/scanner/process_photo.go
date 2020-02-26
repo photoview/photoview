@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/h2non/filetype"
 	"github.com/nfnt/resize"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
@@ -25,6 +26,7 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
+// Higher order function used to check if PhotoURL for a given PhotoPurpose exists
 func makePhotoURLChecker(tx *sql.Tx, photoID int) (func(purpose models.PhotoPurpose) (*models.PhotoURL, error), error) {
 	photoURLExistsStmt, err := tx.Prepare("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?")
 	if err != nil {
@@ -45,7 +47,7 @@ func makePhotoURLChecker(tx *sql.Tx, photoID int) (func(purpose models.PhotoPurp
 	}, nil
 }
 
-func ProcessPhoto(tx *sql.Tx, photo *models.Photo, content_type *string) error {
+func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 	log.Printf("Processing photo: %s\n", photo.Path)
 
@@ -78,7 +80,12 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo, content_type *string) error {
 			return err
 		}
 
-		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoImage.Bounds().Max.X, photoImage.Bounds().Max.Y, models.PhotoOriginal, content_type)
+		contentType, err := imageData.ContentType()
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoImage.Bounds().Max.X, photoImage.Bounds().Max.Y, models.PhotoOriginal, contentType)
 		if err != nil {
 			log.Printf("Could not insert original photo url: %d, %s\n", photo.PhotoID, photoName)
 			return err
@@ -145,17 +152,22 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo, content_type *string) error {
 		}
 	}
 
-	// high res
-	original_web_safe := false
-	for _, web_mime := range WebMimetypes {
-		if *content_type == web_mime {
-			original_web_safe = true
-			break
-		}
-	}
-
 	// Generate high res jpeg
 	if highResURL == nil {
+
+		contentType, err := imageData.ContentType()
+		if err != nil {
+			return err
+		}
+
+		original_web_safe := false
+		for _, web_mime := range WebMimetypes {
+			if *contentType == web_mime {
+				original_web_safe = true
+				break
+			}
+		}
+
 		if !original_web_safe {
 			highres_name := fmt.Sprintf("highres_%s_%s", photoName, utils.GenerateToken())
 			highres_name = strings.ReplaceAll(highres_name, ".", "_")
@@ -253,6 +265,34 @@ type ProcessImageData struct {
 	photoPath       string
 	_photoImage     image.Image
 	_thumbnailImage image.Image
+	_contentType    *string
+}
+
+func (img *ProcessImageData) ContentType() (*string, error) {
+	if img._contentType != nil {
+		return img._contentType, nil
+	}
+
+	file, err := os.Open(img.photoPath)
+	if err != nil {
+		ScannerError("Could not open file %s: %s\n", img.photoPath, err)
+		return nil, err
+	}
+	defer file.Close()
+
+	head := make([]byte, 261)
+	if _, err := file.Read(head); err != nil {
+		ScannerError("Could not read file %s: %s\n", img.photoPath, err)
+		return nil, err
+	}
+
+	imgType, err := filetype.Image(head)
+	if err != nil {
+		return nil, err
+	}
+
+	img._contentType = &imgType.MIME.Value
+	return img._contentType, nil
 }
 
 func (img *ProcessImageData) PhotoImage() (image.Image, error) {

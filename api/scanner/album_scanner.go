@@ -81,11 +81,13 @@ func scan(database *sql.DB, user *models.User) {
 	notifyKey := utils.GenerateToken()
 	processKey := utils.GenerateToken()
 
+	timeout := 3000
 	notification.BroadcastNotification(&models.Notification{
 		Key:     notifyKey,
 		Type:    models.NotificationTypeMessage,
 		Header:  "User scan started",
 		Content: "Scanning has started...",
+		Timeout: &timeout,
 	})
 
 	// Start scanning
@@ -102,6 +104,8 @@ func scan(database *sql.DB, user *models.User) {
 		path:     user.RootPath,
 		parentId: nil,
 	})
+
+	photosToProcess := list.New()
 
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
@@ -161,16 +165,24 @@ func scan(database *sql.DB, user *models.User) {
 					continue
 				}
 
-				content_type := scanner_cache.get_photo_type(photoPath)
-				if content_type == nil {
-					ScannerError("Content type not found from cache\n")
+				photo, newPhoto, err := ScanPhoto(tx, photoPath, albumId, processKey)
+				if err != nil {
+					ScannerError("Scanning image %s: %s", photoPath, err)
+					tx.Rollback()
 					continue
 				}
 
-				if err := ScanPhoto(tx, photoPath, albumId, content_type, processKey); err != nil {
-					ScannerError("processing image %s: %s", photoPath, err)
-					tx.Rollback()
-					continue
+				if newPhoto {
+					photosToProcess.PushBack(photo)
+
+					if photosToProcess.Len()%25 == 0 {
+						notification.BroadcastNotification(&models.Notification{
+							Key:     processKey,
+							Type:    models.NotificationTypeMessage,
+							Header:  "Scanning photo",
+							Content: fmt.Sprintf("Scanning image at %s", photoPath),
+						})
+					}
 				}
 
 				tx.Commit()
@@ -192,18 +204,71 @@ func scan(database *sql.DB, user *models.User) {
 
 	cleanupCache(database, album_paths_scanned, user)
 
+	completeMessage := "No new photos were found"
+	if photosToProcess.Len() > 0 {
+		completeMessage = fmt.Sprintf("Starting to process %d newly scanned photos", photosToProcess.Len())
+	}
+
 	notification.BroadcastNotification(&models.Notification{
 		Key:      notifyKey,
 		Type:     models.NotificationTypeMessage,
-		Header:   "User scan completed",
-		Content:  "Scanning has been completed...",
+		Header:   "Scan completed",
+		Content:  completeMessage,
 		Positive: true,
 	})
 
-	notification.BroadcastNotification(&models.Notification{
-		Key:  processKey,
-		Type: models.NotificationTypeClose,
-	})
+	// Proccess all photos
+	photosToProcessElm := photosToProcess.Front()
+	processCount := -1
+	for photosToProcessElm != nil {
+		photo := photosToProcessElm.Value.(*models.Photo)
+		photosToProcessElm = photosToProcessElm.Next()
+		processCount++
+
+		tx, err := database.Begin()
+		if err != nil {
+			ScannerError("Could not start database transaction: %s", err)
+			continue
+		}
+
+		var progress float64 = float64(processCount) / float64(photosToProcess.Len()) * 100.0
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:      processKey,
+			Type:     models.NotificationTypeProgress,
+			Header:   fmt.Sprintf("Processing photos (%d of %d)", processCount, photosToProcess.Len()),
+			Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
+			Progress: &progress,
+		})
+
+		err = ProcessPhoto(tx, photo)
+		if err != nil {
+			tx.Rollback()
+			ScannerError("Could not process photo: %s", err)
+			continue
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			ScannerError("Could not commit db transaction: %s", err)
+			continue
+		}
+	}
+
+	if photosToProcess.Len() > 0 {
+		notification.BroadcastNotification(&models.Notification{
+			Key:      notifyKey,
+			Type:     models.NotificationTypeMessage,
+			Header:   "Processing completed",
+			Content:  fmt.Sprintf("%d photos have been processed", photosToProcess.Len()),
+			Positive: true,
+		})
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:  processKey,
+			Type: models.NotificationTypeClose,
+		})
+	}
 
 	log.Println("Done scanning")
 }
@@ -255,7 +320,8 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 var SupportedMimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
-	"image/tiff",
+	// todo: add support for tiff
+	// "image/tiff",
 	"image/webp",
 	"image/x-canon-cr2",
 	"image/bmp",
@@ -321,10 +387,13 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 	deleted_ids := make([]interface{}, 0)
 	for rows.Next() {
 		var album_id int
-		rows.Scan(&album_id)
+		if err := rows.Scan(&album_id); err != nil {
+			ScannerError("Could not parse album to be removed (album_id %d): %s\n", album_id, err)
+		}
+
 		deleted_ids = append(deleted_ids, album_id)
 		deleted_albums++
-		cache_path := path.Join("./image-cache", strconv.Itoa(album_id))
+		cache_path := path.Join("./photo_cache", strconv.Itoa(album_id))
 		err := os.RemoveAll(cache_path)
 		if err != nil {
 			ScannerError("Could not delete unused cache folder: %s\n%s\n", cache_path, err)

@@ -68,7 +68,7 @@ func DeregisterListener(listenerID int) error {
 
 func BroadcastNotification(notification *models.Notification) {
 
-	log.Println("Broadcasting notification")
+	log.Printf("Broadcasting notification: %s\n", notification.Header)
 
 	notificationLock.Lock()
 	defer notificationLock.Unlock()

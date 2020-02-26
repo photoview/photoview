@@ -133,7 +133,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 					return
 				}
 
-				err = scanner.ProcessPhoto(tx, photo, &content_type)
+				err = scanner.ProcessPhoto(tx, photo)
 				if err != nil {
 					log.Printf("ERROR: processing image not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)

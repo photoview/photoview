@@ -99,22 +99,25 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (*models.PhotoEXIF, error) {
 		}
 	}
 
-	focalLengthRat, err := readRationalTag(exifTags, exif.FocalLength, photo)
+	focalLengthTag, err := exifTags.Get(exif.FocalLength)
 	if err == nil {
-		focalLength, _ := focalLengthRat.Float32()
-		valueNames = append(valueNames, "focal_length")
-		exifValues = append(exifValues, focalLength)
-	} else {
-		// For some photos, the focal length cannot be read as a rational value,
-		// but is instead the second value read as an integer
-		tag, err := exifTags.Get(exif.FocalLength)
+		focalLengthRat, err := focalLengthTag.Rat(0)
 		if err == nil {
-			focalLength, err := tag.Int(1)
-			if err != nil {
-				log.Printf("WARN: Could not parse EXIF FocalLength as integer: %s\n%s\n", photo.Title, err)
-			} else {
-				valueNames = append(valueNames, "focal_length")
-				exifValues = append(exifValues, focalLength)
+			focalLength, _ := focalLengthRat.Float32()
+			valueNames = append(valueNames, "focal_length")
+			exifValues = append(exifValues, focalLength)
+		} else {
+			// For some photos, the focal length cannot be read as a rational value,
+			// but is instead the second value read as an integer
+
+			if err == nil {
+				focalLength, err := focalLengthTag.Int(1)
+				if err != nil {
+					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %s\n%s\n", photo.Title, err)
+				} else {
+					valueNames = append(valueNames, "focal_length")
+					exifValues = append(exifValues, focalLength)
+				}
 			}
 		}
 	}

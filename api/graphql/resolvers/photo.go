@@ -143,6 +143,28 @@ func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*mode
 	return url, nil
 }
 
+// func processPhoto(db *sql.DB, photo *models.Photo) error {
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	err = scanner.ProcessPhoto(tx, photo)
+// 	if err != nil {
+// 		tx.Rollback()
+// 		log.Printf("ERROR: Could not process photo: %s\n", err)
+// 		return errors.New(fmt.Sprintf("Could not process photo: %s\n", err))
+// 	}
+
+// 	err = tx.Commit()
+// 	if err != nil {
+// 		log.Printf("ERROR: Could not commit photo after process to db: %s\n", err)
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
 func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.Album, error) {
 	panic("not implemented")
 }

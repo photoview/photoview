@@ -63,6 +63,7 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
         content: msg.content,
         negative: msg.negative,
         positive: msg.positive,
+        percent: msg.progress,
       },
     }
 
