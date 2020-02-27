@@ -24,7 +24,13 @@ func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]
 		return nil, err
 	}
 
-	rows, err := r.Database.Query("SELECT photo.* FROM photo, album WHERE photo.album_id = album.album_id AND album.owner_id = ?"+filterSQL, user.UserID)
+	rows, err := r.Database.Query(`
+		SELECT photo.* FROM photo, album
+		WHERE photo.album_id = album.album_id AND album.owner_id = ?
+		AND photo.photo_id IN (
+			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		)
+	`+filterSQL, user.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +46,11 @@ func (r *queryResolver) Photo(ctx context.Context, id int) (*models.Photo, error
 
 	row := r.Database.QueryRow(`
 		SELECT photo.* FROM photo
-		LEFT JOIN album ON photo.album_id = album.album_id
+		JOIN album ON photo.album_id = album.album_id
 		WHERE photo.photo_id = ? AND album.owner_id = ?
+		AND photo.photo_id IN (
+			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		)
 	`, id, user.UserID)
 
 	photo, err := models.NewPhotoFromRow(row)

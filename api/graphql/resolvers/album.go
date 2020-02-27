@@ -79,7 +79,13 @@ func (r *albumResolver) Photos(ctx context.Context, obj *models.Album, filter *m
 		return nil, err
 	}
 
-	photoRows, err := r.Database.Query("SELECT photo.* FROM album, photo WHERE album.album_id = ? AND photo.album_id = album.album_id"+filterSQL, obj.AlbumID)
+	photoRows, err := r.Database.Query(`
+		SELECT photo.* FROM album, photo
+		WHERE album.album_id = ? AND photo.album_id = album.album_id
+		AND photo.photo_id IN (
+			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		)
+	`+filterSQL, obj.AlbumID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +110,8 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 
 		SELECT * FROM photo WHERE photo.album_id IN (
 			SELECT album_id FROM sub_albums
+		) AND photo.photo_id IN (
+			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
 		) LIMIT 1
 	`, obj.AlbumID)
 

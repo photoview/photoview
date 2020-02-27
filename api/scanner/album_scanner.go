@@ -105,7 +105,7 @@ func scan(database *sql.DB, user *models.User) {
 		parentId: nil,
 	})
 
-	photosToProcess := list.New()
+	newPhotos := list.New()
 
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
@@ -173,9 +173,9 @@ func scan(database *sql.DB, user *models.User) {
 				}
 
 				if newPhoto {
-					photosToProcess.PushBack(photo)
+					newPhotos.PushBack(photo)
 
-					if photosToProcess.Len()%25 == 0 {
+					if newPhotos.Len()%25 == 0 {
 						notification.BroadcastNotification(&models.Notification{
 							Key:     processKey,
 							Type:    models.NotificationTypeMessage,
@@ -202,11 +202,9 @@ func scan(database *sql.DB, user *models.User) {
 		}
 	}
 
-	cleanupCache(database, album_paths_scanned, user)
-
 	completeMessage := "No new photos were found"
-	if photosToProcess.Len() > 0 {
-		completeMessage = fmt.Sprintf("Starting to process %d newly scanned photos", photosToProcess.Len())
+	if newPhotos.Len() > 0 {
+		completeMessage = fmt.Sprintf("%d new photos were found", newPhotos.Len())
 	}
 
 	notification.BroadcastNotification(&models.Notification{
@@ -217,57 +215,11 @@ func scan(database *sql.DB, user *models.User) {
 		Positive: true,
 	})
 
-	// Proccess all photos
-	photosToProcessElm := photosToProcess.Front()
-	processCount := -1
-	for photosToProcessElm != nil {
-		photo := photosToProcessElm.Value.(*models.Photo)
-		photosToProcessElm = photosToProcessElm.Next()
-		processCount++
+	cleanupCache(database, album_paths_scanned, user)
 
-		tx, err := database.Begin()
-		if err != nil {
-			ScannerError("Could not start database transaction: %s", err)
-			continue
-		}
-
-		var progress float64 = float64(processCount) / float64(photosToProcess.Len()) * 100.0
-
-		notification.BroadcastNotification(&models.Notification{
-			Key:      processKey,
-			Type:     models.NotificationTypeProgress,
-			Header:   fmt.Sprintf("Processing photos (%d of %d)", processCount, photosToProcess.Len()),
-			Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
-			Progress: &progress,
-		})
-
-		err = ProcessPhoto(tx, photo)
-		if err != nil {
-			tx.Rollback()
-			ScannerError("Could not process photo: %s", err)
-			continue
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			ScannerError("Could not commit db transaction: %s", err)
-			continue
-		}
-	}
-
-	if photosToProcess.Len() > 0 {
-		notification.BroadcastNotification(&models.Notification{
-			Key:      notifyKey,
-			Type:     models.NotificationTypeMessage,
-			Header:   "Processing completed",
-			Content:  fmt.Sprintf("%d photos have been processed", photosToProcess.Len()),
-			Positive: true,
-		})
-
-		notification.BroadcastNotification(&models.Notification{
-			Key:  processKey,
-			Type: models.NotificationTypeClose,
-		})
+	err := processUnprocessedPhotos(database, user, notifyKey)
+	if err != nil {
+		log.Printf("ERROR: processing photos: %s\n", err)
 	}
 
 	log.Println("Done scanning")
@@ -365,6 +317,84 @@ func isPathImage(path string, cache *scanner_cache) bool {
 
 	log.Printf("Unsupported image %s of type %s\n", path, imgType.MIME.Value)
 	return false
+}
+
+func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey string) error {
+
+	processKey := utils.GenerateToken()
+
+	rows, err := database.Query(`
+		SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id
+		WHERE album.owner_id = ?
+		AND photo.photo_id NOT IN (
+			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		)
+	`, user.UserID)
+	if err != nil {
+		ScannerError("Could not get photos to process from db")
+		return err
+	}
+
+	photosToProcess, err := models.NewPhotosFromRows(rows)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No photos to process
+			return nil
+		}
+
+		ScannerError("Could not parse photos to process from db %s", err)
+		return err
+	}
+
+	// Proccess all photos
+	for count, photo := range photosToProcess {
+
+		tx, err := database.Begin()
+		if err != nil {
+			ScannerError("Could not start database transaction: %s", err)
+			continue
+		}
+
+		var progress float64 = float64(count) / float64(len(photosToProcess)) * 100.0
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:      processKey,
+			Type:     models.NotificationTypeProgress,
+			Header:   fmt.Sprintf("Processing photos (%d of %d)", count, len(photosToProcess)),
+			Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
+			Progress: &progress,
+		})
+
+		err = ProcessPhoto(tx, photo)
+		if err != nil {
+			tx.Rollback()
+			ScannerError("Could not process photo: %s", err)
+			continue
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			ScannerError("Could not commit db transaction: %s", err)
+			continue
+		}
+	}
+
+	if len(photosToProcess) > 0 {
+		notification.BroadcastNotification(&models.Notification{
+			Key:      notifyKey,
+			Type:     models.NotificationTypeMessage,
+			Header:   "Processing completed",
+			Content:  fmt.Sprintf("%d photos have been processed", len(photosToProcess)),
+			Positive: true,
+		})
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:  processKey,
+			Type: models.NotificationTypeClose,
+		})
+	}
+
+	return nil
 }
 
 func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.User) {
