@@ -44,5 +44,7 @@ func NewShareTokensFromRows(rows *sql.Rows) ([]*ShareToken, error) {
 		tokens = append(tokens, &token)
 	}
 
+	rows.Close()
+
 	return tokens, nil
 }

@@ -58,6 +58,8 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 		photos = append(photos, &photo)
 	}
 
+	rows.Close()
+
 	return photos, nil
 }
 
@@ -90,6 +92,8 @@ func NewPhotoURLFromRows(rows *sql.Rows) ([]*PhotoURL, error) {
 		}
 		urls = append(urls, &url)
 	}
+
+	rows.Close()
 
 	return urls, nil
 }

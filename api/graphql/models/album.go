@@ -37,5 +37,7 @@ func NewAlbumsFromRows(rows *sql.Rows) ([]*Album, error) {
 		albums = append(albums, &album)
 	}
 
+	rows.Close()
+
 	return albums, nil
 }

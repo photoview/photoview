@@ -52,6 +52,8 @@ func NewUsersFromRows(rows *sql.Rows) ([]*User, error) {
 		users = append(users, &user)
 	}
 
+	rows.Close()
+
 	return users, nil
 }
 
