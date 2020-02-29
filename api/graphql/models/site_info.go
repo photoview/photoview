@@ -6,6 +6,7 @@ import (
 
 func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 	rows, err := db.Query("SELECT * FROM site_info")
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}

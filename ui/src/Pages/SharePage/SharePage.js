@@ -60,12 +60,12 @@ const tokenQuery = gql`
       maker
       lens
       dateShot
-      fileSize
       exposure
       aperture
       iso
       focalLength
       flash
+      exposureProgram
     }
   }
 `

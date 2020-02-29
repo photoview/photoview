@@ -412,6 +412,7 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 		ScannerError("Could not get albums from database: %s\n", err)
 		return
 	}
+	defer rows.Close()
 
 	deleted_albums := 0
 	deleted_ids := make([]interface{}, 0)
