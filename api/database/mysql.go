@@ -73,7 +73,7 @@ func SetupDatabase() *sql.DB {
 		break
 	}
 
-	db.SetMaxOpenConns(24)
+	db.SetMaxOpenConns(120)
 
 	return db
 }
