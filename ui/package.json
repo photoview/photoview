@@ -53,11 +53,7 @@
     "react-router-prop-types": "^1.0.4"
   },
   "cache": {
-    "swDest": "service-worker.js",
-    "modifyURLPrefix": {
-      "/": "/ui",
-      "": "/ui/"
-    }
+    "swDest": "service-worker.js"
   },
   "husky": {
     "hooks": {

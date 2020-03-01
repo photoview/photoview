@@ -12,11 +12,11 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  api:
-    build: ./api
+  photoview:
+    build: .
     restart: always
-    expose:
-      - 80
+    ports:
+      - "8000:80"
     depends_on:
       - db
     environment:
@@ -25,7 +25,7 @@ services:
       # Change This: The publicly exposed url for the api
       # For example if the server is available from the domain example.com,
       # change this value to http://example.com/api
-      - API_ENDPOINT=http://localhost:8080/api
+      - API_ENDPOINT=http://localhost:8080/
       - PUBLIC_ENDPOINT=http://localhost:8080/
       - API_LISTEN_PORT=80
     volumes:
@@ -36,32 +36,6 @@ services:
       # You can mount multiple paths, if your photos are spread across multiple directories.
       - ./photos_path:/photos:ro
       - api_cache:/app/cache
-
-  ui:
-    build:
-      context: ./ui
-      args:
-        # Change This: The publicly exposed url for the graphql api
-        # For example if the server is available from the domain example.com,
-        # change this value to http://example.com/api/graphql
-        GRAPHQL_ENDPOINT: http://localhost:8080/api/graphql
-    restart: always
-    expose:
-      - 80
-    depends_on:
-      - api
-
-  proxy:
-    image: nginx
-    restart: always
-    volumes:
-      - ./docker/nginx-proxy/default.conf:/etc/nginx/conf.d/default.conf
-    ports:
-      # Change This: Replace 8080 with the port you want photoview to be accessible at
-      - 8080:80
-    depends_on:
-      - api
-      - ui
 
 volumes:
   db_data:
