@@ -272,8 +272,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 var SupportedMimetypes = [...]string{
 	"image/jpeg",
 	"image/png",
-	// todo: add support for tiff
-	// "image/tiff",
+	"image/tiff",
 	"image/webp",
 	"image/x-canon-cr2",
 	"image/bmp",

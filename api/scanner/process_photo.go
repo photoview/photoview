@@ -17,13 +17,14 @@ import (
 	"github.com/viktorstrate/photoview/api/utils"
 
 	// Image decoders
-	_ "golang.org/x/image/bmp"
-	// _ "golang.org/x/image/tiff"
 	_ "image/gif"
 	_ "image/png"
 
-	_ "github.com/nf/cr2"
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
+
+	cr2Decoder "github.com/nf/cr2"
 )
 
 // Higher order function used to check if PhotoURL for a given PhotoPurpose exists
@@ -261,6 +262,7 @@ func encodeImageJPEG(photoPath string, photoImage image.Image, jpegOptions *jpeg
 	return nil
 }
 
+// ProcessImageData is used to easily decode image data, with a cache so expensive operations are not repeated
 type ProcessImageData struct {
 	photoPath       string
 	_photoImage     image.Image
@@ -268,6 +270,7 @@ type ProcessImageData struct {
 	_contentType    *string
 }
 
+// ContentType reads the image to determine its content type
 func (img *ProcessImageData) ContentType() (*string, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
@@ -295,6 +298,7 @@ func (img *ProcessImageData) ContentType() (*string, error) {
 	return img._contentType, nil
 }
 
+// PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
 func (img *ProcessImageData) PhotoImage() (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
@@ -306,16 +310,31 @@ func (img *ProcessImageData) PhotoImage() (image.Image, error) {
 	}
 	defer photoFile.Close()
 
-	photoImg, _, err := image.Decode(photoFile)
+	var photoImg image.Image
+	contentType, err := img.ContentType()
 	if err != nil {
-		log.Println("ERROR: decoding image")
 		return nil, err
+	}
+
+	if contentType != nil && *contentType == "image/x-canon-cr2" {
+		photoImg, err = cr2Decoder.Decode(photoFile)
+		if err != nil {
+			log.Println("ERROR: decoding cr2 raw image")
+			return nil, err
+		}
+	} else {
+		photoImg, _, err = image.Decode(photoFile)
+		if err != nil {
+			log.Println("ERROR: decoding image")
+			return nil, err
+		}
 	}
 
 	img._photoImage = photoImg
 	return img._photoImage, nil
 }
 
+// ThumbnailImage downsizes the image and returns it
 func (img *ProcessImageData) ThumbnailImage() (image.Image, error) {
 	photoImage, err := img.PhotoImage()
 	if err != nil {
