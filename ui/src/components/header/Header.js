@@ -22,7 +22,7 @@ const Title = styled.h1`
 const Header = () => (
   <Container>
     <Title>Photoview</Title>
-    <SearchBar />
+    {localStorage.getItem('token') ? <SearchBar /> : null}
   </Container>
 )
 

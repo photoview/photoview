@@ -53,6 +53,7 @@ const Results = styled.div`
 const SEARCH_QUERY = gql`
   query searchQuery($query: String!) {
     search(query: $query) {
+      query
       albums {
         id
         title
@@ -67,6 +68,9 @@ const SEARCH_QUERY = gql`
         title
         thumbnail {
           url
+        }
+        album {
+          id
         }
       }
     }
@@ -118,6 +122,7 @@ const ResultTitle = styled.h1`
 
 const SearchResults = ({ result }) => {
   const { data, loading } = result
+  const query = data && data.search.query
 
   const photos = (data && data.search.photos) || []
   const albums = (data && data.search.albums) || []
@@ -128,11 +133,11 @@ const SearchResults = ({ result }) => {
     message = 'No results found'
 
   const albumElements = albums.map(album => (
-    <AlbumRow key={album.id} {...album} />
+    <AlbumRow key={album.id} query={query} album={album} />
   ))
 
   const photoElements = photos.map(photo => (
-    <PhotoRow key={photo.id} {...photo} />
+    <PhotoRow key={photo.id} query={query} photo={photo} />
   ))
 
   return (
@@ -144,24 +149,28 @@ const SearchResults = ({ result }) => {
       show={data}
     >
       {message}
-      <ResultTitle>Albums</ResultTitle>
+      {albumElements.length > 0 && <ResultTitle>Albums</ResultTitle>}
       {albumElements}
-      <ResultTitle>Photos</ResultTitle>
+      {photoElements.length > 0 && <ResultTitle>Photos</ResultTitle>}
       {photoElements}
     </Results>
   )
 }
 
+SearchResults.propTypes = {
+  result: PropTypes.object,
+}
+
 const RowLink = styled(NavLink)`
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #eee;
   color: black;
 `
 
 const PhotoSearchThumbnail = styled(ProtectedImage)`
   width: 50px;
   height: 50px;
+  margin: 2px 0;
   object-fit: contain;
 `
 
@@ -170,7 +179,7 @@ const AlbumSearchThumbnail = styled(ProtectedImage)`
   height: 50px;
   margin: 4px 0;
   border-radius: 4px;
-  border: 1px solid #888;
+  /* border: 1px solid #888; */
   object-fit: cover;
 `
 
@@ -179,22 +188,48 @@ const RowTitle = styled.span`
   padding-left: 8px;
 `
 
-const PhotoRow = photo => (
-  <RowLink to="/">
+const PhotoRow = ({ query, photo }) => (
+  <RowLink to={`/album/${photo.album.id}`}>
     <PhotoSearchThumbnail src={photo.thumbnail.url} />
-    <RowTitle>{photo.title}</RowTitle>
+    <RowTitle>{searchHighlighted(query, photo.title)}</RowTitle>
   </RowLink>
 )
 
-const AlbumRow = album => (
+PhotoRow.propTypes = {
+  query: PropTypes.string.isRequired,
+  photo: PropTypes.object.isRequired,
+}
+
+const AlbumRow = ({ query, album }) => (
   <RowLink to={`/album/${album.id}`}>
     <AlbumSearchThumbnail src={album.thumbnail.thumbnail.url} />
-    <RowTitle>{album.title}</RowTitle>
+    <RowTitle>{searchHighlighted(query, album.title)}</RowTitle>
   </RowLink>
 )
 
-SearchResults.propTypes = {
-  result: PropTypes.object,
+AlbumRow.propTypes = {
+  query: PropTypes.string.isRequired,
+  album: PropTypes.object.isRequired,
+}
+
+const searchHighlighted = (query, text) => {
+  const i = text.toLowerCase().indexOf(query.toLowerCase())
+
+  if (i == -1) {
+    return text
+  }
+
+  const start = text.substring(0, i)
+  const middle = text.substring(i, i + query.length)
+  const end = text.substring(i + query.length)
+
+  return (
+    <>
+      {start}
+      <b>{middle}</b>
+      {end}
+    </>
+  )
 }
 
 export default SearchBar
