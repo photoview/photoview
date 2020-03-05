@@ -29,7 +29,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, 
 
 	photoRows, err := r.Database.Query(`
 		SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id
-		WHERE album.owner_id = ? AND photo.title LIKE ? OR photo.path LIKE ?
+		WHERE album.owner_id = ? AND ( photo.title LIKE ? OR photo.path LIKE ? )
 		ORDER BY (
 			case when photo.title LIKE ? then 2
 			     when photo.path LIKE ? then 1
@@ -48,7 +48,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, 
 
 	albumRows, err := r.Database.Query(`
 		SELECT * FROM album
-		WHERE owner_id = ? AND title LIKE ? OR path LIKE ?
+		WHERE owner_id = ? AND ( title LIKE ? OR path LIKE ? )
 		ORDER BY (
 			case when title LIKE ? then 2
 			     when path LIKE ? then 1
