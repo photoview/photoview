@@ -17,6 +17,7 @@
     "downloadjs": "^1.4.7",
     "graphql": "^14.6.0",
     "graphql-tag": "^2.10.3",
+    "lodash": "^4.17.15",
     "parcel-bundler": "^1.12.4",
     "prettier": "^1.19.1",
     "prop-types": "^15.7.2",
