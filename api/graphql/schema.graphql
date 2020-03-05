@@ -39,6 +39,8 @@ type Query {
   photo(id: Int!): Photo!
 
   shareToken(token: String!, password: String): ShareToken!
+
+  search(query: String!, limitPhotos: Int, limitAlbums: Int): SearchResult!
 }
 
 type Mutation {
@@ -227,4 +229,10 @@ type PhotoEXIF {
   flash: String
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+}
+
+type SearchResult {
+  query: String!
+  albums: [Album!]!
+  photos: [Photo!]!
 }

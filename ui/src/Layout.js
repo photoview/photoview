@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
@@ -8,6 +8,7 @@ import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Authorized } from './AuthorizedRoute'
 import Helmet from 'react-helmet'
+import Header from './components/header/Header'
 
 const adminQuery = gql`
   query adminQuery {
@@ -76,21 +77,6 @@ const SideButtonLabel = styled.div`
   font-size: 16px;
 `
 
-const Header = styled.div`
-  height: 60px;
-  width: 100%;
-  position: fixed;
-  background: white;
-  top: 0;
-  /* border-bottom: 1px solid rgba(0, 0, 0, 0.1); */
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-`
-
-const Title = styled.h1`
-  font-size: 36px;
-  padding: 5px 12px;
-`
-
 const Layout = ({ children, title }) => (
   <Container>
     <Helmet>
@@ -132,9 +118,7 @@ const Layout = ({ children, title }) => (
         <div style={{ height: 24 }}></div>
       </Content>
     </Sidebar>
-    <Header>
-      <Title>Photoview</Title>
-    </Header>
+    <Header />
   </Container>
 )
 
