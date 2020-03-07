@@ -11,7 +11,6 @@ import { useLazyQuery } from '@apollo/react-hooks'
 
 const Header = styled.h1`
   margin: 0 0 12px 0 !important;
-  height: 36px;
 
   & a {
     color: black;
