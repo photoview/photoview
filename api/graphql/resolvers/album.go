@@ -165,14 +165,20 @@ func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*model
 }
 
 func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		empty := make([]*models.Album, 0)
+		return empty, nil
+	}
+
 	rows, err := r.Database.Query(`
 		WITH recursive path_albums AS (
 			SELECT * FROM album anchor WHERE anchor.album_id = ?
 			UNION
 			SELECT parent.* FROM path_albums child JOIN album parent ON parent.album_id = child.parent_album
 		)
-		SELECT * FROM path_albums WHERE album_id != ?
-	`, obj.AlbumID, obj.AlbumID)
+		SELECT * FROM path_albums WHERE album_id != ? AND owner_id = ?
+	`, obj.AlbumID, obj.AlbumID, user.UserID)
 	if err != nil {
 		return nil, err
 	}
