@@ -163,3 +163,19 @@ func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*model
 
 	return models.NewShareTokensFromRows(rows)
 }
+
+func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
+	rows, err := r.Database.Query(`
+		WITH recursive path_albums AS (
+			SELECT * FROM album anchor WHERE anchor.album_id = ?
+			UNION
+			SELECT parent.* FROM path_albums child JOIN album parent ON parent.album_id = child.parent_album
+		)
+		SELECT * FROM path_albums WHERE album_id != ?
+	`, obj.AlbumID, obj.AlbumID)
+	if err != nil {
+		return nil, err
+	}
+
+	return models.NewAlbumsFromRows(rows)
+}

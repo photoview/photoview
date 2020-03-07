@@ -166,9 +166,10 @@ type Album {
   "The user who owns this album"
   owner: User!
   "The path on the filesystem of the server, where this album is located"
-  path: String!
+  filePath: String!
   "An image in this album used for previewing this album"
   thumbnail: Photo
+  path: [Album!]!
 
   shares: [ShareToken]
 }

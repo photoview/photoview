@@ -16,6 +16,10 @@ func (a *Album) ID() int {
 	return a.AlbumID
 }
 
+func (a *Album) FilePath() string {
+	return a.Path
+}
+
 func NewAlbumFromRow(row *sql.Row) (*Album, error) {
 	album := Album{}
 
