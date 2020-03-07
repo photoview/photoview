@@ -193,6 +193,11 @@ func scan(database *sql.DB, user *models.User) {
 		for _, item := range dirContent {
 			subalbumPath := path.Join(albumPath, item.Name())
 
+			// Skip if directory is hidden
+			if path.Base(subalbumPath)[0:1] == "." {
+				continue
+			}
+
 			if item.IsDir() && directoryContainsPhotos(subalbumPath, &scanner_cache) {
 				scanQueue.PushBack(scanInfo{
 					path:     subalbumPath,
