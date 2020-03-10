@@ -93,6 +93,7 @@ func scan(database *sql.DB, user *models.User) {
 	// Start scanning
 	scanner_cache := make(scanner_cache)
 	album_paths_scanned := make([]interface{}, 0)
+	photo_paths_scanned := make([]interface{}, 0)
 
 	type scanInfo struct {
 		path     string
@@ -165,6 +166,8 @@ func scan(database *sql.DB, user *models.User) {
 					continue
 				}
 
+				photo_paths_scanned = append(photo_paths_scanned, photoPath)
+
 				photo, newPhoto, err := ScanPhoto(tx, photoPath, albumId, processKey)
 				if err != nil {
 					ScannerError("Scanning image %s: %s", photoPath, err)
@@ -220,7 +223,7 @@ func scan(database *sql.DB, user *models.User) {
 		Positive: true,
 	})
 
-	cleanupCache(database, album_paths_scanned, user)
+	cleanupCache(database, album_paths_scanned, photo_paths_scanned, user)
 
 	err := processUnprocessedPhotos(database, user, notifyKey)
 	if err != nil {
@@ -401,33 +404,32 @@ func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey str
 	return nil
 }
 
-func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.User) {
+func cleanupCache(database *sql.DB, scanned_albums []interface{}, scanned_photos []interface{}, user *models.User) {
 	if len(scanned_albums) == 0 {
 		return
 	}
 
-	args := make([]interface{}, 0)
-	args = append(args, user.UserID)
-	args = append(args, scanned_albums...)
+	// Delete old albums
+	album_args := make([]interface{}, 0)
+	album_args = append(album_args, user.UserID)
+	album_args = append(album_args, scanned_albums...)
 
 	albums_questions := strings.Repeat("?,", len(scanned_albums))[:len(scanned_albums)*2-1]
-	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", args...)
+	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", album_args...)
 	if err != nil {
 		ScannerError("Could not get albums from database: %s\n", err)
 		return
 	}
 	defer rows.Close()
 
-	deleted_albums := 0
-	deleted_ids := make([]interface{}, 0)
+	deleted_album_ids := make([]interface{}, 0)
 	for rows.Next() {
 		var album_id int
 		if err := rows.Scan(&album_id); err != nil {
 			ScannerError("Could not parse album to be removed (album_id %d): %s\n", album_id, err)
 		}
 
-		deleted_ids = append(deleted_ids, album_id)
-		deleted_albums++
+		deleted_album_ids = append(deleted_album_ids, album_id)
 		cache_path := path.Join("./photo_cache", strconv.Itoa(album_id))
 		err := os.RemoveAll(cache_path)
 		if err != nil {
@@ -435,22 +437,68 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, user *models.U
 		}
 	}
 
-	if len(deleted_ids) > 0 {
-		albums_questions = strings.Repeat("?,", len(deleted_ids))[:len(deleted_ids)*2-1]
+	if len(deleted_album_ids) > 0 {
+		albums_questions = strings.Repeat("?,", len(deleted_album_ids))[:len(deleted_album_ids)*2-1]
 
-		if _, err := database.Exec("DELETE FROM album WHERE album_id IN ("+albums_questions+")", deleted_ids...); err != nil {
+		if _, err := database.Exec("DELETE FROM album WHERE album_id IN ("+albums_questions+")", deleted_album_ids...); err != nil {
 			ScannerError("Could not delete old albums from database:\n%s\n", err)
 		}
+	}
 
+	// Delete old photos
+	photo_args := make([]interface{}, 0)
+	photo_args = append(photo_args, user.UserID)
+	photo_args = append(photo_args, scanned_photos...)
+
+	photo_questions := strings.Repeat("?,", len(scanned_photos))[:len(scanned_photos)*2-1]
+
+	rows, err = database.Query(`
+		SELECT photo.photo_id as photo_id, album.album_id as album_id FROM photo JOIN album ON photo.album_id = album.album_id
+		WHERE album.owner_id = ? AND photo.path NOT IN (`+photo_questions+`)
+	`, photo_args...)
+	if err != nil {
+		ScannerError("Could not get deleted photos from database: %s\n", err)
+		return
+	}
+	defer rows.Close()
+
+	deleted_photo_ids := make([]interface{}, 0)
+
+	for rows.Next() {
+		var photo_id int
+		var album_id int
+
+		if err := rows.Scan(&photo_id, &album_id); err != nil {
+			ScannerError("Could not parse photo to be removed (album_id %d, photo_id %d): %s\n", album_id, photo_id, err)
+		}
+
+		deleted_photo_ids = append(deleted_photo_ids, photo_id)
+		cache_path := path.Join("./photo_cache", strconv.Itoa(album_id), strconv.Itoa(photo_id))
+		err := os.RemoveAll(cache_path)
+		if err != nil {
+			ScannerError("Could not delete unused cache photo folder: %s\n%s\n", cache_path, err)
+		}
+	}
+
+	if len(deleted_photo_ids) > 0 {
+		photo_questions = strings.Repeat("?,", len(deleted_photo_ids))[:len(deleted_photo_ids)*2-1]
+
+		if _, err := database.Exec("DELETE FROM photo WHERE photo_id IN ("+photo_questions+")", deleted_photo_ids...); err != nil {
+			ScannerError("Could not delete old photos from database:\n%s\n", err)
+		}
+	}
+
+	if len(deleted_album_ids) > 0 || len(deleted_photo_ids) > 0 {
+		timeout := 3000
 		notification.BroadcastNotification(&models.Notification{
 			Key:     utils.GenerateToken(),
 			Type:    models.NotificationTypeMessage,
-			Header:  "Deleted old albums",
-			Content: fmt.Sprintf("Deleted %d albums, that was not found", len(deleted_ids)),
+			Header:  "Deleted old photos",
+			Content: fmt.Sprintf("Deleted %d albums and %d photos, that was not found on disk", len(deleted_album_ids), len(deleted_photo_ids)),
+			Timeout: &timeout,
 		})
 	}
 
-	log.Printf("Deleted %d unused albums from cache", deleted_albums)
 }
 
 func ScannerError(format string, args ...interface{}) {
