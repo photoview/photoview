@@ -1,10 +1,11 @@
 package utils
 
-import "crypto/rand"
-
-import "math/big"
-
-import "log"
+import (
+	"crypto/rand"
+	"fmt"
+	"log"
+	"math/big"
+)
 
 func GenerateToken() string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -22,4 +23,21 @@ func GenerateToken() string {
 		b[i] = charset[n.Int64()]
 	}
 	return string(b)
+}
+
+type PhotoviewError struct {
+	message  string
+	original error
+}
+
+func (e PhotoviewError) Error() string {
+	return fmt.Sprintf("%s: %s", e.message, e.original)
+}
+
+func HandleError(message string, err error) PhotoviewError {
+	log.Printf("ERROR: %s: %s", message, err)
+	return PhotoviewError{
+		message:  message,
+		original: err,
+	}
 }
