@@ -168,14 +168,14 @@ func scan(database *sql.DB, user *models.User) {
 
 				photo_paths_scanned = append(photo_paths_scanned, photoPath)
 
-				photo, newPhoto, err := ScanPhoto(tx, photoPath, albumId, processKey)
+				photo, isNewPhoto, err := ScanPhoto(tx, photoPath, albumId, processKey)
 				if err != nil {
 					ScannerError("Scanning image %s: %s", photoPath, err)
 					tx.Rollback()
 					continue
 				}
 
-				if newPhoto {
+				if isNewPhoto {
 					newPhotos.PushBack(photo)
 
 					if newPhotos.Len()%25 == 0 {
@@ -375,7 +375,7 @@ func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey str
 		err = ProcessPhoto(tx, photo)
 		if err != nil {
 			tx.Rollback()
-			ScannerError("Could not process photo: %s", err)
+			ScannerError("Could not process photo (%s): %s", photo.Path, err)
 			continue
 		}
 

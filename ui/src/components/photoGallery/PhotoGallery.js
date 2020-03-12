@@ -78,6 +78,8 @@ const PhotoGallery = ({
           )
         }
 
+        console.log(minWidth)
+
         return (
           <Photo
             key={photo.id}

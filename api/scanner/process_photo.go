@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype"
-	"github.com/nfnt/resize"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
 
@@ -53,7 +53,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 	log.Printf("Processing photo: %s\n", photo.Path)
 
 	imageData := ProcessImageData{
-		photoPath: photo.Path,
+		photo: photo,
 	}
 
 	photoName := path.Base(photo.Path)
@@ -76,7 +76,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
 		original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
 
-		photoImage, err := imageData.PhotoImage()
+		photoImage, err := imageData.PhotoImage(tx)
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,9 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 			return err
 		}
 
-		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoImage.Bounds().Max.X, photoImage.Bounds().Max.Y, models.PhotoOriginal, contentType)
+		photoDimensions := photoImage.Bounds().Max
+
+		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoDimensions.X, photoDimensions.Y, models.PhotoOriginal, contentType)
 		if err != nil {
 			log.Printf("Could not insert original photo url: %d, %s\n", photo.PhotoID, photoName)
 			return err
@@ -118,7 +120,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
 		thumbnail_name = thumbnail_name + ".jpg"
 
-		thumbnailImage, err := imageData.ThumbnailImage()
+		thumbnailImage, err := imageData.ThumbnailImage(tx)
 		if err != nil {
 			return err
 		}
@@ -140,7 +142,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.PhotoName)
 
-			thumbnailImage, err := imageData.ThumbnailImage()
+			thumbnailImage, err := imageData.ThumbnailImage(tx)
 			if err != nil {
 				return err
 			}
@@ -175,7 +177,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 			highres_name = strings.ReplaceAll(highres_name, " ", "_")
 			highres_name = highres_name + ".jpg"
 
-			photoImage, err := imageData.PhotoImage()
+			photoImage, err := imageData.PhotoImage(tx)
 			if err != nil {
 				return err
 			}
@@ -199,7 +201,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		if _, err := os.Stat(highResPath); os.IsNotExist(err) {
 			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
 
-			photoImage, err := imageData.PhotoImage()
+			photoImage, err := imageData.PhotoImage(tx)
 			if err != nil {
 				return err
 			}
@@ -264,7 +266,7 @@ func encodeImageJPEG(photoPath string, photoImage image.Image, jpegOptions *jpeg
 
 // ProcessImageData is used to easily decode image data, with a cache so expensive operations are not repeated
 type ProcessImageData struct {
-	photoPath       string
+	photo           *models.Photo
 	_photoImage     image.Image
 	_thumbnailImage image.Image
 	_contentType    *string
@@ -276,16 +278,16 @@ func (img *ProcessImageData) ContentType() (*string, error) {
 		return img._contentType, nil
 	}
 
-	file, err := os.Open(img.photoPath)
+	file, err := os.Open(img.photo.Path)
 	if err != nil {
-		ScannerError("Could not open file %s: %s\n", img.photoPath, err)
+		ScannerError("Could not open file %s: %s\n", img.photo.Path, err)
 		return nil, err
 	}
 	defer file.Close()
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
-		ScannerError("Could not read file %s: %s\n", img.photoPath, err)
+		ScannerError("Could not read file %s: %s\n", img.photo.Path, err)
 		return nil, err
 	}
 
@@ -299,12 +301,12 @@ func (img *ProcessImageData) ContentType() (*string, error) {
 }
 
 // PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
-func (img *ProcessImageData) PhotoImage() (image.Image, error) {
+func (img *ProcessImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}
 
-	photoFile, err := os.Open(img.photoPath)
+	photoFile, err := os.Open(img.photo.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -319,15 +321,53 @@ func (img *ProcessImageData) PhotoImage() (image.Image, error) {
 	if contentType != nil && *contentType == "image/x-canon-cr2" {
 		photoImg, err = cr2Decoder.Decode(photoFile)
 		if err != nil {
-			log.Println("ERROR: decoding cr2 raw image")
-			return nil, err
+			return nil, utils.HandleError("cr2 raw image decoding", err)
 		}
 	} else {
 		photoImg, _, err = image.Decode(photoFile)
 		if err != nil {
-			log.Println("ERROR: decoding image")
+			return nil, utils.HandleError("image decoding", err)
+		}
+	}
+
+	// Get orientation from exif data
+	row := tx.QueryRow("SELECT photo_exif.orientation FROM photo JOIN photo_exif WHERE photo.exif_id = photo_exif.exif_id AND photo.photo_id = ?", img.photo.PhotoID)
+	var orientation int
+	if err = row.Scan(&orientation); err != nil {
+		// If not found use default orientation (not rotate)
+		if err == sql.ErrNoRows {
+			orientation = 0
+		} else {
 			return nil, err
 		}
+	}
+
+	log.Printf("ORIENTATION: %d\n", orientation)
+
+	switch orientation {
+	case 2:
+		photoImg = imaging.FlipH(photoImg)
+		break
+	case 3:
+		photoImg = imaging.Rotate180(photoImg)
+		break
+	case 4:
+		photoImg = imaging.FlipV(photoImg)
+		break
+	case 5:
+		photoImg = imaging.Transpose(photoImg)
+		break
+	case 6:
+		photoImg = imaging.Rotate270(photoImg)
+		break
+	case 7:
+		photoImg = imaging.Transverse(photoImg)
+		break
+	case 8:
+		photoImg = imaging.Rotate90(photoImg)
+		break
+	default:
+		break
 	}
 
 	img._photoImage = photoImg
@@ -335,13 +375,26 @@ func (img *ProcessImageData) PhotoImage() (image.Image, error) {
 }
 
 // ThumbnailImage downsizes the image and returns it
-func (img *ProcessImageData) ThumbnailImage() (image.Image, error) {
-	photoImage, err := img.PhotoImage()
+func (img *ProcessImageData) ThumbnailImage(tx *sql.Tx) (image.Image, error) {
+	photoImage, err := img.PhotoImage(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	thumbImage := resize.Thumbnail(1024, 1024, photoImage, resize.Bilinear)
+	dimensions := photoImage.Bounds().Max
+	aspect := float64(dimensions.X) / float64(dimensions.Y)
+
+	var width, height int
+
+	if aspect > 1 {
+		width = 1024
+		height = int(1024 / aspect)
+	} else {
+		width = int(1024 * aspect)
+		height = 1024
+	}
+
+	thumbImage := imaging.Thumbnail(photoImage, width, height, imaging.NearestNeighbor)
 	img._thumbnailImage = thumbImage
 
 	return img._thumbnailImage, nil

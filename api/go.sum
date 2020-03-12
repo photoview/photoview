@@ -6,6 +6,8 @@ github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1ei82L+c=
+github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
 github.com/dsoprea/go-exif v0.0.0-20200126052615-bd04addaf40f h1:yIPu74TXwq1dxn9edEn4p1si4DW/c/h7sgEJ/zMZNcg=
 github.com/dsoprea/go-exif v0.0.0-20200126052615-bd04addaf40f/go.mod h1:lOaOt7+UEppOgyvRy749v3do836U/hw0YVJNjoyPaEs=
 github.com/dsoprea/go-exif/v2 v2.0.0-20200126052615-bd04addaf40f h1:LJ4lH4r8MgKEC5HeSNRw81lfVOlAM0xELOOvf712H0o=
@@ -90,6 +92,7 @@ github.com/xor-gate/goexif2 v1.1.0 h1:OvTZ5iEvsDhRWFjV5xY3wT7uHFna28nSSP7ucau+cX
 github.com/xor-gate/goexif2 v1.1.0/go.mod h1:eRjn3VSkAwpNpxEx/CGmd0zg0JFGL3akrSMxnJ581AY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 h1:VklqNMn3ovrHsnt90PveolxSbWFaJdECFbxSq0Mqo2M=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
+golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/image v0.0.0-20200119044424-58c23975cae1 h1:5h3ngYt7+vXCDZCup/HkCQgW5XwmSvR/nA2JmJ0RErg=
 golang.org/x/image v0.0.0-20200119044424-58c23975cae1/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
