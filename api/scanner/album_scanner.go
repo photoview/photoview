@@ -10,7 +10,9 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bep/debounce"
 	"github.com/h2non/filetype"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
@@ -80,6 +82,7 @@ func scan(database *sql.DB, user *models.User) {
 
 	notifyKey := utils.GenerateToken()
 	processKey := utils.GenerateToken()
+	scanNotifyDebounce := debounce.New(1 * time.Second)
 
 	timeout := 3000
 	notification.BroadcastNotification(&models.Notification{
@@ -178,14 +181,14 @@ func scan(database *sql.DB, user *models.User) {
 				if isNewPhoto {
 					newPhotos.PushBack(photo)
 
-					if newPhotos.Len()%25 == 0 {
+					scanNotifyDebounce(func() {
 						notification.BroadcastNotification(&models.Notification{
 							Key:     processKey,
 							Type:    models.NotificationTypeMessage,
 							Header:  "Scanning photo",
 							Content: fmt.Sprintf("Scanning image at %s", photoPath),
 						})
-					}
+					})
 				}
 
 				tx.Commit()
@@ -329,6 +332,7 @@ func isPathImage(path string, cache *scanner_cache) bool {
 func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey string) error {
 
 	processKey := utils.GenerateToken()
+	processNotifyDebounce := debounce.New(500 * time.Microsecond)
 
 	rows, err := database.Query(`
 		SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id
@@ -362,14 +366,16 @@ func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey str
 			continue
 		}
 
-		var progress float64 = float64(count) / float64(len(photosToProcess)) * 100.0
+		processNotifyDebounce(func() {
+			var progress float64 = float64(count) / float64(len(photosToProcess)) * 100.0
 
-		notification.BroadcastNotification(&models.Notification{
-			Key:      processKey,
-			Type:     models.NotificationTypeProgress,
-			Header:   fmt.Sprintf("Processing photos (%d of %d)", count, len(photosToProcess)),
-			Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
-			Progress: &progress,
+			notification.BroadcastNotification(&models.Notification{
+				Key:      processKey,
+				Type:     models.NotificationTypeProgress,
+				Header:   fmt.Sprintf("Processing photos (%d of %d)", count, len(photosToProcess)),
+				Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
+				Progress: &progress,
+			})
 		})
 
 		err = ProcessPhoto(tx, photo)

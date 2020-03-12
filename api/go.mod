@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/99designs/gqlgen v0.10.2
+	github.com/bep/debounce v1.2.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/fatih/color v1.9.0
 	github.com/go-sql-driver/mysql v1.5.0

@@ -342,8 +342,6 @@ func (img *ProcessImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
 		}
 	}
 
-	log.Printf("ORIENTATION: %d\n", orientation)
-
 	switch orientation {
 	case 2:
 		photoImg = imaging.FlipH(photoImg)
