@@ -47,6 +47,12 @@ type ScannerResult struct {
 	Message  *string  `json:"message"`
 }
 
+type SearchResult struct {
+	Query  string   `json:"query"`
+	Albums []*Album `json:"albums"`
+	Photos []*Photo `json:"photos"`
+}
+
 // General public information about the site
 type SiteInfo struct {
 	InitialSetup bool `json:"initialSetup"`
