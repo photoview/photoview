@@ -75,11 +75,6 @@ func main() {
 
 	devMode := os.Getenv("DEVELOPMENT") == "1"
 
-	port := os.Getenv("API_LISTEN_PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
 	db := database.SetupDatabase()
 	defer db.Close()
 
@@ -134,10 +129,15 @@ func main() {
 	endpointRouter.PathPrefix("/").Handler(spa)
 
 	if devMode {
-		log.Printf("🚀 Graphql playground ready at %s", endpointURL.String())
+		log.Printf("🚀 Graphql playground ready at %s\n", endpointURL.String())
 	} else {
-		log.Printf("Photoview API endpoint available at %s", endpointURL.String())
+		log.Printf("Photoview API endpoint listening at %s\n", endpointURL.String())
+
+		publicEndpoint := os.Getenv("PUBLIC_ENDPOINT")
+		if publicEndpoint != "" && publicEndpoint != endpointURL.String() {
+			log.Printf("Photoview API public endpoint ready at %s\n", publicEndpoint)
+		}
 	}
 
-	log.Fatal(http.ListenAndServe(":"+port, rootRouter))
+	log.Fatal(http.ListenAndServe(":"+endpointURL.Port(), rootRouter))
 }

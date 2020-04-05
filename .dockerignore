@@ -1,0 +1,12 @@
+.git
+.gitignore
+.prettierrc
+.vscode
+photos_path
+screenshots
+
+ui/node_modules/
+ui/dist/
+ui/.cache/
+
+api/photo_cache
