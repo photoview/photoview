@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/gorilla/websocket"
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 func WebsocketUpgrader(devMode bool) websocket.Upgrader {
@@ -15,11 +15,7 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 			if devMode {
 				return true
 			} else {
-				pubEndpoint, err := url.Parse(os.Getenv("PUBLIC_ENDPOINT"))
-				if err != nil {
-					log.Printf("Could not parse API_ENDPOINT environment variable as url: %s", err)
-					return false
-				}
+				uiEndpoint := utils.UiEndpointUrl()
 
 				if r.Header.Get("origin") == "" {
 					return true
@@ -31,10 +27,10 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 					return false
 				}
 
-				if pubEndpoint.Host == originURL.Host {
+				if uiEndpoint.Host == originURL.Host {
 					return true
 				} else {
-					log.Printf("Not allowing websocket request from %s because it doesn't match PUBLIC_ENDPOINT %s", originURL.Host, pubEndpoint.Host)
+					log.Printf("Not allowing websocket request from %s because it doesn't match UI_ENDPOINT %s", originURL.Host, uiEndpoint.Host)
 					return false
 				}
 			}

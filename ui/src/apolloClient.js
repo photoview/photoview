@@ -7,17 +7,20 @@ import { setContext } from 'apollo-link-context'
 import { ApolloLink, split } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
 import { MessageState } from './components/messages/Messages'
+import urlJoin from 'url-join'
+
+const GRAPHQL_ENDPOINT = urlJoin(process.env.API_ENDPOINT, '/graphql')
 
 const httpLink = new HttpLink({
-  uri: process.env.GRAPHQL_ENDPOINT,
+  uri: GRAPHQL_ENDPOINT,
   credentials: 'same-origin',
 })
 
-console.log('GRAPHQL ENDPOINT', process.env.GRAPHQL_ENDPOINT)
+console.log('API ENDPOINT', process.env.API_ENDPOINT)
 
-const apiProtocol = new URL(process.env.GRAPHQL_ENDPOINT).protocol
+const apiProtocol = new URL(process.env.API_ENDPOINT).protocol
 
-let websocketUri = new URL(process.env.GRAPHQL_ENDPOINT)
+let websocketUri = new URL(GRAPHQL_ENDPOINT)
 websocketUri.protocol = apiProtocol === 'https:' ? 'wss:' : 'ws:'
 
 const wsLink = new WebSocketLink({

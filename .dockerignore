@@ -2,6 +2,8 @@
 .gitignore
 .prettierrc
 .vscode
+.env
+example.env
 photos_path
 screenshots
 

@@ -2,10 +2,9 @@ package models
 
 import (
 	"database/sql"
-	"log"
-	"net/url"
-	"os"
 	"path"
+
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 type Photo struct {
@@ -66,18 +65,9 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 
 func (p *PhotoURL) URL() string {
 
-	publicUrl := os.Getenv("PUBLIC_ENDPOINT")
-	if publicUrl == "" {
-		publicUrl = os.Getenv("API_ENDPOINT")
-	}
+	imageUrl := utils.ApiEndpointUrl()
+	imageUrl.Path = path.Join(imageUrl.Path, "photo", p.PhotoName)
 
-	imageUrl, err := url.Parse(publicUrl)
-	if err != nil {
-		log.Println("Endpoint url is not properly configured, make sure the PUBLIC_ENDPOINT AND API_ENDPOINT environment variables are set correctly")
-		return p.PhotoName
-	}
-
-	imageUrl.Path = path.Join(imageUrl.Path, "api", "photo", p.PhotoName)
 	return imageUrl.String()
 }
 

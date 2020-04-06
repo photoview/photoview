@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,13 +15,12 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/routes"
 	"github.com/viktorstrate/photoview/api/server"
+	"github.com/viktorstrate/photoview/api/utils"
 
 	"github.com/99designs/gqlgen/handler"
 	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/resolvers"
 )
-
-const defaultPort = "4001"
 
 // spaHandler implements the http.Handler interface, so we can use it
 // to respond to HTTP requests. The path to the static directory and
@@ -98,23 +96,19 @@ func main() {
 		Directives: graphqlDirective,
 	}
 
-	endpointURL, err := url.Parse(os.Getenv("API_ENDPOINT"))
-	if err != nil {
-		log.Println("WARN: Environment variable API_ENDPOINT not specified")
-		endpointURL, _ = url.Parse("/")
-	}
+	apiListenUrl := utils.ApiListenUrl()
 
-	endpointRouter := rootRouter.PathPrefix(endpointURL.Path).Subrouter()
+	endpointRouter := rootRouter.PathPrefix(apiListenUrl.Path).Subrouter()
 
 	if devMode {
-		endpointRouter.Handle("/api", handler.Playground("GraphQL playground", path.Join(endpointURL.Path, "/graphql")))
+		endpointRouter.Handle("/", handler.Playground("GraphQL playground", path.Join(apiListenUrl.Path, "/graphql")))
 	} else {
-		endpointRouter.HandleFunc("/api", func(w http.ResponseWriter, req *http.Request) {
+		endpointRouter.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte("photoview api endpoint"))
 		})
 	}
 
-	endpointRouter.Handle("/api/graphql",
+	endpointRouter.Handle("/graphql",
 		handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig),
 			handler.IntrospectionEnabled(devMode),
 			handler.WebsocketUpgrader(server.WebsocketUpgrader(devMode)),
@@ -122,22 +116,28 @@ func main() {
 		),
 	)
 
-	photoRouter := endpointRouter.PathPrefix("/api/photo").Subrouter()
+	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)
 
-	spa := spaHandler{staticPath: "/ui", indexPath: "index.html"}
-	endpointRouter.PathPrefix("/").Handler(spa)
+	shouldServeUI := os.Getenv("SERVE_UI") == "1"
 
-	if devMode {
-		log.Printf("🚀 Graphql playground ready at %s\n", endpointURL.String())
-	} else {
-		log.Printf("Photoview API endpoint listening at %s\n", endpointURL.String())
-
-		publicEndpoint := os.Getenv("PUBLIC_ENDPOINT")
-		if publicEndpoint != "" && publicEndpoint != endpointURL.String() {
-			log.Printf("Photoview API public endpoint ready at %s\n", publicEndpoint)
-		}
+	if shouldServeUI {
+		spa := spaHandler{staticPath: "/ui", indexPath: "index.html"}
+		rootRouter.PathPrefix("/").Handler(spa)
 	}
 
-	log.Fatal(http.ListenAndServe(":"+endpointURL.Port(), rootRouter))
+	if devMode {
+		log.Printf("🚀 Graphql playground ready at %s\n", apiListenUrl.String())
+	} else {
+		log.Printf("Photoview API endpoint listening at %s\n", apiListenUrl.String())
+
+		uiEndpoint := utils.UiEndpointUrl()
+		apiEndpoint := utils.ApiEndpointUrl()
+
+		log.Printf("Photoview API public endpoint ready at %s\n", apiEndpoint.String())
+		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+
+	}
+
+	log.Fatal(http.ListenAndServe(":"+apiListenUrl.Port(), rootRouter))
 }

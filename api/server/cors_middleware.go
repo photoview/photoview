@@ -1,14 +1,12 @@
 package server
 
 import (
-	"log"
 	"net/http"
-	"net/url"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
@@ -22,10 +20,7 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
 			w.Header().Set("Access-Control-Expose-Headers", "content-length")
 
-			endpoint, err := url.Parse(os.Getenv("API_ENDPOINT"))
-			if err != nil {
-				log.Fatalln("Could not parse API_ENDPOINT environment variable as url")
-			}
+			endpoint := utils.ApiEndpointUrl()
 			endpoint.Path = path.Join(endpoint.Path, "graphql")
 
 			if devMode {
@@ -34,12 +29,8 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 				w.Header().Set("Vary", "Origin")
 			} else {
 				// Production environment
-				publicEndpoint, err := url.Parse(os.Getenv("PUBLIC_ENDPOINT"))
-				if err != nil {
-					log.Printf("Error parsing environment variable PUBLIC_ENDPOINT as url: %s", err)
-				} else {
-					w.Header().Set("Access-Control-Allow-Origin", publicEndpoint.Scheme+"://"+publicEndpoint.Host)
-				}
+				uiEndpoint := utils.UiEndpointUrl()
+				w.Header().Set("Access-Control-Allow-Origin", uiEndpoint.Scheme+"://"+uiEndpoint.Host)
 			}
 
 			if req.Method != http.MethodOptions {

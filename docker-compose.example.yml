@@ -16,7 +16,7 @@ services:
     build:
       context: "."
       args:
-        - GRAPHQL_ENDPOINT=http://localhost:8000/api/graphql
+        - API_ENDPOINT=http://localhost:8000/api/
 
     restart: always
     ports:
@@ -26,21 +26,24 @@ services:
 
     environment:
       - MYSQL_URL=photoview:photo-secret@tcp(db)/photoview
+      - API_LISTEN_IP=photoview
+      - API_LISTEN_PORT=80
       - PHOTO_CACHE=/app/cache
+      - SERVE_UI=1
+
       # Change This: The publicly exposed url for the api
       # For example if the server is available from the domain example.com,
-      # change this value to http://example.com/api
-      - API_ENDPOINT=http://localhost:80/
+      # change this value to http://example.com/
       - PUBLIC_ENDPOINT=http://localhost:8000/
 
     volumes:
-      # Change This: Link photo paths from the host machine
+      - api_cache:/app/cache
+
       # Change this to the directory where your photos are located on your server.
       # If the photos are located at `/home/user/photos`, then change this value
       # to the following: `/home/user/photos:/photos:ro`.
       # You can mount multiple paths, if your photos are spread across multiple directories.
       - ./photos_path:/photos:ro
-      - api_cache:/app/cache
 
 volumes:
   db_data:
