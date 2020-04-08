@@ -2,9 +2,9 @@ package models
 
 import (
 	"database/sql"
-	"net/url"
-	"os"
 	"path"
+
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 type Photo struct {
@@ -64,11 +64,10 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 }
 
 func (p *PhotoURL) URL() string {
-	imageUrl, err := url.Parse(os.Getenv("API_ENDPOINT"))
-	if err != nil {
-		return path.Join("/photo", p.PhotoName)
-	}
+
+	imageUrl := utils.ApiEndpointUrl()
 	imageUrl.Path = path.Join(imageUrl.Path, "photo", p.PhotoName)
+
 	return imageUrl.String()
 }
 
