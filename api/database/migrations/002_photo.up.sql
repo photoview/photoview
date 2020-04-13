@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS photo_exif (
-  exif_id int NOT NULL AUTO_INCREMENT,
+  exif_id int(11) NOT NULL AUTO_INCREMENT,
   camera varchar(256),
   maker varchar(256),
   lens varchar(256),
@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS photo_exif (
 );
 
 CREATE TABLE IF NOT EXISTS album (
-  album_id int NOT NULL AUTO_INCREMENT,
+  album_id int(11) NOT NULL AUTO_INCREMENT,
   title varchar(256) NOT NULL,
-  parent_album int,
-  owner_id int NOT NULL,
+  parent_album int(11),
+  owner_id int(11) NOT NULL,
   path varchar(512) NOT NULL UNIQUE,
 
   PRIMARY KEY (album_id),
@@ -28,11 +28,11 @@ CREATE TABLE IF NOT EXISTS album (
 );
 
 CREATE TABLE IF NOT EXISTS photo (
-  photo_id int NOT NULL AUTO_INCREMENT,
+  photo_id int(11) NOT NULL AUTO_INCREMENT,
   title varchar(256) NOT NULL,
   path varchar(1024) NOT NULL UNIQUE,
-  album_id int NOT NULL,
-  exif_id int,
+  album_id int(11) NOT NULL,
+  exif_id int(11),
 
   PRIMARY KEY (photo_id),
   FOREIGN KEY (album_id) REFERENCES album(album_id) ON DELETE CASCADE,
@@ -40,11 +40,11 @@ CREATE TABLE IF NOT EXISTS photo (
 );
 
 CREATE TABLE IF NOT EXISTS photo_url (
-  url_id int NOT NULL AUTO_INCREMENT,
-  photo_id int NOT NULL,
+  url_id int(11) NOT NULL AUTO_INCREMENT,
+  photo_id int(11) NOT NULL,
   photo_name varchar(512) NOT NULL,
-  width int NOT NULL,
-  height int NOT NULL,
+  width int(11) NOT NULL,
+  height int(11) NOT NULL,
   purpose varchar(64) NOT NULL,
   content_type varchar(64) NOT NULL,
 

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS user (
-  user_id int NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL AUTO_INCREMENT,
   username varchar(256) NOT NULL UNIQUE,
   password varchar(256),
   root_path varchar(512),
@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 CREATE TABLE IF NOT EXISTS access_token (
-	token_id int NOT NULL AUTO_INCREMENT,
-  user_id int NOT NULL,
+	token_id int(11) NOT NULL AUTO_INCREMENT,
+  user_id int(11) NOT NULL,
 	value char(24) NOT NULL UNIQUE,
 	expire timestamp NOT NULL,
 
