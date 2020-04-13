@@ -4,6 +4,9 @@ FROM node:10 as ui
 ARG API_ENDPOINT
 ENV API_ENDPOINT=${API_ENDPOINT}
 
+ARG UI_PUBLIC_URL
+ENV UI_PUBLIC_URL=${UI_PUBLIC_URL}
+
 RUN mkdir -p /app
 WORKDIR /app
 
@@ -11,7 +14,7 @@ COPY ui/package*.json /app/
 RUN npm install
 COPY ui /app
 
-RUN npm run build
+RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 # Build API
 FROM golang:alpine AS api
