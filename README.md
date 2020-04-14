@@ -78,7 +78,7 @@ $ cd photoview
 $ docker-compose up -d
 ```
 
-If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, PhotoView can now be accessed at http://localhost:8080
+If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, PhotoView can now be accessed at http://localhost:8000
 
 ### Initial Setup
 
