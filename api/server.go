@@ -34,7 +34,7 @@ func main() {
 
 	// Migrate database
 	if err := database.MigrateDatabase(db); err != nil {
-		log.Fatalf("Could not migrate database: %s\n", err)
+		panic(fmt.Sprintf("Could not migrate database: %s\n", err))
 	}
 
 	rootRouter := mux.NewRouter()
