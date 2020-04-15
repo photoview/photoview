@@ -20,7 +20,7 @@ WORKDIR /app
 COPY api /app
 
 RUN go get -d -v ./...
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o photoview .
+RUN CGO_ENABLED=0 GOOS=linux GOARM=7 GOARCH=arm go build -o photoview .
 
 # Copy api and ui to production environment
 FROM alpine:latest
