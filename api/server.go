@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -38,7 +37,7 @@ func main() {
 
 	// Migrate database
 	if err := database.MigrateDatabase(db); err != nil {
-		panic(fmt.Sprintf("Could not migrate database: %s\n", err))
+		log.Panicf("Could not migrate database: %s\n", err)
 	}
 
 	rootRouter := mux.NewRouter()
