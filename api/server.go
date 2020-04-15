@@ -30,7 +30,10 @@ func main() {
 
 	devMode := os.Getenv("DEVELOPMENT") == "1"
 
-	db := database.SetupDatabase()
+	db, err := database.SetupDatabase()
+	if err != nil {
+		log.Panicf("Could not connect to database: %s\n", err)
+	}
 	defer db.Close()
 
 	// Migrate database
@@ -96,5 +99,5 @@ func main() {
 
 	}
 
-	log.Fatal(http.ListenAndServe(":"+apiListenUrl.Port(), rootRouter))
+	log.Panic(http.ListenAndServe(":"+apiListenUrl.Port(), rootRouter))
 }
