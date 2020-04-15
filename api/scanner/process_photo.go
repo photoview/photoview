@@ -332,17 +332,22 @@ func (img *ProcessImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
 
 	// Get orientation from exif data
 	row := tx.QueryRow("SELECT photo_exif.orientation FROM photo JOIN photo_exif WHERE photo.exif_id = photo_exif.exif_id AND photo.photo_id = ?", img.photo.PhotoID)
-	var orientation int
+	var orientation *int
 	if err = row.Scan(&orientation); err != nil {
 		// If not found use default orientation (not rotate)
 		if err == sql.ErrNoRows {
-			orientation = 0
+			orientation = nil
 		} else {
 			return nil, err
 		}
 	}
 
-	switch orientation {
+	if orientation == nil {
+		defaultOrientation := 0
+		orientation = &defaultOrientation
+	}
+
+	switch *orientation {
 	case 2:
 		photoImg = imaging.FlipH(photoImg)
 		break
