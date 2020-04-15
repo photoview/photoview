@@ -62,6 +62,26 @@ func (cache *scanner_cache) album_contains_photo(path string) *bool {
 	return nil
 }
 
+func ScanAll(database *sql.DB) error {
+	rows, err := database.Query("SELECT * FROM user")
+	if err != nil {
+		log.Printf("Could not fetch all users from database: %s\n", err.Error())
+		return err
+	}
+
+	users, err := models.NewUsersFromRows(rows)
+	if err != nil {
+		log.Printf("Could not convert users: %s\n", err)
+		return err
+	}
+
+	for _, user := range users {
+		go scan(database, user)
+	}
+
+	return nil
+}
+
 func ScanUser(database *sql.DB, userId int) error {
 
 	row := database.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
@@ -88,7 +108,7 @@ func scan(database *sql.DB, user *models.User) {
 		Key:     notifyKey,
 		Type:    models.NotificationTypeMessage,
 		Header:  "User scan started",
-		Content: "Scanning has started...",
+		Content: fmt.Sprintf("Scanning has started for user '%s'", user.Username),
 		Timeout: &timeout,
 	})
 
@@ -184,7 +204,7 @@ func scan(database *sql.DB, user *models.User) {
 						notification.BroadcastNotification(&models.Notification{
 							Key:     processKey,
 							Type:    models.NotificationTypeMessage,
-							Header:  "Scanning photo",
+							Header:  fmt.Sprintf("Scanning photo for user '%s'", user.Username),
 							Content: fmt.Sprintf("Scanning image at %s", photoPath),
 						})
 					})
@@ -220,7 +240,7 @@ func scan(database *sql.DB, user *models.User) {
 	notification.BroadcastNotification(&models.Notification{
 		Key:      notifyKey,
 		Type:     models.NotificationTypeMessage,
-		Header:   "Scan completed",
+		Header:   fmt.Sprintf("Scan completed for user '%s'", user.Username),
 		Content:  completeMessage,
 		Positive: true,
 	})
@@ -232,7 +252,7 @@ func scan(database *sql.DB, user *models.User) {
 		log.Printf("ERROR: processing photos: %s\n", err)
 	}
 
-	log.Println("Done scanning")
+	log.Printf("Done scanning user '%s'\n", user.Username)
 }
 
 func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
@@ -371,7 +391,7 @@ func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey str
 			notification.BroadcastNotification(&models.Notification{
 				Key:      processKey,
 				Type:     models.NotificationTypeProgress,
-				Header:   fmt.Sprintf("Processing photos (%d of %d)", count, len(photosToProcess)),
+				Header:   fmt.Sprintf("Processing photos (%d of %d) for user '%s'", count, len(photosToProcess), user.Username),
 				Content:  fmt.Sprintf("Processing photo at %s", photo.Path),
 				Progress: &progress,
 			})
@@ -395,7 +415,7 @@ func processUnprocessedPhotos(database *sql.DB, user *models.User, notifyKey str
 		notification.BroadcastNotification(&models.Notification{
 			Key:      notifyKey,
 			Type:     models.NotificationTypeMessage,
-			Header:   "Processing completed",
+			Header:   fmt.Sprintf("Processing photos for user '%s' has completed", user.Username),
 			Content:  fmt.Sprintf("%d photos have been processed", len(photosToProcess)),
 			Positive: true,
 		})
