@@ -16,6 +16,10 @@ services:
     build:
       context: "."
       args:
+        - UI_PUBLIC_URL=/
+
+        # Change This: The url from which the web ui can access the backend
+        # Should by default be the value of PUBLIC_ENDPOINT with /api appended to it
         - API_ENDPOINT=http://localhost:8000/api/
 
     restart: always
@@ -31,7 +35,7 @@ services:
       - PHOTO_CACHE=/app/cache
       - SERVE_UI=1
 
-      # Change This: The publicly exposed url for the api
+      # Change This: The publicly exposed url
       # For example if the server is available from the domain example.com,
       # change this value to http://example.com/
       - PUBLIC_ENDPOINT=http://localhost:8000/
