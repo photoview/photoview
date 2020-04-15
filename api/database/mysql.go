@@ -25,7 +25,7 @@ func SetupDatabase() (*sql.DB, error) {
 
 	address, err := url.Parse(os.Getenv("MYSQL_URL"))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Could not parse mysql url")
+		return nil, errors.Wrap(err, "Could not parse mysql url")
 	}
 
 	if address.String() == "" {

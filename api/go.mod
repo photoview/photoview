@@ -18,6 +18,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/nf/cr2 v0.0.0-20180623103828-4699471a17ed
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/urfave/cli v1.22.3 // indirect
 	github.com/vektah/gqlparser v1.3.1
 	github.com/vektah/gqlparser/v2 v2.0.1
