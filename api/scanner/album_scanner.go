@@ -62,6 +62,26 @@ func (cache *scanner_cache) album_contains_photo(path string) *bool {
 	return nil
 }
 
+func ScanAll(database *sql.DB) error {
+	rows, err := database.Query("SELECT * FROM user")
+	if err != nil {
+		log.Printf("Could not fetch all users from database: %s\n", err.Error())
+		return err
+	}
+
+	users, err := models.NewUsersFromRows(rows)
+	if err != nil {
+		log.Printf("Could not convert users: %s\n", err)
+		return err
+	}
+
+	for _, user := range users {
+		go scan(database, user)
+	}
+
+	return nil
+}
+
 func ScanUser(database *sql.DB, userId int) error {
 
 	row := database.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
