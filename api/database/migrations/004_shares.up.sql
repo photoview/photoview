@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS share_token (
 
   PRIMARY KEY (token_id)
   -- CHECK (album_id IS NOT NULL OR photo_id IS NOT NULL)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

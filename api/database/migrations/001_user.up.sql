@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS user (
   admin boolean NOT NULL DEFAULT 0,
 
   PRIMARY KEY (user_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS access_token (
 	token_id int NOT NULL AUTO_INCREMENT,
@@ -16,4 +16,4 @@ CREATE TABLE IF NOT EXISTS access_token (
 
 	PRIMARY KEY (token_id),
   FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS photo_exif (
   exposure_program int(1),
 
   PRIMARY KEY (exif_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS album (
   album_id int NOT NULL AUTO_INCREMENT,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS album (
   PRIMARY KEY (album_id),
   FOREIGN KEY (parent_album) REFERENCES album(album_id) ON DELETE CASCADE,
   FOREIGN KEY (owner_id) REFERENCES user(user_id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS photo (
   photo_id int NOT NULL AUTO_INCREMENT,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS photo (
   PRIMARY KEY (photo_id),
   FOREIGN KEY (album_id) REFERENCES album(album_id) ON DELETE CASCADE,
   FOREIGN KEY (exif_id) REFERENCES photo_exif(exif_id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS photo_url (
   url_id int NOT NULL AUTO_INCREMENT,
@@ -50,4 +50,4 @@ CREATE TABLE IF NOT EXISTS photo_url (
 
   PRIMARY KEY (url_id),
   FOREIGN KEY (photo_id) REFERENCES photo(photo_id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
