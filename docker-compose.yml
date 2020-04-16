@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  db:
+    image: linuxserver/mariadb:arm32v7-latest
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - MYSQL_DATABASE=photoview
+      - MYSQL_USER=photoview
+      - MYSQL_PASSWORD=photoview
+      - MYSQL_ROOT_PASSWORD=yololo
+    ports:
+      - 3304:3306
+    volumes:
+      - db_data:/config
+
+  photoview:
+    build:
+      context: "."
+      args:
+        - API_ENDPOINT=http://localhost:8000/api/
+
+    restart: always
+    ports:
+      - "8000:80"
+    depends_on:
+            - db
+
+    environment:
+      - MYSQL_URL=photoview:photoview@tcp(db)/photoview
+      - API_LISTEN_IP=photoview
+      - API_LISTEN_PORT=80
+      - PHOTO_CACHE=/app/cache
+      - SERVE_UI=1
+
+      # Change This: The publicly exposed url for the api
+      # For example if the server is available from the domain example.com,
+      # change this value to http://example.com/
+      - PUBLIC_ENDPOINT=http://192.168.1.38:8000/
+
+    volumes:
+      - api_cache:/app/cache
+
+      # Change this to the directory where your photos are located on your server.
+      # If the photos are located at `/home/user/photos`, then change this value
+      # to the following: `/home/user/photos:/photos:ro`.
+      # You can mount multiple paths, if your photos are spread across multiple directories.
+      - /mnt/md0/files/photos:/photos:ro
+
+volumes:
+  api_cache:
+  db_data:
