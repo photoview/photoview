@@ -2,17 +2,19 @@ package scanner
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"log"
 	"math/big"
 	"os"
+
+	"github.com/pkg/errors"
 
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )
 
-func ScanEXIF(tx *sql.Tx, photo *models.Photo) (*models.PhotoEXIF, error) {
+func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, returnErr error) {
 
 	log.Printf("Scanning for EXIF")
 
@@ -39,9 +41,17 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (*models.PhotoEXIF, error) {
 
 	exif.RegisterParsers(mknote.All...)
 
+	// Recover if exif.Decode panics
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Recovered from panic: Exif decoding: %s\n", err)
+			returnErr = errors.New(fmt.Sprintf("Exif decoding panicked: %s\n", err))
+		}
+	}()
+
 	exifTags, err := exif.Decode(photoFile)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not decode EXIF")
 	}
 
 	// log.Printf("EXIF DATA FOR %s\n%s\n", photo.Title, exifTags.String())
