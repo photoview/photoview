@@ -99,6 +99,17 @@ func ScanUser(database *sql.DB, userId int) error {
 
 func scan(database *sql.DB, user *models.User) {
 
+	// Check if user directory exists on the file system
+	if _, err := os.Stat(user.RootPath); err != nil {
+		if os.IsNotExist(err) {
+			ScannerError("Photo directory for user '%s' does not exist '%s'\n", user.Username, user.RootPath)
+		} else {
+			ScannerError("Could not read photo directory for user '%s': %s\n", user.Username, user.RootPath)
+		}
+
+		return
+	}
+
 	notifyKey := utils.GenerateToken()
 	processKey := utils.GenerateToken()
 	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
