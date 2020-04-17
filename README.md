@@ -38,7 +38,7 @@ There exists a lot of open-source self-hosted photo galleries already. Here are 
 - [Piwigo](https://github.com/Piwigo/Piwigo)
 - [Ownphoto](https://github.com/hooram/ownphotos)
 - [Photoprism](https://github.com/photoprism/photoprism)
-- [Photato](https://github.com/trebonius0/Photato)
+- [Lychee](https://github.com/LycheeOrg/Lychee)
 
 So why another one?
 I love taking photos, and I store all of them on my local fileserver.
@@ -96,6 +96,16 @@ A new admin user will be created, with access to the photos located at the path 
 
 The photos will have to be scanned for the photos to show up, you can force a scan, by navigating to `Settings` and clicking on `Scan All`
 
+## Updating
+
+To update Photoview to the lastest version, first pull the latest changes from master and rebuild the docker container.
+
+```bash
+$ git pull                # Fetch newest changes
+$ docker-compose build    # Rebuild the container
+$ docker-compose up -d    # Restart containers that have been changed
+```
+
 ## Setup development environment
 
 ### Local setup
@@ -109,7 +119,7 @@ The photos will have to be scanned for the photos to show up, you can force a sc
 #### Start API server
 
 ```bash
-cd ./api && go run server/server.go
+cd ./api && go run server.go
 ```
 
 ### [`/ui`](./ui)
