@@ -287,7 +287,7 @@ func (img *ProcessImageData) ContentType() (*string, error) {
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
-		ScannerError("Could not read file %s: %s\n", img.photo.Path, err)
+		ScannerError("Could not read photo %s: %s\n", img.photo.Path, err)
 		return nil, err
 	}
 

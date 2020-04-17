@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"database/sql"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -339,6 +340,10 @@ func isPathImage(path string, cache *scanner_cache) bool {
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
+		if err == io.EOF {
+			return false
+		}
+
 		ScannerError("Could not read file %s: %s\n", path, err)
 		return false
 	}
