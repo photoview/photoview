@@ -2,11 +2,6 @@ import React, { Component } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
-import Layout from '../../Layout'
-import PhotoGallery, {
-  presentIndexFromHash,
-} from '../../components/photoGallery/PhotoGallery'
-import AlbumTitle from '../../components/AlbumTitle'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 
 const albumQuery = gql`
@@ -38,89 +33,18 @@ const albumQuery = gql`
   }
 `
 
-class AlbumPage extends Component {
-  // constructor(props) {
-  //   super(props)
+function AlbumPage({ match }) {
+  const albumId = match.params.id
 
-  //   this.state = {
-  //     activeImage: -1,
-  //     presenting: false,
-  //   }
+  return (
+    <Query query={albumQuery} variables={{ id: albumId }}>
+      {({ loading, error, data }) => {
+        if (error) return <div>Error</div>
 
-  //   const presentIndex = presentIndexFromHash(document.location.hash)
-  //   if (presentIndex) {
-  //     this.state.activeImage = presentIndex
-  //     this.state.presenting = true
-  //   }
-
-  //   this.setActiveImage = this.setActiveImage.bind(this)
-  //   this.nextImage = this.nextImage.bind(this)
-  //   this.previousImage = this.previousImage.bind(this)
-  //   this.setPresenting = this.setPresenting.bind(this)
-
-  //   this.photos = []
-  // }
-
-  // setActiveImage(index) {
-  //   this.setState({
-  //     activeImage: index,
-  //   })
-  // }
-
-  // nextImage() {
-  //   this.setState({
-  //     activeImage: (this.state.activeImage + 1) % this.photos.length,
-  //   })
-  // }
-
-  // previousImage() {
-  //   if (this.state.activeImage <= 0) {
-  //     this.setState({
-  //       activeImage: this.photos.length - 1,
-  //     })
-  //   } else {
-  //     this.setState({
-  //       activeImage: this.state.activeImage - 1,
-  //     })
-  //   }
-  // }
-
-  // componentDidUpdate(prevProps, prevState) {
-  //   if (this.state.presenting) {
-  //     window.history.replaceState(
-  //       null,
-  //       null,
-  //       document.location.pathname + '#' + `present=${this.state.activeImage}`
-  //     )
-  //   } else if (presentIndexFromHash(document.location.hash)) {
-  //     window.history.replaceState(
-  //       null,
-  //       null,
-  //       document.location.pathname.split('#')[0]
-  //     )
-  //   }
-  // }
-
-  // setPresenting(presenting) {
-  //   console.log('Presenting', presenting, this)
-  //   this.setState({
-  //     presenting,
-  //   })
-  // }
-
-  render() {
-    const albumId = this.props.match.params.id
-
-    return (
-      <Query query={albumQuery} variables={{ id: albumId }}>
-        {({ loading, error, data }) => {
-          if (error) return <div>Error</div>
-
-          return <AlbumGallery album={data && data.album} loading={loading} />
-        }}
-      </Query>
-    )
-  }
+        return <AlbumGallery album={data && data.album} loading={loading} />
+      }}
+    </Query>
+  )
 }
 
 AlbumPage.propTypes = {

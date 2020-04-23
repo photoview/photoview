@@ -122,7 +122,6 @@ export const Photo = ({
       <HoverIcon
         name="expand"
         onClick={() => {
-          // window.location.hash = `present=${photo.id}`
           setPresenting(true)
         }}
       />

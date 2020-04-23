@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { presentIndexFromHash } from '../photoGallery/PhotoGallery'
 import Layout from '../../Layout'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
@@ -9,6 +8,15 @@ import AlbumBoxes from './AlbumBoxes'
 const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
   const [activeImage, setActiveImage] = useState(-1)
   const [presenting, setPresenting] = useState(false)
+
+  const setPresentingWithHistory = presenting => {
+    setPresenting(presenting)
+    if (presenting) {
+      history.pushState({ presenting: true }, '')
+    } else {
+      history.back()
+    }
+  }
 
   const nextImage = () => {
     setActiveImage((activeImage + 1) % album.photos.length)
@@ -22,32 +30,16 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
     }
   }
 
-  // Setup
   useEffect(() => {
-    const presentIndex = presentIndexFromHash(document.location.hash)
-    if (presentIndex) {
-      setActiveImage(presentIndex)
-      setPresenting(true)
+    const updatePresenting = event => {
+      setPresenting(event.state.presenting)
     }
-  }, [])
+    window.addEventListener('popstate', updatePresenting)
 
-  // On update
-  // TODO: Fix hash
-  // useEffect(() => {
-  //   if (presenting) {
-  //     window.history.replaceState(
-  //       null,
-  //       null,
-  //       document.location.pathname + '#' + `present=${activeImage}`
-  //     )
-  //   } else if (presentIndexFromHash(document.location.hash)) {
-  //     window.history.replaceState(
-  //       null,
-  //       null,
-  //       document.location.pathname.split('#')[0]
-  //     )
-  //   }
-  // })
+    return () => {
+      window.removeEventListener('popstate', updatePresenting)
+    }
+  }, [activeImage])
 
   useEffect(() => {
     setActiveImage(-1)
@@ -91,7 +83,7 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
         onSelectImage={index => {
           setActiveImage(index)
         }}
-        setPresenting={setPresenting}
+        setPresenting={setPresentingWithHistory}
         nextImage={nextImage}
         previousImage={previousImage}
       />

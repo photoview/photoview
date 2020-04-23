@@ -20,11 +20,6 @@ const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
-export const presentIndexFromHash = hash => {
-  let match = hash.match(/present=(\d+)/)
-  return match && parseInt(match[1])
-}
-
 const PhotoGallery = ({
   activeIndex = -1,
   photos,
