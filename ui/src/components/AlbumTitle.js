@@ -21,18 +21,18 @@ const Header = styled.h1`
   }
 `
 
-const SettingsIcon = props => {
-  const StyledIcon = styled(Icon)`
-    margin-left: 8px !important;
-    display: inline-block;
-    color: #888;
-    cursor: pointer;
+const StyledIcon = styled(Icon)`
+  margin-left: 8px !important;
+  display: inline-block;
+  color: #888;
+  cursor: pointer;
 
-    &:hover {
-      color: #1e70bf;
-    }
-  `
+  &:hover {
+    color: #1e70bf;
+  }
+`
 
+const SettingsIcon = (props) => {
   return <StyledIcon name="settings" size="small" {...props} />
 }
 
@@ -73,7 +73,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
   const breadcrumbSections = path
     .slice()
     .reverse()
-    .map(x => (
+    .map((x) => (
       <span key={x.id}>
         <Breadcrumb.Section as={Link} to={`/album/${x.id}`}>
           {x.title}

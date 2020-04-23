@@ -3,18 +3,18 @@ import PropTypes from 'prop-types'
 import styled, { createGlobalStyle } from 'styled-components'
 import ProtectedImage from './ProtectedImage'
 
-export const PresentContainer = ({ children, ...otherProps }) => {
-  const StyledContainer = styled.div`
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    background-color: black;
-    color: white;
-    top: 0;
-    left: 0;
-    z-index: 100;
-  `
+const StyledContainer = styled.div`
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  color: white;
+  top: 0;
+  left: 0;
+  z-index: 100;
+`
 
+export const PresentContainer = ({ children, ...otherProps }) => {
   return (
     <StyledContainer {...otherProps}>
       <PreventScroll />
@@ -51,7 +51,7 @@ export const PresentPhoto = ({ photo, imageLoaded, ...otherProps }) => {
       <StyledPhoto
         style={{ display: 'none' }}
         src={photo.highRes.url}
-        onLoad={e => {
+        onLoad={(e) => {
           e.target.style.display = 'initial'
           imageLoaded && imageLoaded()
         }}
