@@ -7,7 +7,7 @@ import Sidebar from './components/sidebar/Sidebar'
 import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Authorized } from './AuthorizedRoute'
-import Helmet from 'react-helmet'
+import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
 
 const adminQuery = gql`
@@ -61,7 +61,7 @@ const SideButtonLink = styled(NavLink)`
   }
 `
 
-const SideButton = props => {
+const SideButton = (props) => {
   return (
     <SideButtonLink {...props} activeStyle={{ color: '#4183c4' }}>
       {props.children}
