@@ -41,29 +41,30 @@ func SetupDatabase() (*sql.DB, error) {
 	log.Printf("Connecting to database: %s", address)
 
 	var db *sql.DB
+
+	db, err = sql.Open("mysql", address.String())
+	if err != nil {
+		return nil, errors.New("Could not connect to database, exiting")
+	}
+
 	tryCount := 0
 
 	for {
-		db, err = sql.Open("mysql", address.String())
-		if err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := db.PingContext(ctx); err != nil {
 			if tryCount < 4 {
 				tryCount++
-				log.Printf("WARN: Could not connect to database: %s. Will retry after 1 second", err.Error())
+				log.Printf("WARN: Could not ping database: %s, Will retry after 1 second", err)
 				time.Sleep(time.Second)
 				continue
 			} else {
-				return nil, errors.New("Could not connect to database, exiting")
+				return nil, errors.Wrap(err, "Could not ping database, exiting")
 			}
 		}
 
 		break
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
-		return nil, errors.Wrap(err, "Could not ping database, exiting")
 	}
 
 	db.SetMaxOpenConns(80)

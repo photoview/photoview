@@ -9,16 +9,18 @@ import { getMainDefinition } from 'apollo-utilities'
 import { MessageState } from './components/messages/Messages'
 import urlJoin from 'url-join'
 
-const GRAPHQL_ENDPOINT = urlJoin(process.env.API_ENDPOINT, '/graphql')
+const GRAPHQL_ENDPOINT = process.env.API_ENDPOINT
+  ? urlJoin(process.env.API_ENDPOINT, '/graphql')
+  : urlJoin(location.origin, '/api/graphql')
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_ENDPOINT,
   credentials: 'same-origin',
 })
 
-console.log('API ENDPOINT', process.env.API_ENDPOINT)
+console.log('GRAPHQL ENDPOINT', GRAPHQL_ENDPOINT)
 
-const apiProtocol = new URL(process.env.API_ENDPOINT).protocol
+const apiProtocol = new URL(GRAPHQL_ENDPOINT).protocol
 
 let websocketUri = new URL(GRAPHQL_ENDPOINT)
 websocketUri.protocol = apiProtocol === 'https:' ? 'wss:' : 'ws:'
@@ -92,7 +94,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 
   if (errorMessages.length > 0) {
-    const newMessages = errorMessages.map(msg => ({
+    const newMessages = errorMessages.map((msg) => ({
       key: Math.random().toString(26),
       type: 'message',
       props: {
@@ -100,7 +102,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         ...msg,
       },
     }))
-    MessageState.set(messages => [...messages, ...newMessages])
+    MessageState.set((messages) => [...messages, ...newMessages])
   }
 })
 
