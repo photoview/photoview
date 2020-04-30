@@ -96,6 +96,10 @@ func main() {
 		log.Printf("Photoview API public endpoint ready at %s\n", apiEndpoint.String())
 		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
 
+		if !shouldServeUI {
+			log.Printf("Notice: UI is not served by the the api (SERVE_UI=0)")
+		}
+
 	}
 
 	log.Panic(http.ListenAndServe(":"+apiListenUrl.Port(), rootRouter))

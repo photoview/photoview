@@ -33,6 +33,11 @@ COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations
 COPY --from=api /app/photoview /app/photoview
 
+ENV API_LISTEN_IP 127.0.0.1
+ENV API_LISTEN_PORT 80
+
+ENV SERVE_UI 1
+
 EXPOSE 80
 
 ENTRYPOINT ["/app/photoview"]
