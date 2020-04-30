@@ -63,16 +63,9 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 > This section describes how to get PhotoView up and running on your server with Docker.
 > Make sure you have Docker and docker-compose installed and running on your server
 
-1. Clone this repository by executing
-
-```bash
-$ git clone https://github.com/viktorstrate/photoview
-$ cd photoview
-```
-
-2. Duplicate `docker-compose.example.yml` and name the new file `docker-compose.yml`
-3. Edit `docker-compose.yml`, find the comments starting with `Change This:`, and change the values, to properly match your setup. If you are just testing locally, you don't have to change anything.
-4. Start the server by running the following command, inside the `photoview` directory
+1. Make a new `docker-compose.yml` file on your computer, and copy the content of [docker-compose.example.yml](/docker-compose.example.yml) to the new file.
+2. Edit `docker-compose.yml`, find the comments starting with `Change This:`, and change the values, to properly match your setup. If you are just testing locally, you don't have to change anything.
+3. Start the server by running the following command
 
 ```bash
 $ docker-compose up -d

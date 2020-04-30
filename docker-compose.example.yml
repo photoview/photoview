@@ -13,8 +13,7 @@ services:
       - db_data:/var/lib/mysql
 
   photoview:
-    build: "."
-
+    image: viktorstrate/photoview:latest
     restart: always
     ports:
       - "8000:80"
