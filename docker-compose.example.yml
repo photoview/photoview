@@ -13,14 +13,7 @@ services:
       - db_data:/var/lib/mysql
 
   photoview:
-    build:
-      context: "."
-      args:
-        - UI_PUBLIC_URL=/
-
-        # Change This: The url from which the web ui can access the backend
-        # Should by default be the value of PUBLIC_ENDPOINT with /api appended to it
-        - API_ENDPOINT=http://localhost:8000/api/
+    build: "."
 
     restart: always
     ports:

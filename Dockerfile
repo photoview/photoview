@@ -4,8 +4,9 @@ FROM node:10 as ui
 ARG API_ENDPOINT
 ENV API_ENDPOINT=${API_ENDPOINT}
 
+# Set environment variable UI_PUBLIC_URL from build args, uses "/" as default
 ARG UI_PUBLIC_URL
-ENV UI_PUBLIC_URL=${UI_PUBLIC_URL}
+ENV UI_PUBLIC_URL=${UI_PUBLIC_URL:-/}
 
 RUN mkdir -p /app
 WORKDIR /app
