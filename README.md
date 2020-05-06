@@ -7,6 +7,9 @@
 
 ![screenshot](./screenshots/main-window.png)
 
+Photoview is a simple and user-friendly photo gallery that can easily be installed on personal servers.
+It's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high resolution photos.
+
 ## Demo site
 
 Visit https://photos.qpqp.dk/
@@ -22,11 +25,6 @@ Password: **demo**
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
 - [Setup development environment](#setup-development-environment)
-
-## Aim of the project
-
-The aim of this project is to make a simple and user-friendly photo gallery application,
-that is easy to host on a personal server, to easily view the photos located on that server.
 
 ## Main features
 
@@ -92,17 +90,7 @@ The default location is `/photos`
 
 A new admin user will be created, with access to the photos located at the path provided under the initial setup.
 
-The photos will have to be scanned for the photos to show up, you can force a scan, by navigating to `Settings` and clicking on `Scan All`
-
-## Updating
-
-To update Photoview to the lastest version, first pull the latest changes from master and rebuild the docker container.
-
-```bash
-$ git pull                # Fetch newest changes
-$ docker-compose build    # Rebuild the container
-$ docker-compose up -d    # Restart containers that have been changed
-```
+The photos will have to be scanned before they show up, you can start a scan manually, by navigating to `Settings` and clicking on `Scan All`
 
 ## Setup development environment
 
@@ -112,19 +100,19 @@ $ docker-compose up -d    # Restart containers that have been changed
 2. Rename `/api/example.env` to `.env` and update the `MYSQL_URL` field
 3. Rename `/ui/example.env` to `.env`
 
-### [`/api`](./api)
+### Start API server
 
-#### Start API server
+Make sure [golang](https://golang.org/) is installed.
+Then run the following commands:
 
 ```bash
 cd ./api && go run server.go
 ```
 
-### [`/ui`](./ui)
+### Start UI server
 
-The above command will start the GraphQL API in the foreground, so in another terminal session start the UI development server:
-
-#### Start UI server
+Make sure [node](https://nodejs.org/en/) is installed.
+In a new terminal window run the following commands:
 
 ```bash
 cd ./ui && npm start
