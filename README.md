@@ -1,4 +1,9 @@
-# PhotoView
+# Photoview
+
+[![License](https://img.shields.io/github/license/viktorstrate/photoview)](./LICENSE.md)
+[![GitHub contributors](https://img.shields.io/github/contributors/viktorstrate/photoview)](https://github.com/viktorstrate/photoview/graphs/contributors)
+[![Docker Pulls](https://img.shields.io/docker/pulls/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview)
+[![Docker Build Status](https://img.shields.io/docker/cloud/build/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview/builds)
 
 ![screenshot](./screenshots/main-window.png)
 
@@ -60,7 +65,7 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 
 ## Getting started - Setup with Docker
 
-> This section describes how to get PhotoView up and running on your server with Docker.
+> This section describes how to get Photoview up and running on your server with Docker.
 > Make sure you have Docker and docker-compose installed and running on your server
 
 1. Make a new `docker-compose.yml` file on your computer, and copy the content of [docker-compose.example.yml](/docker-compose.example.yml) to the new file.
@@ -71,7 +76,7 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 $ docker-compose up -d
 ```
 
-If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, PhotoView can now be accessed at http://localhost:8000
+If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, Photoview can now be accessed at http://localhost:8000
 
 ### Initial Setup
 
