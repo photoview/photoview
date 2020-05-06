@@ -106,7 +106,12 @@ const PhotoGallery = ({
             {getPhotoElements(updateSidebar)}
             <PhotoFiller />
           </Gallery>
-          {presenting && <PresentView photo={activeImage} />}
+          {presenting && (
+            <PresentView
+              photo={activeImage}
+              {...{ nextImage, previousImage, setPresenting }}
+            />
+          )}
         </div>
       )}
     </SidebarConsumer>

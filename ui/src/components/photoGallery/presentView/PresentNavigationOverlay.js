@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
 const StyledOverlayContainer = styled.div`
@@ -7,11 +8,22 @@ const StyledOverlayContainer = styled.div`
   position: relative;
 `
 
-const PresentNavigationOverlay = () => (
+const PresentNavigationOverlay = ({
+  nextImage,
+  previousImage,
+  setPresenting,
+}) => (
   <StyledOverlayContainer>
-    <button>Previous</button>
-    <button>Next</button>
+    <button onClick={() => setPresenting(false)}>Exit</button>
+    <button onClick={() => previousImage()}>Previous</button>
+    <button onClick={() => nextImage()}>Next</button>
   </StyledOverlayContainer>
 )
+
+PresentNavigationOverlay.propTypes = {
+  nextImage: PropTypes.func.isRequired,
+  previousImage: PropTypes.func.isRequired,
+  setPresenting: PropTypes.func.isRequired,
+}
 
 export default PresentNavigationOverlay

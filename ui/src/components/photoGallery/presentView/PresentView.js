@@ -21,11 +21,20 @@ const PreventScroll = createGlobalStyle`
   }
 `
 
-const PresentView = ({ className, photo, imageLoaded }) => (
+const PresentView = ({
+  className,
+  photo,
+  imageLoaded,
+  nextImage,
+  previousImage,
+  setPresenting,
+}) => (
   <StyledContainer {...className}>
     <PreventScroll />
     <PresentPhoto photo={photo} imageLoaded={imageLoaded} />
-    <PresentNavigationOverlay />
+    <PresentNavigationOverlay
+      {...{ nextImage, previousImage, setPresenting }}
+    />
   </StyledContainer>
 )
 
@@ -33,6 +42,9 @@ PresentView.propTypes = {
   photo: PropTypes.object.isRequired,
   imageLoaded: PropTypes.func,
   className: PropTypes.string,
+  nextImage: PropTypes.func.isRequired,
+  previousImage: PropTypes.func.isRequired,
+  setPresenting: PropTypes.func.isRequired,
 }
 
 export default PresentView
