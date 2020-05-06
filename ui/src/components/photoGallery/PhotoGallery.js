@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { Photo, PhotoThumbnail } from './Photo'
-import { PresentContainer, PresentPhoto } from './PresentView'
+import PresentView from './PresentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarConsumer } from '../sidebar/Sidebar'
 import PhotoSidebar from '../sidebar/PhotoSidebar'
@@ -31,7 +31,7 @@ const PhotoGallery = ({
   previousImage,
 }) => {
   useEffect(() => {
-    const keyDownEvent = e => {
+    const keyDownEvent = (e) => {
       if (!onSelectImage || activeIndex == -1) {
         return
       }
@@ -44,7 +44,7 @@ const PhotoGallery = ({
         nextImage && previousImage()
       }
 
-      if (e.key == 'Escape') {
+      if (e.key == 'Escape' && presenting) {
         setPresenting(false)
       }
     }
@@ -58,10 +58,10 @@ const PhotoGallery = ({
 
   const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
-  const getPhotoElements = updateSidebar => {
+  const getPhotoElements = (updateSidebar) => {
     let photoElements = []
     if (photos) {
-      photos.filter(photo => photo.thumbnail)
+      photos.filter((photo) => photo.thumbnail)
 
       photoElements = photos.map((photo, index) => {
         const active = activeIndex == index
@@ -77,7 +77,7 @@ const PhotoGallery = ({
           <Photo
             key={photo.id}
             photo={photo}
-            onSelectImage={index => {
+            onSelectImage={(index) => {
               updateSidebar(<PhotoSidebar photo={photo} />)
               onSelectImage(index)
             }}
@@ -106,11 +106,7 @@ const PhotoGallery = ({
             {getPhotoElements(updateSidebar)}
             <PhotoFiller />
           </Gallery>
-          {presenting && (
-            <PresentContainer>
-              <PresentPhoto photo={activeImage} />
-            </PresentContainer>
-          )}
+          {presenting && <PresentView photo={activeImage} />}
         </div>
       )}
     </SidebarConsumer>
