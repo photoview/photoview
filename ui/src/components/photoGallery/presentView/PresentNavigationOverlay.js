@@ -65,9 +65,8 @@ const NavigationButton = styled(OverlayButton)`
 
 const mouseMoveEvent = ({ setHide }) =>
   debounce(
-    (event) => {
-      console.log('Hide')
-      setHide((hide) => !hide)
+    event => {
+      setHide(hide => !hide)
     },
     2000,
     { leading: true, trailing: true }
