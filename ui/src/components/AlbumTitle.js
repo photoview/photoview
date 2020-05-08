@@ -32,7 +32,7 @@ const StyledIcon = styled(Icon)`
   }
 `
 
-const SettingsIcon = (props) => {
+const SettingsIcon = props => {
   return <StyledIcon name="settings" size="small" {...props} />
 }
 
@@ -73,7 +73,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
   const breadcrumbSections = path
     .slice()
     .reverse()
-    .map((x) => (
+    .map(x => (
       <span key={x.id}>
         <Breadcrumb.Section as={Link} to={`/album/${x.id}`}>
           {x.title}

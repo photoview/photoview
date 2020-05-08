@@ -31,7 +31,7 @@ const PhotoGallery = ({
   previousImage,
 }) => {
   useEffect(() => {
-    const keyDownEvent = (e) => {
+    const keyDownEvent = e => {
       if (!onSelectImage || activeIndex == -1) {
         return
       }
@@ -58,10 +58,10 @@ const PhotoGallery = ({
 
   const activeImage = photos && activeIndex != -1 && photos[activeIndex]
 
-  const getPhotoElements = (updateSidebar) => {
+  const getPhotoElements = updateSidebar => {
     let photoElements = []
     if (photos) {
-      photos.filter((photo) => photo.thumbnail)
+      photos.filter(photo => photo.thumbnail)
 
       photoElements = photos.map((photo, index) => {
         const active = activeIndex == index
@@ -77,7 +77,7 @@ const PhotoGallery = ({
           <Photo
             key={photo.id}
             photo={photo}
-            onSelectImage={(index) => {
+            onSelectImage={index => {
               updateSidebar(<PhotoSidebar photo={photo} />)
               onSelectImage(index)
             }}

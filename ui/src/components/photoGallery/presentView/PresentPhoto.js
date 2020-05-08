@@ -19,7 +19,7 @@ const PresentPhoto = ({ photo, imageLoaded, ...otherProps }) => (
     <StyledPhoto
       style={{ display: 'none' }}
       src={photo.highRes.url}
-      onLoad={(e) => {
+      onLoad={e => {
         e.target.style.display = 'initial'
         imageLoaded && imageLoaded()
       }}
