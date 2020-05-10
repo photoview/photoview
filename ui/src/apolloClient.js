@@ -94,7 +94,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 
   if (errorMessages.length > 0) {
-    const newMessages = errorMessages.map((msg) => ({
+    const newMessages = errorMessages.map(msg => ({
       key: Math.random().toString(26),
       type: 'message',
       props: {
@@ -102,7 +102,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         ...msg,
       },
     }))
-    MessageState.set((messages) => [...messages, ...newMessages])
+    MessageState.set(messages => [...messages, ...newMessages])
   }
 })
 

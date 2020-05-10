@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { Photo, PhotoThumbnail } from './Photo'
-import { PresentContainer, PresentPhoto } from './PresentView'
+import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarConsumer } from '../sidebar/Sidebar'
 import PhotoSidebar from '../sidebar/PhotoSidebar'
@@ -44,7 +44,7 @@ const PhotoGallery = ({
         nextImage && previousImage()
       }
 
-      if (e.key == 'Escape') {
+      if (e.key == 'Escape' && presenting) {
         setPresenting(false)
       }
     }
@@ -107,9 +107,10 @@ const PhotoGallery = ({
             <PhotoFiller />
           </Gallery>
           {presenting && (
-            <PresentContainer>
-              <PresentPhoto photo={activeImage} />
-            </PresentContainer>
+            <PresentView
+              photo={activeImage}
+              {...{ nextImage, previousImage, setPresenting }}
+            />
           )}
         </div>
       )}

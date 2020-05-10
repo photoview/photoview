@@ -61,7 +61,7 @@ const SideButtonLink = styled(NavLink)`
   }
 `
 
-const SideButton = (props) => {
+const SideButton = props => {
   return (
     <SideButtonLink {...props} activeStyle={{ color: '#4183c4' }}>
       {props.children}
