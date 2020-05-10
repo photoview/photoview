@@ -1,4 +1,4 @@
-# Photoview
+<img src="./screenshots/photoview-logo.svg" height="92px" alt="photoview logo" />
 
 [![License](https://img.shields.io/github/license/viktorstrate/photoview)](./LICENSE.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/viktorstrate/photoview)](https://github.com/viktorstrate/photoview/graphs/contributors)
