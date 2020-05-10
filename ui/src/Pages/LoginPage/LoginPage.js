@@ -12,7 +12,7 @@ import {
 } from 'semantic-ui-react'
 import { checkInitialSetupQuery, login } from './loginUtilFunctions'
 
-import logoPath from './photoview-logo.svg'
+import logoPath from '../../assets/photoview-logo.svg'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {

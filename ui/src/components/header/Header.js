@@ -2,6 +2,8 @@ import React from 'react'
 import styled from 'styled-components'
 import SearchBar from './Searchbar'
 
+import logoPath from '../../assets/photoview-logo.svg'
+
 const Container = styled.div`
   height: 60px;
   width: 100%;
@@ -15,13 +17,29 @@ const Container = styled.div`
 
 const Title = styled.h1`
   font-size: 36px;
-  padding: 5px 12px;
+  font-weight: 400;
+  padding: 2px 12px;
   flex-grow: 1;
+`
+
+const Logo = styled.img`
+  width: 42px;
+  height: 42px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+`
+
+const LogoText = styled.span`
+  vertical-align: middle;
 `
 
 const Header = () => (
   <Container>
-    <Title>Photoview</Title>
+    <Title>
+      <Logo src={logoPath} alt="logo" />
+      <LogoText>Photoview</LogoText>
+    </Title>
     {localStorage.getItem('token') ? <SearchBar /> : null}
   </Container>
 )
