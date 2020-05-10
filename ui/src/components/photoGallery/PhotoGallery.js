@@ -13,6 +13,7 @@ const Gallery = styled.div`
   align-items: center;
   min-height: 200px;
   position: relative;
+  margin: -4px;
 `
 
 const PhotoFiller = styled.div`

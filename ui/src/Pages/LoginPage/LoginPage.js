@@ -12,6 +12,8 @@ import {
 } from 'semantic-ui-react'
 import { checkInitialSetupQuery, login } from './loginUtilFunctions'
 
+import logoPath from '../../assets/photoview-logo.svg'
+
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
     authorizeUser(username: $username, password: $password) {
@@ -24,6 +26,21 @@ const authorizeMutation = gql`
 
 export const Container = styled(SemanticContainer)`
   margin-top: 80px;
+`
+
+const StyledLogo = styled.img`
+  max-height: 128px;
+`
+
+const LogoHeader = props => (
+  <Header {...props} as="h1" textAlign="center">
+    <StyledLogo src={logoPath} alt="photoview logo" />
+    <p style={{ fontWeight: 400 }}>Welcome to Photoview</p>
+  </Header>
+)
+
+const LogoHeaderStyled = styled(LogoHeader)`
+  margin-bottom: 72px !important;
 `
 
 class LoginPage extends Component {
@@ -59,9 +76,7 @@ class LoginPage extends Component {
     return (
       <div>
         <Container>
-          <Header as="h1" textAlign="center">
-            Welcome to Photoview
-          </Header>
+          <LogoHeaderStyled />
           <Query query={checkInitialSetupQuery}>
             {({ loading, error, data }) => {
               if (data && data.siteInfo && data.siteInfo.initialSetup) {
