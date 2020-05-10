@@ -3,9 +3,9 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import debounce from 'lodash/debounce'
 
-import ExitIcon from './icons/exit.svg'
-import NextIcon from './icons/next.svg'
-import PrevIcon from './icons/previous.svg'
+import ExitIcon from './icons/Exit'
+import NextIcon from './icons/Next'
+import PrevIcon from './icons/Previous'
 
 const StyledOverlayContainer = styled.div`
   width: 100%;
