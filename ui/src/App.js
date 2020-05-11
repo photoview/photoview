@@ -11,6 +11,9 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
+import 'semantic-ui-css/components/reset.css'
+import 'semantic-ui-css/components/site.css'
+
 class App extends Component {
   render() {
     return (

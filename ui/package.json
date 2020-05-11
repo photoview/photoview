@@ -35,21 +35,20 @@
   },
   "scripts": {
     "start": "parcel start src/index.html",
-    "build": "parcel build src/index.html",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "now-build": "react-scripts build"
+    "build": "parcel build src/index.html --no-source-maps"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/plugin-transform-runtime": "^7.9.0",
     "babel-eslint": "^10.1.0",
     "babel-plugin-graphql-tag": "^2.5.0",
+    "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
     "eslint": "^6.8.0",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.7",
+    "parcel-plugin-bundle-visualiser": "^1.2.0",
     "parcel-plugin-sw-cache": "^0.3.1",
     "prettier": "^2.0.5",
     "react-router-prop-types": "^1.0.4"
@@ -79,9 +78,16 @@
       ]
     ],
     "plugins": [
-      "babel-plugin-styled-components",
+      "styled-components",
       "@babel/plugin-transform-runtime",
-      "graphql-tag"
+      "graphql-tag",
+      [
+        "transform-semantic-ui-react-imports",
+        {
+          "convertMemberImports": true,
+          "addCssImports": true
+        }
+      ]
     ]
   },
   "lint-staged": {
