@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useLazyQuery } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
-import debounce from 'lodash/debounce'
+import debounce from '../../debounce'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import { NavLink } from 'react-router-dom'
 
@@ -82,21 +82,25 @@ const SearchBar = () => {
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
 
-  let debouncedFetch = null
+  let debouncedFetch = useRef(null)
+  useEffect(() => {
+    debouncedFetch.current = debounce(query => {
+      console.log('searching', query)
+      fetchSearches({ variables: { query } })
+      setFetched(true)
+    }, 250)
+
+    return () => {
+      debouncedFetch.current.cancel()
+    }
+  }, [])
+
   const fetchEvent = e => {
     e.persist()
 
-    if (!debouncedFetch) {
-      debouncedFetch = debounce(() => {
-        console.log('searching', e.target.value.trim())
-        fetchSearches({ variables: { query: e.target.value.trim() } })
-        setFetched(true)
-      }, 250)
-    }
-
     setQuery(e.target.value)
     if (e.target.value.trim() != '') {
-      debouncedFetch()
+      debouncedFetch.current(e.target.value.trim())
     } else {
       setFetched(false)
     }

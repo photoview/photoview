@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import debounce from 'lodash/debounce'
+import debounce from '../../../debounce'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -63,25 +63,35 @@ const NavigationButton = styled(OverlayButton)`
   }
 `
 
-const mouseMoveEvent = ({ setHide }) =>
-  debounce(
-    event => {
-      setHide(hide => !hide)
-    },
-    2000,
-    { leading: true, trailing: true }
-  )
-
 const PresentNavigationOverlay = ({
   nextImage,
   previousImage,
   setPresenting,
 }) => {
   const [hide, setHide] = useState(true)
-  const onMouseMove = useRef(mouseMoveEvent({ hide, setHide }))
+  const onMouseMove = useRef(null)
+
+  useEffect(() => {
+    console.log('Setup mouse move')
+    onMouseMove.current = debounce(
+      () => {
+        setHide(hide => !hide)
+      },
+      2000,
+      true
+    )
+
+    return () => {
+      onMouseMove.current.cancel()
+    }
+  }, [])
 
   return (
-    <StyledOverlayContainer onMouseMove={onMouseMove.current}>
+    <StyledOverlayContainer
+      onMouseMove={() => {
+        onMouseMove.current()
+      }}
+    >
       <NavigationButton
         className={hide && 'hide'}
         float="left"
