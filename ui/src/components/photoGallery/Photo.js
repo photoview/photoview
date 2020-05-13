@@ -12,6 +12,7 @@ const PhotoContainer = styled.div`
   margin: 4px;
   background-color: #eee;
   position: relative;
+  overflow: hidden;
 `
 
 const StyledPhoto = styled(ProtectedImage)`
@@ -111,7 +112,7 @@ export const Photo = ({
     key={photo.id}
     style={{
       cursor: onSelectImage ? 'pointer' : null,
-      minWidth: `${minWidth}px`,
+      minWidth: `min(${minWidth}px, 100% - 8px)`,
     }}
     onClick={() => {
       onSelectImage && onSelectImage(index)
