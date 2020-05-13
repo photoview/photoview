@@ -4,22 +4,25 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/pkg/errors"
 )
 
-type FileType string
+type ImageType string
 
 const (
-	TypeJpeg FileType = "image/jpeg"
-	TypePng  FileType = "image/png"
-	TypeTiff FileType = "image/tiff"
-	TypeWebp FileType = "image/webp"
-	TypeCr2  FileType = "image/x-canon-cr2"
-	TypeBmp  FileType = "image/bmp"
+	TypeJpeg ImageType = "image/jpeg"
+	TypePng  ImageType = "image/png"
+	TypeTiff ImageType = "image/tiff"
+	TypeWebp ImageType = "image/webp"
+	TypeBmp  ImageType = "image/bmp"
+	TypeCr2  ImageType = "image/x-canon-cr2"
 )
 
-var SupportedMimetypes = [...]FileType{
+var SupportedMimetypes = [...]ImageType{
 	TypeJpeg,
 	TypePng,
 	TypeTiff,
@@ -28,46 +31,88 @@ var SupportedMimetypes = [...]FileType{
 	TypeCr2,
 }
 
-var WebMimetypes = [...]FileType{
+var WebMimetypes = [...]ImageType{
 	TypeJpeg,
 	TypePng,
 	TypeWebp,
 	TypeBmp,
 }
 
-func isPathImage(path string, cache *scanner_cache) bool {
-	if cache.get_photo_type(path) != nil {
-		return true
+var fileExtensions = map[string]ImageType{
+	".jpg":  TypeJpeg,
+	".jpeg": TypeJpeg,
+	".png":  TypePng,
+	".tif":  TypeTiff,
+	".tiff": TypeTiff,
+	".bmp":  TypeBmp,
+	".cr2":  TypeCr2,
+}
+
+func isTypeSupported(img ImageType) bool {
+	for _, supported_mime := range SupportedMimetypes {
+		if supported_mime == img {
+			return true
+		}
 	}
+
+	return false
+}
+
+func getImageType(path string) (*ImageType, error) {
+
+	ext := filepath.Ext(path)
+
+	fileExtType := fileExtensions[strings.ToLower(ext)]
+
+	if isTypeSupported(fileExtType) {
+		return &fileExtType, nil
+	}
+
+	// If extension was not recognized try to read file header
 	file, err := os.Open(path)
 	if err != nil {
-		ScannerError("Could not open file %s: %s\n", path, err)
-		return false
+		return nil, errors.Wrapf(err, "could not open file %s", path)
 	}
 	defer file.Close()
 
 	head := make([]byte, 261)
 	if _, err := file.Read(head); err != nil {
 		if err == io.EOF {
-			return false
+			return nil, nil
 		}
 
-		ScannerError("Could not read file %s: %s\n", path, err)
-		return false
+		return nil, errors.Wrapf(err, "could not read file: %s", path)
 	}
 
-	imgType, err := filetype.Image(head)
+	_imgType, err := filetype.Image(head)
 	if err != nil {
+		return nil, nil
+	}
+
+	imgType := ImageType(_imgType.MIME.Value)
+	if isTypeSupported(imgType) {
+		return &imgType, nil
+	}
+
+	return nil, nil
+}
+
+func isPathImage(path string, cache *scanner_cache) bool {
+	if cache.get_photo_type(path) != nil {
+		return true
+	}
+
+	imageType, err := getImageType(path)
+	if err != nil {
+		ScannerError("%s (%s)", err, path)
 		return false
 	}
 
-	for _, supported_mime := range SupportedMimetypes {
-		if supported_mime == FileType(imgType.MIME.Value) {
-			cache.insert_photo_type(path, supported_mime)
-			return true
-		}
+	if imageType != nil {
+		cache.insert_photo_type(path, *imageType)
+		return true
 	}
 
-	log.Printf("Unsupported image %s of type %s\n", path, imgType.MIME.Value)
+	log.Printf("File is not a supported image %s\n", path)
 	return false
 }

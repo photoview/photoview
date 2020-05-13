@@ -19,7 +19,7 @@ import (
 
 type scanner_cache map[string]interface{}
 
-func (cache *scanner_cache) insert_photo_type(path string, content_type FileType) {
+func (cache *scanner_cache) insert_photo_type(path string, content_type ImageType) {
 	(*cache)["photo_type//"+path] = content_type
 }
 

@@ -269,11 +269,11 @@ type ProcessImageData struct {
 	photo           *models.Photo
 	_photoImage     image.Image
 	_thumbnailImage image.Image
-	_contentType    *FileType
+	_contentType    *ImageType
 }
 
 // ContentType reads the image to determine its content type
-func (img *ProcessImageData) ContentType() (*FileType, error) {
+func (img *ProcessImageData) ContentType() (*ImageType, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
 	}
@@ -296,7 +296,7 @@ func (img *ProcessImageData) ContentType() (*FileType, error) {
 		return nil, err
 	}
 
-	imgType := FileType(_imgType.MIME.Value)
+	imgType := ImageType(_imgType.MIME.Value)
 	img._contentType = &imgType
 	return img._contentType, nil
 }
