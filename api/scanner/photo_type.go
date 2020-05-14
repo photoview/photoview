@@ -38,6 +38,10 @@ var WebMimetypes = [...]ImageType{
 	TypeBmp,
 }
 
+var RawMimeTypes = [...]ImageType{
+	TypeCr2,
+}
+
 var fileExtensions = map[string]ImageType{
 	".jpg":  TypeJpeg,
 	".jpeg": TypeJpeg,
@@ -48,9 +52,19 @@ var fileExtensions = map[string]ImageType{
 	".cr2":  TypeCr2,
 }
 
-func isTypeSupported(img ImageType) bool {
+func (imgType *ImageType) isRaw() bool {
+	for _, raw_mime := range RawMimeTypes {
+		if raw_mime == *imgType {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (imgType *ImageType) isSupported() bool {
 	for _, supported_mime := range SupportedMimetypes {
-		if supported_mime == img {
+		if supported_mime == *imgType {
 			return true
 		}
 	}
@@ -64,7 +78,7 @@ func getImageType(path string) (*ImageType, error) {
 
 	fileExtType := fileExtensions[strings.ToLower(ext)]
 
-	if isTypeSupported(fileExtType) {
+	if fileExtType.isSupported() {
 		return &fileExtType, nil
 	}
 
@@ -90,7 +104,7 @@ func getImageType(path string) (*ImageType, error) {
 	}
 
 	imgType := ImageType(_imgType.MIME.Value)
-	if isTypeSupported(imgType) {
+	if imgType.isSupported() {
 		return &imgType, nil
 	}
 
