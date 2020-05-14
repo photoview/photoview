@@ -85,7 +85,7 @@ func getImageType(path string) (*ImageType, error) {
 	// If extension was not recognized try to read file header
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not open file %s", path)
+		return nil, errors.Wrapf(err, "could not open file to determine content-type %s", path)
 	}
 	defer file.Close()
 
@@ -95,7 +95,7 @@ func getImageType(path string) (*ImageType, error) {
 			return nil, nil
 		}
 
-		return nil, errors.Wrapf(err, "could not read file: %s", path)
+		return nil, errors.Wrapf(err, "could not read file to determine content-type: %s", path)
 	}
 
 	_imgType, err := filetype.Image(head)
@@ -123,6 +123,12 @@ func isPathImage(path string, cache *scanner_cache) bool {
 	}
 
 	if imageType != nil {
+		// Make sure file isn't empty
+		fileStats, err := os.Stat(path)
+		if err != nil || fileStats.Size() == 0 {
+			return false
+		}
+
 		cache.insert_photo_type(path, *imageType)
 		return true
 	}

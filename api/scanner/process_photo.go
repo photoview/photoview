@@ -3,7 +3,6 @@ package scanner
 import (
 	"database/sql"
 	"fmt"
-	"image/jpeg"
 	"log"
 	"os"
 	"path"
@@ -121,7 +120,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 			return err
 		}
 
-		err = encodeImageJPEG(path.Join(*photoCachePath, thumbnail_name), thumbnailImage, &jpeg.Options{Quality: 70})
+		err = imageData.EncodeImageJPEG(tx, path.Join(*photoCachePath, thumbnail_name), 70)
 		if err != nil {
 			return errors.Wrap(err, "could not create thumbnail cached image")
 		}
@@ -138,12 +137,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.PhotoName)
 
-			thumbnailImage, err := imageData.ThumbnailImage(tx)
-			if err != nil {
-				return err
-			}
-
-			err = encodeImageJPEG(thumbPath, thumbnailImage, &jpeg.Options{Quality: 70})
+			err = imageData.EncodeImageJPEG(tx, thumbPath, 70)
 			if err != nil {
 				log.Println("ERROR: creating thumbnail cached image")
 				return err
@@ -178,7 +172,7 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 				return err
 			}
 
-			err = encodeImageJPEG(path.Join(*photoCachePath, highres_name), photoImage, &jpeg.Options{Quality: 70})
+			err = imageData.EncodeImageJPEG(tx, path.Join(*photoCachePath, highres_name), 70)
 			if err != nil {
 				return errors.Wrap(err, "creating high-res cached image")
 			}
@@ -197,15 +191,9 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		if _, err := os.Stat(highResPath); os.IsNotExist(err) {
 			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
 
-			photoImage, err := imageData.PhotoImage(tx)
+			err = imageData.EncodeImageJPEG(tx, highResPath, 70)
 			if err != nil {
-				return err
-			}
-
-			err = encodeImageJPEG(highResPath, photoImage, &jpeg.Options{Quality: 70})
-			if err != nil {
-				log.Println("ERROR: creating high-res cached image")
-				return err
+				return errors.Wrap(err, "could create high-res cached image")
 			}
 		}
 	}

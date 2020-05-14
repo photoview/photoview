@@ -4,31 +4,14 @@ import (
 	"database/sql"
 	"image"
 	"image/jpeg"
-	"log"
 	"os"
 
 	"github.com/disintegration/imaging"
-	"github.com/h2non/filetype"
 	cr2Decoder "github.com/nf/cr2"
+	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
 )
-
-func encodeImageJPEG(photoPath string, photoImage image.Image, jpegOptions *jpeg.Options) error {
-	photo_file, err := os.Create(photoPath)
-	if err != nil {
-		log.Printf("ERROR: Could not create file: %s\n", photoPath)
-		return err
-	}
-	defer photo_file.Close()
-
-	err = jpeg.Encode(photo_file, photoImage, jpegOptions)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // EncodeImageData is used to easily decode image data, with a cache so expensive operations are not repeated
 type EncodeImageData struct {
@@ -38,33 +21,39 @@ type EncodeImageData struct {
 	_contentType    *ImageType
 }
 
+func (img *EncodeImageData) EncodeImageJPEG(tx *sql.Tx, path string, jpegQuality int) error {
+	photo_file, err := os.Create(path)
+	if err != nil {
+		return errors.Wrapf(err, "could not create file: %s", path)
+	}
+	defer photo_file.Close()
+
+	image, err := img.PhotoImage(tx)
+	if err != nil {
+		return err
+	}
+
+	err = jpeg.Encode(photo_file, image, &jpeg.Options{Quality: jpegQuality})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ContentType reads the image to determine its content type
 func (img *EncodeImageData) ContentType() (*ImageType, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
 	}
 
-	file, err := os.Open(img.photo.Path)
-	if err != nil {
-		ScannerError("Could not open file %s: %s\n", img.photo.Path, err)
-		return nil, err
-	}
-	defer file.Close()
-
-	head := make([]byte, 261)
-	if _, err := file.Read(head); err != nil {
-		ScannerError("Could not read photo %s: %s\n", img.photo.Path, err)
-		return nil, err
-	}
-
-	_imgType, err := filetype.Image(head)
+	imgType, err := getImageType(img.photo.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	imgType := ImageType(_imgType.MIME.Value)
-	img._contentType = &imgType
-	return img._contentType, nil
+	img._contentType = imgType
+	return imgType, nil
 }
 
 // PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
