@@ -21,17 +21,12 @@ type EncodeImageData struct {
 	_contentType    *ImageType
 }
 
-func (img *EncodeImageData) EncodeImageJPEG(tx *sql.Tx, path string, jpegQuality int) error {
-	photo_file, err := os.Create(path)
+func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
+	photo_file, err := os.Create(outputPath)
 	if err != nil {
-		return errors.Wrapf(err, "could not create file: %s", path)
+		return errors.Wrapf(err, "could not create file: %s", outputPath)
 	}
 	defer photo_file.Close()
-
-	image, err := img.PhotoImage(tx)
-	if err != nil {
-		return err
-	}
 
 	err = jpeg.Encode(photo_file, image, &jpeg.Options{Quality: jpegQuality})
 	if err != nil {
