@@ -17,7 +17,7 @@ type ExecutableWorker struct {
 func newExecutableWorker(name string, argsFmt string) ExecutableWorker {
 	path, err := exec.LookPath(name)
 	if err != nil {
-		log.Printf("WARN: Darktable was not found, RAW conversion will be disabled")
+		log.Printf(fmt.Sprintf("WARN: %s was not found", name))
 	}
 
 	return ExecutableWorker{
@@ -25,6 +25,10 @@ func newExecutableWorker(name string, argsFmt string) ExecutableWorker {
 		Path:    path,
 		argsFmt: argsFmt,
 	}
+}
+
+func (execWorker *ExecutableWorker) isInstalled() bool {
+	return execWorker.Path != ""
 }
 
 func (execWorker *ExecutableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {

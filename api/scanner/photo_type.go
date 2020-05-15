@@ -62,6 +62,16 @@ func (imgType *ImageType) isRaw() bool {
 	return false
 }
 
+func (imgType *ImageType) isWebCompatible() bool {
+	for _, web_mime := range WebMimetypes {
+		if web_mime == *imgType {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (imgType *ImageType) isSupported() bool {
 	for _, supported_mime := range SupportedMimetypes {
 		if supported_mime == *imgType {

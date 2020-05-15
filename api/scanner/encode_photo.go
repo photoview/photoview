@@ -7,11 +7,41 @@ import (
 	"os"
 
 	"github.com/disintegration/imaging"
-	cr2Decoder "github.com/nf/cr2"
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
 )
+
+type PhotoDimensions struct {
+	Width  int
+	Height int
+}
+
+func PhotoDimensionsFromRect(rect image.Rectangle) PhotoDimensions {
+	return PhotoDimensions{
+		Width:  rect.Bounds().Max.X,
+		Height: rect.Bounds().Max.Y,
+	}
+}
+
+func (dimensions *PhotoDimensions) ThumbnailScale() PhotoDimensions {
+	aspect := float64(dimensions.Width) / float64(dimensions.Height)
+
+	var width, height int
+
+	if aspect > 1 {
+		width = 1024
+		height = int(1024 / aspect)
+	} else {
+		width = int(1024 * aspect)
+		height = 1024
+	}
+
+	return PhotoDimensions{
+		Width:  width,
+		Height: height,
+	}
+}
 
 // EncodeImageData is used to easily decode image data, with a cache so expensive operations are not repeated
 type EncodeImageData struct {
@@ -36,6 +66,24 @@ func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 	return nil
 }
 
+func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
+	photoFile, err := os.Open(imagePath)
+	if err != nil {
+		return nil, err
+	}
+	defer photoFile.Close()
+
+	config, _, err := image.DecodeConfig(photoFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PhotoDimensions{
+		Width:  config.Width,
+		Height: config.Height,
+	}, nil
+}
+
 // ContentType reads the image to determine its content type
 func (img *EncodeImageData) ContentType() (*ImageType, error) {
 	if img._contentType != nil {
@@ -51,8 +99,62 @@ func (img *EncodeImageData) ContentType() (*ImageType, error) {
 	return imgType, nil
 }
 
+func (img *EncodeImageData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
+	contentType, err := img.ContentType()
+	if err != nil {
+		return err
+	}
+
+	if !contentType.isSupported() {
+		return errors.New("could not convert photo as file format is not supported")
+	}
+
+	if contentType.isRaw() {
+		if DarktableCli.isInstalled() {
+			err := DarktableCli.EncodeJpeg(img.photo.Path, outputPath, 70)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("could not convert photo as no RAW converter was found")
+		}
+	}
+
+	image, err := img.photoImage(tx)
+	if err != nil {
+		return err
+	}
+
+	EncodeImageJPEG(image, outputPath, 70)
+
+	return nil
+}
+
+func EncodeThumbnail(inputPath string, outputPath string) (*PhotoDimensions, error) {
+	inputFile, err := os.Open(inputPath)
+	if err != nil {
+		return nil, err
+	}
+	defer inputFile.Close()
+
+	inputImage, _, err := image.Decode(inputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	dimensions := PhotoDimensionsFromRect(inputImage.Bounds())
+	dimensions = dimensions.ThumbnailScale()
+
+	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
+	if err = EncodeImageJPEG(thumbImage, outputPath, 60); err != nil {
+		return nil, err
+	}
+
+	return &dimensions, nil
+}
+
 // PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
-func (img *EncodeImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
+func (img *EncodeImageData) photoImage(tx *sql.Tx) (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}
@@ -63,22 +165,9 @@ func (img *EncodeImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
 	}
 	defer photoFile.Close()
 
-	var photoImg image.Image
-	contentType, err := img.ContentType()
+	photoImg, _, err := image.Decode(photoFile)
 	if err != nil {
-		return nil, err
-	}
-
-	if contentType != nil && *contentType == "image/x-canon-cr2" {
-		photoImg, err = cr2Decoder.Decode(photoFile)
-		if err != nil {
-			return nil, utils.HandleError("cr2 raw image decoding", err)
-		}
-	} else {
-		photoImg, _, err = image.Decode(photoFile)
-		if err != nil {
-			return nil, utils.HandleError("image decoding", err)
-		}
+		return nil, utils.HandleError("image decoding", err)
 	}
 
 	// Get orientation from exif data
@@ -126,30 +215,4 @@ func (img *EncodeImageData) PhotoImage(tx *sql.Tx) (image.Image, error) {
 
 	img._photoImage = photoImg
 	return img._photoImage, nil
-}
-
-// ThumbnailImage downsizes the image and returns it
-func (img *EncodeImageData) ThumbnailImage(tx *sql.Tx) (image.Image, error) {
-	photoImage, err := img.PhotoImage(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	dimensions := photoImage.Bounds().Max
-	aspect := float64(dimensions.X) / float64(dimensions.Y)
-
-	var width, height int
-
-	if aspect > 1 {
-		width = 1024
-		height = int(1024 / aspect)
-	} else {
-		width = int(1024 * aspect)
-		height = 1024
-	}
-
-	thumbImage := imaging.Thumbnail(photoImage, width, height, imaging.NearestNeighbor)
-	img._thumbnailImage = thumbImage
-
-	return img._thumbnailImage, nil
 }

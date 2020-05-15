@@ -51,11 +51,6 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		photo: photo,
 	}
 
-	photoName := path.Base(photo.Path)
-
-	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
-	photoBaseExt := path.Ext(photoName)
-
 	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.PhotoID)
 	if err != nil {
 		return err
@@ -65,29 +60,6 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 	origURL, err := photoUrlFromDB(models.PhotoOriginal)
 	if err != nil {
 		return err
-	}
-
-	if origURL == nil {
-		original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
-		original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
-
-		photoImage, err := imageData.PhotoImage(tx)
-		if err != nil {
-			return err
-		}
-
-		contentType, err := imageData.ContentType()
-		if err != nil {
-			return err
-		}
-
-		photoDimensions := photoImage.Bounds().Max
-
-		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoDimensions.X, photoDimensions.Y, models.PhotoOriginal, contentType)
-		if err != nil {
-			log.Printf("Could not insert original photo url: %d, %s\n", photo.PhotoID, photoName)
-			return err
-		}
 	}
 
 	// Thumbnail
@@ -108,25 +80,91 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		return errors.Wrap(err, "cache directory error")
 	}
 
-	// Save thumbnail to cache
-	if thumbURL == nil {
-		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", photoName, utils.GenerateToken())
-		thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
-		thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
-		thumbnail_name = thumbnail_name + ".jpg"
+	// Generate high res jpeg
+	var photoDimensions *PhotoDimensions
+	var baseImagePath string = photo.Path
 
-		thumbnailImage, err := imageData.ThumbnailImage(tx)
+	if highResURL == nil {
+
+		contentType, err := imageData.ContentType()
 		if err != nil {
 			return err
 		}
 
-		err = EncodeImageJPEG(thumbnailImage, path.Join(*photoCachePath, thumbnail_name), 70)
+		if !contentType.isWebCompatible() {
+			highres_name := fmt.Sprintf("highres_%s_%s", path.Base(photo.Path), utils.GenerateToken())
+			highres_name = strings.ReplaceAll(highres_name, ".", "_")
+			highres_name = strings.ReplaceAll(highres_name, " ", "_")
+			highres_name = highres_name + ".jpg"
+
+			baseImagePath = path.Join(*photoCachePath, highres_name)
+
+			err = imageData.EncodeHighRes(tx, baseImagePath)
+			if err != nil {
+				return errors.Wrap(err, "creating high-res cached image")
+			}
+
+			photoDimensions, err = GetPhotoDimensions(baseImagePath)
+			if err != nil {
+				return err
+			}
+
+			_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
+				photo.PhotoID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
+			if err != nil {
+				log.Printf("Could not insert highres photo url: %d, %s\n", photo.PhotoID, path.Base(photo.Path))
+				return err
+			}
+		}
+	} else {
+		// Verify that highres photo still exists in cache
+		baseImagePath = path.Join(*photoCachePath, highResURL.PhotoName)
+
+		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) {
+			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
+
+			err = imageData.EncodeHighRes(tx, baseImagePath)
+			if err != nil {
+				return errors.Wrap(err, "creating high-res cached image")
+			}
+		}
+	}
+
+	// Save original photo to database
+	if origURL == nil {
+		// Make sure photo dimensions is set
+		if photoDimensions == nil {
+			photoDimensions, err = GetPhotoDimensions(baseImagePath)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err = saveOriginalPhotoToDB(tx, photo, imageData, photoDimensions); err != nil {
+			return errors.Wrap(err, "saving original photo to database")
+		}
+	}
+
+	// Save thumbnail to cache
+	if thumbURL == nil {
+		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
+		thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
+		thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
+		thumbnail_name = thumbnail_name + ".jpg"
+
+		// thumbnailImage, err := imageData.ThumbnailImage(tx)
+		// if err != nil {
+		// 	return err
+		// }
+
+		thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
+
+		thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
 		if err != nil {
 			return errors.Wrap(err, "could not create thumbnail cached image")
 		}
 
-		thumbSize := thumbnailImage.Bounds().Max
-		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, thumbnail_name, thumbSize.X, thumbSize.Y, models.PhotoThumbnail, "image/jpeg")
+		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg")
 		if err != nil {
 			return err
 		}
@@ -137,73 +175,9 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.PhotoName)
 
-			thumbnailImage, err := imageData.ThumbnailImage(tx)
+			_, err := EncodeThumbnail(baseImagePath, thumbPath)
 			if err != nil {
-				return err
-			}
-
-			err = EncodeImageJPEG(thumbnailImage, thumbPath, 70)
-			if err != nil {
-				log.Println("ERROR: creating thumbnail cached image")
-				return err
-			}
-		}
-	}
-
-	// Generate high res jpeg
-	if highResURL == nil {
-
-		contentType, err := imageData.ContentType()
-		if err != nil {
-			return err
-		}
-
-		original_web_safe := false
-		for _, web_mime := range WebMimetypes {
-			if *contentType == web_mime {
-				original_web_safe = true
-				break
-			}
-		}
-
-		if !original_web_safe {
-			highres_name := fmt.Sprintf("highres_%s_%s", photoName, utils.GenerateToken())
-			highres_name = strings.ReplaceAll(highres_name, ".", "_")
-			highres_name = strings.ReplaceAll(highres_name, " ", "_")
-			highres_name = highres_name + ".jpg"
-
-			photoImage, err := imageData.PhotoImage(tx)
-			if err != nil {
-				return err
-			}
-
-			err = EncodeImageJPEG(photoImage, path.Join(*photoCachePath, highres_name), 70)
-			if err != nil {
-				return errors.Wrap(err, "creating high-res cached image")
-			}
-
-			_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
-				photo.PhotoID, highres_name, photoImage.Bounds().Max.X, photoImage.Bounds().Max.Y, models.PhotoHighRes, "image/jpeg")
-			if err != nil {
-				log.Printf("Could not insert highres photo url: %d, %s\n", photo.PhotoID, photoName)
-				return err
-			}
-		}
-	} else {
-		// Verify that highres photo still exists in cache
-		highResPath := path.Join(*photoCachePath, highResURL.PhotoName)
-
-		if _, err := os.Stat(highResPath); os.IsNotExist(err) {
-			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
-
-			photoImage, err := imageData.PhotoImage(tx)
-			if err != nil {
-				return err
-			}
-
-			err = EncodeImageJPEG(photoImage, highResPath, 70)
-			if err != nil {
-				return errors.Wrap(err, "could create high-res cached image")
+				return errors.Wrap(err, "could not create thumbnail cached image")
 			}
 		}
 	}
@@ -240,4 +214,26 @@ func makePhotoCacheDir(photo *models.Photo) (*string, error) {
 	}
 
 	return &photoCachePath, nil
+}
+
+func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Photo, imageData EncodeImageData, photoDimensions *PhotoDimensions) error {
+	photoName := path.Base(photo.Path)
+	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
+	photoBaseExt := path.Ext(photoName)
+
+	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
+	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
+
+	contentType, err := imageData.ContentType()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.PhotoOriginal, contentType)
+	if err != nil {
+		log.Printf("Could not insert original photo url: %d, %s\n", photo.PhotoID, photoName)
+		return err
+	}
+
+	return nil
 }
