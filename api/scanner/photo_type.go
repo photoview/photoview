@@ -19,7 +19,38 @@ const (
 	TypeTiff ImageType = "image/tiff"
 	TypeWebp ImageType = "image/webp"
 	TypeBmp  ImageType = "image/bmp"
-	TypeCr2  ImageType = "image/x-canon-cr2"
+
+	// Raw formats
+	TypeDNG ImageType = "image/x-adobe-dng"
+	TypeARW ImageType = "image/x-sony-arw"
+	TypeSR2 ImageType = "image/x-sony-sr2"
+	TypeSRF ImageType = "image/x-sony-srf"
+	TypeCR2 ImageType = "image/x-canon-cr2"
+	TypeCRW ImageType = "image/x-canon-crw"
+	TypeERF ImageType = "image/x-epson-erf"
+	TypeDCS ImageType = "image/x-kodak-dcs"
+	TypeDRF ImageType = "image/x-kodak-drf"
+	TypeDCR ImageType = "image/x-kodak-dcr"
+	TypeK25 ImageType = "image/x-kodak-k25"
+	TypeKDC ImageType = "image/x-kodak-kdc"
+	TypeMRW ImageType = "image/x-minolta-mrw"
+	TypeMDC ImageType = "image/x-minolta-mdc"
+	TypeNEF ImageType = "image/x-nikon-nef"
+	TypeNRW ImageType = "image/x-nikon-nrw"
+	TypeORF ImageType = "image/x-olympus-orf"
+	TypePEF ImageType = "image/x-pentax-pef"
+	TypeRAF ImageType = "image/x-fuji-raf"
+	TypeRAW ImageType = "image/x-panasonic-raw"
+	TypeRW2 ImageType = "image/x-panasonic-rw2"
+	TypeGPR ImageType = "image/x-gopro-gpr"
+	Type3FR ImageType = "image/x-hasselblad-3fr"
+	TypeFFF ImageType = "image/x-hasselblad-fff"
+	TypeMEF ImageType = "image/x-mamiya-mef"
+	TypeCap ImageType = "image/x-phaseone-cap"
+	TypeIIQ ImageType = "image/x-phaseone-iiq"
+	TypeMOS ImageType = "image/x-leaf-mos"
+	TypeRWL ImageType = "image/x-leica-rwl"
+	TypeSRW ImageType = "image/x-samsung-srw"
 )
 
 var SupportedMimetypes = [...]ImageType{
@@ -28,7 +59,37 @@ var SupportedMimetypes = [...]ImageType{
 	TypeTiff,
 	TypeWebp,
 	TypeBmp,
-	TypeCr2,
+
+	TypeDNG,
+	TypeARW,
+	TypeSR2,
+	TypeSRF,
+	TypeCR2,
+	TypeCRW,
+	TypeERF,
+	TypeDCS,
+	TypeDRF,
+	TypeDCR,
+	TypeK25,
+	TypeKDC,
+	TypeMRW,
+	TypeMDC,
+	TypeNEF,
+	TypeNRW,
+	TypeORF,
+	TypePEF,
+	TypeRAF,
+	TypeRAW,
+	TypeRW2,
+	TypeGPR,
+	Type3FR,
+	TypeFFF,
+	TypeMEF,
+	TypeCap,
+	TypeIIQ,
+	TypeMOS,
+	TypeRWL,
+	TypeSRW,
 }
 
 var WebMimetypes = [...]ImageType{
@@ -39,7 +100,36 @@ var WebMimetypes = [...]ImageType{
 }
 
 var RawMimeTypes = [...]ImageType{
-	TypeCr2,
+	TypeDNG,
+	TypeARW,
+	TypeSR2,
+	TypeSRF,
+	TypeCR2,
+	TypeCRW,
+	TypeERF,
+	TypeDCS,
+	TypeDRF,
+	TypeDCR,
+	TypeK25,
+	TypeKDC,
+	TypeMRW,
+	TypeMDC,
+	TypeNEF,
+	TypeNRW,
+	TypeORF,
+	TypePEF,
+	TypeRAF,
+	TypeRAW,
+	TypeRW2,
+	TypeGPR,
+	Type3FR,
+	TypeFFF,
+	TypeMEF,
+	TypeCap,
+	TypeIIQ,
+	TypeMOS,
+	TypeRWL,
+	TypeSRW,
 }
 
 var fileExtensions = map[string]ImageType{
@@ -49,7 +139,30 @@ var fileExtensions = map[string]ImageType{
 	".tif":  TypeTiff,
 	".tiff": TypeTiff,
 	".bmp":  TypeBmp,
-	".cr2":  TypeCr2,
+
+	// RAW formats
+	".dng": TypeDNG,
+	".arw": TypeARW,
+	".sr2": TypeSR2,
+	".srf": TypeSRF,
+	".cr2": TypeCR2,
+	".crw": TypeCRW,
+	".erf": TypeERF,
+	".dcr": TypeDCR,
+	".k25": TypeK25,
+	".kdc": TypeKDC,
+	".mrw": TypeMRW,
+	".nef": TypeNEF,
+	".nrw": TypeNRW,
+	".orf": TypeORF,
+	".pef": TypePEF,
+	".raf": TypeRAF,
+	".raw": TypeRAW,
+	".dcs": TypeDCS,
+	".drf": TypeDRF,
+	".gpr": TypeGPR,
+	".3fr": Type3FR,
+	".fff": TypeFFF,
 }
 
 func (imgType *ImageType) isRaw() bool {
