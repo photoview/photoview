@@ -1,14 +1,13 @@
 package scanner
 
-import "os/exec"
+import (
+	"fmt"
+	"log"
+	"os/exec"
+	"strings"
 
-import "log"
-
-import "fmt"
-
-import "github.com/pkg/errors"
-
-import "strings"
+	"github.com/pkg/errors"
+)
 
 type ExecutableWorker struct {
 	Name    string
@@ -19,7 +18,9 @@ type ExecutableWorker struct {
 func newExecutableWorker(name string, argsFmt string) ExecutableWorker {
 	path, err := exec.LookPath(name)
 	if err != nil {
-		log.Printf(fmt.Sprintf("WARN: %s was not found", name))
+		log.Printf("WARN: %s was not found\n", name)
+	} else {
+		log.Printf("Found executable worker: %s\n", name)
 	}
 
 	return ExecutableWorker{
@@ -34,14 +35,21 @@ func (execWorker *ExecutableWorker) isInstalled() bool {
 }
 
 func (execWorker *ExecutableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
-	args := fmt.Sprintf(execWorker.argsFmt, inputPath, outputPath, jpegQuality)
-	cmd := exec.Command(execWorker.Path, strings.Split(args, " ")...)
+	args := make([]string, 0)
+	for _, arg := range strings.Split(execWorker.argsFmt, " ") {
+		if strings.Contains(arg, "%") {
+			arg = fmt.Sprintf(arg, inputPath, outputPath, jpegQuality)
+		}
+		args = append(args, arg)
+	}
+
+	cmd := exec.Command(execWorker.Path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "error encoding image using: %s %s", execWorker.Name, args)
+		return errors.Wrapf(err, "error encoding image using: %s %v", execWorker.Name, args)
 	}
 
 	return nil
 }
 
-var DarktableCli = newExecutableWorker("darktable-cli", "%s %s --core --conf plugins/imageio/format/jpeg/quality=%d")
+var DarktableCli = newExecutableWorker("darktable-cli", "%[1]s %[2]s --core --conf plugins/imageio/format/jpeg/quality=%[3]d")
