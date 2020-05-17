@@ -2,54 +2,59 @@ package scanner
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/pkg/errors"
 )
 
-type ExecutableWorker struct {
-	Name    string
-	Path    string
-	argsFmt string
+type DarktableWorker struct {
+	path string
 }
 
-func newExecutableWorker(name string, argsFmt string) ExecutableWorker {
-	path, err := exec.LookPath(name)
+func newDarktableWorker() DarktableWorker {
+	path, err := exec.LookPath("darktable-cli")
 	if err != nil {
-		log.Printf("WARN: %s was not found\n", name)
+		log.Println("Executable worker not found: darktable")
 	} else {
-		log.Printf("Found executable worker: %s\n", name)
+		log.Println("Found executable worker: darktable")
 	}
 
-	return ExecutableWorker{
-		Name:    name,
-		Path:    path,
-		argsFmt: argsFmt,
+	return DarktableWorker{
+		path: path,
 	}
 }
 
-func (execWorker *ExecutableWorker) isInstalled() bool {
-	return execWorker.Path != ""
+func (worker *DarktableWorker) IsInstalled() bool {
+	return worker.path != ""
 }
 
-func (execWorker *ExecutableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
-	args := make([]string, 0)
-	for _, arg := range strings.Split(execWorker.argsFmt, " ") {
-		if strings.Contains(arg, "%") {
-			arg = fmt.Sprintf(arg, inputPath, outputPath, jpegQuality)
-		}
-		args = append(args, arg)
+func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+	tmpDir, err := ioutil.TempDir("/tmp", "photoview-darktable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	args := []string{
+		inputPath,
+		outputPath,
+		"--core",
+		"--conf",
+		fmt.Sprintf("plugins/imageio/format/jpeg/quality=%d", jpegQuality),
+		"--configdir",
+		tmpDir,
 	}
 
-	cmd := exec.Command(execWorker.Path, args...)
+	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "error encoding image using: %s %v", execWorker.Name, args)
+		return errors.Wrapf(err, "encoding image using: %s %v", worker.path, args)
 	}
 
 	return nil
 }
 
-var DarktableCli = newExecutableWorker("darktable-cli", "%[1]s %[2]s --core --conf plugins/imageio/format/jpeg/quality=%[3]d")
+var DarktableCli = newDarktableWorker()

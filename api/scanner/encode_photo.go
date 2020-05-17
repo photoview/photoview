@@ -110,7 +110,7 @@ func (img *EncodeImageData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 	}
 
 	if contentType.isRaw() {
-		if DarktableCli.isInstalled() {
+		if DarktableCli.IsInstalled() {
 			err := DarktableCli.EncodeJpeg(img.photo.Path, outputPath, 70)
 			if err != nil {
 				return err
