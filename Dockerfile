@@ -11,23 +11,34 @@ ENV UI_PUBLIC_URL=${UI_PUBLIC_URL:-/}
 RUN mkdir -p /app
 WORKDIR /app
 
+# Download dependencies
 COPY ui/package*.json /app/
 RUN npm install
 COPY ui /app
 
+# Build frontend
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 # Build API
 FROM golang:alpine AS api
 
+RUN mkdir -p /app
 WORKDIR /app
+
+# Download dependencies
+COPY api/go.mod api/go.sum /app/
+RUN go mod download
+
+# Copy api source
 COPY api /app
 
-RUN go get -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o photoview .
 
 # Copy api and ui to production environment
 FROM alpine:latest
+
+# Install darktable
+RUN apk add darktable
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations
