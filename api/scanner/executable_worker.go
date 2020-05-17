@@ -8,6 +8,8 @@ import "fmt"
 
 import "github.com/pkg/errors"
 
+import "strings"
+
 type ExecutableWorker struct {
 	Name    string
 	Path    string
@@ -33,10 +35,10 @@ func (execWorker *ExecutableWorker) isInstalled() bool {
 
 func (execWorker *ExecutableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
 	args := fmt.Sprintf(execWorker.argsFmt, inputPath, outputPath, jpegQuality)
-	cmd := exec.Command(execWorker.Path, args)
+	cmd := exec.Command(execWorker.Path, strings.Split(args, " ")...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "error encoding image using '%s'", execWorker.Name)
+		return errors.Wrapf(err, "error encoding image using: %s %s", execWorker.Name, args)
 	}
 
 	return nil

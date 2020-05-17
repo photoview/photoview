@@ -118,14 +118,14 @@ func (img *EncodeImageData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 		} else {
 			return errors.New("could not convert photo as no RAW converter was found")
 		}
-	}
+	} else {
+		image, err := img.photoImage(tx)
+		if err != nil {
+			return err
+		}
 
-	image, err := img.photoImage(tx)
-	if err != nil {
-		return err
+		EncodeImageJPEG(image, outputPath, 70)
 	}
-
-	EncodeImageJPEG(image, outputPath, 70)
 
 	return nil
 }
