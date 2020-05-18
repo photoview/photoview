@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"database/sql"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/h2non/filetype"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
 	"github.com/viktorstrate/photoview/api/utils"
@@ -21,7 +19,7 @@ import (
 
 type scanner_cache map[string]interface{}
 
-func (cache *scanner_cache) insert_photo_type(path string, content_type string) {
+func (cache *scanner_cache) insert_photo_type(path string, content_type ImageType) {
 	(*cache)["photo_type//"+path] = content_type
 }
 
@@ -308,59 +306,6 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache) bool {
 	for _, scanned_path := range scanned_directories {
 		cache.insert_album_path(scanned_path, false)
 	}
-	return false
-}
-
-var SupportedMimetypes = [...]string{
-	"image/jpeg",
-	"image/png",
-	"image/tiff",
-	"image/webp",
-	"image/x-canon-cr2",
-	"image/bmp",
-}
-
-var WebMimetypes = [...]string{
-	"image/jpeg",
-	"image/png",
-	"image/webp",
-	"image/bmp",
-}
-
-func isPathImage(path string, cache *scanner_cache) bool {
-	if cache.get_photo_type(path) != nil {
-		return true
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		ScannerError("Could not open file %s: %s\n", path, err)
-		return false
-	}
-	defer file.Close()
-
-	head := make([]byte, 261)
-	if _, err := file.Read(head); err != nil {
-		if err == io.EOF {
-			return false
-		}
-
-		ScannerError("Could not read file %s: %s\n", path, err)
-		return false
-	}
-
-	imgType, err := filetype.Image(head)
-	if err != nil {
-		return false
-	}
-
-	for _, supported_mime := range SupportedMimetypes {
-		if supported_mime == imgType.MIME.Value {
-			cache.insert_photo_type(path, supported_mime)
-			return true
-		}
-	}
-
-	log.Printf("Unsupported image %s of type %s\n", path, imgType.MIME.Value)
 	return false
 }
 
