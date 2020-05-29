@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Query, Mutation } from 'react-apollo'
+import { useMutation, useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Table, Button, Dropdown } from 'semantic-ui-react'
 import copy from 'copy-to-clipboard'
@@ -63,118 +63,123 @@ const SidebarShare = ({ photo, album }) => {
     ? addPhotoShareMutation
     : addAlbumShareMutation
 
+  const {
+    loading: sharesLoading,
+    error: sharesError,
+    data: sharesData,
+  } = useQuery(query, {
+    variables: { id },
+  })
+
+  const [deleteShare, { loading: deleteShareLoading }] = useMutation(
+    deleteShareMutation,
+    {
+      refetchQueries: [{ query: query, variables: { id } }],
+    }
+  )
+
+  const [sharePhoto, { loading: sharePhotoLoading }] = useMutation(
+    addShareMutation,
+    {
+      refetchQueries: [{ query: query, variables: { id } }],
+    }
+  )
+
+  let content = null
+
+  if (!content && sharesError) {
+    content = <div>Error: {sharesError.message}</div>
+  }
+
+  if (!content && sharesLoading) {
+    content = <div>Loading shares...</div>
+  }
+
+  if (!content) {
+    const shares = isPhoto ? sharesData.photo.shares : sharesData.album.shares
+
+    const optionsRows = shares.map(share => (
+      <Table.Row key={share.token}>
+        <Table.Cell>
+          <b>Public Link</b> {share.token}
+        </Table.Cell>
+        <Table.Cell>
+          <Button.Group>
+            <Button
+              icon="chain"
+              content="Copy link"
+              onClick={() => {
+                copy(`${location.origin}/share/${share.token}`)
+              }}
+            />
+            <Dropdown button text="More">
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  text="Delete"
+                  icon="delete"
+                  disabled={deleteShareLoading}
+                  onClick={() => {
+                    deleteShare({
+                      variables: {
+                        token: share.token,
+                      },
+                    })
+                  }}
+                />
+              </Dropdown.Menu>
+            </Dropdown>
+          </Button.Group>
+        </Table.Cell>
+      </Table.Row>
+    ))
+
+    if (optionsRows.length == 0) {
+      optionsRows.push(
+        <Table.Row key="no-shares">
+          <Table.Cell colSpan="2">No shares found</Table.Cell>
+        </Table.Row>
+      )
+    }
+
+    content = (
+      <div>
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell colSpan="2">Public Shares</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>{optionsRows}</Table.Body>
+          <Table.Footer>
+            <Table.Row>
+              <Table.HeaderCell colSpan="2">
+                <Button
+                  content="Add share"
+                  icon="add"
+                  floated="right"
+                  positive
+                  loading={sharePhotoLoading}
+                  disabled={sharePhotoLoading}
+                  onClick={() => {
+                    sharePhoto({
+                      variables: {
+                        id,
+                      },
+                    })
+                  }}
+                />
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Footer>
+        </Table>
+      </div>
+    )
+  }
+
   return (
     <div>
       <h2>Sharing options</h2>
-      <Query query={query} variables={{ id }}>
-        {({ loading, error, data, refetch }) => {
-          if (loading) return <div>Loading...</div>
-          if (error) return <div>Error: {error.message}</div>
-
-          let shares = isPhoto ? data.photo.shares : data.album.shares
-
-          const rows = shares.map(share => (
-            <Table.Row key={share.token}>
-              <Table.Cell>
-                <b>Public Link</b> {share.token}
-              </Table.Cell>
-              <Table.Cell>
-                <Button.Group>
-                  <Button
-                    icon="chain"
-                    content="Copy link"
-                    onClick={() => {
-                      copy(`${location.origin}/share/${share.token}`)
-                    }}
-                  />
-                  <Dropdown button text="More">
-                    <Dropdown.Menu>
-                      <Mutation
-                        mutation={deleteShareMutation}
-                        onCompleted={() => {
-                          refetch()
-                        }}
-                      >
-                        {(deleteShare, { loading, error, data }) => {
-                          return (
-                            <Dropdown.Item
-                              text="Delete"
-                              icon="delete"
-                              disabled={loading}
-                              onClick={() => {
-                                deleteShare({
-                                  variables: {
-                                    token: share.token,
-                                  },
-                                })
-                              }}
-                            />
-                          )
-                        }}
-                      </Mutation>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Button.Group>
-              </Table.Cell>
-            </Table.Row>
-          ))
-
-          if (rows.length == 0) {
-            rows.push(
-              <Table.Row key="no-shares">
-                <Table.Cell colSpan="2">No shares found</Table.Cell>
-              </Table.Row>
-            )
-          }
-
-          return (
-            <div>
-              <Table>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.HeaderCell colSpan="2">
-                      Public Shares
-                    </Table.HeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>{rows}</Table.Body>
-                <Table.Footer>
-                  <Table.Row>
-                    <Table.HeaderCell colSpan="2">
-                      <Mutation
-                        mutation={addShareMutation}
-                        onCompleted={() => {
-                          refetch()
-                        }}
-                      >
-                        {(sharePhoto, { loading, error, data }) => {
-                          return (
-                            <Button
-                              content="Add share"
-                              icon="add"
-                              floated="right"
-                              positive
-                              loading={loading}
-                              disabled={loading}
-                              onClick={() => {
-                                sharePhoto({
-                                  variables: {
-                                    id,
-                                  },
-                                })
-                              }}
-                            />
-                          )
-                        }}
-                      </Mutation>
-                    </Table.HeaderCell>
-                  </Table.Row>
-                </Table.Footer>
-              </Table>
-            </div>
-          )
-        }}
-      </Query>
+      {content}
     </div>
   )
 }
