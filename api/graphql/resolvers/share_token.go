@@ -62,11 +62,6 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 
 func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
 
-	hashed_password, err := hashSharePassword(password)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to hash password")
-	}
-
 	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
 	token, err := models.NewShareTokenFromRow(row)
 	if err != nil {
@@ -77,14 +72,20 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 		}
 	}
 
-	if token.Password != nil && hashed_password != token.Password {
-		return nil, errors.New("unauthorized")
+	if token.Password != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*password)); err != nil {
+			if err == bcrypt.ErrMismatchedHashAndPassword {
+				return nil, errors.New("unauthorized")
+			} else {
+				return nil, errors.New("internal server error")
+			}
+		}
 	}
 
 	return token, nil
 }
 
-func (r *queryResolver) ShareTokenRequiresPassword(ctx context.Context, tokenValue string) (bool, error) {
+func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenValue string, password *string) (bool, error) {
 	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
 	token, err := models.NewShareTokenFromRow(row)
 	if err != nil {
@@ -95,8 +96,23 @@ func (r *queryResolver) ShareTokenRequiresPassword(ctx context.Context, tokenVal
 		}
 	}
 
-	requiresPassword := token.Password != nil
-	return requiresPassword, nil
+	if token.Password == nil {
+		return true, nil
+	}
+
+	if password == nil {
+		return false, nil
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*password)); err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
 
 func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {

@@ -39,7 +39,7 @@ type Query {
   photo(id: Int!): Photo!
 
   shareToken(token: String!, password: String): ShareToken!
-  shareTokenRequiresPassword(token: String!): Boolean!
+  shareTokenValidatePassword(token: String!, password: String): Boolean!
 
   search(query: String!, limitPhotos: Int, limitAlbums: Int): SearchResult!
 }
