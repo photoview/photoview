@@ -60,10 +60,15 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 	return hasPassword, nil
 }
 
-func (r *queryResolver) ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error) {
+func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
 
-	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ? AND (password = ? OR password IS NULL)", token, password)
-	result, err := models.NewShareTokenFromRow(row)
+	hashed_password, err := hashSharePassword(password)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to hash password")
+	}
+
+	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
+	token, err := models.NewShareTokenFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("share not found")
@@ -72,7 +77,11 @@ func (r *queryResolver) ShareToken(ctx context.Context, token string, password *
 		}
 	}
 
-	return result, nil
+	if token.Password != nil && hashed_password != token.Password {
+		return nil, errors.New("unauthorized")
+	}
+
+	return token, nil
 }
 
 func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {

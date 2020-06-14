@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -60,7 +61,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 				return
 			}
 		} else {
-
+			// Check if photo is authorized with a share token
 			token := r.URL.Query().Get("token")
 			if token == "" {
 				w.WriteHeader(http.StatusForbidden)
@@ -76,6 +77,23 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("internal server error"))
 				return
+			}
+
+			// Validate share token password, if set
+			if shareToken.Password != nil {
+				tokenPassword := r.Header.Get("TokenPassword")
+
+				if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
+					if err == bcrypt.ErrMismatchedHashAndPassword {
+						w.WriteHeader(http.StatusForbidden)
+						w.Write([]byte("unauthorized"))
+						return
+					} else {
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte("internal server error"))
+						return
+					}
+				}
 			}
 
 			if shareToken.AlbumID != nil && photo.AlbumId != *shareToken.AlbumID {
