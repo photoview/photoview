@@ -76,6 +76,7 @@ type ComplexityRoot struct {
 		DeleteShareToken   func(childComplexity int, token string) int
 		DeleteUser         func(childComplexity int, id int) int
 		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
+		ProtectShareToken  func(childComplexity int, token string, password *string) int
 		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
 		ScanAll            func(childComplexity int) int
 		ScanUser           func(childComplexity int, userID int) int
@@ -136,15 +137,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Album      func(childComplexity int, id int) int
-		MyAlbums   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
-		MyPhotos   func(childComplexity int, filter *models.Filter) int
-		MyUser     func(childComplexity int) int
-		Photo      func(childComplexity int, id int) int
-		Search     func(childComplexity int, query string, limitPhotos *int, limitAlbums *int) int
-		ShareToken func(childComplexity int, token string, password *string) int
-		SiteInfo   func(childComplexity int) int
-		User       func(childComplexity int, filter *models.Filter) int
+		Album                      func(childComplexity int, id int) int
+		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
+		MyPhotos                   func(childComplexity int, filter *models.Filter) int
+		MyUser                     func(childComplexity int) int
+		Photo                      func(childComplexity int, id int) int
+		Search                     func(childComplexity int, query string, limitPhotos *int, limitAlbums *int) int
+		ShareToken                 func(childComplexity int, token string, password *string) int
+		ShareTokenValidatePassword func(childComplexity int, token string, password *string) int
+		SiteInfo                   func(childComplexity int) int
+		User                       func(childComplexity int, filter *models.Filter) int
 	}
 
 	ScannerResult struct {
@@ -161,12 +163,13 @@ type ComplexityRoot struct {
 	}
 
 	ShareToken struct {
-		Album  func(childComplexity int) int
-		Expire func(childComplexity int) int
-		ID     func(childComplexity int) int
-		Owner  func(childComplexity int) int
-		Photo  func(childComplexity int) int
-		Token  func(childComplexity int) int
+		Album       func(childComplexity int) int
+		Expire      func(childComplexity int) int
+		HasPassword func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Owner       func(childComplexity int) int
+		Photo       func(childComplexity int) int
+		Token       func(childComplexity int) int
 	}
 
 	SiteInfo struct {
@@ -204,6 +207,7 @@ type MutationResolver interface {
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
+	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
@@ -225,11 +229,13 @@ type QueryResolver interface {
 	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
 	Photo(ctx context.Context, id int) (*models.Photo, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
+	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
 	Search(ctx context.Context, query string, limitPhotos *int, limitAlbums *int) (*models.SearchResult, error)
 }
 type ShareTokenResolver interface {
 	Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error)
 
+	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
 	Album(ctx context.Context, obj *models.ShareToken) (*models.Album, error)
 	Photo(ctx context.Context, obj *models.ShareToken) (*models.Photo, error)
 }
@@ -412,6 +418,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
+
+	case "Mutation.protectShareToken":
+		if e.complexity.Mutation.ProtectShareToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_protectShareToken_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -811,6 +829,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 
+	case "Query.shareTokenValidatePassword":
+		if e.complexity.Query.ShareTokenValidatePassword == nil {
+			break
+		}
+
+		args, err := ec.field_Query_shareTokenValidatePassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ShareTokenValidatePassword(childComplexity, args["token"].(string), args["password"].(*string)), true
+
 	case "Query.siteInfo":
 		if e.complexity.Query.SiteInfo == nil {
 			break
@@ -892,6 +922,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ShareToken.Expire(childComplexity), true
+
+	case "ShareToken.hasPassword":
+		if e.complexity.ShareToken.HasPassword == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.HasPassword(childComplexity), true
 
 	case "ShareToken.id":
 		if e.complexity.ShareToken.ID == nil {
@@ -1085,6 +1122,7 @@ type Query {
   photo(id: Int!): Photo!
 
   shareToken(token: String!, password: String): ShareToken!
+  shareTokenValidatePassword(token: String!, password: String): Boolean!
 
   search(query: String!, limitPhotos: Int, limitAlbums: Int): SearchResult!
 }
@@ -1117,6 +1155,8 @@ type Mutation {
   sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
+  "Set a password for a token, if null is passed for the password argument, the password will be cleared"
+  protectShareToken(token: String!, password: String): ShareToken
 
   updateUser(
     id: Int!
@@ -1178,6 +1218,8 @@ type ShareToken {
   owner: User!
   "Optional expire date"
   expire: Time
+  "Whether or not a password is needed to access the share"
+  hasPassword: Boolean!
 
   "The album this token shares"
   album: Album
@@ -1434,6 +1476,28 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 		}
 	}
 	args["rootPath"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
 	return args, nil
 }
 
@@ -1700,6 +1764,28 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 		}
 	}
 	args["limitAlbums"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
 	return args, nil
 }
 
@@ -2535,6 +2621,44 @@ func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, fiel
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteShareToken(rctx, args["token"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.ShareToken)
+	fc.Result = res
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_protectShareToken_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ProtectShareToken(rctx, args["token"].(string), args["password"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4238,6 +4362,47 @@ func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql
 	return ec.marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_shareTokenValidatePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_shareTokenValidatePassword_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ShareTokenValidatePassword(rctx, args["token"].(string), args["password"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4711,6 +4876,40 @@ func (ec *executionContext) _ShareToken_expire(ctx context.Context, field graphq
 	res := resTmp.(*time.Time)
 	fc.Result = res
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ShareToken_hasPassword(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ShareToken",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ShareToken().HasPassword(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -6311,6 +6510,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_sharePhoto(ctx, field)
 		case "deleteShareToken":
 			out.Values[i] = ec._Mutation_deleteShareToken(ctx, field)
+		case "protectShareToken":
+			out.Values[i] = ec._Mutation_protectShareToken(ctx, field)
 		case "updateUser":
 			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 		case "createUser":
@@ -6757,6 +6958,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "shareTokenValidatePassword":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_shareTokenValidatePassword(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "search":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -6896,6 +7111,20 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 			})
 		case "expire":
 			out.Values[i] = ec._ShareToken_expire(ctx, field, obj)
+		case "hasPassword":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ShareToken_hasPassword(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "album":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {

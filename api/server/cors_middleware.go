@@ -14,7 +14,7 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
 			methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-			headers := []string{"authorization", "content-type", "content-length"}
+			headers := []string{"authorization", "content-type", "content-length", "TokenPassword"}
 
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
