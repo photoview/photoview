@@ -3,8 +3,9 @@ package resolvers
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -52,6 +53,11 @@ func (r *shareTokenResolver) Photo(ctx context.Context, obj *models.ShareToken) 
 	}
 
 	return photo, nil
+}
+
+func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error) {
+	hasPassword := obj.Password != nil
+	return hasPassword, nil
 }
 
 func (r *queryResolver) ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error) {
@@ -131,14 +137,9 @@ func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *
 	}
 	rows.Close()
 
-	var hashed_password *string = nil
-	if password != nil {
-		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
-		if err != nil {
-			return nil, err
-		}
-		hashed_str := string(hashedPassBytes)
-		hashed_password = &hashed_str
+	hashed_password, err := hashSharePassword(password)
+	if err != nil {
+		return nil, err
 	}
 
 	token := utils.GenerateToken()
@@ -169,7 +170,59 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 		return nil, auth.ErrUnauthorized
 	}
 
-	row := r.Database.QueryRow(`
+	token, err := getUserToken(r.Database, user, tokenValue)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := r.Database.Exec("DELETE FROM share_token WHERE token_id = ?", token.TokenID); err != nil {
+		return nil, errors.Wrapf(err, "Error occurred when trying to delete share token (%s) from database", tokenValue)
+	}
+
+	return token, nil
+}
+
+func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	token, err := getUserToken(r.Database, user, tokenValue)
+	if err != nil {
+		return nil, err
+	}
+
+	hashed_password, err := hashSharePassword(password)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Database.Exec("UPDATE share_token SET password = ? WHERE token_id = ?", hashed_password, token.TokenID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to update password for share token")
+	}
+
+	updatedToken := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
+	return models.NewShareTokenFromRow(updatedToken)
+}
+
+func hashSharePassword(password *string) (*string, error) {
+	var hashed_password *string = nil
+	if password != nil {
+		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
+		if err != nil {
+			return nil, err
+		}
+		hashed_str := string(hashedPassBytes)
+		hashed_password = &hashed_str
+	}
+
+	return hashed_password, nil
+}
+
+func getUserToken(db *sql.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
+	row := db.QueryRow(`
 		SELECT share_token.* FROM share_token, user WHERE
 		share_token.value = ? AND
 		share_token.owner_id = user.user_id AND
@@ -178,10 +231,6 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 
 	token, err := models.NewShareTokenFromRow(row)
 	if err != nil {
-		return nil, err
-	}
-
-	if _, err := r.Database.Exec("DELETE FROM share_token WHERE token_id = ?", token.TokenID); err != nil {
 		return nil, err
 	}
 
