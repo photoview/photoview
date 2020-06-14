@@ -84,6 +84,21 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 	return token, nil
 }
 
+func (r *queryResolver) ShareTokenRequiresPassword(ctx context.Context, tokenValue string) (bool, error) {
+	row := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
+	token, err := models.NewShareTokenFromRow(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, errors.New("share not found")
+		} else {
+			return false, err
+		}
+	}
+
+	requiresPassword := token.Password != nil
+	return requiresPassword, nil
+}
+
 func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
