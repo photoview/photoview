@@ -8,11 +8,12 @@ import (
 )
 
 type Photo struct {
-	PhotoID int
-	Title   string
-	Path    string
-	AlbumId int
-	ExifId  *int
+	PhotoID  int
+	Title    string
+	Path     string
+	AlbumId  int
+	ExifId   *int
+	Favorite bool
 }
 
 func (p *Photo) ID() int {
@@ -40,7 +41,7 @@ type PhotoURL struct {
 func NewPhotoFromRow(row *sql.Row) (*Photo, error) {
 	photo := Photo{}
 
-	if err := row.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId); err != nil {
+	if err := row.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId, &photo.Favorite); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +53,7 @@ func NewPhotosFromRows(rows *sql.Rows) ([]*Photo, error) {
 
 	for rows.Next() {
 		var photo Photo
-		if err := rows.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId); err != nil {
+		if err := rows.Scan(&photo.PhotoID, &photo.Title, &photo.Path, &photo.AlbumId, &photo.ExifId, &photo.Favorite); err != nil {
 			return nil, err
 		}
 		photos = append(photos, &photo)

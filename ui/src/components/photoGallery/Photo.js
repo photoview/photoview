@@ -1,9 +1,20 @@
 import React, { useState } from 'react'
+import gql from 'graphql-tag'
+import { useMutation } from 'react-apollo'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
 import ProtectedImage from './ProtectedImage'
+
+const markFavoriteMutation = gql`
+  mutation markPhotoFavorite($photoId: Int!, $favorite: Boolean!) {
+    favoritePhoto(photoId: $photoId, favorite: $favorite) {
+      id
+      favorite
+    }
+  }
+`
 
 const PhotoContainer = styled.div`
   flex-grow: 1;
@@ -107,29 +118,44 @@ export const Photo = ({
   index,
   active,
   setPresenting,
-}) => (
-  <PhotoContainer
-    key={photo.id}
-    style={{
-      cursor: onSelectImage ? 'pointer' : null,
-      minWidth: `min(${minWidth}px, 100% - 8px)`,
-    }}
-    onClick={() => {
-      onSelectImage && onSelectImage(index)
-    }}
-  >
-    <LazyPhoto src={photo.thumbnail && photo.thumbnail.url} />
-    <PhotoOverlay active={active}>
-      <HoverIcon
-        name="expand"
-        onClick={() => {
-          setPresenting(true)
-        }}
-      />
-      <HoverIcon name="heart outline" />
-    </PhotoOverlay>
-  </PhotoContainer>
-)
+}) => {
+  const [markFavorite] = useMutation(markFavoriteMutation)
+
+  return (
+    <PhotoContainer
+      key={photo.id}
+      style={{
+        cursor: onSelectImage ? 'pointer' : null,
+        minWidth: `min(${minWidth}px, 100% - 8px)`,
+      }}
+      onClick={() => {
+        onSelectImage && onSelectImage(index)
+      }}
+    >
+      <LazyPhoto src={photo.thumbnail && photo.thumbnail.url} />
+      <PhotoOverlay active={active}>
+        <HoverIcon
+          name="expand"
+          onClick={() => {
+            setPresenting(true)
+          }}
+        />
+        <HoverIcon
+          name={photo.favorite ? 'heart' : 'heart outline'}
+          onClick={event => {
+            event.stopPropagation()
+            markFavorite({
+              variables: {
+                photoId: photo.id,
+                favorite: !photo.favorite,
+              },
+            })
+          }}
+        />
+      </PhotoOverlay>
+    </PhotoContainer>
+  )
+}
 
 Photo.propTypes = {
   photo: PropTypes.object.isRequired,

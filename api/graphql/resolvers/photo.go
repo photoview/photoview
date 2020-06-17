@@ -171,3 +171,19 @@ func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.Ph
 
 	return exif, nil
 }
+
+func (r *mutationResolver) FavoritePhoto(ctx context.Context, photoID int, favourite bool) (*models.Photo, error) {
+
+	user := auth.UserFromContext(ctx)
+
+	row := r.Database.QueryRow("SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id WHERE photo.photo_id = ? AND album.owner_id = ?", photoID, user.UserID)
+
+	photo, err := models.NewPhotoFromRow(row)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Update photo row
+
+	return photo, nil
+}
