@@ -75,6 +75,9 @@ type Mutation {
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
+  "Mark or unmark a photo as being a favorite"
+  favoritePhoto(photoId: Int!, favorite: Boolean!): Photo
+
   updateUser(
     id: Int!
     username: String
@@ -207,6 +210,7 @@ type Photo {
   "The album that holds the photo"
   album: Album!
   exif: PhotoEXIF
+  favorite: Boolean!
 
   shares: [ShareToken!]!
   downloads: [PhotoDownload!]!

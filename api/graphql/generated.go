@@ -75,6 +75,7 @@ type ComplexityRoot struct {
 		CreateUser         func(childComplexity int, username string, rootPath string, password *string, admin bool) int
 		DeleteShareToken   func(childComplexity int, token string) int
 		DeleteUser         func(childComplexity int, id int) int
+		FavoritePhoto      func(childComplexity int, photoID int, favorite bool) int
 		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
 		ProtectShareToken  func(childComplexity int, token string, password *string) int
 		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
@@ -100,6 +101,7 @@ type ComplexityRoot struct {
 		Album     func(childComplexity int) int
 		Downloads func(childComplexity int) int
 		Exif      func(childComplexity int) int
+		Favorite  func(childComplexity int) int
 		HighRes   func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Path      func(childComplexity int) int
@@ -208,6 +210,7 @@ type MutationResolver interface {
 	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
+	FavoritePhoto(ctx context.Context, photoID int, favorite bool) (*models.Photo, error)
 	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
@@ -217,6 +220,7 @@ type PhotoResolver interface {
 	HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
 	Album(ctx context.Context, obj *models.Photo) (*models.Album, error)
 	Exif(ctx context.Context, obj *models.Photo) (*models.PhotoEXIF, error)
+
 	Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error)
 }
@@ -407,6 +411,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
 
+	case "Mutation.favoritePhoto":
+		if e.complexity.Mutation.FavoritePhoto == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_favoritePhoto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FavoritePhoto(childComplexity, args["photoId"].(int), args["favorite"].(bool)), true
+
 	case "Mutation.initialSetupWizard":
 		if e.complexity.Mutation.InitialSetupWizard == nil {
 			break
@@ -574,6 +590,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Photo.Exif(childComplexity), true
+
+	case "Photo.favorite":
+		if e.complexity.Photo.Favorite == nil {
+			break
+		}
+
+		return e.complexity.Photo.Favorite(childComplexity), true
 
 	case "Photo.highRes":
 		if e.complexity.Photo.HighRes == nil {
@@ -1158,6 +1181,9 @@ type Mutation {
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
+  "Mark or unmark a photo as being a favorite"
+  favoritePhoto(photoId: Int!, favorite: Boolean!): Photo
+
   updateUser(
     id: Int!
     username: String
@@ -1290,6 +1316,7 @@ type Photo {
   "The album that holds the photo"
   album: Album!
   exif: PhotoEXIF
+  favorite: Boolean!
 
   shares: [ShareToken!]!
   downloads: [PhotoDownload!]!
@@ -1446,6 +1473,28 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_favoritePhoto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["photoId"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["photoId"] = arg0
+	var arg1 bool
+	if tmp, ok := rawArgs["favorite"]; ok {
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["favorite"] = arg1
 	return args, nil
 }
 
@@ -2672,6 +2721,44 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_favoritePhoto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_favoritePhoto_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().FavoritePhoto(rctx, args["photoId"].(int), args["favorite"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Photo)
+	fc.Result = res
+	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3345,6 +3432,40 @@ func (ec *executionContext) _Photo_exif(ctx context.Context, field graphql.Colle
 	res := resTmp.(*models.PhotoEXIF)
 	fc.Result = res
 	return ec.marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoEXIF(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Photo_favorite(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Photo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Favorite, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Photo_shares(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
@@ -6512,6 +6633,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteShareToken(ctx, field)
 		case "protectShareToken":
 			out.Values[i] = ec._Mutation_protectShareToken(ctx, field)
+		case "favoritePhoto":
+			out.Values[i] = ec._Mutation_favoritePhoto(ctx, field)
 		case "updateUser":
 			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 		case "createUser":
@@ -6664,6 +6787,11 @@ func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, ob
 				res = ec._Photo_exif(ctx, field, obj)
 				return res
 			})
+		case "favorite":
+			out.Values[i] = ec._Photo_favorite(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "shares":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {

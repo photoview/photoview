@@ -28,6 +28,7 @@ const albumQuery = gql`
         highRes {
           url
         }
+        favorite
       }
     }
   }
