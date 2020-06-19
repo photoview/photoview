@@ -139,6 +139,13 @@ export const Photo = ({
               photoId: photo.id,
               favorite: !photo.favorite,
             },
+            optimisticResponse: {
+              favoritePhoto: {
+                id: photo.id,
+                favorite: !photo.favorite,
+                __typename: 'Photo',
+              },
+            },
           })
         }}
       />
