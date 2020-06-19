@@ -121,6 +121,24 @@ export const Photo = ({
 }) => {
   const [markFavorite] = useMutation(markFavoriteMutation)
 
+  let heartIcon = null
+  if (typeof photo.favorite == 'boolean') {
+    heartIcon = (
+      <HoverIcon
+        name={photo.favorite ? 'heart' : 'heart outline'}
+        onClick={event => {
+          event.stopPropagation()
+          markFavorite({
+            variables: {
+              photoId: photo.id,
+              favorite: !photo.favorite,
+            },
+          })
+        }}
+      />
+    )
+  }
+
   return (
     <PhotoContainer
       key={photo.id}
@@ -140,18 +158,7 @@ export const Photo = ({
             setPresenting(true)
           }}
         />
-        <HoverIcon
-          name={photo.favorite ? 'heart' : 'heart outline'}
-          onClick={event => {
-            event.stopPropagation()
-            markFavorite({
-              variables: {
-                photoId: photo.id,
-                favorite: !photo.favorite,
-              },
-            })
-          }}
-        />
+        {heartIcon}
       </PhotoOverlay>
     </PhotoContainer>
   )
