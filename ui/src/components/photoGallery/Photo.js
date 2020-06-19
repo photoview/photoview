@@ -89,7 +89,7 @@ const PhotoOverlay = styled.div`
 
 const HoverIcon = styled(Icon)`
   font-size: 1.5em !important;
-  margin: 160px 0 0 10px !important;
+  margin: 160px 10px 0 10px !important;
   color: white !important;
   text-shadow: 0 0 4px black;
   opacity: 0 !important;
@@ -98,7 +98,7 @@ const HoverIcon = styled(Icon)`
   border-radius: 50%;
   width: 34px !important;
   height: 34px !important;
-  padding-top: 8px;
+  padding-top: 7px;
 
   ${PhotoContainer}:hover & {
     opacity: 1 !important;
@@ -109,6 +109,11 @@ const HoverIcon = styled(Icon)`
   }
 
   transition: opacity 100ms, background-color 100ms;
+`
+
+const FavoriteIcon = styled(HoverIcon)`
+  float: right;
+  opacity: ${({ favorite }) => (favorite ? '0.8' : '0.2')} !important;
 `
 
 export const Photo = ({
@@ -124,7 +129,8 @@ export const Photo = ({
   let heartIcon = null
   if (typeof photo.favorite == 'boolean') {
     heartIcon = (
-      <HoverIcon
+      <FavoriteIcon
+        favorite={photo.favorite}
         name={photo.favorite ? 'heart' : 'heart outline'}
         onClick={event => {
           event.stopPropagation()
