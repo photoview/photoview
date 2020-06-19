@@ -172,7 +172,7 @@ func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.Ph
 	return exif, nil
 }
 
-func (r *mutationResolver) FavoritePhoto(ctx context.Context, photoID int, favourite bool) (*models.Photo, error) {
+func (r *mutationResolver) FavoritePhoto(ctx context.Context, photoID int, favorite bool) (*models.Photo, error) {
 
 	user := auth.UserFromContext(ctx)
 
@@ -183,7 +183,12 @@ func (r *mutationResolver) FavoritePhoto(ctx context.Context, photoID int, favou
 		return nil, err
 	}
 
-	// TODO: Update photo row
+	_, err = r.Database.Exec("UPDATE photo SET favorite = ? WHERE photo_id = ?", favorite, photo.PhotoID)
+	if err != nil {
+		return nil, err
+	}
+
+	photo.Favorite = favorite
 
 	return photo, nil
 }
