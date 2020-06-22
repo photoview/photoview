@@ -8,7 +8,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, notificationKey string) (*models.Photo, bool, error) {
+func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, error) {
 
 	log.Printf("Scanning image: %s\n", photoPath)
 

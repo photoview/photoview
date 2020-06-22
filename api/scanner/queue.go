@@ -37,6 +37,10 @@ func (job *ScannerJob) modelAsAlbum() (*models.Album, error) {
 	return &album, nil
 }
 
+func (job *ScannerJob) Run() {
+	// TODO: Not implemented
+}
+
 type ScannerQueue struct {
 	mutex       sync.Mutex
 	idle_chan   chan bool
@@ -56,11 +60,18 @@ func InitializeScannerQueue(db *sql.DB) {
 	}
 }
 
-func (job *ScannerJob) Run() {
-	// TODO: Not implemented
+func (queue *ScannerQueue) startBackgroundWorker() {
+	for {
+		<-queue.idle_chan
+		queue.mutex.Lock()
+		defer queue.mutex.Unlock()
+	}
 }
 
 func (queue *ScannerQueue) AddJob(job *ScannerJob) error {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
 	if exists, err := queue.jobOnQueue(job); exists || err != nil {
 		return err
 	}
@@ -80,8 +91,6 @@ func (queue *ScannerQueue) Notify() bool {
 }
 
 func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
-	queue.mutex.Lock()
-	defer queue.mutex.Unlock()
 
 	scannerJobs := append(queue.in_progress, queue.up_next...)
 

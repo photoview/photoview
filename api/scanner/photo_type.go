@@ -234,7 +234,7 @@ func getImageType(path string) (*ImageType, error) {
 	return nil, nil
 }
 
-func isPathImage(path string, cache *scanner_cache) bool {
+func isPathImage(path string, cache *ScannerCache) bool {
 	if cache.get_photo_type(path) != nil {
 		return true
 	}
