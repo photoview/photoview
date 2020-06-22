@@ -164,7 +164,7 @@ func deleteOldUserAlbums(db *sql.DB, scannedAlbums []*models.Album, user *models
 
 	albumPaths := make([]interface{}, len(scannedAlbums))
 	for i, album := range scannedAlbums {
-		albumPaths[i] = album.AlbumID
+		albumPaths[i] = album.Path
 	}
 
 	// Delete old albums

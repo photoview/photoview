@@ -46,21 +46,25 @@ func InitializeScannerQueue(db *sql.DB) {
 
 func (queue *ScannerQueue) startBackgroundWorker() {
 	for {
+		log.Println("Queue waiting")
 		<-queue.idle_chan
+		log.Println("Queue waiting for lock")
 		queue.mutex.Lock()
-		defer queue.mutex.Unlock()
+		log.Println("Queue running")
 
 		for len(queue.in_progress) < queue.settings.max_concurrent_tasks && len(queue.up_next) > 0 {
+			log.Println("Queue starting job")
 			nextJob := queue.up_next[0]
 			queue.up_next = queue.up_next[1:]
 			queue.in_progress = append(queue.in_progress, nextJob)
 
 			go func() {
+				log.Println("Starting job")
 				nextJob.Run(queue.db)
-				queue.mutex.Lock()
-				defer queue.mutex.Unlock()
+				log.Println("Job finished")
 
 				// Delete finished job from queue
+				queue.mutex.Lock()
 				for i, x := range queue.in_progress {
 					if x == nextJob {
 						queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
@@ -68,15 +72,20 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 						break
 					}
 				}
+				queue.mutex.Unlock()
 
-				queue.Notify()
+				queue.notify()
 			}()
 		}
+
+		log.Printf("Waiting jobs: %d\n", len(queue.up_next))
+
+		queue.mutex.Unlock()
 	}
 }
 
 // Notifies the queue that the jobs has changed
-func (queue *ScannerQueue) Notify() bool {
+func (queue *ScannerQueue) notify() bool {
 	select {
 	case queue.idle_chan <- true:
 		return true
@@ -85,21 +94,21 @@ func (queue *ScannerQueue) Notify() bool {
 	}
 }
 
-func (queue *ScannerQueue) ScanUser(user *models.User) {
+func AddUserToQueue(user *models.User) {
 	album_cache := MakeAlbumCache()
-	albums, album_errors := findAlbumsForUser(queue.db, user, album_cache)
+	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
 		log.Printf("User scanner error: %s", err)
 	}
 
-	queue.mutex.Lock()
+	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
-		queue.addJob(&ScannerJob{
+		global_scanner_queue.addJob(&ScannerJob{
 			album: album,
 			cache: album_cache,
 		})
 	}
-	queue.mutex.Unlock()
+	global_scanner_queue.mutex.Unlock()
 }
 
 // Queue should be locked prior to calling this function
@@ -108,7 +117,7 @@ func (queue *ScannerQueue) addJob(job *ScannerJob) error {
 		return err
 	}
 	queue.up_next = append(queue.up_next, *job)
-	queue.Notify()
+	queue.notify()
 
 	return nil
 }

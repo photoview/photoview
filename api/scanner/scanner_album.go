@@ -24,15 +24,21 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 		ScannerError("Failed to find photos for album (%s): %s", album.Path, err)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		ScannerError("Failed to begin database transaction: %s", err)
-	}
-
 	for _, photo := range albumPhotos {
+		tx, err := db.Begin()
+		if err != nil {
+			ScannerError("Failed to begin database transaction: %s", err)
+		}
+
 		err = ProcessPhoto(tx, photo)
 		if err != nil {
+			tx.Rollback()
 			ScannerError("Failed to process photo (%s): %s", photo.Path, err)
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			ScannerError("Failed to commit database transaction: %s", err)
 		}
 
 		// TODO: Broadcast progress
@@ -60,7 +66,7 @@ func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.D
 
 			photo, isNewPhoto, err := ScanPhoto(tx, photoPath, album.AlbumID)
 			if err != nil {
-				ScannerError("Scanning image %s: %s", photoPath, err)
+				ScannerError("Scanning image (%s): %s", photoPath, err)
 				tx.Rollback()
 				continue
 			}

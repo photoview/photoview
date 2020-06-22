@@ -1,10 +1,14 @@
 package scanner
 
-import "path"
+import (
+	"path"
+	"sync"
+)
 
 type AlbumScannerCache struct {
 	path_contains_photos map[string]bool
 	photo_types          map[string]ImageType
+	mutex                sync.Mutex
 }
 
 func MakeAlbumCache() *AlbumScannerCache {
@@ -16,6 +20,8 @@ func MakeAlbumCache() *AlbumScannerCache {
 
 // Insert single album directory in cache
 func (c *AlbumScannerCache) InsertAlbumPath(path string, contains_photo bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	c.path_contains_photos[path] = contains_photo
 }
 
@@ -23,6 +29,9 @@ func (c *AlbumScannerCache) InsertAlbumPath(path string, contains_photo bool) {
 func (c *AlbumScannerCache) InsertAlbumPaths(end_path string, root string, contains_photo bool) {
 	curr_path := path.Clean(end_path)
 	root_path := path.Clean(root)
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	for curr_path != root_path || curr_path == "." {
 
@@ -33,6 +42,9 @@ func (c *AlbumScannerCache) InsertAlbumPaths(end_path string, root string, conta
 }
 
 func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	contains_photo, found := c.path_contains_photos[path]
 	if found {
 		// log.Printf("Album cache hit: %s\n", path)
@@ -43,10 +55,16 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 }
 
 func (c *AlbumScannerCache) InsertPhotoType(path string, content_type ImageType) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	(c.photo_types)[path] = content_type
 }
 
 func (c *AlbumScannerCache) GetPhotoType(path string) *ImageType {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	result, found := c.photo_types[path]
 	if found {
 		// log.Printf("Image cache hit: %s\n", path)
