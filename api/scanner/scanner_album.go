@@ -8,7 +8,38 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func findPhotosForAlbum(album *models.Album, cache *ScannerCache, db *sql.DB, onScanPhoto func(photo *models.Photo, newPhoto bool)) ([]*models.Photo, error) {
+func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
+	// Scan for photos
+	albumPhotos, err := findPhotosForAlbum(album, cache, db, func(photo *models.Photo, newPhoto bool) {
+		// notifyThrottle.Trigger(func() {
+		// 	notification.BroadcastNotification(&models.Notification{
+		// 		Key:     processKey,
+		// 		Type:    models.NotificationTypeMessage,
+		// 		Header:  fmt.Sprintf("Scanning photo for user '%s'", user.Username),
+		// 		Content: fmt.Sprintf("Scanning image at %s", photo.Path),
+		// 	})
+		// })
+	})
+	if err != nil {
+		ScannerError("Failed to find photos for album (%s): %s", album.Path, err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		ScannerError("Failed to begin database transaction: %s", err)
+	}
+
+	for _, photo := range albumPhotos {
+		err = ProcessPhoto(tx, photo)
+		if err != nil {
+			ScannerError("Failed to process photo (%s): %s", photo.Path, err)
+		}
+
+		// TODO: Broadcast progress
+	}
+}
+
+func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Photo, newPhoto bool)) ([]*models.Photo, error) {
 
 	newPhotos := make([]*models.Photo, 0)
 
@@ -26,8 +57,6 @@ func findPhotosForAlbum(album *models.Album, cache *ScannerCache, db *sql.DB, on
 				ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)
 				continue
 			}
-
-			cache.photo_paths_scanned = append(cache.photo_paths_scanned, photoPath)
 
 			photo, isNewPhoto, err := ScanPhoto(tx, photoPath, album.AlbumID)
 			if err != nil {

@@ -234,8 +234,8 @@ func getImageType(path string) (*ImageType, error) {
 	return nil, nil
 }
 
-func isPathImage(path string, cache *ScannerCache) bool {
-	if cache.get_photo_type(path) != nil {
+func isPathImage(path string, cache *AlbumScannerCache) bool {
+	if cache.GetPhotoType(path) != nil {
 		return true
 	}
 
@@ -252,7 +252,7 @@ func isPathImage(path string, cache *ScannerCache) bool {
 			return false
 		}
 
-		cache.insert_photo_type(path, *imageType)
+		cache.InsertPhotoType(path, *imageType)
 		return true
 	}
 
