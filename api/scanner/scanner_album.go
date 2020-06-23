@@ -36,7 +36,6 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	}
 
 	album_has_changes := false
-
 	for count, photo := range albumPhotos {
 		tx, err := db.Begin()
 		if err != nil {
@@ -82,7 +81,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 
 func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Photo, newPhoto bool)) ([]*models.Photo, error) {
 
-	newPhotos := make([]*models.Photo, 0)
+	albumPhotos := make([]*models.Photo, 0)
 
 	dirContent, err := ioutil.ReadDir(album.Path)
 	if err != nil {
@@ -108,13 +107,11 @@ func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.D
 
 			onScanPhoto(photo, isNewPhoto)
 
-			if isNewPhoto {
-				newPhotos = append(newPhotos, photo)
-			}
+			albumPhotos = append(albumPhotos, photo)
 
 			tx.Commit()
 		}
 	}
 
-	return newPhotos, nil
+	return albumPhotos, nil
 }

@@ -88,14 +88,14 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) (bool, error) {
 
 	if highResURL == nil {
 
-		didProcess = true
-
 		contentType, err := imageData.ContentType()
 		if err != nil {
 			return false, err
 		}
 
 		if !contentType.isWebCompatible() {
+			didProcess = true
+
 			highres_name := fmt.Sprintf("highres_%s_%s", path.Base(photo.Path), utils.GenerateToken())
 			highres_name = strings.ReplaceAll(highres_name, ".", "_")
 			highres_name = strings.ReplaceAll(highres_name, " ", "_")
