@@ -13,6 +13,7 @@ import (
 	"github.com/viktorstrate/photoview/api/database"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/routes"
+	"github.com/viktorstrate/photoview/api/scanner"
 	"github.com/viktorstrate/photoview/api/server"
 	"github.com/viktorstrate/photoview/api/utils"
 
@@ -39,6 +40,8 @@ func main() {
 	if err := database.MigrateDatabase(db); err != nil {
 		log.Panicf("Could not migrate database: %s\n", err)
 	}
+
+	scanner.InitializeScannerQueue(db)
 
 	rootRouter := mux.NewRouter()
 
