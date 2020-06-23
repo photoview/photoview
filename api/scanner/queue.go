@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
+	"github.com/viktorstrate/photoview/api/utils"
 )
 
 type ScannerJob struct {
@@ -48,6 +50,9 @@ func InitializeScannerQueue(db *sql.DB) {
 }
 
 func (queue *ScannerQueue) startBackgroundWorker() {
+
+	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
+
 	for {
 		log.Println("Queue waiting")
 		<-queue.idle_chan
@@ -95,11 +100,13 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 				Positive: true,
 			})
 		} else {
-			notification.BroadcastNotification(&models.Notification{
-				Key:     "global-scanner-progress",
-				Type:    models.NotificationTypeMessage,
-				Header:  fmt.Sprintf("Scanning photos"),
-				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
+			notifyThrottle.Trigger(func() {
+				notification.BroadcastNotification(&models.Notification{
+					Key:     "global-scanner-progress",
+					Type:    models.NotificationTypeMessage,
+					Header:  fmt.Sprintf("Scanning photos"),
+					Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
+				})
 			})
 		}
 
