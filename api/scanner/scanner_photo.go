@@ -9,9 +9,6 @@ import (
 )
 
 func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, error) {
-
-	log.Printf("Scanning image: %s\n", photoPath)
-
 	photoName := path.Base(photoPath)
 
 	// Check if image already exists
@@ -27,6 +24,8 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, 
 			}
 		}
 	}
+
+	log.Printf("Scanning image: %s\n", photoPath)
 
 	result, err := tx.Exec("INSERT INTO photo (title, path, album_id) VALUES (?, ?, ?)", photoName, photoPath, albumId)
 	if err != nil {

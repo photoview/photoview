@@ -35,7 +35,7 @@ func (c *AlbumScannerCache) InsertAlbumPaths(end_path string, root string, conta
 
 	for curr_path != root_path || curr_path == "." {
 
-		c.InsertAlbumPath(curr_path, contains_photo)
+		c.path_contains_photos[curr_path] = contains_photo
 
 		curr_path = path.Dir(curr_path)
 	}
