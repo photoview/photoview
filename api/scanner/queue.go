@@ -145,7 +145,7 @@ func AddUserToQueue(user *models.User) error {
 	album_cache := MakeAlbumCache()
 	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
-		return errors.Wrapf(err, "find albums for user (user_id: %s)", user.UserID)
+		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.UserID)
 	}
 
 	global_scanner_queue.mutex.Lock()
