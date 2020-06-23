@@ -2,10 +2,13 @@ package scanner
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/viktorstrate/photoview/api/graphql/notification"
 )
 
 type ScannerJob struct {
@@ -78,9 +81,28 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 			}()
 		}
 
-		log.Printf("Waiting jobs: %d\n", len(queue.up_next))
+		in_progress_length := len(global_scanner_queue.in_progress)
+		up_next_length := len(global_scanner_queue.up_next)
 
 		queue.mutex.Unlock()
+
+		if in_progress_length+up_next_length == 0 {
+			notification.BroadcastNotification(&models.Notification{
+				Key:      "global-scanner-progress",
+				Type:     models.NotificationTypeMessage,
+				Header:   fmt.Sprintf("Scanner complete"),
+				Content:  fmt.Sprintf("All jobs have been scanned"),
+				Positive: true,
+			})
+		} else {
+			notification.BroadcastNotification(&models.Notification{
+				Key:     "global-scanner-progress",
+				Type:    models.NotificationTypeMessage,
+				Header:  fmt.Sprintf("Scanning photos"),
+				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
+			})
+		}
+
 	}
 }
 
@@ -94,11 +116,29 @@ func (queue *ScannerQueue) notify() bool {
 	}
 }
 
-func AddUserToQueue(user *models.User) {
+func AddAllToQueue() error {
+	rows, err := global_scanner_queue.db.Query("SELECT * FROM user")
+	if err != nil {
+		return errors.Wrap(err, "get all users from database")
+	}
+
+	users, err := models.NewUsersFromRows(rows)
+	if err != nil {
+		return errors.Wrap(err, "parse all users from db")
+	}
+
+	for _, user := range users {
+		AddUserToQueue(user)
+	}
+
+	return nil
+}
+
+func AddUserToQueue(user *models.User) error {
 	album_cache := MakeAlbumCache()
 	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
-		log.Printf("User scanner error: %s", err)
+		return errors.Wrapf(err, "find albums for user (user_id: %s)", user.UserID)
 	}
 
 	global_scanner_queue.mutex.Lock()
@@ -109,6 +149,8 @@ func AddUserToQueue(user *models.User) {
 		})
 	}
 	global_scanner_queue.mutex.Unlock()
+
+	return nil
 }
 
 // Queue should be locked prior to calling this function

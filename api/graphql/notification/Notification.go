@@ -2,9 +2,10 @@ package notification
 
 import (
 	"errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
 	"log"
 	"sync"
+
+	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
 type NotificationChannel = chan<- *models.Notification
@@ -67,6 +68,10 @@ func DeregisterListener(listenerID int) error {
 }
 
 func BroadcastNotification(notification *models.Notification) {
+
+	if notification == nil {
+		return
+	}
 
 	log.Printf("Broadcasting notification: %s\n", notification.Header)
 

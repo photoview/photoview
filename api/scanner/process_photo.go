@@ -43,9 +43,11 @@ func makePhotoURLChecker(tx *sql.Tx, photoID int) (func(purpose models.PhotoPurp
 	}, nil
 }
 
-func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
+func ProcessPhoto(tx *sql.Tx, photo *models.Photo) (bool, error) {
 
 	log.Printf("Processing photo: %s\n", photo.Path)
+
+	didProcess := false
 
 	imageData := EncodeImageData{
 		photo: photo,
@@ -53,31 +55,31 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.PhotoID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// original photo url
 	origURL, err := photoUrlFromDB(models.PhotoOriginal)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Thumbnail
 	thumbURL, err := photoUrlFromDB(models.PhotoThumbnail)
 	if err != nil {
-		return errors.Wrap(err, "error processing thumbnail")
+		return false, errors.Wrap(err, "error processing thumbnail")
 	}
 
 	// Highres
 	highResURL, err := photoUrlFromDB(models.PhotoHighRes)
 	if err != nil {
-		return errors.Wrap(err, "error processing highres")
+		return false, errors.Wrap(err, "error processing highres")
 	}
 
 	// Make sure photo cache directory exists
 	photoCachePath, err := makePhotoCacheDir(photo)
 	if err != nil {
-		return errors.Wrap(err, "cache directory error")
+		return false, errors.Wrap(err, "cache directory error")
 	}
 
 	// Generate high res jpeg
@@ -86,9 +88,11 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 	if highResURL == nil {
 
+		didProcess = true
+
 		contentType, err := imageData.ContentType()
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if !contentType.isWebCompatible() {
@@ -101,19 +105,19 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 			err = imageData.EncodeHighRes(tx, baseImagePath)
 			if err != nil {
-				return errors.Wrap(err, "creating high-res cached image")
+				return false, errors.Wrap(err, "creating high-res cached image")
 			}
 
 			photoDimensions, err = GetPhotoDimensions(baseImagePath)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
 				photo.PhotoID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
 			if err != nil {
 				log.Printf("Could not insert highres photo url: %d, %s\n", photo.PhotoID, path.Base(photo.Path))
-				return err
+				return false, err
 			}
 		}
 	} else {
@@ -122,31 +126,36 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) {
 			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
+			didProcess = true
 
 			err = imageData.EncodeHighRes(tx, baseImagePath)
 			if err != nil {
-				return errors.Wrap(err, "creating high-res cached image")
+				return false, errors.Wrap(err, "creating high-res cached image")
 			}
 		}
 	}
 
 	// Save original photo to database
 	if origURL == nil {
+		didProcess = true
+
 		// Make sure photo dimensions is set
 		if photoDimensions == nil {
 			photoDimensions, err = GetPhotoDimensions(baseImagePath)
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 
 		if err = saveOriginalPhotoToDB(tx, photo, imageData, photoDimensions); err != nil {
-			return errors.Wrap(err, "saving original photo to database")
+			return false, errors.Wrap(err, "saving original photo to database")
 		}
 	}
 
 	// Save thumbnail to cache
 	if thumbURL == nil {
+		didProcess = true
+
 		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
 		thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
 		thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
@@ -161,28 +170,29 @@ func ProcessPhoto(tx *sql.Tx, photo *models.Photo) error {
 
 		thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
 		if err != nil {
-			return errors.Wrap(err, "could not create thumbnail cached image")
+			return false, errors.Wrap(err, "could not create thumbnail cached image")
 		}
 
 		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg")
 		if err != nil {
-			return err
+			return false, err
 		}
 	} else {
 		// Verify that thumbnail photo still exists in cache
 		thumbPath := path.Join(*photoCachePath, thumbURL.PhotoName)
 
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
+			didProcess = true
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.PhotoName)
 
 			_, err := EncodeThumbnail(baseImagePath, thumbPath)
 			if err != nil {
-				return errors.Wrap(err, "could not create thumbnail cached image")
+				return false, errors.Wrap(err, "could not create thumbnail cached image")
 			}
 		}
 	}
 
-	return nil
+	return didProcess, nil
 }
 
 func makePhotoCacheDir(photo *models.Photo) (*string, error) {
