@@ -67,14 +67,14 @@ func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerC
 
 		// Make album if not exists
 		albumTitle := path.Base(albumPath)
-		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path) VALUES (?, ?, ?, ?)", albumTitle, albumParentId, user.UserID, albumPath)
+		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path, path_hash) VALUES (?, ?, ?, ?, MD5(path))", albumTitle, albumParentId, user.UserID, albumPath)
 		if err != nil {
 			albumErrors = append(albumErrors, errors.Wrap(err, "insert album into database"))
 			tx.Rollback()
 			continue
 		}
 
-		row := tx.QueryRow("SELECT * FROM album WHERE path = ?", albumPath)
+		row := tx.QueryRow("SELECT * FROM album WHERE path_hash = MD5(?)", albumPath)
 		album, err := models.NewAlbumFromRow(row)
 		if err != nil {
 			albumErrors = append(albumErrors, errors.Wrapf(err, "get album from database (%s)", albumPath))
@@ -172,8 +172,8 @@ func deleteOldUserAlbums(db *sql.DB, scannedAlbums []*models.Album, user *models
 	album_args = append(album_args, user.UserID)
 	album_args = append(album_args, albumPaths...)
 
-	albums_questions := strings.Repeat("?,", len(albumPaths))[:len(albumPaths)*2-1]
-	rows, err := db.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", album_args...)
+	albums_questions := strings.Repeat("MD5(?),", len(albumPaths))[:len(albumPaths)*7-1]
+	rows, err := db.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path_hash NOT IN ("+albums_questions+")", album_args...)
 	if err != nil {
 		return []error{errors.Wrap(err, "get albums to be deleted from database")}
 	}
@@ -216,11 +216,11 @@ func deleteOldUserAlbums(db *sql.DB, scannedAlbums []*models.Album, user *models
 // 	photo_args = append(photo_args, user.UserID)
 // 	photo_args = append(photo_args, cache.photo_paths_scanned...)
 
-// 	photo_questions := strings.Repeat("?,", len(cache.photo_paths_scanned))[:len(cache.photo_paths_scanned)*2-1]
+// 	photo_questions := strings.Repeat("MD5(?),", len(cache.photo_paths_scanned))[:len(cache.photo_paths_scanned)*7-1]
 
 // 	rows, err = database.Query(`
 // 		SELECT photo.photo_id as photo_id, album.album_id as album_id FROM photo JOIN album ON photo.album_id = album.album_id
-// 		WHERE album.owner_id = ? AND photo.path NOT IN (`+photo_questions+`)
+// 		WHERE album.owner_id = ? AND photo.path_hash NOT IN (`+photo_questions+`)
 // 	`, photo_args...)
 // 	if err != nil {
 // 		ScannerError("Could not get deleted photos from database: %s\n", err)
