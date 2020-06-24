@@ -166,14 +166,14 @@ func scan(database *sql.DB, user *models.User) {
 
 		// Make album if not exists
 		albumTitle := path.Base(albumPath)
-		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path) VALUES (?, ?, ?, ?)", albumTitle, albumParentId, user.UserID, albumPath)
+		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path, path_hash) VALUES (?, ?, ?, ?, MD5(path))", albumTitle, albumParentId, user.UserID, albumPath)
 		if err != nil {
 			ScannerError("Could not insert album into database: %s\n", err)
 			tx.Rollback()
 			continue
 		}
 
-		row := tx.QueryRow("SELECT album_id FROM album WHERE path = ?", albumPath)
+		row := tx.QueryRow("SELECT album_id FROM album WHERE path_hash = MD5(?)", albumPath)
 		var albumId int
 		if err := row.Scan(&albumId); err != nil {
 			ScannerError("Could not get id of album: %s\n", err)
@@ -400,8 +400,8 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, scanned_photos
 	album_args = append(album_args, user.UserID)
 	album_args = append(album_args, scanned_albums...)
 
-	albums_questions := strings.Repeat("?,", len(scanned_albums))[:len(scanned_albums)*2-1]
-	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path NOT IN ("+albums_questions+")", album_args...)
+	albums_questions := strings.Repeat("MD5(?),", len(scanned_albums))[:len(scanned_albums)*7-1]
+	rows, err := database.Query("SELECT album_id FROM album WHERE album.owner_id = ? AND path_hash NOT IN ("+albums_questions+")", album_args...)
 	if err != nil {
 		ScannerError("Could not get albums from database: %s\n", err)
 		return
@@ -436,11 +436,11 @@ func cleanupCache(database *sql.DB, scanned_albums []interface{}, scanned_photos
 	photo_args = append(photo_args, user.UserID)
 	photo_args = append(photo_args, scanned_photos...)
 
-	photo_questions := strings.Repeat("?,", len(scanned_photos))[:len(scanned_photos)*2-1]
+	photo_questions := strings.Repeat("MD5(?),", len(scanned_photos))[:len(scanned_photos)*7-1]
 
 	rows, err = database.Query(`
 		SELECT photo.photo_id as photo_id, album.album_id as album_id FROM photo JOIN album ON photo.album_id = album.album_id
-		WHERE album.owner_id = ? AND photo.path NOT IN (`+photo_questions+`)
+		WHERE album.owner_id = ? AND photo.path_hash NOT IN (`+photo_questions+`)
 	`, photo_args...)
 	if err != nil {
 		ScannerError("Could not get deleted photos from database: %s\n", err)

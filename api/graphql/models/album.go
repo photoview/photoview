@@ -10,6 +10,7 @@ type Album struct {
 	ParentAlbum *int
 	OwnerID     int
 	Path        string
+	PathHash    string
 }
 
 func (a *Album) ID() int {
@@ -23,7 +24,7 @@ func (a *Album) FilePath() string {
 func NewAlbumFromRow(row *sql.Row) (*Album, error) {
 	album := Album{}
 
-	if err := row.Scan(&album.AlbumID, &album.Title, &album.ParentAlbum, &album.OwnerID, &album.Path); err != nil {
+	if err := row.Scan(&album.AlbumID, &album.Title, &album.ParentAlbum, &album.OwnerID, &album.Path, &album.PathHash); err != nil {
 		return nil, err
 	}
 
@@ -35,7 +36,7 @@ func NewAlbumsFromRows(rows *sql.Rows) ([]*Album, error) {
 
 	for rows.Next() {
 		var album Album
-		if err := rows.Scan(&album.AlbumID, &album.Title, &album.ParentAlbum, &album.OwnerID, &album.Path); err != nil {
+		if err := rows.Scan(&album.AlbumID, &album.Title, &album.ParentAlbum, &album.OwnerID, &album.Path, &album.PathHash); err != nil {
 			return nil, err
 		}
 		albums = append(albums, &album)
