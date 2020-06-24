@@ -23,6 +23,7 @@ const photoQuery = gql`
         highRes {
           url
         }
+        favorite
       }
     }
   }

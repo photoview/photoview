@@ -1,9 +1,20 @@
 import React, { useState } from 'react'
+import gql from 'graphql-tag'
+import { useMutation } from 'react-apollo'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
 import ProtectedImage from './ProtectedImage'
+
+const markFavoriteMutation = gql`
+  mutation markPhotoFavorite($photoId: Int!, $favorite: Boolean!) {
+    favoritePhoto(photoId: $photoId, favorite: $favorite) {
+      id
+      favorite
+    }
+  }
+`
 
 const PhotoContainer = styled.div`
   flex-grow: 1;
@@ -78,7 +89,7 @@ const PhotoOverlay = styled.div`
 
 const HoverIcon = styled(Icon)`
   font-size: 1.5em !important;
-  margin: 160px 0 0 10px !important;
+  margin: 160px 10px 0 10px !important;
   color: white !important;
   text-shadow: 0 0 4px black;
   opacity: 0 !important;
@@ -87,7 +98,7 @@ const HoverIcon = styled(Icon)`
   border-radius: 50%;
   width: 34px !important;
   height: 34px !important;
-  padding-top: 8px;
+  padding-top: 7px;
 
   ${PhotoContainer}:hover & {
     opacity: 1 !important;
@@ -100,6 +111,11 @@ const HoverIcon = styled(Icon)`
   transition: opacity 100ms, background-color 100ms;
 `
 
+const FavoriteIcon = styled(HoverIcon)`
+  float: right;
+  opacity: ${({ favorite }) => (favorite ? '0.8' : '0.2')} !important;
+`
+
 export const Photo = ({
   photo,
   onSelectImage,
@@ -107,29 +123,59 @@ export const Photo = ({
   index,
   active,
   setPresenting,
-}) => (
-  <PhotoContainer
-    key={photo.id}
-    style={{
-      cursor: onSelectImage ? 'pointer' : null,
-      minWidth: `min(${minWidth}px, 100% - 8px)`,
-    }}
-    onClick={() => {
-      onSelectImage && onSelectImage(index)
-    }}
-  >
-    <LazyPhoto src={photo.thumbnail && photo.thumbnail.url} />
-    <PhotoOverlay active={active}>
-      <HoverIcon
-        name="expand"
-        onClick={() => {
-          setPresenting(true)
+}) => {
+  const [markFavorite] = useMutation(markFavoriteMutation)
+
+  let heartIcon = null
+  if (typeof photo.favorite == 'boolean') {
+    heartIcon = (
+      <FavoriteIcon
+        favorite={photo.favorite}
+        name={photo.favorite ? 'heart' : 'heart outline'}
+        onClick={event => {
+          event.stopPropagation()
+          markFavorite({
+            variables: {
+              photoId: photo.id,
+              favorite: !photo.favorite,
+            },
+            optimisticResponse: {
+              favoritePhoto: {
+                id: photo.id,
+                favorite: !photo.favorite,
+                __typename: 'Photo',
+              },
+            },
+          })
         }}
       />
-      <HoverIcon name="heart outline" />
-    </PhotoOverlay>
-  </PhotoContainer>
-)
+    )
+  }
+
+  return (
+    <PhotoContainer
+      key={photo.id}
+      style={{
+        cursor: onSelectImage ? 'pointer' : null,
+        minWidth: `min(${minWidth}px, 100% - 8px)`,
+      }}
+      onClick={() => {
+        onSelectImage && onSelectImage(index)
+      }}
+    >
+      <LazyPhoto src={photo.thumbnail && photo.thumbnail.url} />
+      <PhotoOverlay active={active}>
+        <HoverIcon
+          name="expand"
+          onClick={() => {
+            setPresenting(true)
+          }}
+        />
+        {heartIcon}
+      </PhotoOverlay>
+    </PhotoContainer>
+  )
+}
 
 Photo.propTypes = {
   photo: PropTypes.object.isRequired,

@@ -3,13 +3,18 @@ import PropTypes from 'prop-types'
 
 let imageCache = {}
 
-export async function fetchProtectedImage(src, { signal } = { signal: null }) {
+export async function fetchProtectedImage(
+  src,
+  { signal, headers: customHeaders } = { signal: null, headers: null }
+) {
   if (src) {
     if (imageCache[src]) {
       return imageCache[src]
     }
 
-    let headers = {}
+    let headers = {
+      ...customHeaders,
+    }
     if (localStorage.getItem('token')) {
       headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`
     }
@@ -44,16 +49,27 @@ const ProtectedImage = ({ src, ...props }) => {
     setImgSrc('')
 
     const imgUrl = new URL(src)
+    const fetchHeaders = {}
+
     if (localStorage.getItem('token') == null) {
       // Get share token if not authorized
 
-      const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-      if (token) {
-        imgUrl.searchParams.set('token', token[1])
+      const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+      if (tokenRegex) {
+        const token = tokenRegex[1]
+        imgUrl.searchParams.set('token', token)
+
+        const tokenPassword = sessionStorage.getItem(`share-token-pw-${token}`)
+        if (tokenPassword) {
+          fetchHeaders['TokenPassword'] = tokenPassword
+        }
       }
     }
 
-    fetchProtectedImage(imgUrl.href, { signal: fetchController.signal })
+    fetchProtectedImage(imgUrl.href, {
+      signal: fetchController.signal,
+      headers: fetchHeaders,
+    })
       .then(newSrc => {
         if (!canceled) {
           setImgSrc(newSrc)

@@ -35,10 +35,10 @@ COPY api /app
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o photoview .
 
 # Copy api and ui to production environment
-FROM alpine:latest
+FROM alpine:3.12
 
-# Install darktable
-RUN apk add darktable
+# Install darktable for converting RAW images
+RUN apk --no-cache add darktable
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations

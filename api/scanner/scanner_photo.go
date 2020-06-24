@@ -8,10 +8,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, notificationKey string) (*models.Photo, bool, error) {
-
-	log.Printf("Scanning image: %s\n", photoPath)
-
+func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, error) {
 	photoName := path.Base(photoPath)
 
 	// Check if image already exists
@@ -27,6 +24,8 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int, notificationKey string
 			}
 		}
 	}
+
+	log.Printf("Scanning image: %s\n", photoPath)
 
 	result, err := tx.Exec("INSERT INTO photo (title, path, path_hash, album_id) VALUES (?, ?, MD5(path), ?)", photoName, photoPath, albumId)
 	if err != nil {

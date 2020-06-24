@@ -15,6 +15,9 @@ func NewThrottle(interval time.Duration) Throttle {
 }
 
 func (t *Throttle) Trigger(action func()) {
+	if action == nil {
+		return
+	}
 	if time.Now().After(t.lastAction.Add(t.interval)) {
 		t.lastAction = time.Now()
 		action()
