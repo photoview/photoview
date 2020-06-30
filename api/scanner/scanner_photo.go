@@ -13,7 +13,7 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, 
 
 	// Check if image already exists
 	{
-		row := tx.QueryRow("SELECT * FROM photo WHERE path = ?", photoPath)
+		row := tx.QueryRow("SELECT * FROM photo WHERE path_hash = MD5(?)", photoPath)
 		photo, err := models.NewPhotoFromRow(row)
 		if err != sql.ErrNoRows {
 			if err == nil {
@@ -27,7 +27,7 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, 
 
 	log.Printf("Scanning image: %s\n", photoPath)
 
-	result, err := tx.Exec("INSERT INTO photo (title, path, album_id) VALUES (?, ?, ?)", photoName, photoPath, albumId)
+	result, err := tx.Exec("INSERT INTO photo (title, path, path_hash, album_id) VALUES (?, ?, MD5(path), ?)", photoName, photoPath, albumId)
 	if err != nil {
 		log.Printf("ERROR: Could not insert photo into database")
 		return nil, false, err

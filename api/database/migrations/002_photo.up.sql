@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS album (
   title varchar(256) NOT NULL,
   parent_album int,
   owner_id int NOT NULL,
-  path varchar(512) NOT NULL UNIQUE,
+  path varchar(1024) NOT NULL,
+  path_hash varchar(32) NOT NULL UNIQUE,
 
   PRIMARY KEY (album_id),
   FOREIGN KEY (parent_album) REFERENCES album(album_id) ON DELETE CASCADE,
@@ -30,7 +31,8 @@ CREATE TABLE IF NOT EXISTS album (
 CREATE TABLE IF NOT EXISTS photo (
   photo_id int NOT NULL AUTO_INCREMENT,
   title varchar(256) NOT NULL,
-  path varchar(1024) NOT NULL UNIQUE,
+  path varchar(1024) NOT NULL,
+  path_hash varchar(32) NOT NULL UNIQUE,
   album_id int NOT NULL,
   exif_id int,
 
