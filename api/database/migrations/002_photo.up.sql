@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS album (
   title varchar(256) NOT NULL,
   parent_album int,
   owner_id int NOT NULL,
-  path varchar(512) NOT NULL,
+  path varchar(1024) NOT NULL,
   path_hash varchar(32) NOT NULL UNIQUE,
 
   PRIMARY KEY (album_id),
