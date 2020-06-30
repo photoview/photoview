@@ -14,7 +14,7 @@ IF NOT EXISTS( SELECT *
     ALTER TABLE photo DROP INDEX path;
 
     -- Add path_hash and set it to the md5 hash based of the path attribute
-    ALTER TABLE photo ADD path_hash varchar(32);
+    ALTER TABLE photo ADD path_hash varchar(32) AFTER path;
     UPDATE photo p SET path_hash = md5(p.path);
     ALTER TABLE photo MODIFY path_hash varchar(32) NOT NULL UNIQUE;
 
@@ -31,7 +31,7 @@ IF NOT EXISTS( SELECT *
     ALTER TABLE album DROP INDEX path;
 
     -- Add path_hash and set it to the md5 hash based of the path attribute
-    ALTER TABLE album ADD path_hash varchar(32);
+    ALTER TABLE album ADD path_hash varchar(32) AFTER path;
     UPDATE album a SET path_hash = md5(a.path);
     ALTER TABLE album MODIFY path_hash varchar(32) NOT NULL UNIQUE;
 
