@@ -46,6 +46,10 @@ const Name = styled.div`
   margin-bottom: 12px;
 `
 
+const ExifInfo = styled.div`
+  margin-bottom: 24px;
+`
+
 const exifNameLookup = {
   camera: 'Camera',
   maker: 'Maker',
@@ -115,7 +119,7 @@ const SidebarContent = ({ photo, hidePreview }) => {
     <div>
       {!hidePreview && <PreviewImage src={previewUrl} />}
       <Name>{photo && photo.title}</Name>
-      <div>{exifItems}</div>
+      <ExifInfo>{exifItems}</ExifInfo>
       <SidebarDownload photo={photo} />
       <SidebarShare photo={photo} />
     </div>

@@ -1,8 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Menu, Dropdown, Button } from 'semantic-ui-react'
+import { Table } from 'semantic-ui-react'
+import styled from 'styled-components'
 import { MessageState } from '../messages/Messages'
-import { Query, useLazyQuery } from 'react-apollo'
+import { useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import download from 'downloadjs'
 
@@ -138,6 +139,10 @@ const downloadPhoto = async url => {
   download(content, filename)
 }
 
+const DownloadTableRow = styled(Table.Row)`
+  cursor: pointer;
+`
+
 const SidebarDownload = ({ photo }) => {
   if (!photo || !photo.id) return null
 
@@ -160,20 +165,32 @@ const SidebarDownload = ({ photo }) => {
     }
   }
 
-  let buttons = downloads.map(x => (
-    <Button
-      style={{ marginTop: 4 }}
-      key={x.url}
-      onClick={() => downloadPhoto(x.url)}
-    >
-      {`${x.title} (${x.width} x ${x.height})`}
-    </Button>
+  const extractExtension = url => {
+    return url.split(/[#?]/)[0].split('.').pop().trim().toLowerCase()
+  }
+
+  let downloadRows = downloads.map(x => (
+    <DownloadTableRow key={x.url} onClick={() => downloadPhoto(x.url)}>
+      <Table.Cell>{`${x.title}`}</Table.Cell>
+      <Table.Cell>{`${x.width} x ${x.height}`}</Table.Cell>
+      <Table.Cell>{extractExtension(x.url)}</Table.Cell>
+    </DownloadTableRow>
   ))
 
   return (
     <div style={{ marginBottom: 24 }}>
       <h2>Download</h2>
-      <div>{buttons}</div>
+
+      <Table selectable singleLine>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>Dimensions</Table.HeaderCell>
+            <Table.HeaderCell>Type</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>{downloadRows}</Table.Body>
+      </Table>
     </div>
   )
 }
