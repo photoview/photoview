@@ -36,18 +36,18 @@ const photoQuery = gql`
 
 const PreviewImage = styled(ProtectedImage)`
   width: 100%;
-  height: 333px;
+  height: ${({ imageAspect }) => imageAspect * 100}%;
   object-fit: contain;
 `
 
 const Name = styled.div`
   text-align: center;
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 1.2rem;
+  margin: 0.75rem 0 1rem;
 `
 
 const ExifInfo = styled.div`
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 `
 
 const exifNameLookup = {
@@ -109,15 +109,20 @@ const SidebarContent = ({ photo, hidePreview }) => {
     ))
   }
 
-  let previewUrl = null
+  let previewImage = null
   if (photo) {
-    if (photo.highRes) previewUrl = photo.highRes.url
-    else if (photo.thumbnail) previewUrl = photo.thumbnail.url
+    if (photo.highRes) previewImage = photo.highRes
+    else if (photo.thumbnail) previewImage = photo.thumbnail
   }
 
   return (
     <div>
-      {!hidePreview && <PreviewImage src={previewUrl} />}
+      {!hidePreview && (
+        <PreviewImage
+          src={previewImage.url}
+          imageAspect={previewImage.width / previewImage.height}
+        />
+      )}
       <Name>{photo && photo.title}</Name>
       <ExifInfo>{exifItems}</ExifInfo>
       <SidebarDownload photo={photo} />

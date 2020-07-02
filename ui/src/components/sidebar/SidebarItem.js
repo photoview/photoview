@@ -6,14 +6,15 @@ const ItemName = styled.div`
   display: inline-block;
   width: 100px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.85rem;
   color: #888;
   text-align: right;
-  margin-right: 8px;
+  margin-right: 0.5rem;
 `
 
 const ItemValue = styled.div`
   display: inline-block;
+  font-size: 1rem;
 `
 
 const SidebarItem = ({ name, value }) => (

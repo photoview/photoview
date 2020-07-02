@@ -21,7 +21,7 @@ const SearchField = styled.input`
   border: 1px solid #eee;
   border-radius: 4px;
   padding: 0 8px;
-  font-size: 16px;
+  font-size: 1rem;
   font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
 
   &:focus {
@@ -120,8 +120,8 @@ const SearchBar = () => {
 }
 
 const ResultTitle = styled.h1`
-  font-size: 20px;
-  margin: 12px 0 4px;
+  font-size: 1.25rem;
+  margin: 12px 0 0.25rem;
 `
 
 const SearchResults = ({ result }) => {

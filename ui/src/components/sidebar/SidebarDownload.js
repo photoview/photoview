@@ -181,7 +181,7 @@ const SidebarDownload = ({ photo }) => {
     <div style={{ marginBottom: 24 }}>
       <h2>Download</h2>
 
-      <Table selectable singleLine>
+      <Table selectable singleLine compact>
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Name</Table.HeaderCell>
