@@ -34,9 +34,19 @@ const photoQuery = gql`
   }
 `
 
-const PreviewImage = styled(ProtectedImage)`
+const PreviewImageWrapper = styled.div`
   width: 100%;
-  height: ${({ imageAspect }) => imageAspect * 100}%;
+  height: 0;
+  padding-top: ${({ imageAspect }) => Math.min(imageAspect, 0.75) * 100}%;
+  position: relative;
+`
+
+const PreviewImage = styled(ProtectedImage)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
   object-fit: contain;
 `
 
@@ -118,10 +128,11 @@ const SidebarContent = ({ photo, hidePreview }) => {
   return (
     <div>
       {!hidePreview && (
-        <PreviewImage
-          src={previewImage.url}
-          imageAspect={previewImage.width / previewImage.height}
-        />
+        <PreviewImageWrapper
+          imageAspect={previewImage.height / previewImage.width}
+        >
+          <PreviewImage src={previewImage.url} />
+        </PreviewImageWrapper>
       )}
       <Name>{photo && photo.title}</Name>
       <ExifInfo>{exifItems}</ExifInfo>
