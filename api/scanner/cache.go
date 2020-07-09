@@ -7,14 +7,14 @@ import (
 
 type AlbumScannerCache struct {
 	path_contains_photos map[string]bool
-	photo_types          map[string]ImageType
+	photo_types          map[string]MediaType
 	mutex                sync.Mutex
 }
 
 func MakeAlbumCache() *AlbumScannerCache {
 	return &AlbumScannerCache{
 		path_contains_photos: make(map[string]bool),
-		photo_types:          make(map[string]ImageType),
+		photo_types:          make(map[string]MediaType),
 	}
 }
 
@@ -54,14 +54,14 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 	return nil
 }
 
-func (c *AlbumScannerCache) InsertPhotoType(path string, content_type ImageType) {
+func (c *AlbumScannerCache) InsertPhotoType(path string, content_type MediaType) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	(c.photo_types)[path] = content_type
 }
 
-func (c *AlbumScannerCache) GetPhotoType(path string) *ImageType {
+func (c *AlbumScannerCache) GetPhotoType(path string) *MediaType {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

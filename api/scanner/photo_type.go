@@ -11,49 +11,61 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ImageType string
+type MediaType string
 
 const (
-	TypeJpeg ImageType = "image/jpeg"
-	TypePng  ImageType = "image/png"
-	TypeTiff ImageType = "image/tiff"
-	TypeWebp ImageType = "image/webp"
-	TypeBmp  ImageType = "image/bmp"
+	TypeJpeg MediaType = "image/jpeg"
+	TypePng  MediaType = "image/png"
+	TypeTiff MediaType = "image/tiff"
+	TypeWebp MediaType = "image/webp"
+	TypeBmp  MediaType = "image/bmp"
 
 	// Raw formats
-	TypeDNG ImageType = "image/x-adobe-dng"
-	TypeARW ImageType = "image/x-sony-arw"
-	TypeSR2 ImageType = "image/x-sony-sr2"
-	TypeSRF ImageType = "image/x-sony-srf"
-	TypeCR2 ImageType = "image/x-canon-cr2"
-	TypeCRW ImageType = "image/x-canon-crw"
-	TypeERF ImageType = "image/x-epson-erf"
-	TypeDCS ImageType = "image/x-kodak-dcs"
-	TypeDRF ImageType = "image/x-kodak-drf"
-	TypeDCR ImageType = "image/x-kodak-dcr"
-	TypeK25 ImageType = "image/x-kodak-k25"
-	TypeKDC ImageType = "image/x-kodak-kdc"
-	TypeMRW ImageType = "image/x-minolta-mrw"
-	TypeMDC ImageType = "image/x-minolta-mdc"
-	TypeNEF ImageType = "image/x-nikon-nef"
-	TypeNRW ImageType = "image/x-nikon-nrw"
-	TypeORF ImageType = "image/x-olympus-orf"
-	TypePEF ImageType = "image/x-pentax-pef"
-	TypeRAF ImageType = "image/x-fuji-raf"
-	TypeRAW ImageType = "image/x-panasonic-raw"
-	TypeRW2 ImageType = "image/x-panasonic-rw2"
-	TypeGPR ImageType = "image/x-gopro-gpr"
-	Type3FR ImageType = "image/x-hasselblad-3fr"
-	TypeFFF ImageType = "image/x-hasselblad-fff"
-	TypeMEF ImageType = "image/x-mamiya-mef"
-	TypeCap ImageType = "image/x-phaseone-cap"
-	TypeIIQ ImageType = "image/x-phaseone-iiq"
-	TypeMOS ImageType = "image/x-leaf-mos"
-	TypeRWL ImageType = "image/x-leica-rwl"
-	TypeSRW ImageType = "image/x-samsung-srw"
+	TypeDNG MediaType = "image/x-adobe-dng"
+	TypeARW MediaType = "image/x-sony-arw"
+	TypeSR2 MediaType = "image/x-sony-sr2"
+	TypeSRF MediaType = "image/x-sony-srf"
+	TypeCR2 MediaType = "image/x-canon-cr2"
+	TypeCRW MediaType = "image/x-canon-crw"
+	TypeERF MediaType = "image/x-epson-erf"
+	TypeDCS MediaType = "image/x-kodak-dcs"
+	TypeDRF MediaType = "image/x-kodak-drf"
+	TypeDCR MediaType = "image/x-kodak-dcr"
+	TypeK25 MediaType = "image/x-kodak-k25"
+	TypeKDC MediaType = "image/x-kodak-kdc"
+	TypeMRW MediaType = "image/x-minolta-mrw"
+	TypeMDC MediaType = "image/x-minolta-mdc"
+	TypeNEF MediaType = "image/x-nikon-nef"
+	TypeNRW MediaType = "image/x-nikon-nrw"
+	TypeORF MediaType = "image/x-olympus-orf"
+	TypePEF MediaType = "image/x-pentax-pef"
+	TypeRAF MediaType = "image/x-fuji-raf"
+	TypeRAW MediaType = "image/x-panasonic-raw"
+	TypeRW2 MediaType = "image/x-panasonic-rw2"
+	TypeGPR MediaType = "image/x-gopro-gpr"
+	Type3FR MediaType = "image/x-hasselblad-3fr"
+	TypeFFF MediaType = "image/x-hasselblad-fff"
+	TypeMEF MediaType = "image/x-mamiya-mef"
+	TypeCap MediaType = "image/x-phaseone-cap"
+	TypeIIQ MediaType = "image/x-phaseone-iiq"
+	TypeMOS MediaType = "image/x-leaf-mos"
+	TypeRWL MediaType = "image/x-leica-rwl"
+	TypeSRW MediaType = "image/x-samsung-srw"
+
+	// Video formats
+	TypeMP4  MediaType = "video/mp4"
+	TypeMPEG MediaType = "video/mpeg"
+	Type3GP  MediaType = "video/3gpp"
+	Type3G2  MediaType = "video/3gpp2"
+	TypeOGV  MediaType = "video/ogg"
+	TypeWMV  MediaType = "video/x-ms-wmv"
+	TypeAVI  MediaType = "video/x-msvideo"
+	TypeWEBM MediaType = "video/webm"
+	TypeMOV  MediaType = "video/quicktime"
+	TypeTS   MediaType = "video/mp2t"
 )
 
-var SupportedMimetypes = [...]ImageType{
+var SupportedMimetypes = [...]MediaType{
 	TypeJpeg,
 	TypePng,
 	TypeTiff,
@@ -92,14 +104,14 @@ var SupportedMimetypes = [...]ImageType{
 	TypeSRW,
 }
 
-var WebMimetypes = [...]ImageType{
+var WebMimetypes = [...]MediaType{
 	TypeJpeg,
 	TypePng,
 	TypeWebp,
 	TypeBmp,
 }
 
-var RawMimeTypes = [...]ImageType{
+var RawMimeTypes = [...]MediaType{
 	TypeDNG,
 	TypeARW,
 	TypeSR2,
@@ -132,7 +144,20 @@ var RawMimeTypes = [...]ImageType{
 	TypeSRW,
 }
 
-var fileExtensions = map[string]ImageType{
+var VideoMimetypes = [...]MediaType{
+	TypeMP4,
+	TypeMPEG,
+	Type3GP,
+	Type3G2,
+	TypeOGV,
+	TypeWMV,
+	TypeAVI,
+	TypeWEBM,
+	TypeMOV,
+	TypeTS,
+}
+
+var fileExtensions = map[string]MediaType{
 	".jpg":  TypeJpeg,
 	".jpeg": TypeJpeg,
 	".png":  TypePng,
@@ -163,9 +188,23 @@ var fileExtensions = map[string]ImageType{
 	".gpr": TypeGPR,
 	".3fr": Type3FR,
 	".fff": TypeFFF,
+
+	// Video formats
+	"mp4":  TypeMP4,
+	"m4v":  TypeMP4,
+	"mpeg": TypeMPEG,
+	"3gp":  Type3GP,
+	"3g2":  Type3G2,
+	"ogv":  TypeOGV,
+	"wmv":  TypeWMV,
+	"avi":  TypeAVI,
+	"webm": TypeWEBM,
+	"mov":  TypeMOV,
+	"qt":   TypeMOV,
+	"ts":   TypeTS,
 }
 
-func (imgType *ImageType) isRaw() bool {
+func (imgType *MediaType) isRaw() bool {
 	for _, raw_mime := range RawMimeTypes {
 		if raw_mime == *imgType {
 			return true
@@ -175,7 +214,7 @@ func (imgType *ImageType) isRaw() bool {
 	return false
 }
 
-func (imgType *ImageType) isWebCompatible() bool {
+func (imgType *MediaType) isWebCompatible() bool {
 	for _, web_mime := range WebMimetypes {
 		if web_mime == *imgType {
 			return true
@@ -185,7 +224,7 @@ func (imgType *ImageType) isWebCompatible() bool {
 	return false
 }
 
-func (imgType *ImageType) isSupported() bool {
+func (imgType *MediaType) isSupported() bool {
 	for _, supported_mime := range SupportedMimetypes {
 		if supported_mime == *imgType {
 			return true
@@ -195,7 +234,7 @@ func (imgType *ImageType) isSupported() bool {
 	return false
 }
 
-func getImageType(path string) (*ImageType, error) {
+func getImageType(path string) (*MediaType, error) {
 
 	ext := filepath.Ext(path)
 
@@ -226,7 +265,7 @@ func getImageType(path string) (*ImageType, error) {
 		return nil, nil
 	}
 
-	imgType := ImageType(_imgType.MIME.Value)
+	imgType := MediaType(_imgType.MIME.Value)
 	if imgType.isSupported() {
 		return &imgType, nil
 	}

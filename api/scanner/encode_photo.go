@@ -48,7 +48,7 @@ type EncodeImageData struct {
 	photo           *models.Photo
 	_photoImage     image.Image
 	_thumbnailImage image.Image
-	_contentType    *ImageType
+	_contentType    *MediaType
 }
 
 func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
@@ -85,7 +85,7 @@ func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
 }
 
 // ContentType reads the image to determine its content type
-func (img *EncodeImageData) ContentType() (*ImageType, error) {
+func (img *EncodeImageData) ContentType() (*MediaType, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
 	}

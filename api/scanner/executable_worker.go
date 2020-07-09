@@ -10,7 +10,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+var DarktableCli = newDarktableWorker()
+var FfmpegCli = newFfmpegWorker()
+
+type ExecutableWorker interface {
+	Path() string
+}
+
 type DarktableWorker struct {
+	path string
+}
+
+type FfmpegWorker struct {
 	path string
 }
 
@@ -27,7 +38,24 @@ func newDarktableWorker() DarktableWorker {
 	}
 }
 
+func newFfmpegWorker() FfmpegWorker {
+	path, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		log.Println("Executable worker not found: ffmpeg")
+	} else {
+		log.Println("Found executable worker: ffmpeg")
+	}
+
+	return FfmpegWorker{
+		path: path,
+	}
+}
+
 func (worker *DarktableWorker) IsInstalled() bool {
+	return worker.path != ""
+}
+
+func (worker *FfmpegWorker) IsInstalled() bool {
 	return worker.path != ""
 }
 
@@ -57,4 +85,20 @@ func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, j
 	return nil
 }
 
-var DarktableCli = newDarktableWorker()
+func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error {
+	args := []string{
+		"-i",
+		inputPath,
+		"-vcodec", "h264",
+		"-acodec", "aac",
+		outputPath,
+	}
+
+	cmd := exec.Command(worker.path, args...)
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+	}
+
+	return nil
+}
