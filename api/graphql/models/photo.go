@@ -21,12 +21,13 @@ func (p *Photo) ID() int {
 	return p.PhotoID
 }
 
-type PhotoPurpose string
+type MediaPurpose string
 
 const (
-	PhotoThumbnail PhotoPurpose = "thumbnail"
-	PhotoHighRes   PhotoPurpose = "high-res"
-	PhotoOriginal  PhotoPurpose = "original"
+	PhotoThumbnail MediaPurpose = "thumbnail"
+	PhotoHighRes   MediaPurpose = "high-res"
+	MediaOriginal  MediaPurpose = "original"
+	VideoWeb       MediaPurpose = "video-web"
 )
 
 type PhotoURL struct {
@@ -35,7 +36,7 @@ type PhotoURL struct {
 	PhotoName   string
 	Width       int
 	Height      int
-	Purpose     PhotoPurpose
+	Purpose     MediaPurpose
 	ContentType string
 }
 

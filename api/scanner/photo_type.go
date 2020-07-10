@@ -71,37 +71,6 @@ var SupportedMimetypes = [...]MediaType{
 	TypeTiff,
 	TypeWebp,
 	TypeBmp,
-
-	TypeDNG,
-	TypeARW,
-	TypeSR2,
-	TypeSRF,
-	TypeCR2,
-	TypeCRW,
-	TypeERF,
-	TypeDCS,
-	TypeDRF,
-	TypeDCR,
-	TypeK25,
-	TypeKDC,
-	TypeMRW,
-	TypeMDC,
-	TypeNEF,
-	TypeNRW,
-	TypeORF,
-	TypePEF,
-	TypeRAF,
-	TypeRAW,
-	TypeRW2,
-	TypeGPR,
-	Type3FR,
-	TypeFFF,
-	TypeMEF,
-	TypeCap,
-	TypeIIQ,
-	TypeMOS,
-	TypeRWL,
-	TypeSRW,
 }
 
 var WebMimetypes = [...]MediaType{
@@ -224,11 +193,30 @@ func (imgType *MediaType) isWebCompatible() bool {
 	return false
 }
 
+func (imgType *MediaType) isVideo() bool {
+	for _, video_mime := range VideoMimetypes {
+		if video_mime == *imgType {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isSupported determines if the given type can be processed
 func (imgType *MediaType) isSupported() bool {
 	for _, supported_mime := range SupportedMimetypes {
 		if supported_mime == *imgType {
 			return true
 		}
+	}
+
+	if DarktableCli.IsInstalled() && imgType.isRaw() {
+		return true
+	}
+
+	if FfmpegCli.IsInstalled() && imgType.isVideo() {
+		return true
 	}
 
 	return false

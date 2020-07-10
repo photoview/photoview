@@ -42,7 +42,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			ScannerError("Failed to begin database transaction: %s", err)
 		}
 
-		processing_was_needed, err := ProcessPhoto(tx, photo)
+		processing_was_needed, err := ProcessMedia(tx, photo)
 		if err != nil {
 			tx.Rollback()
 			ScannerError("Failed to process photo (%s): %s", photo.Path, err)

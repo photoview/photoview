@@ -25,7 +25,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		row := db.QueryRow("SELECT photo_url.purpose, photo_url.content_type, photo_url.photo_id FROM photo_url, photo WHERE photo_url.photo_name = ? AND photo_url.photo_id = photo.photo_id", image_name)
 
-		var purpose models.PhotoPurpose
+		var purpose models.MediaPurpose
 		var content_type string
 		var photo_id int
 
@@ -136,7 +136,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(photo.AlbumId), strconv.Itoa(photo_id), image_name)
 		}
 
-		if purpose == models.PhotoOriginal {
+		if purpose == models.MediaOriginal {
 			cachedPath = photo.Path
 		}
 
@@ -151,7 +151,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 					return
 				}
 
-				_, err = scanner.ProcessPhoto(tx, photo)
+				_, err = scanner.ProcessMedia(tx, photo)
 				if err != nil {
 					log.Printf("ERROR: processing image not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)

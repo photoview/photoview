@@ -96,7 +96,7 @@ func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*mo
 
 		var title string
 		switch {
-		case url.Purpose == models.PhotoOriginal:
+		case url.Purpose == models.MediaOriginal:
 			title = "Original"
 		case url.Purpose == models.PhotoThumbnail:
 			title = "Small"
@@ -119,7 +119,7 @@ func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models
 	// Try high res first, then
 	web_types_questions := strings.Repeat("?,", len(scanner.WebMimetypes))[:len(scanner.WebMimetypes)*2-1]
 	args := make([]interface{}, 0)
-	args = append(args, obj.PhotoID, models.PhotoHighRes, models.PhotoOriginal)
+	args = append(args, obj.PhotoID, models.PhotoHighRes, models.MediaOriginal)
 	for _, webtype := range scanner.WebMimetypes {
 		args = append(args, webtype)
 	}
