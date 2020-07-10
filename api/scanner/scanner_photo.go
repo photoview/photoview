@@ -5,47 +5,47 @@ import (
 	"log"
 	"path"
 
+	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Media, bool, error) {
-	photoName := path.Base(photoPath)
+func ScanMedia(tx *sql.Tx, mediaPath string, albumId int) (*models.Media, bool, error) {
+	mediaName := path.Base(mediaPath)
 
 	// Check if image already exists
 	{
-		row := tx.QueryRow("SELECT * FROM photo WHERE path_hash = MD5(?)", photoPath)
+		row := tx.QueryRow("SELECT * FROM media WHERE path_hash = MD5(?)", mediaPath)
 		photo, err := models.NewMediaFromRow(row)
 		if err != sql.ErrNoRows {
 			if err == nil {
-				log.Printf("Image already scanned: %s\n", photoPath)
+				log.Printf("Image already scanned: %s\n", mediaPath)
 				return photo, false, nil
 			} else {
-				return nil, false, err
+				return nil, false, errors.Wrap(err, "scan media fetch from database")
 			}
 		}
 	}
 
-	log.Printf("Scanning image: %s\n", photoPath)
+	log.Printf("Scanning media: %s\n", mediaPath)
 
-	result, err := tx.Exec("INSERT INTO photo (title, path, path_hash, album_id) VALUES (?, ?, MD5(path), ?)", photoName, photoPath, albumId)
+	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id) VALUES (?, ?, MD5(path), ?)", mediaName, mediaPath, albumId)
 	if err != nil {
-		log.Printf("ERROR: Could not insert photo into database")
-		return nil, false, err
+		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}
 	media_id, err := result.LastInsertId()
 	if err != nil {
 		return nil, false, err
 	}
 
-	row := tx.QueryRow("SELECT * FROM photo WHERE media_id = ?", media_id)
+	row := tx.QueryRow("SELECT * FROM media WHERE media_id = ?", media_id)
 	photo, err := models.NewMediaFromRow(row)
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrap(err, "failed to get media by id from database")
 	}
 
 	_, err = ScanEXIF(tx, photo)
 	if err != nil {
-		log.Printf("ERROR: ScanEXIF for %s: %s\n", photoName, err)
+		log.Printf("WARN: ScanEXIF for %s failed: %s\n", mediaName, err)
 	}
 
 	return photo, true, nil

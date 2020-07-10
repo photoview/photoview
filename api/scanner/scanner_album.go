@@ -99,9 +99,9 @@ func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.D
 				continue
 			}
 
-			photo, isNewPhoto, err := ScanPhoto(tx, photoPath, album.AlbumID)
+			photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.AlbumID)
 			if err != nil {
-				ScannerError("Scanning image error (%s): %s", photoPath, err)
+				ScannerError("Scanning media error (%s): %s", photoPath, err)
 				tx.Rollback()
 				continue
 			}
