@@ -3,10 +3,9 @@ package resolvers
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"log"
 	"strings"
 
+	"github.com/pkg/errors"
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -55,7 +54,7 @@ func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error
 
 	media, err := models.NewMediaFromRow(row)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not get media by media_id and user_id from database")
 	}
 
 	return media, nil
@@ -72,7 +71,7 @@ func (r *Resolver) Media() api.MediaResolver {
 func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
 	rows, err := r.Database.Query("SELECT * FROM share_token WHERE media_id = ?", obj.MediaID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "get shares for media (%s)", obj.Path)
 	}
 
 	return models.NewShareTokensFromRows(rows)
@@ -82,7 +81,7 @@ func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*mo
 
 	rows, err := r.Database.Query("SELECT * FROM media_url WHERE media_id = ?", obj.MediaID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "get downloads for media (%s)", obj.Path)
 	}
 
 	mediaUrls, err := models.NewMediaURLFromRows(rows)
@@ -133,8 +132,7 @@ func (r *mediaResolver) HighRes(ctx context.Context, obj *models.Media) (*models
 
 	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		log.Printf("Error: Could not query highres: %s\n", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "could not query high-res (%s)", obj.Path)
 	}
 
 	return url, nil
@@ -145,8 +143,7 @@ func (r *mediaResolver) Thumbnail(ctx context.Context, obj *models.Media) (*mode
 
 	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		log.Printf("Error: Could not query thumbnail: %s\n", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "could not query thumbnail (%s)", obj.Path)
 	}
 
 	return url, nil
@@ -165,7 +162,7 @@ func (r *mediaResolver) Exif(ctx context.Context, obj *models.Media) (*models.Me
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
-			return nil, err
+			return nil, errors.Wrapf(err, "could not get exif of media from database")
 		}
 	}
 
@@ -185,7 +182,7 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 
 	_, err = r.Database.Exec("UPDATE media SET favorite = ? WHERE media_id = ?", favorite, media.MediaID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to update media favorite on database")
 	}
 
 	media.Favorite = favorite
