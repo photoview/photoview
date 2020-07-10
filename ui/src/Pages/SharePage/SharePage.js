@@ -30,8 +30,8 @@ const shareTokenQuery = gql`
           }
         }
       }
-      photo {
-        ...PhotoProps
+      media {
+        ...MediaProps
       }
     }
   }
@@ -44,12 +44,12 @@ const shareTokenQuery = gql`
         url
       }
     }
-    photos(filter: { order_by: "title", order_direction: DESC }) {
-      ...PhotoProps
+    media(filter: { order_by: "title", order_direction: DESC }) {
+      ...MediaProps
     }
   }
 
-  fragment PhotoProps on Photo {
+  fragment MediaProps on Media {
     id
     title
     thumbnail {
@@ -104,8 +104,8 @@ const AuthorizedTokenRoute = ({ match }) => {
     return <AlbumSharePage album={data.shareToken.album} match={match} />
   }
 
-  if (data.shareToken.photo) {
-    return <PhotoSharePage photo={data.shareToken.photo} />
+  if (data.shareToken.media) {
+    return <PhotoSharePage photo={data.shareToken.media} />
   }
 
   return <h1>Share not found</h1>

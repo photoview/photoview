@@ -18,7 +18,7 @@ const albumQuery = gql`
           }
         }
       }
-      photos(filter: { order_by: "title", order_direction: DESC }) {
+      media(filter: { order_by: "title", order_direction: DESC }) {
         id
         thumbnail {
           url

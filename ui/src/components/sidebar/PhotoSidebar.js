@@ -10,7 +10,7 @@ import SidebarDownload from './SidebarDownload'
 
 const photoQuery = gql`
   query sidebarPhoto($id: Int!) {
-    photo(id: $id) {
+    media(id: $id) {
       id
       title
       highRes {
@@ -168,7 +168,7 @@ class PhotoSidebar extends Component {
             }
 
             return (
-              <SidebarContent photo={data.photo} hidePreview={hidePreview} />
+              <SidebarContent photo={data.media} hidePreview={hidePreview} />
             )
           }}
         </Query>

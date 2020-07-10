@@ -3,12 +3,12 @@ package models
 import (
 	"crypto/rand"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -35,7 +35,7 @@ func NewUserFromRow(row *sql.Row) (*User, error) {
 	user := User{}
 
 	if err := row.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to scan user from database")
 	}
 
 	return &user, nil
@@ -47,7 +47,7 @@ func NewUsersFromRows(rows *sql.Rows) ([]*User, error) {
 	for rows.Next() {
 		var user User
 		if err := rows.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to scan users from database")
 		}
 		users = append(users, &user)
 	}
@@ -77,7 +77,7 @@ func AuthorizeUser(database *sql.DB, username string, password string) (*User, e
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return nil, ErrorInvalidUserCredentials
 		} else {
-			return nil, err
+			return nil, errors.Wrap(err, "compare user password hash")
 		}
 	}
 
@@ -104,16 +104,16 @@ func RegisterUser(database *sql.Tx, username string, password *string, rootPath 
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to hash password")
 		}
 		hashedPass := string(hashedPassBytes)
 
 		if _, err := database.Exec("INSERT INTO user (username, password, root_path, admin) VALUES (?, ?, ?, ?)", username, hashedPass, rootPath, admin); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "insert new user with password into database")
 		}
 	} else {
 		if _, err := database.Exec("INSERT INTO user (username, root_path, admin) VALUES (?, ?, ?)", username, rootPath, admin); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "insert user without password into database")
 		}
 	}
 

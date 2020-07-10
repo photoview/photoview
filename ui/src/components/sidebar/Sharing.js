@@ -14,7 +14,7 @@ import copy from 'copy-to-clipboard'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: Int!) {
-    photo(id: $id) {
+    media(id: $id) {
       id
       shares {
         token
@@ -38,7 +38,7 @@ const shareAlbumQuery = gql`
 
 const addPhotoShareMutation = gql`
   mutation sidebarPhotoAddShare($id: Int!, $password: String, $expire: Time) {
-    sharePhoto(photoId: $id, password: $password, expire: $expire) {
+    shareMedia(mediaId: $id, password: $password, expire: $expire) {
       token
     }
   }
@@ -254,7 +254,7 @@ const SidebarShare = ({ photo, album }) => {
   }
 
   if (!content) {
-    const shares = isPhoto ? sharesData.photo.shares : sharesData.album.shares
+    const shares = isPhoto ? sharesData.media.shares : sharesData.album.shares
 
     const optionsRows = shares.map(share => (
       <Table.Row key={share.token}>

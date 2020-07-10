@@ -8,8 +8,8 @@ import gql from 'graphql-tag'
 import download from 'downloadjs'
 
 const downloadQuery = gql`
-  query sidebarDownloadQuery($photoId: Int!) {
-    photo(id: $photoId) {
+  query sidebarDownloadQuery($mediaId: Int!) {
+    media(id: $mediaId) {
       id
       downloads {
         title
@@ -149,13 +149,13 @@ const SidebarDownload = ({ photo }) => {
   const [
     loadPhotoDownloads,
     { called, loading, data },
-  ] = useLazyQuery(downloadQuery, { variables: { photoId: photo.id } })
+  ] = useLazyQuery(downloadQuery, { variables: { mediaId: photo.id } })
 
   let downloads = []
 
   if (called) {
     if (!loading) {
-      downloads = data && data.photo.downloads
+      downloads = data && data.media.downloads
     }
   } else {
     if (!photo.downloads) {

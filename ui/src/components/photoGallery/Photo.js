@@ -130,7 +130,7 @@ export const Photo = ({
   if (typeof photo.favorite == 'boolean') {
     heartIcon = (
       <FavoriteIcon
-        favorite={photo.favorite}
+        favorite={photo.favorite.toString()}
         name={photo.favorite ? 'heart' : 'heart outline'}
         onClick={event => {
           event.stopPropagation()

@@ -33,12 +33,12 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
   }
 
   const nextImage = () => {
-    setActiveImage((imageState.activeImage + 1) % album.photos.length)
+    setActiveImage((imageState.activeImage + 1) % album.media.length)
   }
 
   const previousImage = () => {
     if (imageState.activeImage <= 0) {
-      setActiveImage(album.photos.length - 1)
+      setActiveImage(album.media.length - 1)
     } else {
       setActiveImage(imageState.activeImage - 1)
     }
@@ -92,7 +92,7 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
       }
       <PhotoGallery
         loading={loading}
-        photos={album && album.photos}
+        media={album && album.media}
         activeIndex={imageState.activeImage}
         presenting={imageState.presenting}
         onSelectImage={index => {
