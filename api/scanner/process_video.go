@@ -9,12 +9,12 @@ import (
 )
 
 func processVideo(tx *sql.Tx, imageData *EncodeImageData, videoCachePath *string) (bool, error) {
-	video := imageData.photo
+	video := imageData.media
 	didProcess := false
 
 	log.Printf("Processing video: %s", video.Path)
 
-	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.PhotoID)
+	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.MediaID)
 	if err != nil {
 		return false, err
 	}

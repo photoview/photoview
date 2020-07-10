@@ -13,7 +13,7 @@ import (
 	"github.com/viktorstrate/photoview/api/scanner"
 )
 
-func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error) {
+func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -25,52 +25,52 @@ func (r *queryResolver) MyPhotos(ctx context.Context, filter *models.Filter) ([]
 	}
 
 	rows, err := r.Database.Query(`
-		SELECT photo.* FROM photo, album
-		WHERE photo.album_id = album.album_id AND album.owner_id = ?
-		AND photo.photo_id IN (
-			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		SELECT media.* FROM media, album
+		WHERE media.album_id = album.album_id AND album.owner_id = ?
+		AND media.media_id IN (
+			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
 		)
 	`+filterSQL, user.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewPhotosFromRows(rows)
+	return models.NewMediaFromRows(rows)
 }
 
-func (r *queryResolver) Photo(ctx context.Context, id int) (*models.Photo, error) {
+func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
 	row := r.Database.QueryRow(`
-		SELECT photo.* FROM photo
-		JOIN album ON photo.album_id = album.album_id
-		WHERE photo.photo_id = ? AND album.owner_id = ?
-		AND photo.photo_id IN (
-			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		SELECT media.* FROM media
+		JOIN album ON media.album_id = album.album_id
+		WHERE media.media_id = ? AND album.owner_id = ?
+		AND media.media_id IN (
+			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
 		)
 	`, id, user.UserID)
 
-	photo, err := models.NewPhotoFromRow(row)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		return nil, err
 	}
 
-	return photo, nil
+	return media, nil
 }
 
-type photoResolver struct {
+type mediaResolver struct {
 	*Resolver
 }
 
-func (r *Resolver) Photo() api.PhotoResolver {
-	return &photoResolver{r}
+func (r *Resolver) Media() api.MediaResolver {
+	return &mediaResolver{r}
 }
 
-func (r *photoResolver) Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error) {
-	rows, err := r.Database.Query("SELECT * FROM share_token WHERE photo_id = ?", obj.PhotoID)
+func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
+	rows, err := r.Database.Query("SELECT * FROM share_token WHERE media_id = ?", obj.MediaID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,21 +78,21 @@ func (r *photoResolver) Shares(ctx context.Context, obj *models.Photo) ([]*model
 	return models.NewShareTokensFromRows(rows)
 }
 
-func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error) {
+func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error) {
 
-	rows, err := r.Database.Query("SELECT * FROM photo_url WHERE photo_id = ?", obj.PhotoID)
+	rows, err := r.Database.Query("SELECT * FROM media_url WHERE media_id = ?", obj.MediaID)
 	if err != nil {
 		return nil, err
 	}
 
-	photoUrls, err := models.NewPhotoURLFromRows(rows)
+	mediaUrls, err := models.NewMediaURLFromRows(rows)
 	if err != nil {
 		return nil, err
 	}
 
-	downloads := make([]*models.PhotoDownload, 0)
+	downloads := make([]*models.MediaDownload, 0)
 
-	for _, url := range photoUrls {
+	for _, url := range mediaUrls {
 
 		var title string
 		switch {
@@ -104,7 +104,7 @@ func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*mo
 			title = "Large"
 		}
 
-		downloads = append(downloads, &models.PhotoDownload{
+		downloads = append(downloads, &models.MediaDownload{
 			Title:  title,
 			Width:  url.Width,
 			Height: url.Height,
@@ -115,23 +115,23 @@ func (r *photoResolver) Downloads(ctx context.Context, obj *models.Photo) ([]*mo
 	return downloads, nil
 }
 
-func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
+func (r *mediaResolver) HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
 	// Try high res first, then
 	web_types_questions := strings.Repeat("?,", len(scanner.WebMimetypes))[:len(scanner.WebMimetypes)*2-1]
 	args := make([]interface{}, 0)
-	args = append(args, obj.PhotoID, models.PhotoHighRes, models.MediaOriginal)
+	args = append(args, obj.MediaID, models.PhotoHighRes, models.MediaOriginal)
 	for _, webtype := range scanner.WebMimetypes {
 		args = append(args, webtype)
 	}
 
 	row := r.Database.QueryRow(`
-		SELECT * FROM photo_url WHERE photo_id = ? AND
+		SELECT * FROM media_url WHERE media_id = ? AND
 		(
 			purpose = ? OR (purpose = ? AND content_type IN (`+web_types_questions+`))
 		) LIMIT 1
 	`, args...)
 
-	url, err := models.NewPhotoURLFromRow(row)
+	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
 		log.Printf("Error: Could not query highres: %s\n", err)
 		return nil, err
@@ -140,10 +140,10 @@ func (r *photoResolver) HighRes(ctx context.Context, obj *models.Photo) (*models
 	return url, nil
 }
 
-func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?", obj.PhotoID, models.PhotoThumbnail)
+func (r *mediaResolver) Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
+	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND purpose = ?", obj.MediaID, models.PhotoThumbnail)
 
-	url, err := models.NewPhotoURLFromRow(row)
+	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
 		log.Printf("Error: Could not query thumbnail: %s\n", err)
 		return nil, err
@@ -152,15 +152,15 @@ func (r *photoResolver) Thumbnail(ctx context.Context, obj *models.Photo) (*mode
 	return url, nil
 }
 
-func (r *photoResolver) Album(ctx context.Context, obj *models.Photo) (*models.Album, error) {
-	row := r.Database.QueryRow("SELECT album.* from photo JOIN album ON photo.album_id = album.album_id WHERE photo_id = ?", obj.PhotoID)
+func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
+	row := r.Database.QueryRow("SELECT album.* from media JOIN album ON media.album_id = album.album_id WHERE media_id = ?", obj.MediaID)
 	return models.NewAlbumFromRow(row)
 }
 
-func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.PhotoEXIF, error) {
-	row := r.Database.QueryRow("SELECT photo_exif.* FROM photo NATURAL JOIN photo_exif WHERE photo.photo_id = ?", obj.PhotoID)
+func (r *mediaResolver) Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error) {
+	row := r.Database.QueryRow("SELECT media_exif.* FROM media NATURAL JOIN media_exif WHERE media.media_id = ?", obj.MediaID)
 
-	exif, err := models.NewPhotoExifFromRow(row)
+	exif, err := models.NewMediaExifFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -172,23 +172,23 @@ func (r *photoResolver) Exif(ctx context.Context, obj *models.Photo) (*models.Ph
 	return exif, nil
 }
 
-func (r *mutationResolver) FavoritePhoto(ctx context.Context, photoID int, favorite bool) (*models.Photo, error) {
+func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error) {
 
 	user := auth.UserFromContext(ctx)
 
-	row := r.Database.QueryRow("SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id WHERE photo.photo_id = ? AND album.owner_id = ?", photoID, user.UserID)
+	row := r.Database.QueryRow("SELECT media.* FROM media JOIN album ON media.album_id = album.album_id WHERE media.media_id = ? AND album.owner_id = ?", mediaID, user.UserID)
 
-	photo, err := models.NewPhotoFromRow(row)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = r.Database.Exec("UPDATE photo SET favorite = ? WHERE photo_id = ?", favorite, photo.PhotoID)
+	_, err = r.Database.Exec("UPDATE media SET favorite = ? WHERE media_id = ?", favorite, media.MediaID)
 	if err != nil {
 		return nil, err
 	}
 
-	photo.Favorite = favorite
+	media.Favorite = favorite
 
-	return photo, nil
+	return media, nil
 }

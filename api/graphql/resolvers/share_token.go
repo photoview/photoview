@@ -41,9 +41,9 @@ func (r *shareTokenResolver) Album(ctx context.Context, obj *models.ShareToken) 
 	return album, nil
 }
 
-func (r *shareTokenResolver) Photo(ctx context.Context, obj *models.ShareToken) (*models.Photo, error) {
-	row := r.Database.QueryRow("SELECT * FROM photo WHERE photo.photo_id = ?", obj.PhotoID)
-	photo, err := models.NewPhotoFromRow(row)
+func (r *shareTokenResolver) Media(ctx context.Context, obj *models.ShareToken) (*models.Media, error) {
+	row := r.Database.QueryRow("SELECT * FROM media WHERE media.media_id = ?", obj.MediaID)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -52,7 +52,7 @@ func (r *shareTokenResolver) Photo(ctx context.Context, obj *models.ShareToken) 
 		}
 	}
 
-	return photo, nil
+	return media, nil
 }
 
 func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error) {
@@ -158,17 +158,17 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 		Expire:   expire,
 		Password: password,
 		AlbumID:  &albumID,
-		PhotoID:  nil,
+		MediaID:  nil,
 	}, nil
 }
 
-func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	rows, err := r.Database.Query("SELECT owner_id FROM album, photo WHERE photo.photo_id = ? AND photo.album_id = album.album_id AND album.owner_id = ?", photoID, user.UserID)
+	rows, err := r.Database.Query("SELECT owner_id FROM album, media WHERE media.media_id = ? AND media.album_id = album.album_id AND album.owner_id = ?", mediaID, user.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *
 	}
 
 	token := utils.GenerateToken()
-	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, photo_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, photoID)
+	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, media_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, mediaID)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *
 		Expire:   expire,
 		Password: password,
 		AlbumID:  nil,
-		PhotoID:  &photoID,
+		MediaID:  &mediaID,
 	}, nil
 }
 
@@ -216,7 +216,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 	}
 
 	if _, err := r.Database.Exec("DELETE FROM share_token WHERE token_id = ?", token.TokenID); err != nil {
-		return nil, errors.Wrapf(err, "Error occurred when trying to delete share token (%s) from database", tokenValue)
+		return nil, errors.Wrapf(err, "failed to delete share token (%s) from database", tokenValue)
 	}
 
 	return token, nil
@@ -240,7 +240,7 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue str
 
 	_, err = r.Database.Exec("UPDATE share_token SET password = ? WHERE token_id = ?", hashed_password, token.TokenID)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to update password for share token")
+		return nil, errors.Wrap(err, "failed to update password for share token")
 	}
 
 	updatedToken := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type PhotoEXIF struct {
+type MediaEXIF struct {
 	ExifID          int
 	Camera          *string
 	Maker           *string
@@ -20,16 +20,16 @@ type PhotoEXIF struct {
 	ExposureProgram *int
 }
 
-func (exif *PhotoEXIF) Photo() *Photo {
+func (exif *MediaEXIF) Media() *Media {
 	panic("not implemented")
 }
 
-func (exif *PhotoEXIF) ID() int {
+func (exif *MediaEXIF) ID() int {
 	return exif.ExifID
 }
 
-func NewPhotoExifFromRow(row *sql.Row) (*PhotoEXIF, error) {
-	exif := PhotoEXIF{}
+func NewMediaExifFromRow(row *sql.Row) (*MediaEXIF, error) {
+	exif := MediaEXIF{}
 
 	if err := row.Scan(&exif.ExifID, &exif.Camera, &exif.Maker, &exif.Lens, &exif.DateShot, &exif.Exposure, &exif.Aperture, &exif.Iso, &exif.FocalLength, &exif.Flash, &exif.Orientation, &exif.ExposureProgram); err != nil {
 		return nil, err

@@ -27,21 +27,21 @@ type Query {
     filter: Filter
     "Return only albums from the root directory of the user"
     onlyRoot: Boolean
-    "Return also albums with no photos directly in them"
+    "Return also albums with no media directly in them"
     showEmpty: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
 
-  "List of photos owned by the logged in user"
-  myPhotos(filter: Filter): [Photo!]!
-  "Get photo by id, user must own the photo or be admin"
-  photo(id: Int!): Photo!
+  "List of media owned by the logged in user"
+  myMedia(filter: Filter): [Media!]!
+  "Get media by id, user must own the media or be admin"
+  media(id: Int!): Media!
 
   shareToken(token: String!, password: String): ShareToken!
   shareTokenValidatePassword(token: String!, password: String): Boolean!
 
-  search(query: String!, limitPhotos: Int, limitAlbums: Int): SearchResult!
+  search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 }
 
 type Mutation {
@@ -61,22 +61,22 @@ type Mutation {
     rootPath: String!
   ): AuthorizeResult
 
-  "Scan all users for new photos"
+  "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
-  "Scan a single user for new photos"
+  "Scan a single user for new media"
   scanUser(userId: Int!): ScannerResult!
 
   "Generate share token for album"
   shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
-  "Generate share token for photo"
-  sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
+  "Generate share token for media"
+  shareMedia(mediaId: Int!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
-  "Mark or unmark a photo as being a favorite"
-  favoritePhoto(photoId: Int!, favorite: Boolean!): Photo
+  "Mark or unmark a media as being a favorite"
+  favoriteMedia(mediaId: Int!, favorite: Boolean!): Media
 
   updateUser(
     id: Int!
@@ -130,7 +130,7 @@ type ScannerResult {
   message: String
 }
 
-"A token used to publicly access an album or photo"
+"A token used to publicly access an album or media"
 type ShareToken {
   id: Int!
   token: String!
@@ -143,8 +143,8 @@ type ShareToken {
 
   "The album this token shares"
   album: Album
-  "The photo this token shares"
-  photo: Photo
+  "The media this token shares"
+  media: Media
 }
 
 "General public information about the site"
@@ -165,8 +165,8 @@ type User {
 type Album {
   id: Int!
   title: String!
-  "The photos inside this album"
-  photos(filter: Filter): [Photo!]!
+  "The media inside this album"
+  media(filter: Filter): [Media!]!
   "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
   "The album witch contains this album"
@@ -176,13 +176,13 @@ type Album {
   "The path on the filesystem of the server, where this album is located"
   filePath: String!
   "An image in this album used for previewing this album"
-  thumbnail: Photo
+  thumbnail: Media
   path: [Album!]!
 
   shares: [ShareToken]
 }
 
-type PhotoURL {
+type MediaURL {
   "URL for previewing the image"
   url: String!
   "Width of the image in pixels"
@@ -191,35 +191,35 @@ type PhotoURL {
   height: Int!
 }
 
-type PhotoDownload {
+type MediaDownload {
   title: String!
   width: Int!
   height: Int!
   url: String!
 }
 
-type Photo {
+type Media {
   id: Int!
   title: String!
-  "Local filepath for the photo"
+  "Local filepath for the media"
   path: String!
-  "URL to display the photo in a smaller resolution"
-  thumbnail: PhotoURL!
-  "URL to display the photo in full resolution"
-  highRes: PhotoURL!
-  "The album that holds the photo"
+  "URL to display the media in a smaller resolution"
+  thumbnail: MediaURL!
+  "URL to display the photo in full resolution, will be null for videos"
+  highRes: MediaURL
+  "The album that holds the media"
   album: Album!
-  exif: PhotoEXIF
+  exif: MediaEXIF
   favorite: Boolean!
 
   shares: [ShareToken!]!
-  downloads: [PhotoDownload!]!
+  downloads: [MediaDownload!]!
 }
 
 "EXIF metadata from the camera"
-type PhotoEXIF {
+type MediaEXIF {
   id: Int!
-  photo: Photo
+  media: Media!
   "The model name of the camera"
   camera: String
   "The maker of the camera"
@@ -244,5 +244,5 @@ type PhotoEXIF {
 type SearchResult {
   query: String!
   albums: [Album!]!
-  photos: [Photo!]!
+  media: [Media!]!
 }

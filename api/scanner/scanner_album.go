@@ -19,7 +19,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	notifyThrottle.Trigger(nil)
 
 	// Scan for photos
-	albumPhotos, err := findPhotosForAlbum(album, cache, db, func(photo *models.Photo, newPhoto bool) {
+	albumPhotos, err := findPhotosForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
 		if newPhoto {
 			notifyThrottle.Trigger(func() {
 				notification.BroadcastNotification(&models.Notification{
@@ -80,9 +80,9 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	}
 }
 
-func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Photo, newPhoto bool)) ([]*models.Photo, error) {
+func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
-	albumPhotos := make([]*models.Photo, 0)
+	albumPhotos := make([]*models.Media, 0)
 
 	dirContent, err := ioutil.ReadDir(album.Path)
 	if err != nil {

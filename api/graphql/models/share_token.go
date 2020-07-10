@@ -12,7 +12,7 @@ type ShareToken struct {
 	Expire   *time.Time
 	Password *string
 	AlbumID  *int
-	PhotoID  *int
+	MediaID  *int
 }
 
 func (share *ShareToken) Token() string {
@@ -26,7 +26,7 @@ func (share *ShareToken) ID() int {
 func NewShareTokenFromRow(row *sql.Row) (*ShareToken, error) {
 	token := ShareToken{}
 
-	if err := row.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.PhotoID); err != nil {
+	if err := row.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.MediaID); err != nil {
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func NewShareTokensFromRows(rows *sql.Rows) ([]*ShareToken, error) {
 
 	for rows.Next() {
 		var token ShareToken
-		if err := rows.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.PhotoID); err != nil {
+		if err := rows.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.MediaID); err != nil {
 			return nil, err
 		}
 		tokens = append(tokens, &token)

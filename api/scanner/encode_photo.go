@@ -45,7 +45,7 @@ func (dimensions *PhotoDimensions) ThumbnailScale() PhotoDimensions {
 
 // EncodeImageData is used to easily decode image data, with a cache so expensive operations are not repeated
 type EncodeImageData struct {
-	photo           *models.Photo
+	media           *models.Media
 	_photoImage     image.Image
 	_thumbnailImage image.Image
 	_contentType    *MediaType
@@ -90,7 +90,7 @@ func (img *EncodeImageData) ContentType() (*MediaType, error) {
 		return img._contentType, nil
 	}
 
-	imgType, err := getImageType(img.photo.Path)
+	imgType, err := getImageType(img.media.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (img *EncodeImageData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 
 	if contentType.isRaw() {
 		if DarktableCli.IsInstalled() {
-			err := DarktableCli.EncodeJpeg(img.photo.Path, outputPath, 70)
+			err := DarktableCli.EncodeJpeg(img.media.Path, outputPath, 70)
 			if err != nil {
 				return err
 			}
@@ -159,7 +159,7 @@ func (img *EncodeImageData) photoImage(tx *sql.Tx) (image.Image, error) {
 		return img._photoImage, nil
 	}
 
-	photoFile, err := os.Open(img.photo.Path)
+	photoFile, err := os.Open(img.media.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (img *EncodeImageData) photoImage(tx *sql.Tx) (image.Image, error) {
 	}
 
 	// Get orientation from exif data
-	row := tx.QueryRow("SELECT photo_exif.orientation FROM photo JOIN photo_exif WHERE photo.exif_id = photo_exif.exif_id AND photo.photo_id = ?", img.photo.PhotoID)
+	row := tx.QueryRow("SELECT media_exif.orientation FROM media JOIN media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", img.media.MediaID)
 	var orientation *int
 	if err = row.Scan(&orientation); err != nil {
 		// If not found use default orientation (not rotate)

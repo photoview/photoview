@@ -23,7 +23,7 @@ const PhotoFiller = styled.div`
 
 const PhotoGallery = ({
   activeIndex = -1,
-  photos,
+  media,
   loading,
   onSelectImage,
   presenting,
@@ -57,14 +57,14 @@ const PhotoGallery = ({
     }
   })
 
-  const activeImage = photos && activeIndex != -1 && photos[activeIndex]
+  const activeImage = media && activeIndex != -1 && media[activeIndex]
 
   const getPhotoElements = updateSidebar => {
     let photoElements = []
-    if (photos) {
-      photos.filter(photo => photo.thumbnail)
+    if (media) {
+      media.filter(media => media.thumbnail)
 
-      photoElements = photos.map((photo, index) => {
+      photoElements = media.map((photo, index) => {
         const active = activeIndex == index
 
         let minWidth = 100
@@ -121,7 +121,7 @@ const PhotoGallery = ({
 
 PhotoGallery.propTypes = {
   loading: PropTypes.bool,
-  photos: PropTypes.array,
+  media: PropTypes.array,
   activeIndex: PropTypes.number,
   presenting: PropTypes.bool,
   onSelectImage: PropTypes.func,

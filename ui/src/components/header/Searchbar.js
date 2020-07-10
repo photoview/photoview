@@ -63,7 +63,7 @@ const SEARCH_QUERY = gql`
           }
         }
       }
-      photos {
+      media {
         id
         title
         thumbnail {
@@ -128,20 +128,20 @@ const SearchResults = ({ result }) => {
   const { data, loading } = result
   const query = data && data.search.query
 
-  const photos = (data && data.search.photos) || []
+  const media = (data && data.search.media) || []
   const albums = (data && data.search.albums) || []
 
   let message = null
   if (loading) message = 'Loading results...'
-  else if (data && photos.length == 0 && albums.length == 0)
+  else if (data && media.length == 0 && albums.length == 0)
     message = 'No results found'
 
   const albumElements = albums.map(album => (
     <AlbumRow key={album.id} query={query} album={album} />
   ))
 
-  const photoElements = photos.map(photo => (
-    <PhotoRow key={photo.id} query={query} photo={photo} />
+  const mediaElements = media.map(media => (
+    <PhotoRow key={media.id} query={query} photo={media} />
   ))
 
   return (
@@ -155,8 +155,8 @@ const SearchResults = ({ result }) => {
       {message}
       {albumElements.length > 0 && <ResultTitle>Albums</ResultTitle>}
       {albumElements}
-      {photoElements.length > 0 && <ResultTitle>Photos</ResultTitle>}
-      {photoElements}
+      {mediaElements.length > 0 && <ResultTitle>Photos</ResultTitle>}
+      {mediaElements}
     </Results>
   )
 }
@@ -192,16 +192,16 @@ const RowTitle = styled.span`
   padding-left: 8px;
 `
 
-const PhotoRow = ({ query, photo }) => (
-  <RowLink to={`/album/${photo.album.id}`}>
-    <PhotoSearchThumbnail src={photo.thumbnail.url} />
-    <RowTitle>{searchHighlighted(query, photo.title)}</RowTitle>
+const PhotoRow = ({ query, media }) => (
+  <RowLink to={`/album/${media.album.id}`}>
+    <PhotoSearchThumbnail src={media.thumbnail.url} />
+    <RowTitle>{searchHighlighted(query, media.title)}</RowTitle>
   </RowLink>
 )
 
 PhotoRow.propTypes = {
   query: PropTypes.string.isRequired,
-  photo: PropTypes.object.isRequired,
+  media: PropTypes.object.isRequired,
 }
 
 const AlbumRow = ({ query, album }) => (

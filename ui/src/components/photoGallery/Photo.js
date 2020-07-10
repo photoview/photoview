@@ -8,8 +8,8 @@ import { Icon } from 'semantic-ui-react'
 import ProtectedImage from './ProtectedImage'
 
 const markFavoriteMutation = gql`
-  mutation markPhotoFavorite($photoId: Int!, $favorite: Boolean!) {
-    favoritePhoto(photoId: $photoId, favorite: $favorite) {
+  mutation markMediaFavorite($mediaId: Int!, $favorite: Boolean!) {
+    favoriteMedia(mediaId: $mediaId, favorite: $favorite) {
       id
       favorite
     }
@@ -136,7 +136,7 @@ export const Photo = ({
           event.stopPropagation()
           markFavorite({
             variables: {
-              photoId: photo.id,
+              mediaId: photo.id,
               favorite: !photo.favorite,
             },
             optimisticResponse: {

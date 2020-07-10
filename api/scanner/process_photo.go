@@ -22,16 +22,16 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
-// Higher order function used to check if PhotoURL for a given PhotoPurpose exists
-func makePhotoURLChecker(tx *sql.Tx, photoID int) (func(purpose models.MediaPurpose) (*models.PhotoURL, error), error) {
-	photoURLExistsStmt, err := tx.Prepare("SELECT * FROM photo_url WHERE photo_id = ? AND purpose = ?")
+// Higher order function used to check if MediaURL for a given MediaPurpose exists
+func makePhotoURLChecker(tx *sql.Tx, mediaID int) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
+	mediaURLExistsStmt, err := tx.Prepare("SELECT * FROM media_url WHERE media_id = ? AND purpose = ?")
 	if err != nil {
 		return nil, err
 	}
 
-	return func(purpose models.MediaPurpose) (*models.PhotoURL, error) {
-		row := photoURLExistsStmt.QueryRow(photoID, purpose)
-		photoURL, err := models.NewPhotoURLFromRow(row)
+	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
+		row := mediaURLExistsStmt.QueryRow(mediaID, purpose)
+		mediaURL, err := models.NewMediaURLFromRow(row)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return nil, nil
@@ -39,22 +39,22 @@ func makePhotoURLChecker(tx *sql.Tx, photoID int) (func(purpose models.MediaPurp
 			return nil, err
 		}
 
-		return photoURL, nil
+		return mediaURL, nil
 	}, nil
 }
 
-func ProcessMedia(tx *sql.Tx, photo *models.Photo) (bool, error) {
+func ProcessMedia(tx *sql.Tx, media *models.Media) (bool, error) {
 	imageData := EncodeImageData{
-		photo: photo,
+		media: media,
 	}
 
 	contentType, err := imageData.ContentType()
 	if err != nil {
-		return false, errors.Wrapf(err, "get content-type of media (%s)", photo.Path)
+		return false, errors.Wrapf(err, "get content-type of media (%s)", media.Path)
 	}
 
-	// Make sure photo cache directory exists
-	mediaCachePath, err := makeMediaCacheDir(photo)
+	// Make sure media cache directory exists
+	mediaCachePath, err := makeMediaCacheDir(media)
 	if err != nil {
 		return false, errors.Wrap(err, "cache directory error")
 	}
@@ -68,13 +68,13 @@ func ProcessMedia(tx *sql.Tx, photo *models.Photo) (bool, error) {
 
 func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string) (bool, error) {
 
-	photo := imageData.photo
+	photo := imageData.media
 
 	log.Printf("Processing photo: %s\n", photo.Path)
 
 	didProcess := false
 
-	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.PhotoID)
+	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.MediaID)
 	if err != nil {
 		return false, err
 	}
@@ -128,19 +128,19 @@ func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string
 				return false, err
 			}
 
-			_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
-				photo.PhotoID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
+			_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
+				photo.MediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
 			if err != nil {
-				log.Printf("Could not insert highres photo url: %d, %s\n", photo.PhotoID, path.Base(photo.Path))
+				log.Printf("Could not insert highres media url: %d, %s\n", photo.MediaID, path.Base(photo.Path))
 				return false, err
 			}
 		}
 	} else {
 		// Verify that highres photo still exists in cache
-		baseImagePath = path.Join(*photoCachePath, highResURL.PhotoName)
+		baseImagePath = path.Join(*photoCachePath, highResURL.MediaName)
 
 		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) {
-			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.PhotoName)
+			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.MediaName)
 			didProcess = true
 
 			err = imageData.EncodeHighRes(tx, baseImagePath)
@@ -188,17 +188,17 @@ func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string
 			return false, errors.Wrap(err, "could not create thumbnail cached image")
 		}
 
-		_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg")
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.MediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg")
 		if err != nil {
 			return false, err
 		}
 	} else {
 		// Verify that thumbnail photo still exists in cache
-		thumbPath := path.Join(*photoCachePath, thumbURL.PhotoName)
+		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
 
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			didProcess = true
-			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.PhotoName)
+			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.MediaName)
 
 			_, err := EncodeThumbnail(baseImagePath, thumbPath)
 			if err != nil {
@@ -210,7 +210,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string
 	return didProcess, nil
 }
 
-func makeMediaCacheDir(photo *models.Photo) (*string, error) {
+func makeMediaCacheDir(photo *models.Media) (*string, error) {
 
 	// Make root cache dir if not exists
 	if _, err := os.Stat(PhotoCache()); os.IsNotExist(err) {
@@ -228,7 +228,7 @@ func makeMediaCacheDir(photo *models.Photo) (*string, error) {
 	}
 
 	// Make photo cache dir if not exists
-	photoCachePath := path.Join(albumCachePath, strconv.Itoa(photo.PhotoID))
+	photoCachePath := path.Join(albumCachePath, strconv.Itoa(photo.MediaID))
 	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
 			return nil, errors.Wrap(err, "could not make photo image cache directory")
@@ -238,7 +238,7 @@ func makeMediaCacheDir(photo *models.Photo) (*string, error) {
 	return &photoCachePath, nil
 }
 
-func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Photo, imageData *EncodeImageData, photoDimensions *PhotoDimensions) error {
+func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeImageData, photoDimensions *PhotoDimensions) error {
 	photoName := path.Base(photo.Path)
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
@@ -251,9 +251,9 @@ func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Photo, imageData *EncodeIma
 		return err
 	}
 
-	_, err = tx.Exec("INSERT INTO photo_url (photo_id, photo_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.PhotoID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.MediaOriginal, contentType)
+	_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.MediaID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.MediaOriginal, contentType)
 	if err != nil {
-		log.Printf("Could not insert original photo url: %d, %s\n", photo.PhotoID, photoName)
+		log.Printf("Could not insert original photo url: %d, %s\n", photo.MediaID, photoName)
 		return err
 	}
 

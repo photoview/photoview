@@ -8,13 +8,13 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, error) {
+func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Media, bool, error) {
 	photoName := path.Base(photoPath)
 
 	// Check if image already exists
 	{
 		row := tx.QueryRow("SELECT * FROM photo WHERE path_hash = MD5(?)", photoPath)
-		photo, err := models.NewPhotoFromRow(row)
+		photo, err := models.NewMediaFromRow(row)
 		if err != sql.ErrNoRows {
 			if err == nil {
 				log.Printf("Image already scanned: %s\n", photoPath)
@@ -32,13 +32,13 @@ func ScanPhoto(tx *sql.Tx, photoPath string, albumId int) (*models.Photo, bool, 
 		log.Printf("ERROR: Could not insert photo into database")
 		return nil, false, err
 	}
-	photo_id, err := result.LastInsertId()
+	media_id, err := result.LastInsertId()
 	if err != nil {
 		return nil, false, err
 	}
 
-	row := tx.QueryRow("SELECT * FROM photo WHERE photo_id = ?", photo_id)
-	photo, err := models.NewPhotoFromRow(row)
+	row := tx.QueryRow("SELECT * FROM photo WHERE media_id = ?", media_id)
+	photo, err := models.NewMediaFromRow(row)
 	if err != nil {
 		return nil, false, err
 	}

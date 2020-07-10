@@ -209,64 +209,6 @@ func deleteOldUserAlbums(db *sql.DB, scannedAlbums []*models.Album, user *models
 	return deleteErrors
 }
 
-// func cleanupCache(database *sql.DB, cache *ScannerCache, user *models.User) {
-
-// 	// Delete old photos
-// 	photo_args := make([]interface{}, 0)
-// 	photo_args = append(photo_args, user.UserID)
-// 	photo_args = append(photo_args, cache.photo_paths_scanned...)
-
-// 	photo_questions := strings.Repeat("MD5(?),", len(cache.photo_paths_scanned))[:len(cache.photo_paths_scanned)*7-1]
-
-// 	rows, err = database.Query(`
-// 		SELECT photo.photo_id as photo_id, album.album_id as album_id FROM photo JOIN album ON photo.album_id = album.album_id
-// 		WHERE album.owner_id = ? AND photo.path_hash NOT IN (`+photo_questions+`)
-// 	`, photo_args...)
-// 	if err != nil {
-// 		ScannerError("Could not get deleted photos from database: %s\n", err)
-// 		return
-// 	}
-// 	defer rows.Close()
-
-// 	deleted_photo_ids := make([]interface{}, 0)
-
-// 	for rows.Next() {
-// 		var photo_id int
-// 		var album_id int
-
-// 		if err := rows.Scan(&photo_id, &album_id); err != nil {
-// 			ScannerError("Could not parse photo to be removed (album_id %d, photo_id %d): %s\n", album_id, photo_id, err)
-// 		}
-
-// 		deleted_photo_ids = append(deleted_photo_ids, photo_id)
-// 		cache_path := path.Join("./photo_cache", strconv.Itoa(album_id), strconv.Itoa(photo_id))
-// 		err := os.RemoveAll(cache_path)
-// 		if err != nil {
-// 			ScannerError("Could not delete unused cache photo folder: %s\n%s\n", cache_path, err)
-// 		}
-// 	}
-
-// 	if len(deleted_photo_ids) > 0 {
-// 		photo_questions = strings.Repeat("?,", len(deleted_photo_ids))[:len(deleted_photo_ids)*2-1]
-
-// 		if _, err := database.Exec("DELETE FROM photo WHERE photo_id IN ("+photo_questions+")", deleted_photo_ids...); err != nil {
-// 			ScannerError("Could not delete old photos from database:\n%s\n", err)
-// 		}
-// 	}
-
-// 	if len(deleted_album_ids) > 0 || len(deleted_photo_ids) > 0 {
-// 		timeout := 3000
-// 		notification.BroadcastNotification(&models.Notification{
-// 			Key:     utils.GenerateToken(),
-// 			Type:    models.NotificationTypeMessage,
-// 			Header:  "Deleted old photos",
-// 			Content: fmt.Sprintf("Deleted %d albums and %d photos, that was not found on disk", len(deleted_album_ids), len(deleted_photo_ids)),
-// 			Timeout: &timeout,
-// 		})
-// 	}
-
-// }
-
 func ScannerError(format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 

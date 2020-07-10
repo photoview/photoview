@@ -21,6 +21,13 @@ type Filter struct {
 	Offset         *int            `json:"offset"`
 }
 
+type MediaDownload struct {
+	Title  string `json:"title"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	URL    string `json:"url"`
+}
+
 type Notification struct {
 	Key      string           `json:"key"`
 	Type     NotificationType `json:"type"`
@@ -33,13 +40,6 @@ type Notification struct {
 	Timeout *int `json:"timeout"`
 }
 
-type PhotoDownload struct {
-	Title  string `json:"title"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	URL    string `json:"url"`
-}
-
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`
@@ -50,7 +50,7 @@ type ScannerResult struct {
 type SearchResult struct {
 	Query  string   `json:"query"`
 	Albums []*Album `json:"albums"`
-	Photos []*Photo `json:"photos"`
+	Media  []*Media `json:"media"`
 }
 
 // General public information about the site

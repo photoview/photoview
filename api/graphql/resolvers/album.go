@@ -22,7 +22,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 
 	var rows *sql.Rows
 
-	filterEmpty := " AND EXISTS (SELECT * FROM photo WHERE album_id = album.album_id) "
+	filterEmpty := " AND EXISTS (SELECT * FROM media WHERE album_id = album.album_id) "
 	if showEmpty != nil && *showEmpty == true {
 		filterEmpty = ""
 	}
@@ -72,34 +72,34 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Photos(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Photo, error) {
+func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Media, error) {
 
 	filterSQL, err := filter.FormatSQL()
 	if err != nil {
 		return nil, err
 	}
 
-	photoRows, err := r.Database.Query(`
-		SELECT photo.* FROM album, photo
-		WHERE album.album_id = ? AND photo.album_id = album.album_id
-		AND photo.photo_id IN (
-			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+	mediaRows, err := r.Database.Query(`
+		SELECT media.* FROM album, media
+		WHERE album.album_id = ? AND media.album_id = album.album_id
+		AND media.media_id IN (
+			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
 		)
 	`+filterSQL, obj.AlbumID)
 	if err != nil {
 		return nil, err
 	}
-	defer photoRows.Close()
+	defer mediaRows.Close()
 
-	photos, err := models.NewPhotosFromRows(photoRows)
+	media, err := models.NewMediaFromRows(mediaRows)
 	if err != nil {
 		return nil, err
 	}
 
-	return photos, nil
+	return media, nil
 }
 
-func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error) {
+func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
 
 	row := r.Database.QueryRow(`
 		WITH recursive sub_albums AS (
@@ -108,14 +108,14 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 			SELECT child.* FROM album AS child JOIN sub_albums ON child.parent_album = sub_albums.album_id
 		)
 
-		SELECT * FROM photo WHERE photo.album_id IN (
+		SELECT * FROM media WHERE media.album_id IN (
 			SELECT album_id FROM sub_albums
-		) AND photo.photo_id IN (
-			SELECT photo_id FROM photo_url WHERE photo_url.photo_id = photo.photo_id
+		) AND media.media_id IN (
+			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
 		) LIMIT 1
 	`, obj.AlbumID)
 
-	photo, err := models.NewPhotoFromRow(row)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -124,7 +124,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 		}
 	}
 
-	return photo, nil
+	return media, nil
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error) {
