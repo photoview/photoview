@@ -134,13 +134,17 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes || purpose == models.VideoThumbnail {
 			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(media_id), media_name)
-		}
-
-		if purpose == models.MediaOriginal {
+		} else if purpose == models.MediaOriginal {
 			cachedPath = media.Path
+		} else {
+			log.Printf("ERROR: Can not handle media_purpose for photo: %s\n", purpose)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("internal server error"))
+			return
 		}
 
 		file, err = os.Open(cachedPath)
+		defer file.Close()
 		if err != nil {
 			if os.IsNotExist(err) {
 				tx, err := db.Begin()

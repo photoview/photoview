@@ -153,6 +153,17 @@ func (r *mediaResolver) Thumbnail(ctx context.Context, obj *models.Media) (*mode
 	return url, nil
 }
 
+func (r *mediaResolver) VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
+	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND (purpose = ?)", obj.MediaID, models.VideoWeb)
+
+	url, err := models.NewMediaURLFromRow(row)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not query video web-format url (%s)", obj.Path)
+	}
+
+	return url, nil
+}
+
 func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
 	row := r.Database.QueryRow("SELECT album.* from media JOIN album ON media.album_id = album.album_id WHERE media_id = ?", obj.MediaID)
 	return models.NewAlbumFromRow(row)

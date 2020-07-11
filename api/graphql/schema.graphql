@@ -212,6 +212,8 @@ type Media {
   thumbnail: MediaURL!
   "URL to display the photo in full resolution, will be null for videos"
   highRes: MediaURL
+  "URL to get the video in a web format that can be played in the browser, will be null for photos"
+  videoWeb: MediaURL
   "The album that holds the media"
   album: Album!
   exif: MediaEXIF

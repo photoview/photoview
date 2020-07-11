@@ -82,6 +82,7 @@ type ComplexityRoot struct {
 		Thumbnail func(childComplexity int) int
 		Title     func(childComplexity int) int
 		Type      func(childComplexity int) int
+		VideoWeb  func(childComplexity int) int
 	}
 
 	MediaDownload struct {
@@ -204,6 +205,7 @@ type AlbumResolver interface {
 type MediaResolver interface {
 	Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
+	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	Album(ctx context.Context, obj *models.Media) (*models.Album, error)
 	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
 
@@ -440,6 +442,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Media.Type(childComplexity), true
+
+	case "Media.videoWeb":
+		if e.complexity.Media.VideoWeb == nil {
+			break
+		}
+
+		return e.complexity.Media.VideoWeb(childComplexity), true
 
 	case "MediaDownload.height":
 		if e.complexity.MediaDownload.Height == nil {
@@ -1326,6 +1335,8 @@ type Media {
   thumbnail: MediaURL!
   "URL to display the photo in full resolution, will be null for videos"
   highRes: MediaURL
+  "URL to get the video in a web format that can be played in the browser, will be null for photos"
+  videoWeb: MediaURL
   "The album that holds the media"
   album: Album!
   exif: MediaEXIF
@@ -2522,6 +2533,37 @@ func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Media().HighRes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.MediaURL)
+	fc.Result = res
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().VideoWeb(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6685,6 +6727,17 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Media_highRes(ctx, field, obj)
+				return res
+			})
+		case "videoWeb":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_videoWeb(ctx, field, obj)
 				return res
 			})
 		case "album":

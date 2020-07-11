@@ -71,7 +71,11 @@ func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
 func (p *MediaURL) URL() string {
 
 	imageUrl := utils.ApiEndpointUrl()
-	imageUrl.Path = path.Join(imageUrl.Path, "photo", p.MediaName)
+	if p.Purpose != VideoWeb {
+		imageUrl.Path = path.Join(imageUrl.Path, "photo", p.MediaName)
+	} else {
+		imageUrl.Path = path.Join(imageUrl.Path, "video", p.MediaName)
+	}
 
 	return imageUrl.String()
 }
