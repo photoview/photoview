@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import Layout from '../../Layout'
 import ProtectedImage from '../../components/photoGallery/ProtectedImage'
 import { SidebarConsumer } from '../../components/sidebar/Sidebar'
-import PhotoSidebar from '../../components/sidebar/PhotoSidebar'
+import MediaSidebar from '../../components/sidebar/MediaSidebar'
 
 const DisplayPhoto = styled(ProtectedImage)`
   width: 100%;
@@ -22,7 +22,7 @@ const AlbumSharePage = ({ photo }) => {
             <DisplayPhoto
               src={photo.highRes.url}
               onLoad={() => {
-                updateSidebar(<PhotoSidebar photo={photo} hidePreview />)
+                updateSidebar(<MediaSidebar media={photo} hidePreview />)
               }}
             />
           </>

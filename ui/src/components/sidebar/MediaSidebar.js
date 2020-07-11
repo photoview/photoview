@@ -1,19 +1,30 @@
-import React, { Component } from 'react'
+import React, { Component, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Query } from 'react-apollo'
+import { useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import SidebarItem from './SidebarItem'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 
-const photoQuery = gql`
+const mediaQuery = gql`
   query sidebarPhoto($id: Int!) {
     media(id: $id) {
       id
       title
+      type
       highRes {
+        url
+        width
+        height
+      }
+      thumbnail {
+        url
+        width
+        height
+      }
+      videoWeb {
         url
         width
         height
@@ -50,6 +61,35 @@ const PreviewImage = styled(ProtectedImage)`
   object-fit: contain;
 `
 
+const PreviewVideo = styled.video`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+`
+
+const PreviewMedia = ({ media, previewImage }) => {
+  if (media.type == null || media.type == 'photo') {
+    return <PreviewImage src={previewImage.url} />
+  }
+
+  if (media.type == 'video') {
+    return (
+      <PreviewVideo controls key={media.id}>
+        <source src={media.videoWeb.url} type="video/mp4" />
+      </PreviewVideo>
+    )
+  }
+
+  throw new Error('Unknown media type')
+}
+
+PreviewMedia.propTypes = {
+  media: PropTypes.object.isRequired,
+  previewImage: PropTypes.object.isRequired,
+}
+
 const Name = styled.div`
   text-align: center;
   font-size: 1.2rem;
@@ -85,18 +125,18 @@ const exposurePrograms = {
   '8': 'Landscape mode ',
 }
 
-const SidebarContent = ({ photo, hidePreview }) => {
+const SidebarContent = ({ media, hidePreview }) => {
   let exifItems = []
 
-  if (photo && photo.exif) {
+  if (media && media.exif) {
     let exifKeys = Object.keys(exifNameLookup).filter(
-      x => !!photo.exif[x] && x != '__typename'
+      x => !!media.exif[x] && x != '__typename'
     )
 
     let exif = exifKeys.reduce(
       (prev, curr) => ({
         ...prev,
-        [curr]: photo.exif[curr],
+        [curr]: media.exif[curr],
       }),
       {}
     )
@@ -120,9 +160,9 @@ const SidebarContent = ({ photo, hidePreview }) => {
   }
 
   let previewImage = null
-  if (photo) {
-    if (photo.highRes) previewImage = photo.highRes
-    else if (photo.thumbnail) previewImage = photo.thumbnail
+  if (media) {
+    if (media.highRes) previewImage = media.highRes
+    else if (media.thumbnail) previewImage = media.thumbnail
   }
 
   return (
@@ -131,55 +171,53 @@ const SidebarContent = ({ photo, hidePreview }) => {
         <PreviewImageWrapper
           imageAspect={previewImage.height / previewImage.width}
         >
-          <PreviewImage src={previewImage.url} />
+          <PreviewMedia previewImage={previewImage} media={media} />
         </PreviewImageWrapper>
       )}
-      <Name>{photo && photo.title}</Name>
+      <Name>{media && media.title}</Name>
       <ExifInfo>{exifItems}</ExifInfo>
-      <SidebarDownload photo={photo} />
-      <SidebarShare photo={photo} />
+      <SidebarDownload photo={media} />
+      <SidebarShare photo={media} />
     </div>
   )
 }
 
 SidebarContent.propTypes = {
-  photo: PropTypes.object,
+  media: PropTypes.object,
   hidePreview: PropTypes.bool,
 }
 
-class PhotoSidebar extends Component {
-  render() {
-    const { photo, hidePreview } = this.props
+const MediaSidebar = ({ media, hidePreview }) => {
+  const [loadMedia, { loading, error, data }] = useLazyQuery(mediaQuery)
 
-    if (!photo) return null
-
-    if (!localStorage.getItem('token')) {
-      return <SidebarContent photo={photo} hidePreview={hidePreview} />
+  useEffect(() => {
+    if (media != null && localStorage.getItem('token')) {
+      loadMedia({
+        variables: {
+          id: media.id,
+        },
+      })
     }
+  }, [media])
 
-    return (
-      <div>
-        <Query query={photoQuery} variables={{ id: photo.id }}>
-          {({ loading, error, data }) => {
-            if (error) return error
+  if (!media) return null
 
-            if (loading) {
-              return <SidebarContent photo={photo} hidePreview={hidePreview} />
-            }
-
-            return (
-              <SidebarContent photo={data.media} hidePreview={hidePreview} />
-            )
-          }}
-        </Query>
-      </div>
-    )
+  if (!localStorage.getItem('token')) {
+    return <SidebarContent media={media} hidePreview={hidePreview} />
   }
+
+  if (error) return error
+
+  if (loading || data == null) {
+    return <SidebarContent media={media} hidePreview={hidePreview} />
+  }
+
+  return <SidebarContent media={data.media} hidePreview={hidePreview} />
 }
 
-PhotoSidebar.propTypes = {
-  photo: PropTypes.object.isRequired,
+MediaSidebar.propTypes = {
+  media: PropTypes.object.isRequired,
   hidePreview: PropTypes.bool,
 }
 
-export default PhotoSidebar
+export default MediaSidebar

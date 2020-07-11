@@ -101,6 +101,10 @@ func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*mo
 			title = "Small"
 		case url.Purpose == models.PhotoHighRes:
 			title = "Large"
+		case url.Purpose == models.VideoThumbnail:
+			title = "Video thumbnail"
+		case url.Purpose == models.VideoWeb:
+			title = "Web optimized video"
 		}
 
 		downloads = append(downloads, &models.MediaDownload{
@@ -158,7 +162,11 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, obj *models.Media) (*model
 
 	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not query video web-format url (%s)", obj.Path)
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, errors.Wrapf(err, "could not query video web-format url (%s)", obj.Path)
+		}
 	}
 
 	return url, nil

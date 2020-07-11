@@ -5,7 +5,7 @@ import { Photo, PhotoThumbnail } from './Photo'
 import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarConsumer } from '../sidebar/Sidebar'
-import PhotoSidebar from '../sidebar/PhotoSidebar'
+import MediaSidebar from '../sidebar/MediaSidebar'
 
 const Gallery = styled.div`
   display: flex;
@@ -79,7 +79,7 @@ const PhotoGallery = ({
             key={photo.id}
             photo={photo}
             onSelectImage={index => {
-              updateSidebar(<PhotoSidebar photo={photo} />)
+              updateSidebar(<MediaSidebar media={photo} />)
               onSelectImage(index)
             }}
             setPresenting={setPresenting}
@@ -109,7 +109,7 @@ const PhotoGallery = ({
           </Gallery>
           {presenting && (
             <PresentView
-              photo={activeImage}
+              media={activeImage}
               {...{ nextImage, previousImage, setPresenting }}
             />
           )}

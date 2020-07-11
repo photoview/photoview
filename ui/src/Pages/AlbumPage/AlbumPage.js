@@ -20,12 +20,16 @@ const albumQuery = gql`
       }
       media(filter: { order_by: "title", order_direction: DESC }) {
         id
+        type
         thumbnail {
           url
           width
           height
         }
         highRes {
+          url
+        }
+        videoWeb {
           url
         }
         favorite

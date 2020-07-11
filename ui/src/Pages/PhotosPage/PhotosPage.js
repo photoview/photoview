@@ -15,12 +15,16 @@ const photoQuery = gql`
       ) {
         id
         title
+        type
         thumbnail {
           url
           width
           height
         }
         highRes {
+          url
+        }
+        videoWeb {
           url
         }
         favorite
