@@ -19,7 +19,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	notifyThrottle.Trigger(nil)
 
 	// Scan for photos
-	albumPhotos, err := findPhotosForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
+	albumPhotos, err := findMediaForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
 		if newPhoto {
 			notifyThrottle.Trigger(func() {
 				notification.BroadcastNotification(&models.Notification{
@@ -80,7 +80,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	}
 }
 
-func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
+func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
 	albumPhotos := make([]*models.Media, 0)
 
@@ -92,14 +92,14 @@ func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.D
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
-		if !item.IsDir() && isPathImage(photoPath, cache) {
+		if !item.IsDir() && isPathMedia(photoPath, cache) {
 			tx, err := db.Begin()
 			if err != nil {
 				ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)
 				continue
 			}
 
-			photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.AlbumID)
+			photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.AlbumID, cache)
 			if err != nil {
 				ScannerError("Scanning media error (%s): %s", photoPath, err)
 				tx.Rollback()

@@ -92,7 +92,7 @@ func (img *EncodeMediaData) ContentType() (*MediaType, error) {
 		return img._contentType, nil
 	}
 
-	imgType, err := getImageType(img.media.Path)
+	imgType, err := getMediaType(img.media.Path)
 	if err != nil {
 		return nil, err
 	}

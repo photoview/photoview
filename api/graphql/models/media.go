@@ -7,6 +7,13 @@ import (
 	"github.com/viktorstrate/photoview/api/utils"
 )
 
+type MediaType string
+
+const (
+	MediaTypePhoto MediaType = "photo"
+	MediaTypeVide  MediaType = "video"
+)
+
 type Media struct {
 	MediaID  int
 	Title    string
@@ -15,6 +22,7 @@ type Media struct {
 	AlbumId  int
 	ExifId   *int
 	Favorite bool
+	Type     MediaType
 }
 
 func (p *Media) ID() int {
@@ -44,7 +52,7 @@ type MediaURL struct {
 func NewMediaFromRow(row *sql.Row) (*Media, error) {
 	media := Media{}
 
-	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite); err != nil {
+	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type); err != nil {
 		return nil, err
 	}
 

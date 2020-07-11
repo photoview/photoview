@@ -142,7 +142,7 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
 			if fileInfo.IsDir() {
 				scanQueue.PushBack(filePath)
 			} else {
-				if isPathImage(filePath, cache) {
+				if isPathMedia(filePath, cache) {
 					cache.InsertAlbumPaths(dirPath, rootPath, true)
 					return true
 				}

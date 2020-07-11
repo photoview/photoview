@@ -9,7 +9,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func ScanMedia(tx *sql.Tx, mediaPath string, albumId int) (*models.Media, bool, error) {
+func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if image already exists
@@ -28,7 +28,19 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int) (*models.Media, bool, 
 
 	log.Printf("Scanning media: %s\n", mediaPath)
 
-	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id) VALUES (?, ?, MD5(path), ?)", mediaName, mediaPath, albumId)
+	mediaType, err := cache.GetMediaType(mediaPath)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "could determine if media was photo or video")
+	}
+
+	var mediaTypeText string
+	if mediaType.isVideo() {
+		mediaTypeText = "video"
+	} else {
+		mediaTypeText = "photo"
+	}
+
+	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type) VALUES (?, ?, MD5(path), ?, ?)", mediaName, mediaPath, albumId, mediaTypeText)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}

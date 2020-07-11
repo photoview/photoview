@@ -54,22 +54,31 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 	return nil
 }
 
-func (c *AlbumScannerCache) InsertPhotoType(path string, content_type MediaType) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+// func (c *AlbumScannerCache) InsertPhotoType(path string, content_type MediaType) {
+// 	c.mutex.Lock()
+// 	defer c.mutex.Unlock()
 
-	(c.photo_types)[path] = content_type
-}
+// 	(c.photo_types)[path] = content_type
+// }
 
-func (c *AlbumScannerCache) GetPhotoType(path string) *MediaType {
+func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	result, found := c.photo_types[path]
 	if found {
 		// log.Printf("Image cache hit: %s\n", path)
-		return &result
+		return &result, nil
 	}
 
-	return nil
+	mediaType, err := getMediaType(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if mediaType != nil {
+		(c.photo_types)[path] = *mediaType
+	}
+
+	return mediaType, nil
 }

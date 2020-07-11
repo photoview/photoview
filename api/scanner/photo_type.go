@@ -222,7 +222,7 @@ func (imgType *MediaType) isSupported() bool {
 	return false
 }
 
-func getImageType(path string) (*MediaType, error) {
+func getMediaType(path string) (*MediaType, error) {
 
 	ext := filepath.Ext(path)
 
@@ -261,28 +261,23 @@ func getImageType(path string) (*MediaType, error) {
 	return nil, nil
 }
 
-func isPathImage(path string, cache *AlbumScannerCache) bool {
-	if cache.GetPhotoType(path) != nil {
-		return true
-	}
-
-	imageType, err := getImageType(path)
+func isPathMedia(path string, cache *AlbumScannerCache) bool {
+	mediaType, err := cache.GetMediaType(path)
 	if err != nil {
 		ScannerError("%s (%s)", err, path)
 		return false
 	}
 
-	if imageType != nil {
+	if mediaType != nil {
 		// Make sure file isn't empty
 		fileStats, err := os.Stat(path)
 		if err != nil || fileStats.Size() == 0 {
 			return false
 		}
 
-		cache.InsertPhotoType(path, *imageType)
 		return true
 	}
 
-	log.Printf("File is not a supported image %s\n", path)
+	log.Printf("File is not a supported media %s\n", path)
 	return false
 }
