@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 		Shares    func(childComplexity int) int
 		Thumbnail func(childComplexity int) int
 		Title     func(childComplexity int) int
+		Type      func(childComplexity int) int
 	}
 
 	MediaDownload struct {
@@ -432,6 +433,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Media.Title(childComplexity), true
+
+	case "Media.type":
+		if e.complexity.Media.Type == nil {
+			break
+		}
+
+		return e.complexity.Media.Type(childComplexity), true
 
 	case "MediaDownload.height":
 		if e.complexity.MediaDownload.Height == nil {
@@ -1304,6 +1312,11 @@ type MediaDownload {
   url: String!
 }
 
+enum MediaType {
+  photo
+  video
+}
+
 type Media {
   id: Int!
   title: String!
@@ -1317,6 +1330,7 @@ type Media {
   album: Album!
   exif: MediaEXIF
   favorite: Boolean!
+  type: MediaType!
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!
@@ -2618,6 +2632,40 @@ func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.C
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_type(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.MediaType)
+	fc.Result = res
+	return ec.marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -6669,6 +6717,11 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "type":
+			out.Values[i] = ec._Media_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "shares":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7813,6 +7866,15 @@ func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrate
 		return graphql.Null
 	}
 	return ec._MediaDownload(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, v interface{}) (models.MediaType, error) {
+	var res models.MediaType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNMediaURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {

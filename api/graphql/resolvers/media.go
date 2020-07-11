@@ -132,14 +132,18 @@ func (r *mediaResolver) HighRes(ctx context.Context, obj *models.Media) (*models
 
 	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not query high-res (%s)", obj.Path)
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, errors.Wrapf(err, "could not query high-res (%s)", obj.Path)
+		}
 	}
 
 	return url, nil
 }
 
 func (r *mediaResolver) Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND purpose = ?", obj.MediaID, models.PhotoThumbnail)
+	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND (purpose = ? OR purpose = ?)", obj.MediaID, models.PhotoThumbnail, models.VideoThumbnail)
 
 	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {

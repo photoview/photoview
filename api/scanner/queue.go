@@ -104,7 +104,7 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 				notification.BroadcastNotification(&models.Notification{
 					Key:     "global-scanner-progress",
 					Type:    models.NotificationTypeMessage,
-					Header:  fmt.Sprintf("Scanning photos"),
+					Header:  fmt.Sprintf("Scanning media"),
 					Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
 				})
 			})

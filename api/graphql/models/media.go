@@ -7,13 +7,6 @@ import (
 	"github.com/viktorstrate/photoview/api/utils"
 )
 
-type MediaType string
-
-const (
-	MediaTypePhoto MediaType = "photo"
-	MediaTypeVide  MediaType = "video"
-)
-
 type Media struct {
 	MediaID  int
 	Title    string
@@ -64,7 +57,7 @@ func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
 
 	for rows.Next() {
 		var media Media
-		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite); err != nil {
+		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type); err != nil {
 			return nil, err
 		}
 		medias = append(medias, &media)

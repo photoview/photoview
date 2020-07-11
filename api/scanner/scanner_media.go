@@ -18,7 +18,7 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		photo, err := models.NewMediaFromRow(row)
 		if err != sql.ErrNoRows {
 			if err == nil {
-				log.Printf("Image already scanned: %s\n", mediaPath)
+				log.Printf("Media already scanned: %s\n", mediaPath)
 				return photo, false, nil
 			} else {
 				return nil, false, errors.Wrap(err, "scan media fetch from database")

@@ -132,7 +132,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 		var cachedPath string
 		var file *os.File = nil
 
-		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes {
+		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes || purpose == models.VideoThumbnail {
 			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(media_id), media_name)
 		}
 

@@ -198,6 +198,11 @@ type MediaDownload {
   url: String!
 }
 
+enum MediaType {
+  photo
+  video
+}
+
 type Media {
   id: Int!
   title: String!
@@ -211,6 +216,7 @@ type Media {
   album: Album!
   exif: MediaEXIF
   favorite: Boolean!
+  type: MediaType!
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!

@@ -25,14 +25,14 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 				notification.BroadcastNotification(&models.Notification{
 					Key:     album_notify_key,
 					Type:    models.NotificationTypeMessage,
-					Header:  fmt.Sprintf("Found new photos in album '%s'", album.Title),
-					Content: fmt.Sprintf("Found photo %s", photo.Path),
+					Header:  fmt.Sprintf("Found new media in album '%s'", album.Title),
+					Content: fmt.Sprintf("Found %s", photo.Path),
 				})
 			})
 		}
 	})
 	if err != nil {
-		ScannerError("Failed to find photos for album (%s): %s", album.Path, err)
+		ScannerError("Failed to find media for album (%s): %s", album.Path, err)
 	}
 
 	album_has_changes := false
@@ -55,8 +55,8 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			notification.BroadcastNotification(&models.Notification{
 				Key:      album_notify_key,
 				Type:     models.NotificationTypeProgress,
-				Header:   fmt.Sprintf("Processing photo for album '%s'", album.Title),
-				Content:  fmt.Sprintf("Processed photo at %s", photo.Path),
+				Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
+				Content:  fmt.Sprintf("Processed media at %s", photo.Path),
 				Progress: &progress,
 			})
 		}
@@ -73,8 +73,8 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			Key:      album_notify_key,
 			Type:     models.NotificationTypeMessage,
 			Positive: true,
-			Header:   fmt.Sprintf("Done processing photos for album '%s'", album.Title),
-			Content:  fmt.Sprintf("All photos have been processed"),
+			Header:   fmt.Sprintf("Done processing media for album '%s'", album.Title),
+			Content:  fmt.Sprintf("All media have been processed"),
 			Timeout:  &timeoutDelay,
 		})
 	}
