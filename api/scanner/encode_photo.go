@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 type PhotoDimensions struct {
@@ -43,12 +44,13 @@ func (dimensions *PhotoDimensions) ThumbnailScale() PhotoDimensions {
 	}
 }
 
-// EncodeImageData is used to easily decode image data, with a cache so expensive operations are not repeated
-type EncodeImageData struct {
+// EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
+type EncodeMediaData struct {
 	media           *models.Media
 	_photoImage     image.Image
 	_thumbnailImage image.Image
 	_contentType    *MediaType
+	_videoMetadata  *ffprobe.Stream
 }
 
 func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
@@ -85,7 +87,7 @@ func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
 }
 
 // ContentType reads the image to determine its content type
-func (img *EncodeImageData) ContentType() (*MediaType, error) {
+func (img *EncodeMediaData) ContentType() (*MediaType, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
 	}
@@ -99,7 +101,7 @@ func (img *EncodeImageData) ContentType() (*MediaType, error) {
 	return imgType, nil
 }
 
-func (img *EncodeImageData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
+func (img *EncodeMediaData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 	contentType, err := img.ContentType()
 	if err != nil {
 		return err
@@ -154,7 +156,7 @@ func EncodeThumbnail(inputPath string, outputPath string) (*PhotoDimensions, err
 }
 
 // PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
-func (img *EncodeImageData) photoImage(tx *sql.Tx) (image.Image, error) {
+func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}

@@ -159,18 +159,18 @@ var fileExtensions = map[string]MediaType{
 	".fff": TypeFFF,
 
 	// Video formats
-	"mp4":  TypeMP4,
-	"m4v":  TypeMP4,
-	"mpeg": TypeMPEG,
-	"3gp":  Type3GP,
-	"3g2":  Type3G2,
-	"ogv":  TypeOGV,
-	"wmv":  TypeWMV,
-	"avi":  TypeAVI,
-	"webm": TypeWEBM,
-	"mov":  TypeMOV,
-	"qt":   TypeMOV,
-	"ts":   TypeTS,
+	".mp4":  TypeMP4,
+	".m4v":  TypeMP4,
+	".mpeg": TypeMPEG,
+	".3gp":  Type3GP,
+	".3g2":  Type3G2,
+	".ogv":  TypeOGV,
+	".wmv":  TypeWMV,
+	".avi":  TypeAVI,
+	".webm": TypeWEBM,
+	".mov":  TypeMOV,
+	".qt":   TypeMOV,
+	".ts":   TypeTS,
 }
 
 func (imgType *MediaType) isRaw() bool {

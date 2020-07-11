@@ -44,7 +44,7 @@ func makePhotoURLChecker(tx *sql.Tx, mediaID int) (func(purpose models.MediaPurp
 }
 
 func ProcessMedia(tx *sql.Tx, media *models.Media) (bool, error) {
-	imageData := EncodeImageData{
+	imageData := EncodeMediaData{
 		media: media,
 	}
 
@@ -66,7 +66,7 @@ func ProcessMedia(tx *sql.Tx, media *models.Media) (bool, error) {
 	}
 }
 
-func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string) (bool, error) {
+func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string) (bool, error) {
 
 	photo := imageData.media
 
@@ -131,8 +131,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeImageData, photoCachePath *string
 			_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
 				photo.MediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
 			if err != nil {
-				log.Printf("Could not insert highres media url: %d, %s\n", photo.MediaID, path.Base(photo.Path))
-				return false, err
+				return false, errors.Wrapf(err, "could not insert highres media url (%d, %s)", photo.MediaID, photo.Title)
 			}
 		}
 	} else {
@@ -238,7 +237,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	return &photoCachePath, nil
 }
 
-func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeImageData, photoDimensions *PhotoDimensions) error {
+func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMediaData, photoDimensions *PhotoDimensions) error {
 	photoName := path.Base(photo.Path)
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
