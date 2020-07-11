@@ -31,6 +31,11 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 		return false, errors.Wrap(err, "error processing video web-format")
 	}
 
+	videoThumbnailURL, err := mediaUrlFromDB(models.VideoThumbnail)
+	if err != nil {
+		return false, errors.Wrap(err, "error processing video thumbnail")
+	}
+
 	if videoWebURL == nil {
 		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
 		web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
@@ -44,7 +49,7 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 			return false, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
 
-		webMetadata, err := readVideoMetadata(webVideoPath)
+		webMetadata, err := readVideoStreamMetadata(webVideoPath)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
 		}
@@ -56,27 +61,52 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 		}
 	}
 
-	// TODO: Process video thumbnail
+	if videoThumbnailURL == nil {
+		video_thumb_name := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
+		video_thumb_name = strings.ReplaceAll(video_thumb_name, ".", "_")
+		video_thumb_name = strings.ReplaceAll(video_thumb_name, " ", "_")
+		video_thumb_name = video_thumb_name + ".jpg"
+
+		thumbImagePath := path.Join(*videoCachePath, video_thumb_name)
+
+		err = FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, mediaData)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
+		}
+
+		thumbDimensions, err := GetPhotoDimensions(thumbImagePath)
+		if err != nil {
+			return false, errors.Wrap(err, "get dimensions of video thumbnail image")
+		}
+
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
+			video.MediaID, video_thumb_name, thumbDimensions.Width, thumbDimensions.Height, models.VideoThumbnail, "image/jpeg")
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
+		}
+	}
 
 	return didProcess, nil
 }
 
-func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.Stream, error) {
+func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
 
 	if enc._videoMetadata != nil {
 		return enc._videoMetadata, nil
 	}
 
-	metadata, err := readVideoMetadata(enc.media.Path)
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFn()
+	data, err := ffprobe.ProbeURL(ctx, enc.media.Path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.media.Title)
 	}
 
-	enc._videoMetadata = metadata
-	return metadata, nil
+	enc._videoMetadata = data
+	return enc._videoMetadata, nil
 }
 
-func readVideoMetadata(videoPath string) (*ffprobe.Stream, error) {
+func readVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 

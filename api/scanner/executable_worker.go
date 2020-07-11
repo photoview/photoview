@@ -103,3 +103,31 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 
 	return nil
 }
+
+func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath string, mediaData *EncodeMediaData) error {
+
+	metadata, err := mediaData.VideoMetadata()
+	if err != nil {
+		return errors.Wrapf(err, "get metadata to encode video thumbnail (%s)", inputPath)
+	}
+
+	thumbnailOffsetSeconds := fmt.Sprintf("%d", int(metadata.Format.DurationSeconds*0.25))
+
+	args := []string{
+		"-i",
+		inputPath,
+		"-vframes", "1", // output one frame
+		"-an", // disable audio
+		"-vf", "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease",
+		"-ss", thumbnailOffsetSeconds, // grab frame at time offset
+		outputPath,
+	}
+
+	cmd := exec.Command(worker.path, args...)
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+	}
+
+	return nil
+}

@@ -28,6 +28,7 @@ const (
 	PhotoHighRes   MediaPurpose = "high-res"
 	MediaOriginal  MediaPurpose = "original"
 	VideoWeb       MediaPurpose = "video-web"
+	VideoThumbnail MediaPurpose = "video-thumbnail"
 )
 
 type MediaURL struct {

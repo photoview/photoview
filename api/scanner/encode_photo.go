@@ -50,7 +50,7 @@ type EncodeMediaData struct {
 	_photoImage     image.Image
 	_thumbnailImage image.Image
 	_contentType    *MediaType
-	_videoMetadata  *ffprobe.Stream
+	_videoMetadata  *ffprobe.ProbeData
 }
 
 func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
