@@ -141,7 +141,7 @@ const SearchResults = ({ result }) => {
   ))
 
   const mediaElements = media.map(media => (
-    <PhotoRow key={media.id} query={query} photo={media} />
+    <PhotoRow key={media.id} query={query} media={media} />
   ))
 
   return (

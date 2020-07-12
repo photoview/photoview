@@ -37,6 +37,8 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 	}
 
 	if videoWebURL == nil {
+		didProcess = true
+
 		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
 		web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
 		web_video_name = strings.ReplaceAll(web_video_name, " ", "_")
@@ -62,6 +64,8 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 	}
 
 	if videoThumbnailURL == nil {
+		didProcess = true
+
 		video_thumb_name := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
 		video_thumb_name = strings.ReplaceAll(video_thumb_name, ".", "_")
 		video_thumb_name = strings.ReplaceAll(video_thumb_name, " ", "_")
