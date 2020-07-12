@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { Photo, PhotoThumbnail } from './Photo'
 import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
-import { SidebarConsumer } from '../sidebar/Sidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
 
 const Gallery = styled.div`
@@ -31,6 +31,8 @@ const PhotoGallery = ({
   nextImage,
   previousImage,
 }) => {
+  const { updateSidebar } = useContext(SidebarContext)
+
   useEffect(() => {
     const keyDownEvent = e => {
       if (!onSelectImage || activeIndex == -1) {
@@ -99,23 +101,19 @@ const PhotoGallery = ({
   }
 
   return (
-    <SidebarConsumer>
-      {({ updateSidebar }) => (
-        <div>
-          <Gallery>
-            <Loader active={loading}>Loading images</Loader>
-            {getPhotoElements(updateSidebar)}
-            <PhotoFiller />
-          </Gallery>
-          {presenting && (
-            <PresentView
-              media={activeImage}
-              {...{ nextImage, previousImage, setPresenting }}
-            />
-          )}
-        </div>
+    <div>
+      <Gallery>
+        <Loader active={loading}>Loading images</Loader>
+        {getPhotoElements(updateSidebar)}
+        <PhotoFiller />
+      </Gallery>
+      {presenting && (
+        <PresentView
+          media={activeImage}
+          {...{ nextImage, previousImage, setPresenting }}
+        />
       )}
-    </SidebarConsumer>
+    </div>
   )
 }
 

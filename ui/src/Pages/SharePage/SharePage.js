@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import RouterProps from 'react-router-prop-types'
 import { Route, Switch } from 'react-router-dom'
 import AlbumSharePage from './AlbumSharePage'
-import PhotoSharePage from './PhotoSharePage'
+import MediaSharePage from './MediaSharePage'
 import { useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import {
@@ -52,6 +52,7 @@ const shareTokenQuery = gql`
   fragment MediaProps on Media {
     id
     title
+    type
     thumbnail {
       url
       width
@@ -64,6 +65,9 @@ const shareTokenQuery = gql`
       height
     }
     highRes {
+      url
+    }
+    videoWeb {
       url
     }
     exif {
@@ -105,7 +109,7 @@ const AuthorizedTokenRoute = ({ match }) => {
   }
 
   if (data.shareToken.media) {
-    return <PhotoSharePage photo={data.shareToken.media} />
+    return <MediaSharePage media={data.shareToken.media} />
   }
 
   return <h1>Share not found</h1>
