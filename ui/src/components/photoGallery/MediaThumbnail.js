@@ -16,7 +16,7 @@ const markFavoriteMutation = gql`
   }
 `
 
-const PhotoContainer = styled.div`
+const MediaContainer = styled.div`
   flex-grow: 1;
   flex-basis: 0;
   height: 200px;
@@ -100,7 +100,7 @@ const HoverIcon = styled(Icon)`
   height: 34px !important;
   padding-top: 7px;
 
-  ${PhotoContainer}:hover & {
+  ${MediaContainer}:hover & {
     opacity: 1 !important;
   }
 
@@ -116,8 +116,15 @@ const FavoriteIcon = styled(HoverIcon)`
   opacity: ${({ favorite }) => (favorite ? '0.8' : '0.2')} !important;
 `
 
-export const Photo = ({
-  photo,
+const VideoThumbnailIcon = styled(Icon)`
+  color: rgba(255, 255, 255, 0.8);
+  position: absolute;
+  left: calc(50% - 16px);
+  top: calc(50% - 13px);
+`
+
+export const MediaThumbnail = ({
+  media,
   onSelectImage,
   minWidth,
   index,
@@ -127,22 +134,22 @@ export const Photo = ({
   const [markFavorite] = useMutation(markFavoriteMutation)
 
   let heartIcon = null
-  if (typeof photo.favorite == 'boolean') {
+  if (typeof media.favorite == 'boolean') {
     heartIcon = (
       <FavoriteIcon
-        favorite={photo.favorite.toString()}
-        name={photo.favorite ? 'heart' : 'heart outline'}
+        favorite={media.favorite.toString()}
+        name={media.favorite ? 'heart' : 'heart outline'}
         onClick={event => {
           event.stopPropagation()
           markFavorite({
             variables: {
-              mediaId: photo.id,
-              favorite: !photo.favorite,
+              mediaId: media.id,
+              favorite: !media.favorite,
             },
             optimisticResponse: {
               favoritePhoto: {
-                id: photo.id,
-                favorite: !photo.favorite,
+                id: media.id,
+                favorite: !media.favorite,
                 __typename: 'Photo',
               },
             },
@@ -152,9 +159,14 @@ export const Photo = ({
     )
   }
 
+  let videoIcon = null
+  if (media.type == 'video') {
+    videoIcon = <VideoThumbnailIcon name="play" size="big" />
+  }
+
   return (
-    <PhotoContainer
-      key={photo.id}
+    <MediaContainer
+      key={media.id}
       style={{
         cursor: onSelectImage ? 'pointer' : null,
         minWidth: `min(${minWidth}px, 100% - 8px)`,
@@ -163,8 +175,9 @@ export const Photo = ({
         onSelectImage && onSelectImage(index)
       }}
     >
-      <LazyPhoto src={photo.thumbnail && photo.thumbnail.url} />
+      <LazyPhoto src={media.thumbnail && media.thumbnail.url} />
       <PhotoOverlay active={active}>
+        {videoIcon}
         <HoverIcon
           name="expand"
           onClick={() => {
@@ -173,12 +186,12 @@ export const Photo = ({
         />
         {heartIcon}
       </PhotoOverlay>
-    </PhotoContainer>
+    </MediaContainer>
   )
 }
 
-Photo.propTypes = {
-  photo: PropTypes.object.isRequired,
+MediaThumbnail.propTypes = {
+  media: PropTypes.object.isRequired,
   onSelectImage: PropTypes.func,
   minWidth: PropTypes.number.isRequired,
   index: PropTypes.number.isRequired,

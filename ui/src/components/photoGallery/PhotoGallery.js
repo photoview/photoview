@@ -1,7 +1,7 @@
 import React, { useEffect, useContext } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
-import { Photo, PhotoThumbnail } from './Photo'
+import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarContext } from '../sidebar/Sidebar'
@@ -77,9 +77,9 @@ const PhotoGallery = ({
         }
 
         return (
-          <Photo
+          <MediaThumbnail
             key={photo.id}
-            photo={photo}
+            media={photo}
             onSelectImage={index => {
               updateSidebar(<MediaSidebar media={photo} />)
               onSelectImage(index)
