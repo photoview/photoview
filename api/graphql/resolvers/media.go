@@ -192,6 +192,21 @@ func (r *mediaResolver) Exif(ctx context.Context, obj *models.Media) (*models.Me
 	return exif, nil
 }
 
+func (r *mediaResolver) VideoMetadata(ctx context.Context, obj *models.Media) (*models.VideoMetadata, error) {
+	row := r.Database.QueryRow("SELECT video_metadata.* FROM media JOIN video_metadata ON media.video_metadata_id = video_metadata.metadata_id WHERE media.media_id = ?", obj.MediaID)
+
+	metadata, err := models.NewVideoMetadataFromRow(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, errors.Wrapf(err, "could not get video metadata of media from database")
+		}
+	}
+
+	return metadata, nil
+}
+
 func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error) {
 
 	user := auth.UserFromContext(ctx)

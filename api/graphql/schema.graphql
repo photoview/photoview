@@ -217,6 +217,7 @@ type Media {
   "The album that holds the media"
   album: Album!
   exif: MediaEXIF
+  videoMetadata: VideoMetadata
   favorite: Boolean!
   type: MediaType!
 
@@ -247,6 +248,19 @@ type MediaEXIF {
   flash: String
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+}
+
+type VideoMetadata {
+  id: Int!
+  media: Media!
+  width: Int!
+  height: Int!
+  duration: Float!
+  codec: String
+  framerate: Float
+  bitrate: Int
+  colorProfile: String
+  audio: String
 }
 
 type SearchResult {

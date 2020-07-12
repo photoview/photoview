@@ -50,15 +50,21 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 	}
 
 	row := tx.QueryRow("SELECT * FROM media WHERE media_id = ?", media_id)
-	photo, err := models.NewMediaFromRow(row)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "failed to get media by id from database")
 	}
 
-	_, err = ScanEXIF(tx, photo)
+	_, err = ScanEXIF(tx, media)
 	if err != nil {
 		log.Printf("WARN: ScanEXIF for %s failed: %s\n", mediaName, err)
 	}
 
-	return photo, true, nil
+	if media.Type == models.MediaTypeVideo {
+		if err = ScanVideoMetadata(tx, media); err != nil {
+			log.Printf("WARN: ScanVideoMetadata for %s failed: %s\n", mediaName, err)
+		}
+	}
+
+	return media, true, nil
 }

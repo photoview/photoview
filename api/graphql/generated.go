@@ -71,18 +71,19 @@ type ComplexityRoot struct {
 	}
 
 	Media struct {
-		Album     func(childComplexity int) int
-		Downloads func(childComplexity int) int
-		Exif      func(childComplexity int) int
-		Favorite  func(childComplexity int) int
-		HighRes   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Path      func(childComplexity int) int
-		Shares    func(childComplexity int) int
-		Thumbnail func(childComplexity int) int
-		Title     func(childComplexity int) int
-		Type      func(childComplexity int) int
-		VideoWeb  func(childComplexity int) int
+		Album         func(childComplexity int) int
+		Downloads     func(childComplexity int) int
+		Exif          func(childComplexity int) int
+		Favorite      func(childComplexity int) int
+		HighRes       func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Path          func(childComplexity int) int
+		Shares        func(childComplexity int) int
+		Thumbnail     func(childComplexity int) int
+		Title         func(childComplexity int) int
+		Type          func(childComplexity int) int
+		VideoMetadata func(childComplexity int) int
+		VideoWeb      func(childComplexity int) int
 	}
 
 	MediaDownload struct {
@@ -190,6 +191,19 @@ type ComplexityRoot struct {
 		RootPath func(childComplexity int) int
 		Username func(childComplexity int) int
 	}
+
+	VideoMetadata struct {
+		Audio        func(childComplexity int) int
+		Bitrate      func(childComplexity int) int
+		Codec        func(childComplexity int) int
+		ColorProfile func(childComplexity int) int
+		Duration     func(childComplexity int) int
+		Framerate    func(childComplexity int) int
+		Height       func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Media        func(childComplexity int) int
+		Width        func(childComplexity int) int
+	}
 }
 
 type AlbumResolver interface {
@@ -208,6 +222,7 @@ type MediaResolver interface {
 	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	Album(ctx context.Context, obj *models.Media) (*models.Album, error)
 	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
+	VideoMetadata(ctx context.Context, obj *models.Media) (*models.VideoMetadata, error)
 
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
@@ -442,6 +457,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Media.Type(childComplexity), true
+
+	case "Media.videoMetadata":
+		if e.complexity.Media.VideoMetadata == nil {
+			break
+		}
+
+		return e.complexity.Media.VideoMetadata(childComplexity), true
 
 	case "Media.videoWeb":
 		if e.complexity.Media.VideoWeb == nil {
@@ -1040,6 +1062,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Username(childComplexity), true
 
+	case "VideoMetadata.audio":
+		if e.complexity.VideoMetadata.Audio == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Audio(childComplexity), true
+
+	case "VideoMetadata.bitrate":
+		if e.complexity.VideoMetadata.Bitrate == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Bitrate(childComplexity), true
+
+	case "VideoMetadata.codec":
+		if e.complexity.VideoMetadata.Codec == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Codec(childComplexity), true
+
+	case "VideoMetadata.colorProfile":
+		if e.complexity.VideoMetadata.ColorProfile == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.ColorProfile(childComplexity), true
+
+	case "VideoMetadata.duration":
+		if e.complexity.VideoMetadata.Duration == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Duration(childComplexity), true
+
+	case "VideoMetadata.framerate":
+		if e.complexity.VideoMetadata.Framerate == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Framerate(childComplexity), true
+
+	case "VideoMetadata.height":
+		if e.complexity.VideoMetadata.Height == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Height(childComplexity), true
+
+	case "VideoMetadata.id":
+		if e.complexity.VideoMetadata.ID == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.ID(childComplexity), true
+
+	case "VideoMetadata.media":
+		if e.complexity.VideoMetadata.Media == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Media(childComplexity), true
+
+	case "VideoMetadata.width":
+		if e.complexity.VideoMetadata.Width == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Width(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -1340,6 +1432,7 @@ type Media {
   "The album that holds the media"
   album: Album!
   exif: MediaEXIF
+  videoMetadata: VideoMetadata
   favorite: Boolean!
   type: MediaType!
 
@@ -1370,6 +1463,19 @@ type MediaEXIF {
   flash: String
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+}
+
+type VideoMetadata {
+  id: Int!
+  media: Media!
+  width: Int!
+  height: Int!
+  duration: Float!
+  codec: String
+  framerate: Float
+  bitrate: Int
+  colorProfile: String
+  audio: String
 }
 
 type SearchResult {
@@ -2640,6 +2746,37 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 	res := resTmp.(*models.MediaEXIF)
 	fc.Result = res
 	return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().VideoMetadata(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.VideoMetadata)
+	fc.Result = res
+	return ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -5419,6 +5556,331 @@ func (ec *executionContext) _User_admin(ctx context.Context, field graphql.Colle
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Media(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Media)
+	fc.Result = res
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_width(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_height(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_duration(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Duration, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_codec(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Codec, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_framerate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Framerate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bitrate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_colorProfile(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ColorProfile, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_audio(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Audio, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6765,6 +7227,17 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 				res = ec._Media_exif(ctx, field, obj)
 				return res
 			})
+		case "videoMetadata":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_videoMetadata(ctx, field, obj)
+				return res
+			})
 		case "favorite":
 			out.Values[i] = ec._Media_favorite(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7481,6 +7954,63 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var videoMetadataImplementors = []string{"VideoMetadata"}
+
+func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.SelectionSet, obj *models.VideoMetadata) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, videoMetadataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VideoMetadata")
+		case "id":
+			out.Values[i] = ec._VideoMetadata_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "media":
+			out.Values[i] = ec._VideoMetadata_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "width":
+			out.Values[i] = ec._VideoMetadata_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "height":
+			out.Values[i] = ec._VideoMetadata_height(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "duration":
+			out.Values[i] = ec._VideoMetadata_duration(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "codec":
+			out.Values[i] = ec._VideoMetadata_codec(ctx, field, obj)
+		case "framerate":
+			out.Values[i] = ec._VideoMetadata_framerate(ctx, field, obj)
+		case "bitrate":
+			out.Values[i] = ec._VideoMetadata_bitrate(ctx, field, obj)
+		case "colorProfile":
+			out.Values[i] = ec._VideoMetadata_colorProfile(ctx, field, obj)
+		case "audio":
+			out.Values[i] = ec._VideoMetadata_audio(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
@@ -7797,6 +8327,20 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	return graphql.UnmarshalFloat(v)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloat(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8617,6 +9161,17 @@ func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotov
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOVideoMetadata2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v models.VideoMetadata) graphql.Marshaler {
+	return ec._VideoMetadata(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._VideoMetadata(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

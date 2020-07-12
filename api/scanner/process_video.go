@@ -106,13 +106,22 @@ func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
 	return enc._videoMetadata, nil
 }
 
-func readVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
+func readVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
 	data, err := ffprobe.ProbeURL(ctx, videoPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read video metadata (%s)", path.Base(videoPath))
+	}
+
+	return data, nil
+}
+
+func readVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
+	data, err := readVideoMetadata(videoPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "read video stream metadata")
 	}
 
 	stream := data.FirstVideoStream()

@@ -8,14 +8,15 @@ import (
 )
 
 type Media struct {
-	MediaID  int
-	Title    string
-	Path     string
-	PathHash string
-	AlbumId  int
-	ExifId   *int
-	Favorite bool
-	Type     MediaType
+	MediaID         int
+	Title           string
+	Path            string
+	PathHash        string
+	AlbumId         int
+	ExifId          *int
+	Favorite        bool
+	Type            MediaType
+	VideoMetadataId *int
 }
 
 func (p *Media) ID() int {
@@ -45,7 +46,7 @@ type MediaURL struct {
 func NewMediaFromRow(row *sql.Row) (*Media, error) {
 	media := Media{}
 
-	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type); err != nil {
+	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +58,7 @@ func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
 
 	for rows.Next() {
 		var media Media
-		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type); err != nil {
+		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 			return nil, err
 		}
 		medias = append(medias, &media)

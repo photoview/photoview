@@ -29,6 +29,17 @@ const mediaQuery = gql`
         width
         height
       }
+      videoMetadata {
+        id
+        width
+        height
+        duration
+        codec
+        framerate
+        bitrate
+        colorProfile
+        audio
+      }
       exif {
         camera
         maker
@@ -96,7 +107,7 @@ const Name = styled.div`
   margin: 0.75rem 0 1rem;
 `
 
-const ExifInfo = styled.div`
+const MetadataInfo = styled.div`
   margin-bottom: 1.5rem;
 `
 
@@ -154,8 +165,30 @@ const SidebarContent = ({ media, hidePreview }) => {
       exif.focalLength = `${exif.focalLength}mm`
     }
 
-    exif.exposureProgram = exifItems = exifKeys.map(key => (
+    exifItems = exifKeys.map(key => (
       <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
+    ))
+  }
+
+  let videoMetadataItems = []
+  if (media && media.videoMetadata) {
+    let metadata = Object.keys(media.videoMetadata)
+      .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
+      .reduce(
+        (prev, curr) => ({
+          ...prev,
+          [curr]: media.videoMetadata[curr],
+        }),
+        {}
+      )
+
+    metadata = {
+      dimensions: `${media.videoMetadata.width}x${media.videoMetadata.height}`,
+      ...metadata,
+    }
+
+    videoMetadataItems = Object.keys(metadata).map(key => (
+      <SidebarItem key={key} name={key} value={metadata[key]} />
     ))
   }
 
@@ -175,7 +208,8 @@ const SidebarContent = ({ media, hidePreview }) => {
         </PreviewImageWrapper>
       )}
       <Name>{media && media.title}</Name>
-      <ExifInfo>{exifItems}</ExifInfo>
+      <MetadataInfo>{videoMetadataItems}</MetadataInfo>
+      <MetadataInfo>{exifItems}</MetadataInfo>
       <SidebarDownload photo={media} />
       <SidebarShare photo={media} />
     </div>
