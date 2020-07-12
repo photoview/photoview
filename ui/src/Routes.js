@@ -3,6 +3,7 @@ import { Route, Switch, Redirect } from 'react-router-dom'
 
 import { Loader } from 'semantic-ui-react'
 import Layout from './Layout'
+import { clearTokenCookie } from './authentication'
 
 const AlbumsPage = React.lazy(() => import('./Pages/AllAlbumsPage/AlbumsPage'))
 const AlbumPage = React.lazy(() => import('./Pages/AlbumPage/AlbumPage'))
@@ -33,7 +34,7 @@ class Routes extends React.Component {
           <Route path="/login" component={LoginPage} />
           <Route path="/logout">
             {() => {
-              localStorage.removeItem('token')
+              clearTokenCookie()
               location.href = '/'
             }}
           </Route>

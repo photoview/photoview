@@ -8,6 +8,7 @@ import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 import gql from 'graphql-tag'
 import { useLazyQuery } from '@apollo/react-hooks'
+import { authToken } from '../authentication'
 
 const Header = styled.h1`
   margin: 24px 0 8px 0 !important;
@@ -55,7 +56,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
   useEffect(() => {
     if (!album) return
 
-    if (localStorage.getItem('token') && disableLink == true) {
+    if (authToken() && disableLink == true) {
       fetchPath({
         variables: {
           id: album.id,
@@ -93,7 +94,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
     <Header>
       <Breadcrumb>{breadcrumbSections}</Breadcrumb>
       {title}
-      {localStorage.getItem('token') && (
+      {authToken() && (
         <SettingsIcon
           onClick={() => {
             updateSidebar(<AlbumSidebar albumId={album.id} />)

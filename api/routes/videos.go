@@ -38,6 +38,16 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 		}
 
 		// TODO: Make sure user is authorized to access video
+		if success, response, status, err := authenticateMedia(media, db, r); !success {
+			if err != nil {
+				log.Printf("WARN: error authenticating video: %s\n", err)
+			}
+			w.WriteHeader(status)
+			w.Write([]byte(response))
+			return
+		}
+
+		log.Printf("Video cookies: %d", len(r.Cookies()))
 
 		var cachedPath string
 

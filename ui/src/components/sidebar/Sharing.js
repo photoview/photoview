@@ -11,6 +11,7 @@ import {
   Icon,
 } from 'semantic-ui-react'
 import copy from 'copy-to-clipboard'
+import { authToken } from '../../authentication'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: Int!) {
@@ -218,7 +219,7 @@ ShareItemMoreDropdown.propTypes = {
 
 const SidebarShare = ({ photo, album }) => {
   if ((!photo || !photo.id) && (!album || !album.id)) return null
-  if (!localStorage.getItem('token')) return null
+  if (!authToken()) return null
 
   const isPhoto = !!photo
   const id = isPhoto ? photo.id : album.id

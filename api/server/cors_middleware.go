@@ -18,6 +18,7 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Expose-Headers", "content-length")
 
 			endpoint := utils.ApiEndpointUrl()

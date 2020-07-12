@@ -41,7 +41,12 @@ const PresentMedia = ({ media, imageLoaded, ...otherProps }) => {
   if (media.type == 'video') {
     return (
       <div {...otherProps}>
-        <StyledVideo controls key={media.id}>
+        <StyledVideo
+          controls
+          key={media.id}
+          crossorigin="use-credentials"
+          poster={media.thumbnail.url}
+        >
           <source src={media.videoWeb.url} type="video/mp4" />
         </StyledVideo>
       </div>

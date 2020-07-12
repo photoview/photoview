@@ -30,7 +30,12 @@ const MediaView = ({ media }) => {
 
   if (media.type == 'video') {
     return (
-      <DisplayVideo controls key={media.id}>
+      <DisplayVideo
+        controls
+        key={media.id}
+        crossorigin="use-credentials"
+        poster={media.thumbnail.url}
+      >
         <source src={media.videoWeb.url} type="video/mp4" />
       </DisplayVideo>
     )

@@ -7,6 +7,7 @@ import SidebarItem from './SidebarItem'
 import ProtectedImage from '../photoGallery/ProtectedImage'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
+import { authToken } from '../../authentication'
 
 const mediaQuery = gql`
   query sidebarPhoto($id: Int!) {
@@ -87,7 +88,12 @@ const PreviewMedia = ({ media, previewImage }) => {
 
   if (media.type == 'video') {
     return (
-      <PreviewVideo controls key={media.id}>
+      <PreviewVideo
+        controls
+        key={media.id}
+        crossorigin="use-credentials"
+        poster={media.thumbnail.url}
+      >
         <source src={media.videoWeb.url} type="video/mp4" />
       </PreviewVideo>
     )
@@ -225,7 +231,7 @@ const MediaSidebar = ({ media, hidePreview }) => {
   const [loadMedia, { loading, error, data }] = useLazyQuery(mediaQuery)
 
   useEffect(() => {
-    if (media != null && localStorage.getItem('token')) {
+    if (media != null && authToken()) {
       loadMedia({
         variables: {
           id: media.id,
@@ -236,7 +242,7 @@ const MediaSidebar = ({ media, hidePreview }) => {
 
   if (!media) return null
 
-  if (!localStorage.getItem('token')) {
+  if (!authToken()) {
     return <SidebarContent media={media} hidePreview={hidePreview} />
   }
 

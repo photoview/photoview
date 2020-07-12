@@ -11,6 +11,7 @@ import {
   Header,
 } from 'semantic-ui-react'
 import { checkInitialSetupQuery, login } from './loginUtilFunctions'
+import { authToken } from '../../authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
 
@@ -69,7 +70,7 @@ class LoginPage extends Component {
   }
 
   render() {
-    if (localStorage.getItem('token')) {
+    if (authToken()) {
       return <Redirect to="/" />
     }
 

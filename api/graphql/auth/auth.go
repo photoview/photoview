@@ -27,31 +27,24 @@ func Middleware(db *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			bearer := r.Header.Get("Authorization")
-			if bearer == "" {
-				next.ServeHTTP(w, r)
-				return
+			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
+				log.Println("Found auth-token cookie")
+				user, err := models.VerifyTokenAndGetUser(db, tokenCookie.Value)
+				if err != nil {
+					log.Printf("Invalid token: %s\n", err)
+					http.Error(w, "invalid authorization token", http.StatusForbidden)
+					return
+				}
+
+				// put it in context
+				ctx := context.WithValue(r.Context(), userCtxKey, user)
+
+				// and call the next with our new context
+				r = r.WithContext(ctx)
+			} else {
+				log.Println("Did not find auth-token cookie")
 			}
 
-			token, err := TokenFromBearer(&bearer)
-			if err != nil {
-				log.Printf("Invalid bearer format: %s\n", bearer)
-				http.Error(w, "Invalid authorization header format", http.StatusBadRequest)
-				return
-			}
-
-			user, err := models.VerifyTokenAndGetUser(db, *token)
-			if err != nil {
-				log.Printf("Invalid token: %s\n", err)
-				http.Error(w, "Invalid authorization token", http.StatusForbidden)
-				return
-			}
-
-			// put it in context
-			ctx := context.WithValue(r.Context(), userCtxKey, user)
-
-			// and call the next with our new context
-			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
 	}

@@ -6,6 +6,7 @@ import { Button, Form, Message, Header } from 'semantic-ui-react'
 import { Container } from './LoginPage'
 
 import { checkInitialSetupQuery, login } from './loginUtilFunctions'
+import { authToken } from '../../authentication'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -53,7 +54,7 @@ class InitialSetupPage extends Component {
   }
 
   render() {
-    if (localStorage.getItem('token')) {
+    if (authToken()) {
       return <Redirect to="/" />
     }
 

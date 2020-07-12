@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import SearchBar from './Searchbar'
 
 import logoPath from '../../assets/photoview-logo.svg'
+import { authToken } from '../../authentication'
 
 const Container = styled.div`
   height: 60px;
@@ -40,7 +41,7 @@ const Header = () => (
       <Logo src={logoPath} alt="logo" />
       <LogoText>Photoview</LogoText>
     </Title>
-    {localStorage.getItem('token') ? <SearchBar /> : null}
+    {authToken() ? <SearchBar /> : null}
   </Container>
 )
 

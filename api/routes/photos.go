@@ -11,9 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 
-	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/scanner"
 )
@@ -43,90 +41,13 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 			w.Write([]byte("internal server error"))
 		}
 
-		user := auth.UserFromContext(r.Context())
-		if user != nil {
-			row := db.QueryRow("SELECT owner_id FROM album WHERE album.album_id = ?", media.AlbumId)
-			var owner_id int
-
-			if err := row.Scan(&owner_id); err != nil {
-				log.Printf("WARN: %s", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
-				return
-			}
-
-			if owner_id != user.UserID {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte("invalid credentials"))
-				return
-			}
-		} else {
-			// Check if photo is authorized with a share token
-			token := r.URL.Query().Get("token")
-			if token == "" {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte("unauthorized"))
-				return
-			}
-
-			row := db.QueryRow("SELECT * FROM share_token WHERE value = ?", token)
-
-			shareToken, err := models.NewShareTokenFromRow(row)
+		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
-				log.Printf("WARN: %s", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
-				return
+				log.Printf("WARN: error authenticating photo: %s\n", err)
 			}
-
-			// Validate share token password, if set
-			if shareToken.Password != nil {
-				tokenPassword := r.Header.Get("TokenPassword")
-
-				if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
-					if err == bcrypt.ErrMismatchedHashAndPassword {
-						w.WriteHeader(http.StatusForbidden)
-						w.Write([]byte("unauthorized"))
-						return
-					} else {
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte("internal server error"))
-						return
-					}
-				}
-			}
-
-			if shareToken.AlbumID != nil && media.AlbumId != *shareToken.AlbumID {
-				// Check child albums
-				row := db.QueryRow(`
-					WITH recursive child_albums AS (
-						SELECT * FROM album WHERE parent_album = ?
-						UNION ALL
-						SELECT child.* FROM album child JOIN child_albums parent ON parent.album_id = child.parent_album
-					)
-					SELECT * FROM child_albums WHERE album_id = ?
-				`, *shareToken.AlbumID, media.AlbumId)
-
-				_, err := models.NewAlbumFromRow(row)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						w.WriteHeader(http.StatusForbidden)
-						w.Write([]byte("unauthorized"))
-						return
-					}
-					log.Printf("WARN: %s", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					return
-				}
-			}
-
-			if shareToken.MediaID != nil && media_id != *shareToken.MediaID {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte("unauthorized"))
-				return
-			}
-
+			w.WriteHeader(status)
+			w.Write([]byte(response))
+			return
 		}
 
 		var cachedPath string

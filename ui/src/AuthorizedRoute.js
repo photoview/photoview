@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
+import { authToken } from './authentication'
 
 const adminQuery = gql`
   query adminQuery {
@@ -13,13 +14,13 @@ const adminQuery = gql`
 `
 
 export const Authorized = ({ children }) => {
-  const token = localStorage.getItem('token')
+  const token = authToken()
 
   return token ? children : null
 }
 
 const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
-  const token = localStorage.getItem('token')
+  const token = authToken()
 
   let unauthorizedRedirect = null
   if (!token) {
