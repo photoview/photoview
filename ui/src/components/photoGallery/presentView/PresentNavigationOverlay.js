@@ -64,6 +64,7 @@ const NavigationButton = styled(OverlayButton)`
 `
 
 const PresentNavigationOverlay = ({
+  children,
   nextImage,
   previousImage,
   setPresenting,
@@ -92,6 +93,7 @@ const PresentNavigationOverlay = ({
         onMouseMove.current()
       }}
     >
+      {children}
       <NavigationButton
         className={hide && 'hide'}
         float="left"
@@ -117,6 +119,7 @@ const PresentNavigationOverlay = ({
 }
 
 PresentNavigationOverlay.propTypes = {
+  children: PropTypes.element,
   nextImage: PropTypes.func.isRequired,
   previousImage: PropTypes.func.isRequired,
   setPresenting: PropTypes.func.isRequired,

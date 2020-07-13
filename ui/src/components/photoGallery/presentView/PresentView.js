@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
-import PresentPhoto from './PresentPhoto'
+import PresentMedia from './PresentMedia'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -23,7 +23,7 @@ const PreventScroll = createGlobalStyle`
 
 const PresentView = ({
   className,
-  photo,
+  media,
   imageLoaded,
   nextImage,
   previousImage,
@@ -31,15 +31,14 @@ const PresentView = ({
 }) => (
   <StyledContainer {...className}>
     <PreventScroll />
-    <PresentPhoto photo={photo} imageLoaded={imageLoaded} />
-    <PresentNavigationOverlay
-      {...{ nextImage, previousImage, setPresenting }}
-    />
+    <PresentNavigationOverlay {...{ nextImage, previousImage, setPresenting }}>
+      <PresentMedia media={media} imageLoaded={imageLoaded} />
+    </PresentNavigationOverlay>
   </StyledContainer>
 )
 
 PresentView.propTypes = {
-  photo: PropTypes.object.isRequired,
+  media: PropTypes.object.isRequired,
   imageLoaded: PropTypes.func,
   className: PropTypes.string,
   nextImage: PropTypes.func.isRequired,

@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import PropTypes from 'prop-types'
 import { Breadcrumb } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
-import { SidebarConsumer } from './sidebar/Sidebar'
+import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 import gql from 'graphql-tag'
 import { useLazyQuery } from '@apollo/react-hooks'
+import { authToken } from '../authentication'
 
 const Header = styled.h1`
   margin: 24px 0 8px 0 !important;
@@ -49,14 +50,13 @@ const ALBUM_PATH_QUERY = gql`
 `
 
 const AlbumTitle = ({ album, disableLink = false }) => {
-  if (!album) return <div style={{ height: 36 }}></div>
-
-  let title = <span>{album.title}</span>
-
   const [fetchPath, { data: pathData }] = useLazyQuery(ALBUM_PATH_QUERY)
+  const { updateSidebar } = useContext(SidebarContext)
 
   useEffect(() => {
-    if (localStorage.getItem('token') && disableLink == true) {
+    if (!album) return
+
+    if (authToken() && disableLink == true) {
       fetchPath({
         variables: {
           id: album.id,
@@ -64,6 +64,10 @@ const AlbumTitle = ({ album, disableLink = false }) => {
       })
     }
   }, [album])
+
+  if (!album) return <div style={{ height: 36 }}></div>
+
+  let title = <span>{album.title}</span>
 
   let path = []
   if (pathData) {
@@ -87,21 +91,17 @@ const AlbumTitle = ({ album, disableLink = false }) => {
   }
 
   return (
-    <SidebarConsumer>
-      {({ updateSidebar }) => (
-        <Header>
-          <Breadcrumb>{breadcrumbSections}</Breadcrumb>
-          {title}
-          {localStorage.getItem('token') && (
-            <SettingsIcon
-              onClick={() => {
-                updateSidebar(<AlbumSidebar albumId={album.id} />)
-              }}
-            />
-          )}
-        </Header>
+    <Header>
+      <Breadcrumb>{breadcrumbSections}</Breadcrumb>
+      {title}
+      {authToken() && (
+        <SettingsIcon
+          onClick={() => {
+            updateSidebar(<AlbumSidebar albumId={album.id} />)
+          }}
+        />
       )}
-    </SidebarConsumer>
+    </Header>
   )
 }
 

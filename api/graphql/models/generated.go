@@ -21,6 +21,13 @@ type Filter struct {
 	Offset         *int            `json:"offset"`
 }
 
+type MediaDownload struct {
+	Title  string `json:"title"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	URL    string `json:"url"`
+}
+
 type Notification struct {
 	Key      string           `json:"key"`
 	Type     NotificationType `json:"type"`
@@ -33,13 +40,6 @@ type Notification struct {
 	Timeout *int `json:"timeout"`
 }
 
-type PhotoDownload struct {
-	Title  string `json:"title"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	URL    string `json:"url"`
-}
-
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`
@@ -50,12 +50,53 @@ type ScannerResult struct {
 type SearchResult struct {
 	Query  string   `json:"query"`
 	Albums []*Album `json:"albums"`
-	Photos []*Photo `json:"photos"`
+	Media  []*Media `json:"media"`
 }
 
 // General public information about the site
 type SiteInfo struct {
 	InitialSetup bool `json:"initialSetup"`
+}
+
+type MediaType string
+
+const (
+	MediaTypePhoto MediaType = "photo"
+	MediaTypeVideo MediaType = "video"
+)
+
+var AllMediaType = []MediaType{
+	MediaTypePhoto,
+	MediaTypeVideo,
+}
+
+func (e MediaType) IsValid() bool {
+	switch e {
+	case MediaTypePhoto, MediaTypeVideo:
+		return true
+	}
+	return false
+}
+
+func (e MediaType) String() string {
+	return string(e)
+}
+
+func (e *MediaType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MediaType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MediaType", str)
+	}
+	return nil
+}
+
+func (e MediaType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type NotificationType string

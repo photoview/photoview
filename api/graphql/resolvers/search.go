@@ -2,23 +2,23 @@ package resolvers
 
 import (
 	"context"
-	"log"
 
+	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, _limitAlbums *int) (*models.SearchResult, error) {
+func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _limitAlbums *int) (*models.SearchResult, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	limitPhotos := 10
+	limitMedia := 10
 	limitAlbums := 10
 
-	if _limitPhotos != nil {
-		limitPhotos = *_limitPhotos
+	if _limitMedia != nil {
+		limitMedia = *_limitMedia
 	}
 
 	if _limitAlbums != nil {
@@ -28,20 +28,19 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, 
 	wildQuery := "%" + query + "%"
 
 	photoRows, err := r.Database.Query(`
-		SELECT photo.* FROM photo JOIN album ON photo.album_id = album.album_id
-		WHERE album.owner_id = ? AND ( photo.title LIKE ? OR photo.path LIKE ? )
+		SELECT media.* FROM media JOIN album ON media.album_id = album.album_id
+		WHERE album.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )
 		ORDER BY (
-			case when photo.title LIKE ? then 2
-			     when photo.path LIKE ? then 1
+			case when media.title LIKE ? then 2
+			     when media.path LIKE ? then 1
 			end ) DESC
 		LIMIT ?
-	`, user.UserID, wildQuery, wildQuery, wildQuery, wildQuery, limitPhotos)
+	`, user.UserID, wildQuery, wildQuery, wildQuery, wildQuery, limitMedia)
 	if err != nil {
-		log.Printf("ERROR: searching photos %s", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "searching media")
 	}
 
-	photos, err := models.NewPhotosFromRows(photoRows)
+	photos, err := models.NewMediaFromRows(photoRows)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +55,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, 
 		LIMIT ?
 	`, user.UserID, wildQuery, wildQuery, wildQuery, wildQuery, limitAlbums)
 	if err != nil {
-		log.Printf("ERROR: searching albums %s", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "searching albums")
 	}
 
 	albums, err := models.NewAlbumsFromRows(albumRows)
@@ -67,7 +65,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitPhotos *int, 
 
 	result := models.SearchResult{
 		Query:  query,
-		Photos: photos,
+		Media:  photos,
 		Albums: albums,
 	}
 

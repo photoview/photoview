@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTransition, animated } from 'react-spring'
 import styled from 'styled-components'
 import { Message } from 'semantic-ui-react'
+import { authToken } from '../../authentication'
 
 import MessageProgress from './MessageProgress'
 import SubscriptionsHook from './SubscriptionsHook'
@@ -124,7 +125,7 @@ const Messages = () => {
           </animated.div>
         )
       })}
-      {localStorage.getItem('token') && (
+      {authToken() && (
         <SubscriptionsHook messages={messages} setMessages={setMessages} />
       )}
     </Container>

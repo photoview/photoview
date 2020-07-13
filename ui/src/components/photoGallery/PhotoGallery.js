@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
-import { Photo, PhotoThumbnail } from './Photo'
+import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
-import { SidebarConsumer } from '../sidebar/Sidebar'
-import PhotoSidebar from '../sidebar/PhotoSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
+import MediaSidebar from '../sidebar/MediaSidebar'
 
 const Gallery = styled.div`
   display: flex;
@@ -23,7 +23,7 @@ const PhotoFiller = styled.div`
 
 const PhotoGallery = ({
   activeIndex = -1,
-  photos,
+  media,
   loading,
   onSelectImage,
   presenting,
@@ -31,6 +31,8 @@ const PhotoGallery = ({
   nextImage,
   previousImage,
 }) => {
+  const { updateSidebar } = useContext(SidebarContext)
+
   useEffect(() => {
     const keyDownEvent = e => {
       if (!onSelectImage || activeIndex == -1) {
@@ -57,14 +59,14 @@ const PhotoGallery = ({
     }
   })
 
-  const activeImage = photos && activeIndex != -1 && photos[activeIndex]
+  const activeImage = media && activeIndex != -1 && media[activeIndex]
 
   const getPhotoElements = updateSidebar => {
     let photoElements = []
-    if (photos) {
-      photos.filter(photo => photo.thumbnail)
+    if (media) {
+      media.filter(media => media.thumbnail)
 
-      photoElements = photos.map((photo, index) => {
+      photoElements = media.map((photo, index) => {
         const active = activeIndex == index
 
         let minWidth = 100
@@ -75,11 +77,11 @@ const PhotoGallery = ({
         }
 
         return (
-          <Photo
+          <MediaThumbnail
             key={photo.id}
-            photo={photo}
+            media={photo}
             onSelectImage={index => {
-              updateSidebar(<PhotoSidebar photo={photo} />)
+              updateSidebar(<MediaSidebar media={photo} />)
               onSelectImage(index)
             }}
             setPresenting={setPresenting}
@@ -99,29 +101,25 @@ const PhotoGallery = ({
   }
 
   return (
-    <SidebarConsumer>
-      {({ updateSidebar }) => (
-        <div>
-          <Gallery>
-            <Loader active={loading}>Loading images</Loader>
-            {getPhotoElements(updateSidebar)}
-            <PhotoFiller />
-          </Gallery>
-          {presenting && (
-            <PresentView
-              photo={activeImage}
-              {...{ nextImage, previousImage, setPresenting }}
-            />
-          )}
-        </div>
+    <div>
+      <Gallery>
+        <Loader active={loading}>Loading images</Loader>
+        {getPhotoElements(updateSidebar)}
+        <PhotoFiller />
+      </Gallery>
+      {presenting && (
+        <PresentView
+          media={activeImage}
+          {...{ nextImage, previousImage, setPresenting }}
+        />
       )}
-    </SidebarConsumer>
+    </div>
   )
 }
 
 PhotoGallery.propTypes = {
   loading: PropTypes.bool,
-  photos: PropTypes.array,
+  media: PropTypes.array,
   activeIndex: PropTypes.number,
   presenting: PropTypes.bool,
   onSelectImage: PropTypes.func,

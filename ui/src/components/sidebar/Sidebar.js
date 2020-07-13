@@ -23,10 +23,7 @@ const SidebarContainer = styled.div`
 `
 
 export const SidebarContext = createContext()
-
-export const SidebarConsumer = SidebarContext.Consumer
-
-const { Consumer, Provider } = SidebarContext
+SidebarContext.displayName = 'SidebarContext'
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -43,19 +40,19 @@ class Sidebar extends React.Component {
 
   render() {
     return (
-      <Provider
+      <SidebarContext.Provider
         value={{ updateSidebar: this.update, content: this.state.content }}
       >
         {this.props.children}
-        <Consumer>
+        <SidebarContext.Consumer>
           {value => (
             <SidebarContainer>
               {value.content}
               <div style={{ height: 100 }}></div>
             </SidebarContainer>
           )}
-        </Consumer>
-      </Provider>
+        </SidebarContext.Consumer>
+      </SidebarContext.Provider>
     )
   }
 }

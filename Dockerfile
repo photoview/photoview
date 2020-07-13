@@ -40,6 +40,9 @@ FROM alpine:3.12
 # Install darktable for converting RAW images
 RUN apk --no-cache add darktable
 
+# Install ffmpeg for encoding videos
+RUN apk --no-cache add ffmpeg
+
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations
 COPY --from=api /app/photoview /app/photoview

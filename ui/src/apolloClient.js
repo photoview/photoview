@@ -8,14 +8,15 @@ import { ApolloLink, split } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
 import { MessageState } from './components/messages/Messages'
 import urlJoin from 'url-join'
+import { clearTokenCookie } from './authentication'
 
-const GRAPHQL_ENDPOINT = process.env.API_ENDPOINT
+export const GRAPHQL_ENDPOINT = process.env.API_ENDPOINT
   ? urlJoin(process.env.API_ENDPOINT, '/graphql')
   : urlJoin(location.origin, '/api/graphql')
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_ENDPOINT,
-  credentials: 'same-origin',
+  credentials: 'include',
 })
 
 console.log('GRAPHQL ENDPOINT', GRAPHQL_ENDPOINT)
@@ -27,13 +28,7 @@ websocketUri.protocol = apiProtocol === 'https:' ? 'wss:' : 'ws:'
 
 const wsLink = new WebSocketLink({
   uri: websocketUri,
-  credentials: 'same-origin',
-  options: {
-    reconnect: true,
-    connectionParams: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  },
+  credentials: 'include',
 })
 
 const link = split(
@@ -76,7 +71,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
 
   if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
-    localStorage.removeItem('token')
+    clearTokenCookie()
 
     const errors = networkError.result.errors
 
@@ -106,20 +101,9 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 })
 
-const authLink = setContext((_, { headers }) => {
-  // get the authentication token from local storage if it exists
-  const token = localStorage.getItem('token')
-  // return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : '',
-    },
-  }
-})
-
 const client = new ApolloClient({
-  link: ApolloLink.from([linkError, authLink.concat(link)]),
+  // link: ApolloLink.from([linkError, authLink.concat(link)]),
+  link: ApolloLink.from([linkError, link]),
   cache: new InMemoryCache(),
 })
 

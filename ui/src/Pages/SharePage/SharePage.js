@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import RouterProps from 'react-router-prop-types'
 import { Route, Switch } from 'react-router-dom'
 import AlbumSharePage from './AlbumSharePage'
-import PhotoSharePage from './PhotoSharePage'
+import MediaSharePage from './MediaSharePage'
 import { useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import {
@@ -16,6 +16,7 @@ import {
   Icon,
   Message,
 } from 'semantic-ui-react'
+import { saveSharePassword, getSharePassword } from '../../authentication'
 
 const shareTokenQuery = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -30,8 +31,8 @@ const shareTokenQuery = gql`
           }
         }
       }
-      photo {
-        ...PhotoProps
+      media {
+        ...MediaProps
       }
     }
   }
@@ -44,14 +45,15 @@ const shareTokenQuery = gql`
         url
       }
     }
-    photos(filter: { order_by: "title", order_direction: DESC }) {
-      ...PhotoProps
+    media(filter: { order_by: "title", order_direction: DESC }) {
+      ...MediaProps
     }
   }
 
-  fragment PhotoProps on Photo {
+  fragment MediaProps on Media {
     id
     title
+    type
     thumbnail {
       url
       width
@@ -64,6 +66,9 @@ const shareTokenQuery = gql`
       height
     }
     highRes {
+      url
+    }
+    videoWeb {
       url
     }
     exif {
@@ -93,7 +98,7 @@ const AuthorizedTokenRoute = ({ match }) => {
   const { loading, error, data } = useQuery(shareTokenQuery, {
     variables: {
       token,
-      password: sessionStorage.getItem(`share-token-pw-${token}`),
+      password: getSharePassword(token),
     },
   })
 
@@ -104,8 +109,8 @@ const AuthorizedTokenRoute = ({ match }) => {
     return <AlbumSharePage album={data.shareToken.album} match={match} />
   }
 
-  if (data.shareToken.photo) {
-    return <PhotoSharePage photo={data.shareToken.photo} />
+  if (data.shareToken.media) {
+    return <MediaSharePage media={data.shareToken.media} />
   }
 
   return <h1>Share not found</h1>
@@ -181,7 +186,7 @@ const TokenRoute = ({ match }) => {
     {
       variables: {
         token: match.params.token,
-        password: sessionStorage.getItem(`share-token-pw-${token}`),
+        password: getSharePassword(match.params.token),
       },
     }
   )
@@ -204,8 +209,8 @@ const TokenRoute = ({ match }) => {
       <ProtectedTokenEnterPassword
         match={match}
         refetchWithPassword={password => {
-          sessionStorage.setItem(`share-token-pw-${token}`, password)
-          refetch({ variables: { password: password } })
+          saveSharePassword(token, password)
+          refetch({ variables: { password } })
         }}
         loading={loading}
       />

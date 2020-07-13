@@ -1,4 +1,5 @@
 import gql from 'graphql-tag'
+import { saveTokenCookie } from '../../authentication'
 
 export const checkInitialSetupQuery = gql`
   query CheckInitialSetup {
@@ -9,6 +10,6 @@ export const checkInitialSetupQuery = gql`
 `
 
 export function login(token) {
-  localStorage.setItem('token', token)
+  saveTokenCookie(token)
   window.location = '/'
 }

@@ -6,10 +6,11 @@ import { MessageState } from '../messages/Messages'
 import { useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import download from 'downloadjs'
+import { authToken } from '../../authentication'
 
 const downloadQuery = gql`
-  query sidebarDownloadQuery($photoId: Int!) {
-    photo(id: $photoId) {
+  query sidebarDownloadQuery($mediaId: Int!) {
+    media(id: $mediaId) {
       id
       downloads {
         title
@@ -30,22 +31,22 @@ function formatBytes(bytes) {
 
 const downloadPhoto = async url => {
   const imgUrl = new URL(url)
-  let headers = {
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-  }
+  // let headers = {
+  //   Authorization: `Bearer ${localStorage.getItem('token')}`,
+  // }
 
-  if (localStorage.getItem('token') == null) {
+  if (authToken() == null) {
     // Get share token if not authorized
     const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
     if (token) {
       imgUrl.searchParams.set('token', token[1])
     }
 
-    headers = {}
+    // headers = {}
   }
 
   const response = await fetch(imgUrl.href, {
-    headers,
+    // headers,
   })
 
   const totalBytes = Number(response.headers.get('content-length'))
@@ -149,13 +150,13 @@ const SidebarDownload = ({ photo }) => {
   const [
     loadPhotoDownloads,
     { called, loading, data },
-  ] = useLazyQuery(downloadQuery, { variables: { photoId: photo.id } })
+  ] = useLazyQuery(downloadQuery, { variables: { mediaId: photo.id } })
 
   let downloads = []
 
   if (called) {
     if (!loading) {
-      downloads = data && data.photo.downloads
+      downloads = data && data.media.downloads
     }
   } else {
     if (!photo.downloads) {

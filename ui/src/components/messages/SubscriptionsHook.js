@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useSubscription } from 'react-apollo'
 import gql from 'graphql-tag'
+import { authToken } from '../../authentication'
 
 const notificationSubscription = gql`
   subscription notificationSubscription {
@@ -21,7 +22,7 @@ const notificationSubscription = gql`
 let messageTimeoutHandles = new Map()
 
 const SubscriptionsHook = ({ messages, setMessages }) => {
-  if (!localStorage.getItem('token')) {
+  if (!authToken()) {
     return null
   }
 

@@ -25,7 +25,7 @@ require (
 	github.com/urfave/cli v1.22.4 // indirect
 	github.com/urfave/cli/v2 v2.2.0 // indirect
 	github.com/vektah/dataloaden v0.3.0 // indirect
-	github.com/vektah/gqlparser v1.3.1
+	github.com/vektah/gqlparser v1.3.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.0.1
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
@@ -33,5 +33,6 @@ require (
 	golang.org/x/image v0.0.0-20200618115811-c13761719519
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/tools v0.0.0-20200622192924-4fd1c64487bf // indirect
+	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

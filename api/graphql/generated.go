@@ -39,8 +39,8 @@ type Config struct {
 
 type ResolverRoot interface {
 	Album() AlbumResolver
+	Media() MediaResolver
 	Mutation() MutationResolver
-	Photo() PhotoResolver
 	Query() QueryResolver
 	ShareToken() ShareTokenResolver
 	Subscription() SubscriptionResolver
@@ -54,10 +54,10 @@ type ComplexityRoot struct {
 	Album struct {
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Media       func(childComplexity int, filter *models.Filter) int
 		Owner       func(childComplexity int) int
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
-		Photos      func(childComplexity int, filter *models.Filter) int
 		Shares      func(childComplexity int) int
 		SubAlbums   func(childComplexity int, filter *models.Filter) int
 		Thumbnail   func(childComplexity int) int
@@ -70,19 +70,63 @@ type ComplexityRoot struct {
 		Token   func(childComplexity int) int
 	}
 
+	Media struct {
+		Album         func(childComplexity int) int
+		Downloads     func(childComplexity int) int
+		Exif          func(childComplexity int) int
+		Favorite      func(childComplexity int) int
+		HighRes       func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Path          func(childComplexity int) int
+		Shares        func(childComplexity int) int
+		Thumbnail     func(childComplexity int) int
+		Title         func(childComplexity int) int
+		Type          func(childComplexity int) int
+		VideoMetadata func(childComplexity int) int
+		VideoWeb      func(childComplexity int) int
+	}
+
+	MediaDownload struct {
+		Height func(childComplexity int) int
+		Title  func(childComplexity int) int
+		URL    func(childComplexity int) int
+		Width  func(childComplexity int) int
+	}
+
+	MediaExif struct {
+		Aperture        func(childComplexity int) int
+		Camera          func(childComplexity int) int
+		DateShot        func(childComplexity int) int
+		Exposure        func(childComplexity int) int
+		ExposureProgram func(childComplexity int) int
+		Flash           func(childComplexity int) int
+		FocalLength     func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Iso             func(childComplexity int) int
+		Lens            func(childComplexity int) int
+		Maker           func(childComplexity int) int
+		Media           func(childComplexity int) int
+	}
+
+	MediaURL struct {
+		Height func(childComplexity int) int
+		URL    func(childComplexity int) int
+		Width  func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AuthorizeUser      func(childComplexity int, username string, password string) int
 		CreateUser         func(childComplexity int, username string, rootPath string, password *string, admin bool) int
 		DeleteShareToken   func(childComplexity int, token string) int
 		DeleteUser         func(childComplexity int, id int) int
-		FavoritePhoto      func(childComplexity int, photoID int, favorite bool) int
+		FavoriteMedia      func(childComplexity int, mediaID int, favorite bool) int
 		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
 		ProtectShareToken  func(childComplexity int, token string, password *string) int
 		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
 		ScanAll            func(childComplexity int) int
 		ScanUser           func(childComplexity int, userID int) int
 		ShareAlbum         func(childComplexity int, albumID int, expire *time.Time, password *string) int
-		SharePhoto         func(childComplexity int, photoID int, expire *time.Time, password *string) int
+		ShareMedia         func(childComplexity int, mediaID int, expire *time.Time, password *string) int
 		UpdateUser         func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
 	}
 
@@ -97,54 +141,13 @@ type ComplexityRoot struct {
 		Type     func(childComplexity int) int
 	}
 
-	Photo struct {
-		Album     func(childComplexity int) int
-		Downloads func(childComplexity int) int
-		Exif      func(childComplexity int) int
-		Favorite  func(childComplexity int) int
-		HighRes   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Path      func(childComplexity int) int
-		Shares    func(childComplexity int) int
-		Thumbnail func(childComplexity int) int
-		Title     func(childComplexity int) int
-	}
-
-	PhotoDownload struct {
-		Height func(childComplexity int) int
-		Title  func(childComplexity int) int
-		URL    func(childComplexity int) int
-		Width  func(childComplexity int) int
-	}
-
-	PhotoExif struct {
-		Aperture        func(childComplexity int) int
-		Camera          func(childComplexity int) int
-		DateShot        func(childComplexity int) int
-		Exposure        func(childComplexity int) int
-		ExposureProgram func(childComplexity int) int
-		Flash           func(childComplexity int) int
-		FocalLength     func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Iso             func(childComplexity int) int
-		Lens            func(childComplexity int) int
-		Maker           func(childComplexity int) int
-		Photo           func(childComplexity int) int
-	}
-
-	PhotoURL struct {
-		Height func(childComplexity int) int
-		URL    func(childComplexity int) int
-		Width  func(childComplexity int) int
-	}
-
 	Query struct {
 		Album                      func(childComplexity int, id int) int
+		Media                      func(childComplexity int, id int) int
 		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
-		MyPhotos                   func(childComplexity int, filter *models.Filter) int
+		MyMedia                    func(childComplexity int, filter *models.Filter) int
 		MyUser                     func(childComplexity int) int
-		Photo                      func(childComplexity int, id int) int
-		Search                     func(childComplexity int, query string, limitPhotos *int, limitAlbums *int) int
+		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
 		ShareToken                 func(childComplexity int, token string, password *string) int
 		ShareTokenValidatePassword func(childComplexity int, token string, password *string) int
 		SiteInfo                   func(childComplexity int) int
@@ -160,7 +163,7 @@ type ComplexityRoot struct {
 
 	SearchResult struct {
 		Albums func(childComplexity int) int
-		Photos func(childComplexity int) int
+		Media  func(childComplexity int) int
 		Query  func(childComplexity int) int
 	}
 
@@ -169,8 +172,8 @@ type ComplexityRoot struct {
 		Expire      func(childComplexity int) int
 		HasPassword func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Media       func(childComplexity int) int
 		Owner       func(childComplexity int) int
-		Photo       func(childComplexity int) int
 		Token       func(childComplexity int) int
 	}
 
@@ -188,17 +191,41 @@ type ComplexityRoot struct {
 		RootPath func(childComplexity int) int
 		Username func(childComplexity int) int
 	}
+
+	VideoMetadata struct {
+		Audio        func(childComplexity int) int
+		Bitrate      func(childComplexity int) int
+		Codec        func(childComplexity int) int
+		ColorProfile func(childComplexity int) int
+		Duration     func(childComplexity int) int
+		Framerate    func(childComplexity int) int
+		Height       func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Media        func(childComplexity int) int
+		Width        func(childComplexity int) int
+	}
 }
 
 type AlbumResolver interface {
-	Photos(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Photo, error)
+	Media(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Media, error)
 	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
 	ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error)
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
 
-	Thumbnail(ctx context.Context, obj *models.Album) (*models.Photo, error)
+	Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error)
 	Path(ctx context.Context, obj *models.Album) ([]*models.Album, error)
 	Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error)
+}
+type MediaResolver interface {
+	Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
+	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
+	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
+	Album(ctx context.Context, obj *models.Media) (*models.Album, error)
+	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
+	VideoMetadata(ctx context.Context, obj *models.Media) (*models.VideoMetadata, error)
+
+	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
+	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
 }
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
@@ -207,22 +234,13 @@ type MutationResolver interface {
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error)
-	SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error)
+	ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
-	FavoritePhoto(ctx context.Context, photoID int, favorite bool) (*models.Photo, error)
+	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
 	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
-}
-type PhotoResolver interface {
-	Thumbnail(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
-	HighRes(ctx context.Context, obj *models.Photo) (*models.PhotoURL, error)
-	Album(ctx context.Context, obj *models.Photo) (*models.Album, error)
-	Exif(ctx context.Context, obj *models.Photo) (*models.PhotoEXIF, error)
-
-	Shares(ctx context.Context, obj *models.Photo) ([]*models.ShareToken, error)
-	Downloads(ctx context.Context, obj *models.Photo) ([]*models.PhotoDownload, error)
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
@@ -230,18 +248,18 @@ type QueryResolver interface {
 	MyUser(ctx context.Context) (*models.User, error)
 	MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool) ([]*models.Album, error)
 	Album(ctx context.Context, id int) (*models.Album, error)
-	MyPhotos(ctx context.Context, filter *models.Filter) ([]*models.Photo, error)
-	Photo(ctx context.Context, id int) (*models.Photo, error)
+	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
+	Media(ctx context.Context, id int) (*models.Media, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
-	Search(ctx context.Context, query string, limitPhotos *int, limitAlbums *int) (*models.SearchResult, error)
+	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 }
 type ShareTokenResolver interface {
 	Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error)
 
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
 	Album(ctx context.Context, obj *models.ShareToken) (*models.Album, error)
-	Photo(ctx context.Context, obj *models.ShareToken) (*models.Photo, error)
+	Media(ctx context.Context, obj *models.ShareToken) (*models.Media, error)
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
@@ -276,6 +294,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Album.ID(childComplexity), true
 
+	case "Album.media":
+		if e.complexity.Album.Media == nil {
+			break
+		}
+
+		args, err := ec.field_Album_media_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Album.Media(childComplexity, args["filter"].(*models.Filter)), true
+
 	case "Album.owner":
 		if e.complexity.Album.Owner == nil {
 			break
@@ -296,18 +326,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Album.Path(childComplexity), true
-
-	case "Album.photos":
-		if e.complexity.Album.Photos == nil {
-			break
-		}
-
-		args, err := ec.field_Album_photos_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Album.Photos(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "Album.shares":
 		if e.complexity.Album.Shares == nil {
@@ -363,6 +381,230 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthorizeResult.Token(childComplexity), true
 
+	case "Media.album":
+		if e.complexity.Media.Album == nil {
+			break
+		}
+
+		return e.complexity.Media.Album(childComplexity), true
+
+	case "Media.downloads":
+		if e.complexity.Media.Downloads == nil {
+			break
+		}
+
+		return e.complexity.Media.Downloads(childComplexity), true
+
+	case "Media.exif":
+		if e.complexity.Media.Exif == nil {
+			break
+		}
+
+		return e.complexity.Media.Exif(childComplexity), true
+
+	case "Media.favorite":
+		if e.complexity.Media.Favorite == nil {
+			break
+		}
+
+		return e.complexity.Media.Favorite(childComplexity), true
+
+	case "Media.highRes":
+		if e.complexity.Media.HighRes == nil {
+			break
+		}
+
+		return e.complexity.Media.HighRes(childComplexity), true
+
+	case "Media.id":
+		if e.complexity.Media.ID == nil {
+			break
+		}
+
+		return e.complexity.Media.ID(childComplexity), true
+
+	case "Media.path":
+		if e.complexity.Media.Path == nil {
+			break
+		}
+
+		return e.complexity.Media.Path(childComplexity), true
+
+	case "Media.shares":
+		if e.complexity.Media.Shares == nil {
+			break
+		}
+
+		return e.complexity.Media.Shares(childComplexity), true
+
+	case "Media.thumbnail":
+		if e.complexity.Media.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.Media.Thumbnail(childComplexity), true
+
+	case "Media.title":
+		if e.complexity.Media.Title == nil {
+			break
+		}
+
+		return e.complexity.Media.Title(childComplexity), true
+
+	case "Media.type":
+		if e.complexity.Media.Type == nil {
+			break
+		}
+
+		return e.complexity.Media.Type(childComplexity), true
+
+	case "Media.videoMetadata":
+		if e.complexity.Media.VideoMetadata == nil {
+			break
+		}
+
+		return e.complexity.Media.VideoMetadata(childComplexity), true
+
+	case "Media.videoWeb":
+		if e.complexity.Media.VideoWeb == nil {
+			break
+		}
+
+		return e.complexity.Media.VideoWeb(childComplexity), true
+
+	case "MediaDownload.height":
+		if e.complexity.MediaDownload.Height == nil {
+			break
+		}
+
+		return e.complexity.MediaDownload.Height(childComplexity), true
+
+	case "MediaDownload.title":
+		if e.complexity.MediaDownload.Title == nil {
+			break
+		}
+
+		return e.complexity.MediaDownload.Title(childComplexity), true
+
+	case "MediaDownload.url":
+		if e.complexity.MediaDownload.URL == nil {
+			break
+		}
+
+		return e.complexity.MediaDownload.URL(childComplexity), true
+
+	case "MediaDownload.width":
+		if e.complexity.MediaDownload.Width == nil {
+			break
+		}
+
+		return e.complexity.MediaDownload.Width(childComplexity), true
+
+	case "MediaEXIF.aperture":
+		if e.complexity.MediaExif.Aperture == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Aperture(childComplexity), true
+
+	case "MediaEXIF.camera":
+		if e.complexity.MediaExif.Camera == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Camera(childComplexity), true
+
+	case "MediaEXIF.dateShot":
+		if e.complexity.MediaExif.DateShot == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.DateShot(childComplexity), true
+
+	case "MediaEXIF.exposure":
+		if e.complexity.MediaExif.Exposure == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Exposure(childComplexity), true
+
+	case "MediaEXIF.exposureProgram":
+		if e.complexity.MediaExif.ExposureProgram == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.ExposureProgram(childComplexity), true
+
+	case "MediaEXIF.flash":
+		if e.complexity.MediaExif.Flash == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Flash(childComplexity), true
+
+	case "MediaEXIF.focalLength":
+		if e.complexity.MediaExif.FocalLength == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.FocalLength(childComplexity), true
+
+	case "MediaEXIF.id":
+		if e.complexity.MediaExif.ID == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.ID(childComplexity), true
+
+	case "MediaEXIF.iso":
+		if e.complexity.MediaExif.Iso == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Iso(childComplexity), true
+
+	case "MediaEXIF.lens":
+		if e.complexity.MediaExif.Lens == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Lens(childComplexity), true
+
+	case "MediaEXIF.maker":
+		if e.complexity.MediaExif.Maker == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Maker(childComplexity), true
+
+	case "MediaEXIF.media":
+		if e.complexity.MediaExif.Media == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Media(childComplexity), true
+
+	case "MediaURL.height":
+		if e.complexity.MediaURL.Height == nil {
+			break
+		}
+
+		return e.complexity.MediaURL.Height(childComplexity), true
+
+	case "MediaURL.url":
+		if e.complexity.MediaURL.URL == nil {
+			break
+		}
+
+		return e.complexity.MediaURL.URL(childComplexity), true
+
+	case "MediaURL.width":
+		if e.complexity.MediaURL.Width == nil {
+			break
+		}
+
+		return e.complexity.MediaURL.Width(childComplexity), true
+
 	case "Mutation.authorizeUser":
 		if e.complexity.Mutation.AuthorizeUser == nil {
 			break
@@ -411,17 +653,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
 
-	case "Mutation.favoritePhoto":
-		if e.complexity.Mutation.FavoritePhoto == nil {
+	case "Mutation.favoriteMedia":
+		if e.complexity.Mutation.FavoriteMedia == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_favoritePhoto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_favoriteMedia_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FavoritePhoto(childComplexity, args["photoId"].(int), args["favorite"].(bool)), true
+		return e.complexity.Mutation.FavoriteMedia(childComplexity, args["mediaId"].(int), args["favorite"].(bool)), true
 
 	case "Mutation.initialSetupWizard":
 		if e.complexity.Mutation.InitialSetupWizard == nil {
@@ -490,17 +732,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 
-	case "Mutation.sharePhoto":
-		if e.complexity.Mutation.SharePhoto == nil {
+	case "Mutation.shareMedia":
+		if e.complexity.Mutation.ShareMedia == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_sharePhoto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_shareMedia_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SharePhoto(childComplexity, args["photoId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+		return e.complexity.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -570,209 +812,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Notification.Type(childComplexity), true
 
-	case "Photo.album":
-		if e.complexity.Photo.Album == nil {
-			break
-		}
-
-		return e.complexity.Photo.Album(childComplexity), true
-
-	case "Photo.downloads":
-		if e.complexity.Photo.Downloads == nil {
-			break
-		}
-
-		return e.complexity.Photo.Downloads(childComplexity), true
-
-	case "Photo.exif":
-		if e.complexity.Photo.Exif == nil {
-			break
-		}
-
-		return e.complexity.Photo.Exif(childComplexity), true
-
-	case "Photo.favorite":
-		if e.complexity.Photo.Favorite == nil {
-			break
-		}
-
-		return e.complexity.Photo.Favorite(childComplexity), true
-
-	case "Photo.highRes":
-		if e.complexity.Photo.HighRes == nil {
-			break
-		}
-
-		return e.complexity.Photo.HighRes(childComplexity), true
-
-	case "Photo.id":
-		if e.complexity.Photo.ID == nil {
-			break
-		}
-
-		return e.complexity.Photo.ID(childComplexity), true
-
-	case "Photo.path":
-		if e.complexity.Photo.Path == nil {
-			break
-		}
-
-		return e.complexity.Photo.Path(childComplexity), true
-
-	case "Photo.shares":
-		if e.complexity.Photo.Shares == nil {
-			break
-		}
-
-		return e.complexity.Photo.Shares(childComplexity), true
-
-	case "Photo.thumbnail":
-		if e.complexity.Photo.Thumbnail == nil {
-			break
-		}
-
-		return e.complexity.Photo.Thumbnail(childComplexity), true
-
-	case "Photo.title":
-		if e.complexity.Photo.Title == nil {
-			break
-		}
-
-		return e.complexity.Photo.Title(childComplexity), true
-
-	case "PhotoDownload.height":
-		if e.complexity.PhotoDownload.Height == nil {
-			break
-		}
-
-		return e.complexity.PhotoDownload.Height(childComplexity), true
-
-	case "PhotoDownload.title":
-		if e.complexity.PhotoDownload.Title == nil {
-			break
-		}
-
-		return e.complexity.PhotoDownload.Title(childComplexity), true
-
-	case "PhotoDownload.url":
-		if e.complexity.PhotoDownload.URL == nil {
-			break
-		}
-
-		return e.complexity.PhotoDownload.URL(childComplexity), true
-
-	case "PhotoDownload.width":
-		if e.complexity.PhotoDownload.Width == nil {
-			break
-		}
-
-		return e.complexity.PhotoDownload.Width(childComplexity), true
-
-	case "PhotoEXIF.aperture":
-		if e.complexity.PhotoExif.Aperture == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Aperture(childComplexity), true
-
-	case "PhotoEXIF.camera":
-		if e.complexity.PhotoExif.Camera == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Camera(childComplexity), true
-
-	case "PhotoEXIF.dateShot":
-		if e.complexity.PhotoExif.DateShot == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.DateShot(childComplexity), true
-
-	case "PhotoEXIF.exposure":
-		if e.complexity.PhotoExif.Exposure == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Exposure(childComplexity), true
-
-	case "PhotoEXIF.exposureProgram":
-		if e.complexity.PhotoExif.ExposureProgram == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.ExposureProgram(childComplexity), true
-
-	case "PhotoEXIF.flash":
-		if e.complexity.PhotoExif.Flash == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Flash(childComplexity), true
-
-	case "PhotoEXIF.focalLength":
-		if e.complexity.PhotoExif.FocalLength == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.FocalLength(childComplexity), true
-
-	case "PhotoEXIF.id":
-		if e.complexity.PhotoExif.ID == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.ID(childComplexity), true
-
-	case "PhotoEXIF.iso":
-		if e.complexity.PhotoExif.Iso == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Iso(childComplexity), true
-
-	case "PhotoEXIF.lens":
-		if e.complexity.PhotoExif.Lens == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Lens(childComplexity), true
-
-	case "PhotoEXIF.maker":
-		if e.complexity.PhotoExif.Maker == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Maker(childComplexity), true
-
-	case "PhotoEXIF.photo":
-		if e.complexity.PhotoExif.Photo == nil {
-			break
-		}
-
-		return e.complexity.PhotoExif.Photo(childComplexity), true
-
-	case "PhotoURL.height":
-		if e.complexity.PhotoURL.Height == nil {
-			break
-		}
-
-		return e.complexity.PhotoURL.Height(childComplexity), true
-
-	case "PhotoURL.url":
-		if e.complexity.PhotoURL.URL == nil {
-			break
-		}
-
-		return e.complexity.PhotoURL.URL(childComplexity), true
-
-	case "PhotoURL.width":
-		if e.complexity.PhotoURL.Width == nil {
-			break
-		}
-
-		return e.complexity.PhotoURL.Width(childComplexity), true
-
 	case "Query.album":
 		if e.complexity.Query.Album == nil {
 			break
@@ -784,6 +823,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
+
+	case "Query.media":
+		if e.complexity.Query.Media == nil {
+			break
+		}
+
+		args, err := ec.field_Query_media_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Media(childComplexity, args["id"].(int)), true
 
 	case "Query.myAlbums":
 		if e.complexity.Query.MyAlbums == nil {
@@ -797,17 +848,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool)), true
 
-	case "Query.myPhotos":
-		if e.complexity.Query.MyPhotos == nil {
+	case "Query.myMedia":
+		if e.complexity.Query.MyMedia == nil {
 			break
 		}
 
-		args, err := ec.field_Query_myPhotos_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_myMedia_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.MyPhotos(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Query.MyMedia(childComplexity, args["filter"].(*models.Filter)), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -815,18 +866,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.MyUser(childComplexity), true
-
-	case "Query.photo":
-		if e.complexity.Query.Photo == nil {
-			break
-		}
-
-		args, err := ec.field_Query_photo_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Photo(childComplexity, args["id"].(int)), true
 
 	case "Query.search":
 		if e.complexity.Query.Search == nil {
@@ -838,7 +877,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Search(childComplexity, args["query"].(string), args["limitPhotos"].(*int), args["limitAlbums"].(*int)), true
+		return e.complexity.Query.Search(childComplexity, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int)), true
 
 	case "Query.shareToken":
 		if e.complexity.Query.ShareToken == nil {
@@ -918,12 +957,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SearchResult.Albums(childComplexity), true
 
-	case "SearchResult.photos":
-		if e.complexity.SearchResult.Photos == nil {
+	case "SearchResult.media":
+		if e.complexity.SearchResult.Media == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Photos(childComplexity), true
+		return e.complexity.SearchResult.Media(childComplexity), true
 
 	case "SearchResult.query":
 		if e.complexity.SearchResult.Query == nil {
@@ -960,19 +999,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ShareToken.ID(childComplexity), true
 
+	case "ShareToken.media":
+		if e.complexity.ShareToken.Media == nil {
+			break
+		}
+
+		return e.complexity.ShareToken.Media(childComplexity), true
+
 	case "ShareToken.owner":
 		if e.complexity.ShareToken.Owner == nil {
 			break
 		}
 
 		return e.complexity.ShareToken.Owner(childComplexity), true
-
-	case "ShareToken.photo":
-		if e.complexity.ShareToken.Photo == nil {
-			break
-		}
-
-		return e.complexity.ShareToken.Photo(childComplexity), true
 
 	case "ShareToken.token":
 		if e.complexity.ShareToken.Token == nil {
@@ -1022,6 +1061,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Username(childComplexity), true
+
+	case "VideoMetadata.audio":
+		if e.complexity.VideoMetadata.Audio == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Audio(childComplexity), true
+
+	case "VideoMetadata.bitrate":
+		if e.complexity.VideoMetadata.Bitrate == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Bitrate(childComplexity), true
+
+	case "VideoMetadata.codec":
+		if e.complexity.VideoMetadata.Codec == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Codec(childComplexity), true
+
+	case "VideoMetadata.colorProfile":
+		if e.complexity.VideoMetadata.ColorProfile == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.ColorProfile(childComplexity), true
+
+	case "VideoMetadata.duration":
+		if e.complexity.VideoMetadata.Duration == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Duration(childComplexity), true
+
+	case "VideoMetadata.framerate":
+		if e.complexity.VideoMetadata.Framerate == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Framerate(childComplexity), true
+
+	case "VideoMetadata.height":
+		if e.complexity.VideoMetadata.Height == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Height(childComplexity), true
+
+	case "VideoMetadata.id":
+		if e.complexity.VideoMetadata.ID == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.ID(childComplexity), true
+
+	case "VideoMetadata.media":
+		if e.complexity.VideoMetadata.Media == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Media(childComplexity), true
+
+	case "VideoMetadata.width":
+		if e.complexity.VideoMetadata.Width == nil {
+			break
+		}
+
+		return e.complexity.VideoMetadata.Width(childComplexity), true
 
 	}
 	return 0, false
@@ -1133,21 +1242,21 @@ type Query {
     filter: Filter
     "Return only albums from the root directory of the user"
     onlyRoot: Boolean
-    "Return also albums with no photos directly in them"
+    "Return also albums with no media directly in them"
     showEmpty: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
 
-  "List of photos owned by the logged in user"
-  myPhotos(filter: Filter): [Photo!]!
-  "Get photo by id, user must own the photo or be admin"
-  photo(id: Int!): Photo!
+  "List of media owned by the logged in user"
+  myMedia(filter: Filter): [Media!]!
+  "Get media by id, user must own the media or be admin"
+  media(id: Int!): Media!
 
   shareToken(token: String!, password: String): ShareToken!
   shareTokenValidatePassword(token: String!, password: String): Boolean!
 
-  search(query: String!, limitPhotos: Int, limitAlbums: Int): SearchResult!
+  search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 }
 
 type Mutation {
@@ -1167,22 +1276,22 @@ type Mutation {
     rootPath: String!
   ): AuthorizeResult
 
-  "Scan all users for new photos"
+  "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
-  "Scan a single user for new photos"
+  "Scan a single user for new media"
   scanUser(userId: Int!): ScannerResult!
 
   "Generate share token for album"
   shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
-  "Generate share token for photo"
-  sharePhoto(photoId: Int!, expire: Time, password: String): ShareToken
+  "Generate share token for media"
+  shareMedia(mediaId: Int!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
-  "Mark or unmark a photo as being a favorite"
-  favoritePhoto(photoId: Int!, favorite: Boolean!): Photo
+  "Mark or unmark a media as being a favorite"
+  favoriteMedia(mediaId: Int!, favorite: Boolean!): Media
 
   updateUser(
     id: Int!
@@ -1236,7 +1345,7 @@ type ScannerResult {
   message: String
 }
 
-"A token used to publicly access an album or photo"
+"A token used to publicly access an album or media"
 type ShareToken {
   id: Int!
   token: String!
@@ -1249,8 +1358,8 @@ type ShareToken {
 
   "The album this token shares"
   album: Album
-  "The photo this token shares"
-  photo: Photo
+  "The media this token shares"
+  media: Media
 }
 
 "General public information about the site"
@@ -1271,8 +1380,8 @@ type User {
 type Album {
   id: Int!
   title: String!
-  "The photos inside this album"
-  photos(filter: Filter): [Photo!]!
+  "The media inside this album"
+  media(filter: Filter): [Media!]!
   "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
   "The album witch contains this album"
@@ -1282,13 +1391,13 @@ type Album {
   "The path on the filesystem of the server, where this album is located"
   filePath: String!
   "An image in this album used for previewing this album"
-  thumbnail: Photo
+  thumbnail: Media
   path: [Album!]!
 
   shares: [ShareToken]
 }
 
-type PhotoURL {
+type MediaURL {
   "URL for previewing the image"
   url: String!
   "Width of the image in pixels"
@@ -1297,35 +1406,44 @@ type PhotoURL {
   height: Int!
 }
 
-type PhotoDownload {
+type MediaDownload {
   title: String!
   width: Int!
   height: Int!
   url: String!
 }
 
-type Photo {
+enum MediaType {
+  photo
+  video
+}
+
+type Media {
   id: Int!
   title: String!
-  "Local filepath for the photo"
+  "Local filepath for the media"
   path: String!
-  "URL to display the photo in a smaller resolution"
-  thumbnail: PhotoURL!
-  "URL to display the photo in full resolution"
-  highRes: PhotoURL!
-  "The album that holds the photo"
+  "URL to display the media in a smaller resolution"
+  thumbnail: MediaURL!
+  "URL to display the photo in full resolution, will be null for videos"
+  highRes: MediaURL
+  "URL to get the video in a web format that can be played in the browser, will be null for photos"
+  videoWeb: MediaURL
+  "The album that holds the media"
   album: Album!
-  exif: PhotoEXIF
+  exif: MediaEXIF
+  videoMetadata: VideoMetadata
   favorite: Boolean!
+  type: MediaType!
 
   shares: [ShareToken!]!
-  downloads: [PhotoDownload!]!
+  downloads: [MediaDownload!]!
 }
 
 "EXIF metadata from the camera"
-type PhotoEXIF {
+type MediaEXIF {
   id: Int!
-  photo: Photo
+  media: Media!
   "The model name of the camera"
   camera: String
   "The maker of the camera"
@@ -1347,10 +1465,23 @@ type PhotoEXIF {
   exposureProgram: Int
 }
 
+type VideoMetadata {
+  id: Int!
+  media: Media!
+  width: Int!
+  height: Int!
+  duration: Float!
+  codec: String
+  framerate: Float
+  bitrate: Int
+  colorProfile: String
+  audio: String
+}
+
 type SearchResult {
   query: String!
   albums: [Album!]!
-  photos: [Photo!]!
+  media: [Media!]!
 }
 `, BuiltIn: false},
 }
@@ -1360,7 +1491,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Album_photos_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
@@ -1476,17 +1607,17 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_favoritePhoto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
-	if tmp, ok := rawArgs["photoId"]; ok {
+	if tmp, ok := rawArgs["mediaId"]; ok {
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["photoId"] = arg0
+	args["mediaId"] = arg0
 	var arg1 bool
 	if tmp, ok := rawArgs["favorite"]; ok {
 		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
@@ -1624,17 +1755,17 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_sharePhoto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
-	if tmp, ok := rawArgs["photoId"]; ok {
+	if tmp, ok := rawArgs["mediaId"]; ok {
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["photoId"] = arg0
+	args["mediaId"] = arg0
 	var arg1 *time.Time
 	if tmp, ok := rawArgs["expire"]; ok {
 		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
@@ -1728,6 +1859,20 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1758,7 +1903,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_myPhotos_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
@@ -1769,20 +1914,6 @@ func (ec *executionContext) field_Query_myPhotos_args(ctx context.Context, rawAr
 		}
 	}
 	args["filter"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_photo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
 	return args, nil
 }
 
@@ -1798,13 +1929,13 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	}
 	args["query"] = arg0
 	var arg1 *int
-	if tmp, ok := rawArgs["limitPhotos"]; ok {
+	if tmp, ok := rawArgs["limitMedia"]; ok {
 		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limitPhotos"] = arg1
+	args["limitMedia"] = arg1
 	var arg2 *int
 	if tmp, ok := rawArgs["limitAlbums"]; ok {
 		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
@@ -1978,7 +2109,7 @@ func (ec *executionContext) _Album_title(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+func (ec *executionContext) _Album_media(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1994,7 +2125,7 @@ func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.Col
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Album_photos_args(ctx, rawArgs)
+	args, err := ec.field_Album_media_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2002,7 +2133,7 @@ func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.Col
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().Photos(rctx, obj, args["filter"].(*models.Filter))
+		return ec.resolvers.Album().Media(rctx, obj, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2014,9 +2145,9 @@ func (ec *executionContext) _Album_photos(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Photo)
+	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNPhoto2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2185,9 +2316,9 @@ func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Photo)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_path(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2352,6 +2483,1052 @@ func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field gr
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_id(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_title(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_path(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().Thumbnail(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.MediaURL)
+	fc.Result = res
+	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().HighRes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.MediaURL)
+	fc.Result = res
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().VideoWeb(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.MediaURL)
+	fc.Result = res
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_album(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().Album(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Album)
+	fc.Result = res
+	return ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().Exif(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.MediaEXIF)
+	fc.Result = res
+	return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().VideoMetadata(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.VideoMetadata)
+	fc.Result = res
+	return ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Favorite, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_type(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.MediaType)
+	fc.Result = res
+	return ec.marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().Shares(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.ShareToken)
+	fc.Result = res
+	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_downloads(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Media",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Media().Downloads(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.MediaDownload)
+	fc.Result = res
+	return ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaDownload_title(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaDownload_width(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaDownload_height(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaDownload_url(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaDownload",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Media(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Media)
+	fc.Result = res
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Camera, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_maker(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Maker, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_lens(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lens, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_dateShot(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DateShot, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_exposure(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Exposure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_aperture(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Aperture, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_iso(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Iso, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_focalLength(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FocalLength, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_flash(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Flash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_exposureProgram(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaEXIF",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExposureProgram, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaURL_url(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaURL",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaURL_width(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaURL",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaURL_height(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaURL",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2607,7 +3784,7 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_sharePhoto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2623,7 +3800,7 @@ func (ec *executionContext) _Mutation_sharePhoto(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_sharePhoto_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_shareMedia_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2631,7 +3808,7 @@ func (ec *executionContext) _Mutation_sharePhoto(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SharePhoto(rctx, args["photoId"].(int), args["expire"].(*time.Time), args["password"].(*string))
+		return ec.resolvers.Mutation().ShareMedia(rctx, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2721,7 +3898,7 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_favoritePhoto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2737,7 +3914,7 @@ func (ec *executionContext) _Mutation_favoritePhoto(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_favoritePhoto_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_favoriteMedia_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2745,7 +3922,7 @@ func (ec *executionContext) _Mutation_favoritePhoto(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FavoritePhoto(rctx, args["photoId"].(int), args["favorite"].(bool))
+		return ec.resolvers.Mutation().FavoriteMedia(rctx, args["mediaId"].(int), args["favorite"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2754,9 +3931,9 @@ func (ec *executionContext) _Mutation_favoritePhoto(ctx context.Context, field g
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Photo)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3199,956 +4376,6 @@ func (ec *executionContext) _Notification_timeout(ctx context.Context, field gra
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Photo_id(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID(), nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_title(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_path(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Thumbnail(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.PhotoURL)
-	fc.Result = res
-	return ec.marshalNPhotoURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_highRes(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().HighRes(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.PhotoURL)
-	fc.Result = res
-	return ec.marshalNPhotoURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_album(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Album(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Album)
-	fc.Result = res
-	return ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_exif(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Exif(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.PhotoEXIF)
-	fc.Result = res
-	return ec.marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoEXIF(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_favorite(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Favorite, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_shares(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Shares(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.ShareToken)
-	fc.Result = res
-	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Photo_downloads(ctx context.Context, field graphql.CollectedField, obj *models.Photo) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Photo",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Photo().Downloads(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.PhotoDownload)
-	fc.Result = res
-	return ec.marshalNPhotoDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownloadᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoDownload_title(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoDownload_width(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Width, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoDownload_height(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Height, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoDownload_url(ctx context.Context, field graphql.CollectedField, obj *models.PhotoDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_id(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID(), nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_photo(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Photo(), nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Photo)
-	fc.Result = res
-	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Camera, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_maker(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Maker, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_lens(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Lens, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_dateShot(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DateShot, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_exposure(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Exposure, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_aperture(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Aperture, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_iso(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Iso, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_focalLength(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FocalLength, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_flash(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Flash, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoEXIF_exposureProgram(ctx context.Context, field graphql.CollectedField, obj *models.PhotoEXIF) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoEXIF",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExposureProgram, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoURL_url(ctx context.Context, field graphql.CollectedField, obj *models.PhotoURL) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoURL",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL(), nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoURL_width(ctx context.Context, field graphql.CollectedField, obj *models.PhotoURL) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoURL",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Width, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PhotoURL_height(ctx context.Context, field graphql.CollectedField, obj *models.PhotoURL) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "PhotoURL",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Height, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4360,7 +4587,7 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 	return ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_myPhotos(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4376,7 +4603,7 @@ func (ec *executionContext) _Query_myPhotos(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_myPhotos_args(ctx, rawArgs)
+	args, err := ec.field_Query_myMedia_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4384,7 +4611,7 @@ func (ec *executionContext) _Query_myPhotos(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyPhotos(rctx, args["filter"].(*models.Filter))
+		return ec.resolvers.Query().MyMedia(rctx, args["filter"].(*models.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4396,12 +4623,12 @@ func (ec *executionContext) _Query_myPhotos(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Photo)
+	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNPhoto2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_media(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4417,7 +4644,7 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_photo_args(ctx, rawArgs)
+	args, err := ec.field_Query_media_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4425,7 +4652,7 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Photo(rctx, args["id"].(int))
+		return ec.resolvers.Query().Media(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4437,9 +4664,9 @@ func (ec *executionContext) _Query_photo(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.Photo)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4548,7 +4775,7 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Search(rctx, args["query"].(string), args["limitPhotos"].(*int), args["limitAlbums"].(*int))
+		return ec.resolvers.Query().Search(rctx, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4832,7 +5059,7 @@ func (ec *executionContext) _SearchResult_albums(ctx context.Context, field grap
 	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _SearchResult_photos(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _SearchResult_media(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4849,7 +5076,7 @@ func (ec *executionContext) _SearchResult_photos(ctx context.Context, field grap
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Photos, nil
+		return obj.Media, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4861,9 +5088,9 @@ func (ec *executionContext) _SearchResult_photos(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Photo)
+	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNPhoto2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -5064,7 +5291,7 @@ func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql
 	return ec.marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ShareToken_photo(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+func (ec *executionContext) _ShareToken_media(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5081,7 +5308,7 @@ func (ec *executionContext) _ShareToken_photo(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ShareToken().Photo(rctx, obj)
+		return ec.resolvers.ShareToken().Media(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5090,9 +5317,9 @@ func (ec *executionContext) _ShareToken_photo(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Photo)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
@@ -5327,6 +5554,331 @@ func (ec *executionContext) _User_admin(ctx context.Context, field graphql.Colle
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Media(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Media)
+	fc.Result = res
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_width(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Width, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_height(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_duration(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Duration, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_codec(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Codec, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_framerate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Framerate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bitrate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_colorProfile(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ColorProfile, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VideoMetadata_audio(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VideoMetadata",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Audio, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6449,7 +7001,7 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "photos":
+		case "media":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -6457,7 +7009,7 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Album_photos(ctx, field, obj)
+				res = ec._Album_media(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6588,6 +7140,284 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 	return out
 }
 
+var mediaImplementors = []string{"Media"}
+
+func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, obj *models.Media) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mediaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Media")
+		case "id":
+			out.Values[i] = ec._Media_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "title":
+			out.Values[i] = ec._Media_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "path":
+			out.Values[i] = ec._Media_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "thumbnail":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_thumbnail(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "highRes":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_highRes(ctx, field, obj)
+				return res
+			})
+		case "videoWeb":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_videoWeb(ctx, field, obj)
+				return res
+			})
+		case "album":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_album(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "exif":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_exif(ctx, field, obj)
+				return res
+			})
+		case "videoMetadata":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_videoMetadata(ctx, field, obj)
+				return res
+			})
+		case "favorite":
+			out.Values[i] = ec._Media_favorite(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "type":
+			out.Values[i] = ec._Media_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "shares":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_shares(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "downloads":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_downloads(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mediaDownloadImplementors = []string{"MediaDownload"}
+
+func (ec *executionContext) _MediaDownload(ctx context.Context, sel ast.SelectionSet, obj *models.MediaDownload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mediaDownloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MediaDownload")
+		case "title":
+			out.Values[i] = ec._MediaDownload_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "width":
+			out.Values[i] = ec._MediaDownload_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "height":
+			out.Values[i] = ec._MediaDownload_height(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "url":
+			out.Values[i] = ec._MediaDownload_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mediaEXIFImplementors = []string{"MediaEXIF"}
+
+func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet, obj *models.MediaEXIF) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mediaEXIFImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MediaEXIF")
+		case "id":
+			out.Values[i] = ec._MediaEXIF_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "media":
+			out.Values[i] = ec._MediaEXIF_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "camera":
+			out.Values[i] = ec._MediaEXIF_camera(ctx, field, obj)
+		case "maker":
+			out.Values[i] = ec._MediaEXIF_maker(ctx, field, obj)
+		case "lens":
+			out.Values[i] = ec._MediaEXIF_lens(ctx, field, obj)
+		case "dateShot":
+			out.Values[i] = ec._MediaEXIF_dateShot(ctx, field, obj)
+		case "exposure":
+			out.Values[i] = ec._MediaEXIF_exposure(ctx, field, obj)
+		case "aperture":
+			out.Values[i] = ec._MediaEXIF_aperture(ctx, field, obj)
+		case "iso":
+			out.Values[i] = ec._MediaEXIF_iso(ctx, field, obj)
+		case "focalLength":
+			out.Values[i] = ec._MediaEXIF_focalLength(ctx, field, obj)
+		case "flash":
+			out.Values[i] = ec._MediaEXIF_flash(ctx, field, obj)
+		case "exposureProgram":
+			out.Values[i] = ec._MediaEXIF_exposureProgram(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mediaURLImplementors = []string{"MediaURL"}
+
+func (ec *executionContext) _MediaURL(ctx context.Context, sel ast.SelectionSet, obj *models.MediaURL) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mediaURLImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MediaURL")
+		case "url":
+			out.Values[i] = ec._MediaURL_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "width":
+			out.Values[i] = ec._MediaURL_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "height":
+			out.Values[i] = ec._MediaURL_height(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -6627,14 +7457,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "shareAlbum":
 			out.Values[i] = ec._Mutation_shareAlbum(ctx, field)
-		case "sharePhoto":
-			out.Values[i] = ec._Mutation_sharePhoto(ctx, field)
+		case "shareMedia":
+			out.Values[i] = ec._Mutation_shareMedia(ctx, field)
 		case "deleteShareToken":
 			out.Values[i] = ec._Mutation_deleteShareToken(ctx, field)
 		case "protectShareToken":
 			out.Values[i] = ec._Mutation_protectShareToken(ctx, field)
-		case "favoritePhoto":
-			out.Values[i] = ec._Mutation_favoritePhoto(ctx, field)
+		case "favoriteMedia":
+			out.Values[i] = ec._Mutation_favoriteMedia(ctx, field)
 		case "updateUser":
 			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 		case "createUser":
@@ -6697,257 +7527,6 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 			}
 		case "timeout":
 			out.Values[i] = ec._Notification_timeout(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var photoImplementors = []string{"Photo"}
-
-func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, obj *models.Photo) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, photoImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Photo")
-		case "id":
-			out.Values[i] = ec._Photo_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "title":
-			out.Values[i] = ec._Photo_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Photo_path(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "thumbnail":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_thumbnail(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "highRes":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_highRes(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "album":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_album(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "exif":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_exif(ctx, field, obj)
-				return res
-			})
-		case "favorite":
-			out.Values[i] = ec._Photo_favorite(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "shares":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_shares(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "downloads":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Photo_downloads(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var photoDownloadImplementors = []string{"PhotoDownload"}
-
-func (ec *executionContext) _PhotoDownload(ctx context.Context, sel ast.SelectionSet, obj *models.PhotoDownload) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, photoDownloadImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PhotoDownload")
-		case "title":
-			out.Values[i] = ec._PhotoDownload_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "width":
-			out.Values[i] = ec._PhotoDownload_width(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "height":
-			out.Values[i] = ec._PhotoDownload_height(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "url":
-			out.Values[i] = ec._PhotoDownload_url(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var photoEXIFImplementors = []string{"PhotoEXIF"}
-
-func (ec *executionContext) _PhotoEXIF(ctx context.Context, sel ast.SelectionSet, obj *models.PhotoEXIF) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, photoEXIFImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PhotoEXIF")
-		case "id":
-			out.Values[i] = ec._PhotoEXIF_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "photo":
-			out.Values[i] = ec._PhotoEXIF_photo(ctx, field, obj)
-		case "camera":
-			out.Values[i] = ec._PhotoEXIF_camera(ctx, field, obj)
-		case "maker":
-			out.Values[i] = ec._PhotoEXIF_maker(ctx, field, obj)
-		case "lens":
-			out.Values[i] = ec._PhotoEXIF_lens(ctx, field, obj)
-		case "dateShot":
-			out.Values[i] = ec._PhotoEXIF_dateShot(ctx, field, obj)
-		case "exposure":
-			out.Values[i] = ec._PhotoEXIF_exposure(ctx, field, obj)
-		case "aperture":
-			out.Values[i] = ec._PhotoEXIF_aperture(ctx, field, obj)
-		case "iso":
-			out.Values[i] = ec._PhotoEXIF_iso(ctx, field, obj)
-		case "focalLength":
-			out.Values[i] = ec._PhotoEXIF_focalLength(ctx, field, obj)
-		case "flash":
-			out.Values[i] = ec._PhotoEXIF_flash(ctx, field, obj)
-		case "exposureProgram":
-			out.Values[i] = ec._PhotoEXIF_exposureProgram(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var photoURLImplementors = []string{"PhotoURL"}
-
-func (ec *executionContext) _PhotoURL(ctx context.Context, sel ast.SelectionSet, obj *models.PhotoURL) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, photoURLImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PhotoURL")
-		case "url":
-			out.Values[i] = ec._PhotoURL_url(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "width":
-			out.Values[i] = ec._PhotoURL_width(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "height":
-			out.Values[i] = ec._PhotoURL_height(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7044,7 +7623,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "myPhotos":
+		case "myMedia":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -7052,13 +7631,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_myPhotos(ctx, field)
+				res = ec._Query_myMedia(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
 				return res
 			})
-		case "photo":
+		case "media":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -7066,7 +7645,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_photo(ctx, field)
+				res = ec._Query_media(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -7186,8 +7765,8 @@ func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "photos":
-			out.Values[i] = ec._SearchResult_photos(ctx, field, obj)
+		case "media":
+			out.Values[i] = ec._SearchResult_media(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7264,7 +7843,7 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 				res = ec._ShareToken_album(ctx, field, obj)
 				return res
 			})
-		case "photo":
+		case "media":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -7272,7 +7851,7 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._ShareToken_photo(ctx, field, obj)
+				res = ec._ShareToken_media(ctx, field, obj)
 				return res
 			})
 		default:
@@ -7364,6 +7943,63 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var videoMetadataImplementors = []string{"VideoMetadata"}
+
+func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.SelectionSet, obj *models.VideoMetadata) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, videoMetadataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VideoMetadata")
+		case "id":
+			out.Values[i] = ec._VideoMetadata_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "media":
+			out.Values[i] = ec._VideoMetadata_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "width":
+			out.Values[i] = ec._VideoMetadata_width(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "height":
+			out.Values[i] = ec._VideoMetadata_height(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "duration":
+			out.Values[i] = ec._VideoMetadata_duration(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "codec":
+			out.Values[i] = ec._VideoMetadata_codec(ctx, field, obj)
+		case "framerate":
+			out.Values[i] = ec._VideoMetadata_framerate(ctx, field, obj)
+		case "bitrate":
+			out.Values[i] = ec._VideoMetadata_bitrate(ctx, field, obj)
+		case "colorProfile":
+			out.Values[i] = ec._VideoMetadata_colorProfile(ctx, field, obj)
+		case "audio":
+			out.Values[i] = ec._VideoMetadata_audio(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7699,6 +8335,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	return graphql.UnmarshalFloat(v)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloat(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	return graphql.UnmarshalInt(v)
 }
@@ -7711,6 +8361,131 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {
+	return ec._Media(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Media(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMediaDownload2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx context.Context, sel ast.SelectionSet, v models.MediaDownload) graphql.Marshaler {
+	return ec._MediaDownload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx context.Context, sel ast.SelectionSet, v *models.MediaDownload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MediaDownload(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, v interface{}) (models.MediaType, error) {
+	var res models.MediaType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNMediaURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
+	return ec._MediaURL(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MediaURL(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNotification2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx context.Context, sel ast.SelectionSet, v models.Notification) graphql.Marshaler {
@@ -7734,122 +8509,6 @@ func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋviktorstra
 
 func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNPhoto2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx context.Context, sel ast.SelectionSet, v models.Photo) graphql.Marshaler {
-	return ec._Photo(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPhoto2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Photo) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx context.Context, sel ast.SelectionSet, v *models.Photo) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Photo(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPhotoDownload2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx context.Context, sel ast.SelectionSet, v models.PhotoDownload) graphql.Marshaler {
-	return ec._PhotoDownload(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPhotoDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.PhotoDownload) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPhotoDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNPhotoDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoDownload(ctx context.Context, sel ast.SelectionSet, v *models.PhotoDownload) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PhotoDownload(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPhotoURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx context.Context, sel ast.SelectionSet, v models.PhotoURL) graphql.Marshaler {
-	return ec._PhotoURL(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNPhotoURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoURL(ctx context.Context, sel ast.SelectionSet, v *models.PhotoURL) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PhotoURL(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNScannerResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v models.ScannerResult) graphql.Marshaler {
@@ -8339,6 +8998,39 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
+func (ec *executionContext) marshalOMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {
+	return ec._Media(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Media(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMediaEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v models.MediaEXIF) graphql.Marshaler {
+	return ec._MediaEXIF(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MediaEXIF(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMediaURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
+	return ec._MediaURL(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MediaURL(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (models.OrderDirection, error) {
 	var res models.OrderDirection
 	return res, res.UnmarshalGQL(v)
@@ -8361,28 +9053,6 @@ func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrat
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) marshalOPhoto2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx context.Context, sel ast.SelectionSet, v models.Photo) graphql.Marshaler {
-	return ec._Photo(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOPhoto2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhoto(ctx context.Context, sel ast.SelectionSet, v *models.Photo) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Photo(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOPhotoEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoEXIF(ctx context.Context, sel ast.SelectionSet, v models.PhotoEXIF) graphql.Marshaler {
-	return ec._PhotoEXIF(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOPhotoEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPhotoEXIF(ctx context.Context, sel ast.SelectionSet, v *models.PhotoEXIF) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._PhotoEXIF(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
@@ -8491,6 +9161,17 @@ func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotov
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOVideoMetadata2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v models.VideoMetadata) graphql.Marshaler {
+	return ec._VideoMetadata(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._VideoMetadata(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

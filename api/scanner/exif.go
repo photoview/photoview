@@ -14,19 +14,19 @@ import (
 	"github.com/xor-gate/goexif2/mknote"
 )
 
-func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, returnErr error) {
+func ScanEXIF(tx *sql.Tx, media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
 
 	log.Printf("Scanning for EXIF")
 
 	{
 		// Check if EXIF data already exists
-		if photo.ExifId != nil {
-			row := tx.QueryRow("SELECT * FROM photo_exif WHERE exif_id = ?", photo.ExifId)
-			return models.NewPhotoExifFromRow(row)
+		if media.ExifId != nil {
+			row := tx.QueryRow("SELECT * FROM media_exif WHERE exif_id = ?", media.ExifId)
+			return models.NewMediaExifFromRow(row)
 		}
 
-		row := tx.QueryRow("SELECT photo_exif.* FROM photo, photo_exif WHERE photo.exif_id = photo_exif.exif_id AND photo.photo_id = ?", photo.PhotoID)
-		exifData, err := models.NewPhotoExifFromRow(row)
+		row := tx.QueryRow("SELECT media_exif.* FROM media, media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", media.MediaID)
+		exifData, err := models.NewMediaExifFromRow(row)
 		if err != nil && err != sql.ErrNoRows {
 			return nil, err
 		} else if exifData != nil {
@@ -34,7 +34,7 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 		}
 	}
 
-	photoFile, err := os.Open(photo.Path)
+	photoFile, err := os.Open(media.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -54,24 +54,22 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 		return nil, errors.Wrap(err, "Could not decode EXIF")
 	}
 
-	// log.Printf("EXIF DATA FOR %s\n%s\n", photo.Title, exifTags.String())
-
 	valueNames := make([]string, 0)
 	exifValues := make([]interface{}, 0)
 
-	model, err := readStringTag(exifTags, exif.Model, photo)
+	model, err := readStringTag(exifTags, exif.Model, media)
 	if err == nil {
 		valueNames = append(valueNames, "camera")
 		exifValues = append(exifValues, model)
 	}
 
-	maker, err := readStringTag(exifTags, exif.Make, photo)
+	maker, err := readStringTag(exifTags, exif.Make, media)
 	if err == nil {
 		valueNames = append(valueNames, "maker")
 		exifValues = append(exifValues, maker)
 	}
 
-	lens, err := readStringTag(exifTags, exif.LensModel, photo)
+	lens, err := readStringTag(exifTags, exif.LensModel, media)
 	if err == nil {
 		valueNames = append(valueNames, "lens")
 		exifValues = append(exifValues, lens)
@@ -83,13 +81,13 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 		exifValues = append(exifValues, date)
 	}
 
-	exposure, err := readRationalTag(exifTags, exif.ExposureTime, photo)
+	exposure, err := readRationalTag(exifTags, exif.ExposureTime, media)
 	if err == nil {
 		valueNames = append(valueNames, "exposure")
 		exifValues = append(exifValues, exposure.RatString())
 	}
 
-	apertureRat, err := readRationalTag(exifTags, exif.FNumber, photo)
+	apertureRat, err := readRationalTag(exifTags, exif.FNumber, media)
 	if err == nil {
 		aperture, _ := apertureRat.Float32()
 		valueNames = append(valueNames, "aperture")
@@ -98,11 +96,11 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 
 	isoTag, err := exifTags.Get(exif.ISOSpeedRatings)
 	if err != nil {
-		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %s\n", photo.Title)
+		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %s\n", media.Title)
 	} else {
 		iso, err := isoTag.Int(0)
 		if err != nil {
-			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %s\n", photo.Title)
+			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %s\n", media.Title)
 		} else {
 			valueNames = append(valueNames, "iso")
 			exifValues = append(exifValues, iso)
@@ -123,7 +121,7 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 			if err == nil {
 				focalLength, err := focalLengthTag.Int(1)
 				if err != nil {
-					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %s\n%s\n", photo.Title, err)
+					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %s\n%s\n", media.Title, err)
 				} else {
 					valueNames = append(valueNames, "focal_length")
 					exifValues = append(exifValues, focalLength)
@@ -138,13 +136,13 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 		exifValues = append(exifValues, flash)
 	}
 
-	orientation, err := readIntegerTag(exifTags, exif.Orientation, photo)
+	orientation, err := readIntegerTag(exifTags, exif.Orientation, media)
 	if err == nil {
 		valueNames = append(valueNames, "orientation")
 		exifValues = append(exifValues, *orientation)
 	}
 
-	exposureProgram, err := readIntegerTag(exifTags, exif.ExposureProgram, photo)
+	exposureProgram, err := readIntegerTag(exifTags, exif.ExposureProgram, media)
 	if err == nil {
 		valueNames = append(valueNames, "exposure_program")
 		exifValues = append(exifValues, *exposureProgram)
@@ -167,7 +165,7 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 	columns = columns[0 : len(columns)-1]
 
 	// Insert into database
-	result, err := tx.Exec("INSERT INTO photo_exif ("+columns+") VALUES ("+prepareQuestions+")", exifValues...)
+	result, err := tx.Exec("INSERT INTO media_exif ("+columns+") VALUES ("+prepareQuestions+")", exifValues...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,85 +175,79 @@ func ScanEXIF(tx *sql.Tx, photo *models.Photo) (returnExif *models.PhotoEXIF, re
 		return nil, err
 	}
 
-	// Link exif to photo in database
-	result, err = tx.Exec("UPDATE photo SET exif_id = ? WHERE photo_id = ?", exifID, photo.PhotoID)
+	// Link exif to media in database
+	result, err = tx.Exec("UPDATE media SET exif_id = ? WHERE media_id = ?", exifID, media.MediaID)
 	if err != nil {
 		return nil, err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "linking exif to media in database failed")
 	}
 
 	if rowsAffected == 0 {
-		return nil, errors.New("Linking exif to photo in database failed: 0 rows affected")
+		return nil, errors.New("linking exif to media in database failed: 0 rows affected")
 	}
 
 	// Return newly created exif row
-	row := tx.QueryRow("SELECT * FROM photo_exif WHERE exif_id = ?", exifID)
-	return models.NewPhotoExifFromRow(row)
+	row := tx.QueryRow("SELECT * FROM media_exif WHERE exif_id = ?", exifID)
+	return models.NewMediaExifFromRow(row)
 }
 
-func readStringTag(tags *exif.Exif, name exif.FieldName, photo *models.Photo) (*string, error) {
+func readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*string, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		log.Printf("WARN: Could not read %s from EXIF: %s\n", name, photo.Title)
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
 	}
 
 	if tag != nil {
 		value, err := tag.StringVal()
 		if err != nil {
-			log.Printf("WARN: Could not parse %s from EXIF as string: %s\n", name, photo.Title)
-			return nil, err
+			return nil, errors.Wrapf(err, "could not parse %s from EXIF as string: %s", name, media.Title)
 		}
 
 		return &value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, photo.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
 	return nil, errors.New("exif tag returned null")
 }
 
-func readRationalTag(tags *exif.Exif, name exif.FieldName, photo *models.Photo) (*big.Rat, error) {
+func readRationalTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*big.Rat, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		log.Printf("WARN: Could not read %s from EXIF: %s\n", name, photo.Title)
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
 	}
 
 	if tag != nil {
 		value, err := tag.Rat(0)
 		if err != nil {
-			log.Printf("WARN: Could not parse %s from EXIF as rational: %s\n%s\n", name, photo.Title, err)
-			return nil, err
+			return nil, errors.Wrapf(err, "could not parse %s from EXIF as rational: %s", name, media.Title)
 		}
 
 		return value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, photo.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
 	return nil, errors.New("exif tag returned null")
 }
 
-func readIntegerTag(tags *exif.Exif, name exif.FieldName, photo *models.Photo) (*int, error) {
+func readIntegerTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*int, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		log.Printf("WARN: Could not read %s from EXIF: %s\n", name, photo.Title)
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
 	}
 
 	if tag != nil {
 		value, err := tag.Int(0)
 		if err != nil {
-			log.Printf("WARN: Could not parse %s from EXIF as integer: %s\n%s\n", name, photo.Title, err)
-			return nil, err
+			return nil, errors.Wrapf(err, "Could not parse %s from EXIF as integer: %s", name, media.Title)
 		}
 
 		return &value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, photo.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
 	return nil, errors.New("exif tag returned null")
 }

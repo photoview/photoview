@@ -19,20 +19,20 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	notifyThrottle.Trigger(nil)
 
 	// Scan for photos
-	albumPhotos, err := findPhotosForAlbum(album, cache, db, func(photo *models.Photo, newPhoto bool) {
+	albumPhotos, err := findMediaForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
 		if newPhoto {
 			notifyThrottle.Trigger(func() {
 				notification.BroadcastNotification(&models.Notification{
 					Key:     album_notify_key,
 					Type:    models.NotificationTypeMessage,
-					Header:  fmt.Sprintf("Found new photos in album '%s'", album.Title),
-					Content: fmt.Sprintf("Found photo %s", photo.Path),
+					Header:  fmt.Sprintf("Found new media in album '%s'", album.Title),
+					Content: fmt.Sprintf("Found %s", photo.Path),
 				})
 			})
 		}
 	})
 	if err != nil {
-		ScannerError("Failed to find photos for album (%s): %s", album.Path, err)
+		ScannerError("Failed to find media for album (%s): %s", album.Path, err)
 	}
 
 	album_has_changes := false
@@ -42,7 +42,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			ScannerError("Failed to begin database transaction: %s", err)
 		}
 
-		processing_was_needed, err := ProcessPhoto(tx, photo)
+		processing_was_needed, err := ProcessMedia(tx, photo)
 		if err != nil {
 			tx.Rollback()
 			ScannerError("Failed to process photo (%s): %s", photo.Path, err)
@@ -55,8 +55,8 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			notification.BroadcastNotification(&models.Notification{
 				Key:      album_notify_key,
 				Type:     models.NotificationTypeProgress,
-				Header:   fmt.Sprintf("Processing photo for album '%s'", album.Title),
-				Content:  fmt.Sprintf("Processed photo at %s", photo.Path),
+				Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
+				Content:  fmt.Sprintf("Processed media at %s", photo.Path),
 				Progress: &progress,
 			})
 		}
@@ -73,16 +73,16 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 			Key:      album_notify_key,
 			Type:     models.NotificationTypeMessage,
 			Positive: true,
-			Header:   fmt.Sprintf("Done processing photos for album '%s'", album.Title),
-			Content:  fmt.Sprintf("All photos have been processed"),
+			Header:   fmt.Sprintf("Done processing media for album '%s'", album.Title),
+			Content:  fmt.Sprintf("All media have been processed"),
 			Timeout:  &timeoutDelay,
 		})
 	}
 }
 
-func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Photo, newPhoto bool)) ([]*models.Photo, error) {
+func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
-	albumPhotos := make([]*models.Photo, 0)
+	albumPhotos := make([]*models.Media, 0)
 
 	dirContent, err := ioutil.ReadDir(album.Path)
 	if err != nil {
@@ -92,16 +92,16 @@ func findPhotosForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.D
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
-		if !item.IsDir() && isPathImage(photoPath, cache) {
+		if !item.IsDir() && isPathMedia(photoPath, cache) {
 			tx, err := db.Begin()
 			if err != nil {
 				ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)
 				continue
 			}
 
-			photo, isNewPhoto, err := ScanPhoto(tx, photoPath, album.AlbumID)
+			photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.AlbumID, cache)
 			if err != nil {
-				ScannerError("Scanning image error (%s): %s", photoPath, err)
+				ScannerError("Scanning media error (%s): %s", photoPath, err)
 				tx.Rollback()
 				continue
 			}

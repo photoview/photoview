@@ -10,17 +10,21 @@ const photoQuery = gql`
     myAlbums(filter: { order_by: "title", order_direction: ASC, limit: 100 }) {
       title
       id
-      photos(
-        filter: { order_by: "photo.title", order_direction: DESC, limit: 12 }
+      media(
+        filter: { order_by: "media.title", order_direction: DESC, limit: 12 }
       ) {
         id
         title
+        type
         thumbnail {
           url
           width
           height
         }
         highRes {
+          url
+        }
+        videoWeb {
           url
         }
         favorite
@@ -66,7 +70,7 @@ class PhotosPage extends Component {
   }
 
   nextImage() {
-    const albumImageCount = this.albums[this.state.activeAlbumIndex].photos
+    const albumImageCount = this.albums[this.state.activeAlbumIndex].media
       .length
 
     if (this.state.activePhotoIndex + 1 < albumImageCount) {
@@ -115,7 +119,7 @@ class PhotosPage extends Component {
                       this.setPresenting(presenting, index)
                     }
                     loading={loading}
-                    photos={album.photos}
+                    media={album.media}
                     nextImage={this.nextImage}
                     previousImage={this.previousImage}
                   />
@@ -126,7 +130,7 @@ class PhotosPage extends Component {
             let activeImage = null
             if (this.state.activeAlbumIndex != -1) {
               activeImage =
-                data.myAlbums[this.state.activeAlbumIndex].photos[
+                data.myAlbums[this.state.activeAlbumIndex].media[
                   this.state.activePhotoIndex
                 ].id
             }

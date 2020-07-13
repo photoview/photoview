@@ -34,25 +34,25 @@ func (r *shareTokenResolver) Album(ctx context.Context, obj *models.ShareToken) 
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
-			return nil, err
+			return nil, errors.Wrap(err, "could not get album of share token from database")
 		}
 	}
 
 	return album, nil
 }
 
-func (r *shareTokenResolver) Photo(ctx context.Context, obj *models.ShareToken) (*models.Photo, error) {
-	row := r.Database.QueryRow("SELECT * FROM photo WHERE photo.photo_id = ?", obj.PhotoID)
-	photo, err := models.NewPhotoFromRow(row)
+func (r *shareTokenResolver) Media(ctx context.Context, obj *models.ShareToken) (*models.Media, error) {
+	row := r.Database.QueryRow("SELECT * FROM media WHERE media.media_id = ?", obj.MediaID)
+	media, err := models.NewMediaFromRow(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
-			return nil, err
+			return nil, errors.Wrap(err, "could not get media of share token from database")
 		}
 	}
 
-	return photo, nil
+	return media, nil
 }
 
 func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error) {
@@ -68,7 +68,7 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 		if err == sql.ErrNoRows {
 			return nil, errors.New("share not found")
 		} else {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get share token from database")
 		}
 	}
 
@@ -77,7 +77,7 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 			if err == bcrypt.ErrMismatchedHashAndPassword {
 				return nil, errors.New("unauthorized")
 			} else {
-				return nil, errors.New("internal server error")
+				return nil, errors.Wrap(err, "failed to compare token password hashes")
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenVal
 		if err == sql.ErrNoRows {
 			return false, errors.New("share not found")
 		} else {
-			return false, err
+			return false, errors.Wrap(err, "failed to get share token from database")
 		}
 	}
 
@@ -108,7 +108,7 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenVal
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil
 		} else {
-			return false, err
+			return false, errors.Wrap(err, "could not compare token password hashes")
 		}
 	}
 
@@ -123,7 +123,7 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 
 	rows, err := r.Database.Query("SELECT owner_id FROM album WHERE album.album_id = ? AND album.owner_id = ?", albumID, user.UserID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to validate album owner with database")
 	}
 	if rows.Next() == false {
 		return nil, auth.ErrUnauthorized
@@ -134,7 +134,7 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to hash token password")
 		}
 		hashed_str := string(hashedPassBytes)
 		hashed_password = &hashed_str
@@ -143,12 +143,12 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 	token := utils.GenerateToken()
 	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, album_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, albumID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to insert new share token into database")
 	}
 
 	token_id, err := res.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not get database id of new album share token")
 	}
 
 	return &models.ShareToken{
@@ -158,19 +158,19 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 		Expire:   expire,
 		Password: password,
 		AlbumID:  &albumID,
-		PhotoID:  nil,
+		MediaID:  nil,
 	}, nil
 }
 
-func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	rows, err := r.Database.Query("SELECT owner_id FROM album, photo WHERE photo.photo_id = ? AND photo.album_id = album.album_id AND album.owner_id = ?", photoID, user.UserID)
+	rows, err := r.Database.Query("SELECT owner_id FROM album, media WHERE media.media_id = ? AND media.album_id = album.album_id AND album.owner_id = ?", mediaID, user.UserID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error validating owner of media with database")
 	}
 	if rows.Next() == false {
 		return nil, auth.ErrUnauthorized
@@ -183,14 +183,14 @@ func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *
 	}
 
 	token := utils.GenerateToken()
-	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, photo_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, photoID)
+	res, err := r.Database.Exec("INSERT INTO share_token (value, owner_id, expire, password, media_id) VALUES (?, ?, ?, ?, ?)", token, user.UserID, expire, hashed_password, mediaID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to insert new share token into database")
 	}
 
 	token_id, err := res.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not get database id of new media share token")
 	}
 
 	return &models.ShareToken{
@@ -200,7 +200,7 @@ func (r *mutationResolver) SharePhoto(ctx context.Context, photoID int, expire *
 		Expire:   expire,
 		Password: password,
 		AlbumID:  nil,
-		PhotoID:  &photoID,
+		MediaID:  &mediaID,
 	}, nil
 }
 
@@ -216,7 +216,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 	}
 
 	if _, err := r.Database.Exec("DELETE FROM share_token WHERE token_id = ?", token.TokenID); err != nil {
-		return nil, errors.Wrapf(err, "Error occurred when trying to delete share token (%s) from database", tokenValue)
+		return nil, errors.Wrapf(err, "failed to delete share token (%s) from database", tokenValue)
 	}
 
 	return token, nil
@@ -240,7 +240,7 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue str
 
 	_, err = r.Database.Exec("UPDATE share_token SET password = ? WHERE token_id = ?", hashed_password, token.TokenID)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to update password for share token")
+		return nil, errors.Wrap(err, "failed to update password for share token")
 	}
 
 	updatedToken := r.Database.QueryRow("SELECT * FROM share_token WHERE value = ?", tokenValue)
@@ -252,7 +252,7 @@ func hashSharePassword(password *string) (*string, error) {
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to generate hash for share password")
 		}
 		hashed_str := string(hashedPassBytes)
 		hashed_password = &hashed_str
@@ -271,7 +271,7 @@ func getUserToken(db *sql.DB, user *models.User, tokenValue string) (*models.Sha
 
 	token, err := models.NewShareTokenFromRow(row)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get user share token from database")
 	}
 
 	return token, nil

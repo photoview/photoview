@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type ShareToken struct {
@@ -12,7 +14,7 @@ type ShareToken struct {
 	Expire   *time.Time
 	Password *string
 	AlbumID  *int
-	PhotoID  *int
+	MediaID  *int
 }
 
 func (share *ShareToken) Token() string {
@@ -26,8 +28,8 @@ func (share *ShareToken) ID() int {
 func NewShareTokenFromRow(row *sql.Row) (*ShareToken, error) {
 	token := ShareToken{}
 
-	if err := row.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.PhotoID); err != nil {
-		return nil, err
+	if err := row.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.MediaID); err != nil {
+		return nil, errors.Wrap(err, "failed to scan share token from database")
 	}
 
 	return &token, nil
@@ -38,8 +40,8 @@ func NewShareTokensFromRows(rows *sql.Rows) ([]*ShareToken, error) {
 
 	for rows.Next() {
 		var token ShareToken
-		if err := rows.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.PhotoID); err != nil {
-			return nil, err
+		if err := rows.Scan(&token.TokenID, &token.Value, &token.OwnerID, &token.Expire, &token.Password, &token.AlbumID, &token.MediaID); err != nil {
+			return nil, errors.Wrap(err, "failed to scan share tokens from database")
 		}
 		tokens = append(tokens, &token)
 	}

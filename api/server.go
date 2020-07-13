@@ -81,6 +81,9 @@ func main() {
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)
 
+	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
+	routes.RegisterVideoRoutes(db, videoRouter)
+
 	shouldServeUI := os.Getenv("SERVE_UI") == "1"
 
 	if shouldServeUI {

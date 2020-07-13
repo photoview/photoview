@@ -2,8 +2,6 @@ package routes
 
 import (
 	"database/sql"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -11,23 +9,21 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/scanner"
 )
 
-func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
+func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		media_name := mux.Vars(r)["name"]
 
-		row := db.QueryRow("SELECT media_url.purpose, media_url.content_type, media_url.media_id FROM media_url, media WHERE media_url.media_name = ? AND media_url.media_id = media.media_id", media_name)
+		row := db.QueryRow("SELECT media_url.purpose, media_url.media_id FROM media_url, media WHERE media_url.media_name = ? AND media_url.media_id = media.media_id", media_name)
 
 		var purpose models.MediaPurpose
-		var content_type string
 		var media_id int
 
-		if err := row.Scan(&purpose, &content_type, &media_id); err != nil {
+		if err := row.Scan(&purpose, &media_id); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
@@ -43,7 +39,7 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
-				log.Printf("WARN: error authenticating photo: %s\n", err)
+				log.Printf("WARN: error authenticating video: %s\n", err)
 			}
 			w.WriteHeader(status)
 			w.Write([]byte(response))
@@ -51,21 +47,17 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 		}
 
 		var cachedPath string
-		var file *os.File = nil
 
-		if purpose == models.PhotoThumbnail || purpose == models.PhotoHighRes || purpose == models.VideoThumbnail {
+		if purpose == models.VideoWeb {
 			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(media_id), media_name)
-		} else if purpose == models.MediaOriginal {
-			cachedPath = media.Path
 		} else {
-			log.Printf("ERROR: Can not handle media_purpose for photo: %s\n", purpose)
+			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", purpose)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("internal server error"))
 			return
 		}
 
-		file, err = os.Open(cachedPath)
-		defer file.Close()
+		_, err = os.Stat(cachedPath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				tx, err := db.Begin()
@@ -78,16 +70,16 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 
 				_, err = scanner.ProcessMedia(tx, media)
 				if err != nil {
-					log.Printf("ERROR: processing image not found in cache: %s\n", err)
+					log.Printf("ERROR: processing video not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte("internal server error"))
 					tx.Rollback()
 					return
 				}
 
-				file, err = os.Open(cachedPath)
+				_, err = os.Stat(cachedPath)
 				if err != nil {
-					log.Printf("ERROR: after reprocessing image not found in cache: %s\n", err)
+					log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte("internal server error"))
 					tx.Rollback()
@@ -98,11 +90,6 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 			}
 		}
 
-		w.Header().Set("Content-Type", content_type)
-		if stats, err := file.Stat(); err == nil {
-			w.Header().Set("Content-Length", fmt.Sprintf("%d", stats.Size()))
-		}
-
-		io.Copy(w, file)
+		http.ServeFile(w, r, cachedPath)
 	})
 }
