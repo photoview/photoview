@@ -46,8 +46,6 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 			return
 		}
 
-		log.Printf("Video cookies: %d", len(r.Cookies()))
-
 		var cachedPath string
 
 		if purpose == models.VideoWeb {
