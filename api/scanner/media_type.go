@@ -63,6 +63,7 @@ const (
 	TypeWEBM MediaType = "video/webm"
 	TypeMOV  MediaType = "video/quicktime"
 	TypeTS   MediaType = "video/mp2t"
+	TypeMTS  MediaType = "video/MP2T"
 )
 
 var SupportedMimetypes = [...]MediaType{
@@ -124,6 +125,7 @@ var VideoMimetypes = [...]MediaType{
 	TypeWEBM,
 	TypeMOV,
 	TypeTS,
+	TypeMTS,
 }
 
 var fileExtensions = map[string]MediaType{
@@ -171,6 +173,8 @@ var fileExtensions = map[string]MediaType{
 	".mov":  TypeMOV,
 	".qt":   TypeMOV,
 	".ts":   TypeTS,
+	".m2ts": TypeMTS,
+	".mts":  TypeMTS,
 }
 
 func (imgType *MediaType) isRaw() bool {

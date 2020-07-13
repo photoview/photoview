@@ -28,7 +28,6 @@ func Middleware(db *sql.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
-				log.Println("Found auth-token cookie")
 				user, err := models.VerifyTokenAndGetUser(db, tokenCookie.Value)
 				if err != nil {
 					log.Printf("Invalid token: %s\n", err)
