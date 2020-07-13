@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { useLazyQuery } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
 import debounce from '../../debounce'
-import ProtectedImage from '../photoGallery/ProtectedImage'
+import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink } from 'react-router-dom'
 
 const Container = styled.div`

@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import SidebarItem from './SidebarItem'
-import ProtectedImage from '../photoGallery/ProtectedImage'
+import { ProtectedImage, ProtectedVideo } from '../photoGallery/ProtectedMedia'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 import { authToken } from '../../authentication'
@@ -73,7 +73,7 @@ const PreviewImage = styled(ProtectedImage)`
   object-fit: contain;
 `
 
-const PreviewVideo = styled.video`
+const PreviewVideo = styled(ProtectedVideo)`
   position: absolute;
   width: 100%;
   height: 100%;
@@ -87,16 +87,7 @@ const PreviewMedia = ({ media, previewImage }) => {
   }
 
   if (media.type == 'video') {
-    return (
-      <PreviewVideo
-        controls
-        key={media.id}
-        crossorigin="use-credentials"
-        poster={media.thumbnail.url}
-      >
-        <source src={media.videoWeb.url} type="video/mp4" />
-      </PreviewVideo>
-    )
+    return <PreviewVideo media={media} />
   }
 
   throw new Error('Unknown media type')

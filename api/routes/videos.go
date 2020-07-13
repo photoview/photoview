@@ -37,7 +37,6 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 			w.Write([]byte("internal server error"))
 		}
 
-		// TODO: Make sure user is authorized to access video
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
 				log.Printf("WARN: error authenticating video: %s\n", err)

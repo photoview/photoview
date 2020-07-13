@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -39,7 +40,12 @@ func authenticateMedia(media *models.Media, db *sql.DB, r *http.Request) (succes
 
 		// Validate share token password, if set
 		if shareToken.Password != nil {
-			tokenPassword := r.Header.Get("TokenPassword")
+			tokenPasswordCookie, err := r.Cookie(fmt.Sprintf("share-token-pw-%s", shareToken.Value))
+			if err != nil {
+				return false, "unauthorized", http.StatusForbidden, nil
+			}
+			// tokenPassword := r.Header.Get("TokenPassword")
+			tokenPassword := tokenPasswordCookie.Value
 
 			if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
 				if err == bcrypt.ErrMismatchedHashAndPassword {

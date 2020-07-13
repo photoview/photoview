@@ -2,7 +2,10 @@ import React, { useContext, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import Layout from '../../Layout'
-import ProtectedImage from '../../components/photoGallery/ProtectedImage'
+import {
+  ProtectedImage,
+  ProtectedVideo,
+} from '../../components/photoGallery/ProtectedMedia'
 import { SidebarContext } from '../../components/sidebar/Sidebar'
 import MediaSidebar from '../../components/sidebar/MediaSidebar'
 
@@ -12,7 +15,7 @@ const DisplayPhoto = styled(ProtectedImage)`
   object-fit: contain;
 `
 
-const DisplayVideo = styled.video`
+const DisplayVideo = styled(ProtectedVideo)`
   width: 100%;
   max-height: calc(80vh);
 `
@@ -29,16 +32,7 @@ const MediaView = ({ media }) => {
   }
 
   if (media.type == 'video') {
-    return (
-      <DisplayVideo
-        controls
-        key={media.id}
-        crossorigin="use-credentials"
-        poster={media.thumbnail.url}
-      >
-        <source src={media.videoWeb.url} type="video/mp4" />
-      </DisplayVideo>
-    )
+    return <DisplayVideo media={media} />
   }
 
   throw new Error(`Unsupported media type: ${media.type}`)

@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
-import ProtectedImage from './ProtectedImage'
+import { ProtectedImage } from './ProtectedMedia'
 
 const markFavoriteMutation = gql`
   mutation markMediaFavorite($mediaId: Int!, $favorite: Boolean!) {

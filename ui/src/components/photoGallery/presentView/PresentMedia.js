@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import ProtectedImage from '../ProtectedImage'
+import { ProtectedImage, ProtectedVideo } from '../ProtectedMedia'
 
 const StyledPhoto = styled(ProtectedImage)`
   position: absolute;
@@ -13,7 +13,7 @@ const StyledPhoto = styled(ProtectedImage)`
   object-position: center;
 `
 
-const StyledVideo = styled.video`
+const StyledVideo = styled(ProtectedVideo)`
   position: absolute;
   top: 0;
   left: 0;
@@ -39,18 +39,7 @@ const PresentMedia = ({ media, imageLoaded, ...otherProps }) => {
   }
 
   if (media.type == 'video') {
-    return (
-      <div {...otherProps}>
-        <StyledVideo
-          controls
-          key={media.id}
-          crossorigin="use-credentials"
-          poster={media.thumbnail.url}
-        >
-          <source src={media.videoWeb.url} type="video/mp4" />
-        </StyledVideo>
-      </div>
-    )
+    return <StyledVideo media={media} />
   }
 
   throw new Error(`Unknown media type '${media.type}'`)

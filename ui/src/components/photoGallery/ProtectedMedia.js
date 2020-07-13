@@ -1,43 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 
-// let imageCache = {}
+const getProtectedUrl = url => {
+  const imgUrl = new URL(url)
 
-// export async function fetchProtectedImage(
-//   src,
-//   { signal, headers: customHeaders } = { signal: null, headers: null }
-// ) {
-//   if (src) {
-//     if (imageCache[src]) {
-//       return imageCache[src]
-//     }
+  if (localStorage.getItem('token') == null) {
+    // Get share token if not authorized
 
-//     let headers = {
-//       ...customHeaders,
-//     }
-//     if (localStorage.getItem('token')) {
-//       headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`
-//     }
+    const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+    if (tokenRegex) {
+      const token = tokenRegex[1]
+      imgUrl.searchParams.set('token', token)
+    }
+  }
 
-//     let image = await fetch(src, {
-//       headers,
-//       signal,
-//     })
-
-//     image = await image.blob()
-//     const url = URL.createObjectURL(image)
-
-//     // eslint-disable-next-line require-atomic-updates
-//     imageCache[src] = url
-
-//     return url
-//   }
-// }
+  return imgUrl.href
+}
 
 /**
- * An image that needs a authorization header to load
+ * An image that needs authorization to load
  */
-const ProtectedImage = ({ src, ...props }) => {
+export const ProtectedImage = ({ src, ...props }) => {
   // const [imgSrc, setImgSrc] = useState(null)
 
   // useEffect(() => {
@@ -85,11 +68,29 @@ const ProtectedImage = ({ src, ...props }) => {
   //   }
   // }, [src])
 
-  return <img {...props} src={src} crossOrigin="use-credentials" />
+  return (
+    <img {...props} src={getProtectedUrl(src)} crossOrigin="use-credentials" />
+  )
 }
 
 ProtectedImage.propTypes = {
-  src: PropTypes.string,
+  src: PropTypes.string.isRequired,
 }
 
-export default ProtectedImage
+export const ProtectedVideo = ({ media, ...props }) => {
+  return (
+    <video
+      {...props}
+      controls
+      key={media.id}
+      crossOrigin="use-credentials"
+      poster={getProtectedUrl(media.thumbnail.url)}
+    >
+      <source src={getProtectedUrl(media.videoWeb.url)} type="video/mp4" />
+    </video>
+  )
+}
+
+ProtectedVideo.propTypes = {
+  media: PropTypes.object.isRequired,
+}

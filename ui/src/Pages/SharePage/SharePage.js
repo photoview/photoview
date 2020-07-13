@@ -16,6 +16,7 @@ import {
   Icon,
   Message,
 } from 'semantic-ui-react'
+import { saveSharePassword, getSharePassword } from '../../authentication'
 
 const shareTokenQuery = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -97,7 +98,7 @@ const AuthorizedTokenRoute = ({ match }) => {
   const { loading, error, data } = useQuery(shareTokenQuery, {
     variables: {
       token,
-      password: sessionStorage.getItem(`share-token-pw-${token}`),
+      password: getSharePassword(token),
     },
   })
 
@@ -185,7 +186,7 @@ const TokenRoute = ({ match }) => {
     {
       variables: {
         token: match.params.token,
-        password: sessionStorage.getItem(`share-token-pw-${token}`),
+        password: getSharePassword(match.params.token),
       },
     }
   )
@@ -208,8 +209,8 @@ const TokenRoute = ({ match }) => {
       <ProtectedTokenEnterPassword
         match={match}
         refetchWithPassword={password => {
-          sessionStorage.setItem(`share-token-pw-${token}`, password)
-          refetch({ variables: { password: password } })
+          saveSharePassword(token, password)
+          refetch({ variables: { password } })
         }}
         loading={loading}
       />
