@@ -1,13 +1,14 @@
-
 ALTER TABLE photo RENAME TO media;
 ALTER TABLE photo_url RENAME TO media_url;
 ALTER TABLE photo_exif RENAME TO media_exif;
 
-ALTER TABLE media CHANGE COLUMN photo_id media_id int NOT NULL AUTO_INCREMENT;
+ALTER TABLE media RENAME COLUMN photo_id TO media_id;
+
 ALTER TABLE media_url
-  CHANGE COLUMN photo_id media_id int NOT NULL,
-  CHANGE COLUMN photo_name media_name varchar(512) NOT NULL;
-ALTER TABLE share_token CHANGE COLUMN photo_id media_id int;
+  RENAME COLUMN photo_id TO media_id,
+  RENAME COLUMN photo_name TO media_name;
+
+ALTER TABLE share_token RENAME COLUMN photo_id TO media_id;
 
 CREATE TABLE video_metadata (
   metadata_id int NOT NULL AUTO_INCREMENT,
