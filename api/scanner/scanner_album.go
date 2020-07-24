@@ -67,6 +67,11 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 		}
 	}
 
+	cleanup_errors := CleanupMedia(db, album.AlbumID, albumPhotos)
+	for _, err := range cleanup_errors {
+		ScannerError("Failed to delete old media: %s", err)
+	}
+
 	if album_has_changes {
 		timeoutDelay := 2000
 		notification.BroadcastNotification(&models.Notification{
