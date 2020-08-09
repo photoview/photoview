@@ -1,5 +1,5 @@
 # Build UI
-FROM node:10 as ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:10 as ui
 
 ARG API_ENDPOINT
 ENV API_ENDPOINT=${API_ENDPOINT}
@@ -20,7 +20,12 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 # Build API
-FROM golang:alpine AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14-alpine AS api
+
+# Convert TARGETPLATFORM to GOARCH format
+# https://github.com/tonistiigi/xx
+COPY --from=tonistiigi/xx:golang / /
+ARG TARGETPLATFORM
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -32,7 +37,7 @@ RUN go mod download
 # Copy api source
 COPY api /app
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o photoview .
+RUN go env && go build -v -o photoview .
 
 # Copy api and ui to production environment
 FROM alpine:3.12
