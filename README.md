@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/viktorstrate/photoview)](./LICENSE.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/viktorstrate/photoview)](https://github.com/viktorstrate/photoview/graphs/contributors)
 [![Docker Pulls](https://img.shields.io/docker/pulls/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview)
-[![Docker Build Status](https://img.shields.io/docker/cloud/build/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview/builds)
+[![Docker Build Status](https://img.shields.io/github/workflow/status/viktorstrate/photoview/Docker%20builds?label=docker%20build)](https://hub.docker.com/r/viktorstrate/photoview/)
 
 ![screenshot](./screenshots/main-window.png)
 
