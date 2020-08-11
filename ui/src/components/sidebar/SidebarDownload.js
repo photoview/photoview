@@ -14,9 +14,12 @@ const downloadQuery = gql`
       id
       downloads {
         title
-        url
-        width
-        height
+        mediaUrl {
+          url
+          width
+          height
+          fileSize
+        }
       }
     }
   }
@@ -171,10 +174,14 @@ const SidebarDownload = ({ photo }) => {
   }
 
   let downloadRows = downloads.map(x => (
-    <DownloadTableRow key={x.url} onClick={() => downloadPhoto(x.url)}>
+    <DownloadTableRow
+      key={x.mediaUrl.url}
+      onClick={() => downloadPhoto(x.mediaUrl.url)}
+    >
       <Table.Cell>{`${x.title}`}</Table.Cell>
-      <Table.Cell>{`${x.width} x ${x.height}`}</Table.Cell>
-      <Table.Cell>{extractExtension(x.url)}</Table.Cell>
+      <Table.Cell>{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</Table.Cell>
+      <Table.Cell>{`${formatBytes(x.mediaUrl.fileSize)}`}</Table.Cell>
+      <Table.Cell>{extractExtension(x.mediaUrl.url)}</Table.Cell>
     </DownloadTableRow>
   ))
 
@@ -187,6 +194,7 @@ const SidebarDownload = ({ photo }) => {
           <Table.Row>
             <Table.HeaderCell>Name</Table.HeaderCell>
             <Table.HeaderCell>Dimensions</Table.HeaderCell>
+            <Table.HeaderCell>Size</Table.HeaderCell>
             <Table.HeaderCell>Type</Table.HeaderCell>
           </Table.Row>
         </Table.Header>

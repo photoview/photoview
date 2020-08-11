@@ -108,10 +108,8 @@ func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*mo
 		}
 
 		downloads = append(downloads, &models.MediaDownload{
-			Title:  title,
-			Width:  url.Width,
-			Height: url.Height,
-			URL:    url.URL(),
+			Title:    title,
+			MediaURL: url,
 		})
 	}
 
