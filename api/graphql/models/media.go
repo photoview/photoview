@@ -41,6 +41,7 @@ type MediaURL struct {
 	Height      int
 	Purpose     MediaPurpose
 	ContentType string
+	FileSize    int
 }
 
 func NewMediaFromRow(row *sql.Row) (*Media, error) {
@@ -84,7 +85,7 @@ func (p *MediaURL) URL() string {
 func NewMediaURLFromRow(row *sql.Row) (*MediaURL, error) {
 	url := MediaURL{}
 
-	if err := row.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType); err != nil {
+	if err := row.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +97,7 @@ func NewMediaURLFromRows(rows *sql.Rows) ([]*MediaURL, error) {
 
 	for rows.Next() {
 		var url MediaURL
-		if err := rows.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType); err != nil {
+		if err := rows.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
 			return nil, err
 		}
 		urls = append(urls, &url)

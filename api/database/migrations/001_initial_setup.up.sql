@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS media_url (
   height int NOT NULL,
   purpose varchar(64) NOT NULL,
   content_type varchar(64) NOT NULL,
+  file_size int NOT NULL,
 
   PRIMARY KEY (url_id),
   FOREIGN KEY (media_id) REFERENCES media(media_id) ON DELETE CASCADE

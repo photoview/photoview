@@ -128,8 +128,13 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 				return false, err
 			}
 
-			_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
-				photo.MediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg")
+			fileStats, err := os.Stat(baseImagePath)
+			if err != nil {
+				return false, errors.Wrap(err, "reading file stats of highres photo")
+			}
+
+			_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				photo.MediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg", fileStats.Size())
 			if err != nil {
 				return false, errors.Wrapf(err, "could not insert highres media url (%d, %s)", photo.MediaID, photo.Title)
 			}
@@ -187,7 +192,12 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 			return false, errors.Wrap(err, "could not create thumbnail cached image")
 		}
 
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.MediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg")
+		fileStats, err := os.Stat(thumbOutputPath)
+		if err != nil {
+			return false, errors.Wrap(err, "reading file stats of thumbnail photo")
+		}
+
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)", photo.MediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg", fileStats.Size())
 		if err != nil {
 			return false, err
 		}
@@ -250,7 +260,12 @@ func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMed
 		return err
 	}
 
-	_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)", photo.MediaID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.MediaOriginal, contentType)
+	fileStats, err := os.Stat(photo.Path)
+	if err != nil {
+		return errors.Wrap(err, "reading file stats of original photo")
+	}
+
+	_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)", photo.MediaID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.MediaOriginal, contentType, fileStats.Size())
 	if err != nil {
 		log.Printf("Could not insert original photo url: %d, %s\n", photo.MediaID, photoName)
 		return err
