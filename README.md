@@ -30,9 +30,11 @@ Password: **demo**
 
 - **Closely tied to the file system**. The website presents the images found on the local filesystem of the server, directories are mapped to albums.
 - **User management**. Each user is created along with a path on the local filesystem, photos within that path can be accessed by that user.
-- **Photo sharing**. Photos and albums can easily be shared with other users or publicly with a unique URL.
-- **Made for photography**. The website is ment as a way to present photographies, and thus supports **RAW** file formats, and **EXIF** parsing.
+- **Sharing**. Albums, as well as individual media, can easily be shared with a public link, the link can optinally be password protected.
+- **Made for photography**. Photoview is built with photographers in mind, and thus supports **RAW** file formats, and **EXIF** parsing.
+- **Video support**. Many common video formats are supported. Videos will automatically be optimized for web.
 - **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high resolution image has been fully loaded.
+- **Secure**. All media resources are protected with a cookie-token, all passwords are properly hashed, and the API uses a strict [CORS policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
 ## Why yet another self-hosted photo gallery
 
