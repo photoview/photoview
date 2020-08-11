@@ -148,6 +148,15 @@ func ScanEXIF(tx *sql.Tx, media *models.Media) (returnExif *models.MediaEXIF, re
 		exifValues = append(exifValues, *exposureProgram)
 	}
 
+	lat, long, err := exifTags.LatLong()
+	if err == nil {
+		valueNames = append(valueNames, "gps_latitude")
+		exifValues = append(exifValues, lat)
+
+		valueNames = append(valueNames, "gps_longitude")
+		exifValues = append(exifValues, long)
+	}
+
 	if len(valueNames) == 0 {
 		return nil, nil
 	}

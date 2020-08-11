@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS media_exif (
   flash varchar(256),
   orientation int(1),
   exposure_program int(1),
+  gps_latitude float,
+  gps_longitude float,
 
   PRIMARY KEY (exif_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
