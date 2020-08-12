@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"path"
+	"time"
 
 	"github.com/viktorstrate/photoview/api/utils"
 )
@@ -14,6 +15,8 @@ type Media struct {
 	PathHash        string
 	AlbumId         int
 	ExifId          *int
+	DateShot        time.Time
+	DateImported    time.Time
 	Favorite        bool
 	Type            MediaType
 	VideoMetadataId *int
@@ -47,7 +50,7 @@ type MediaURL struct {
 func NewMediaFromRow(row *sql.Row) (*Media, error) {
 	media := Media{}
 
-	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
+	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 		return nil, err
 	}
 
