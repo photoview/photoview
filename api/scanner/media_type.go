@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -265,16 +266,21 @@ func getMediaType(path string) (*MediaType, error) {
 	return nil, nil
 }
 
-func isPathMedia(path string, cache *AlbumScannerCache) bool {
-	mediaType, err := cache.GetMediaType(path)
+func isPathMedia(mediaPath string, cache *AlbumScannerCache) bool {
+	mediaType, err := cache.GetMediaType(mediaPath)
 	if err != nil {
-		ScannerError("%s (%s)", err, path)
+		ScannerError("%s (%s)", err, mediaPath)
+		return false
+	}
+
+	// Ignore hidden files
+	if path.Base(mediaPath)[0:1] == "." {
 		return false
 	}
 
 	if mediaType != nil {
 		// Make sure file isn't empty
-		fileStats, err := os.Stat(path)
+		fileStats, err := os.Stat(mediaPath)
 		if err != nil || fileStats.Size() == 0 {
 			return false
 		}
@@ -282,6 +288,6 @@ func isPathMedia(path string, cache *AlbumScannerCache) bool {
 		return true
 	}
 
-	log.Printf("File is not a supported media %s\n", path)
+	log.Printf("File is not a supported media %s\n", mediaPath)
 	return false
 }
