@@ -5,8 +5,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"syscall"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -48,11 +46,7 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		return nil, false, err
 	}
 
-	// Get the file creation date
-	sec, nsec := stat.Sys().(*syscall.Stat_t).Ctimespec.Unix()
-	createDate := time.Unix(sec, nsec)
-
-	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?)", mediaName, mediaPath, albumId, mediaTypeText, createDate)
+	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?)", mediaName, mediaPath, albumId, mediaTypeText, stat.ModTime())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}
