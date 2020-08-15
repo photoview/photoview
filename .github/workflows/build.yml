@@ -42,6 +42,7 @@ jobs:
             VERSION=nightly
           fi
           
+          TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
           if [[ $VERSION =~ ^(([0-9]{1,3})\.[0-9]{1,3})\.[0-9]{1,3}$ ]]; then
             VERSION_MINOR=${BASH_REMATCH[1]}
             VERSION_MAJOR=${BASH_REMATCH[2]}
