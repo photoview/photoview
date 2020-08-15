@@ -9,7 +9,7 @@ const Container = styled.div`
   position: relative;
 `
 
-const AlbumBoxes = ({ loading, error, albums, getCustomLink }) => {
+const AlbumBoxes = ({ error, albums, getCustomLink }) => {
   if (error) return <div>Error {error.message}</div>
 
   let albumElements = []
@@ -28,12 +28,7 @@ const AlbumBoxes = ({ loading, error, albums, getCustomLink }) => {
     }
   }
 
-  return (
-    <Container>
-      {/* <Loader active={loading}>Loading albums</Loader> */}
-      {albumElements}
-    </Container>
-  )
+  return <Container>{albumElements}</Container>
 }
 
 AlbumBoxes.propTypes = {

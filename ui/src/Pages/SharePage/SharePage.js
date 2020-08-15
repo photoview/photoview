@@ -1,22 +1,14 @@
-import React, { useState } from 'react'
+import gql from 'graphql-tag'
 import PropTypes from 'prop-types'
-import styled from 'styled-components'
-import RouterProps from 'react-router-prop-types'
+import React, { useState } from 'react'
+import { useQuery } from 'react-apollo'
 import { Route, Switch } from 'react-router-dom'
+import RouterProps from 'react-router-prop-types'
+import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'
+import styled from 'styled-components'
+import { getSharePassword, saveSharePassword } from '../../authentication'
 import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
-import { useQuery } from 'react-apollo'
-import gql from 'graphql-tag'
-import {
-  Container,
-  Header,
-  Form,
-  Button,
-  Input,
-  Icon,
-  Message,
-} from 'semantic-ui-react'
-import { saveSharePassword, getSharePassword } from '../../authentication'
 
 const shareTokenQuery = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -61,9 +53,12 @@ const shareTokenQuery = gql`
     }
     downloads {
       title
-      url
-      width
-      height
+      mediaUrl {
+        url
+        width
+        height
+        fileSize
+      }
     }
     highRes {
       url

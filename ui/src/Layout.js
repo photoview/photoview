@@ -21,9 +21,6 @@ const adminQuery = gql`
 const Container = styled.div`
   height: 100%;
   display: flex;
-  /* margin-right: 500px; */
-  /* display: grid;
-  grid-template-columns: 80px 1fr 500px; */
 `
 
 const SideMenu = styled.div`
