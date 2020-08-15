@@ -18,6 +18,21 @@ type PhotoDimensions struct {
 	Height int
 }
 
+func DecodeImage(imagePath string) (image.Image, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open file to decode image (%s)", imagePath)
+	}
+	defer file.Close()
+
+	image, err := imaging.Decode(file, imaging.AutoOrientation(true))
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to decode image (%s)", imagePath)
+	}
+
+	return image, nil
+}
+
 func PhotoDimensionsFromRect(rect image.Rectangle) PhotoDimensions {
 	return PhotoDimensions{
 		Width:  rect.Bounds().Max.X,
@@ -133,13 +148,7 @@ func (img *EncodeMediaData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 }
 
 func EncodeThumbnail(inputPath string, outputPath string) (*PhotoDimensions, error) {
-	inputFile, err := os.Open(inputPath)
-	if err != nil {
-		return nil, err
-	}
-	defer inputFile.Close()
-
-	inputImage, _, err := image.Decode(inputFile)
+	inputImage, err := DecodeImage(inputPath)
 	if err != nil {
 		return nil, err
 	}
@@ -161,13 +170,7 @@ func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 		return img._photoImage, nil
 	}
 
-	photoFile, err := os.Open(img.media.Path)
-	if err != nil {
-		return nil, err
-	}
-	defer photoFile.Close()
-
-	photoImg, _, err := image.Decode(photoFile)
+	photoImg, err := DecodeImage(img.media.Path)
 	if err != nil {
 		return nil, utils.HandleError("image decoding", err)
 	}
@@ -182,37 +185,6 @@ func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 		} else {
 			return nil, err
 		}
-	}
-
-	if orientation == nil {
-		defaultOrientation := 0
-		orientation = &defaultOrientation
-	}
-
-	switch *orientation {
-	case 2:
-		photoImg = imaging.FlipH(photoImg)
-		break
-	case 3:
-		photoImg = imaging.Rotate180(photoImg)
-		break
-	case 4:
-		photoImg = imaging.FlipV(photoImg)
-		break
-	case 5:
-		photoImg = imaging.Transpose(photoImg)
-		break
-	case 6:
-		photoImg = imaging.Rotate270(photoImg)
-		break
-	case 7:
-		photoImg = imaging.Transverse(photoImg)
-		break
-	case 8:
-		photoImg = imaging.Rotate90(photoImg)
-		break
-	default:
-		break
 	}
 
 	img._photoImage = photoImg
