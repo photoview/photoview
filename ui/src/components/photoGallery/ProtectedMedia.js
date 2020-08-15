@@ -17,7 +17,12 @@ const getProtectedUrl = url => {
  * An image that needs authorization to load
  */
 export const ProtectedImage = ({ src, ...props }) => (
-  <img {...props} src={getProtectedUrl(src)} crossOrigin="use-credentials" />
+  <img
+    key={src}
+    {...props}
+    src={getProtectedUrl(src)}
+    crossOrigin="use-credentials"
+  />
 )
 
 ProtectedImage.propTypes = {
