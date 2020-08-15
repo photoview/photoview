@@ -62,7 +62,7 @@ func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
 
 	for rows.Next() {
 		var media Media
-		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
+		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 			return nil, err
 		}
 		medias = append(medias, &media)
