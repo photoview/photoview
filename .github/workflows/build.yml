@@ -41,10 +41,11 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
           fi
-
-          TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
-          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            TAGS="$TAGS --tag ${DOCKER_IMAGE}:latest"
+          
+          if [[ $VERSION =~ ^(([0-9]{1,3})\.[0-9]{1,3})\.[0-9]{1,3}$ ]]; then
+            VERSION_MINOR=${BASH_REMATCH[1]}
+            VERSION_MAJOR=${BASH_REMATCH[2]}
+            TAGS="$TAGS --tag ${DOCKER_IMAGE}:latest --tag ${DOCKER_IMAGE}:${VERSION_MINOR} --tag ${DOCKER_IMAGE}:${VERSION_MAJOR}"
           fi
 
           echo ::set-output name=docker_username::${DOCKER_USERNAME}
