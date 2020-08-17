@@ -18,6 +18,7 @@ const OverlayButton = styled.button`
   height: 64px;
   background: none;
   border: none;
+  outline: none;
   cursor: pointer;
   position: absolute;
 
