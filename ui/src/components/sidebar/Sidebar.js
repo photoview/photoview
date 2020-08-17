@@ -17,6 +17,8 @@ const SidebarContainer = styled.div`
   @media (max-width: 700px) {
     position: absolute;
     width: 100%;
+    /* full height - header - tabbar */
+    height: calc(100% - 60px - 80px);
     max-width: calc(100vw - 85px);
     transform: translateX(100vw);
   }
