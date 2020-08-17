@@ -21,11 +21,11 @@ const SidebarContainer = styled.div`
     /* full height - header - tabbar */
     height: calc(100% - 60px - 80px);
     max-width: min(calc(100vw - 85px), 400px);
-    ${({ highlighted }) => `transform: translateX(${highlighted ? 0 : 100}vw);`}
+    ${({ highlighted }) => `right: ${highlighted ? 0 : -100}%;`}
     padding-top: 45px;
   }
 
-  transition: transform 200ms ease-in-out;
+  transition: right 200ms ease-in-out;
 `
 
 const SidebarDismissButton = styled(Icon)`

@@ -12,6 +12,10 @@ const Container = styled.div`
   bottom: 20px;
   right: 20px;
   width: 500px;
+
+  @media (max-width: 1000px) {
+    display: none;
+  }
 `
 
 export let MessageState = {

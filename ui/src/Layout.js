@@ -21,6 +21,8 @@ const adminQuery = gql`
 const Container = styled.div`
   height: 100%;
   display: flex;
+  overflow: hidden;
+  position: relative;
 `
 
 const SideMenu = styled.div`
