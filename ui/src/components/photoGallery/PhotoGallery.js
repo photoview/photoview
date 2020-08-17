@@ -14,6 +14,11 @@ const Gallery = styled.div`
   min-height: 200px;
   position: relative;
   margin: -4px;
+
+  @media (max-width: 1000px) {
+    /* Compensate for tab bar on mobile */
+    margin-bottom: 76px;
+  }
 `
 
 const PhotoFiller = styled.div`

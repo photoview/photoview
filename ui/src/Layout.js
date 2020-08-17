@@ -28,6 +28,18 @@ const SideMenu = styled.div`
   width: 80px;
   left: 0;
   padding-top: 70px;
+
+  @media (max-width: 1000px) {
+    width: 100%;
+    height: 80px;
+    position: fixed;
+    background: white;
+    z-index: 10;
+    padding-top: 0;
+    display: flex;
+    bottom: 0;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  }
 `
 
 const Content = styled.div`
