@@ -29,6 +29,8 @@ type Query {
     onlyRoot: Boolean
     "Return also albums with no media directly in them"
     showEmpty: Boolean
+    "Show only albums having favorites"
+    onlyWithFavorites: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
@@ -166,7 +168,11 @@ type Album {
   id: Int!
   title: String!
   "The media inside this album"
-  media(filter: Filter): [Media!]!
+  media(
+    filter: Filter,
+    "Return only the favorited media"
+    onlyFavorites: Boolean
+  ): [Media!]!
   "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
   "The album witch contains this album"
