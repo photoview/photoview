@@ -3,6 +3,7 @@ import ReactRouterPropTypes from 'react-router-prop-types'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
+import PropTypes from 'prop-types'
 
 const albumQuery = gql`
   query albumQuery($id: Int!, $onlyFavorites: Boolean) {
@@ -91,10 +92,14 @@ function AlbumPage({ match }) {
   )
 }
 
-console.log(ReactRouterPropTypes)
-
 AlbumPage.propTypes = {
   ...ReactRouterPropTypes,
+  match: PropTypes.shape({
+    params: PropTypes.shape({
+      id: PropTypes.string,
+      subPage: PropTypes.string,
+    }),
+  }),
 }
 
 export default AlbumPage
