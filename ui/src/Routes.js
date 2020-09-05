@@ -41,8 +41,8 @@ class Routes extends React.Component {
           <Route path="/initialSetup" component={InitialSetupPage} />
           <Route path="/share" component={SharePage} />
           <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
-          <AuthorizedRoute path="/album/:id" component={AlbumPage} />
-          <AuthorizedRoute path="/photos" component={PhotosPage} />
+          <AuthorizedRoute path="/album/:id/:subPage?" component={AlbumPage} />
+          <AuthorizedRoute path="/photos/:subPage?" component={PhotosPage} />
           <AuthorizedRoute admin path="/settings" component={SettingsPage} />
           <Route path="/" exact render={() => <Redirect to="/photos" />} />
           <Route render={() => <div>Page not found</div>} />
