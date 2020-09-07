@@ -18,6 +18,8 @@ type MediaEXIF struct {
 	Flash           *string
 	Orientation     *int
 	ExposureProgram *int
+	GPSLatitude     *float64
+	GPSLonitude     *float64
 }
 
 func (exif *MediaEXIF) Media() *Media {
@@ -31,7 +33,7 @@ func (exif *MediaEXIF) ID() int {
 func NewMediaExifFromRow(row *sql.Row) (*MediaEXIF, error) {
 	exif := MediaEXIF{}
 
-	if err := row.Scan(&exif.ExifID, &exif.Camera, &exif.Maker, &exif.Lens, &exif.DateShot, &exif.Exposure, &exif.Aperture, &exif.Iso, &exif.FocalLength, &exif.Flash, &exif.Orientation, &exif.ExposureProgram); err != nil {
+	if err := row.Scan(&exif.ExifID, &exif.Camera, &exif.Maker, &exif.Lens, &exif.DateShot, &exif.Exposure, &exif.Aperture, &exif.Iso, &exif.FocalLength, &exif.Flash, &exif.Orientation, &exif.ExposureProgram, &exif.GPSLatitude, &exif.GPSLonitude); err != nil {
 		return nil, err
 	}
 

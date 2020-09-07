@@ -22,10 +22,8 @@ type Filter struct {
 }
 
 type MediaDownload struct {
-	Title  string `json:"title"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	URL    string `json:"url"`
+	Title    string    `json:"title"`
+	MediaURL *MediaURL `json:"mediaUrl"`
 }
 
 type Notification struct {

@@ -31,6 +31,8 @@ const photoQuery = gql`
         }
         highRes {
           url
+          width
+          height
         }
         videoWeb {
           url

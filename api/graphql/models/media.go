@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"path"
+	"time"
 
 	"github.com/viktorstrate/photoview/api/utils"
 )
@@ -14,6 +15,8 @@ type Media struct {
 	PathHash        string
 	AlbumId         int
 	ExifId          *int
+	DateShot        time.Time
+	DateImported    time.Time
 	Favorite        bool
 	Type            MediaType
 	VideoMetadataId *int
@@ -41,12 +44,13 @@ type MediaURL struct {
 	Height      int
 	Purpose     MediaPurpose
 	ContentType string
+	FileSize    int
 }
 
 func NewMediaFromRow(row *sql.Row) (*Media, error) {
 	media := Media{}
 
-	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
+	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 		return nil, err
 	}
 
@@ -58,7 +62,7 @@ func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
 
 	for rows.Next() {
 		var media Media
-		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
+		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId); err != nil {
 			return nil, err
 		}
 		medias = append(medias, &media)
@@ -84,7 +88,7 @@ func (p *MediaURL) URL() string {
 func NewMediaURLFromRow(row *sql.Row) (*MediaURL, error) {
 	url := MediaURL{}
 
-	if err := row.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType); err != nil {
+	if err := row.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +100,7 @@ func NewMediaURLFromRows(rows *sql.Rows) ([]*MediaURL, error) {
 
 	for rows.Next() {
 		var url MediaURL
-		if err := rows.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType); err != nil {
+		if err := rows.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
 			return nil, err
 		}
 		urls = append(urls, &url)

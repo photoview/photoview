@@ -1,6 +1,7 @@
 import React, { createContext } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
+import { Icon } from 'semantic-ui-react'
 
 const SidebarContainer = styled.div`
   width: 28vw;
@@ -17,8 +18,23 @@ const SidebarContainer = styled.div`
   @media (max-width: 700px) {
     position: absolute;
     width: 100%;
-    max-width: calc(100vw - 85px);
-    transform: translateX(100vw);
+    /* full height - header - tabbar */
+    height: calc(100% - 60px - 80px);
+    max-width: min(calc(100vw - 85px), 400px);
+    ${({ highlighted }) => `right: ${highlighted ? 0 : -100}%;`}
+    padding-top: 45px;
+  }
+
+  transition: right 200ms ease-in-out;
+`
+
+const SidebarDismissButton = styled(Icon)`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  @media (min-width: 700px) {
+    display: none;
   }
 `
 
@@ -46,8 +62,14 @@ class Sidebar extends React.Component {
         {this.props.children}
         <SidebarContext.Consumer>
           {value => (
-            <SidebarContainer>
+            <SidebarContainer highlighted={value.content != null}>
               {value.content}
+              <SidebarDismissButton
+                name="angle double right"
+                size="big"
+                link
+                onClick={() => this.setState({ content: null })}
+              />
               <div style={{ height: 100 }}></div>
             </SidebarContainer>
           )}

@@ -21,6 +21,15 @@ const Title = styled.h1`
   font-weight: 400;
   padding: 2px 12px;
   flex-grow: 1;
+  min-width: 245px;
+
+  @media (max-width: 400px) {
+    min-width: auto;
+
+    & span {
+      display: none;
+    }
+  }
 `
 
 const Logo = styled.img`

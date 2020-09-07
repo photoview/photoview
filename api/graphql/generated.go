@@ -87,10 +87,8 @@ type ComplexityRoot struct {
 	}
 
 	MediaDownload struct {
-		Height func(childComplexity int) int
-		Title  func(childComplexity int) int
-		URL    func(childComplexity int) int
-		Width  func(childComplexity int) int
+		MediaURL func(childComplexity int) int
+		Title    func(childComplexity int) int
 	}
 
 	MediaExif struct {
@@ -109,9 +107,10 @@ type ComplexityRoot struct {
 	}
 
 	MediaURL struct {
-		Height func(childComplexity int) int
-		URL    func(childComplexity int) int
-		Width  func(childComplexity int) int
+		FileSize func(childComplexity int) int
+		Height   func(childComplexity int) int
+		URL      func(childComplexity int) int
+		Width    func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -472,12 +471,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Media.VideoWeb(childComplexity), true
 
-	case "MediaDownload.height":
-		if e.complexity.MediaDownload.Height == nil {
+	case "MediaDownload.mediaUrl":
+		if e.complexity.MediaDownload.MediaURL == nil {
 			break
 		}
 
-		return e.complexity.MediaDownload.Height(childComplexity), true
+		return e.complexity.MediaDownload.MediaURL(childComplexity), true
 
 	case "MediaDownload.title":
 		if e.complexity.MediaDownload.Title == nil {
@@ -485,20 +484,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MediaDownload.Title(childComplexity), true
-
-	case "MediaDownload.url":
-		if e.complexity.MediaDownload.URL == nil {
-			break
-		}
-
-		return e.complexity.MediaDownload.URL(childComplexity), true
-
-	case "MediaDownload.width":
-		if e.complexity.MediaDownload.Width == nil {
-			break
-		}
-
-		return e.complexity.MediaDownload.Width(childComplexity), true
 
 	case "MediaEXIF.aperture":
 		if e.complexity.MediaExif.Aperture == nil {
@@ -583,6 +568,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MediaExif.Media(childComplexity), true
+
+	case "MediaURL.fileSize":
+		if e.complexity.MediaURL.FileSize == nil {
+			break
+		}
+
+		return e.complexity.MediaURL.FileSize(childComplexity), true
 
 	case "MediaURL.height":
 		if e.complexity.MediaURL.Height == nil {
@@ -1410,13 +1402,13 @@ type MediaURL {
   width: Int!
   "Height of the image in pixels"
   height: Int!
+  "The file size of the resource in bytes"
+  fileSize: Int!
 }
 
 type MediaDownload {
   title: String!
-  width: Int!
-  height: Int!
-  url: String!
+  mediaUrl: MediaURL!
 }
 
 enum MediaType {
@@ -2971,7 +2963,7 @@ func (ec *executionContext) _MediaDownload_title(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MediaDownload_width(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
+func (ec *executionContext) _MediaDownload_mediaUrl(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2988,7 +2980,7 @@ func (ec *executionContext) _MediaDownload_width(ctx context.Context, field grap
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Width, nil
+		return obj.MediaURL, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3000,77 +2992,9 @@ func (ec *executionContext) _MediaDownload_width(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MediaDownload_height(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "MediaDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Height, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MediaDownload_url(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "MediaDownload",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -3537,6 +3461,40 @@ func (ec *executionContext) _MediaURL_height(ctx context.Context, field graphql.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaURL_fileSize(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MediaURL",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileSize, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7325,18 +7283,8 @@ func (ec *executionContext) _MediaDownload(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "width":
-			out.Values[i] = ec._MediaDownload_width(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "height":
-			out.Values[i] = ec._MediaDownload_height(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "url":
-			out.Values[i] = ec._MediaDownload_url(ctx, field, obj)
+		case "mediaUrl":
+			out.Values[i] = ec._MediaDownload_mediaUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7426,6 +7374,11 @@ func (ec *executionContext) _MediaURL(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "height":
 			out.Values[i] = ec._MediaURL_height(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fileSize":
+			out.Values[i] = ec._MediaURL_fileSize(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

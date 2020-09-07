@@ -77,8 +77,13 @@ func ScanEXIF(tx *sql.Tx, media *models.Media) (returnExif *models.MediaEXIF, re
 
 	date, err := exifTags.DateTime()
 	if err == nil {
-		valueNames = append(valueNames, "dateShot")
+		valueNames = append(valueNames, "date_shot")
 		exifValues = append(exifValues, date)
+
+		_, err := tx.Exec("UPDATE media SET date_shot = ? WHERE media_id = ?", date, media.MediaID)
+		if err != nil {
+			log.Printf("WARN: Failed to update date_shot for media %s: %s", media.Title, err)
+		}
 	}
 
 	exposure, err := readRationalTag(exifTags, exif.ExposureTime, media)
@@ -146,6 +151,15 @@ func ScanEXIF(tx *sql.Tx, media *models.Media) (returnExif *models.MediaEXIF, re
 	if err == nil {
 		valueNames = append(valueNames, "exposure_program")
 		exifValues = append(exifValues, *exposureProgram)
+	}
+
+	lat, long, err := exifTags.LatLong()
+	if err == nil {
+		valueNames = append(valueNames, "gps_latitude")
+		exifValues = append(exifValues, lat)
+
+		valueNames = append(valueNames, "gps_longitude")
+		exifValues = append(exifValues, long)
 	}
 
 	if len(valueNames) == 0 {

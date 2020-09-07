@@ -1,5 +1,3 @@
 {
-  "eslint.workingDirectories": [
-    "ui", "api"
-  ]
+  "eslint.workingDirectories": ["ui"]
 }

@@ -195,13 +195,13 @@ type MediaURL {
   width: Int!
   "Height of the image in pixels"
   height: Int!
+  "The file size of the resource in bytes"
+  fileSize: Int!
 }
 
 type MediaDownload {
   title: String!
-  width: Int!
-  height: Int!
-  url: String!
+  mediaUrl: MediaURL!
 }
 
 enum MediaType {

@@ -11,27 +11,33 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func CleanupMedia(db *sql.DB, albumId int, albumPhotos []*models.Media) []error {
-	if len(albumPhotos) == 0 {
-		return nil
+func CleanupMedia(db *sql.DB, albumId int, albumMedia []*models.Media) []error {
+	albumMediaIds := make([]interface{}, len(albumMedia))
+	for i, photo := range albumMedia {
+		albumMediaIds[i] = photo.MediaID
 	}
 
-	albumPhotoIds := make([]interface{}, len(albumPhotos))
-	for i, photo := range albumPhotos {
-		albumPhotoIds[i] = photo.MediaID
+	// Delete missing media
+	var rows *sql.Rows
+	var err error
+
+	// Select media from database that was not found on hard disk
+	if len(albumMedia) > 0 {
+		media_args := make([]interface{}, 0)
+		media_args = append(media_args, albumId)
+		media_args = append(media_args, albumMediaIds...)
+
+		media_questions := strings.Repeat("?,", len(albumMediaIds))[:len(albumMediaIds)*2-1]
+		rows, err = db.Query(
+			"SELECT media_id FROM media WHERE album_id = ? AND media_id NOT IN ("+media_questions+")",
+			media_args...,
+		)
+	} else {
+		rows, err = db.Query(
+			"SELECT media_id FROM media WHERE album_id = ?",
+			albumId,
+		)
 	}
-
-	// Delete missing photos
-	media_args := make([]interface{}, 0)
-	media_args = append(media_args, albumId)
-	media_args = append(media_args, albumPhotoIds...)
-
-	media_questions := strings.Repeat("?,", len(albumPhotoIds))[:len(albumPhotoIds)*2-1]
-
-	rows, err := db.Query(
-		"SELECT media_id FROM media WHERE album_id = ? AND media_id NOT IN ("+media_questions+")",
-		media_args...,
-	)
 	if err != nil {
 		return []error{errors.Wrap(err, "get media files to be deleted from database")}
 	}
@@ -56,7 +62,7 @@ func CleanupMedia(db *sql.DB, albumId int, albumPhotos []*models.Media) []error 
 	}
 
 	if len(deleted_media_ids) > 0 {
-		media_questions = strings.Repeat("?,", len(deleted_media_ids))[:len(deleted_media_ids)*2-1]
+		media_questions := strings.Repeat("?,", len(deleted_media_ids))[:len(deleted_media_ids)*2-1]
 
 		if _, err := db.Exec("DELETE FROM media WHERE media_id IN ("+media_questions+")", deleted_media_ids...); err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))

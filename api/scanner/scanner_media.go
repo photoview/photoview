@@ -3,6 +3,7 @@ package scanner
 import (
 	"database/sql"
 	"log"
+	"os"
 	"path"
 
 	"github.com/pkg/errors"
@@ -40,7 +41,12 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		mediaTypeText = "photo"
 	}
 
-	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type) VALUES (?, ?, MD5(path), ?, ?)", mediaName, mediaPath, albumId, mediaTypeText)
+	stat, err := os.Stat(mediaPath)
+	if err != nil {
+		return nil, false, err
+	}
+
+	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?)", mediaName, mediaPath, albumId, mediaTypeText, stat.ModTime())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}

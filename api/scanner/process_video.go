@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -56,8 +57,13 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 			return false, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
 		}
 
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
-			video.MediaID, web_video_name, webMetadata.Width, webMetadata.Height, models.VideoWeb, "video/mp4")
+		fileStats, err := os.Stat(webVideoPath)
+		if err != nil {
+			return false, errors.Wrap(err, "reading file stats of web-optimized video")
+		}
+
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			video.MediaID, web_video_name, webMetadata.Width, webMetadata.Height, models.VideoWeb, "video/mp4", fileStats.Size())
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
 		}
@@ -83,8 +89,13 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 			return false, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
 
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type) VALUES (?, ?, ?, ?, ?, ?)",
-			video.MediaID, video_thumb_name, thumbDimensions.Width, thumbDimensions.Height, models.VideoThumbnail, "image/jpeg")
+		fileStats, err := os.Stat(thumbImagePath)
+		if err != nil {
+			return false, errors.Wrap(err, "reading file stats of video thumbnail")
+		}
+
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			video.MediaID, video_thumb_name, thumbDimensions.Width, thumbDimensions.Height, models.VideoThumbnail, "image/jpeg", fileStats.Size())
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
 		}
