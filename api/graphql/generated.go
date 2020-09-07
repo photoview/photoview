@@ -54,7 +54,7 @@ type ComplexityRoot struct {
 	Album struct {
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Media       func(childComplexity int, filter *models.Filter) int
+		Media       func(childComplexity int, filter *models.Filter, onlyFavorites *bool) int
 		Owner       func(childComplexity int) int
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
@@ -144,7 +144,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Album                      func(childComplexity int, id int) int
 		Media                      func(childComplexity int, id int) int
-		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
+		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
 		MyMedia                    func(childComplexity int, filter *models.Filter) int
 		MyUser                     func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
@@ -207,7 +207,7 @@ type ComplexityRoot struct {
 }
 
 type AlbumResolver interface {
-	Media(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Media, error)
+	Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error)
 	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
 	ParentAlbum(ctx context.Context, obj *models.Album) (*models.Album, error)
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
@@ -246,7 +246,7 @@ type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
 	User(ctx context.Context, filter *models.Filter) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
-	MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool) ([]*models.Album, error)
+	MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
 	Album(ctx context.Context, id int) (*models.Album, error)
 	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
 	Media(ctx context.Context, id int) (*models.Media, error)
@@ -304,7 +304,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Album.Media(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Album.Media(childComplexity, args["filter"].(*models.Filter), args["onlyFavorites"].(*bool)), true
 
 	case "Album.owner":
 		if e.complexity.Album.Owner == nil {
@@ -846,7 +846,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool)), true
+		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
 
 	case "Query.myMedia":
 		if e.complexity.Query.MyMedia == nil {
@@ -1244,6 +1244,8 @@ type Query {
     onlyRoot: Boolean
     "Return also albums with no media directly in them"
     showEmpty: Boolean
+    "Show only albums having favorites"
+    onlyWithFavorites: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
   album(id: Int!): Album!
@@ -1381,7 +1383,11 @@ type Album {
   id: Int!
   title: String!
   "The media inside this album"
-  media(filter: Filter): [Media!]!
+  media(
+    filter: Filter,
+    "Return only the favorited media"
+    onlyFavorites: Boolean
+  ): [Media!]!
   "The albums contained in this album"
   subAlbums(filter: Filter): [Album!]!
   "The album witch contains this album"
@@ -1502,6 +1508,14 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["filter"] = arg0
+	var arg1 *bool
+	if tmp, ok := rawArgs["onlyFavorites"]; ok {
+		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyFavorites"] = arg1
 	return args, nil
 }
 
@@ -1900,6 +1914,14 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 		}
 	}
 	args["showEmpty"] = arg2
+	var arg3 *bool
+	if tmp, ok := rawArgs["onlyWithFavorites"]; ok {
+		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyWithFavorites"] = arg3
 	return args, nil
 }
 
@@ -2133,7 +2155,7 @@ func (ec *executionContext) _Album_media(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().Media(rctx, obj, args["filter"].(*models.Filter))
+		return ec.resolvers.Album().Media(rctx, obj, args["filter"].(*models.Filter), args["onlyFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4529,7 +4551,7 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool))
+		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

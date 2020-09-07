@@ -4,14 +4,22 @@ import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import AlbumTitle from '../../components/AlbumTitle'
+import { Checkbox } from 'semantic-ui-react'
+import styled from 'styled-components'
+import { authToken } from '../../authentication'
+import PropTypes from 'prop-types'
 
 const photoQuery = gql`
-  query allPhotosPage {
-    myAlbums(filter: { order_by: "title", order_direction: ASC, limit: 100 }) {
+  query allPhotosPage($onlyWithFavorites: Boolean) {
+    myAlbums(
+      filter: { order_by: "title", order_direction: ASC, limit: 100 }
+      onlyWithFavorites: $onlyWithFavorites
+    ) {
       title
       id
       media(
         filter: { order_by: "media.title", order_direction: DESC, limit: 12 }
+        onlyFavorites: $onlyWithFavorites
       ) {
         id
         title
@@ -33,6 +41,11 @@ const photoQuery = gql`
   }
 `
 
+const FavoritesCheckbox = styled(Checkbox)`
+  float: right;
+  margin: 0.5rem 0 0 1rem;
+`
+
 class PhotosPage extends Component {
   constructor(props) {
     super(props)
@@ -41,6 +54,7 @@ class PhotosPage extends Component {
       activeAlbumIndex: -1,
       activePhotoIndex: -1,
       presenting: false,
+      onlyWithFavorites: this.props.match.params.subPage === 'favorites',
     }
 
     this.setPresenting = this.setPresenting.bind(this)
@@ -48,6 +62,33 @@ class PhotosPage extends Component {
     this.previousImage = this.previousImage.bind(this)
 
     this.albums = []
+  }
+
+  onPopState(event) {
+    this.state.setState({
+      onlyWithFavorites: event.state.showFavorites,
+    })
+  }
+
+  componentDidMount() {
+    window.addEventListener('popstate', this.onPopState)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('popstate', this.onPopState)
+  }
+
+  favoritesCheckboxClick() {
+    const onlyWithFavorites = !this.state.onlyWithFavorites
+    history.pushState(
+      { showFavorites: onlyWithFavorites },
+      '',
+      '/photos' + (onlyWithFavorites ? '/favorites' : '')
+    )
+
+    this.setState({
+      onlyWithFavorites,
+    })
   }
 
   setActiveImage(album, photo) {
@@ -89,19 +130,35 @@ class PhotosPage extends Component {
   }
 
   render() {
+    const showOnlyWithFavorites = this.state.onlyWithFavorites
     return (
       <Layout title="Photos">
-        <Query query={photoQuery}>
+        <Query
+          query={photoQuery}
+          variables={{ onlyWithFavorites: showOnlyWithFavorites }}
+        >
           {({ loading, error, data }) => {
             if (error) return error
 
             if (loading) return null
 
             let galleryGroups = []
+            let favoritesSwitch = ''
 
             this.albums = data.myAlbums
 
-            if (data.myAlbums) {
+            if (data.myAlbums && authToken()) {
+              favoritesSwitch = (
+                <FavoritesCheckbox
+                  toggle
+                  label="Show only the favorites"
+                  onClick={e => e.stopPropagation()}
+                  checked={showOnlyWithFavorites}
+                  onChange={() => {
+                    this.favoritesCheckboxClick()
+                  }}
+                />
+              )
               galleryGroups = data.myAlbums.map((album, index) => (
                 <div key={album.id}>
                   <AlbumTitle album={album} />
@@ -127,20 +184,25 @@ class PhotosPage extends Component {
               ))
             }
 
-            let activeImage = null
-            if (this.state.activeAlbumIndex != -1) {
-              activeImage =
-                data.myAlbums[this.state.activeAlbumIndex].media[
-                  this.state.activePhotoIndex
-                ].id
-            }
-
-            return <div>{galleryGroups}</div>
+            return (
+              <div>
+                {favoritesSwitch}
+                {galleryGroups}
+              </div>
+            )
           }}
         </Query>
       </Layout>
     )
   }
+}
+
+PhotosPage.propTypes = {
+  match: PropTypes.shape({
+    params: PropTypes.shape({
+      subPage: PropTypes.string,
+    }),
+  }),
 }
 
 export default PhotosPage
