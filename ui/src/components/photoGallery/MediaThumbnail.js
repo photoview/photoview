@@ -169,7 +169,7 @@ export const MediaThumbnail = ({
       key={media.id}
       style={{
         cursor: onSelectImage ? 'pointer' : null,
-        minWidth: `min(${minWidth}px, 100% - 8px)`,
+        minWidth: `clamp(124px, ${minWidth}px, 100% - 8px)`,
       }}
       onClick={() => {
         onSelectImage && onSelectImage(index)
