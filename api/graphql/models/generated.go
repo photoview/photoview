@@ -51,9 +51,11 @@ type SearchResult struct {
 	Media  []*Media `json:"media"`
 }
 
-// General public information about the site
+// General information about the site
 type SiteInfo struct {
 	InitialSetup bool `json:"initialSetup"`
+	// How often automatic scans should be initiated in seconds
+	PeriodicScanInterval int `json:"periodicScanInterval"`
 }
 
 type MediaType string

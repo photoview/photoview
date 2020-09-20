@@ -147,9 +147,11 @@ type ShareToken {
   media: Media
 }
 
-"General public information about the site"
+"General information about the site"
 type SiteInfo {
   initialSetup: Boolean!
+  "How often automatic scans should be initiated in seconds"
+  periodicScanInterval: Int! @isAdmin
 }
 
 type User {

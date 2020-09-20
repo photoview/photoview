@@ -177,7 +177,8 @@ type ComplexityRoot struct {
 	}
 
 	SiteInfo struct {
-		InitialSetup func(childComplexity int) int
+		InitialSetup         func(childComplexity int) int
+		PeriodicScanInterval func(childComplexity int) int
 	}
 
 	Subscription struct {
@@ -1019,6 +1020,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiteInfo.InitialSetup(childComplexity), true
 
+	case "SiteInfo.periodicScanInterval":
+		if e.complexity.SiteInfo.PeriodicScanInterval == nil {
+			break
+		}
+
+		return e.complexity.SiteInfo.PeriodicScanInterval(childComplexity), true
+
 	case "Subscription.notification":
 		if e.complexity.Subscription.Notification == nil {
 			break
@@ -1205,7 +1213,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "graphql/schema.graphql", Input: `directive @isAdmin on FIELD_DEFINITION
+	{Name: "graphql/schema.graphql", Input: `directive @isAdmin on FIELD_DEFINITION
 
 scalar Time
 
@@ -1354,9 +1362,11 @@ type ShareToken {
   media: Media
 }
 
-"General public information about the site"
+"General information about the site"
 type SiteInfo {
   initialSetup: Boolean!
+  "How often automatic scans should be initiated in seconds"
+  periodicScanInterval: Int! @isAdmin
 }
 
 type User {
@@ -1488,6 +1498,7 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("filter"))
 		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1502,6 +1513,7 @@ func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawA
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("filter"))
 		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1516,6 +1528,7 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("username"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1524,6 +1537,7 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 	args["username"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1538,6 +1552,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("username"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1546,6 +1561,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args["username"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["rootPath"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("rootPath"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1554,6 +1570,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args["rootPath"] = arg1
 	var arg2 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1562,6 +1579,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args["password"] = arg2
 	var arg3 bool
 	if tmp, ok := rawArgs["admin"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("admin"))
 		arg3, err = ec.unmarshalNBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1576,6 +1594,7 @@ func (ec *executionContext) field_Mutation_deleteShareToken_args(ctx context.Con
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["token"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("token"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1590,6 +1609,7 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1604,6 +1624,7 @@ func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["mediaId"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("mediaId"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1612,6 +1633,7 @@ func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Contex
 	args["mediaId"] = arg0
 	var arg1 bool
 	if tmp, ok := rawArgs["favorite"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("favorite"))
 		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1626,6 +1648,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("username"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1634,6 +1657,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 	args["username"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1642,6 +1666,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 	args["password"] = arg1
 	var arg2 string
 	if tmp, ok := rawArgs["rootPath"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("rootPath"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1656,6 +1681,7 @@ func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Co
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["token"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("token"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1664,6 +1690,7 @@ func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Co
 	args["token"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1678,6 +1705,7 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("username"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1686,6 +1714,7 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 	args["username"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1694,6 +1723,7 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 	args["password"] = arg1
 	var arg2 string
 	if tmp, ok := rawArgs["rootPath"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("rootPath"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1708,6 +1738,7 @@ func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("userId"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1722,6 +1753,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["albumId"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("albumId"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1730,6 +1762,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 	args["albumId"] = arg0
 	var arg1 *time.Time
 	if tmp, ok := rawArgs["expire"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("expire"))
 		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1738,6 +1771,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 	args["expire"] = arg1
 	var arg2 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1752,6 +1786,7 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["mediaId"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("mediaId"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1760,6 +1795,7 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 	args["mediaId"] = arg0
 	var arg1 *time.Time
 	if tmp, ok := rawArgs["expire"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("expire"))
 		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1768,6 +1804,7 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 	args["expire"] = arg1
 	var arg2 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1782,6 +1819,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1790,6 +1828,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	args["id"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("username"))
 		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1798,6 +1837,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	args["username"] = arg1
 	var arg2 *string
 	if tmp, ok := rawArgs["rootPath"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("rootPath"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1806,6 +1846,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	args["rootPath"] = arg2
 	var arg3 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1814,6 +1855,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	args["password"] = arg3
 	var arg4 *bool
 	if tmp, ok := rawArgs["admin"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("admin"))
 		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1828,6 +1870,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("name"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1842,6 +1885,7 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1856,6 +1900,7 @@ func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs 
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1870,6 +1915,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("filter"))
 		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1878,6 +1924,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	args["filter"] = arg0
 	var arg1 *bool
 	if tmp, ok := rawArgs["onlyRoot"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("onlyRoot"))
 		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1886,6 +1933,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	args["onlyRoot"] = arg1
 	var arg2 *bool
 	if tmp, ok := rawArgs["showEmpty"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("showEmpty"))
 		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1900,6 +1948,7 @@ func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("filter"))
 		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1914,6 +1963,7 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("query"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1922,6 +1972,7 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	args["query"] = arg0
 	var arg1 *int
 	if tmp, ok := rawArgs["limitMedia"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("limitMedia"))
 		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1930,6 +1981,7 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	args["limitMedia"] = arg1
 	var arg2 *int
 	if tmp, ok := rawArgs["limitAlbums"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("limitAlbums"))
 		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1944,6 +1996,7 @@ func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx cont
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["token"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("token"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1952,6 +2005,7 @@ func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx cont
 	args["token"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1966,6 +2020,7 @@ func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, raw
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["token"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("token"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1974,6 +2029,7 @@ func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, raw
 	args["token"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1988,6 +2044,7 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("filter"))
 		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -2002,6 +2059,7 @@ func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 bool
 	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("includeDeprecated"))
 		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -2016,6 +2074,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 bool
 	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("includeDeprecated"))
 		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -5314,6 +5373,60 @@ func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field gr
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SiteInfo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.PeriodicScanInterval, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAdmin == nil {
+				return nil, errors.New("directive isAdmin is not implemented")
+			}
+			return ec.directives.IsAdmin(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Subscription_notification(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6902,24 +7015,32 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 		switch k {
 		case "order_by":
 			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("order_by"))
 			it.OrderBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "order_direction":
 			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("order_direction"))
 			it.OrderDirection, err = ec.unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "limit":
 			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("limit"))
 			it.Limit, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "offset":
 			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("offset"))
 			it.Offset, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
@@ -7834,6 +7955,11 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "periodicScanInterval":
+			out.Values[i] = ec._SiteInfo_periodicScanInterval(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8275,7 +8401,8 @@ func (ec *executionContext) marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstra
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
-	return graphql.UnmarshalBoolean(v)
+	res, err := graphql.UnmarshalBoolean(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
@@ -8289,7 +8416,8 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
-	return graphql.UnmarshalFloat(v)
+	res, err := graphql.UnmarshalFloat(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
@@ -8303,7 +8431,8 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	return graphql.UnmarshalInt(v)
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
@@ -8367,10 +8496,6 @@ func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Media(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMediaDownload2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx context.Context, sel ast.SelectionSet, v models.MediaDownload) graphql.Marshaler {
-	return ec._MediaDownload(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -8420,7 +8545,8 @@ func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrate
 
 func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, v interface{}) (models.MediaType, error) {
 	var res models.MediaType
-	return res, res.UnmarshalGQL(v)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
@@ -8457,7 +8583,8 @@ func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋviktorstrate�
 
 func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, v interface{}) (models.NotificationType, error) {
 	var res models.NotificationType
-	return res, res.UnmarshalGQL(v)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
@@ -8558,7 +8685,8 @@ func (ec *executionContext) marshalNSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋph
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -8664,7 +8792,8 @@ func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgq
 }
 
 func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -8689,9 +8818,10 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithIndex(i))
 		res[i], err = ec.unmarshalN__DirectiveLocation2string(ctx, vSlice[i])
 		if err != nil {
-			return nil, err
+			return nil, graphql.WrapErrorWithInputPath(ctx, err)
 		}
 	}
 	return res, nil
@@ -8835,7 +8965,8 @@ func (ec *executionContext) marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 }
 
 func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -8848,19 +8979,11 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAlbum2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
-	return ec._Album(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Album(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
-	return ec._AuthorizeResult(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
@@ -8871,7 +8994,8 @@ func (ec *executionContext) marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstra
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
-	return graphql.UnmarshalBoolean(v)
+	res, err := graphql.UnmarshalBoolean(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
@@ -8882,77 +9006,53 @@ func (ec *executionContext) unmarshalOBoolean2ᚖbool(ctx context.Context, v int
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOBoolean2bool(ctx, v)
-	return &res, err
+	res, err := graphql.UnmarshalBoolean(v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast.SelectionSet, v *bool) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOBoolean2bool(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOFilter2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (models.Filter, error) {
-	return ec.unmarshalInputFilter(ctx, v)
+	return graphql.MarshalBoolean(*v)
 }
 
 func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (*models.Filter, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOFilter2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {
-	return graphql.UnmarshalFloat(v)
-}
-
-func (ec *executionContext) marshalOFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
-	return graphql.MarshalFloat(v)
+	res, err := ec.unmarshalInputFilter(ctx, v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOFloat2float64(ctx, v)
-	return &res, err
+	res, err := graphql.UnmarshalFloat(v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOFloat2float64(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
-	return graphql.UnmarshalInt(v)
-}
-
-func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	return graphql.MarshalInt(v)
+	return graphql.MarshalFloat(*v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOInt2int(ctx, v)
-	return &res, err
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOInt2int(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {
-	return ec._Media(ctx, sel, &v)
+	return graphql.MarshalInt(*v)
 }
 
 func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
@@ -8962,19 +9062,11 @@ func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Media(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMediaEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v models.MediaEXIF) graphql.Marshaler {
-	return ec._MediaEXIF(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._MediaEXIF(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOMediaURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
-	return ec._MediaURL(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
@@ -8984,21 +9076,13 @@ func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋph
 	return ec._MediaURL(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (models.OrderDirection, error) {
-	var res models.OrderDirection
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v models.OrderDirection) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (*models.OrderDirection, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOOrderDirection2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
-	return &res, err
+	var res = new(models.OrderDirection)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v *models.OrderDirection) graphql.Marshaler {
@@ -9006,10 +9090,6 @@ func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrat
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) marshalOShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
-	return ec._ShareToken(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
@@ -9060,7 +9140,8 @@ func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋ
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -9071,42 +9152,30 @@ func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v in
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOString2string(ctx, v)
-	return &res, err
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOString2string(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return graphql.UnmarshalTime(v)
-}
-
-func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	return graphql.MarshalTime(v)
+	return graphql.MarshalString(*v)
 }
 
 func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOTime2timeᚐTime(ctx, v)
-	return &res, err
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOUser2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
-	return ec._User(ctx, sel, &v)
+	return graphql.MarshalTime(*v)
 }
 
 func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
@@ -9114,10 +9183,6 @@ func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotov
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOVideoMetadata2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v models.VideoMetadata) graphql.Marshaler {
-	return ec._VideoMetadata(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
@@ -9247,19 +9312,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalO__Schema2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx context.Context, sel ast.SelectionSet, v introspection.Schema) graphql.Marshaler {
-	return ec.___Schema(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx context.Context, sel ast.SelectionSet, v *introspection.Schema) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec.___Schema(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalO__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v introspection.Type) graphql.Marshaler {
-	return ec.___Type(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
