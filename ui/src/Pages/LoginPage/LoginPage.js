@@ -112,13 +112,17 @@ class LoginPage extends Component {
                   loading={loading || (data && data.authorizeUser.success)}
                 >
                   <Form.Field>
-                    <label>Username</label>
-                    <input onChange={e => this.handleChange(e, 'username')} />
+                    <label htmlFor="username_field">Username</label>
+                    <input
+                      id="username_field"
+                      onChange={e => this.handleChange(e, 'username')}
+                    />
                   </Form.Field>
                   <Form.Field>
-                    <label>Password</label>
+                    <label htmlFor="password_field">Password</label>
                     <input
                       type="password"
+                      id="password_field"
                       onChange={e => this.handleChange(e, 'password')}
                     />
                   </Form.Field>
