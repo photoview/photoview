@@ -1,43 +1,24 @@
 import React from 'react'
+import styled from 'styled-components'
+
 import Layout from '../../Layout'
 
-import { Button, Icon } from 'semantic-ui-react'
-import { Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
+import ScannerSection from './ScannerSection'
 import UsersTable from './UsersTable'
 
-const scanMutation = gql`
-  mutation scanAllMutation {
-    scanAll {
-      success
-      message
-    }
-  }
+export const SectionTitle = styled.h2`
+  margin-top: ${({ nospace }) => (nospace ? '0' : '1.4em')} !important;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #ddd;
 `
 
-const SettingsPage = () => (
-  <Layout>
-    <h1>Settings</h1>
-    <Mutation mutation={scanMutation}>
-      {(scan, { data, called }) => (
-        <>
-          <h2>Scanner</h2>
-          <Button
-            icon
-            labelPosition="left"
-            onClick={() => {
-              scan()
-            }}
-            disabled={called}
-          >
-            <Icon name="sync" />
-            Scan All
-          </Button>
-        </>
-      )}
-    </Mutation>
-    <UsersTable />
-  </Layout>
-)
+const SettingsPage = () => {
+  return (
+    <Layout>
+      <ScannerSection />
+      <UsersTable />
+    </Layout>
+  )
+}
 
 export default SettingsPage

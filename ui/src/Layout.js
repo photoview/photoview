@@ -45,7 +45,7 @@ const SideMenu = styled.div`
 `
 
 const Content = styled.div`
-  margin-top: 60px;
+  margin-top: 70px;
   padding: 10px 12px 0;
   width: 100%;
   overflow-y: scroll;

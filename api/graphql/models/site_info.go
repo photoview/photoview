@@ -4,6 +4,14 @@ import (
 	"database/sql"
 )
 
+func InitializeSiteInfoRow(db *sql.DB) error {
+	_, err := db.Exec("INSERT INTO site_info (initial_setup) VALUES (true)")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 	rows, err := db.Query("SELECT * FROM site_info")
 	defer rows.Close()
@@ -12,21 +20,22 @@ func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 	}
 
 	var initialSetup bool
+	var periodicScanInterval int = 0
 
 	if !rows.Next() {
 		// Entry does not exist
-		_, err := db.Exec("INSERT INTO site_info (initial_setup) VALUES (true)")
-		if err != nil {
+		if err := InitializeSiteInfoRow(db); err != nil {
 			return nil, err
 		}
 		initialSetup = true
 	} else {
-		if err := rows.Scan(&initialSetup); err != nil {
+		if err := rows.Scan(&initialSetup, &periodicScanInterval); err != nil {
 			return nil, err
 		}
 	}
 
 	return &SiteInfo{
-		InitialSetup: initialSetup,
+		InitialSetup:         initialSetup,
+		PeriodicScanInterval: periodicScanInterval,
 	}, nil
 }

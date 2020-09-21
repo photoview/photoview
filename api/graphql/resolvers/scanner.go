@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -38,4 +39,26 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		Success:  true,
 		Message:  &startMessage,
 	}, nil
+}
+
+func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval int) (int, error) {
+	if interval < 0 {
+		return 0, errors.New("interval must be 0 or above")
+	}
+
+	_, err := r.Database.Exec("UPDATE site_info SET periodic_scan_interval = ?", interval)
+	if err != nil {
+		return 0, err
+	}
+
+	var dbInterval int
+
+	row := r.Database.QueryRow("SELECT periodic_scan_interval FROM site_info")
+	if err = row.Scan(&dbInterval); err != nil {
+		return 0, err
+	}
+
+	scanner.ChangePeriodicScanInterval(time.Duration(dbInterval) * time.Second)
+
+	return dbInterval, nil
 }

@@ -92,6 +92,12 @@ type Mutation {
     admin: Boolean!
   ): User @isAdmin
   deleteUser(id: Int!): User @isAdmin
+
+  """
+  Set how often, in seconds, the server should automatically scan for new media,
+  a value of 0 will disable periodic scans
+  """
+  setPeriodicScanInterval(interval: Int!): Int!
 }
 
 type Subscription {
@@ -147,9 +153,11 @@ type ShareToken {
   media: Media
 }
 
-"General public information about the site"
+"General information about the site"
 type SiteInfo {
   initialSetup: Boolean!
+  "How often automatic scans should be initiated in seconds"
+  periodicScanInterval: Int! @isAdmin
 }
 
 type User {

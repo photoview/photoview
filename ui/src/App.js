@@ -26,6 +26,7 @@ import 'semantic-ui-css/components/site.css'
 import 'semantic-ui-css/components/transition.css'
 import 'semantic-ui-css/components/menu.css'
 import 'semantic-ui-css/components/dimmer.css'
+import 'semantic-ui-css/components/label.css'
 
 class App extends Component {
   render() {

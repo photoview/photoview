@@ -42,6 +42,7 @@ func main() {
 	}
 
 	scanner.InitializeScannerQueue(db)
+	scanner.InitializePeriodicScanner(db)
 
 	rootRouter := mux.NewRouter()
 
