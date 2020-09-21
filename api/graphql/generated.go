@@ -114,20 +114,21 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AuthorizeUser           func(childComplexity int, username string, password string) int
-		CreateUser              func(childComplexity int, username string, rootPath string, password *string, admin bool) int
-		DeleteShareToken        func(childComplexity int, token string) int
-		DeleteUser              func(childComplexity int, id int) int
-		FavoriteMedia           func(childComplexity int, mediaID int, favorite bool) int
-		InitialSetupWizard      func(childComplexity int, username string, password string, rootPath string) int
-		ProtectShareToken       func(childComplexity int, token string, password *string) int
-		RegisterUser            func(childComplexity int, username string, password string, rootPath string) int
-		ScanAll                 func(childComplexity int) int
-		ScanUser                func(childComplexity int, userID int) int
-		SetPeriodicScanInterval func(childComplexity int, interval int) int
-		ShareAlbum              func(childComplexity int, albumID int, expire *time.Time, password *string) int
-		ShareMedia              func(childComplexity int, mediaID int, expire *time.Time, password *string) int
-		UpdateUser              func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
+		AuthorizeUser               func(childComplexity int, username string, password string) int
+		CreateUser                  func(childComplexity int, username string, rootPath string, password *string, admin bool) int
+		DeleteShareToken            func(childComplexity int, token string) int
+		DeleteUser                  func(childComplexity int, id int) int
+		FavoriteMedia               func(childComplexity int, mediaID int, favorite bool) int
+		InitialSetupWizard          func(childComplexity int, username string, password string, rootPath string) int
+		ProtectShareToken           func(childComplexity int, token string, password *string) int
+		RegisterUser                func(childComplexity int, username string, password string, rootPath string) int
+		ScanAll                     func(childComplexity int) int
+		ScanUser                    func(childComplexity int, userID int) int
+		SetPeriodicScanInterval     func(childComplexity int, interval int) int
+		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
+		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
+		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string) int
+		UpdateUser                  func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
 	}
 
 	Notification struct {
@@ -178,6 +179,7 @@ type ComplexityRoot struct {
 	}
 
 	SiteInfo struct {
+		ConcurrentWorkers    func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
 	}
@@ -243,6 +245,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
+	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
@@ -727,6 +730,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
 
+	case "Mutation.setScannerConcurrentWorkers":
+		if e.complexity.Mutation.SetScannerConcurrentWorkers == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setScannerConcurrentWorkers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
+
 	case "Mutation.shareAlbum":
 		if e.complexity.Mutation.ShareAlbum == nil {
 			break
@@ -1026,6 +1041,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ShareToken.Token(childComplexity), true
+
+	case "SiteInfo.concurrentWorkers":
+		if e.complexity.SiteInfo.ConcurrentWorkers == nil {
+			break
+		}
+
+		return e.complexity.SiteInfo.ConcurrentWorkers(childComplexity), true
 
 	case "SiteInfo.initialSetup":
 		if e.complexity.SiteInfo.InitialSetup == nil {
@@ -1327,6 +1349,9 @@ type Mutation {
   a value of 0 will disable periodic scans
   """
   setPeriodicScanInterval(interval: Int!): Int!
+
+  "Set max number of concurrent scanner jobs running at once"
+  setScannerConcurrentWorkers(workers: Int!): Int!
 }
 
 type Subscription {
@@ -1387,6 +1412,8 @@ type SiteInfo {
   initialSetup: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
+  "How many max concurrent scanner jobs that should run at once"
+  concurrentWorkers: Int! @isAdmin
 }
 
 type User {
@@ -1780,6 +1807,21 @@ func (ec *executionContext) field_Mutation_setPeriodicScanInterval_args(ctx cont
 		}
 	}
 	args["interval"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["workers"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("workers"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workers"] = arg0
 	return args, nil
 }
 
@@ -4203,6 +4245,47 @@ func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Contex
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_setScannerConcurrentWorkers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setScannerConcurrentWorkers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetScannerConcurrentWorkers(rctx, args["workers"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Notification_key(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5468,6 +5551,60 @@ func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, 
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
 			return obj.PeriodicScanInterval, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAdmin == nil {
+				return nil, errors.New("directive isAdmin is not implemented")
+			}
+			return ec.directives.IsAdmin(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(int); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SiteInfo",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ConcurrentWorkers, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -7626,6 +7763,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "setScannerConcurrentWorkers":
+			out.Values[i] = ec._Mutation_setScannerConcurrentWorkers(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8038,6 +8180,11 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "periodicScanInterval":
 			out.Values[i] = ec._SiteInfo_periodicScanInterval(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "concurrentWorkers":
+			out.Values[i] = ec._SiteInfo_concurrentWorkers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

@@ -37,16 +37,33 @@ type ScannerQueue struct {
 
 var global_scanner_queue ScannerQueue
 
-func InitializeScannerQueue(db *sql.DB) {
+func InitializeScannerQueue(db *sql.DB) error {
+
+	var concurrentWorkers int
+	row := db.QueryRow("SELECT concurrent_workers FROM site_info")
+	if err := row.Scan(&concurrentWorkers); err != nil {
+		return errors.Wrap(err, "get current workers from database")
+	}
+
 	global_scanner_queue = ScannerQueue{
 		idle_chan:   make(chan bool, 1),
 		in_progress: make([]ScannerJob, 0),
 		up_next:     make([]ScannerJob, 0),
 		db:          db,
-		settings:    ScannerQueueSettings{max_concurrent_tasks: 3},
+		settings:    ScannerQueueSettings{max_concurrent_tasks: concurrentWorkers},
 	}
 
 	go global_scanner_queue.startBackgroundWorker()
+
+	return nil
+}
+
+func ChangeScannerConcurrentWorkers(newMaxWorkers int) {
+	global_scanner_queue.mutex.Lock()
+	defer global_scanner_queue.mutex.Unlock()
+
+	log.Printf("Scanner max concurrent workers changed to: %d", newMaxWorkers)
+	global_scanner_queue.settings.max_concurrent_tasks = newMaxWorkers
 }
 
 func (queue *ScannerQueue) startBackgroundWorker() {

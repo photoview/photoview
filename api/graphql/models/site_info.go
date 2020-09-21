@@ -20,7 +20,8 @@ func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 	}
 
 	var initialSetup bool
-	var periodicScanInterval int = 0
+	var periodicScanInterval int
+	var concurrentWorkers int
 
 	if !rows.Next() {
 		// Entry does not exist
@@ -29,7 +30,7 @@ func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 		}
 		initialSetup = true
 	} else {
-		if err := rows.Scan(&initialSetup, &periodicScanInterval); err != nil {
+		if err := rows.Scan(&initialSetup, &periodicScanInterval, &concurrentWorkers); err != nil {
 			return nil, err
 		}
 	}
@@ -37,5 +38,6 @@ func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 	return &SiteInfo{
 		InitialSetup:         initialSetup,
 		PeriodicScanInterval: periodicScanInterval,
+		ConcurrentWorkers:    concurrentWorkers,
 	}, nil
 }
