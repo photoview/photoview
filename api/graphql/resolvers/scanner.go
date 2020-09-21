@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -56,6 +57,8 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 	if err = row.Scan(&dbInterval); err != nil {
 		return 0, err
 	}
+
+	scanner.ChangePeriodicScanInterval(time.Duration(dbInterval) * time.Second)
 
 	return dbInterval, nil
 }

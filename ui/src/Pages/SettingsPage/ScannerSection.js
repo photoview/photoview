@@ -75,7 +75,10 @@ const convertToAppropriateUnit = ({ value, unit }) => {
 
   let resultingUnit = timeUnits.first
   for (const unit of timeUnits) {
-    if (seconds / unit.multiplier >= 1) {
+    if (
+      seconds / unit.multiplier >= 1 &&
+      (seconds / unit.multiplier) % 1 == 0
+    ) {
       resultingUnit = unit
     } else {
       break
