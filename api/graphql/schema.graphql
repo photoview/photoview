@@ -98,6 +98,9 @@ type Mutation {
   a value of 0 will disable periodic scans
   """
   setPeriodicScanInterval(interval: Int!): Int!
+
+  "Set max number of concurrent scanner jobs running at once"
+  setScannerConcurrentWorkers(workers: Int!): Int!
 }
 
 type Subscription {
@@ -158,6 +161,8 @@ type SiteInfo {
   initialSetup: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
+  "How many max concurrent scanner jobs that should run at once"
+  concurrentWorkers: Int! @isAdmin
 }
 
 type User {

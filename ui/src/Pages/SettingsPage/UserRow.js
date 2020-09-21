@@ -145,6 +145,7 @@ const UserRow = ({ user, refetchUsers }) => {
           <Table.Row>
             <Table.Cell>
               <Input
+                style={{ width: '100%' }}
                 placeholder={user.username}
                 value={state.username}
                 onChange={e => updateInput(e, 'username')}
@@ -152,6 +153,7 @@ const UserRow = ({ user, refetchUsers }) => {
             </Table.Cell>
             <Table.Cell>
               <Input
+                style={{ width: '100%' }}
                 placeholder={user.rootPath}
                 value={state.rootPath}
                 onChange={e => updateInput(e, 'rootPath')}

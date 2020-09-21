@@ -41,8 +41,13 @@ func main() {
 		log.Panicf("Could not migrate database: %s\n", err)
 	}
 
-	scanner.InitializeScannerQueue(db)
-	scanner.InitializePeriodicScanner(db)
+	if err := scanner.InitializeScannerQueue(db); err != nil {
+		log.Panicf("Could not initialize scanner queue: %s\n", err)
+	}
+
+	if err := scanner.InitializePeriodicScanner(db); err != nil {
+		log.Panicf("Could not initialize periodic scanner: %s", err)
+	}
 
 	rootRouter := mux.NewRouter()
 
