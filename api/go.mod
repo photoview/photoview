@@ -25,7 +25,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.2.0 // indirect
 	github.com/vektah/dataloaden v0.3.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.0.1
+	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
