@@ -9,6 +9,9 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "ui (npm)"
+    labels:
+      - "dependencies"
+      - "UI"
 
   # Enable version updates api
   - package-ecosystem: "gomod"
@@ -17,3 +20,6 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "api (gomod)"
+    labels:
+      - "dependencies"
+      - "API"
