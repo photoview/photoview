@@ -1,0 +1,19 @@
+# Automatic dependency updates
+
+version: 2
+updates:
+  # Enable version updates ui
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ui (npm)"
+
+  # Enable version updates api
+  - package-ecosystem: "gomod"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "api (gomod)"
