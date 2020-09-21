@@ -114,19 +114,20 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AuthorizeUser      func(childComplexity int, username string, password string) int
-		CreateUser         func(childComplexity int, username string, rootPath string, password *string, admin bool) int
-		DeleteShareToken   func(childComplexity int, token string) int
-		DeleteUser         func(childComplexity int, id int) int
-		FavoriteMedia      func(childComplexity int, mediaID int, favorite bool) int
-		InitialSetupWizard func(childComplexity int, username string, password string, rootPath string) int
-		ProtectShareToken  func(childComplexity int, token string, password *string) int
-		RegisterUser       func(childComplexity int, username string, password string, rootPath string) int
-		ScanAll            func(childComplexity int) int
-		ScanUser           func(childComplexity int, userID int) int
-		ShareAlbum         func(childComplexity int, albumID int, expire *time.Time, password *string) int
-		ShareMedia         func(childComplexity int, mediaID int, expire *time.Time, password *string) int
-		UpdateUser         func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
+		AuthorizeUser           func(childComplexity int, username string, password string) int
+		CreateUser              func(childComplexity int, username string, rootPath string, password *string, admin bool) int
+		DeleteShareToken        func(childComplexity int, token string) int
+		DeleteUser              func(childComplexity int, id int) int
+		FavoriteMedia           func(childComplexity int, mediaID int, favorite bool) int
+		InitialSetupWizard      func(childComplexity int, username string, password string, rootPath string) int
+		ProtectShareToken       func(childComplexity int, token string, password *string) int
+		RegisterUser            func(childComplexity int, username string, password string, rootPath string) int
+		ScanAll                 func(childComplexity int) int
+		ScanUser                func(childComplexity int, userID int) int
+		SetPeriodicScanInterval func(childComplexity int, interval int) int
+		ShareAlbum              func(childComplexity int, albumID int, expire *time.Time, password *string) int
+		ShareMedia              func(childComplexity int, mediaID int, expire *time.Time, password *string) int
+		UpdateUser              func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
 	}
 
 	Notification struct {
@@ -241,6 +242,7 @@ type MutationResolver interface {
 	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
+	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
@@ -712,6 +714,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
+
+	case "Mutation.setPeriodicScanInterval":
+		if e.complexity.Mutation.SetPeriodicScanInterval == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setPeriodicScanInterval_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
 
 	case "Mutation.shareAlbum":
 		if e.complexity.Mutation.ShareAlbum == nil {
@@ -1307,6 +1321,12 @@ type Mutation {
     admin: Boolean!
   ): User @isAdmin
   deleteUser(id: Int!): User @isAdmin
+
+  """
+  Set how often, in seconds, the server should automatically scan for new media,
+  a value of 0 will disable periodic scans
+  """
+  setPeriodicScanInterval(interval: Int!): Int!
 }
 
 type Subscription {
@@ -1745,6 +1765,21 @@ func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, ra
 		}
 	}
 	args["userId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setPeriodicScanInterval_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["interval"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("interval"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["interval"] = arg0
 	return args, nil
 }
 
@@ -4125,6 +4160,47 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	res := resTmp.(*models.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setPeriodicScanInterval_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetPeriodicScanInterval(rctx, args["interval"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Notification_key(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -7545,6 +7621,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		case "deleteUser":
 			out.Values[i] = ec._Mutation_deleteUser(ctx, field)
+		case "setPeriodicScanInterval":
+			out.Values[i] = ec._Mutation_setPeriodicScanInterval(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
