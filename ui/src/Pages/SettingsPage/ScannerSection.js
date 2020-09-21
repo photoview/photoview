@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import {
   Button,
@@ -111,6 +111,8 @@ const ScannerSection = () => {
     unit: 'minute',
   })
 
+  const scanIntervalServerValue = useRef(null)
+
   const scanIntervalQuery = useQuery(SCAN_INTERVAL_QUERY, {
     onCompleted(data) {
       const queryScanInterval = data.siteInfo.periodicScanInterval
@@ -141,19 +143,20 @@ const ScannerSection = () => {
   const onScanIntervalCheckboxChange = checked => {
     setEnablePeriodicScanner(checked)
 
-    setScanIntervalMutation({
-      variables: {
-        interval: checked ? convertToSeconds(scanInterval) : 0,
-      },
-    })
+    onScanIntervalUpdate(checked ? scanInterval : { value: 0, unit: 'second' })
   }
 
   const onScanIntervalUpdate = scanInterval => {
-    setScanIntervalMutation({
-      variables: {
-        interval: convertToSeconds(scanInterval),
-      },
-    })
+    const seconds = convertToSeconds(scanInterval)
+
+    if (scanIntervalServerValue.current != seconds) {
+      setScanIntervalMutation({
+        variables: {
+          interval: convertToSeconds(scanInterval),
+        },
+      })
+      scanIntervalServerValue.current = seconds
+    }
   }
 
   const scanIntervalUnits = [
