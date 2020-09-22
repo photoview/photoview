@@ -3,7 +3,7 @@ module github.com/viktorstrate/photoview/api
 go 1.13
 
 require (
-	github.com/99designs/gqlgen v0.12.2
+	github.com/99designs/gqlgen v0.13.0
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
@@ -25,6 +25,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.2.0 // indirect
 	github.com/vektah/dataloaden v0.3.0 // indirect
+	github.com/vektah/gqlparser v1.3.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0

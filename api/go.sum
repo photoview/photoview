@@ -2,6 +2,8 @@ github.com/99designs/gqlgen v0.12.1 h1:Qfi6HDi6uDxGVKvz5kg8/5iP9YF2XqhwIoBKAt+Nt
 github.com/99designs/gqlgen v0.12.1/go.mod h1:7zdGo6ry9u1YBp/qlb2uxSU5Mt2jQKLcBETQiKk+Bxo=
 github.com/99designs/gqlgen v0.12.2 h1:aOdpsiCycFtCnAv8CAI1exnKrIDHMqtMzQoXeTziY4o=
 github.com/99designs/gqlgen v0.12.2/go.mod h1:7zdGo6ry9u1YBp/qlb2uxSU5Mt2jQKLcBETQiKk+Bxo=
+github.com/99designs/gqlgen v0.13.0 h1:haLTcUp3Vwp80xMVEg5KRNwzfUrgFdRmtBY8fuB8scA=
+github.com/99designs/gqlgen v0.13.0/go.mod h1:NV130r6f4tpRWuAI+zsrSdooO/eWUv+Gyyoi3rEfXIk=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Microsoft/go-winio v0.4.14 h1:+hMXMk01us9KgxGb7ftKQt2Xpf5hH/yky+TDA+qxleU=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
