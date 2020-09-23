@@ -1,7 +1,7 @@
 -- Users and authentication
 CREATE TABLE IF NOT EXISTS user (
   user_id int NOT NULL AUTO_INCREMENT,
-  username varchar(256) NOT NULL UNIQUE,
+  username varchar(128) NOT NULL UNIQUE,
   password varchar(256),
   root_path varchar(512),
   admin boolean NOT NULL DEFAULT 0,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS access_token (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS site_info (
-  initial_setup boolean NOT NULL DEFAULT TRUE,
+  initial_setup boolean NOT NULL DEFAULT TRUE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Video related
