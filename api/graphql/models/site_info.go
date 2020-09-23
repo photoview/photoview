@@ -4,7 +4,7 @@ import (
 	"database/sql"
 )
 
-func InitializeSiteInfoRow(db *sql.DB) error {
+func initializeSiteInfoRow(db *sql.DB) error {
 	_, err := db.Exec("INSERT INTO site_info (initial_setup) VALUES (true)")
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
 
 	if !rows.Next() {
 		// Entry does not exist
-		if err := InitializeSiteInfoRow(db); err != nil {
+		if err := initializeSiteInfoRow(db); err != nil {
 			return nil, err
 		}
 		initialSetup = true

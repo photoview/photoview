@@ -10,8 +10,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-var DarktableCli = newDarktableWorker()
-var FfmpegCli = newFfmpegWorker()
+func InitializeExecutableWorkers() {
+	DarktableCli = newDarktableWorker()
+	FfmpegCli = newFfmpegWorker()
+}
+
+var DarktableCli *DarktableWorker = nil
+var FfmpegCli *FfmpegWorker = nil
 
 type ExecutableWorker interface {
 	Path() string
@@ -25,38 +30,42 @@ type FfmpegWorker struct {
 	path string
 }
 
-func newDarktableWorker() DarktableWorker {
+func newDarktableWorker() *DarktableWorker {
 	path, err := exec.LookPath("darktable-cli")
 	if err != nil {
 		log.Println("Executable worker not found: darktable")
 	} else {
 		log.Println("Found executable worker: darktable")
+
+		return &DarktableWorker{
+			path: path,
+		}
 	}
 
-	return DarktableWorker{
-		path: path,
-	}
+	return nil
 }
 
-func newFfmpegWorker() FfmpegWorker {
+func newFfmpegWorker() *FfmpegWorker {
 	path, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		log.Println("Executable worker not found: ffmpeg")
 	} else {
 		log.Println("Found executable worker: ffmpeg")
+
+		return &FfmpegWorker{
+			path: path,
+		}
 	}
 
-	return FfmpegWorker{
-		path: path,
-	}
+	return nil
 }
 
 func (worker *DarktableWorker) IsInstalled() bool {
-	return worker.path != ""
+	return worker != nil
 }
 
 func (worker *FfmpegWorker) IsInstalled() bool {
-	return worker.path != ""
+	return worker != nil
 }
 
 func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {

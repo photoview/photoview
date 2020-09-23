@@ -49,6 +49,8 @@ func main() {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
 
+	scanner.InitializeExecutableWorkers()
+
 	rootRouter := mux.NewRouter()
 
 	rootRouter.Use(auth.Middleware(db))

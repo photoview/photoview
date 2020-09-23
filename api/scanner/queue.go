@@ -40,9 +40,12 @@ var global_scanner_queue ScannerQueue
 func InitializeScannerQueue(db *sql.DB) error {
 
 	var concurrentWorkers int
-	row := db.QueryRow("SELECT concurrent_workers FROM site_info")
-	if err := row.Scan(&concurrentWorkers); err != nil {
-		return errors.Wrap(err, "get current workers from database")
+	{
+		site_info, err := models.GetSiteInfo(db)
+		if err != nil {
+			return errors.Wrap(err, "get current workers from database")
+		}
+		concurrentWorkers = site_info.ConcurrentWorkers
 	}
 
 	global_scanner_queue = ScannerQueue{
