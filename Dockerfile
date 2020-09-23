@@ -20,8 +20,8 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 # Build API
-FROM --platform=${BUILDPLATFORM:-linux/amd64} tonistiigi/xx:golang AS xgo
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14-alpine AS api
+COPY --from=tonistiigi/xx:golang / /
 
 RUN mkdir -p /app
 WORKDIR /app
