@@ -48,6 +48,8 @@ func InitializeScannerQueue(db *sql.DB) error {
 		concurrentWorkers = site_info.ConcurrentWorkers
 	}
 
+	log.Printf("Initializing scanner queue with %d workers", concurrentWorkers)
+
 	global_scanner_queue = ScannerQueue{
 		idle_chan:   make(chan bool, 1),
 		in_progress: make([]ScannerJob, 0),
@@ -78,7 +80,7 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 		<-queue.idle_chan
 		log.Println("Queue waiting for lock")
 		queue.mutex.Lock()
-		log.Println("Queue running")
+		log.Printf("Queue running: in_progress: %d, max_tasks: %d, queue_len: %d\n", len(queue.in_progress), queue.settings.max_concurrent_tasks, len(queue.up_next))
 
 		for len(queue.in_progress) < queue.settings.max_concurrent_tasks && len(queue.up_next) > 0 {
 			log.Println("Queue starting job")
