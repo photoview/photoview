@@ -34,9 +34,7 @@ const StyledIcon = styled(Icon)`
 `
 
 const FavoritesCheckbox = styled(Checkbox)`
-  float: right;
-  padding-left: 10px;
-  margin-top: 0.5rem;
+  margin-bottom: 16px;
 `
 
 const SettingsIcon = props => {
@@ -103,16 +101,18 @@ const AlbumTitle = ({
   }
 
   return (
-    <Header>
-      <Breadcrumb>{breadcrumbSections}</Breadcrumb>
-      {title}
-      {authToken() && (
-        <SettingsIcon
-          onClick={() => {
-            updateSidebar(<AlbumSidebar albumId={album.id} />)
-          }}
-        />
-      )}
+    <>
+      <Header>
+        <Breadcrumb>{breadcrumbSections}</Breadcrumb>
+        {title}
+        {authToken() && (
+          <SettingsIcon
+            onClick={() => {
+              updateSidebar(<AlbumSidebar albumId={album.id} />)
+            }}
+          />
+        )}
+      </Header>
       {authToken() && showFavoritesToggle && (
         <FavoritesCheckbox
           toggle
@@ -122,7 +122,7 @@ const AlbumTitle = ({
           onChange={setOnlyFavorites}
         />
       )}
-    </Header>
+    </>
   )
 }
 

@@ -52,21 +52,21 @@ function AlbumPage({ match }) {
   )
 
   const toggleFavorites = refetch => {
-    const onlyFavorites = !onlyFavorites
+    const newState = !onlyFavorites
     if (
-      (refetchNeededAll && !onlyFavorites) ||
-      (refetchNeededFavorites && onlyFavorites)
+      (refetchNeededAll && !newState) ||
+      (refetchNeededFavorites && newState)
     ) {
-      refetch({ id: albumId, onlyFavorites: onlyFavorites }).then(() => {
+      refetch({ id: albumId, onlyFavorites: newState }).then(() => {
         if (onlyFavorites) {
           refetchNeededFavorites = false
         } else {
           refetchNeededAll = false
         }
-        setOnlyFavorites(onlyFavorites)
+        setOnlyFavorites(newState)
       })
     } else {
-      setOnlyFavorites(onlyFavorites)
+      setOnlyFavorites(newState)
     }
     history.replaceState(
       {},

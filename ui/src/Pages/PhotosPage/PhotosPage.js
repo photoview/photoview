@@ -44,8 +44,7 @@ const photoQuery = gql`
 `
 
 const FavoritesCheckbox = styled(Checkbox)`
-  float: right;
-  margin: 0.5rem 0 0 1rem;
+  margin: 0.5rem 0 0 0;
 `
 
 class PhotosPage extends Component {
