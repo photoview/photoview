@@ -64,8 +64,8 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 }
 
 func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error) {
-	if workers < 0 {
-		return 0, errors.New("concurrent workers must be positive")
+	if workers < 1 {
+		return 0, errors.New("concurrent workers must at least be 1")
 	}
 
 	_, err := r.Database.Exec("UPDATE site_info SET concurrent_workers = ?", workers)
