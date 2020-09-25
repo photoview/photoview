@@ -64,6 +64,8 @@ class PhotosPage extends Component {
     this.previousImage = this.previousImage.bind(this)
 
     this.albums = []
+    this.refetchNeededFavorites = false
+    this.refetchNeededAll = false
   }
 
   onPopState(event) {
@@ -80,17 +82,33 @@ class PhotosPage extends Component {
     window.removeEventListener('popstate', this.onPopState)
   }
 
-  favoritesCheckboxClick() {
+  favoritesCheckboxClick(refetch) {
     const onlyWithFavorites = !this.state.onlyWithFavorites
     history.pushState(
-      { showFavorites: onlyWithFavorites },
+      {},
       '',
       '/photos' + (onlyWithFavorites ? '/favorites' : '')
     )
 
-    this.setState({
-      onlyWithFavorites,
-    })
+    if (
+      (this.refetchNeededAll && !onlyWithFavorites) ||
+      (this.refetchNeededFavorites && onlyWithFavorites)
+    ) {
+      refetch({ onlyWithFavorites }).then(() => {
+        if (onlyWithFavorites) {
+          this.refetchNeededFavorites = false
+        } else {
+          this.refetchNeededAll = false
+        }
+        this.setState({
+          onlyWithFavorites,
+        })
+      })
+    } else {
+      this.setState({
+        onlyWithFavorites,
+      })
+    }
   }
 
   setActiveImage(album, photo) {
@@ -139,7 +157,7 @@ class PhotosPage extends Component {
           query={photoQuery}
           variables={{ onlyWithFavorites: showOnlyWithFavorites }}
         >
-          {({ loading, error, data }) => {
+          {({ loading, error, data, refetch }) => {
             if (error) return error
 
             if (loading) return null
@@ -157,7 +175,7 @@ class PhotosPage extends Component {
                   onClick={e => e.stopPropagation()}
                   checked={showOnlyWithFavorites}
                   onChange={() => {
-                    this.favoritesCheckboxClick()
+                    this.favoritesCheckboxClick(refetch)
                   }}
                 />
               )
@@ -167,6 +185,10 @@ class PhotosPage extends Component {
                   <PhotoGallery
                     onSelectImage={photoIndex => {
                       this.setActiveImage(index, photoIndex)
+                    }}
+                    onFavorite={() => {
+                      this.refetchNeededAll = true
+                      this.refetchNeededFavorites = true
                     }}
                     activeIndex={
                       this.state.activeAlbumIndex == index

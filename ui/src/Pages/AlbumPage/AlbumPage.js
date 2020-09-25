@@ -42,49 +42,55 @@ const albumQuery = gql`
   }
 `
 
+let refetchNeededAll = false
+let refetchNeededFavorites = false
+
 function AlbumPage({ match }) {
   const albumId = match.params.id
-  const showFavorites = match.params.subPage === 'favorites'
+  const [onlyFavorites, setOnlyFavorites] = useState(
+    match.params.subPage === 'favorites'
+  )
 
-  const [onlyFavorites, setOnlyFavorites] = useState(showFavorites)
-
-  const toggleFavorites = onlyFavorites => {
-    setOnlyFavorites(onlyFavorites)
-    if (onlyFavorites) {
-      history.pushState(
-        { showFavorites: onlyFavorites },
-        '',
-        '/album/' + albumId + '/favorites'
-      )
+  const toggleFavorites = refetch => {
+    const onlyFavorites = !onlyFavorites
+    if (
+      (refetchNeededAll && !onlyFavorites) ||
+      (refetchNeededFavorites && onlyFavorites)
+    ) {
+      refetch({ id: albumId, onlyFavorites: onlyFavorites }).then(() => {
+        if (onlyFavorites) {
+          refetchNeededFavorites = false
+        } else {
+          refetchNeededAll = false
+        }
+        setOnlyFavorites(onlyFavorites)
+      })
     } else {
-      history.back()
+      setOnlyFavorites(onlyFavorites)
     }
+    history.replaceState(
+      {},
+      '',
+      '/album/' + albumId + (onlyFavorites ? '/favorites' : '')
+    )
   }
-
-  useEffect(() => {
-    const updateImageState = event => {
-      setOnlyFavorites(event.state.showFavorites)
-    }
-
-    window.addEventListener('popstate', updateImageState)
-
-    return () => {
-      window.removeEventListener('popstate', updateImageState)
-    }
-  }, [setOnlyFavorites])
 
   return (
     <Query query={albumQuery} variables={{ id: albumId, onlyFavorites }}>
-      {({ loading, error, data }) => {
+      {({ loading, error, data, refetch }) => {
         if (error) return <div>Error</div>
-
         return (
           <AlbumGallery
             album={data && data.album}
             loading={loading}
             showFavoritesToggle
-            setOnlyFavorites={toggleFavorites}
+            setOnlyFavorites={() => {
+              toggleFavorites(refetch)
+            }}
             onlyFavorites={onlyFavorites}
+            onFavorite={() =>
+              (refetchNeededAll = refetchNeededFavorites = true)
+            }
           />
         )
       }}

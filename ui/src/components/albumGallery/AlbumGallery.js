@@ -12,6 +12,7 @@ const AlbumGallery = ({
   showFavoritesToggle = false,
   setOnlyFavorites,
   onlyFavorites = false,
+  onFavorite,
 }) => {
   const [imageState, setImageState] = useState({
     activeImage: -1,
@@ -111,6 +112,7 @@ const AlbumGallery = ({
         onSelectImage={index => {
           setActiveImage(index)
         }}
+        onFavorite={onFavorite}
         setPresenting={setPresentingWithHistory}
         nextImage={nextImage}
         previousImage={previousImage}
@@ -126,6 +128,7 @@ AlbumGallery.propTypes = {
   showFavoritesToggle: PropTypes.bool,
   setOnlyFavorites: PropTypes.func,
   onlyFavorites: PropTypes.bool,
+  onFavorite: PropTypes.func,
 }
 
 export default AlbumGallery

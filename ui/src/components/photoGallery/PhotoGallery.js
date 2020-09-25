@@ -40,6 +40,7 @@ const PhotoGallery = ({
   setPresenting,
   nextImage,
   previousImage,
+  onFavorite,
 }) => {
   const { updateSidebar } = useContext(SidebarContext)
 
@@ -94,6 +95,7 @@ const PhotoGallery = ({
               updateSidebar(<MediaSidebar media={photo} />)
               onSelectImage(index)
             }}
+            onFavorite={onFavorite}
             setPresenting={setPresenting}
             minWidth={minWidth}
             index={index}
@@ -140,6 +142,7 @@ PhotoGallery.propTypes = {
   setPresenting: PropTypes.func,
   nextImage: PropTypes.func,
   previousImage: PropTypes.func,
+  onFavorite: PropTypes.func,
 }
 
 export default PhotoGallery

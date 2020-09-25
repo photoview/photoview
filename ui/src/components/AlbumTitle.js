@@ -119,7 +119,7 @@ const AlbumTitle = ({
           label="Show only the favorites"
           checked={onlyFavorites}
           onClick={e => e.stopPropagation()}
-          onChange={() => setOnlyFavorites(!onlyFavorites)}
+          onChange={setOnlyFavorites}
         />
       )}
     </Header>
