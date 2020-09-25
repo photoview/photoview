@@ -3,9 +3,9 @@ import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
 import { Button, Form, Message, Header } from 'semantic-ui-react'
-import { Container } from './LoginPage'
+import { Container } from './loginUtilities'
 
-import { checkInitialSetupQuery, login } from './loginUtilFunctions'
+import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../authentication'
 
 const initialSetupMutation = gql`

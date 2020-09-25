@@ -3,14 +3,8 @@ import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import { Redirect } from 'react-router-dom'
 import styled from 'styled-components'
-import {
-  Button,
-  Form,
-  Message,
-  Container as SemanticContainer,
-  Header,
-} from 'semantic-ui-react'
-import { checkInitialSetupQuery, login } from './loginUtilFunctions'
+import { Button, Form, Message, Header } from 'semantic-ui-react'
+import { checkInitialSetupQuery, login, Container } from './loginUtilities'
 import { authToken } from '../../authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
@@ -23,10 +17,6 @@ const authorizeMutation = gql`
       token
     }
   }
-`
-
-export const Container = styled(SemanticContainer)`
-  margin-top: 80px;
 `
 
 const StyledLogo = styled.img`
