@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: mariadb
+    image: mariadb:10.5
     restart: always
     environment:
       - MYSQL_DATABASE=photoview
@@ -13,7 +13,7 @@ services:
       - db_data:/var/lib/mysql
 
   photoview:
-    image: viktorstrate/photoview:latest
+    image: viktorstrate/photoview:1
     restart: always
     ports:
       - "8000:80"
