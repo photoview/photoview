@@ -144,9 +144,11 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Album                      func(childComplexity int, id int) int
+		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int) int
 		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool) int
 		MyMedia                    func(childComplexity int, filter *models.Filter) int
+		MyMediaGeoJSON             func(childComplexity int) int
 		MyUser                     func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
 		ShareToken                 func(childComplexity int, token string, password *string) int
@@ -255,6 +257,8 @@ type QueryResolver interface {
 	Album(ctx context.Context, id int) (*models.Album, error)
 	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
 	Media(ctx context.Context, id int) (*models.Media, error)
+	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
+	MapboxToken(ctx context.Context) (*string, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
@@ -846,6 +850,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
 
+	case "Query.mapboxToken":
+		if e.complexity.Query.MapboxToken == nil {
+			break
+		}
+
+		return e.complexity.Query.MapboxToken(childComplexity), true
+
 	case "Query.media":
 		if e.complexity.Query.Media == nil {
 			break
@@ -881,6 +892,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.MyMedia(childComplexity, args["filter"].(*models.Filter)), true
+
+	case "Query.myMediaGeoJson":
+		if e.complexity.Query.MyMediaGeoJSON == nil {
+			break
+		}
+
+		return e.complexity.Query.MyMediaGeoJSON(childComplexity), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -1252,6 +1270,7 @@ var sources = []*ast.Source{
 	{Name: "graphql/schema.graphql", Input: `directive @isAdmin on FIELD_DEFINITION
 
 scalar Time
+scalar Any
 
 enum OrderDirection {
   ASC
@@ -1288,6 +1307,11 @@ type Query {
   myMedia(filter: Filter): [Media!]!
   "Get media by id, user must own the media or be admin"
   media(id: Int!): Media!
+
+  "Get media owned by the logged in user, returned in GeoJson format"
+  myMediaGeoJson: Any!
+  "Get the mapbox api token, returns null if mapbox is not enabled"
+  mapboxToken: String
 
   shareToken(token: String!, password: String): ShareToken!
   shareTokenValidatePassword(token: String!, password: String): Boolean!
@@ -4919,6 +4943,73 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyMediaGeoJSON(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MapboxToken(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8091,6 +8182,31 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "myMediaGeoJson":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myMediaGeoJson(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "mapboxToken":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mapboxToken(ctx, field)
+				return res
+			})
 		case "shareToken":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8755,6 +8871,27 @@ func (ec *executionContext) marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 		return graphql.Null
 	}
 	return ec._Album(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
