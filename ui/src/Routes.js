@@ -9,6 +9,7 @@ const AlbumsPage = React.lazy(() => import('./Pages/AllAlbumsPage/AlbumsPage'))
 const AlbumPage = React.lazy(() => import('./Pages/AlbumPage/AlbumPage'))
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
 const PhotosPage = React.lazy(() => import('./Pages/PhotosPage/PhotosPage'))
+const PlacesPage = React.lazy(() => import('./Pages/PlacesPage/PlacesPage'))
 const SharePage = React.lazy(() => import('./Pages/SharePage/SharePage'))
 
 const LoginPage = React.lazy(() => import('./Pages/LoginPage/LoginPage'))
@@ -43,6 +44,7 @@ class Routes extends React.Component {
           <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
           <AuthorizedRoute path="/album/:id" component={AlbumPage} />
           <AuthorizedRoute path="/photos" component={PhotosPage} />
+          <AuthorizedRoute path="/places" component={PlacesPage} />
           <AuthorizedRoute admin path="/settings" component={SettingsPage} />
           <Route path="/" exact render={() => <Redirect to="/photos" />} />
           <Route render={() => <div>Page not found</div>} />

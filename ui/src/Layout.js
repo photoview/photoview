@@ -103,6 +103,10 @@ const Layout = ({ children, title }) => (
           <Icon name="images outline" />
           <SideButtonLabel>Albums</SideButtonLabel>
         </SideButton>
+        <SideButton to="/places" exact>
+          <Icon name="map outline" />
+          <SideButtonLabel>Places</SideButtonLabel>
+        </SideButton>
         <Query query={adminQuery}>
           {({ loading, error, data }) => {
             if (data && data.myUser && data.myUser.admin) {
