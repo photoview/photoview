@@ -67,20 +67,6 @@ class PhotosPage extends Component {
     this.refetchNeededAll = false
   }
 
-  onPopState(event) {
-    this.state.setState({
-      onlyWithFavorites: event.state.showFavorites,
-    })
-  }
-
-  componentDidMount() {
-    window.addEventListener('popstate', this.onPopState)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('popstate', this.onPopState)
-  }
-
   favoritesCheckboxClick(refetch) {
     const onlyWithFavorites = !this.state.onlyWithFavorites
     history.replaceState(
