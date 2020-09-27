@@ -146,6 +146,7 @@ type ComplexityRoot struct {
 		Album                      func(childComplexity int, id int) int
 		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int) int
+		MediaList                  func(childComplexity int, ids []int) int
 		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
 		MyMedia                    func(childComplexity int, filter *models.Filter) int
 		MyMediaGeoJSON             func(childComplexity int) int
@@ -257,6 +258,7 @@ type QueryResolver interface {
 	Album(ctx context.Context, id int) (*models.Album, error)
 	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
 	Media(ctx context.Context, id int) (*models.Media, error)
+	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	MapboxToken(ctx context.Context) (*string, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
@@ -869,6 +871,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Media(childComplexity, args["id"].(int)), true
 
+	case "Query.mediaList":
+		if e.complexity.Query.MediaList == nil {
+			break
+		}
+
+		args, err := ec.field_Query_mediaList_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MediaList(childComplexity, args["ids"].([]int)), true
+
 	case "Query.myAlbums":
 		if e.complexity.Query.MyAlbums == nil {
 			break
@@ -1310,6 +1324,9 @@ type Query {
   "Get media by id, user must own the media or be admin"
   media(id: Int!): Media!
 
+  "Get a list of media by their ids, user must own the media or be admin"
+  mediaList(ids: [Int!]!): [Media!]!
+
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
   "Get the mapbox api token, returns null if mapbox is not enabled"
@@ -1584,6 +1601,7 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 	args["filter"] = arg0
 	var arg1 *bool
 	if tmp, ok := rawArgs["onlyFavorites"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyFavorites"))
 		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -2010,6 +2028,21 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_mediaList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalNInt2ᚕintᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2057,6 +2090,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	args["showEmpty"] = arg2
 	var arg3 *bool
 	if tmp, ok := rawArgs["onlyWithFavorites"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyWithFavorites"))
 		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -4963,6 +4997,48 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 	res := resTmp.(*models.Media)
 	fc.Result = res
 	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_mediaList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_mediaList_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MediaList(rctx, args["ids"].([]int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Media)
+	fc.Result = res
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8204,6 +8280,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "mediaList":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mediaList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "myMediaGeoJson":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8973,6 +9063,36 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNInt2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]int, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInt2int(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNInt2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNInt2int(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {

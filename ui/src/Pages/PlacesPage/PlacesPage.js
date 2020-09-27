@@ -61,12 +61,10 @@ const MapPage = () => {
     })
 
     map.current.on('load', () => {
-      console.log(mapboxData.myMediaGeoJson)
       map.current.addSource('media', {
         type: 'geojson',
         data: mapboxData.myMediaGeoJson,
         cluster: true,
-        // clusterMaxZoom: 14, // Max zoom to cluster points on
         clusterRadius: 50,
         clusterProperties: {
           thumbnail: ['coalesce', ['get', 'thumbnail'], false],

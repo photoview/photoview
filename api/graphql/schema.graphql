@@ -41,6 +41,9 @@ type Query {
   "Get media by id, user must own the media or be admin"
   media(id: Int!): Media!
 
+  "Get a list of media by their ids, user must own the media or be admin"
+  mediaList(ids: [Int!]!): [Media!]!
+
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
   "Get the mapbox api token, returns null if mapbox is not enabled"

@@ -5,8 +5,8 @@ import { useLazyQuery } from 'react-apollo'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
 
 const QUERY_MEDIA = gql`
-  query placePageQueryMedia($mediaID: Int!) {
-    media(id: $mediaID) {
+  query placePageQueryMedia($mediaIDs: [Int!]!) {
+    mediaList(ids: $mediaIDs) {
       id
       title
       thumbnail {
@@ -53,74 +53,51 @@ const getMediaFromMarker = (map, presentMarker) =>
   })
 
 const MapPresentMarker = ({ map, presentMarker, setPresentMarker }) => {
-  const [media, setMedia] = useState(null)
+  const [mediaMarkers, setMediaMarkers] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const previousLoadedMedia = useRef(null)
-  const [loadMedia, { data: loadedMedia }] = useLazyQuery(QUERY_MEDIA, {
-    onCompleted(data) {
-      previousLoadedMedia.current = data
-    },
-  })
+  const [loadMedia, { data: loadedMedia }] = useLazyQuery(QUERY_MEDIA)
 
   useEffect(() => {
     if (presentMarker == null || map == null) {
-      setMedia(null)
+      setMediaMarkers(null)
       return
     }
 
-    getMediaFromMarker(map, presentMarker).then(setMedia)
+    getMediaFromMarker(map, presentMarker).then(setMediaMarkers)
   }, [presentMarker])
 
   useEffect(() => {
-    if (!media) return
+    if (!mediaMarkers) return
 
     setCurrentIndex(0)
     loadMedia({
       variables: {
-        mediaID: media[0].media_id,
+        mediaIDs: mediaMarkers.map(x => x.media_id),
       },
     })
-  }, [media])
-
-  useEffect(() => {
-    if (!media) return
-
-    console.log('Current index change', currentIndex, media)
-
-    loadMedia({
-      variables: {
-        mediaID: media[currentIndex].media_id,
-      },
-    })
-  }, [currentIndex])
+  }, [mediaMarkers])
 
   if (presentMarker == null || map == null) {
     return null
   }
 
-  if (loadedMedia == null && previousLoadedMedia.current == null) {
+  if (loadedMedia == null) {
     return null
   }
 
-  const displayMedia = loadedMedia
-    ? loadedMedia.media
-    : previousLoadedMedia.current.media
-
-  console.log('diaplay media', displayMedia)
-
   return (
     <PresentView
-      media={displayMedia}
+      media={loadedMedia.mediaList[currentIndex]}
       nextImage={() => {
-        setCurrentIndex(i => Math.min(media.length - 1, i + 1))
+        setCurrentIndex(i => Math.min(mediaMarkers.length - 1, i + 1))
       }}
       previousImage={() => {
         setCurrentIndex(i => Math.max(0, i - 1))
       }}
       setPresenting={presenting => {
         if (!presenting) {
-          previousLoadedMedia.current = null
+          setCurrentIndex(0)
           setPresentMarker(null)
         }
       }}

@@ -18,7 +18,9 @@ export const makeUpdateMarkers = ({
   for (let i = 0; i < features.length; i++) {
     const coords = features[i].geometry.coordinates
     const props = features[i].properties
-    const id = props.cluster ? props.cluster_id : props.media_id
+    const id = props.cluster
+      ? `cluster_${props.cluster_id}`
+      : `media_${props.media_id}`
 
     let marker = markers[id]
     if (!marker) {

@@ -44,32 +44,6 @@ const PhotoGallery = ({
 }) => {
   const { updateSidebar } = useContext(SidebarContext)
 
-  useEffect(() => {
-    const keyDownEvent = e => {
-      if (!onSelectImage || activeIndex == -1) {
-        return
-      }
-
-      if (e.key == 'ArrowRight') {
-        nextImage && nextImage()
-      }
-
-      if (e.key == 'ArrowLeft') {
-        nextImage && previousImage()
-      }
-
-      if (e.key == 'Escape' && presenting) {
-        setPresenting(false)
-      }
-    }
-
-    document.addEventListener('keydown', keyDownEvent)
-
-    return function cleanup() {
-      document.removeEventListener('keydown', keyDownEvent)
-    }
-  })
-
   const activeImage = media && activeIndex != -1 && media[activeIndex]
 
   const getPhotoElements = updateSidebar => {
