@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
@@ -51,29 +51,32 @@ function AlbumPage({ match }) {
     match.params.subPage === 'favorites'
   )
 
-  const toggleFavorites = refetch => {
-    const newState = !onlyFavorites
-    if (
-      (refetchNeededAll && !newState) ||
-      (refetchNeededFavorites && newState)
-    ) {
-      refetch({ id: albumId, onlyFavorites: newState }).then(() => {
-        if (onlyFavorites) {
-          refetchNeededFavorites = false
-        } else {
-          refetchNeededAll = false
-        }
+  const toggleFavorites = useCallback(
+    refetch => {
+      const newState = !onlyFavorites
+      if (
+        (refetchNeededAll && !newState) ||
+        (refetchNeededFavorites && newState)
+      ) {
+        refetch({ id: albumId, onlyFavorites: newState }).then(() => {
+          if (onlyFavorites) {
+            refetchNeededFavorites = false
+          } else {
+            refetchNeededAll = false
+          }
+          setOnlyFavorites(newState)
+        })
+      } else {
         setOnlyFavorites(newState)
-      })
-    } else {
-      setOnlyFavorites(newState)
-    }
-    history.replaceState(
-      {},
-      '',
-      '/album/' + albumId + (newState ? '/favorites' : '')
-    )
-  }
+      }
+      history.replaceState(
+        {},
+        '',
+        '/album/' + albumId + (newState ? '/favorites' : '')
+      )
+    },
+    [onlyFavorites, setOnlyFavorites]
+  )
 
   return (
     <Query query={albumQuery} variables={{ id: albumId, onlyFavorites }}>
