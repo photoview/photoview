@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom'
+import PropTypes from 'prop-types'
 import { useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import styled from 'styled-components'
@@ -6,7 +8,8 @@ import styled from 'styled-components'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import Layout from '../../Layout'
-import imagePopup from './image-popup.png'
+
+import MapClusterMarker from './MapClusterMarker'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -66,74 +69,62 @@ const MapPage = () => {
         type: 'geojson',
         data: mapboxData.myMediaGeoJson,
         cluster: true,
-        clusterMaxZoom: 14, // Max zoom to cluster points on
+        // clusterMaxZoom: 14, // Max zoom to cluster points on
         clusterRadius: 50,
         clusterProperties: {
-          thumbnail_url: [
-            'coalesce',
-            ['get', 'url', ['get', 'thumbnail']],
-            false,
-          ],
+          thumbnail: ['coalesce', ['get', 'thumbnail'], false],
         },
       })
 
-      map.current.loadImage(imagePopup, (error, image) => {
-        console.log(error, image)
-        map.current.addImage('media-popup-bg', image)
-
-        map.current.addLayer({
-          id: 'media-cluster-popup',
-          type: 'symbol',
-          source: 'media',
-          filter: ['has', 'point_count'],
-          layout: {
-            'icon-image': 'media-popup-bg',
-            'icon-size': 0.5,
-            'icon-allow-overlap': true,
-          },
-        })
-
-        map.current.addLayer({
-          id: 'media-cluster-count-bg',
-          type: 'circle',
-          source: 'media',
-          filter: ['has', 'point_count'],
-          paint: {
-            'circle-color': '#11b4da',
-            'circle-radius': 11,
-            'circle-translate': [22, -24],
-          },
-        })
-
-        map.current.addLayer({
-          id: 'media-cluster-count',
-          type: 'symbol',
-          source: 'media',
-          filter: ['has', 'point_count'],
-          layout: {
-            'text-field': '{point_count_abbreviated}',
-            'text-size': 12,
-            'text-allow-overlap': true,
-            'text-offset': [22 / 12, -24 / 12],
-          },
-          paint: {
-            'text-color': '#ffffff',
-          },
-        })
+      // Add dummy layer for features to be queryable
+      map.current.addLayer({
+        id: 'media-points',
+        type: 'circle',
+        source: 'media',
+        filter: ['!', true],
       })
 
-      // map.current.addLayer({
-      //   id: 'media-points',
-      //   type: 'circle',
-      //   source: 'media',
-      //   filter: ['!', ['has', 'point_count']],
-      //   paint: {
-      //     'circle-color': '#11b4da',
-      //     'circle-radius': 4,
-      //     'circle-stroke-width': 1,
-      //     'circle-stroke-color': '#fff',
-      //   },
-      // })
+      map.current.on('move', updateMarkers)
+      map.current.on('moveend', updateMarkers)
+      updateMarkers()
+
+      var markers = {}
+      var markersOnScreen = {}
+
+      function updateMarkers() {
+        var newMarkers = {}
+        var features = map.current.querySourceFeatures('media')
+
+        // for every media on the screen, create an HTML marker for it (if we didn't yet),
+        // and add it to the map if it's not there already
+        for (var i = 0; i < features.length; i++) {
+          var coords = features[i].geometry.coordinates
+          var props = features[i].properties
+          var id = props.cluster ? props.cluster_id : props.media_id
+
+          var marker = markers[id]
+          if (!marker) {
+            var el = createClusterPopupElement(props)
+            marker = markers[id] = new mapboxLibrary.Marker({
+              element: el,
+            }).setLngLat(coords)
+          }
+          newMarkers[id] = marker
+
+          if (!markersOnScreen[id]) marker.addTo(map.current)
+        }
+        // for every marker we've added previously, remove those that are no longer visible
+        for (id in markersOnScreen) {
+          if (!newMarkers[id]) markersOnScreen[id].remove()
+        }
+        markersOnScreen = newMarkers
+      }
+
+      function createClusterPopupElement(props) {
+        const el = document.createElement('div')
+        ReactDOM.render(<MapClusterMarker {...props} />, el)
+        return el
+      }
 
       console.log(map.current)
     })
