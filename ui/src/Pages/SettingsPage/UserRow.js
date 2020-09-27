@@ -1,16 +1,16 @@
-import React, { useState } from 'react'
+import gql from 'graphql-tag'
 import PropTypes from 'prop-types'
+import React, { useState } from 'react'
 import { Mutation } from 'react-apollo'
 import {
-  Table,
-  Icon,
   Button,
-  Input,
   Checkbox,
-  Modal,
   Form,
+  Icon,
+  Input,
+  Modal,
+  Table,
 } from 'semantic-ui-react'
-import gql from 'graphql-tag'
 
 const updateUserMutation = gql`
   mutation updateUser(
@@ -68,7 +68,7 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
         onClose && onClose()
       }}
     >
-      {(changePassword, { data }) => (
+      {changePassword => (
         <Modal {...props}>
           <Modal.Header>Change password</Modal.Header>
           <Modal.Content>
@@ -141,7 +141,7 @@ const UserRow = ({ user, refetchUsers }) => {
           refetchUsers()
         }}
       >
-        {(updateUser, { loading, data }) => (
+        {(updateUser, { loading }) => (
           <Table.Row>
             <Table.Cell>
               <Input
@@ -163,7 +163,7 @@ const UserRow = ({ user, refetchUsers }) => {
               <Checkbox
                 toggle
                 checked={state.admin}
-                onChange={(e, data) => {
+                onChange={(_, data) => {
                   setState({
                     ...state,
                     admin: data.checked,
@@ -175,7 +175,7 @@ const UserRow = ({ user, refetchUsers }) => {
               <Button.Group>
                 <Button
                   negative
-                  onClick={e =>
+                  onClick={() =>
                     setState({
                       ...state.oldState,
                     })
@@ -215,7 +215,7 @@ const UserRow = ({ user, refetchUsers }) => {
         refetchUsers()
       }}
     >
-      {(deleteUser, { loading, data }) => (
+      {deleteUser => (
         <Table.Row>
           <Table.Cell>{user.username}</Table.Cell>
           <Table.Cell>{user.rootPath}</Table.Cell>
@@ -233,7 +233,7 @@ const UserRow = ({ user, refetchUsers }) => {
                 Edit
               </Button>
               <Mutation mutation={scanUserMutation}>
-                {(scanUser, { data, called }) => (
+                {(scanUser, { called }) => (
                   <Button
                     disabled={called}
                     onClick={() => scanUser({ variables: { userId: user.id } })}

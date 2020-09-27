@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import PropTypes from 'prop-types'
-import { Mutation } from 'react-apollo'
-import { Table, Button, Input, Checkbox } from 'semantic-ui-react'
 import gql from 'graphql-tag'
+import PropTypes from 'prop-types'
+import React, { useState } from 'react'
+import { Mutation } from 'react-apollo'
+import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 
 const createUserMutation = gql`
   mutation createUser(
@@ -42,11 +42,11 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
   return (
     <Mutation
       mutation={createUserMutation}
-      onCompleted={data => {
+      onCompleted={() => {
         onUserAdded()
       }}
     >
-      {(createUser, { loading, data }) => (
+      {(createUser, { loading }) => (
         <Table.Row>
           <Table.Cell>
             <Input
@@ -77,7 +77,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
           </Table.Cell>
           <Table.Cell>
             <Button.Group>
-              <Button negative onClick={e => setShow(false)}>
+              <Button negative onClick={() => setShow(false)}>
                 Cancel
               </Button>
               <Button

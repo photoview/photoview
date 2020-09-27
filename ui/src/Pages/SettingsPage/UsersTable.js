@@ -67,7 +67,7 @@ const UsersTable = () => {
                 positive
                 disabled={showAddUser}
                 floated="right"
-                onClick={e => setShowAddUser(true)}
+                onClick={() => setShowAddUser(true)}
               >
                 <Icon name="add" />
                 New user

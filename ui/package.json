@@ -34,7 +34,8 @@
   },
   "scripts": {
     "start": "parcel start src/index.html",
-    "build": "parcel build src/index.html --no-source-maps"
+    "build": "parcel build src/index.html --no-source-maps",
+    "test": "eslint ./src --max-warnings 0 --cache"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
@@ -90,10 +91,8 @@
     ]
   },
   "lint-staged": {
-    "*.{js,json,css,md,graphql}": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{js,json,css,md,graphql}": "prettier --write",
+    "*.js": "eslint --cache --fix --max-warnings 0"
   },
   "browserslist": [
     ">0.2%",

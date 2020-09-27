@@ -121,7 +121,6 @@ const MessageContainer = styled.div`
 `
 
 const ProtectedTokenEnterPassword = ({
-  match,
   refetchWithPassword,
   loading = false,
 }) => {
@@ -168,7 +167,6 @@ const ProtectedTokenEnterPassword = ({
 }
 
 ProtectedTokenEnterPassword.propTypes = {
-  match: PropTypes.object.isRequired,
   refetchWithPassword: PropTypes.func.isRequired,
   loading: PropTypes.bool,
 }

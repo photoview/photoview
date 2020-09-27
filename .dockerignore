@@ -1,6 +1,7 @@
 .git
 .gitignore
 .prettierrc
+.eslintcache
 .vscode
 .env
 example.env

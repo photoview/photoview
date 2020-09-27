@@ -69,7 +69,7 @@ class LoginPage extends Component {
         <Container>
           <LogoHeaderStyled />
           <Query query={checkInitialSetupQuery}>
-            {({ loading, error, data }) => {
+            {({ data }) => {
               if (data && data.siteInfo && data.siteInfo.initialSetup) {
                 return <Redirect to="/initialSetup" />
               }
@@ -87,7 +87,7 @@ class LoginPage extends Component {
               }
             }}
           >
-            {(authorize, { loading, error, data }) => {
+            {(authorize, { loading, data }) => {
               let errorMessage = null
               if (data) {
                 if (!data.authorizeUser.success)

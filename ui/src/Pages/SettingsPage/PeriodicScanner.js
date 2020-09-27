@@ -1,21 +1,8 @@
-import React, { useRef, useState } from 'react'
-
-import {
-  Button,
-  Checkbox,
-  Dropdown,
-  Icon,
-  Input,
-  Loader,
-} from 'semantic-ui-react'
-import { useMutation, useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
-import styled from 'styled-components'
-import {
-  SectionTitle,
-  InputLabelTitle,
-  InputLabelDescription,
-} from './SettingsPage'
+import React, { useRef, useState } from 'react'
+import { useMutation, useQuery } from 'react-apollo'
+import { Checkbox, Dropdown, Input, Loader } from 'semantic-ui-react'
+import { InputLabelDescription, InputLabelTitle } from './SettingsPage'
 
 const SCAN_INTERVAL_QUERY = gql`
   query scanIntervalQuery {

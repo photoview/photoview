@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react'
-import PropTypes from 'prop-types'
 import gql from 'graphql-tag'
+import PropTypes from 'prop-types'
+import React, { useEffect, useState } from 'react'
 import { useLazyQuery } from 'react-apollo'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
 

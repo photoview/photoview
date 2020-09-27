@@ -30,6 +30,7 @@ yarn.lock
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.eslintcache
 
 # vscode
 __debug_bin

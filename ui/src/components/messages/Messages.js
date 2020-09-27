@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { useTransition, animated } from 'react-spring'
-import styled from 'styled-components'
+import React, { useState } from 'react'
+import { animated, useTransition } from 'react-spring'
 import { Message } from 'semantic-ui-react'
+import styled from 'styled-components'
 import { authToken } from '../../authentication'
-
 import MessageProgress from './MessageProgress'
 import SubscriptionsHook from './SubscriptionsHook'
 
@@ -83,7 +82,7 @@ const Messages = () => {
   messages.forEach(message => {
     let resolveFunc = null
 
-    const waitPromise = new Promise((resolve, reject) => {
+    const waitPromise = new Promise(resolve => {
       resolveFunc = resolve
     })
 

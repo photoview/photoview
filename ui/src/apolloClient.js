@@ -1,14 +1,13 @@
-import { ApolloClient } from 'apollo-client'
 import { InMemoryCache } from 'apollo-cache-inmemory'
+import { ApolloClient } from 'apollo-client'
+import { ApolloLink, split } from 'apollo-link'
+import { onError } from 'apollo-link-error'
 import { HttpLink } from 'apollo-link-http'
 import { WebSocketLink } from 'apollo-link-ws'
-import { onError } from 'apollo-link-error'
-import { setContext } from 'apollo-link-context'
-import { ApolloLink, split } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
-import { MessageState } from './components/messages/Messages'
 import urlJoin from 'url-join'
 import { clearTokenCookie } from './authentication'
+import { MessageState } from './components/messages/Messages'
 
 export const GRAPHQL_ENDPOINT = process.env.API_ENDPOINT
   ? urlJoin(process.env.API_ENDPOINT, '/graphql')

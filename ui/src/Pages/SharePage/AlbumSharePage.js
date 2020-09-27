@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
 import PropTypes from 'prop-types'
+import React from 'react'
+import { Route, Switch } from 'react-router-dom'
 import RouterPropTypes from 'react-router-prop-types'
-import { Switch, Route } from 'react-router-dom'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 
 const AlbumSharePage = ({ album, match }) => {

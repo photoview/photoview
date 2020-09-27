@@ -31,7 +31,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
   if (token && admin) {
     adminRedirect = (
       <Query query={adminQuery}>
-        {({ loading, error, data }) => {
+        {({ error, data }) => {
           if (error) alert(error)
 
           if (data && data.myUser && !data.myUser.admin) {

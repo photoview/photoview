@@ -18,7 +18,7 @@
   },
   "plugins": ["react", "react-hooks"],
   "rules": {
-    "no-unused-vars": "off",
+    "no-unused-vars": "warn",
     "react/display-name": "off"
   },
   "parser": "babel-eslint"

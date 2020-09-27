@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
-import { useSubscription } from 'react-apollo'
 import gql from 'graphql-tag'
+import PropTypes from 'prop-types'
+import { useEffect } from 'react'
+import { useSubscription } from 'react-apollo'
 import { authToken } from '../../authentication'
 
 const notificationSubscription = gql`

@@ -1,13 +1,13 @@
-import React, { Component, useEffect } from 'react'
-import PropTypes from 'prop-types'
-import styled from 'styled-components'
-import { useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
-import SidebarItem from './SidebarItem'
+import PropTypes from 'prop-types'
+import React, { useEffect } from 'react'
+import { useLazyQuery } from 'react-apollo'
+import styled from 'styled-components'
+import { authToken } from '../../authentication'
 import { ProtectedImage, ProtectedVideo } from '../photoGallery/ProtectedMedia'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
-import { authToken } from '../../authentication'
+import SidebarItem from './SidebarItem'
 
 const mediaQuery = gql`
   query sidebarPhoto($id: Int!) {
@@ -122,15 +122,15 @@ const exifNameLookup = {
 }
 
 const exposurePrograms = {
-  '0': 'Not defined',
-  '1': 'Manual',
-  '2': 'Normal program',
-  '3': 'Aperture priority',
-  '4': 'Shutter priority',
-  '5': 'Creative program',
-  '6': 'Action program',
-  '7': 'Portrait mode',
-  '8': 'Landscape mode ',
+  0: 'Not defined',
+  1: 'Manual',
+  2: 'Normal program',
+  3: 'Aperture priority',
+  4: 'Shutter priority',
+  5: 'Creative program',
+  6: 'Action program',
+  7: 'Portrait mode',
+  8: 'Landscape mode ',
 }
 
 const SidebarContent = ({ media, hidePreview }) => {

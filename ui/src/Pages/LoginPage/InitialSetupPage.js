@@ -65,7 +65,7 @@ class InitialSetupPage extends Component {
             Initial Setup
           </Header>
           <Query query={checkInitialSetupQuery}>
-            {({ loading, error, data }) => {
+            {({ data }) => {
               if (data && data.siteInfo && data.siteInfo.initialSetup) {
                 return null
               }
@@ -83,7 +83,7 @@ class InitialSetupPage extends Component {
               }
             }}
           >
-            {(authorize, { loading, error, data }) => {
+            {(authorize, { loading, data }) => {
               let errorMessage = null
               if (data) {
                 if (!data.initialSetupWizard.success)

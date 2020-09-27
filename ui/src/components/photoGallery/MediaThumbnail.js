@@ -200,6 +200,7 @@ MediaThumbnail.propTypes = {
   index: PropTypes.number.isRequired,
   active: PropTypes.bool.isRequired,
   setPresenting: PropTypes.func.isRequired,
+  onFavorite: PropTypes.func.isRequired,
 }
 
 export const PhotoThumbnail = styled.div`
