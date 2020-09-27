@@ -60,6 +60,44 @@ func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error
 	return media, nil
 }
 
+func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Media, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	if len(ids) == 0 {
+		return nil, errors.New("no ids provided")
+	}
+
+	mediaIDQuestions := strings.Repeat("?,", len(ids))[:len(ids)*2-1]
+
+	queryArgs := make([]interface{}, 0)
+	for _, id := range ids {
+		queryArgs = append(queryArgs, id)
+	}
+	queryArgs = append(queryArgs, user.UserID)
+
+	rows, err := r.Database.Query(`
+		SELECT media.* FROM media
+		JOIN album ON media.album_id = album.album_id
+		WHERE media.media_id IN (`+mediaIDQuestions+`) AND album.owner_id = ?
+		AND media.media_id IN (
+			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
+		)
+	`, queryArgs...)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")
+	}
+
+	media, err := models.NewMediaFromRows(rows)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not convert database rows to media")
+	}
+
+	return media, nil
+}
+
 type mediaResolver struct {
 	*Resolver
 }

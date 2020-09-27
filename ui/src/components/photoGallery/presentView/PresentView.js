@@ -1,5 +1,5 @@
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
-import React from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
@@ -28,14 +28,43 @@ const PresentView = ({
   nextImage,
   previousImage,
   setPresenting,
-}) => (
-  <StyledContainer {...className}>
-    <PreventScroll />
-    <PresentNavigationOverlay {...{ nextImage, previousImage, setPresenting }}>
-      <PresentMedia media={media} imageLoaded={imageLoaded} />
-    </PresentNavigationOverlay>
-  </StyledContainer>
-)
+}) => {
+  useEffect(() => {
+    const keyDownEvent = e => {
+      if (e.key == 'ArrowRight') {
+        nextImage && nextImage()
+        e.stopPropagation()
+      }
+
+      if (e.key == 'ArrowLeft') {
+        nextImage && previousImage()
+        e.stopPropagation()
+      }
+
+      if (e.key == 'Escape') {
+        setPresenting(false)
+        e.stopPropagation()
+      }
+    }
+
+    document.addEventListener('keydown', keyDownEvent)
+
+    return function cleanup() {
+      document.removeEventListener('keydown', keyDownEvent)
+    }
+  })
+
+  return (
+    <StyledContainer {...className}>
+      <PreventScroll />
+      <PresentNavigationOverlay
+        {...{ nextImage, previousImage, setPresenting }}
+      >
+        <PresentMedia media={media} imageLoaded={imageLoaded} />
+      </PresentNavigationOverlay>
+    </StyledContainer>
+  )
+}
 
 PresentView.propTypes = {
   media: PropTypes.object.isRequired,

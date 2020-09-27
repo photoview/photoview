@@ -1,6 +1,7 @@
 directive @isAdmin on FIELD_DEFINITION
 
 scalar Time
+scalar Any
 
 enum OrderDirection {
   ASC
@@ -39,6 +40,14 @@ type Query {
   myMedia(filter: Filter): [Media!]!
   "Get media by id, user must own the media or be admin"
   media(id: Int!): Media!
+
+  "Get a list of media by their ids, user must own the media or be admin"
+  mediaList(ids: [Int!]!): [Media!]!
+
+  "Get media owned by the logged in user, returned in GeoJson format"
+  myMediaGeoJson: Any!
+  "Get the mapbox api token, returns null if mapbox is not enabled"
+  mapboxToken: String
 
   shareToken(token: String!, password: String): ShareToken!
   shareTokenValidatePassword(token: String!, password: String): Boolean!

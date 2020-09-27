@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 56 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(0.875,0,0,1.0625,0,0)">
+        <g transform="matrix(1,0,0,0.970588,0,0)">
+            <g transform="matrix(0.857143,0,0,1.55496,8,-35.483)">
+                <g style="filter:url(#_Effect1);">
+                    <ellipse cx="28" cy="61.172" rx="8" ry="0.828" style="fill-opacity:0.5;"/>
+                </g>
+            </g>
+            <g transform="matrix(1.14286,0,0,0.969697,0,0)">
+                <path d="M4,54C3.47,54 2.961,53.789 2.586,53.414C2.211,53.039 2,52.53 2,52C2,43.732 2,12.268 2,4C2,3.47 2.211,2.961 2.586,2.586C2.961,2.211 3.47,2 4,2L52,2C52.53,2 53.039,2.211 53.414,2.586C53.789,2.961 54,3.47 54,4L54,52C54,52.53 53.789,53.039 53.414,53.414C53.039,53.789 52.53,54 52,54C48.077,54 39.521,54 36.828,54C36.298,54 35.789,54.211 35.414,54.586C34.161,55.839 31.192,58.808 29.414,60.586C29.039,60.961 28.53,61.172 28,61.172C27.47,61.172 26.961,60.961 26.586,60.586C24.808,58.808 21.839,55.839 20.586,54.586C20.211,54.211 19.702,54 19.172,54C16.479,54 7.923,54 4,54Z" style="fill:white;"/>
+            </g>
+        </g>
+    </g>
+    <defs>
+        <filter id="_Effect1" filterUnits="userSpaceOnUse" x="8" y="54.7306" width="40" height="12.8819">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.1983"/>
+        </filter>
+    </defs>
+</svg>
