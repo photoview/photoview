@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom'
-import PropTypes from 'prop-types'
 import { useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import styled from 'styled-components'
@@ -8,8 +6,8 @@ import styled from 'styled-components'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import Layout from '../../Layout'
-
-import MapClusterMarker from './MapClusterMarker'
+import { makeUpdateMarkers } from './mapboxHelperFunctions'
+import MapPresentMarker from './MapPresentMarker'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -30,6 +28,7 @@ const MAPBOX_DATA_QUERY = gql`
 
 const MapPage = () => {
   const [mapboxLibrary, setMapboxLibrary] = useState(null)
+  const [presentMarker, setPresentMarker] = useState(null)
   const mapContainer = useRef()
   const map = useRef()
 
@@ -59,8 +58,7 @@ const MapPage = () => {
     map.current = new mapboxLibrary.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      // center: [this.state.lng, this.state.lat],
-      // zoom: this.state.zoom
+      zoom: 1,
     })
 
     map.current.on('load', () => {
@@ -84,49 +82,16 @@ const MapPage = () => {
         filter: ['!', true],
       })
 
+      const updateMarkers = makeUpdateMarkers({
+        map: map.current,
+        mapboxLibrary,
+        setPresentMarker,
+      })
+
       map.current.on('move', updateMarkers)
       map.current.on('moveend', updateMarkers)
+      map.current.on('sourcedata', updateMarkers)
       updateMarkers()
-
-      var markers = {}
-      var markersOnScreen = {}
-
-      function updateMarkers() {
-        var newMarkers = {}
-        var features = map.current.querySourceFeatures('media')
-
-        // for every media on the screen, create an HTML marker for it (if we didn't yet),
-        // and add it to the map if it's not there already
-        for (var i = 0; i < features.length; i++) {
-          var coords = features[i].geometry.coordinates
-          var props = features[i].properties
-          var id = props.cluster ? props.cluster_id : props.media_id
-
-          var marker = markers[id]
-          if (!marker) {
-            var el = createClusterPopupElement(props)
-            marker = markers[id] = new mapboxLibrary.Marker({
-              element: el,
-            }).setLngLat(coords)
-          }
-          newMarkers[id] = marker
-
-          if (!markersOnScreen[id]) marker.addTo(map.current)
-        }
-        // for every marker we've added previously, remove those that are no longer visible
-        for (id in markersOnScreen) {
-          if (!newMarkers[id]) markersOnScreen[id].remove()
-        }
-        markersOnScreen = newMarkers
-      }
-
-      function createClusterPopupElement(props) {
-        const el = document.createElement('div')
-        ReactDOM.render(<MapClusterMarker {...props} />, el)
-        return el
-      }
-
-      console.log(map.current)
     })
   }, [mapContainer, mapboxLibrary, mapboxData])
 
@@ -135,6 +100,11 @@ const MapPage = () => {
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>
       </MapWrapper>
+      <MapPresentMarker
+        map={map.current}
+        presentMarker={presentMarker}
+        setPresentMarker={setPresentMarker}
+      />
     </Layout>
   )
 }

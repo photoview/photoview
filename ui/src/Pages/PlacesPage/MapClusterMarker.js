@@ -9,6 +9,7 @@ const Wrapper = styled.div`
   height: 68px;
   position: relative;
   margin-top: -54px;
+  cursor: pointer;
 `
 
 const ThumbnailImage = styled.img`
@@ -43,11 +44,21 @@ const MapClusterMarker = ({
   thumbnail: thumbJson,
   point_count_abbreviated,
   cluster,
+  cluster_id,
+  media_id,
+  setPresentMarker,
 }) => {
   const thumbnail = JSON.parse(thumbJson)
 
+  const presentMedia = () => {
+    setPresentMarker({
+      cluster: !!cluster,
+      id: cluster ? cluster_id : media_id,
+    })
+  }
+
   return (
-    <Wrapper>
+    <Wrapper onClick={presentMedia}>
       <PopupImage src={imagePopupSrc} />
       <ThumbnailImage src={thumbnail.url} />
       {cluster && (
@@ -61,6 +72,9 @@ MapClusterMarker.propTypes = {
   thumbnail: PropTypes.string,
   cluster: PropTypes.bool,
   point_count_abbreviated: PropTypes.number,
+  cluster_id: PropTypes.number,
+  media_id: PropTypes.number,
+  setPresentMarker: PropTypes.func,
 }
 
 export default MapClusterMarker
