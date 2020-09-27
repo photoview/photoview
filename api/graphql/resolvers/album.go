@@ -9,7 +9,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool) ([]*models.Album, error) {
+func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -22,8 +22,13 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 
 	var rows *sql.Rows
 
-	filterEmpty := " AND EXISTS (SELECT * FROM media WHERE album_id = album.album_id) "
-	if showEmpty != nil && *showEmpty == true {
+	filterFavorites := " AND favorite = 1"
+	if onlyWithFavorites == nil || *onlyWithFavorites == false {
+		filterFavorites = ""
+	}
+
+	filterEmpty := " AND EXISTS (SELECT * FROM media WHERE album_id = album.album_id" + filterFavorites + ") "
+	if showEmpty != nil && *showEmpty == true && (onlyWithFavorites == nil || *onlyWithFavorites == false) {
 		filterEmpty = ""
 	}
 
@@ -72,11 +77,16 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Media, error) {
+func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
 
 	filterSQL, err := filter.FormatSQL()
 	if err != nil {
 		return nil, err
+	}
+
+	filterFavorites := " AND media.favorite = 1 "
+	if onlyFavorites == nil || *onlyFavorites == false {
+		filterFavorites = ""
 	}
 
 	mediaRows, err := r.Database.Query(`
@@ -85,7 +95,7 @@ func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *mo
 		AND media.media_id IN (
 			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
 		)
-	`+filterSQL, obj.AlbumID)
+	`+filterFavorites+filterSQL, obj.AlbumID)
 	if err != nil {
 		return nil, err
 	}

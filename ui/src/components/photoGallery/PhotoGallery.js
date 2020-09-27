@@ -6,6 +6,7 @@ import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
+import { forceVisible } from 'react-lazyload'
 
 const Gallery = styled.div`
   display: flex;
@@ -26,6 +27,10 @@ const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
+const ClearWrap = styled.div`
+  clear: both;
+`
+
 const PhotoGallery = ({
   activeIndex = -1,
   media,
@@ -35,6 +40,7 @@ const PhotoGallery = ({
   setPresenting,
   nextImage,
   previousImage,
+  onFavorite,
 }) => {
   const { updateSidebar } = useContext(SidebarContext)
 
@@ -89,6 +95,7 @@ const PhotoGallery = ({
               updateSidebar(<MediaSidebar media={photo} />)
               onSelectImage(index)
             }}
+            onFavorite={onFavorite}
             setPresenting={setPresenting}
             minWidth={minWidth}
             index={index}
@@ -105,8 +112,12 @@ const PhotoGallery = ({
     return photoElements
   }
 
+  useEffect(() => {
+    !loading && forceVisible()
+  }, [loading])
+
   return (
-    <div>
+    <ClearWrap>
       <Gallery>
         <Loader active={loading}>Loading images</Loader>
         {getPhotoElements(updateSidebar)}
@@ -118,7 +129,7 @@ const PhotoGallery = ({
           {...{ nextImage, previousImage, setPresenting }}
         />
       )}
-    </div>
+    </ClearWrap>
   )
 }
 
@@ -131,6 +142,7 @@ PhotoGallery.propTypes = {
   setPresenting: PropTypes.func,
   nextImage: PropTypes.func,
   previousImage: PropTypes.func,
+  onFavorite: PropTypes.func,
 }
 
 export default PhotoGallery

@@ -130,6 +130,7 @@ export const MediaThumbnail = ({
   index,
   active,
   setPresenting,
+  onFavorite,
 }) => {
   const [markFavorite] = useMutation(markFavoriteMutation)
 
@@ -141,19 +142,21 @@ export const MediaThumbnail = ({
         name={media.favorite ? 'heart' : 'heart outline'}
         onClick={event => {
           event.stopPropagation()
+          const favorite = !media.favorite
           markFavorite({
             variables: {
               mediaId: media.id,
-              favorite: !media.favorite,
+              favorite: favorite,
             },
             optimisticResponse: {
-              favoritePhoto: {
+              favoriteMedia: {
                 id: media.id,
-                favorite: !media.favorite,
-                __typename: 'Photo',
+                favorite: favorite,
+                __typename: 'Media',
               },
             },
           })
+          onFavorite()
         }}
       />
     )

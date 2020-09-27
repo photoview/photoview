@@ -5,7 +5,15 @@ import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 
-const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
+const AlbumGallery = ({
+  album,
+  loading = false,
+  customAlbumLink,
+  showFavoritesToggle = false,
+  setOnlyFavorites,
+  onlyFavorites = false,
+  onFavorite,
+}) => {
   const [imageState, setImageState] = useState({
     activeImage: -1,
     presenting: false,
@@ -78,7 +86,13 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
 
   return (
     <Layout title={album ? album.title : 'Loading album'}>
-      <AlbumTitle album={album} disableLink />
+      <AlbumTitle
+        album={album}
+        disableLink
+        showFavoritesToggle={showFavoritesToggle}
+        onlyFavorites={onlyFavorites}
+        setOnlyFavorites={setOnlyFavorites}
+      />
       {subAlbumElement}
       {
         <h2
@@ -98,6 +112,7 @@ const AlbumGallery = ({ album, loading = false, customAlbumLink }) => {
         onSelectImage={index => {
           setActiveImage(index)
         }}
+        onFavorite={onFavorite}
         setPresenting={setPresentingWithHistory}
         nextImage={nextImage}
         previousImage={previousImage}
@@ -110,6 +125,10 @@ AlbumGallery.propTypes = {
   album: PropTypes.object,
   loading: PropTypes.bool,
   customAlbumLink: PropTypes.func,
+  showFavoritesToggle: PropTypes.bool,
+  setOnlyFavorites: PropTypes.func,
+  onlyFavorites: PropTypes.bool,
+  onFavorite: PropTypes.func,
 }
 
 export default AlbumGallery
