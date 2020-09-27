@@ -4,17 +4,23 @@ import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
 import Sidebar from './components/sidebar/Sidebar'
-import { Query } from 'react-apollo'
+import { useQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Authorized } from './AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
 
-const adminQuery = gql`
+const ADMIN_QUERY = gql`
   query adminQuery {
     myUser {
       admin
     }
+  }
+`
+
+const MAPBOX_QUERY = gql`
+  query mapboxEnabledQuery {
+    mapboxToken
   }
 `
 
@@ -88,54 +94,58 @@ const SideButtonLabel = styled.div`
   font-size: 16px;
 `
 
-const Layout = ({ children, title }) => (
-  <Container>
-    <Helmet>
-      <title>{title ? `${title} - Photoview` : `Photoview`}</title>
-    </Helmet>
-    <Authorized>
-      <SideMenu>
-        <SideButton to="/photos" exact>
-          <Icon name="image outline" />
-          <SideButtonLabel>Photos</SideButtonLabel>
-        </SideButton>
-        <SideButton to="/albums" exact>
-          <Icon name="images outline" />
-          <SideButtonLabel>Albums</SideButtonLabel>
-        </SideButton>
-        <SideButton to="/places" exact>
-          <Icon name="map outline" />
-          <SideButtonLabel>Places</SideButtonLabel>
-        </SideButton>
-        <Query query={adminQuery}>
-          {({ loading, error, data }) => {
-            if (data && data.myUser && data.myUser.admin) {
-              return (
-                <SideButton to="/settings" exact>
-                  <Icon name="settings" />
-                  <SideButtonLabel>Settings</SideButtonLabel>
-                </SideButton>
-              )
-            }
+const Layout = ({ children, title }) => {
+  const adminQuery = useQuery(ADMIN_QUERY)
+  const mapboxQuery = useQuery(MAPBOX_QUERY)
 
-            return null
-          }}
-        </Query>
-        <SideButton to="/logout">
-          <Icon name="lock" />
-          <SideButtonLabel>Log out</SideButtonLabel>
-        </SideButton>
-      </SideMenu>
-    </Authorized>
-    <Sidebar>
-      <Content id="layout-content">
-        {children}
-        <div style={{ height: 24 }}></div>
-      </Content>
-    </Sidebar>
-    <Header />
-  </Container>
-)
+  const isAdmin =
+    adminQuery.data && adminQuery.data.myUser && adminQuery.data.myUser.admin
+
+  const mapboxEnabled = mapboxQuery.data && mapboxQuery.data.mapboxToken != null
+
+  return (
+    <Container>
+      <Helmet>
+        <title>{title ? `${title} - Photoview` : `Photoview`}</title>
+      </Helmet>
+      <Authorized>
+        <SideMenu>
+          <SideButton to="/photos" exact>
+            <Icon name="image outline" />
+            <SideButtonLabel>Photos</SideButtonLabel>
+          </SideButton>
+          <SideButton to="/albums" exact>
+            <Icon name="images outline" />
+            <SideButtonLabel>Albums</SideButtonLabel>
+          </SideButton>
+          {mapboxEnabled ? (
+            <SideButton to="/places" exact>
+              <Icon name="map outline" />
+              <SideButtonLabel>Places</SideButtonLabel>
+            </SideButton>
+          ) : null}
+          {isAdmin ? (
+            <SideButton to="/settings" exact>
+              <Icon name="settings" />
+              <SideButtonLabel>Settings</SideButtonLabel>
+            </SideButton>
+          ) : null}
+          <SideButton to="/logout">
+            <Icon name="lock" />
+            <SideButtonLabel>Log out</SideButtonLabel>
+          </SideButton>
+        </SideMenu>
+      </Authorized>
+      <Sidebar>
+        <Content id="layout-content">
+          {children}
+          <div style={{ height: 24 }}></div>
+        </Content>
+      </Sidebar>
+      <Header />
+    </Container>
+  )
+}
 
 Layout.propTypes = {
   children: PropTypes.any.isRequired,

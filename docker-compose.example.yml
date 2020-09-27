@@ -31,6 +31,11 @@ services:
       # change this value to http://example.com/
       - PUBLIC_ENDPOINT=http://localhost:8000/
 
+      # Optional: To enable map related features, you need to create a mapbox token.
+      # A token can be generated for free here https://account.mapbox.com/access-tokens/
+      # It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
+      # - MAPBOX_TOKEN=<YOUR TOKEN HERE>
+
     volumes:
       - api_cache:/app/cache
 

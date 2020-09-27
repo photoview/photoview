@@ -37,7 +37,6 @@ const MapPage = () => {
   useEffect(() => {
     async function loadMapboxLibrary() {
       const mapbox = await import('mapbox-gl')
-      // mapbox.accessToken = <INSERT ACCESS TOKEN>
       setMapboxLibrary(mapbox)
     }
     loadMapboxLibrary()
@@ -94,6 +93,23 @@ const MapPage = () => {
       updateMarkers()
     })
   }, [mapContainer, mapboxLibrary, mapboxData])
+
+  if (mapboxData && mapboxData.mapboxToken == null) {
+    return (
+      <Layout>
+        <h1>Mapbox token is not set</h1>
+        <p>
+          To use map related features a mapbox token is needed.
+          <br /> A mapbox token can be created for free at{' '}
+          <a href="https://account.mapbox.com/access-tokens/">mapbox.com</a>.
+        </p>
+        <p>
+          Make sure the access token is added as the MAPBOX_TOKEN environment
+          variable.
+        </p>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
