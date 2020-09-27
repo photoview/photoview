@@ -83,7 +83,7 @@ class PhotosPage extends Component {
 
   favoritesCheckboxClick(refetch) {
     const onlyWithFavorites = !this.state.onlyWithFavorites
-    history.pushState(
+    history.replaceState(
       {},
       '',
       '/photos' + (onlyWithFavorites ? '/favorites' : '')

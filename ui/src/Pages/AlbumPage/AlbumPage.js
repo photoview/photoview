@@ -71,7 +71,7 @@ function AlbumPage({ match }) {
     history.replaceState(
       {},
       '',
-      '/album/' + albumId + (onlyFavorites ? '/favorites' : '')
+      '/album/' + albumId + (newState ? '/favorites' : '')
     )
   }
 
