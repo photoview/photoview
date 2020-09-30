@@ -14,12 +14,13 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
 			methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-			headers := []string{"authorization", "content-type", "content-length", "TokenPassword"}
+			requestHeaders := []string{"authorization", "content-type", "content-length", "TokenPassword"}
+			responseHeaders := []string{"content-length"}
 
-			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
-			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ", "))
+			w.Header().Set("Access-Control-Allow-Headers", strings.Join(requestHeaders, ", "))
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Expose-Headers", "content-length")
+			w.Header().Set("Access-Control-Expose-Headers", strings.Join(responseHeaders, ", "))
 
 			endpoint := utils.ApiEndpointUrl()
 			endpoint.Path = path.Join(endpoint.Path, "graphql")

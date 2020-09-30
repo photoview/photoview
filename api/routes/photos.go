@@ -103,6 +103,9 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", stats.Size()))
 		}
 
+		// Allow caching the resource for 1 day
+		w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
+
 		io.Copy(w, file)
 	})
 }
