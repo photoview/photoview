@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import Layout from '../../Layout'
 import gql from 'graphql-tag'
-import { Query } from 'react-apollo'
+import { useQuery } from 'react-apollo'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import AlbumTitle from '../../components/AlbumTitle'
 import { Checkbox } from 'semantic-ui-react'
@@ -47,163 +47,111 @@ const FavoritesCheckbox = styled(Checkbox)`
   margin: 0.5rem 0 0 0;
 `
 
-class PhotosPage extends Component {
-  constructor(props) {
-    super(props)
+const PhotosPage = ({ match }) => {
+  const [activeIndex, setActiveIndex] = useState({ album: -1, media: -1 })
+  const [presenting, setPresenting] = useState(false)
+  const [onlyWithFavorites, setOnlyWithFavorites] = useState(
+    match.params.subPage === 'favorites'
+  )
 
-    this.state = {
-      activeAlbumIndex: -1,
-      activePhotoIndex: -1,
-      presenting: false,
-      onlyWithFavorites: this.props.match.params.subPage === 'favorites',
-    }
+  const refetchNeeded = useRef({ all: false, favorites: false })
 
-    this.setPresenting = this.setPresenting.bind(this)
-    this.nextImage = this.nextImage.bind(this)
-    this.previousImage = this.previousImage.bind(this)
+  const { loading, error, data, refetch } = useQuery(photoQuery, {
+    variables: { onlyWithFavorites: onlyWithFavorites },
+  })
 
-    this.albums = []
-    this.refetchNeededFavorites = false
-    this.refetchNeededAll = false
-  }
+  const nextImage = useCallback(() => {
+    setActiveIndex(index => {
+      const albumMediaCount = data.myAlbums[index.album].media.length
 
-  favoritesCheckboxClick(refetch) {
-    const onlyWithFavorites = !this.state.onlyWithFavorites
+      if (index.media + 1 < albumMediaCount) {
+        return {
+          ...index,
+          media: index.media + 1,
+        }
+      } else {
+        return index
+      }
+    })
+  }, [data])
+
+  const previousImage = useCallback(() => {
+    setActiveIndex(index =>
+      index.media > 0 ? { ...index, media: index.media - 1 } : index
+    )
+  })
+
+  const favoritesCheckboxClick = useCallback(() => {
+    const updatedWithFavorites = !onlyWithFavorites
+
     history.replaceState(
       {},
       '',
-      '/photos' + (onlyWithFavorites ? '/favorites' : '')
+      '/photos' + (updatedWithFavorites ? '/favorites' : '')
     )
 
     if (
-      (this.refetchNeededAll && !onlyWithFavorites) ||
-      (this.refetchNeededFavorites && onlyWithFavorites)
+      (refetchNeeded.current.all && !updatedWithFavorites) ||
+      (refetchNeeded.current.favorites && updatedWithFavorites)
     ) {
-      refetch({ onlyWithFavorites }).then(() => {
-        if (onlyWithFavorites) {
-          this.refetchNeededFavorites = false
+      refetch({ onlyWithFavorites: updatedWithFavorites }).then(() => {
+        if (updatedWithFavorites) {
+          refetchNeeded.current.favorites = false
         } else {
-          this.refetchNeededAll = false
+          refetchNeeded.current.all = false
         }
-        this.setState({
-          onlyWithFavorites,
-        })
+        setOnlyWithFavorites(updatedWithFavorites)
       })
     } else {
-      this.setState({
-        onlyWithFavorites,
-      })
+      setOnlyWithFavorites(updatedWithFavorites)
     }
-  }
+  }, [onlyWithFavorites])
 
-  setActiveImage(album, photo) {
-    this.setState({
-      activePhotoIndex: photo,
-      activeAlbumIndex: album,
-    })
-  }
+  if (error) return error
+  if (loading) return null
 
-  setPresenting(presenting, index) {
-    if (presenting) {
-      this.setState({
-        presenting: index,
-      })
-    } else {
-      this.setState({
-        presenting: false,
-      })
-    }
-  }
+  let galleryGroups = []
 
-  nextImage() {
-    const albumImageCount = this.albums[this.state.activeAlbumIndex].media
-      .length
-
-    if (this.state.activePhotoIndex + 1 < albumImageCount) {
-      this.setState({
-        activePhotoIndex: this.state.activePhotoIndex + 1,
-      })
-    }
-  }
-
-  previousImage() {
-    if (this.state.activePhotoIndex > 0) {
-      this.setState({
-        activePhotoIndex: this.state.activePhotoIndex - 1,
-      })
-    }
-  }
-
-  render() {
-    const showOnlyWithFavorites = this.state.onlyWithFavorites
-    return (
-      <Layout title="Photos">
-        <Query
-          query={photoQuery}
-          variables={{ onlyWithFavorites: showOnlyWithFavorites }}
-        >
-          {({ loading, error, data, refetch }) => {
-            if (error) return error
-
-            if (loading) return null
-
-            let galleryGroups = []
-            let favoritesSwitch = ''
-
-            this.albums = data.myAlbums
-
-            if (data.myAlbums && authToken()) {
-              favoritesSwitch = (
-                <FavoritesCheckbox
-                  toggle
-                  label="Show only the favorites"
-                  onClick={e => e.stopPropagation()}
-                  checked={showOnlyWithFavorites}
-                  onChange={() => {
-                    this.favoritesCheckboxClick(refetch)
-                  }}
-                />
-              )
-              galleryGroups = data.myAlbums.map((album, index) => (
-                <div key={album.id}>
-                  <AlbumTitle album={album} />
-                  <PhotoGallery
-                    onSelectImage={photoIndex => {
-                      this.setActiveImage(index, photoIndex)
-                    }}
-                    onFavorite={() => {
-                      this.refetchNeededAll = true
-                      this.refetchNeededFavorites = true
-                    }}
-                    activeIndex={
-                      this.state.activeAlbumIndex == index
-                        ? this.state.activePhotoIndex
-                        : -1
-                    }
-                    presenting={this.state.presenting === index}
-                    setPresenting={presenting =>
-                      this.setPresenting(presenting, index)
-                    }
-                    loading={loading}
-                    media={album.media}
-                    nextImage={this.nextImage}
-                    previousImage={this.previousImage}
-                  />
-                </div>
-              ))
-            }
-
-            return (
-              <div>
-                {favoritesSwitch}
-                {galleryGroups}
-              </div>
-            )
+  if (data.myAlbums && authToken()) {
+    galleryGroups = data.myAlbums.map((album, index) => (
+      <div key={album.id}>
+        <AlbumTitle album={album} />
+        <PhotoGallery
+          onSelectImage={mediaIndex => {
+            setActiveIndex({ album: index, media: mediaIndex })
           }}
-        </Query>
-      </Layout>
-    )
+          onFavorite={() => {
+            refetchNeeded.current.all = true
+            refetchNeeded.current.favorites = true
+          }}
+          activeIndex={activeIndex.album === index ? activeIndex.media : -1}
+          presenting={presenting === index}
+          setPresenting={presenting =>
+            setPresenting(presenting ? index : false)
+          }
+          loading={loading}
+          media={album.media}
+          nextImage={nextImage}
+          previousImage={previousImage}
+        />
+      </div>
+    ))
   }
+
+  return (
+    <Layout title="Photos">
+      <FavoritesCheckbox
+        toggle
+        label="Show only favorites"
+        onClick={e => e.stopPropagation()}
+        checked={onlyWithFavorites}
+        onChange={() => {
+          favoritesCheckboxClick()
+        }}
+      />
+      {galleryGroups}
+    </Layout>
+  )
 }
 
 PhotosPage.propTypes = {

@@ -116,7 +116,7 @@ const AlbumTitle = ({
       {authToken() && showFavoritesToggle && (
         <FavoritesCheckbox
           toggle
-          label="Show only the favorites"
+          label="Show only favorites"
           checked={onlyFavorites}
           onClick={e => e.stopPropagation()}
           onChange={setOnlyFavorites}

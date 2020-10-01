@@ -246,7 +246,7 @@ const SidebarShare = ({ photo, album }) => {
 
   let content = null
 
-  if (!content && sharesError) {
+  if (sharesError) {
     content = <div>Error: {sharesError.message}</div>
   }
 
