@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"github.com/joho/godotenv"
@@ -116,5 +117,5 @@ func main() {
 
 	}
 
-	log.Panic(http.ListenAndServe(":"+apiListenUrl.Port(), rootRouter))
+	log.Panic(http.ListenAndServe(":"+apiListenUrl.Port(), handlers.CompressHandler(rootRouter)))
 }
