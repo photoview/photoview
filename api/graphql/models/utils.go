@@ -16,7 +16,7 @@ func (filter *Filter) FormatSQL() (string, error) {
 
 	if filter.OrderBy != nil {
 		order_by := filter.OrderBy
-		match, err := regexp.MatchString("^(\\w+(,\\s*))*\\w+$", strings.TrimSpace(*filter.OrderBy))
+		match, err := regexp.MatchString("^(\\w+(?:\\.\\w+)?(,\\s)?)+$", strings.TrimSpace(*filter.OrderBy))
 		if err != nil {
 			return "", err
 		}
