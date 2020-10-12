@@ -44,7 +44,7 @@
     "babel-plugin-graphql-tag": "^3.1.0",
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
     "eslint": "^7.9.0",
-    "eslint-plugin-react": "^7.21.3",
+    "eslint-plugin-react": "^7.21.4",
     "eslint-plugin-react-hooks": "^4.1.2",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.0",
