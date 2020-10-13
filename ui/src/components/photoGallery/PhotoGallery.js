@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
@@ -6,6 +6,7 @@ import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
+import { forceVisible } from 'react-lazyload'
 
 const Gallery = styled.div`
   display: flex;
@@ -84,6 +85,10 @@ const PhotoGallery = ({
 
     return photoElements
   }
+
+  useEffect(() => {
+    !loading && forceVisible()
+  }, [loading])
 
   return (
     <ClearWrap>
