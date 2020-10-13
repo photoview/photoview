@@ -4,13 +4,15 @@ import Layout from '../../Layout'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
+import AlbumFilter from '../AlbumFilter'
 
 const AlbumGallery = ({
   album,
   loading = false,
   customAlbumLink,
-  showFavoritesToggle = false,
+  showFilter = false,
   setOnlyFavorites,
+  setSorting,
   onlyFavorites = false,
   onFavorite,
 }) => {
@@ -86,13 +88,14 @@ const AlbumGallery = ({
 
   return (
     <Layout title={album ? album.title : 'Loading album'}>
-      <AlbumTitle
-        album={album}
-        disableLink
-        showFavoritesToggle={showFavoritesToggle}
-        onlyFavorites={onlyFavorites}
-        setOnlyFavorites={setOnlyFavorites}
-      />
+      <AlbumTitle album={album} disableLink />
+      {showFilter && (
+        <AlbumFilter
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
+          setSorting={setSorting}
+        />
+      )}
       {subAlbumElement}
       {
         <h2
@@ -125,10 +128,11 @@ AlbumGallery.propTypes = {
   album: PropTypes.object,
   loading: PropTypes.bool,
   customAlbumLink: PropTypes.func,
-  showFavoritesToggle: PropTypes.bool,
+  showFilter: PropTypes.bool,
   setOnlyFavorites: PropTypes.func,
   onlyFavorites: PropTypes.bool,
   onFavorite: PropTypes.func,
+  setSorting: PropTypes.func,
 }
 
 export default AlbumGallery

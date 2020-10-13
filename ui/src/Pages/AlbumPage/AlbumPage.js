@@ -6,7 +6,12 @@ import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
 
 const albumQuery = gql`
-  query albumQuery($id: Int!, $onlyFavorites: Boolean) {
+  query albumQuery(
+    $id: Int!
+    $onlyFavorites: Boolean
+    $mediaOrderBy: String
+    $mediaOrderDirection: OrderDirection
+  ) {
     album(id: $id) {
       id
       title
@@ -20,7 +25,10 @@ const albumQuery = gql`
         }
       }
       media(
-        filter: { order_by: "title", order_direction: DESC }
+        filter: {
+          order_by: $mediaOrderBy
+          order_direction: $mediaOrderDirection
+        }
         onlyFavorites: $onlyFavorites
       ) {
         id
@@ -51,6 +59,24 @@ function AlbumPage({ match }) {
     match.params.subPage === 'favorites'
   )
 
+  const [orderBy, setOrderBy] = useState('date_shot')
+  const [orderDirection, setOrderDirection] = useState('ASC')
+
+  const setSorting = useCallback(
+    (d, refetch) => {
+      const [orderBy, orderDirection] = d.value.split('.')
+      setOrderBy(orderBy)
+      setOrderDirection(orderDirection)
+      refetch({
+        id: albumId,
+        onlyFavorites,
+        mediaOrderBy: orderBy,
+        mediaOrderDirection: orderDirection,
+      })
+    },
+    [albumId, onlyFavorites, setOrderBy, setOrderDirection]
+  )
+
   const toggleFavorites = useCallback(
     refetch => {
       const newState = !onlyFavorites
@@ -79,7 +105,15 @@ function AlbumPage({ match }) {
   )
 
   return (
-    <Query query={albumQuery} variables={{ id: albumId, onlyFavorites }}>
+    <Query
+      query={albumQuery}
+      variables={{
+        id: albumId,
+        onlyFavorites,
+        mediaOrderBy: orderBy,
+        mediaOrderDirection: orderDirection,
+      }}
+    >
       {({ loading, error, data, refetch }) => {
         if (error) return <div>Error</div>
         return (
@@ -94,6 +128,8 @@ function AlbumPage({ match }) {
             onFavorite={() =>
               (refetchNeededAll = refetchNeededFavorites = true)
             }
+            showFilter
+            setSorting={(e, d) => setSorting(d, refetch)}
           />
         )
       }}

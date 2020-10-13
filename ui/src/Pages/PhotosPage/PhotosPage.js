@@ -4,13 +4,16 @@ import gql from 'graphql-tag'
 import { useQuery } from 'react-apollo'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import AlbumTitle from '../../components/AlbumTitle'
-import { Checkbox } from 'semantic-ui-react'
-import styled from 'styled-components'
 import { authToken } from '../../authentication'
 import PropTypes from 'prop-types'
+import AlbumFilter from '../../components/AlbumFilter'
 
 const photoQuery = gql`
-  query allPhotosPage($onlyWithFavorites: Boolean) {
+  query allPhotosPage(
+    $onlyWithFavorites: Boolean
+    $mediaOrderBy: String
+    $mediaOrderDirection: OrderDirection
+  ) {
     myAlbums(
       filter: { order_by: "title", order_direction: ASC, limit: 100 }
       onlyWithFavorites: $onlyWithFavorites
@@ -18,7 +21,11 @@ const photoQuery = gql`
       title
       id
       media(
-        filter: { order_by: "media.title", order_direction: DESC, limit: 12 }
+        filter: {
+          order_by: $mediaOrderBy
+          order_direction: $mediaOrderDirection
+          limit: 12
+        }
         onlyFavorites: $onlyWithFavorites
       ) {
         id
@@ -43,10 +50,6 @@ const photoQuery = gql`
   }
 `
 
-const FavoritesCheckbox = styled(Checkbox)`
-  margin: 0.5rem 0 0 0;
-`
-
 const PhotosPage = ({ match }) => {
   const [activeIndex, setActiveIndex] = useState({ album: -1, media: -1 })
   const [presenting, setPresenting] = useState(false)
@@ -56,9 +59,30 @@ const PhotosPage = ({ match }) => {
 
   const refetchNeeded = useRef({ all: false, favorites: false })
 
+  const [orderBy, setOrderBy] = useState('date_shot')
+  const [orderDirection, setOrderDirection] = useState('ASC')
+
   const { loading, error, data, refetch } = useQuery(photoQuery, {
-    variables: { onlyWithFavorites: onlyWithFavorites },
+    variables: {
+      onlyWithFavorites: onlyWithFavorites,
+      mediaOrderBy: orderBy,
+      mediaOrderDirection: orderDirection,
+    },
   })
+
+  const setSorting = useCallback(
+    (e, d) => {
+      const [orderBy, orderDirection] = d.value.split('.')
+      setOrderBy(orderBy)
+      setOrderDirection(orderDirection)
+      refetch({
+        onlyWithFavorites: onlyWithFavorites,
+        mediaOrderBy: orderBy,
+        mediaOrderDirection: orderDirection,
+      })
+    },
+    [refetch, setOrderBy, setOrderDirection]
+  )
 
   const nextImage = useCallback(() => {
     setActiveIndex(index => {
@@ -81,7 +105,7 @@ const PhotosPage = ({ match }) => {
     )
   })
 
-  const favoritesCheckboxClick = useCallback(() => {
+  const setOnlyFavorites = useCallback(() => {
     const updatedWithFavorites = !onlyWithFavorites
 
     history.replaceState(
@@ -139,18 +163,16 @@ const PhotosPage = ({ match }) => {
   }
 
   return (
-    <Layout title="Photos">
-      <FavoritesCheckbox
-        toggle
-        label="Show only favorites"
-        onClick={e => e.stopPropagation()}
-        checked={onlyWithFavorites}
-        onChange={() => {
-          favoritesCheckboxClick()
-        }}
-      />
-      {galleryGroups}
-    </Layout>
+    <>
+      <Layout title="Photos">
+        <AlbumFilter
+          onlyFavorites={onlyWithFavorites}
+          setOnlyFavorites={setOnlyFavorites}
+          setSorting={setSorting}
+        />
+        {galleryGroups}
+      </Layout>
+    </>
   )
 }
 

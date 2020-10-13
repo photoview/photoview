@@ -1,6 +1,6 @@
 import React, { useEffect, useContext } from 'react'
 import PropTypes from 'prop-types'
-import { Breadcrumb, Checkbox } from 'semantic-ui-react'
+import { Breadcrumb } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
@@ -33,10 +33,6 @@ const StyledIcon = styled(Icon)`
   }
 `
 
-const FavoritesCheckbox = styled(Checkbox)`
-  margin-bottom: 16px;
-`
-
 const SettingsIcon = props => {
   return <StyledIcon name="settings" size="small" {...props} />
 }
@@ -53,13 +49,7 @@ const ALBUM_PATH_QUERY = gql`
   }
 `
 
-const AlbumTitle = ({
-  album,
-  disableLink = false,
-  showFavoritesToggle,
-  setOnlyFavorites,
-  onlyFavorites = false,
-}) => {
+const AlbumTitle = ({ album, disableLink = false }) => {
   const [fetchPath, { data: pathData }] = useLazyQuery(ALBUM_PATH_QUERY)
   const { updateSidebar } = useContext(SidebarContext)
 
@@ -113,15 +103,6 @@ const AlbumTitle = ({
           />
         )}
       </Header>
-      {authToken() && showFavoritesToggle && (
-        <FavoritesCheckbox
-          toggle
-          label="Show only favorites"
-          checked={onlyFavorites}
-          onClick={e => e.stopPropagation()}
-          onChange={setOnlyFavorites}
-        />
-      )}
     </>
   )
 }
@@ -129,9 +110,6 @@ const AlbumTitle = ({
 AlbumTitle.propTypes = {
   album: PropTypes.object,
   disableLink: PropTypes.bool,
-  showFavoritesToggle: PropTypes.bool,
-  setOnlyFavorites: PropTypes.func,
-  onlyFavorites: PropTypes.bool,
 }
 
 export default AlbumTitle
