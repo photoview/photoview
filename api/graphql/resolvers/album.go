@@ -15,7 +15,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		return nil, auth.ErrUnauthorized
 	}
 
-	filterSQL, err := filter.FormatSQL()
+	filterSQL, err := filter.FormatSQL("album")
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ type albumResolver struct{ *Resolver }
 
 func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
 
-	filterSQL, err := filter.FormatSQL()
+	filterSQL, err := filter.FormatSQL("media")
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error) {
-	filterSQL, err := filter.FormatSQL()
+	filterSQL, err := filter.FormatSQL("album")
 	if err != nil {
 		return nil, err
 	}

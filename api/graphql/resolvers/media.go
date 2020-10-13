@@ -18,7 +18,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		return nil, errors.New("unauthorized")
 	}
 
-	filterSQL, err := filter.FormatSQL()
+	filterSQL, err := filter.FormatSQL("media")
 	if err != nil {
 		return nil, err
 	}

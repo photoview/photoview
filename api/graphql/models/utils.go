@@ -3,32 +3,35 @@ package models
 import (
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 )
 
-func (filter *Filter) FormatSQL() (string, error) {
+func (filter *Filter) FormatSQL(context string) (string, error) {
 	if filter == nil {
 		return "", nil
 	}
 
+	orderByMap := make(map[string]string)
+	orderByMap["media_date_shot"] = "media.date_shot"
+	orderByMap["media_date_imported"] = "media.date_imported"
+	orderByMap["media_title"] = "media.title"
+	orderByMap["media_kind"] = "media.media_type, SUBSTRING_INDEX(media.path, '.', -1)"
+	orderByMap["album_title"] = "album.title"
+
 	result := ""
 
 	if filter.OrderBy != nil {
-		order_by := filter.OrderBy
-		match, err := regexp.MatchString("^(\\w+(?:\\.\\w+)?(,\\s)?)+$", strings.TrimSpace(*filter.OrderBy))
-		if err != nil {
-			return "", err
+		order_by, ok := orderByMap[context+"_"+*filter.OrderBy]
+		if !ok {
+			log.Printf("Invalid order column: '%s'\n", *filter.OrderBy)
+			return "", nil
 		}
 
-		if match {
-			direction := "ASC"
-			if filter.OrderDirection != nil && filter.OrderDirection.IsValid() {
-				direction = filter.OrderDirection.String()
-			}
-
-			result += fmt.Sprintf(" ORDER BY %s %s", *order_by, direction)
+		direction := "ASC"
+		if filter.OrderDirection != nil && filter.OrderDirection.IsValid() {
+			direction = filter.OrderDirection.String()
 		}
+
+		result += fmt.Sprintf(" ORDER BY %s %s", order_by, direction)
 	}
 
 	if filter.Limit != nil {
