@@ -12,6 +12,7 @@ on:
 jobs:
   analyze:
     name: Analyze
+    if: github.repository == 'viktorstrate/photoview'
     runs-on: ubuntu-latest
 
     strategy:
