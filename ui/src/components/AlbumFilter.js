@@ -52,7 +52,7 @@ const FavoritesCheckbox = styled(Checkbox)`
   margin-right: 10px;
 `
 
-const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setSorting }) => {
+const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setOrdering }) => {
   return (
     <>
       {authToken() && (
@@ -61,14 +61,17 @@ const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setSorting }) => {
           label="Show only favorites"
           checked={onlyFavorites}
           onClick={e => e.stopPropagation()}
-          onChange={setOnlyFavorites}
+          onChange={(e, result) => setOnlyFavorites(result.checked)}
         />
       )}
       <strong> Sort by: </strong>
       <Dropdown
         options={sortingOptions}
         defaultValue={sortingOptions[0].value}
-        onChange={setSorting}
+        onChange={(e, d) => {
+          const [orderBy, orderDirection] = d.value.split('.')
+          setOrdering({ orderBy, orderDirection })
+        }}
       />
     </>
   )
@@ -77,7 +80,7 @@ const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setSorting }) => {
 AlbumFilter.propTypes = {
   onlyFavorites: PropTypes.bool,
   setOnlyFavorites: PropTypes.func,
-  setSorting: PropTypes.func,
+  setOrdering: PropTypes.func,
 }
 
 export default React.memo(AlbumFilter)

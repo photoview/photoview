@@ -59,49 +59,35 @@ function AlbumPage({ match }) {
     match.params.subPage === 'favorites'
   )
 
-  const [orderBy, setOrderBy] = useState('date_shot')
-  const [orderDirection, setOrderDirection] = useState('ASC')
-
-  const setSorting = useCallback(
-    (d, refetch) => {
-      const [orderBy, orderDirection] = d.value.split('.')
-      setOrderBy(orderBy)
-      setOrderDirection(orderDirection)
-      refetch({
-        id: albumId,
-        onlyFavorites,
-        mediaOrderBy: orderBy,
-        mediaOrderDirection: orderDirection,
-      })
-    },
-    [albumId, onlyFavorites, setOrderBy, setOrderDirection]
-  )
+  const [ordering, setOrdering] = useState({
+    orderBy: 'date_shot',
+    orderDirection: 'ASC',
+  })
 
   const toggleFavorites = useCallback(
-    refetch => {
-      const newState = !onlyFavorites
+    (onlyFavorites, refetch) => {
       if (
-        (refetchNeededAll && !newState) ||
-        (refetchNeededFavorites && newState)
+        (refetchNeededAll && !onlyFavorites) ||
+        (refetchNeededFavorites && onlyFavorites)
       ) {
-        refetch({ id: albumId, onlyFavorites: newState }).then(() => {
+        refetch({ id: albumId, onlyFavorites: onlyFavorites }).then(() => {
           if (onlyFavorites) {
             refetchNeededFavorites = false
           } else {
             refetchNeededAll = false
           }
-          setOnlyFavorites(newState)
+          setOnlyFavorites(onlyFavorites)
         })
       } else {
-        setOnlyFavorites(newState)
+        setOnlyFavorites(onlyFavorites)
       }
       history.replaceState(
         {},
         '',
-        '/album/' + albumId + (newState ? '/favorites' : '')
+        '/album/' + albumId + (onlyFavorites ? '/favorites' : '')
       )
     },
-    [onlyFavorites, setOnlyFavorites]
+    [setOnlyFavorites]
   )
 
   return (
@@ -110,8 +96,8 @@ function AlbumPage({ match }) {
       variables={{
         id: albumId,
         onlyFavorites,
-        mediaOrderBy: orderBy,
-        mediaOrderDirection: orderDirection,
+        mediaOrderBy: ordering.orderBy,
+        mediaOrderDirection: ordering.orderDirection,
       }}
     >
       {({ loading, error, data, refetch }) => {
@@ -121,15 +107,15 @@ function AlbumPage({ match }) {
             album={data && data.album}
             loading={loading}
             showFavoritesToggle
-            setOnlyFavorites={() => {
-              toggleFavorites(refetch)
+            setOnlyFavorites={checked => {
+              toggleFavorites(checked, refetch)
             }}
             onlyFavorites={onlyFavorites}
             onFavorite={() =>
               (refetchNeededAll = refetchNeededFavorites = true)
             }
             showFilter
-            setSorting={(e, d) => setSorting(d, refetch)}
+            setOrdering={setOrdering}
           />
         )
       }}
