@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import Layout from '../../Layout'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
@@ -87,7 +86,7 @@ const AlbumGallery = ({
   }
 
   return (
-    <Layout title={album ? album.title : 'Loading album'}>
+    <>
       <AlbumTitle album={album} disableLink />
       {showFilter && (
         <AlbumFilter
@@ -120,7 +119,7 @@ const AlbumGallery = ({
         nextImage={nextImage}
         previousImage={previousImage}
       />
-    </Layout>
+    </>
   )
 }
 

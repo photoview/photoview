@@ -4,6 +4,7 @@ import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
+import Layout from '../../Layout'
 
 const albumQuery = gql`
   query albumQuery(
@@ -101,22 +102,29 @@ function AlbumPage({ match }) {
       }}
     >
       {({ loading, error, data, refetch }) => {
+        const setOnlyFavorites = useCallback(
+          checked => {
+            toggleFavorites(checked, refetch)
+          },
+          [toggleFavorites, refetch]
+        )
+
         if (error) return <div>Error</div>
         return (
-          <AlbumGallery
-            album={data && data.album}
-            loading={loading}
-            showFavoritesToggle
-            setOnlyFavorites={checked => {
-              toggleFavorites(checked, refetch)
-            }}
-            onlyFavorites={onlyFavorites}
-            onFavorite={() =>
-              (refetchNeededAll = refetchNeededFavorites = true)
-            }
-            showFilter
-            setOrdering={setOrdering}
-          />
+          <Layout title={data ? data.album.title : 'Loading album'}>
+            <AlbumGallery
+              album={data && data.album}
+              loading={loading}
+              showFavoritesToggle
+              setOnlyFavorites={setOnlyFavorites}
+              onlyFavorites={onlyFavorites}
+              onFavorite={() =>
+                (refetchNeededAll = refetchNeededFavorites = true)
+              }
+              showFilter
+              setOrdering={setOrdering}
+            />
+          </Layout>
         )
       }}
     </Query>
