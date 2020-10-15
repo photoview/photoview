@@ -68,19 +68,19 @@ jobs:
           docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
 
       - name: Docker Login
-        if: success() && github.event_name != 'pull_request'
+        if: success() && github.event_name != 'pull_request' && github.repository == 'viktorstrate/photoview'
         env:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
 
       - name: Docker Buildx (push)
-        if: success() && github.event_name != 'pull_request'
+        if: success() && github.event_name != 'pull_request' && github.repository == 'viktorstrate/photoview'
         run: |
           docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
 
       # - name: Docker Check Manifest
-      #   if: always() && github.event_name != 'pull_request'
+      #   if: always() && github.event_name != 'pull_request' && github.repository == 'viktorstrate/photoview'
       #   run: |
       #     docker run --rm mplatform/mquery ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
 
