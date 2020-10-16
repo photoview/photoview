@@ -1,49 +1,29 @@
 import { authToken } from '../authentication'
-import { Checkbox, Dropdown } from 'semantic-ui-react'
-import React from 'react'
+import { Checkbox, Dropdown, Button, Icon } from 'semantic-ui-react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'
 
 const sortingOptions = [
   {
-    key: 'date_shot.ASC',
-    value: 'date_shot.ASC',
-    text: 'Date shot ↑',
+    key: 'date_shot',
+    value: 'date_shot',
+    text: 'Date shot',
   },
   {
-    key: 'date_shot.DESC',
-    value: 'date_shot.DESC',
-    text: 'Date shot ↓',
+    key: 'date_imported',
+    value: 'date_imported',
+    text: 'Date imported',
   },
   {
-    key: 'date_imported.ASC',
-    value: 'date_imported.ASC',
-    text: 'Date imported ↑',
+    key: 'title',
+    value: 'title',
+    text: 'Title',
   },
   {
-    key: 'date_imported.DESC',
-    value: 'date_imported.DESC',
-    text: 'Date imported ↓',
-  },
-  {
-    key: 'title.ASC',
-    value: 'title.ASC',
-    text: 'Title ↑',
-  },
-  {
-    key: 'title.DESC',
-    value: 'title.DESC',
-    text: 'Title ↓',
-  },
-  {
-    key: 'kind.ASC',
-    value: 'kind.ASC',
-    text: 'Kind ↑',
-  },
-  {
-    key: 'kind.DESC',
-    value: 'kind.DESC',
-    text: 'Kind ↓',
+    key: 'kind',
+    value: 'kind',
+    text: 'Kind',
   },
 ]
 
@@ -52,7 +32,23 @@ const FavoritesCheckbox = styled(Checkbox)`
   margin-right: 10px;
 `
 
+const OrderDirectionButton = styled(Button)`
+  padding: 0.88em;
+  margin-left: 10px !important;
+`
+
 const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setOrdering }) => {
+  const [orderDirection, setOrderDirection] = useState('ASC')
+
+  const onChangeOrderDirection = (e, data) => {
+    const direction = data.children.props.name === 'arrow up' ? 'DESC' : 'ASC'
+    setOrderDirection(direction)
+  }
+
+  useEffect(() => {
+    setOrdering({ orderDirection })
+  }, [orderDirection])
+
   return (
     <>
       {authToken() && (
@@ -66,13 +62,16 @@ const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setOrdering }) => {
       )}
       <strong> Sort by: </strong>
       <Dropdown
+        selection
         options={sortingOptions}
         defaultValue={sortingOptions[0].value}
-        onChange={(e, d) => {
-          const [orderBy, orderDirection] = d.value.split('.')
-          setOrdering({ orderBy, orderDirection })
+        onChange={(e, data) => {
+          setOrdering({ orderBy: data.value })
         }}
       />
+      <OrderDirectionButton icon basic onClick={onChangeOrderDirection}>
+        <Icon name={'arrow ' + (orderDirection === 'ASC' ? 'up' : 'down')} />
+      </OrderDirectionButton>
     </>
   )
 }

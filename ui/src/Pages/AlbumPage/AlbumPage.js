@@ -65,6 +65,18 @@ function AlbumPage({ match }) {
     orderDirection: 'ASC',
   })
 
+  const setOrderingCallback = useCallback(
+    ordering => {
+      setOrdering(prevState => {
+        return {
+          ...prevState,
+          ...ordering,
+        }
+      })
+    },
+    [setOrdering]
+  )
+
   const toggleFavorites = useCallback(
     (onlyFavorites, refetch) => {
       if (
@@ -122,7 +134,7 @@ function AlbumPage({ match }) {
                 (refetchNeededAll = refetchNeededFavorites = true)
               }
               showFilter
-              setOrdering={setOrdering}
+              setOrdering={setOrderingCallback}
             />
           </Layout>
         )

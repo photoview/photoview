@@ -60,6 +60,18 @@ const GalleryGroups = ({ subPage }) => {
     orderDirection: 'ASC',
   })
 
+  const setOrderingCallback = useCallback(
+    ordering => {
+      setOrdering(prevState => {
+        return {
+          ...prevState,
+          ...ordering,
+        }
+      })
+    },
+    [setOrdering]
+  )
+
   const refetchNeeded = useRef({ all: false, favorites: false })
 
   const { loading, error, data, refetch } = useQuery(photoQuery, {
@@ -151,7 +163,7 @@ const GalleryGroups = ({ subPage }) => {
     <>
       <AlbumFilter
         setOnlyFavorites={setOnlyFavorites}
-        setOrdering={setOrdering}
+        setOrdering={setOrderingCallback}
       />
       {galleryGroups}
     </>
