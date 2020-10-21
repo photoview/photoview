@@ -4,7 +4,7 @@
   "license": "GPL-3.0",
   "description": "UI app for Photoview",
   "dependencies": {
-    "@babel/preset-env": "^7.11.5",
+    "@babel/preset-env": "^7.12.1",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link": "^1.2.14",
@@ -19,7 +19,7 @@
     "graphql-tag": "^2.11.0",
     "parcel-bundler": "^1.12.4",
     "prop-types": "^15.7.2",
-    "react": "^16.13.1",
+    "react": "^16.14.0",
     "react-apollo": "^3.1.5",
     "react-dom": "^16.13.1",
     "react-helmet": "^6.1.0",
@@ -38,8 +38,8 @@
     "test": "eslint ./src --max-warnings 0 --cache"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.6",
-    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-runtime": "^7.12.1",
     "babel-eslint": "^10.1.0",
     "babel-plugin-graphql-tag": "^3.1.0",
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
@@ -47,7 +47,7 @@
     "eslint-plugin-react": "^7.21.4",
     "eslint-plugin-react-hooks": "^4.1.2",
     "husky": "^4.3.0",
-    "lint-staged": "^10.4.0",
+    "lint-staged": "^10.4.2",
     "mapbox-gl": "^1.12.0",
     "parcel-plugin-sw-cache": "^0.3.1",
     "prettier": "^2.1.2",
