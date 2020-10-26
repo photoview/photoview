@@ -18,7 +18,7 @@ import (
 
 func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
 
-	filterSQL, err := filter.FormatSQL()
+	filterSQL, err := filter.FormatSQL("user")
 	if err != nil {
 		return nil, err
 	}

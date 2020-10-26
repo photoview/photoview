@@ -1,12 +1,19 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
+import { useLocation } from 'react-router-dom'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
+import Layout from '../../Layout'
 
 const albumQuery = gql`
-  query albumQuery($id: Int!, $onlyFavorites: Boolean) {
+  query albumQuery(
+    $id: Int!
+    $onlyFavorites: Boolean
+    $mediaOrderBy: String
+    $mediaOrderDirection: OrderDirection
+  ) {
     album(id: $id) {
       id
       title
@@ -20,7 +27,10 @@ const albumQuery = gql`
         }
       }
       media(
-        filter: { order_by: "title", order_direction: DESC }
+        filter: {
+          order_by: $mediaOrderBy
+          order_direction: $mediaOrderDirection
+        }
         onlyFavorites: $onlyFavorites
       ) {
         id
@@ -51,50 +61,87 @@ function AlbumPage({ match }) {
     match.params.subPage === 'favorites'
   )
 
+  const urlParams = new URLSearchParams(useLocation().search)
+  const [ordering, setOrdering] = useState({
+    orderBy: urlParams.get('orderBy') || 'date_shot',
+    orderDirection: urlParams.get('orderDirection') || 'ASC',
+  })
+
+  const setOrderingCallback = useCallback(
+    ordering => {
+      setOrdering(prevState => {
+        return {
+          ...prevState,
+          ...ordering,
+        }
+      })
+    },
+    [setOrdering, onlyFavorites]
+  )
+
   const toggleFavorites = useCallback(
-    refetch => {
-      const newState = !onlyFavorites
+    (onlyFavorites, refetch) => {
       if (
-        (refetchNeededAll && !newState) ||
-        (refetchNeededFavorites && newState)
+        (refetchNeededAll && !onlyFavorites) ||
+        (refetchNeededFavorites && onlyFavorites)
       ) {
-        refetch({ id: albumId, onlyFavorites: newState }).then(() => {
+        refetch({ id: albumId, onlyFavorites: onlyFavorites }).then(() => {
           if (onlyFavorites) {
             refetchNeededFavorites = false
           } else {
             refetchNeededAll = false
           }
-          setOnlyFavorites(newState)
+          setOnlyFavorites(onlyFavorites)
         })
       } else {
-        setOnlyFavorites(newState)
+        setOnlyFavorites(onlyFavorites)
       }
-      history.replaceState(
-        {},
-        '',
-        '/album/' + albumId + (newState ? '/favorites' : '')
-      )
     },
-    [onlyFavorites, setOnlyFavorites]
+    [setOnlyFavorites]
   )
 
+  useEffect(() => {
+    const pathName = `/album/${albumId + (onlyFavorites ? '/favorites' : '')}`
+    const queryString = `orderBy=${ordering.orderBy}&orderDirection=${ordering.orderDirection}`
+
+    history.replaceState({}, '', pathName + '?' + queryString)
+  }, [onlyFavorites, ordering])
+
   return (
-    <Query query={albumQuery} variables={{ id: albumId, onlyFavorites }}>
+    <Query
+      query={albumQuery}
+      variables={{
+        id: albumId,
+        onlyFavorites,
+        mediaOrderBy: ordering.orderBy,
+        mediaOrderDirection: ordering.orderDirection,
+      }}
+    >
       {({ loading, error, data, refetch }) => {
+        const setOnlyFavorites = useCallback(
+          checked => {
+            toggleFavorites(checked, refetch)
+          },
+          [toggleFavorites, refetch]
+        )
+
         if (error) return <div>Error</div>
         return (
-          <AlbumGallery
-            album={data && data.album}
-            loading={loading}
-            showFavoritesToggle
-            setOnlyFavorites={() => {
-              toggleFavorites(refetch)
-            }}
-            onlyFavorites={onlyFavorites}
-            onFavorite={() =>
-              (refetchNeededAll = refetchNeededFavorites = true)
-            }
-          />
+          <Layout title={data ? data.album.title : 'Loading album'}>
+            <AlbumGallery
+              album={data && data.album}
+              loading={loading}
+              showFavoritesToggle
+              setOnlyFavorites={setOnlyFavorites}
+              onlyFavorites={onlyFavorites}
+              onFavorite={() =>
+                (refetchNeededAll = refetchNeededFavorites = true)
+              }
+              showFilter
+              setOrdering={setOrderingCallback}
+              ordering={ordering}
+            />
+          </Layout>
         )
       }}
     </Query>

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import Layout from '../../Layout'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
+import AlbumFilter from '../AlbumFilter'
 
 const AlbumGallery = ({
   album,
   loading = false,
   customAlbumLink,
-  showFavoritesToggle = false,
+  showFilter = false,
   setOnlyFavorites,
+  setOrdering,
+  ordering,
   onlyFavorites = false,
   onFavorite,
 }) => {
@@ -85,14 +87,16 @@ const AlbumGallery = ({
   }
 
   return (
-    <Layout title={album ? album.title : 'Loading album'}>
-      <AlbumTitle
-        album={album}
-        disableLink
-        showFavoritesToggle={showFavoritesToggle}
-        onlyFavorites={onlyFavorites}
-        setOnlyFavorites={setOnlyFavorites}
-      />
+    <>
+      <AlbumTitle album={album} disableLink />
+      {showFilter && (
+        <AlbumFilter
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
+          setOrdering={setOrdering}
+          ordering={ordering}
+        />
+      )}
       {subAlbumElement}
       {
         <h2
@@ -117,7 +121,7 @@ const AlbumGallery = ({
         nextImage={nextImage}
         previousImage={previousImage}
       />
-    </Layout>
+    </>
   )
 }
 
@@ -125,10 +129,12 @@ AlbumGallery.propTypes = {
   album: PropTypes.object,
   loading: PropTypes.bool,
   customAlbumLink: PropTypes.func,
-  showFavoritesToggle: PropTypes.bool,
+  showFilter: PropTypes.bool,
   setOnlyFavorites: PropTypes.func,
   onlyFavorites: PropTypes.bool,
   onFavorite: PropTypes.func,
+  setOrdering: PropTypes.func,
+  ordering: PropTypes.object,
 }
 
 export default AlbumGallery

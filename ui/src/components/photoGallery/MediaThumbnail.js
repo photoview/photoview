@@ -156,7 +156,7 @@ export const MediaThumbnail = ({
               },
             },
           })
-          onFavorite()
+          onFavorite && onFavorite()
         }}
       />
     )
@@ -200,7 +200,7 @@ MediaThumbnail.propTypes = {
   index: PropTypes.number.isRequired,
   active: PropTypes.bool.isRequired,
   setPresenting: PropTypes.func.isRequired,
-  onFavorite: PropTypes.func.isRequired,
+  onFavorite: PropTypes.func,
 }
 
 export const PhotoThumbnail = styled.div`
