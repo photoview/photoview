@@ -89,7 +89,7 @@ const AlbumFilter = ({
           onChange={(e, result) => setOnlyFavorites(result.checked)}
         />
       )}
-      <strong> Sort by: </strong>
+      <strong> Sort by </strong>
       <Dropdown
         selection
         options={sortingOptions}
