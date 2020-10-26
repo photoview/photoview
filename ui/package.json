@@ -45,7 +45,7 @@
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
     "eslint": "^7.11.0",
     "eslint-plugin-react": "^7.21.4",
-    "eslint-plugin-react-hooks": "^4.1.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.2",
     "mapbox-gl": "^1.12.0",
