@@ -42,14 +42,12 @@ MediaView.propTypes = {
   media: PropTypes.object.isRequired,
 }
 
-const MediaSharePage = ({ media }) => {
-  return (
-    <Layout>
-      <h1>{media.title}</h1>
-      <MediaView media={media} />
-    </Layout>
-  )
-}
+const MediaSharePage = ({ media }) => (
+  <Layout data-testid="MediaSharePage">
+    <h1>{media.title}</h1>
+    <MediaView media={media} />
+  </Layout>
+)
 
 MediaSharePage.propTypes = {
   media: PropTypes.object.isRequired,

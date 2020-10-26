@@ -80,7 +80,7 @@ export const SHARE_TOKEN_QUERY = gql`
   }
 `
 
-const validateTokenPasswordQuery = gql`
+export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   query ShareTokenValidatePassword($token: String!, $password: String) {
     shareTokenValidatePassword(token: $token, password: $password)
   }
@@ -174,7 +174,7 @@ const TokenRoute = ({ match }) => {
   const token = match.params.token
 
   const { loading, error, data, refetch } = useQuery(
-    validateTokenPasswordQuery,
+    VALIDATE_TOKEN_PASSWORD_QUERY,
     {
       variables: {
         token: match.params.token,
@@ -218,18 +218,16 @@ TokenRoute.propTypes = {
   match: PropTypes.object.isRequired,
 }
 
-const SharePage = ({ match }) => {
-  console.log(match)
-
-  return (
-    <Switch>
-      <Route path={`${match.url}/:token`}>
-        {({ match }) => <TokenRoute match={match} />}
-      </Route>
-      <Route path="/">Route not found</Route>
-    </Switch>
-  )
-}
+const SharePage = ({ match }) => (
+  <Switch>
+    <Route path={`${match.url}/:token`}>
+      {({ match }) => {
+        return <TokenRoute match={match} />
+      }}
+    </Route>
+    <Route path="/">Route not found</Route>
+  </Switch>
+)
 
 SharePage.propTypes = {
   ...RouterProps,

@@ -67,7 +67,6 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
               toggle
               checked={state.admin}
               onChange={(e, data) => {
-                console.log(data)
                 setState({
                   ...state,
                   admin: data.checked,

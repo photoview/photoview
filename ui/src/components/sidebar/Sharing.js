@@ -99,7 +99,6 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
     {
       refetchQueries: [{ query: query, variables: { id } }],
       onCompleted: data => {
-        console.log('data', data)
         hidePassword(data.protectShareToken.hasPassword)
       },
       // refetchQueries: [{ query: query, variables: { id } }],

@@ -19,7 +19,7 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["react", "react-hooks", "jest"],
+  "plugins": ["react", "react-hooks", "jest", "jest-dom"],
   "rules": {
     "no-unused-vars": "warn",
     "react/display-name": "off"

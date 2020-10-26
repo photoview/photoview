@@ -22,8 +22,6 @@ const AlbumSidebar = ({ albumId }) => {
           if (loading) return <div>Loading...</div>
           if (error) return <div>{error.message}</div>
 
-          console.log('ALBUM', data.album)
-
           return (
             <div>
               <h1>{data.album.title}</h1>

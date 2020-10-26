@@ -18,7 +18,7 @@ const ADMIN_QUERY = gql`
   }
 `
 
-const MAPBOX_QUERY = gql`
+export const MAPBOX_QUERY = gql`
   query mapboxEnabledQuery {
     mapboxToken
   }
@@ -94,7 +94,7 @@ const SideButtonLabel = styled.div`
   font-size: 16px;
 `
 
-const Layout = ({ children, title }) => {
+const Layout = ({ children, title, ...otherProps }) => {
   const [loadAdminQuery, adminQuery] = useLazyQuery(ADMIN_QUERY)
   const mapboxQuery = useQuery(MAPBOX_QUERY)
 
@@ -110,7 +110,7 @@ const Layout = ({ children, title }) => {
   const mapboxEnabled = mapboxQuery.data && mapboxQuery.data.mapboxToken != null
 
   return (
-    <Container>
+    <Container {...otherProps}>
       <Helmet>
         <title>{title ? `${title} - Photoview` : `Photoview`}</title>
       </Helmet>

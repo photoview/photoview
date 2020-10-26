@@ -84,7 +84,6 @@ const SearchBar = () => {
   let debouncedFetch = useRef(null)
   useEffect(() => {
     debouncedFetch.current = debounce(query => {
-      console.log('searching', query)
       fetchSearches({ variables: { query } })
       setFetched(true)
     }, 250)
