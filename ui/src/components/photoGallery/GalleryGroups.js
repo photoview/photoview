@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import gql from 'graphql-tag'
-import { useQuery } from 'react-apollo'
+import { useQuery, gql } from '@apollo/client'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
 import AlbumTitle from '../../components/AlbumTitle'
 import { authToken } from '../../authentication'

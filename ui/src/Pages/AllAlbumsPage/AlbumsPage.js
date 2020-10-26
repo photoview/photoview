@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
 import Layout from '../../Layout'
-import gql from 'graphql-tag'
-import { Query } from 'react-apollo'
+import { gql } from '@apollo/client'
+import { Query } from '@apollo/client/react/components'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {

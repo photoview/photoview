@@ -1,7 +1,6 @@
-import gql from 'graphql-tag'
 import PropTypes from 'prop-types'
 import React, { useEffect } from 'react'
-import { useLazyQuery } from 'react-apollo'
+import { useLazyQuery, gql } from '@apollo/client'
 import styled from 'styled-components'
 import { authToken } from '../../authentication'
 import { ProtectedImage, ProtectedVideo } from '../photoGallery/ProtectedMedia'

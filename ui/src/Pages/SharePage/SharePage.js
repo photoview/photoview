@@ -1,7 +1,6 @@
-import gql from 'graphql-tag'
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
-import { useQuery } from 'react-apollo'
+import { useQuery, gql } from '@apollo/client'
 import { Route, Switch } from 'react-router-dom'
 import RouterProps from 'react-router-prop-types'
 import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'

@@ -1,7 +1,7 @@
-import gql from 'graphql-tag'
+import { gql } from '@apollo/client'
 import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
-import { useLazyQuery } from 'react-apollo'
+import { useLazyQuery } from '@apollo/client'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
 
 const QUERY_MEDIA = gql`

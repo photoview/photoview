@@ -1,6 +1,6 @@
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { MockedProvider } from 'react-apollo/testing'
+import { MockedProvider } from '@apollo/client/testing'
 import { create } from 'react-test-renderer'
 
 import SharePage, { SHARE_TOKEN_QUERY } from './SharePage'

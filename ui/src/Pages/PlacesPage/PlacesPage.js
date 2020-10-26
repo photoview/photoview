@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useQuery } from 'react-apollo'
-import gql from 'graphql-tag'
+import { useQuery, gql } from '@apollo/client'
 import styled from 'styled-components'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
