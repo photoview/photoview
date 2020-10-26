@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 import RouterPropTypes from 'react-router-prop-types'
+import Layout from '../../Layout'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 
 const AlbumSharePage = ({ album, match }) => {
@@ -27,7 +28,9 @@ const AlbumSharePage = ({ album, match }) => {
     <Switch>
       <Route path={`${match.url}/:subAlbum`} component={SubAlbumRoute} />
       <Route path="/">
-        <AlbumGallery album={album} customAlbumLink={customAlbumLink} />
+        <Layout title={album ? album.title : 'Loading album'}>
+          <AlbumGallery album={album} customAlbumLink={customAlbumLink} />
+        </Layout>
       </Route>
     </Switch>
   )
