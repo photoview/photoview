@@ -30,6 +30,30 @@ const sortingOptions = [
 const FavoritesCheckbox = styled(Checkbox)`
   margin-bottom: 16px;
   margin-right: 10px;
+
+  &.ui.toggle.checkbox label {
+    padding-left: 0;
+    padding-right: 4em;
+    font-weight: bold;
+  }
+
+  &.ui.checkbox input,
+  &.ui.toggle.checkbox label:before {
+    left: auto;
+    right: 0;
+  }
+
+  &.ui.toggle.checkbox label:after {
+    left: auto;
+    right: 1.75em;
+    transition: background 0.3s ease 0s, right 0.3s ease 0s;
+  }
+
+  &.ui.toggle.checkbox input:checked + label:after {
+    left: auto;
+    right: 0.08em;
+    transition: background 0.3s ease 0s, right 0.3s ease 0s;
+  }
 `
 
 const OrderDirectionButton = styled(Button)`
@@ -37,8 +61,13 @@ const OrderDirectionButton = styled(Button)`
   margin-left: 10px !important;
 `
 
-const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setOrdering }) => {
-  const [orderDirection, setOrderDirection] = useState('ASC')
+const AlbumFilter = ({
+  onlyFavorites,
+  setOnlyFavorites,
+  setOrdering,
+  ordering,
+}) => {
+  const [orderDirection, setOrderDirection] = useState(ordering.orderDirection)
 
   const onChangeOrderDirection = (e, data) => {
     const direction = data.children.props.name === 'arrow up' ? 'DESC' : 'ASC'
@@ -64,7 +93,10 @@ const AlbumFilter = ({ onlyFavorites, setOnlyFavorites, setOrdering }) => {
       <Dropdown
         selection
         options={sortingOptions}
-        defaultValue={sortingOptions[0].value}
+        defaultValue={
+          sortingOptions.find(e => e.value === ordering.orderBy)?.value ||
+          sortingOptions[0].value
+        }
         onChange={(e, data) => {
           setOrdering({ orderBy: data.value })
         }}
@@ -80,6 +112,7 @@ AlbumFilter.propTypes = {
   onlyFavorites: PropTypes.bool,
   setOnlyFavorites: PropTypes.func,
   setOrdering: PropTypes.func,
+  ordering: PropTypes.object,
 }
 
 export default React.memo(AlbumFilter)

@@ -1,4 +1,5 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import gql from 'graphql-tag'
 import { useQuery } from 'react-apollo'
 import PhotoGallery from '../../components/photoGallery/PhotoGallery'
@@ -55,9 +56,11 @@ const GalleryGroups = ({ subPage }) => {
   const [onlyWithFavorites, setOnlyWithFavorites] = useState(
     subPage === 'favorites'
   )
+
+  const urlParams = new URLSearchParams(useLocation().search)
   const [ordering, setOrdering] = useState({
-    orderBy: 'date_shot',
-    orderDirection: 'ASC',
+    orderBy: urlParams.get('orderBy') || 'date_shot',
+    orderDirection: urlParams.get('orderDirection') || 'ASC',
   })
 
   const setOrderingCallback = useCallback(
@@ -130,6 +133,13 @@ const GalleryGroups = ({ subPage }) => {
     [setOnlyWithFavorites]
   )
 
+  useEffect(() => {
+    const pathName = `/photos${onlyWithFavorites ? '/favorites' : ''}`
+    const queryString = `orderBy=${ordering.orderBy}&orderDirection=${ordering.orderDirection}`
+
+    history.replaceState({}, '', pathName + '?' + queryString)
+  }, [onlyWithFavorites, ordering])
+
   if (error) return error
   let galleryGroups = []
 
@@ -164,6 +174,7 @@ const GalleryGroups = ({ subPage }) => {
       <AlbumFilter
         setOnlyFavorites={setOnlyFavorites}
         setOrdering={setOrderingCallback}
+        ordering={ordering}
       />
       {galleryGroups}
     </>

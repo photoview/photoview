@@ -6,7 +6,7 @@ import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
-import { forceVisible } from 'react-lazyload'
+import { forceCheck } from 'react-lazyload'
 
 const Gallery = styled.div`
   display: flex;
@@ -87,7 +87,7 @@ const PhotoGallery = ({
   }
 
   useEffect(() => {
-    !loading && forceVisible()
+    !loading && forceCheck()
   }, [loading])
 
   return (

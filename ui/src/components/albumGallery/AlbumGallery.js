@@ -12,6 +12,7 @@ const AlbumGallery = ({
   showFilter = false,
   setOnlyFavorites,
   setOrdering,
+  ordering,
   onlyFavorites = false,
   onFavorite,
 }) => {
@@ -93,6 +94,7 @@ const AlbumGallery = ({
           onlyFavorites={onlyFavorites}
           setOnlyFavorites={setOnlyFavorites}
           setOrdering={setOrdering}
+          ordering={ordering}
         />
       )}
       {subAlbumElement}
@@ -132,6 +134,7 @@ AlbumGallery.propTypes = {
   onlyFavorites: PropTypes.bool,
   onFavorite: PropTypes.func,
   setOrdering: PropTypes.func,
+  ordering: PropTypes.object,
 }
 
 export default AlbumGallery

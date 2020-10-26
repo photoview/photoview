@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
+import { useLocation } from 'react-router-dom'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
@@ -60,9 +61,10 @@ function AlbumPage({ match }) {
     match.params.subPage === 'favorites'
   )
 
+  const urlParams = new URLSearchParams(useLocation().search)
   const [ordering, setOrdering] = useState({
-    orderBy: 'date_shot',
-    orderDirection: 'ASC',
+    orderBy: urlParams.get('orderBy') || 'date_shot',
+    orderDirection: urlParams.get('orderDirection') || 'ASC',
   })
 
   const setOrderingCallback = useCallback(
@@ -74,7 +76,7 @@ function AlbumPage({ match }) {
         }
       })
     },
-    [setOrdering]
+    [setOrdering, onlyFavorites]
   )
 
   const toggleFavorites = useCallback(
@@ -94,14 +96,16 @@ function AlbumPage({ match }) {
       } else {
         setOnlyFavorites(onlyFavorites)
       }
-      history.replaceState(
-        {},
-        '',
-        '/album/' + albumId + (onlyFavorites ? '/favorites' : '')
-      )
     },
     [setOnlyFavorites]
   )
+
+  useEffect(() => {
+    const pathName = `/album/${albumId + (onlyFavorites ? '/favorites' : '')}`
+    const queryString = `orderBy=${ordering.orderBy}&orderDirection=${ordering.orderDirection}`
+
+    history.replaceState({}, '', pathName + '?' + queryString)
+  }, [onlyFavorites, ordering])
 
   return (
     <Query
@@ -135,6 +139,7 @@ function AlbumPage({ match }) {
               }
               showFilter
               setOrdering={setOrderingCallback}
+              ordering={ordering}
             />
           </Layout>
         )
