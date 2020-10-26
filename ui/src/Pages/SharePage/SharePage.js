@@ -10,7 +10,7 @@ import { getSharePassword, saveSharePassword } from '../../authentication'
 import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
 
-const shareTokenQuery = gql`
+export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
     shareToken(token: $token, password: $password) {
       token
@@ -90,7 +90,7 @@ const validateTokenPasswordQuery = gql`
 const AuthorizedTokenRoute = ({ match }) => {
   const token = match.params.token
 
-  const { loading, error, data } = useQuery(shareTokenQuery, {
+  const { loading, error, data } = useQuery(SHARE_TOKEN_QUERY, {
     variables: {
       token,
       password: getSharePassword(token),
@@ -220,6 +220,8 @@ TokenRoute.propTypes = {
 }
 
 const SharePage = ({ match }) => {
+  console.log(match)
+
   return (
     <Switch>
       <Route path={`${match.url}/:token`}>

@@ -35,23 +35,33 @@
   "scripts": {
     "start": "parcel start src/index.html",
     "build": "parcel build src/index.html --no-source-maps",
-    "test": "eslint ./src --max-warnings 0 --cache"
+    "test": "npm run lint && npm run jest",
+    "lint": "eslint ./src --max-warnings 0 --cache",
+    "jest": "jest"
   },
   "devDependencies": {
+    "react-apollo": "^3.2.5",
     "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.1",
+    "@babel/preset-react": "^7.12.1",
+    "@testing-library/react": "^11.1.0",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.1",
     "babel-plugin-graphql-tag": "^3.1.0",
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
     "eslint": "^7.12.0",
+    "eslint-plugin-jest": "^24.1.0",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
     "husky": "^4.3.0",
+    "jest": "^26.6.1",
     "lint-staged": "^10.5.0",
     "mapbox-gl": "^1.12.0",
     "parcel-plugin-sw-cache": "^0.3.1",
     "prettier": "^2.1.2",
-    "react-router-prop-types": "^1.0.5"
+    "react-router-prop-types": "^1.0.5",
+    "react-test-renderer": "^17.0.1"
   },
   "cache": {
     "swDest": "service-worker.js"
@@ -68,27 +78,14 @@
     "singleQuote": true,
     "arrowParens": "avoid"
   },
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "useBuiltIns": "entry"
-        }
-      ]
+  "jest": {
+    "transformIgnorePatterns": [
+      "^.+\\.css$"
     ],
-    "plugins": [
-      "styled-components",
-      "@babel/plugin-transform-runtime",
-      "graphql-tag",
-      [
-        "transform-semantic-ui-react-imports",
-        {
-          "convertMemberImports": true,
-          "addCssImports": true
-        }
-      ]
-    ]
+    "transform": {
+      "^.+\\.js$": "babel-jest",
+      "^.+\\.svg$": "<rootDir>/testing/transform-svg.js"
+    }
   },
   "lint-staged": {
     "*.{js,json,css,md,graphql}": "prettier --write",

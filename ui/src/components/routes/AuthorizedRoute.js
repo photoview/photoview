@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
 import gql from 'graphql-tag'
 import { Query } from 'react-apollo'
-import { authToken } from './authentication'
+import { authToken } from '../../authentication'
 
 const adminQuery = gql`
   query adminQuery {
