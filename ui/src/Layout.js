@@ -1,14 +1,15 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
 import Sidebar from './components/sidebar/Sidebar'
-import { useQuery } from 'react-apollo'
+import { useQuery, useLazyQuery } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Authorized } from './AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
+import { authToken } from './authentication'
 
 const ADMIN_QUERY = gql`
   query adminQuery {
@@ -95,8 +96,14 @@ const SideButtonLabel = styled.div`
 `
 
 const Layout = ({ children, title }) => {
-  const adminQuery = useQuery(ADMIN_QUERY)
+  const [loadAdminQuery, adminQuery] = useLazyQuery(ADMIN_QUERY)
   const mapboxQuery = useQuery(MAPBOX_QUERY)
+
+  useEffect(() => {
+    if (authToken()) {
+      loadAdminQuery()
+    }
+  }, [])
 
   const isAdmin =
     adminQuery.data && adminQuery.data.myUser && adminQuery.data.myUser.admin
