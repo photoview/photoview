@@ -3,12 +3,11 @@ import PropTypes from 'prop-types'
 import { Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { MessageState } from '../messages/Messages'
-import { useLazyQuery } from 'react-apollo'
-import gql from 'graphql-tag'
+import { useLazyQuery, gql } from '@apollo/client'
 import download from 'downloadjs'
 import { authToken } from '../../authentication'
 
-const downloadQuery = gql`
+export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: Int!) {
     media(id: $mediaId) {
       id
@@ -53,7 +52,6 @@ const downloadPhoto = async url => {
   })
 
   const totalBytes = Number(response.headers.get('content-length'))
-  console.log(totalBytes)
 
   if (totalBytes == 0) {
     MessageState.add({
@@ -73,7 +71,6 @@ const downloadPhoto = async url => {
 
   let canceled = false
   const onDismiss = () => {
-    console.log('Canceling download')
     canceled = true
     reader.cancel('Download canceled by user')
   }
@@ -116,7 +113,6 @@ const downloadPhoto = async url => {
   } while (!result.done)
 
   if (canceled) {
-    console.log('Download canceled returning')
     return
   }
 
@@ -153,7 +149,7 @@ const SidebarDownload = ({ photo }) => {
   const [
     loadPhotoDownloads,
     { called, loading, data },
-  ] = useLazyQuery(downloadQuery, { variables: { mediaId: photo.id } })
+  ] = useLazyQuery(SIDEBAR_DOWNLOAD_QUERY, { variables: { mediaId: photo.id } })
 
   let downloads = []
 

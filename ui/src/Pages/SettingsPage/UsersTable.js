@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 
 import { Table, Loader, Button, Icon } from 'semantic-ui-react'
-import { useQuery } from 'react-apollo'
-import gql from 'graphql-tag'
+import { useQuery, gql } from '@apollo/client'
 import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
 import { SectionTitle } from './SettingsPage'

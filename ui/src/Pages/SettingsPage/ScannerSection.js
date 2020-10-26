@@ -1,6 +1,5 @@
-import gql from 'graphql-tag'
 import React from 'react'
-import { useMutation } from 'react-apollo'
+import { useMutation, gql } from '@apollo/client'
 import { Button, Icon } from 'semantic-ui-react'
 import PeriodicScanner from './PeriodicScanner'
 import ScannerConcurrentWorkers from './ScannerConcurrentWorkers'

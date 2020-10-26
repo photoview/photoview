@@ -1,13 +1,16 @@
 {
   "env": {
     "browser": true,
-    "es6": true
+    "es6": true,
+    "jest/globals": true
   },
   "extends": ["eslint:recommended", "plugin:react/recommended"],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly",
-    "process": "readonly"
+    "process": "readonly",
+    "module": "readonly",
+    "require": "readonly"
   },
   "parserOptions": {
     "ecmaFeatures": {
@@ -16,7 +19,7 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["react", "react-hooks"],
+  "plugins": ["react", "react-hooks", "jest", "jest-dom"],
   "rules": {
     "no-unused-vars": "warn",
     "react/display-name": "off"

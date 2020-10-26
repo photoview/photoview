@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Query } from 'react-apollo'
-import gql from 'graphql-tag'
+import { Query } from '@apollo/client/react/components'
+import { gql } from '@apollo/client'
 import SidebarShare from './Sharing'
 
 const albumQuery = gql`
@@ -21,8 +21,6 @@ const AlbumSidebar = ({ albumId }) => {
         {({ loading, error, data }) => {
           if (loading) return <div>Loading...</div>
           if (error) return <div>{error.message}</div>
-
-          console.log('ALBUM', data.album)
 
           return (
             <div>

@@ -2,23 +2,26 @@ import React from 'react'
 import { Route, Switch, Redirect } from 'react-router-dom'
 
 import { Loader } from 'semantic-ui-react'
-import Layout from './Layout'
-import { clearTokenCookie } from './authentication'
+import Layout from '../../Layout'
+import { clearTokenCookie } from '../../authentication'
 
-const AlbumsPage = React.lazy(() => import('./Pages/AllAlbumsPage/AlbumsPage'))
-const AlbumPage = React.lazy(() => import('./Pages/AlbumPage/AlbumPage'))
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
-const PhotosPage = React.lazy(() => import('./Pages/PhotosPage/PhotosPage'))
-const PlacesPage = React.lazy(() => import('./Pages/PlacesPage/PlacesPage'))
-const SharePage = React.lazy(() => import('./Pages/SharePage/SharePage'))
 
-const LoginPage = React.lazy(() => import('./Pages/LoginPage/LoginPage'))
+const AlbumsPage = React.lazy(() =>
+  import('../../Pages/AllAlbumsPage/AlbumsPage')
+)
+const AlbumPage = React.lazy(() => import('../../Pages/AlbumPage/AlbumPage'))
+const PhotosPage = React.lazy(() => import('../../Pages/PhotosPage/PhotosPage'))
+const PlacesPage = React.lazy(() => import('../../Pages/PlacesPage/PlacesPage'))
+const SharePage = React.lazy(() => import('../../Pages/SharePage/SharePage'))
+
+const LoginPage = React.lazy(() => import('../../Pages/LoginPage/LoginPage'))
 const InitialSetupPage = React.lazy(() =>
-  import('./Pages/LoginPage/InitialSetupPage')
+  import('../../Pages/LoginPage/InitialSetupPage')
 )
 
 const SettingsPage = React.lazy(() =>
-  import('./Pages/SettingsPage/SettingsPage')
+  import('../../Pages/SettingsPage/SettingsPage')
 )
 
 class Routes extends React.Component {

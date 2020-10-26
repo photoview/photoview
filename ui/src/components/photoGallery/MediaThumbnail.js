@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import gql from 'graphql-tag'
-import { useMutation } from 'react-apollo'
+import { useMutation, gql } from '@apollo/client'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import LazyLoad from 'react-lazyload'

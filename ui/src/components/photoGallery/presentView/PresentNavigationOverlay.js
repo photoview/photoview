@@ -74,7 +74,6 @@ const PresentNavigationOverlay = ({
   const onMouseMove = useRef(null)
 
   useEffect(() => {
-    console.log('Setup mouse move')
     onMouseMove.current = debounce(
       () => {
         setHide(hide => !hide)

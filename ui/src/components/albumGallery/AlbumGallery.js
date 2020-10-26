@@ -56,7 +56,6 @@ const AlbumGallery = ({
 
   useEffect(() => {
     const updateImageState = event => {
-      // console.log('Getting status from history', event.state)
       setImageState(event.state.imageState)
     }
     window.addEventListener('popstate', updateImageState)

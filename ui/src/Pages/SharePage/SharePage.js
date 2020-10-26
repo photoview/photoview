@@ -1,7 +1,6 @@
-import gql from 'graphql-tag'
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
-import { useQuery } from 'react-apollo'
+import { useQuery, gql } from '@apollo/client'
 import { Route, Switch } from 'react-router-dom'
 import RouterProps from 'react-router-prop-types'
 import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'
@@ -10,7 +9,7 @@ import { getSharePassword, saveSharePassword } from '../../authentication'
 import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
 
-const shareTokenQuery = gql`
+export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
     shareToken(token: $token, password: $password) {
       token
@@ -81,7 +80,7 @@ const shareTokenQuery = gql`
   }
 `
 
-const validateTokenPasswordQuery = gql`
+export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   query ShareTokenValidatePassword($token: String!, $password: String) {
     shareTokenValidatePassword(token: $token, password: $password)
   }
@@ -90,7 +89,7 @@ const validateTokenPasswordQuery = gql`
 const AuthorizedTokenRoute = ({ match }) => {
   const token = match.params.token
 
-  const { loading, error, data } = useQuery(shareTokenQuery, {
+  const { loading, error, data } = useQuery(SHARE_TOKEN_QUERY, {
     variables: {
       token,
       password: getSharePassword(token),
@@ -175,7 +174,7 @@ const TokenRoute = ({ match }) => {
   const token = match.params.token
 
   const { loading, error, data, refetch } = useQuery(
-    validateTokenPasswordQuery,
+    VALIDATE_TOKEN_PASSWORD_QUERY,
     {
       variables: {
         token: match.params.token,
@@ -219,16 +218,16 @@ TokenRoute.propTypes = {
   match: PropTypes.object.isRequired,
 }
 
-const SharePage = ({ match }) => {
-  return (
-    <Switch>
-      <Route path={`${match.url}/:token`}>
-        {({ match }) => <TokenRoute match={match} />}
-      </Route>
-      <Route path="/">Route not found</Route>
-    </Switch>
-  )
-}
+const SharePage = ({ match }) => (
+  <Switch>
+    <Route path={`${match.url}/:token`}>
+      {({ match }) => {
+        return <TokenRoute match={match} />
+      }}
+    </Route>
+    <Route path="/">Route not found</Route>
+  </Switch>
+)
 
 SharePage.propTypes = {
   ...RouterProps,

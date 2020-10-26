@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { useLazyQuery } from '@apollo/react-hooks'
-import gql from 'graphql-tag'
+import { useLazyQuery, gql } from '@apollo/client'
 import debounce from '../../debounce'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink } from 'react-router-dom'
@@ -85,7 +84,6 @@ const SearchBar = () => {
   let debouncedFetch = useRef(null)
   useEffect(() => {
     debouncedFetch.current = debounce(query => {
-      console.log('searching', query)
       fetchSearches({ variables: { query } })
       setFetched(true)
     }, 250)

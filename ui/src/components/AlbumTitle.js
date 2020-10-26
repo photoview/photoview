@@ -6,8 +6,7 @@ import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
-import gql from 'graphql-tag'
-import { useLazyQuery } from '@apollo/react-hooks'
+import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../authentication'
 
 const Header = styled.h1`

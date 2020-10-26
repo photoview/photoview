@@ -4,9 +4,8 @@ import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react'
 import Sidebar from './components/sidebar/Sidebar'
-import { useQuery, useLazyQuery } from 'react-apollo'
-import gql from 'graphql-tag'
-import { Authorized } from './AuthorizedRoute'
+import { useQuery, useLazyQuery, gql } from '@apollo/client'
+import { Authorized } from './components/routes/AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
 import { authToken } from './authentication'
@@ -19,7 +18,7 @@ const ADMIN_QUERY = gql`
   }
 `
 
-const MAPBOX_QUERY = gql`
+export const MAPBOX_QUERY = gql`
   query mapboxEnabledQuery {
     mapboxToken
   }
@@ -95,7 +94,7 @@ const SideButtonLabel = styled.div`
   font-size: 16px;
 `
 
-const Layout = ({ children, title }) => {
+const Layout = ({ children, title, ...otherProps }) => {
   const [loadAdminQuery, adminQuery] = useLazyQuery(ADMIN_QUERY)
   const mapboxQuery = useQuery(MAPBOX_QUERY)
 
@@ -111,7 +110,7 @@ const Layout = ({ children, title }) => {
   const mapboxEnabled = mapboxQuery.data && mapboxQuery.data.mapboxToken != null
 
   return (
-    <Container>
+    <Container {...otherProps}>
       <Helmet>
         <title>{title ? `${title} - Photoview` : `Photoview`}</title>
       </Helmet>

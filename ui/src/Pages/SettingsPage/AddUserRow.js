@@ -1,7 +1,7 @@
-import gql from 'graphql-tag'
+import { gql } from '@apollo/client'
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
-import { Mutation } from 'react-apollo'
+import { Mutation } from '@apollo/client'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 
 const createUserMutation = gql`
@@ -67,7 +67,6 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
               toggle
               checked={state.admin}
               onChange={(e, data) => {
-                console.log(data)
                 setState({
                   ...state,
                   admin: data.checked,

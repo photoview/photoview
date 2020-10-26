@@ -1,6 +1,6 @@
-import gql from 'graphql-tag'
+import { gql } from '@apollo/client'
 import React, { useRef, useState } from 'react'
-import { useMutation, useQuery } from 'react-apollo'
+import { useMutation, useQuery } from '@apollo/client'
 import { Checkbox, Dropdown, Input, Loader } from 'semantic-ui-react'
 import { InputLabelDescription, InputLabelTitle } from './SettingsPage'
 
