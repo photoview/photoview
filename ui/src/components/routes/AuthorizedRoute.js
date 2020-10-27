@@ -5,7 +5,7 @@ import { gql } from '@apollo/client'
 import { Query } from '@apollo/client/react/components'
 import { authToken } from '../../authentication'
 
-const adminQuery = gql`
+export const ADMIN_QUERY = gql`
   query adminQuery {
     myUser {
       admin
@@ -30,7 +30,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
   let adminRedirect = null
   if (token && admin) {
     adminRedirect = (
-      <Query query={adminQuery}>
+      <Query query={ADMIN_QUERY}>
         {({ error, data }) => {
           if (error) alert(error)
 
@@ -59,7 +59,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
 }
 
 AuthorizedRoute.propTypes = {
-  component: PropTypes.object.isRequired,
+  component: PropTypes.elementType.isRequired,
   admin: PropTypes.bool,
 }
 
