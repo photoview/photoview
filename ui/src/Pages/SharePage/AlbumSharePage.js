@@ -25,14 +25,16 @@ const AlbumSharePage = ({ album, match }) => {
     return `${match.url}/${albumId}`
   }
   return (
-    <Switch>
-      <Route path={`${match.url}/:subAlbum`} component={SubAlbumRoute} />
-      <Route path="/">
-        <Layout title={album ? album.title : 'Loading album'}>
-          <AlbumGallery album={album} customAlbumLink={customAlbumLink} />
-        </Layout>
-      </Route>
-    </Switch>
+    <div data-testid="AlbumSharePage">
+      <Switch>
+        <Route path={`${match.url}/:subAlbum`} component={SubAlbumRoute} />
+        <Route path="/">
+          <Layout title={album ? album.title : 'Loading album'}>
+            <AlbumGallery album={album} customAlbumLink={customAlbumLink} />
+          </Layout>
+        </Route>
+      </Switch>
+    </div>
   )
 }
 

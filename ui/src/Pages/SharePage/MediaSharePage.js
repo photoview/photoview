@@ -43,9 +43,11 @@ MediaView.propTypes = {
 }
 
 const MediaSharePage = ({ media }) => (
-  <Layout data-testid="MediaSharePage">
-    <h1>{media.title}</h1>
-    <MediaView media={media} />
+  <Layout>
+    <div data-testid="MediaSharePage">
+      <h1>{media.title}</h1>
+      <MediaView media={media} />
+    </div>
   </Layout>
 )
 
