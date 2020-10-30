@@ -1,8 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
 import { useLocation } from 'react-router-dom'
-import { gql } from '@apollo/client'
-import { Query } from '@apollo/client/react/components'
+import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
 import Layout from '../../Layout'
@@ -80,7 +79,7 @@ function AlbumPage({ match }) {
   )
 
   const toggleFavorites = useCallback(
-    (onlyFavorites, refetch) => {
+    onlyFavorites => {
       if (
         (refetchNeededAll && !onlyFavorites) ||
         (refetchNeededFavorites && onlyFavorites)
@@ -97,7 +96,7 @@ function AlbumPage({ match }) {
         setOnlyFavorites(onlyFavorites)
       }
     },
-    [setOnlyFavorites]
+    [setOnlyFavorites, refetch]
   )
 
   useEffect(() => {
@@ -107,44 +106,31 @@ function AlbumPage({ match }) {
     history.replaceState({}, '', pathName + '?' + queryString)
   }, [onlyFavorites, ordering])
 
-  return (
-    <Query
-      query={albumQuery}
-      variables={{
-        id: albumId,
-        onlyFavorites,
-        mediaOrderBy: ordering.orderBy,
-        mediaOrderDirection: ordering.orderDirection,
-      }}
-    >
-      {({ loading, error, data, refetch }) => {
-        const setOnlyFavorites = useCallback(
-          checked => {
-            toggleFavorites(checked, refetch)
-          },
-          [toggleFavorites, refetch]
-        )
+  const { loading, error, data, refetch } = useQuery(albumQuery, {
+    variables: {
+      id: albumId,
+      onlyFavorites,
+      mediaOrderBy: ordering.orderBy,
+      mediaOrderDirection: ordering.orderDirection,
+    },
+  })
 
-        if (error) return <div>Error</div>
-        return (
-          <Layout title={data ? data.album.title : 'Loading album'}>
-            <AlbumGallery
-              album={data && data.album}
-              loading={loading}
-              showFavoritesToggle
-              setOnlyFavorites={setOnlyFavorites}
-              onlyFavorites={onlyFavorites}
-              onFavorite={() =>
-                (refetchNeededAll = refetchNeededFavorites = true)
-              }
-              showFilter
-              setOrdering={setOrderingCallback}
-              ordering={ordering}
-            />
-          </Layout>
-        )
-      }}
-    </Query>
+  if (error) return <div>Error</div>
+
+  return (
+    <Layout title={data ? data.album.title : 'Loading album'}>
+      <AlbumGallery
+        album={data && data.album}
+        loading={loading}
+        showFavoritesToggle
+        setOnlyFavorites={toggleFavorites}
+        onlyFavorites={onlyFavorites}
+        onFavorite={() => (refetchNeededAll = refetchNeededFavorites = true)}
+        showFilter
+        setOrdering={setOrderingCallback}
+        ordering={ordering}
+      />
+    </Layout>
   )
 }
 
