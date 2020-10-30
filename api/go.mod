@@ -25,9 +25,9 @@ require (
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
-	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
-	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
+	golang.org/x/net v0.0.0-20201029221708-28c70e62bb1d // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

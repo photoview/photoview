@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
@@ -112,8 +111,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 			didProcess = true
 
 			highres_name := fmt.Sprintf("highres_%s_%s", path.Base(photo.Path), utils.GenerateToken())
-			highres_name = strings.ReplaceAll(highres_name, ".", "_")
-			highres_name = strings.ReplaceAll(highres_name, " ", "_")
+			highres_name = models.SanitizeMediaName(highres_name)
 			highres_name = highres_name + ".jpg"
 
 			baseImagePath = path.Join(*photoCachePath, highres_name)
@@ -176,8 +174,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 		didProcess = true
 
 		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
-		thumbnail_name = strings.ReplaceAll(thumbnail_name, ".", "_")
-		thumbnail_name = strings.ReplaceAll(thumbnail_name, " ", "_")
+		thumbnail_name = models.SanitizeMediaName(thumbnail_name)
 		thumbnail_name = thumbnail_name + ".jpg"
 
 		// thumbnailImage, err := imageData.ThumbnailImage(tx)
@@ -253,7 +250,7 @@ func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMed
 	photoBaseExt := path.Ext(photoName)
 
 	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
-	original_image_name = strings.ReplaceAll(original_image_name, " ", "_") + photoBaseExt
+	original_image_name = models.SanitizeMediaName(original_image_name) + photoBaseExt
 
 	contentType, err := imageData.ContentType()
 	if err != nil {
