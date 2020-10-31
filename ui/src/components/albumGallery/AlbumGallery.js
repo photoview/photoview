@@ -56,7 +56,9 @@ const AlbumGallery = ({
 
   useEffect(() => {
     const updateImageState = event => {
-      setImageState(event.state.imageState)
+      if (event.state.imageState) {
+        setImageState(event.state.imageState)
+      }
     }
     window.addEventListener('popstate', updateImageState)
 
