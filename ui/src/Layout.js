@@ -8,6 +8,7 @@ import { useQuery, gql } from '@apollo/client'
 import { Authorized } from './components/routes/AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
+import { authToken } from './authentication'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -94,13 +95,11 @@ const SideButtonLabel = styled.div`
 `
 
 export const SideMenu = () => {
-  const adminQuery = useQuery(ADMIN_QUERY)
-  const mapboxQuery = useQuery(MAPBOX_QUERY)
+  const adminQuery = authToken() ? useQuery(ADMIN_QUERY) : null
+  const mapboxQuery = authToken() ? useQuery(MAPBOX_QUERY) : null
 
-  const isAdmin =
-    adminQuery.data && adminQuery.data.myUser && adminQuery.data.myUser.admin
-
-  const mapboxEnabled = mapboxQuery.data && mapboxQuery.data.mapboxToken != null
+  const isAdmin = adminQuery?.data?.myUser?.admin
+  const mapboxEnabled = !!mapboxQuery?.data?.mapboxToken
 
   return (
     <SideMenuContainer>
