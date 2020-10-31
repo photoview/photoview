@@ -18,18 +18,16 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		media_name := mux.Vars(r)["name"]
 
-		row := db.QueryRow("SELECT media_url.purpose, media_url.media_id FROM media_url, media WHERE media_url.media_name = ? AND media_url.media_id = media.media_id", media_name)
+		row := db.QueryRow("SELECT media_url.* FROM media_url JOIN media ON media_url.media_id = media.media_id WHERE media_url.media_name = ?", media_name)
+		mediaURL, err := models.NewMediaURLFromRow(row)
 
-		var purpose models.MediaPurpose
-		var media_id int
-
-		if err := row.Scan(&purpose, &media_id); err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
 		}
 
-		row = db.QueryRow("SELECT * FROM media WHERE media_id = ?", media_id)
+		row = db.QueryRow("SELECT * FROM media WHERE media_id = ?", mediaURL.MediaId)
 		media, err := models.NewMediaFromRow(row)
 		if err != nil {
 			log.Printf("WARN: %s", err)
@@ -48,10 +46,10 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 
 		var cachedPath string
 
-		if purpose == models.VideoWeb {
-			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(media_id), media_name)
+		if mediaURL.Purpose == models.VideoWeb {
+			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(mediaURL.MediaId), mediaURL.MediaName)
 		} else {
-			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", purpose)
+			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("internal server error"))
 			return

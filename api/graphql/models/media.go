@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/viktorstrate/photoview/api/utils"
@@ -83,6 +84,15 @@ func (p *MediaURL) URL() string {
 	}
 
 	return imageUrl.String()
+}
+
+func SanitizeMediaName(mediaName string) string {
+	result := mediaName
+	result = strings.ReplaceAll(result, "/", "")
+	result = strings.ReplaceAll(result, "\\", "")
+	result = strings.ReplaceAll(result, " ", "_")
+	result = strings.ReplaceAll(result, ".", "_")
+	return result
 }
 
 func NewMediaURLFromRow(row *sql.Row) (*MediaURL, error) {
