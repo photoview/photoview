@@ -66,6 +66,15 @@ function AlbumPage({ match }) {
     orderDirection: urlParams.get('orderDirection') || 'ASC',
   })
 
+  const { loading, error, data, refetch } = useQuery(albumQuery, {
+    variables: {
+      id: albumId,
+      onlyFavorites,
+      mediaOrderBy: ordering.orderBy,
+      mediaOrderDirection: ordering.orderDirection,
+    },
+  })
+
   const setOrderingCallback = useCallback(
     ordering => {
       setOrdering(prevState => {
@@ -105,15 +114,6 @@ function AlbumPage({ match }) {
 
     history.replaceState({}, '', pathName + '?' + queryString)
   }, [onlyFavorites, ordering])
-
-  const { loading, error, data, refetch } = useQuery(albumQuery, {
-    variables: {
-      id: albumId,
-      onlyFavorites,
-      mediaOrderBy: ordering.orderBy,
-      mediaOrderDirection: ordering.orderDirection,
-    },
-  })
 
   if (error) return <div>Error</div>
 
