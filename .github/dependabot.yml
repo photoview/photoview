@@ -6,7 +6,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/ui"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "ui (npm)"
     labels:
@@ -17,7 +17,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/api"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "api (gomod)"
     labels:
