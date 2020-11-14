@@ -49,19 +49,16 @@ const PhotoImg = photoProps => {
   )
 }
 
-class LazyPhoto extends React.Component {
-  shouldComponentUpdate(nextProps) {
-    return nextProps.src != this.props.src
-  }
-
-  render() {
+const LazyPhoto = React.memo(
+  props => {
     return (
       <LazyLoad scrollContainer="#layout-content">
-        <PhotoImg {...this.props} />
+        <PhotoImg {...props} />
       </LazyLoad>
     )
-  }
-}
+  },
+  (prevProps, nextProps) => prevProps.src === nextProps.src
+)
 
 LazyPhoto.propTypes = {
   src: PropTypes.string,
