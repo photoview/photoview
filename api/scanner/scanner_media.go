@@ -1,7 +1,10 @@
 package scanner
 
 import (
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -9,6 +12,40 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
+
+func scanForSideCarFile(path string) *string {
+	testPath := path + ".xmp"
+	_, err := os.Stat(testPath)
+
+	if os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		// unexpected error logging
+		log.Printf("ERROR: %s", err)
+		return nil
+	}
+	return &testPath
+
+}
+
+func hashSideCarFile(path *string) *string {
+	if path == nil {
+		return nil
+	}
+
+	f, err := os.Open(*path)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+	defer f.Close()
+
+	h := md5.New()
+	if _, err := io.Copy(h, f); err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+	hash := hex.EncodeToString(h.Sum(nil))
+	return &hash
+}
 
 func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
@@ -35,10 +72,22 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 	}
 
 	var mediaTypeText string
+
+	var sideCarPath *string
+	sideCarPath = nil
+	var sideCarHash *string
+	sideCarHash = nil
 	if mediaType.isVideo() {
 		mediaTypeText = "video"
 	} else {
 		mediaTypeText = "photo"
+		// search for sidecar files
+		if mediaType.isRaw() {
+			sideCarPath = scanForSideCarFile(mediaPath)
+			if sideCarPath != nil {
+				sideCarHash = hashSideCarFile(sideCarPath)
+			}
+		}
 	}
 
 	stat, err := os.Stat(mediaPath)
@@ -46,7 +95,7 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		return nil, false, err
 	}
 
-	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?)", mediaName, mediaPath, albumId, mediaTypeText, stat.ModTime())
+	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, side_car_path, side_car_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?, ?, ?)", mediaName, mediaPath, sideCarPath, sideCarHash, albumId, mediaTypeText, stat.ModTime())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}
