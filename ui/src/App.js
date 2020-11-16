@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { createGlobalStyle } from 'styled-components'
 import { Helmet } from 'react-helmet'
 import Routes from './components/routes/Routes'
@@ -23,22 +23,20 @@ const GlobalStyle = createGlobalStyle`
 
 import 'semantic-ui-css/semantic.min.css'
 
-class App extends Component {
-  render() {
-    return (
-      <>
-        <Helmet>
-          <meta
-            name="description"
-            content="Simple and User-friendly Photo Gallery for Personal Servers"
-          />
-        </Helmet>
-        <GlobalStyle />
-        <Routes />
-        <Messages />
-      </>
-    )
-  }
+const App = () => {
+  return (
+    <>
+      <Helmet>
+        <meta
+          name="description"
+          content="Simple and User-friendly Photo Gallery for Personal Servers"
+        />
+      </Helmet>
+      <GlobalStyle />
+      <Routes />
+      <Messages />
+    </>
+  )
 }
 
 export default App
