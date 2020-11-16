@@ -66,7 +66,7 @@ const LoginPage = () => {
     [credentials]
   )
 
-  const { initialSetupData } = useQuery(checkInitialSetupQuery)
+  const { data: initialSetupData } = useQuery(checkInitialSetupQuery)
 
   const [authorize, { loading, data }] = useMutation(authorizeMutation, {
     onCompleted: data => {
