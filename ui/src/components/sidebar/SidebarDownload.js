@@ -4,7 +4,6 @@ import { Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { MessageState } from '../messages/Messages'
 import { useLazyQuery, gql } from '@apollo/client'
-import download from 'downloadjs'
 import { authToken } from '../../authentication'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
@@ -31,11 +30,8 @@ function formatBytes(bytes) {
   return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i]
 }
 
-const downloadPhoto = async url => {
+const downloadMedia = async url => {
   const imgUrl = new URL(url)
-  // let headers = {
-  //   Authorization: `Bearer ${localStorage.getItem('token')}`,
-  // }
 
   if (authToken() == null) {
     // Get share token if not authorized
@@ -43,29 +39,26 @@ const downloadPhoto = async url => {
     if (token) {
       imgUrl.searchParams.set('token', token[1])
     }
-
-    // headers = {}
   }
 
   const response = await fetch(imgUrl.href, {
-    // headers,
+    credentials: 'include',
   })
 
-  const totalBytes = Number(response.headers.get('content-length'))
-
-  if (totalBytes == 0) {
-    MessageState.add({
-      key: Math.random().toString(26),
-      type: 'message',
-      props: {
-        header: 'Error downloading photo',
-        content: `Could not get size of photo from server`,
-        negative: true,
-      },
-    })
-    return
+  let blob = null
+  if (response.headers.has('content-length')) {
+    blob = await downloadMediaShowProgress(response)
+  } else {
+    blob = await response.blob()
   }
 
+  const filename = url.match(/[^/]*$/)[0]
+
+  downloadBlob(blob, filename)
+}
+
+const downloadMediaShowProgress = async response => {
+  const totalBytes = Number(response.headers.get('content-length'))
   const reader = response.body.getReader()
   let data = new Uint8Array(totalBytes)
 
@@ -134,9 +127,23 @@ const downloadPhoto = async url => {
   const content = new Blob([data.buffer], {
     type: response.headers.get('content-type'),
   })
-  const filename = url.match(/[^/]*$/)[0]
 
-  download(content, filename)
+  return content
+}
+
+const downloadBlob = async (blob, filename) => {
+  let objectUrl = window.URL.createObjectURL(blob)
+
+  let anchor = document.createElement('a')
+  document.body.appendChild(anchor)
+
+  anchor.href = objectUrl
+  anchor.download = filename
+  anchor.click()
+
+  anchor.remove()
+
+  window.URL.revokeObjectURL(objectUrl)
 }
 
 const DownloadTableRow = styled(Table.Row)`
@@ -172,7 +179,7 @@ const SidebarDownload = ({ photo }) => {
   let downloadRows = downloads.map(x => (
     <DownloadTableRow
       key={x.mediaUrl.url}
-      onClick={() => downloadPhoto(x.mediaUrl.url)}
+      onClick={() => downloadMedia(x.mediaUrl.url, photo.title)}
     >
       <Table.Cell>{`${x.title}`}</Table.Cell>
       <Table.Cell>{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</Table.Cell>

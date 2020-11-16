@@ -7,11 +7,13 @@ import { MemoryRouter, Route } from 'react-router-dom'
 
 import * as authentication from '../../authentication'
 
+jest.mock('../../authentication.js')
+
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
   test('not logged in', async () => {
-    authentication.authToken = jest.fn(() => null)
+    authentication.authToken.mockImplementation(() => null)
 
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -24,7 +26,7 @@ describe('AuthorizedRoute component', () => {
   })
 
   test('logged in', async () => {
-    authentication.authToken = jest.fn(() => 'token-here')
+    authentication.authToken.mockImplementation(() => 'token-here')
 
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -34,5 +36,6 @@ describe('AuthorizedRoute component', () => {
     )
 
     expect(screen.getByText('authorized content')).toBeInTheDocument()
+    expect(screen.queryByText('login redirect')).toBeNull()
   })
 })

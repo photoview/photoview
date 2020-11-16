@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/Microsoft/go-winio v0.4.15 // indirect
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/disintegration/imaging v1.6.2
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -25,9 +25,10 @@ require (
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/crypto v0.0.0-20201112155050-0c6587e931a9
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
-	golang.org/x/net v0.0.0-20201029221708-28c70e62bb1d // indirect
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
+	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

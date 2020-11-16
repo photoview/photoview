@@ -2,8 +2,6 @@ package routes
 
 import (
 	"database/sql"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -49,7 +47,6 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 		}
 
 		var cachedPath string
-		var file *os.File = nil
 
 		if mediaUrl.Purpose == models.PhotoThumbnail || mediaUrl.Purpose == models.PhotoHighRes || mediaUrl.Purpose == models.VideoThumbnail {
 			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(mediaUrl.MediaId), mediaUrl.MediaName)
@@ -62,48 +59,40 @@ func RegisterPhotoRoutes(db *sql.DB, router *mux.Router) {
 			return
 		}
 
-		file, err = os.Open(cachedPath)
-		defer file.Close()
-		if err != nil {
-			if os.IsNotExist(err) {
-				tx, err := db.Begin()
-				if err != nil {
-					log.Printf("ERROR: %s\n", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					return
-				}
-
-				_, err = scanner.ProcessMedia(tx, media)
-				if err != nil {
-					log.Printf("ERROR: processing image not found in cache: %s\n", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					tx.Rollback()
-					return
-				}
-
-				file, err = os.Open(cachedPath)
-				if err != nil {
-					log.Printf("ERROR: after reprocessing image not found in cache: %s\n", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					tx.Rollback()
-					return
-				}
-
-				tx.Commit()
+		_, err = os.Stat(cachedPath)
+		if os.IsNotExist((err)) {
+			tx, err := db.Begin()
+			if err != nil {
+				log.Printf("ERROR: %s\n", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				return
 			}
-		}
 
-		w.Header().Set("Content-Type", mediaUrl.ContentType)
-		if stats, err := file.Stat(); err == nil {
-			w.Header().Set("Content-Length", fmt.Sprintf("%d", stats.Size()))
+			_, err = scanner.ProcessMedia(tx, media)
+			if err != nil {
+				log.Printf("ERROR: processing image not found in cache: %s\n", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				tx.Rollback()
+				return
+			}
+
+			_, err = os.Stat(cachedPath)
+			if err != nil {
+				log.Printf("ERROR: after reprocessing image not found in cache: %s\n", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				tx.Rollback()
+				return
+			}
+
+			tx.Commit()
 		}
 
 		// Allow caching the resource for 1 day
 		w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
 
-		io.Copy(w, file)
+		http.ServeFile(w, r, cachedPath)
 	})
 }
