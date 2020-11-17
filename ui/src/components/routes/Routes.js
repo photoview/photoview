@@ -24,37 +24,35 @@ const SettingsPage = React.lazy(() =>
   import('../../Pages/SettingsPage/SettingsPage')
 )
 
-class Routes extends React.Component {
-  render() {
-    return (
-      <React.Suspense
-        fallback={
-          <Layout>
-            <Loader active>Loading page</Loader>
-          </Layout>
-        }
-      >
-        <Switch>
-          <Route path="/login" component={LoginPage} />
-          <Route path="/logout">
-            {() => {
-              clearTokenCookie()
-              location.href = '/'
-            }}
-          </Route>
-          <Route path="/initialSetup" component={InitialSetupPage} />
-          <Route path="/share" component={SharePage} />
-          <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
-          <AuthorizedRoute path="/album/:id/:subPage?" component={AlbumPage} />
-          <AuthorizedRoute path="/photos/:subPage?" component={PhotosPage} />
-          <AuthorizedRoute path="/places" component={PlacesPage} />
-          <AuthorizedRoute admin path="/settings" component={SettingsPage} />
-          <Route path="/" exact render={() => <Redirect to="/photos" />} />
-          <Route render={() => <div>Page not found</div>} />
-        </Switch>
-      </React.Suspense>
-    )
-  }
+const Routes = () => {
+  return (
+    <React.Suspense
+      fallback={
+        <Layout>
+          <Loader active>Loading page</Loader>
+        </Layout>
+      }
+    >
+      <Switch>
+        <Route path="/login" component={LoginPage} />
+        <Route path="/logout">
+          {() => {
+            clearTokenCookie()
+            location.href = '/'
+          }}
+        </Route>
+        <Route path="/initialSetup" component={InitialSetupPage} />
+        <Route path="/share" component={SharePage} />
+        <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
+        <AuthorizedRoute path="/album/:id/:subPage?" component={AlbumPage} />
+        <AuthorizedRoute path="/photos/:subPage?" component={PhotosPage} />
+        <AuthorizedRoute path="/places" component={PlacesPage} />
+        <AuthorizedRoute admin path="/settings" component={SettingsPage} />
+        <Route path="/" exact render={() => <Redirect to="/photos" />} />
+        <Route render={() => <div>Page not found</div>} />
+      </Switch>
+    </React.Suspense>
+  )
 }
 
 export default Routes

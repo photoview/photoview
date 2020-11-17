@@ -1,6 +1,5 @@
-import React, { Component } from 'react'
-import { gql } from '@apollo/client'
-import { Mutation, Query } from '@apollo/client/react/components'
+import React, { useState, useCallback } from 'react'
+import { useQuery, gql, useMutation } from '@apollo/client'
 import { Redirect } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button, Form, Message, Header } from 'semantic-ui-react'
@@ -34,98 +33,92 @@ const LogoHeaderStyled = styled(LogoHeader)`
   margin-bottom: 72px !important;
 `
 
-class LoginPage extends Component {
-  constructor(props) {
-    super(props)
+const LoginPage = () => {
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: '',
+  })
 
-    this.state = {
-      username: '',
-      password: '',
-    }
+  const handleChange = useCallback(
+    (event, key) => {
+      const value = event.target.value
+      setCredentials(credentials => {
+        return {
+          ...credentials,
+          [key]: value,
+        }
+      })
+    },
+    [setCredentials]
+  )
+
+  const signIn = useCallback(
+    (event, authorize) => {
+      event.preventDefault()
+
+      authorize({
+        variables: {
+          username: credentials.username,
+          password: credentials.password,
+        },
+      })
+    },
+    [credentials]
+  )
+
+  const { data: initialSetupData } = useQuery(checkInitialSetupQuery)
+
+  const [authorize, { loading, data }] = useMutation(authorizeMutation, {
+    onCompleted: data => {
+      const { success, token } = data.authorizeUser
+
+      if (success) {
+        login(token)
+      }
+    },
+  })
+
+  const errorMessage =
+    data && !data.authorizeUser.success ? data.authorizeUser.status : null
+
+  if (authToken()) {
+    return <Redirect to="/" />
   }
 
-  handleChange(event, key) {
-    this.setState({ [key]: event.target.value })
-  }
-
-  signIn(event, authorize) {
-    event.preventDefault()
-
-    authorize({
-      variables: {
-        username: this.state.username,
-        password: this.state.password,
-      },
-    })
-  }
-
-  render() {
-    if (authToken()) {
-      return <Redirect to="/" />
-    }
-
-    return (
-      <div>
-        <Container>
-          <LogoHeaderStyled />
-          <Query query={checkInitialSetupQuery}>
-            {({ data }) => {
-              if (data && data.siteInfo && data.siteInfo.initialSetup) {
-                return <Redirect to="/initialSetup" />
-              }
-
-              return null
-            }}
-          </Query>
-          <Mutation
-            mutation={authorizeMutation}
-            onCompleted={data => {
-              const { success, token } = data.authorizeUser
-
-              if (success) {
-                login(token)
-              }
-            }}
-          >
-            {(authorize, { loading, data }) => {
-              let errorMessage = null
-              if (data) {
-                if (!data.authorizeUser.success)
-                  errorMessage = data.authorizeUser.status
-              }
-
-              return (
-                <Form
-                  style={{ width: 500, margin: 'auto' }}
-                  error={!!errorMessage}
-                  onSubmit={e => this.signIn(e, authorize)}
-                  loading={loading || (data && data.authorizeUser.success)}
-                >
-                  <Form.Field>
-                    <label htmlFor="username_field">Username</label>
-                    <input
-                      id="username_field"
-                      onChange={e => this.handleChange(e, 'username')}
-                    />
-                  </Form.Field>
-                  <Form.Field>
-                    <label htmlFor="password_field">Password</label>
-                    <input
-                      type="password"
-                      id="password_field"
-                      onChange={e => this.handleChange(e, 'password')}
-                    />
-                  </Form.Field>
-                  <Message error content={errorMessage} />
-                  <Button type="submit">Sign in</Button>
-                </Form>
-              )
-            }}
-          </Mutation>
-        </Container>
-      </div>
-    )
-  }
+  return (
+    <div>
+      <Container>
+        <LogoHeaderStyled />
+        {initialSetupData?.siteInfo?.initialSetup && (
+          <Redirect to="/initialSetup" />
+        )}
+        <Form
+          style={{ width: 500, margin: 'auto' }}
+          error={!!errorMessage}
+          onSubmit={e => signIn(e, authorize)}
+          loading={loading || (data && data.authorizeUser.success)}
+        >
+          <Form.Field>
+            <label htmlFor="username_field">Username</label>
+            <input
+              id="username_field"
+              onChange={e => handleChange(e, 'username')}
+            />
+          </Form.Field>
+          <Form.Field>
+            <label htmlFor="password_field">Password</label>
+            <input
+              type="password"
+              id="password_field"
+              onChange={e => handleChange(e, 'password')}
+            />
+          </Form.Field>
+          <Message error content={errorMessage} />
+          <Button type="submit">Sign in</Button>
+        </Form>
+      </Container>
+    </div>
+  )
 }
 
 export default LoginPage

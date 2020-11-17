@@ -1,8 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
-import { gql } from '@apollo/client'
-import { Query } from '@apollo/client/react/components'
+import { useQuery, gql } from '@apollo/client'
 import { authToken } from '../../authentication'
 
 export const ADMIN_QUERY = gql`
@@ -29,19 +28,13 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
 
   let adminRedirect = null
   if (token && admin) {
-    adminRedirect = (
-      <Query query={ADMIN_QUERY}>
-        {({ error, data }) => {
-          if (error) alert(error)
+    const { error, data } = useQuery(ADMIN_QUERY)
 
-          if (data && data.myUser && !data.myUser.admin) {
-            return <Redirect to="/" />
-          }
+    if (error) alert(error)
 
-          return null
-        }}
-      </Query>
-    )
+    if (data && data.myUser && !data.myUser.admin) {
+      adminRedirect = <Redirect to="/" />
+    }
   }
 
   return (
@@ -54,7 +47,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
           <Component {...routeProps} />
         </>
       )}
-    ></Route>
+    />
   )
 }
 

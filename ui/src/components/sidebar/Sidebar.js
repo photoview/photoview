@@ -1,4 +1,4 @@
-import React, { createContext } from 'react'
+import React, { createContext, useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
@@ -41,42 +41,36 @@ const SidebarDismissButton = styled(Icon)`
 export const SidebarContext = createContext()
 SidebarContext.displayName = 'SidebarContext'
 
-class Sidebar extends React.Component {
-  constructor(props) {
-    super(props)
+const Sidebar = ({ children }) => {
+  const [state, setState] = useState({
+    content: null,
+  })
 
-    this.state = {
-      content: null,
-    }
-
-    this.update = content => {
-      this.setState({ content })
-    }
+  const update = content => {
+    setState({ content })
   }
 
-  render() {
-    return (
-      <SidebarContext.Provider
-        value={{ updateSidebar: this.update, content: this.state.content }}
-      >
-        {this.props.children}
-        <SidebarContext.Consumer>
-          {value => (
-            <SidebarContainer highlighted={value.content != null}>
-              {value.content}
-              <SidebarDismissButton
-                name="angle double right"
-                size="big"
-                link
-                onClick={() => this.setState({ content: null })}
-              />
-              <div style={{ height: 100 }}></div>
-            </SidebarContainer>
-          )}
-        </SidebarContext.Consumer>
-      </SidebarContext.Provider>
-    )
-  }
+  return (
+    <SidebarContext.Provider
+      value={{ updateSidebar: update, content: state.content }}
+    >
+      {children}
+      <SidebarContext.Consumer>
+        {value => (
+          <SidebarContainer highlighted={value.content != null}>
+            {value.content}
+            <SidebarDismissButton
+              name="angle double right"
+              size="big"
+              link
+              onClick={() => setState({ content: null })}
+            />
+            <div style={{ height: 100 }}></div>
+          </SidebarContainer>
+        )}
+      </SidebarContext.Consumer>
+    </SidebarContext.Provider>
+  )
 }
 
 Sidebar.propTypes = {

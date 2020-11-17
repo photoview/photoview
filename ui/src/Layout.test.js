@@ -7,6 +7,10 @@ import { render, screen } from '@testing-library/react'
 import Layout, { ADMIN_QUERY, MAPBOX_QUERY, SideMenu } from './Layout'
 import { MemoryRouter } from 'react-router-dom'
 
+import * as authentication from './authentication'
+
+jest.mock('./authentication.js')
+
 test('Layout component', async () => {
   render(
     <Layout>
@@ -18,7 +22,13 @@ test('Layout component', async () => {
   expect(screen.getByText('layout_content')).toBeInTheDocument()
 })
 
+afterEach(() => {
+  authentication.authToken.mockClear()
+})
+
 test('Layout sidebar component', async () => {
+  authentication.authToken.mockImplementation(() => true)
+
   const mockedGraphql = [
     {
       request: {
