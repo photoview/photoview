@@ -115,6 +115,7 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
         event.preventDefault()
         setPassword({
           variables: {
+            token: share.token,
             password: event.target.value,
           },
         })

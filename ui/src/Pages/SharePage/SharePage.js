@@ -176,6 +176,7 @@ const TokenRoute = ({ match }) => {
   const { loading, error, data, refetch } = useQuery(
     VALIDATE_TOKEN_PASSWORD_QUERY,
     {
+      notifyOnNetworkStatusChange: true,
       variables: {
         token: match.params.token,
         password: getSharePassword(match.params.token),
@@ -202,7 +203,7 @@ const TokenRoute = ({ match }) => {
         match={match}
         refetchWithPassword={password => {
           saveSharePassword(token, password)
-          refetch({ variables: { password } })
+          refetch({ token, password })
         }}
         loading={loading}
       />

@@ -179,7 +179,7 @@ const SidebarDownload = ({ photo }) => {
   let downloadRows = downloads.map(x => (
     <DownloadTableRow
       key={x.mediaUrl.url}
-      onClick={() => downloadMedia(x.mediaUrl.url, photo.title)}
+      onClick={() => downloadMedia(x.mediaUrl.url)}
     >
       <Table.Cell>{`${x.title}`}</Table.Cell>
       <Table.Cell>{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</Table.Cell>
