@@ -96,10 +96,22 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 		return false, errors.Wrap(err, "error processing photo highres")
 	}
 
-	// Generate high res jpeg
 	var photoDimensions *PhotoDimensions
 	var baseImagePath string = photo.Path
 
+	mediaType, err := getMediaType(photo.Path)
+	if err != nil {
+		return false, errors.Wrap(err, "could determine if media was photo or video")
+	}
+
+	if mediaType.isRaw() {
+		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	// Generate high res jpeg
 	if highResURL == nil {
 
 		contentType, err := imageData.ContentType()
@@ -116,25 +128,9 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 
 			baseImagePath = path.Join(*photoCachePath, highres_name)
 
-			err = imageData.EncodeHighRes(tx, baseImagePath)
-			if err != nil {
-				return false, errors.Wrap(err, "creating high-res cached image")
-			}
-
-			photoDimensions, err = GetPhotoDimensions(baseImagePath)
+			err = generateSaveHighResJPEG(tx, photo.MediaID, imageData, highres_name, baseImagePath, -1)
 			if err != nil {
 				return false, err
-			}
-
-			fileStats, err := os.Stat(baseImagePath)
-			if err != nil {
-				return false, errors.Wrap(err, "reading file stats of highres photo")
-			}
-
-			_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
-				photo.MediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg", fileStats.Size())
-			if err != nil {
-				return false, errors.Wrapf(err, "could not insert highres media url (%d, %s)", photo.MediaID, photo.Title)
 			}
 		}
 	} else {
@@ -182,19 +178,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 		// 	return err
 		// }
 
-		thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
-
-		thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
-		if err != nil {
-			return false, errors.Wrap(err, "could not create thumbnail cached image")
-		}
-
-		fileStats, err := os.Stat(thumbOutputPath)
-		if err != nil {
-			return false, errors.Wrap(err, "reading file stats of thumbnail photo")
-		}
-
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)", photo.MediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg", fileStats.Size())
+		err = generateSaveThumbnailJPEG(tx, photo.MediaID, thumbnail_name, photoCachePath, baseImagePath, -1)
 		if err != nil {
 			return false, err
 		}
@@ -268,5 +252,110 @@ func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMed
 		return err
 	}
 
+	return nil
+}
+
+func generateSaveHighResJPEG(tx *sql.Tx, mediaID int, imageData *EncodeMediaData, highres_name string, imagePath string, urlID int) error {
+
+	err := imageData.EncodeHighRes(tx, imagePath)
+	if err != nil {
+		return errors.Wrap(err, "creating high-res cached image")
+	}
+
+	photoDimensions, err := GetPhotoDimensions(imagePath)
+	if err != nil {
+		return err
+	}
+
+	fileStats, err := os.Stat(imagePath)
+	if err != nil {
+		return errors.Wrap(err, "reading file stats of highres photo")
+	}
+
+	if urlID < 0 {
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			mediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg", fileStats.Size())
+	} else {
+		_, err = tx.Exec("UPDATE media_url SET width = ?, height = ?,  file_size= ? WHERE url_id = ?",
+			photoDimensions.Width, photoDimensions.Height, fileStats.Size(), urlID)
+	}
+	if err != nil {
+		return errors.Wrapf(err, "could not insert highres media url (%d, %s)", mediaID, highres_name)
+	}
+
+	return nil
+}
+
+func generateSaveThumbnailJPEG(tx *sql.Tx, mediaID int, thumbnail_name string, photoCachePath *string, baseImagePath string, urlID int) error {
+	thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
+
+	thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
+	if err != nil {
+		return errors.Wrap(err, "could not create thumbnail cached image")
+	}
+
+	fileStats, err := os.Stat(thumbOutputPath)
+	if err != nil {
+		return errors.Wrap(err, "reading file stats of thumbnail photo")
+	}
+
+	if urlID < 0 {
+		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			mediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg", fileStats.Size())
+	} else {
+		_, err = tx.Exec("UPDATE media_url SET width = ?, height = ?,  file_size= ? WHERE url_id = ?",
+			thumbSize.Width, thumbSize.Height, fileStats.Size(), urlID)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
+	photo := imageData.media
+	sideCarFileHasChanged := false
+	var currentFileHash *string
+	currentSideCarPath := scanForSideCarFile(photo.Path)
+
+	if currentSideCarPath != nil {
+		currentFileHash = hashSideCarFile(currentSideCarPath)
+		if photo.SideCarHash == nil || *photo.SideCarHash != *currentFileHash {
+			sideCarFileHasChanged = true
+		}
+	} else if photo.SideCarPath != nil { // sidecar has been deleted since last scan
+		sideCarFileHasChanged = true
+	}
+	if sideCarFileHasChanged {
+		fmt.Printf("Detected changed sidecar file for %s recreating JPG's to reflect changes\n", photo.Path)
+
+		// update high res image may be cropped so dimentions and file size can change
+		baseImagePath := path.Join(*photoCachePath, highResURL.MediaName) // update base image path for thumbnail
+		tempHighResPath := baseImagePath + ".hold"
+		os.Rename(baseImagePath, tempHighResPath)
+		err := generateSaveHighResJPEG(tx, photo.MediaID, imageData, highResURL.MediaName, baseImagePath, highResURL.UrlID)
+		if err != nil {
+			os.Rename(tempHighResPath, baseImagePath)
+			return errors.Wrap(err, "recreating high-res cached image")
+		}
+		os.Remove(tempHighResPath)
+
+		// update thumbnail image may be cropped so dimentions and file size can change
+		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
+		tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
+		os.Rename(thumbPath, tempThumbPath)
+		err = generateSaveThumbnailJPEG(tx, photo.MediaID, thumbURL.MediaName, photoCachePath, baseImagePath, thumbURL.UrlID)
+		if err != nil {
+			os.Rename(tempThumbPath, thumbPath)
+			return errors.Wrap(err, "recreating thumbnail cached image")
+		}
+		os.Remove(tempThumbPath)
+
+		// save new side car hash
+		_, err = tx.Exec("UPDATE media SET side_car_hash = ?, side_car_path = ? WHERE media_id = ?", currentFileHash, currentSideCarPath, photo.MediaID)
+		if err != nil {
+			return errors.Wrapf(err, "could not update side car hash for media: %s", photo.Path)
+		}
+	}
 	return nil
 }

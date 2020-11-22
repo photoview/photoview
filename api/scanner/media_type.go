@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -231,10 +232,14 @@ func getMediaType(path string) (*MediaType, error) {
 
 	ext := filepath.Ext(path)
 
-	fileExtType := fileExtensions[strings.ToLower(ext)]
+	fileExtType, found := fileExtensions[strings.ToLower(ext)]
 
-	if fileExtType.isSupported() {
-		return &fileExtType, nil
+	if found {
+		if fileExtType.isSupported() {
+			return &fileExtType, nil
+		} else {
+			return nil, errors.New(fmt.Sprintf("unsupported file type '%s' (%s)", ext, fileExtType))
+		}
 	}
 
 	// If extension was not recognized try to read file header
