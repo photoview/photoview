@@ -319,7 +319,7 @@ func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *model
 	currentSideCarPath := scanForSideCarFile(photo.Path)
 
 	if currentSideCarPath != nil {
-		currentFileHash := hashSideCarFile(currentSideCarPath)
+		currentFileHash = hashSideCarFile(currentSideCarPath)
 		if photo.SideCarHash == nil || *photo.SideCarHash != *currentFileHash {
 			sideCarFileHasChanged = true
 		}
@@ -354,7 +354,7 @@ func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *model
 		// save new side car hash
 		_, err = tx.Exec("UPDATE media SET side_car_hash = ?, side_car_path = ? WHERE media_id = ?", currentFileHash, currentSideCarPath, photo.MediaID)
 		if err != nil {
-			return errors.Wrapf(err, "could not update side car hash (%d, %s)", photo.MediaID, *currentFileHash)
+			return errors.Wrapf(err, "could not update side car hash for media: %s", photo.Path)
 		}
 	}
 	return nil
