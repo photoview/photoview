@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"sync"
@@ -11,6 +10,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
 	"github.com/viktorstrate/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
 type ScannerJob struct {
@@ -18,7 +18,7 @@ type ScannerJob struct {
 	cache *AlbumScannerCache
 }
 
-func (job *ScannerJob) Run(db *sql.DB) {
+func (job *ScannerJob) Run(db *gorm.DB) {
 	scanAlbum(job.album, job.cache, db)
 }
 
@@ -31,13 +31,13 @@ type ScannerQueue struct {
 	idle_chan   chan bool
 	in_progress []ScannerJob
 	up_next     []ScannerJob
-	db          *sql.DB
+	db          *gorm.DB
 	settings    ScannerQueueSettings
 }
 
 var global_scanner_queue ScannerQueue
 
-func InitializeScannerQueue(db *sql.DB) error {
+func InitializeScannerQueue(db *gorm.DB) error {
 
 	var concurrentWorkers int
 	{
@@ -146,14 +146,11 @@ func (queue *ScannerQueue) notify() bool {
 }
 
 func AddAllToQueue() error {
-	rows, err := global_scanner_queue.db.Query("SELECT * FROM user")
-	if err != nil {
-		return errors.Wrap(err, "get all users from database")
-	}
 
-	users, err := models.NewUsersFromRows(rows)
-	if err != nil {
-		return errors.Wrap(err, "parse all users from db")
+	var users []*models.User
+	result := global_scanner_queue.db.Find(&users)
+	if result.Error != nil {
+		return errors.Wrap(result.Error, "get all users from database")
 	}
 
 	for _, user := range users {
@@ -167,7 +164,7 @@ func AddUserToQueue(user *models.User) error {
 	album_cache := MakeAlbumCache()
 	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
-		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.UserID)
+		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
 	}
 
 	global_scanner_queue.mutex.Lock()

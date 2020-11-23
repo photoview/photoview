@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -261,7 +262,7 @@ func hashSharePassword(password *string) (*string, error) {
 	return hashed_password, nil
 }
 
-func getUserToken(db *sql.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
+func getUserToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
 	row := db.QueryRow(`
 		SELECT share_token.* FROM share_token, user WHERE
 		share_token.value = ? AND

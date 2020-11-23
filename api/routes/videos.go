@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -11,9 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/scanner"
+	"gorm.io/gorm"
 )
 
-func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
+func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		media_name := mux.Vars(r)["name"]

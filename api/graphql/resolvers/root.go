@@ -2,16 +2,16 @@ package resolvers
 
 import (
 	"context"
-	"database/sql"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
 //go:generate go run github.com/99designs/gqlgen
 
 type Resolver struct {
-	Database *sql.DB
+	Database *gorm.DB
 }
 
 func (r *Resolver) Mutation() api.MutationResolver {

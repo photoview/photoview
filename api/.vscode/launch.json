@@ -11,7 +11,9 @@
       "mode": "auto",
       "program": "${workspaceRoot}/server.go",
       "cwd": "${workspaceRoot}",
-      "env": {},
+      "env": {
+        "PATH": "${env:PATH}:/Applications/darktable.app/Contents/MacOS/"
+      },
       "args": []
     }
   ]

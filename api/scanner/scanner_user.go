@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"container/list"
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,9 +12,10 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
 	"github.com/viktorstrate/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
-func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
+func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
 
 	// Check if user directory exists on the file system
 	if _, err := os.Stat(user.RootPath); err != nil {

@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -10,9 +9,10 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/graphql/notification"
 	"github.com/viktorstrate/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
-func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
+func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_notify_key := utils.GenerateToken()
 	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
@@ -85,7 +85,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	}
 }
 
-func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
+func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
 	albumPhotos := make([]*models.Media, 0)
 

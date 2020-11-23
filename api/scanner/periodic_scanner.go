@@ -1,22 +1,23 @@
 package scanner
 
 import (
-	"database/sql"
 	"log"
 	"sync"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type periodicScanner struct {
 	ticker         *time.Ticker
 	ticker_changed chan bool
 	mutex          *sync.Mutex
-	db             *sql.DB
+	db             *gorm.DB
 }
 
 var mainPeriodicScanner *periodicScanner = nil
 
-func getPeriodicScanInterval(db *sql.DB) (time.Duration, error) {
+func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 	row := db.QueryRow("SELECT periodic_scan_interval FROM site_info")
 	var intervalSeconds int
 
@@ -27,7 +28,7 @@ func getPeriodicScanInterval(db *sql.DB) (time.Duration, error) {
 	return time.Duration(intervalSeconds) * time.Second, nil
 }
 
-func InitializePeriodicScanner(db *sql.DB) error {
+func InitializePeriodicScanner(db *gorm.DB) error {
 	if mainPeriodicScanner != nil {
 		panic("periodic scanner has already been initialized")
 	}

@@ -9,9 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
-func CleanupMedia(db *sql.DB, albumId int, albumMedia []*models.Media) []error {
+func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]interface{}, len(albumMedia))
 	for i, photo := range albumMedia {
 		albumMediaIds[i] = photo.MediaID
@@ -72,7 +73,7 @@ func CleanupMedia(db *sql.DB, albumId int, albumMedia []*models.Media) []error {
 	return deleteErrors
 }
 
-func deleteOldUserAlbums(db *sql.DB, scannedAlbums []*models.Album, user *models.User) []error {
+func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *models.User) []error {
 	if len(scannedAlbums) == 0 {
 		return nil
 	}

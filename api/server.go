@@ -35,7 +35,6 @@ func main() {
 	if err != nil {
 		log.Panicf("Could not connect to database: %s\n", err)
 	}
-	defer db.Close()
 
 	// Migrate database
 	if err := database.MigrateDatabase(db); err != nil {

@@ -8,9 +8,10 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/auth"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-func authenticateMedia(media *models.Media, db *sql.DB, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
+func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
