@@ -75,6 +75,8 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.User{},
 		&models.AccessToken{},
 		&models.SiteInfo{},
+		&models.Media{},
+		&models.MediaURL{},
 		&models.Album{},
 		&models.MediaEXIF{},
 	)

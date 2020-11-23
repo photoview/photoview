@@ -176,7 +176,7 @@ func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 	}
 
 	// Get orientation from exif data
-	row := tx.QueryRow("SELECT media_exif.orientation FROM media JOIN media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", img.media.MediaID)
+	row := tx.QueryRow("SELECT media_exif.orientation FROM media JOIN media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", img.media.ID)
 	var orientation *int
 	if err = row.Scan(&orientation); err != nil {
 		// If not found use default orientation (not rotate)

@@ -8,21 +8,27 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )
 
-func ScanEXIF(tx *sql.Tx, media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
+func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
 
 	log.Printf("Scanning for EXIF")
 
 	{
 		// Check if EXIF data already exists
 		if media.ExifId != nil {
-			row := tx.QueryRow("SELECT * FROM media_exif WHERE exif_id = ?", media.ExifId)
-			return models.NewMediaExifFromRow(row)
+
+			var exif models.MediaEXIF
+			if err := tx.First(&exif, media.ExifId).Error; err != nil {
+				return nil, errors.Wrap(err, "get EXIF for media from database")
+			}
+
+			return &exif, nil
 		}
 
 		row := tx.QueryRow("SELECT media_exif.* FROM media, media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", media.MediaID)
