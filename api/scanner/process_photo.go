@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
+	"gorm.io/gorm"
 
 	// Image decoders
 	_ "image/gif"
@@ -42,7 +43,7 @@ func makePhotoURLChecker(tx *sql.Tx, mediaID int) (func(purpose models.MediaPurp
 	}, nil
 }
 
-func ProcessMedia(tx *sql.Tx, media *models.Media) (bool, error) {
+func ProcessMedia(tx *gorm.DB, media *models.Media) (bool, error) {
 	imageData := EncodeMediaData{
 		media: media,
 	}
@@ -65,7 +66,7 @@ func ProcessMedia(tx *sql.Tx, media *models.Media) (bool, error) {
 	}
 }
 
-func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string) (bool, error) {
+func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *string) (bool, error) {
 
 	photo := imageData.media
 

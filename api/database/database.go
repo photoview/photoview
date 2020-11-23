@@ -71,7 +71,13 @@ func SetupDatabase() (*gorm.DB, error) {
 
 func MigrateDatabase(db *gorm.DB) error {
 
-	db.AutoMigrate(&models.User{}, &models.AccessToken{})
+	db.AutoMigrate(
+		&models.User{},
+		&models.AccessToken{},
+		&models.SiteInfo{},
+		&models.Album{},
+		&models.MediaEXIF{},
+	)
 
 	return nil
 }

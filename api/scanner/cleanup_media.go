@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error {
+func CleanupMedia(db *gorm.DB, albumId uint, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]interface{}, len(albumMedia))
 	for i, photo := range albumMedia {
 		albumMediaIds[i] = photo.MediaID

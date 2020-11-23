@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/viktorstrate/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 
@@ -18,14 +19,13 @@ type periodicScanner struct {
 var mainPeriodicScanner *periodicScanner = nil
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
-	row := db.QueryRow("SELECT periodic_scan_interval FROM site_info")
-	var intervalSeconds int
 
-	if err := row.Scan(&intervalSeconds); err != nil {
+	var siteInfo models.SiteInfo
+	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
 	}
 
-	return time.Duration(intervalSeconds) * time.Second, nil
+	return time.Duration(siteInfo.PeriodicScanInterval) * time.Second, nil
 }
 
 func InitializePeriodicScanner(db *gorm.DB) error {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
 func scanForSideCarFile(path string) *string {
@@ -47,7 +48,7 @@ func hashSideCarFile(path *string) *string {
 	return &hash
 }
 
-func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, mediaPath string, albumId uint, cache *AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if image already exists

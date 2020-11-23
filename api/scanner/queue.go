@@ -196,7 +196,7 @@ func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
 	scannerJobs := append(queue.in_progress, queue.up_next...)
 
 	for _, scannerJob := range scannerJobs {
-		if scannerJob.album.AlbumID == job.album.AlbumID {
+		if scannerJob.album.ID == job.album.ID {
 			return true, nil
 		}
 	}
