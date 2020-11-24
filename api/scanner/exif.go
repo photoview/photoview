@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"math/big"
@@ -30,14 +29,6 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 
 			return &exif, nil
 		}
-
-		row := tx.QueryRow("SELECT media_exif.* FROM media, media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", media.MediaID)
-		exifData, err := models.NewMediaExifFromRow(row)
-		if err != nil && err != sql.ErrNoRows {
-			return nil, err
-		} else if exifData != nil {
-			return exifData, nil
-		}
 	}
 
 	photoFile, err := os.Open(media.Path)
@@ -60,49 +51,38 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 		return nil, errors.Wrap(err, "Could not decode EXIF")
 	}
 
-	valueNames := make([]string, 0)
-	exifValues := make([]interface{}, 0)
+	newExif := models.MediaEXIF{}
 
 	model, err := readStringTag(exifTags, exif.Model, media)
 	if err == nil {
-		valueNames = append(valueNames, "camera")
-		exifValues = append(exifValues, model)
+		newExif.Camera = model
 	}
 
 	maker, err := readStringTag(exifTags, exif.Make, media)
 	if err == nil {
-		valueNames = append(valueNames, "maker")
-		exifValues = append(exifValues, maker)
+		newExif.Maker = maker
 	}
 
 	lens, err := readStringTag(exifTags, exif.LensModel, media)
 	if err == nil {
-		valueNames = append(valueNames, "lens")
-		exifValues = append(exifValues, lens)
+		newExif.Lens = lens
 	}
 
 	date, err := exifTags.DateTime()
 	if err == nil {
-		valueNames = append(valueNames, "date_shot")
-		exifValues = append(exifValues, date)
-
-		_, err := tx.Exec("UPDATE media SET date_shot = ? WHERE media_id = ?", date, media.MediaID)
-		if err != nil {
-			log.Printf("WARN: Failed to update date_shot for media %s: %s", media.Title, err)
-		}
+		newExif.DateShot = &date
 	}
 
 	exposure, err := readRationalTag(exifTags, exif.ExposureTime, media)
 	if err == nil {
-		valueNames = append(valueNames, "exposure")
-		exifValues = append(exifValues, exposure.RatString())
+		exposureStr := exposure.RatString()
+		newExif.Exposure = &exposureStr
 	}
 
 	apertureRat, err := readRationalTag(exifTags, exif.FNumber, media)
 	if err == nil {
-		aperture, _ := apertureRat.Float32()
-		valueNames = append(valueNames, "aperture")
-		exifValues = append(exifValues, aperture)
+		aperture, _ := apertureRat.Float64()
+		newExif.Aperture = &aperture
 	}
 
 	isoTag, err := exifTags.Get(exif.ISOSpeedRatings)
@@ -113,8 +93,7 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 		if err != nil {
 			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %s\n", media.Title)
 		} else {
-			valueNames = append(valueNames, "iso")
-			exifValues = append(exifValues, iso)
+			newExif.Iso = &iso
 		}
 	}
 
@@ -122,9 +101,9 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 	if err == nil {
 		focalLengthRat, err := focalLengthTag.Rat(0)
 		if err == nil {
-			focalLength, _ := focalLengthRat.Float32()
-			valueNames = append(valueNames, "focal_length")
-			exifValues = append(exifValues, focalLength)
+			focalLength, _ := focalLengthRat.Float64()
+			newExif.FocalLength = &focalLength
+
 		} else {
 			// For some photos, the focal length cannot be read as a rational value,
 			// but is instead the second value read as an integer
@@ -134,8 +113,8 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 				if err != nil {
 					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %s\n%s\n", media.Title, err)
 				} else {
-					valueNames = append(valueNames, "focal_length")
-					exifValues = append(exifValues, focalLength)
+					focalLenFloat := float64(focalLength)
+					newExif.FocalLength = &focalLenFloat
 				}
 			}
 		}
@@ -143,76 +122,36 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 
 	flash, err := exifTags.Flash()
 	if err == nil {
-		valueNames = append(valueNames, "flash")
-		exifValues = append(exifValues, flash)
+		newExif.Flash = &flash
 	}
 
 	orientation, err := readIntegerTag(exifTags, exif.Orientation, media)
 	if err == nil {
-		valueNames = append(valueNames, "orientation")
-		exifValues = append(exifValues, *orientation)
+		newExif.Orientation = orientation
 	}
 
 	exposureProgram, err := readIntegerTag(exifTags, exif.ExposureProgram, media)
 	if err == nil {
-		valueNames = append(valueNames, "exposure_program")
-		exifValues = append(exifValues, *exposureProgram)
+		newExif.ExposureProgram = exposureProgram
 	}
 
 	lat, long, err := exifTags.LatLong()
 	if err == nil {
-		valueNames = append(valueNames, "gps_latitude")
-		exifValues = append(exifValues, lat)
-
-		valueNames = append(valueNames, "gps_longitude")
-		exifValues = append(exifValues, long)
+		newExif.GPSLatitude = &lat
+		newExif.GPSLonitude = &long
 	}
 
-	if len(valueNames) == 0 {
+	// If exif is empty
+	if newExif == (models.MediaEXIF{}) {
 		return nil, nil
 	}
 
-	prepareQuestions := ""
-	for range valueNames {
-		prepareQuestions += "?,"
-	}
-	prepareQuestions = prepareQuestions[0 : len(prepareQuestions)-1]
-
-	columns := ""
-	for _, name := range valueNames {
-		columns += name + ","
-	}
-	columns = columns[0 : len(columns)-1]
-
-	// Insert into database
-	result, err := tx.Exec("INSERT INTO media_exif ("+columns+") VALUES ("+prepareQuestions+")", exifValues...)
-	if err != nil {
-		return nil, err
+	// Add EXIF to database and link to media
+	if err := tx.Model(&media).Association("Exif").Replace(newExif); err != nil {
+		return nil, errors.Wrap(err, "save media exif to database")
 	}
 
-	exifID, err := result.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	// Link exif to media in database
-	result, err = tx.Exec("UPDATE media SET exif_id = ? WHERE media_id = ?", exifID, media.MediaID)
-	if err != nil {
-		return nil, err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, errors.Wrap(err, "linking exif to media in database failed")
-	}
-
-	if rowsAffected == 0 {
-		return nil, errors.New("linking exif to media in database failed: 0 rows affected")
-	}
-
-	// Return newly created exif row
-	row := tx.QueryRow("SELECT * FROM media_exif WHERE exif_id = ?", exifID)
-	return models.NewMediaExifFromRow(row)
+	return &newExif, nil
 }
 
 func readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*string, error) {

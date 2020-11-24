@@ -1,16 +1,16 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
-func ScanVideoMetadata(tx *sql.Tx, video *models.Media) error {
+func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 
 	data, err := readVideoMetadata(video.Path)
 	if err != nil {

@@ -40,13 +40,14 @@ const (
 
 type MediaURL struct {
 	gorm.Model
-	MediaID     int
+	MediaID     uint
+	Media       Media
 	MediaName   string
 	Width       int
 	Height      int
 	Purpose     MediaPurpose
 	ContentType string
-	FileSize    int
+	FileSize    int64
 }
 
 func (p *MediaURL) URL() string {

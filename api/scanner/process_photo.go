@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -23,23 +22,18 @@ import (
 )
 
 // Higher order function used to check if MediaURL for a given MediaPurpose exists
-func makePhotoURLChecker(tx *sql.Tx, mediaID int) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
-	mediaURLExistsStmt, err := tx.Prepare("SELECT * FROM media_url WHERE media_id = ? AND purpose = ?")
-	if err != nil {
-		return nil, err
-	}
-
+func makePhotoURLChecker(tx *gorm.DB, mediaID uint) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
 	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
-		row := mediaURLExistsStmt.QueryRow(mediaID, purpose)
-		mediaURL, err := models.NewMediaURLFromRow(row)
-		if err != nil {
-			if err == sql.ErrNoRows {
+		var mediaURL models.MediaURL
+
+		if err := tx.Where("purpose = ?", purpose).First(&mediaURL, mediaID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, nil
 			}
 			return nil, err
 		}
 
-		return mediaURL, nil
+		return &mediaURL, nil
 	}, nil
 }
 
@@ -74,7 +68,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 	didProcess := false
 
-	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.MediaID)
+	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.ID)
 	if err != nil {
 		return false, err
 	}
@@ -129,7 +123,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 			baseImagePath = path.Join(*photoCachePath, highres_name)
 
-			err = generateSaveHighResJPEG(tx, photo.MediaID, imageData, highres_name, baseImagePath, -1)
+			err = generateSaveHighResJPEG(tx, photo, imageData, highres_name, baseImagePath, nil)
 			if err != nil {
 				return false, err
 			}
@@ -179,7 +173,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		// 	return err
 		// }
 
-		err = generateSaveThumbnailJPEG(tx, photo.MediaID, thumbnail_name, photoCachePath, baseImagePath, -1)
+		err = generateSaveThumbnailJPEG(tx, photo, thumbnail_name, photoCachePath, baseImagePath, nil)
 		if err != nil {
 			return false, err
 		}
@@ -211,7 +205,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	}
 
 	// Make album cache dir if not exists
-	albumCachePath := path.Join(PhotoCache(), strconv.Itoa(photo.AlbumId))
+	albumCachePath := path.Join(PhotoCache(), strconv.Itoa(int(photo.ID)))
 	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
 			return nil, errors.Wrap(err, "could not make album image cache directory")
@@ -219,7 +213,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	}
 
 	// Make photo cache dir if not exists
-	photoCachePath := path.Join(albumCachePath, strconv.Itoa(photo.MediaID))
+	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(photo.ID)))
 	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
 			return nil, errors.Wrap(err, "could not make photo image cache directory")
@@ -229,7 +223,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	return &photoCachePath, nil
 }
 
-func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMediaData, photoDimensions *PhotoDimensions) error {
+func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMediaData, photoDimensions *PhotoDimensions) error {
 	photoName := path.Base(photo.Path)
 	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
 	photoBaseExt := path.Ext(photoName)
@@ -247,16 +241,24 @@ func saveOriginalPhotoToDB(tx *sql.Tx, photo *models.Media, imageData *EncodeMed
 		return errors.Wrap(err, "reading file stats of original photo")
 	}
 
-	_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)", photo.MediaID, original_image_name, photoDimensions.Width, photoDimensions.Height, models.MediaOriginal, contentType, fileStats.Size())
-	if err != nil {
-		log.Printf("Could not insert original photo url: %d, %s\n", photo.MediaID, photoName)
-		return err
+	mediaURL := models.MediaURL{
+		Media:       *photo,
+		MediaName:   original_image_name,
+		Width:       photoDimensions.Width,
+		Height:      photoDimensions.Height,
+		Purpose:     models.MediaOriginal,
+		ContentType: string(*contentType),
+		FileSize:    fileStats.Size(),
+	}
+
+	if err := tx.Create(&mediaURL).Error; err != nil {
+		return errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photoName)
 	}
 
 	return nil
 }
 
-func generateSaveHighResJPEG(tx *sql.Tx, mediaID int, imageData *EncodeMediaData, highres_name string, imagePath string, urlID int) error {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) error {
 
 	err := imageData.EncodeHighRes(tx, imagePath)
 	if err != nil {
@@ -273,21 +275,35 @@ func generateSaveHighResJPEG(tx *sql.Tx, mediaID int, imageData *EncodeMediaData
 		return errors.Wrap(err, "reading file stats of highres photo")
 	}
 
-	if urlID < 0 {
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			mediaID, highres_name, photoDimensions.Width, photoDimensions.Height, models.PhotoHighRes, "image/jpeg", fileStats.Size())
+	if mediaURL == nil {
+
+		mediaURL = &models.MediaURL{
+			MediaID:     media.ID,
+			MediaName:   highres_name,
+			Width:       photoDimensions.Width,
+			Height:      photoDimensions.Height,
+			Purpose:     models.PhotoHighRes,
+			ContentType: "image/jpeg",
+			FileSize:    fileStats.Size(),
+		}
+
+		if err := tx.Create(&mediaURL).Error; err != nil {
+			return errors.Wrapf(err, "could not insert highres media url (%d, %s)", media.ID, highres_name)
+		}
 	} else {
-		_, err = tx.Exec("UPDATE media_url SET width = ?, height = ?,  file_size= ? WHERE url_id = ?",
-			photoDimensions.Width, photoDimensions.Height, fileStats.Size(), urlID)
-	}
-	if err != nil {
-		return errors.Wrapf(err, "could not insert highres media url (%d, %s)", mediaID, highres_name)
+		mediaURL.Width = photoDimensions.Width
+		mediaURL.Height = photoDimensions.Height
+		mediaURL.FileSize = fileStats.Size()
+
+		if err := tx.Save(&mediaURL).Error; err != nil {
+			return errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, highres_name)
+		}
 	}
 
 	return nil
 }
 
-func generateSaveThumbnailJPEG(tx *sql.Tx, mediaID int, thumbnail_name string, photoCachePath *string, baseImagePath string, urlID int) error {
+func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name string, photoCachePath *string, baseImagePath string, mediaURL *models.MediaURL) error {
 	thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
 
 	thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
@@ -300,20 +316,35 @@ func generateSaveThumbnailJPEG(tx *sql.Tx, mediaID int, thumbnail_name string, p
 		return errors.Wrap(err, "reading file stats of thumbnail photo")
 	}
 
-	if urlID < 0 {
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			mediaID, thumbnail_name, thumbSize.Width, thumbSize.Height, models.PhotoThumbnail, "image/jpeg", fileStats.Size())
+	if mediaURL == nil {
+
+		mediaURL = &models.MediaURL{
+			MediaID:     media.ID,
+			MediaName:   thumbnail_name,
+			Width:       thumbSize.Width,
+			Height:      thumbSize.Height,
+			Purpose:     models.PhotoThumbnail,
+			ContentType: "image/jpeg",
+			FileSize:    fileStats.Size(),
+		}
+
+		if err := tx.Create(&mediaURL).Error; err != nil {
+			return errors.Wrapf(err, "could not insert thumbnail media url (%d, %s)", media.ID, thumbnail_name)
+		}
 	} else {
-		_, err = tx.Exec("UPDATE media_url SET width = ?, height = ?,  file_size= ? WHERE url_id = ?",
-			thumbSize.Width, thumbSize.Height, fileStats.Size(), urlID)
+		mediaURL.Width = thumbSize.Width
+		mediaURL.Height = thumbSize.Height
+		mediaURL.FileSize = fileStats.Size()
+
+		if err := tx.Save(&mediaURL).Error; err != nil {
+			return errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnail_name)
+		}
 	}
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
-func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
+func processRawSideCar(tx *gorm.DB, imageData *EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
 	photo := imageData.media
 	sideCarFileHasChanged := false
 	var currentFileHash *string
@@ -327,6 +358,7 @@ func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *model
 	} else if photo.SideCarPath != nil { // sidecar has been deleted since last scan
 		sideCarFileHasChanged = true
 	}
+
 	if sideCarFileHasChanged {
 		fmt.Printf("Detected changed sidecar file for %s recreating JPG's to reflect changes\n", photo.Path)
 
@@ -334,7 +366,7 @@ func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *model
 		baseImagePath := path.Join(*photoCachePath, highResURL.MediaName) // update base image path for thumbnail
 		tempHighResPath := baseImagePath + ".hold"
 		os.Rename(baseImagePath, tempHighResPath)
-		err := generateSaveHighResJPEG(tx, photo.MediaID, imageData, highResURL.MediaName, baseImagePath, highResURL.UrlID)
+		err := generateSaveHighResJPEG(tx, photo, imageData, highResURL.MediaName, baseImagePath, highResURL)
 		if err != nil {
 			os.Rename(tempHighResPath, baseImagePath)
 			return errors.Wrap(err, "recreating high-res cached image")
@@ -345,18 +377,21 @@ func processRawSideCar(tx *sql.Tx, imageData *EncodeMediaData, highResURL *model
 		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
 		tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
 		os.Rename(thumbPath, tempThumbPath)
-		err = generateSaveThumbnailJPEG(tx, photo.MediaID, thumbURL.MediaName, photoCachePath, baseImagePath, thumbURL.UrlID)
+		err = generateSaveThumbnailJPEG(tx, photo, thumbURL.MediaName, photoCachePath, baseImagePath, thumbURL)
 		if err != nil {
 			os.Rename(tempThumbPath, thumbPath)
 			return errors.Wrap(err, "recreating thumbnail cached image")
 		}
 		os.Remove(tempThumbPath)
 
+		photo.SideCarHash = currentFileHash
+		photo.SideCarPath = currentSideCarPath
+
 		// save new side car hash
-		_, err = tx.Exec("UPDATE media SET side_car_hash = ?, side_car_path = ? WHERE media_id = ?", currentFileHash, currentSideCarPath, photo.MediaID)
-		if err != nil {
+		if err := tx.Save(&photo).Error; err != nil {
 			return errors.Wrapf(err, "could not update side car hash for media: %s", photo.Path)
 		}
 	}
+
 	return nil
 }

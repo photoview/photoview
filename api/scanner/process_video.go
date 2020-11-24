@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -14,15 +13,16 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
+	"gorm.io/gorm"
 )
 
-func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string) (bool, error) {
+func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *string) (bool, error) {
 	video := mediaData.media
 	didProcess := false
 
 	log.Printf("Processing video: %s", video.Path)
 
-	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.MediaID)
+	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.ID)
 	if err != nil {
 		return false, err
 	}
