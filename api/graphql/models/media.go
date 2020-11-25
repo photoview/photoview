@@ -23,7 +23,8 @@ type Media struct {
 	DateImported    time.Time
 	Favorite        bool
 	Type            MediaType
-	VideoMetadataId *int
+	VideoMetadataID *uint
+	VideoMetadata   *VideoMetadata
 	SideCarPath     *string
 	SideCarHash     *string
 }

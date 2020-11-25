@@ -79,6 +79,7 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.MediaURL{},
 		&models.Album{},
 		&models.MediaEXIF{},
+		&models.VideoMetadata{},
 	)
 
 	return nil

@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"image"
 	"image/jpeg"
 	"os"
@@ -174,18 +173,6 @@ func (img *EncodeMediaData) photoImage(tx *gorm.DB) (image.Image, error) {
 	photoImg, err := DecodeImage(img.media.Path)
 	if err != nil {
 		return nil, utils.HandleError("image decoding", err)
-	}
-
-	// Get orientation from exif data
-	row := tx.QueryRow("SELECT media_exif.orientation FROM media JOIN media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", img.media.ID)
-	var orientation *int
-	if err = row.Scan(&orientation); err != nil {
-		// If not found use default orientation (not rotate)
-		if err == sql.ErrNoRows {
-			orientation = nil
-		} else {
-			return nil, err
-		}
 	}
 
 	img._photoImage = photoImg

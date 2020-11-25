@@ -28,13 +28,13 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 	type scanInfo struct {
 		path     string
-		parentId *int
+		parentID *uint
 	}
 
 	scanQueue := list.New()
 	scanQueue.PushBack(scanInfo{
 		path:     user.RootPath,
-		parentId: nil,
+		parentID: nil,
 	})
 
 	userAlbums := make([]*models.Album, 0)
@@ -46,7 +46,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 		scanQueue.Remove(scanQueue.Front())
 
 		albumPath := albumInfo.path
-		albumParentId := albumInfo.parentId
+		albumParentID := albumInfo.parentID
 
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
@@ -55,35 +55,33 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 			continue
 		}
 
-		tx, err := db.Begin()
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "begin database transaction"))
-			continue
-		}
+		// Will become new album or album from db
+		var album models.Album
 
-		log.Printf("Scanning directory: %s", albumPath)
+		transErr := db.Transaction(func(tx *gorm.DB) error {
+			log.Printf("Scanning directory: %s", albumPath)
 
-		// Make album if not exists
-		albumTitle := path.Base(albumPath)
-		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path, path_hash) VALUES (?, ?, ?, ?, MD5(path))", albumTitle, albumParentId, user.UserID, albumPath)
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "insert album into database"))
-			tx.Rollback()
-			continue
-		}
+			// Make album if not exists
+			albumTitle := path.Base(albumPath)
 
-		row := tx.QueryRow("SELECT * FROM album WHERE path_hash = MD5(?)", albumPath)
-		album, err := models.NewAlbumFromRow(row)
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrapf(err, "get album from database (%s)", albumPath))
-			tx.Rollback()
-			continue
-		}
-		userAlbums = append(userAlbums, album)
+			err = tx.FirstOrCreate(&album, models.Album{
+				Title:         albumTitle,
+				ParentAlbumID: albumParentID,
+				OwnerID:       user.ID,
+				Path:          albumPath,
+			}).Error
 
-		// Commit album transaction
-		if err := tx.Commit(); err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "commit database transaction"))
+			if err != nil {
+				return errors.Wrap(err, "insert album into database")
+			}
+
+			userAlbums = append(userAlbums, &album)
+
+			return nil
+		})
+
+		if transErr != nil {
+			albumErrors = append(albumErrors, errors.Wrap(transErr, "begin database transaction"))
 			continue
 		}
 
@@ -99,7 +97,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 			if item.IsDir() && directoryContainsPhotos(subalbumPath, album_cache) {
 				scanQueue.PushBack(scanInfo{
 					path:     subalbumPath,
-					parentId: &album.AlbumID,
+					parentID: &album.ID,
 				})
 			}
 		}

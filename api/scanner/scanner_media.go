@@ -113,7 +113,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId uint, cache *AlbumScannerC
 	}
 
 	if media.Type == models.MediaTypeVideo {
-		if err = ScanVideoMetadata(tx, media); err != nil {
+		if err = ScanVideoMetadata(tx, &media); err != nil {
 			log.Printf("WARN: ScanVideoMetadata for %s failed: %s\n", mediaName, err)
 		}
 	}

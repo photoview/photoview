@@ -52,18 +52,21 @@ func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 		}
 	}
 
-	result, err := tx.Exec("INSERT INTO video_metadata (width, height, duration, codec, framerate, bitrate, color_profile, audio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", stream.Width, stream.Height, data.Format.DurationSeconds, stream.CodecLongName, framerate, stream.BitRate, stream.Profile, audioText)
-	if err != nil {
-		return errors.Wrapf(err, "failed to insert video metadata into database (%s)", video.Title)
+	videoMetadata := models.VideoMetadata{
+		Width:        stream.Width,
+		Height:       stream.Height,
+		Duration:     data.Format.DurationSeconds,
+		Codec:        &stream.CodecLongName,
+		Framerate:    framerate,
+		Bitrate:      &stream.BitRate,
+		ColorProfile: &stream.Profile,
+		Audio:        &audioText,
 	}
 
-	metadata_id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
+	video.VideoMetadata = &videoMetadata
 
-	if _, err = tx.Exec("UPDATE media SET video_metadata_id = ? WHERE media_id = ?", metadata_id, video.MediaID); err != nil {
-		return err
+	if err := tx.Save(video).Error; err != nil {
+		return errors.Wrapf(err, "failed to add video metadata to database (%s)", video.Title)
 	}
 
 	return nil
