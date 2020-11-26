@@ -14,9 +14,9 @@ type Media struct {
 	Title           string
 	Path            string
 	PathHash        string
-	AlbumId         uint
+	AlbumID         uint
 	Album           Album
-	ExifId          *uint
+	ExifID          *uint
 	Exif            MediaEXIF
 	MediaURL        []MediaURL
 	DateShot        time.Time

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -15,14 +14,12 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
-		row := db.QueryRow("SELECT owner_id FROM album WHERE album.album_id = ?", media.AlbumId)
-		var owner_id int
-
-		if err := row.Scan(&owner_id); err != nil {
+		var album models.Album
+		if err := db.First(&album, media.AlbumID).Error; err != nil {
 			return false, "internal server error", http.StatusInternalServerError, err
 		}
 
-		if owner_id != user.UserID {
+		if album.OwnerID != user.ID {
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {
@@ -32,10 +29,8 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 			return false, "unauthorized", http.StatusForbidden, nil
 		}
 
-		row := db.QueryRow("SELECT * FROM share_token WHERE value = ?", token)
-
-		shareToken, err := models.NewShareTokenFromRow(row)
-		if err != nil {
+		var shareToken models.ShareToken
+		if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
 			return false, "internal server error", http.StatusInternalServerError, err
 		}
 
@@ -57,27 +52,28 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 			}
 		}
 
-		if shareToken.AlbumID != nil && media.AlbumId != *shareToken.AlbumID {
+		if shareToken.AlbumID != nil && media.ID != *shareToken.AlbumID {
 			// Check child albums
-			row := db.QueryRow(`
+
+			result := db.Raw(`
 					WITH recursive child_albums AS (
 						SELECT * FROM album WHERE parent_album = ?
 						UNION ALL
 						SELECT child.* FROM album child JOIN child_albums parent ON parent.album_id = child.parent_album
 					)
 					SELECT * FROM child_albums WHERE album_id = ?
-				`, *shareToken.AlbumID, media.AlbumId)
+				`, *shareToken.AlbumID, media.AlbumID)
 
-			_, err := models.NewAlbumFromRow(row)
-			if err != nil {
-				if err == sql.ErrNoRows {
-					return false, "unauthorized", http.StatusForbidden, nil
-				}
+			if err := result.Error; err != nil {
 				return false, "internal server error", http.StatusInternalServerError, err
+			}
+
+			if result.RowsAffected == 0 {
+				return false, "unauthorized", http.StatusForbidden, nil
 			}
 		}
 
-		if shareToken.MediaID != nil && media.MediaID != *shareToken.MediaID {
+		if shareToken.MediaID != nil && media.ID != *shareToken.MediaID {
 			return false, "unauthorized", http.StatusForbidden, nil
 		}
 	}

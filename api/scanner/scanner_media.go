@@ -98,7 +98,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId uint, cache *AlbumScannerC
 		Path:        mediaPath,
 		SideCarPath: sideCarPath,
 		SideCarHash: sideCarHash,
-		AlbumId:     albumId,
+		AlbumID:     albumId,
 		Type:        mediaTypeText,
 		DateShot:    stat.ModTime(),
 	}

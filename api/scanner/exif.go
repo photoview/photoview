@@ -20,10 +20,10 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 
 	{
 		// Check if EXIF data already exists
-		if media.ExifId != nil {
+		if media.ExifID != nil {
 
 			var exif models.MediaEXIF
-			if err := tx.First(&exif, media.ExifId).Error; err != nil {
+			if err := tx.First(&exif, media.ExifID).Error; err != nil {
 				return nil, errors.Wrap(err, "get EXIF for media from database")
 			}
 
