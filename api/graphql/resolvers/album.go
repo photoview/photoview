@@ -23,7 +23,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	}
 
 	if showEmpty == nil || *showEmpty == false {
-		subQuery := r.Database.Model(&models.Media{}).Where("album_id = album.album_id")
+		subQuery := r.Database.Model(&models.Media{}).Where("album_id = albums.id")
 
 		if onlyWithFavorites != nil && *onlyWithFavorites == true {
 			subQuery = subQuery.Where("favorite = 1")
@@ -35,7 +35,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	// TODO: Incorporate models.FormatSQL
 
 	var albums []*models.Album
-	if err := query.Find(albums).Error; err != nil {
+	if err := query.Find(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -118,7 +118,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
 
 	var albums []*models.Album
-	if err := r.Database.Where("parent_album = ?", parent.ID).Find(albums).Error; err != nil {
+	if err := r.Database.Where("parent_album = ?", parent.ID).Find(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -138,7 +138,7 @@ func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.U
 func (r *albumResolver) Shares(ctx context.Context, album *models.Album) ([]*models.ShareToken, error) {
 
 	var shareTokens []*models.ShareToken
-	if err := r.Database.Where("album_id = ?", album.ID).Find(shareTokens).Error; err != nil {
+	if err := r.Database.Where("album_id = ?", album.ID).Find(&shareTokens).Error; err != nil {
 		return nil, err
 	}
 

@@ -105,7 +105,7 @@ func (r *Resolver) Media() api.MediaResolver {
 
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken
-	if err := r.Database.Where("media_id = ?", media.ID).Find(shareTokens).Error; err != nil {
+	if err := r.Database.Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
 		return nil, errors.Wrapf(err, "get shares for media (%s)", media.Path)
 	}
 

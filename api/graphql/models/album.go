@@ -9,12 +9,12 @@ import (
 
 type Album struct {
 	Model
-	Title         string
+	Title         string `gorm:"not null"`
 	ParentAlbumID *int
 	ParentAlbum   *Album
-	OwnerID       int
+	OwnerID       int `gorm:"not null"`
 	Owner         User
-	Path          string
+	Path          string `gorm:"not null"`
 	PathHash      string `gorm:"unique"`
 }
 

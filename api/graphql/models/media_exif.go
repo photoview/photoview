@@ -21,6 +21,10 @@ type MediaEXIF struct {
 	GPSLonitude     *float64
 }
 
+func (MediaEXIF) TableName() string {
+	return "media_exif"
+}
+
 func (exif *MediaEXIF) Media() *Media {
 	panic("not implemented")
 }

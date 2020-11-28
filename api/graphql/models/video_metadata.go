@@ -2,9 +2,9 @@ package models
 
 type VideoMetadata struct {
 	Model
-	Width        int
-	Height       int
-	Duration     float64
+	Width        int     `gorm:"not null"`
+	Height       int     `gorm:"not null"`
+	Duration     float64 `gorm:"not null"`
 	Codec        *string
 	Framerate    *float64
 	Bitrate      *string

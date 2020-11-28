@@ -6,10 +6,13 @@ import (
 )
 
 type SiteInfo struct {
-	Model
-	InitialSetup         bool
-	PeriodicScanInterval int
-	ConcurrentWorkers    int
+	InitialSetup         bool `gorm:"not null"`
+	PeriodicScanInterval int  `gorm:"not null"`
+	ConcurrentWorkers    int  `gorm:"not null"`
+}
+
+func (SiteInfo) TableName() string {
+	return "site_info"
 }
 
 // GetSiteInfo gets the site info row from the database, and creates it if it does not exist

@@ -26,10 +26,10 @@ type User struct {
 
 type AccessToken struct {
 	Model
-	UserID int
-	User   User   `gorm:"constraint:OnDelete:CASCADE;"`
-	Value  string `gorm:"size:24`
-	Expire time.Time
+	UserID int       `gorm:"not null"`
+	User   User      `gorm:"constraint:OnDelete:CASCADE;"`
+	Value  string    `gorm:"not null, size:24`
+	Expire time.Time `gorm:"not null"`
 }
 
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")
@@ -163,12 +163,10 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 
 func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
 
-	now := time.Now().UTC().Format("2006-01-02 15:04:05")
-
 	// row := database.QueryRow("SELECT (user_id) FROM access_token WHERE expire > ? AND value = ?", now, token)
 
 	var accessToken AccessToken
-	result := db.Where("expire > ? AND value = ?", now, token).First(&accessToken)
+	result := db.Where("expire > ? AND value = ?", time.Now(), token).First(&accessToken)
 	if result.Error != nil {
 		return nil, result.Error
 	}

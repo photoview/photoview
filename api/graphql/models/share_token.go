@@ -6,13 +6,13 @@ import (
 
 type ShareToken struct {
 	Model
-	Value    string
-	OwnerID  int
+	Value    string `gorm:"not null"`
+	OwnerID  int    `gorm:"not null"`
 	Owner    User
 	Expire   *time.Time
 	Password *string
 	AlbumID  *int
-	Album    Album
+	Album    *Album
 	MediaID  *int
 	Media    *Media
 }

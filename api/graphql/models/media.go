@@ -10,18 +10,18 @@ import (
 
 type Media struct {
 	Model
-	Title           string
-	Path            string
-	PathHash        string
-	AlbumID         int
+	Title           string `gorm:"not null"`
+	Path            string `gorm:"not null"`
+	PathHash        string `gorm:"not null"`
+	AlbumID         int    `gorm:"not null"`
 	Album           Album
 	ExifID          *int
 	Exif            *MediaEXIF
 	MediaURL        []MediaURL
-	DateShot        time.Time
-	DateImported    time.Time
-	Favorite        bool
-	Type            MediaType
+	DateShot        time.Time `gorm:"not null"`
+	DateImported    time.Time `gorm:"not null"`
+	Favorite        bool      `gorm:"not null, default:false"`
+	Type            MediaType `gorm:"not null"`
 	VideoMetadataID *int
 	VideoMetadata   *VideoMetadata
 	SideCarPath     *string
@@ -44,14 +44,14 @@ const (
 
 type MediaURL struct {
 	Model
-	MediaID     int
+	MediaID     int `gorm:"not null"`
 	Media       Media
-	MediaName   string
-	Width       int
-	Height      int
-	Purpose     MediaPurpose
-	ContentType string
-	FileSize    int64
+	MediaName   string       `gorm:"not null"`
+	Width       int          `gorm:"not null"`
+	Height      int          `gorm:"not null"`
+	Purpose     MediaPurpose `gorm:"not null"`
+	ContentType string       `gorm:"not null"`
+	FileSize    int64        `gorm:"not null"`
 }
 
 func (p *MediaURL) URL() string {
