@@ -17,7 +17,7 @@ type Media struct {
 	AlbumID         uint
 	Album           Album
 	ExifID          *uint
-	Exif            MediaEXIF
+	Exif            *MediaEXIF
 	MediaURL        []MediaURL
 	DateShot        time.Time
 	DateImported    time.Time
@@ -27,6 +27,10 @@ type Media struct {
 	VideoMetadata   *VideoMetadata
 	SideCarPath     *string
 	SideCarHash     *string
+}
+
+func (Media) TableName() string {
+	return "media"
 }
 
 type MediaPurpose string

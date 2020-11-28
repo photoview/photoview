@@ -2985,9 +2985,9 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(models.MediaEXIF)
+	res := resTmp.(*models.MediaEXIF)
 	fc.Result = res
-	return ec.marshalOMediaEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
+	return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -9753,8 +9753,11 @@ func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Media(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMediaEXIF2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v models.MediaEXIF) graphql.Marshaler {
-	return ec._MediaEXIF(ctx, sel, &v)
+func (ec *executionContext) marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MediaEXIF(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
