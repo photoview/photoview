@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type MediaEXIF struct {
-	gorm.Model
+	Model
 	Camera          *string
 	Maker           *string
 	Lens            *string
@@ -21,4 +19,8 @@ type MediaEXIF struct {
 	ExposureProgram *int
 	GPSLatitude     *float64
 	GPSLonitude     *float64
+}
+
+func (exif *MediaEXIF) Media() *Media {
+	panic("not implemented")
 }

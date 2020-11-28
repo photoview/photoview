@@ -13,7 +13,7 @@ import (
 )
 
 type User struct {
-	gorm.Model
+	Model
 	Username string  `gorm:"unique,size:128"`
 	Password *string `gorm:"size:256`
 	RootPath string  `gorm:"size:512`
@@ -25,8 +25,8 @@ type User struct {
 // }
 
 type AccessToken struct {
-	gorm.Model
-	UserID uint
+	Model
+	UserID int
 	User   User   `gorm:"constraint:OnDelete:CASCADE;"`
 	Value  string `gorm:"size:24`
 	Expire time.Time

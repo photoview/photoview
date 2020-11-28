@@ -6,7 +6,7 @@ import (
 )
 
 type SiteInfo struct {
-	gorm.Model
+	Model
 	InitialSetup         bool
 	PeriodicScanInterval int
 	ConcurrentWorkers    int

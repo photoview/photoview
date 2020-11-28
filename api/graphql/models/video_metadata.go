@@ -1,11 +1,7 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type VideoMetadata struct {
-	gorm.Model
+	Model
 	Width        int
 	Height       int
 	Duration     float64
@@ -14,4 +10,8 @@ type VideoMetadata struct {
 	Bitrate      *string
 	ColorProfile *string
 	Audio        *string
+}
+
+func (metadata *VideoMetadata) Media() *Media {
+	panic("not implemented")
 }

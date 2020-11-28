@@ -22,7 +22,7 @@ import (
 )
 
 // Higher order function used to check if MediaURL for a given MediaPurpose exists
-func makePhotoURLChecker(tx *gorm.DB, mediaID uint) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
+func makePhotoURLChecker(tx *gorm.DB, mediaID int) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
 	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
 		var mediaURL models.MediaURL
 

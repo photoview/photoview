@@ -6,24 +6,23 @@ import (
 	"time"
 
 	"github.com/viktorstrate/photoview/api/utils"
-	"gorm.io/gorm"
 )
 
 type Media struct {
-	gorm.Model
+	Model
 	Title           string
 	Path            string
 	PathHash        string
-	AlbumID         uint
+	AlbumID         int
 	Album           Album
-	ExifID          *uint
+	ExifID          *int
 	Exif            *MediaEXIF
 	MediaURL        []MediaURL
 	DateShot        time.Time
 	DateImported    time.Time
 	Favorite        bool
 	Type            MediaType
-	VideoMetadataID *uint
+	VideoMetadataID *int
 	VideoMetadata   *VideoMetadata
 	SideCarPath     *string
 	SideCarHash     *string
@@ -44,8 +43,8 @@ const (
 )
 
 type MediaURL struct {
-	gorm.Model
-	MediaID     uint
+	Model
+	MediaID     int
 	Media       Media
 	MediaName   string
 	Width       int

@@ -2,20 +2,18 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type ShareToken struct {
-	gorm.Model
+	Model
 	Value    string
-	OwnerID  uint
+	OwnerID  int
 	Owner    User
 	Expire   *time.Time
 	Password *string
-	AlbumID  *uint
+	AlbumID  *int
 	Album    Album
-	MediaID  *uint
+	MediaID  *int
 	Media    *Media
 }
 

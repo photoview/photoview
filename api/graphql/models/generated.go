@@ -51,15 +51,6 @@ type SearchResult struct {
 	Media  []*Media `json:"media"`
 }
 
-// General information about the site
-type SiteInfo struct {
-	InitialSetup bool `json:"initialSetup"`
-	// How often automatic scans should be initiated in seconds
-	PeriodicScanInterval int `json:"periodicScanInterval"`
-	// How many max concurrent scanner jobs that should run at once
-	ConcurrentWorkers int `json:"concurrentWorkers"`
-}
-
 type MediaType string
 
 const (

@@ -40,13 +40,10 @@ type Config struct {
 type ResolverRoot interface {
 	Album() AlbumResolver
 	Media() MediaResolver
-	MediaEXIF() MediaEXIFResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	ShareToken() ShareTokenResolver
 	Subscription() SubscriptionResolver
-	User() UserResolver
-	VideoMetadata() VideoMetadataResolver
 }
 
 type DirectiveRoot struct {
@@ -216,8 +213,6 @@ type ComplexityRoot struct {
 }
 
 type AlbumResolver interface {
-	ID(ctx context.Context, obj *models.Album) (int, error)
-
 	Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error)
 	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
 
@@ -226,18 +221,12 @@ type AlbumResolver interface {
 	Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error)
 }
 type MediaResolver interface {
-	ID(ctx context.Context, obj *models.Media) (int, error)
-
 	Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
-}
-type MediaEXIFResolver interface {
-	ID(ctx context.Context, obj *models.MediaEXIF) (int, error)
-	Media(ctx context.Context, obj *models.MediaEXIF) (*models.Media, error)
 }
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
@@ -272,21 +261,10 @@ type QueryResolver interface {
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 }
 type ShareTokenResolver interface {
-	ID(ctx context.Context, obj *models.ShareToken) (int, error)
-
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
-}
-type UserResolver interface {
-	ID(ctx context.Context, obj *models.User) (int, error)
-}
-type VideoMetadataResolver interface {
-	ID(ctx context.Context, obj *models.VideoMetadata) (int, error)
-	Media(ctx context.Context, obj *models.VideoMetadata) (*models.Media, error)
-
-	Bitrate(ctx context.Context, obj *models.VideoMetadata) (*int, error)
 }
 
 type executableSchema struct {
@@ -1330,15 +1308,15 @@ type Query {
     onlyWithFavorites: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
-  album(id: Int!): Album!
+  album(id: ID!): Album!
 
   "List of media owned by the logged in user"
   myMedia(filter: Filter): [Media!]!
   "Get media by id, user must own the media or be admin"
-  media(id: Int!): Media!
+  media(id: ID!): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
-  mediaList(ids: [Int!]!): [Media!]!
+  mediaList(ids: [ID!]!): [Media!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
@@ -1371,22 +1349,22 @@ type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
   "Scan a single user for new media"
-  scanUser(userId: Int!): ScannerResult!
+  scanUser(userId: ID!): ScannerResult!
 
   "Generate share token for album"
-  shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
+  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken
   "Generate share token for media"
-  shareMedia(mediaId: Int!, expire: Time, password: String): ShareToken
+  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
   "Mark or unmark a media as being a favorite"
-  favoriteMedia(mediaId: Int!, favorite: Boolean!): Media
+  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media
 
   updateUser(
-    id: Int!
+    id: ID!
     username: String
     rootPath: String
     password: String
@@ -1398,7 +1376,7 @@ type Mutation {
     password: String
     admin: Boolean!
   ): User @isAdmin
-  deleteUser(id: Int!): User @isAdmin
+  deleteUser(id: ID!): User @isAdmin
 
   """
   Set how often, in seconds, the server should automatically scan for new media,
@@ -1448,7 +1426,7 @@ type ScannerResult {
 
 "A token used to publicly access an album or media"
 type ShareToken {
-  id: Int!
+  id: ID!
   token: String!
   "The user who created the token"
   owner: User!
@@ -1473,7 +1451,7 @@ type SiteInfo {
 }
 
 type User {
-  id: Int!
+  id: ID!
   username: String!
   #albums: [Album]
   "Local filepath for the user's photos"
@@ -1483,7 +1461,7 @@ type User {
 }
 
 type Album {
-  id: Int!
+  id: ID!
   title: String!
   "The media inside this album"
   media(
@@ -1528,7 +1506,7 @@ enum MediaType {
 }
 
 type Media {
-  id: Int!
+  id: ID!
   title: String!
   "Local filepath for the media"
   path: String!
@@ -1551,7 +1529,7 @@ type Media {
 
 "EXIF metadata from the camera"
 type MediaEXIF {
-  id: Int!
+  id: ID!
   media: Media!
   "The model name of the camera"
   camera: String
@@ -1575,14 +1553,14 @@ type MediaEXIF {
 }
 
 type VideoMetadata {
-  id: Int!
+  id: ID!
   media: Media!
   width: Int!
   height: Int!
   duration: Float!
   codec: String
   framerate: Float
-  bitrate: Int
+  bitrate: String
   colorProfile: String
   audio: String
 }
@@ -1726,7 +1704,7 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1741,7 +1719,7 @@ func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Contex
 	var arg0 int
 	if tmp, ok := rawArgs["mediaId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mediaId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1855,7 +1833,7 @@ func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, ra
 	var arg0 int
 	if tmp, ok := rawArgs["userId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1900,7 +1878,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 	var arg0 int
 	if tmp, ok := rawArgs["albumId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("albumId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1933,7 +1911,7 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 	var arg0 int
 	if tmp, ok := rawArgs["mediaId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mediaId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1966,7 +1944,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2032,7 +2010,7 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2047,7 +2025,7 @@ func (ec *executionContext) field_Query_mediaList_args(ctx context.Context, rawA
 	var arg0 []int
 	if tmp, ok := rawArgs["ids"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
-		arg0, err = ec.unmarshalNInt2ᚕintᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalNID2ᚕintᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2062,7 +2040,7 @@ func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs 
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2273,14 +2251,14 @@ func (ec *executionContext) _Album_id(ctx context.Context, field graphql.Collect
 		Object:     "Album",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2294,7 +2272,7 @@ func (ec *executionContext) _Album_id(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_title(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2730,14 +2708,14 @@ func (ec *executionContext) _Media_id(ctx context.Context, field graphql.Collect
 		Object:     "Media",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Media().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2751,7 +2729,7 @@ func (ec *executionContext) _Media_id(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_title(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3243,14 +3221,14 @@ func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.Col
 		Object:     "MediaEXIF",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.MediaEXIF().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3264,7 +3242,7 @@ func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -3279,13 +3257,13 @@ func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.
 		Field:      field,
 		Args:       nil,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.MediaEXIF().Media(rctx, obj)
+		return obj.Media(), nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5568,14 +5546,14 @@ func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.Co
 		Object:     "ShareToken",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ShareToken().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5589,7 +5567,7 @@ func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_token(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -5994,14 +5972,14 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		Object:     "User",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6015,7 +5993,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -6154,14 +6132,14 @@ func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql
 		Object:     "VideoMetadata",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.VideoMetadata().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6175,7 +6153,7 @@ func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -6190,13 +6168,13 @@ func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field grap
 		Field:      field,
 		Args:       nil,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.VideoMetadata().Media(rctx, obj)
+		return obj.Media(), nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6393,14 +6371,14 @@ func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field gr
 		Object:     "VideoMetadata",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.VideoMetadata().Bitrate(rctx, obj)
+		return obj.Bitrate, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6409,9 +6387,9 @@ func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VideoMetadata_colorProfile(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -7629,19 +7607,10 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Album")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Album_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Album_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "title":
 			out.Values[i] = ec._Album_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7780,19 +7749,10 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Media")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Media_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Media_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "title":
 			out.Values[i] = ec._Media_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7941,33 +7901,15 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MediaEXIF")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._MediaEXIF_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._MediaEXIF_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "media":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._MediaEXIF_media(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._MediaEXIF_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "camera":
 			out.Values[i] = ec._MediaEXIF_camera(ctx, field, obj)
 		case "maker":
@@ -8465,19 +8407,10 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ShareToken")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ShareToken_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ShareToken_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "token":
 			out.Values[i] = ec._ShareToken_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8588,33 +8521,24 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("User")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._User_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "username":
 			out.Values[i] = ec._User_username(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "rootPath":
 			out.Values[i] = ec._User_rootPath(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "admin":
 			out.Values[i] = ec._User_admin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8639,63 +8563,36 @@ func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.Selectio
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("VideoMetadata")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._VideoMetadata_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._VideoMetadata_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "media":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._VideoMetadata_media(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._VideoMetadata_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "width":
 			out.Values[i] = ec._VideoMetadata_width(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "height":
 			out.Values[i] = ec._VideoMetadata_height(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "duration":
 			out.Values[i] = ec._VideoMetadata_duration(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "codec":
 			out.Values[i] = ec._VideoMetadata_codec(ctx, field, obj)
 		case "framerate":
 			out.Values[i] = ec._VideoMetadata_framerate(ctx, field, obj)
 		case "bitrate":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._VideoMetadata_bitrate(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._VideoMetadata_bitrate(ctx, field, obj)
 		case "colorProfile":
 			out.Values[i] = ec._VideoMetadata_colorProfile(ctx, field, obj)
 		case "audio":
@@ -9072,6 +8969,51 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalIntID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalIntID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNID2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]int, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2int(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2int(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9100,36 +9042,6 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNInt2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]int, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt2int(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNInt2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNInt2int(ctx, sel, v[i])
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {

@@ -28,7 +28,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 	type scanInfo struct {
 		path     string
-		parentID *uint
+		parentID *int
 	}
 
 	scanQueue := list.New()

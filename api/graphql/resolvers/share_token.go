@@ -111,7 +111,7 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenVal
 	return true, nil
 }
 
-func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID uint, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -152,7 +152,7 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID uint, expire 
 	return &shareToken, nil
 }
 
-func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID uint, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

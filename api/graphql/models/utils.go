@@ -6,6 +6,8 @@ import (
 )
 
 func (filter *Filter) FormatSQL(context string) (string, error) {
+	// TODO: Migrate method to gorm
+
 	if filter == nil {
 		return "", nil
 	}

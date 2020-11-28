@@ -8,11 +8,11 @@ import (
 )
 
 type Album struct {
-	gorm.Model
+	Model
 	Title         string
-	ParentAlbumID *uint
+	ParentAlbumID *int
 	ParentAlbum   *Album
-	OwnerID       uint
+	OwnerID       int
 	Owner         User
 	Path          string
 	PathHash      string `gorm:"unique"`

@@ -36,3 +36,5 @@ models:
     model: github.com/viktorstrate/photoview/api/graphql/models.Album
   ShareToken:
     model: github.com/viktorstrate/photoview/api/graphql/models.ShareToken
+  SiteInfo:
+    model: github.com/viktorstrate/photoview/api/graphql/models.SiteInfo
