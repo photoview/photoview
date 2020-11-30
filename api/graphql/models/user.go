@@ -185,7 +185,7 @@ func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
 	// }
 
 	var user User
-	result = db.First(&user, accessToken.ID)
+	result = db.First(&user, accessToken.UserID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

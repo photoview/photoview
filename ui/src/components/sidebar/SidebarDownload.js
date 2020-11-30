@@ -7,7 +7,7 @@ import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../authentication'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
-  query sidebarDownloadQuery($mediaId: Int!) {
+  query sidebarDownloadQuery($mediaId: ID!) {
     media(id: $mediaId) {
       id
       downloads {

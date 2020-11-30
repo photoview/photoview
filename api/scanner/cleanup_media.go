@@ -33,9 +33,10 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 
 	deleteErrors := make([]error, 0)
 
+	mediaIDs := make([]int, 0)
 	for _, media := range mediaList {
 
-		// deletedMediaIDs = append(deletedMediaIDs, media.ID)
+		mediaIDs = append(mediaIDs, media.ID)
 		cachePath := path.Join(PhotoCache(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
@@ -44,7 +45,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 
 	}
 
-	if err := db.Delete(&mediaList).Error; err != nil {
+	if err := db.Where("id IN ?", mediaIDs).Delete(models.Media{}).Error; err != nil {
 		deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
 	}
 
@@ -69,23 +70,23 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	var albums []models.Album
 
 	albums_questions := strings.Repeat("MD5(?),", len(albumPaths))[:len(albumPaths)*7-1]
-	if err := db.Where("album.owner_id = ? AND path_hash NOT IN ("+albums_questions+")", album_args...).Find(&albums).Error; err != nil {
+	if err := db.Where("owner_id = ? AND path_hash NOT IN ("+albums_questions+")", album_args...).Find(&albums).Error; err != nil {
 		return []error{errors.Wrap(err, "get albums to be deleted from database")}
 	}
 
 	deleteErrors := make([]error, 0)
 
-	deleted_album_ids := make([]interface{}, 0)
+	albumIDs := make([]int, 0)
 	for _, album := range albums {
-		deleted_album_ids = append(deleted_album_ids, album.ID)
-		cache_path := path.Join("./photo_cache", strconv.Itoa(int(album.ID)))
-		err := os.RemoveAll(cache_path)
+		albumIDs = append(albumIDs, album.ID)
+		cachePath := path.Join("./photo_cache", strconv.Itoa(int(album.ID)))
+		err := os.RemoveAll(cachePath)
 		if err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cache_path))
+			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}
 	}
 
-	if err := db.Delete(&albums).Error; err != nil {
+	if err := db.Where("id IN ?", albumIDs).Delete(models.Album{}).Error; err != nil {
 		ScannerError("Could not delete old albums from database:\n%s\n", err)
 		deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old albums from database"))
 	}

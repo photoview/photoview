@@ -37,7 +37,7 @@ const SettingsIcon = props => {
 }
 
 const ALBUM_PATH_QUERY = gql`
-  query albumPathQuery($id: Int!) {
+  query albumPathQuery($id: ID!) {
     album(id: $id) {
       id
       path {

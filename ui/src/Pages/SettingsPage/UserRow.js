@@ -13,7 +13,7 @@ import {
 
 const updateUserMutation = gql`
   mutation updateUser(
-    $id: Int!
+    $id: ID!
     $username: String
     $rootPath: String
     $admin: Boolean
@@ -33,7 +33,7 @@ const updateUserMutation = gql`
 `
 
 const deleteUserMutation = gql`
-  mutation deleteUser($id: Int!) {
+  mutation deleteUser($id: ID!) {
     deleteUser(id: $id) {
       id
       username
@@ -42,7 +42,7 @@ const deleteUserMutation = gql`
 `
 
 const changeUserPasswordMutation = gql`
-  mutation changeUserPassword($userId: Int!, $password: String!) {
+  mutation changeUserPassword($userId: ID!, $password: String!) {
     updateUser(id: $userId, password: $password) {
       id
     }
@@ -50,7 +50,7 @@ const changeUserPasswordMutation = gql`
 `
 
 const scanUserMutation = gql`
-  mutation scanUser($userId: Int!) {
+  mutation scanUser($userId: ID!) {
     scanUser(userId: $userId) {
       success
     }

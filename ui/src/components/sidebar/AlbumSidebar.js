@@ -4,7 +4,7 @@ import { useQuery, gql } from '@apollo/client'
 import SidebarShare from './Sharing'
 
 const albumQuery = gql`
-  query getAlbumSidebar($id: Int!) {
+  query getAlbumSidebar($id: ID!) {
     album(id: $id) {
       id
       title

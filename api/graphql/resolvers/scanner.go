@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"github.com/viktorstrate/photoview/api/scanner"
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
@@ -66,7 +67,7 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, errors.New("concurrent workers must at least be 1")
 	}
 
-	if err := r.Database.Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
+	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
 		return 0, err
 	}
 

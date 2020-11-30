@@ -8,7 +8,7 @@ import Layout from '../../Layout'
 
 const albumQuery = gql`
   query albumQuery(
-    $id: Int!
+    $id: ID!
     $onlyFavorites: Boolean
     $mediaOrderBy: String
     $mediaOrderDirection: OrderDirection
