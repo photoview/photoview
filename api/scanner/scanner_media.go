@@ -52,14 +52,17 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCa
 
 	// Check if media already exists
 	{
-		var media models.Media
-		if err := tx.Where("path_hash = MD5(?)", mediaPath).First(&media).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-			if err == nil {
-				log.Printf("Media already scanned: %s\n", mediaPath)
-				return &media, false, nil
-			} else {
-				return nil, false, errors.Wrap(err, "scan media fetch from database")
-			}
+		var media []*models.Media
+
+		result := tx.Where("path_hash = MD5(?)", mediaPath).Find(&media)
+
+		if result.Error != nil {
+			return nil, false, errors.Wrap(result.Error, "scan media fetch from database")
+		}
+
+		if result.RowsAffected > 0 {
+			log.Printf("Media already scanned: %s\n", mediaPath)
+			return media[0], false, nil
 		}
 	}
 

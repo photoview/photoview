@@ -22,19 +22,22 @@ import (
 )
 
 // Higher order function used to check if MediaURL for a given MediaPurpose exists
-func makePhotoURLChecker(tx *gorm.DB, mediaID int) (func(purpose models.MediaPurpose) (*models.MediaURL, error), error) {
+func makePhotoURLChecker(tx *gorm.DB, mediaID int) func(purpose models.MediaPurpose) (*models.MediaURL, error) {
 	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
-		var mediaURL models.MediaURL
+		var mediaURL []*models.MediaURL
 
-		if err := tx.Where("purpose = ?", purpose).First(&mediaURL, mediaID).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, nil
-			}
-			return nil, err
+		result := tx.Where("purpose = ?", purpose).Find(&mediaURL, mediaID)
+
+		if result.Error != nil {
+			return nil, result.Error
 		}
 
-		return &mediaURL, nil
-	}, nil
+		if result.RowsAffected > 0 {
+			return mediaURL[0], nil
+		}
+
+		return nil, nil
+	}
 }
 
 func ProcessMedia(tx *gorm.DB, media *models.Media) (bool, error) {
@@ -68,25 +71,22 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 	didProcess := false
 
-	photoUrlFromDB, err := makePhotoURLChecker(tx, photo.ID)
-	if err != nil {
-		return false, err
-	}
+	photoURLFromDB := makePhotoURLChecker(tx, photo.ID)
 
 	// original photo url
-	origURL, err := photoUrlFromDB(models.MediaOriginal)
+	origURL, err := photoURLFromDB(models.MediaOriginal)
 	if err != nil {
 		return false, err
 	}
 
 	// Thumbnail
-	thumbURL, err := photoUrlFromDB(models.PhotoThumbnail)
+	thumbURL, err := photoURLFromDB(models.PhotoThumbnail)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing photo thumbnail")
 	}
 
 	// Highres
-	highResURL, err := photoUrlFromDB(models.PhotoHighRes)
+	highResURL, err := photoURLFromDB(models.PhotoHighRes)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing photo highres")
 	}

@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // SetupDatabase connects to the database using environment variables
@@ -32,39 +33,17 @@ func SetupDatabase() (*gorm.DB, error) {
 
 	log.Printf("Connecting to database: %s", address)
 
-	db, err := gorm.Open(mysql.Open(address.String()), &gorm.Config{})
+	config := gorm.Config{}
+
+	// Enable database debug logging
+	config.Logger = logger.Default.LogMode(logger.Info)
+
+	db, err := gorm.Open(mysql.Open(address.String()), &config)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not connect to database")
 	}
 
-	// var db *sql.DB
-
-	// db, err = sql.Open("mysql", address.String())
-	// if err != nil {
-	// 	return nil, errors.New("Could not connect to database, exiting")
-	// }
-
-	// tryCount := 0
-
-	// for {
-	// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// 	defer cancel()
-
-	// 	if err := db.PingContext(ctx); err != nil {
-	// 		if tryCount < 4 {
-	// 			tryCount++
-	// 			log.Printf("WARN: Could not ping database: %s, Will retry after 1 second", err)
-	// 			time.Sleep(time.Second)
-	// 			continue
-	// 		} else {
-	// 			return nil, errors.Wrap(err, "Could not ping database, exiting")
-	// 		}
-	// 	}
-
-	// 	break
-	// }
-
-	// db.SetMaxOpenConns(80)
+	// TODO: Add connection retries
 
 	return db, nil
 }

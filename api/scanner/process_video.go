@@ -22,17 +22,14 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 
 	log.Printf("Processing video: %s", video.Path)
 
-	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.ID)
-	if err != nil {
-		return false, err
-	}
+	mediaURLFromDB := makePhotoURLChecker(tx, video.ID)
 
-	videoWebURL, err := mediaUrlFromDB(models.VideoWeb)
+	videoWebURL, err := mediaURLFromDB(models.VideoWeb)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing video web-format")
 	}
 
-	videoThumbnailURL, err := mediaUrlFromDB(models.VideoThumbnail)
+	videoThumbnailURL, err := mediaURLFromDB(models.VideoThumbnail)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing video thumbnail")
 	}

@@ -1,11 +1,14 @@
 package models
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/viktorstrate/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
 type Media struct {
@@ -30,6 +33,20 @@ type Media struct {
 
 func (Media) TableName() string {
 	return "media"
+}
+
+func (m *Media) BeforeSave(tx *gorm.DB) error {
+	// Update hashes
+	hash := md5.Sum([]byte(m.Path))
+	m.PathHash = hex.EncodeToString(hash[:])
+
+	if m.SideCarPath != nil {
+		hash = md5.Sum([]byte(*m.SideCarPath))
+		encodedHash := hex.EncodeToString(hash[:])
+		m.SideCarHash = &encodedHash
+	}
+
+	return nil
 }
 
 type MediaPurpose string

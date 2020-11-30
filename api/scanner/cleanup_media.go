@@ -20,14 +20,14 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	// Will get from database
 	var mediaList []models.Media
 
-	db.Where("album_id = ?", albumId)
+	query := db.Where("album_id = ?", albumId)
 
 	// Select media from database that was not found on hard disk
 	if len(albumMedia) > 0 {
-		db.Not(albumMediaIds)
+		query.Where("NOT id IN ?", albumMediaIds)
 	}
 
-	if err := db.Find(&mediaList).Error; err != nil {
+	if err := query.Find(&mediaList).Error; err != nil {
 		return []error{errors.Wrap(err, "get media files to be deleted from database")}
 	}
 
@@ -45,8 +45,10 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 
 	}
 
-	if err := db.Where("id IN ?", mediaIDs).Delete(models.Media{}).Error; err != nil {
-		deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
+	if len(mediaIDs) > 0 {
+		if err := db.Where("id IN ?", mediaIDs).Delete(models.Media{}).Error; err != nil {
+			deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
+		}
 	}
 
 	return deleteErrors

@@ -40,7 +40,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 	for count, photo := range albumPhotos {
 		// tx, err := db.Begin()
 
-		transactionResult := db.Transaction(func(tx *gorm.DB) error {
+		transactionError := db.Transaction(func(tx *gorm.DB) error {
 			processing_was_needed, err := ProcessMedia(tx, photo)
 			if err != nil {
 				return errors.Wrapf(err, "failed to process photo (%s)", photo.Path)
@@ -61,8 +61,8 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 			return nil
 		})
 
-		if transactionResult.Error != nil {
-			ScannerError("Failed to begin database transaction: %s", transactionResult.Error)
+		if transactionError != nil {
+			ScannerError("Failed to begin database transaction: %s", transactionError)
 		}
 	}
 

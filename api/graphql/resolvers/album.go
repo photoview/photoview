@@ -67,7 +67,7 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 	query := r.Database.
 		Joins("Album").
 		Where("Album.id = ?", album.ID).
-		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{})).Select("media_id").Where("media_url.media_id = media.id")
+		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
 
 	if onlyFavorites != nil && *onlyFavorites == true {
 		query = query.Where("media.favorite = 1")
