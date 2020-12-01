@@ -52,7 +52,7 @@
     "lint-staged": "^10.5.1",
     "mapbox-gl": "^1.12.0",
     "parcel-plugin-sw-cache": "^0.3.1",
-    "prettier": "^2.1.2",
+    "prettier": "^2.2.1",
     "react-router-prop-types": "^1.0.5",
     "react-test-renderer": "^17.0.1"
   },
