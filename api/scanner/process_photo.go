@@ -109,6 +109,11 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 		if err != nil {
 			return false, err
 		}
+
+		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
+		if counterpartFile != nil {
+			photo.CounterpartPath = *counterpartFile
+		}
 	}
 
 	// Generate high res jpeg
@@ -172,11 +177,6 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
 		thumbnail_name = models.SanitizeMediaName(thumbnail_name)
 		thumbnail_name = thumbnail_name + ".jpg"
-
-		// thumbnailImage, err := imageData.ThumbnailImage(tx)
-		// if err != nil {
-		// 	return err
-		// }
 
 		err = generateSaveThumbnailJPEG(tx, photo.MediaID, thumbnail_name, photoCachePath, baseImagePath, -1)
 		if err != nil {

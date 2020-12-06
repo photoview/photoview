@@ -126,7 +126,8 @@ func (img *EncodeMediaData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 		return errors.New("could not convert photo as file format is not supported")
 	}
 
-	if contentType.isRaw() {
+	// Use darktable if there is no counterpart JPEG file to use instead
+	if contentType.isRaw() && img.media.CounterpartPath != "" {
 		if DarktableCli.IsInstalled() {
 			err := DarktableCli.EncodeJpeg(img.media.Path, outputPath, 70)
 			if err != nil {
@@ -170,21 +171,16 @@ func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 		return img._photoImage, nil
 	}
 
-	photoImg, err := DecodeImage(img.media.Path)
-	if err != nil {
-		return nil, utils.HandleError("image decoding", err)
+	var photoPath string
+	if img.media.CounterpartPath != "" {
+		photoPath = img.media.CounterpartPath
+	} else {
+		photoPath = img.media.Path
 	}
 
-	// Get orientation from exif data
-	row := tx.QueryRow("SELECT media_exif.orientation FROM media JOIN media_exif WHERE media.exif_id = media_exif.exif_id AND media.media_id = ?", img.media.MediaID)
-	var orientation *int
-	if err = row.Scan(&orientation); err != nil {
-		// If not found use default orientation (not rotate)
-		if err == sql.ErrNoRows {
-			orientation = nil
-		} else {
-			return nil, err
-		}
+	photoImg, err := DecodeImage(photoPath)
+	if err != nil {
+		return nil, utils.HandleError("image decoding", err)
 	}
 
 	img._photoImage = photoImg

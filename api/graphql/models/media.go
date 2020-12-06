@@ -23,6 +23,7 @@ type Media struct {
 	VideoMetadataId *int
 	SideCarPath     *string
 	SideCarHash     *string
+	CounterpartPath string
 }
 
 func (p *Media) ID() int {
