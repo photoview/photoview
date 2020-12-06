@@ -19,7 +19,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	query := r.Database.Where("owner_id = ?", user.ID)
 
 	if onlyRoot != nil && *onlyRoot == true {
-		query = query.Where("parent_album = ()", query.Model(&models.Album{})).Select("id").Where("parent_album IS NULL AND owner_id = ?", user.ID)
+		query = query.Where("parent_album_id = (?)", r.Database.Model(&models.Album{}).Select("id").Where("parent_album_id IS NULL AND owner_id = ?", user.ID))
 	}
 
 	if showEmpty == nil || *showEmpty == false {
@@ -118,7 +118,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
 
 	var albums []*models.Album
-	if err := r.Database.Where("parent_album = ?", parent.ID).Find(&albums).Error; err != nil {
+	if err := r.Database.Where("parent_album_id = ?", parent.ID).Find(&albums).Error; err != nil {
 		return nil, err
 	}
 
