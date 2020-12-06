@@ -20,7 +20,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		mediaName := mux.Vars(r)["name"]
 
 		var mediaURL models.MediaURL
-		result := db.Model(&models.MediaURL{}).Select("media_urls.*").Where("media_url.media_name = ?", mediaName).Joins("JOIN media ON media_urls.media_id = media.id").Scan(&mediaURL)
+		result := db.Model(&models.MediaURL{}).Joins("Media").Select("media_urls.*").Where("media_urls.media_name = ?", mediaName).Scan(&mediaURL)
 		if err := result.Error; err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
@@ -54,12 +54,12 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
 			err := db.Transaction(func(tx *gorm.DB) error {
 				if _, err = scanner.ProcessMedia(tx, media); err != nil {
-					log.Printf("ERROR: processing image not found in cache: %s\n", err)
+					log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
 					return err
 				}
 
 				if _, err = os.Stat(cachedPath); err != nil {
-					log.Printf("ERROR: after reprocessing image not found in cache: %s\n", err)
+					log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
 					return err
 				}
 

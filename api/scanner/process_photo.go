@@ -195,7 +195,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 	return didProcess, nil
 }
 
-func makeMediaCacheDir(photo *models.Media) (*string, error) {
+func makeMediaCacheDir(media *models.Media) (*string, error) {
 
 	// Make root cache dir if not exists
 	if _, err := os.Stat(PhotoCache()); os.IsNotExist(err) {
@@ -205,7 +205,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	}
 
 	// Make album cache dir if not exists
-	albumCachePath := path.Join(PhotoCache(), strconv.Itoa(int(photo.ID)))
+	albumCachePath := path.Join(PhotoCache(), strconv.Itoa(int(media.AlbumID)))
 	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
 			return nil, errors.Wrap(err, "could not make album image cache directory")
@@ -213,7 +213,7 @@ func makeMediaCacheDir(photo *models.Media) (*string, error) {
 	}
 
 	// Make photo cache dir if not exists
-	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(photo.ID)))
+	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(media.ID)))
 	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
 		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
 			return nil, errors.Wrap(err, "could not make photo image cache directory")
