@@ -3,6 +3,8 @@ package scanner
 import (
 	"path"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 type AlbumScannerCache struct {
@@ -73,7 +75,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
 
 	mediaType, err := getMediaType(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "get media type (%s)", path)
 	}
 
 	if mediaType != nil {

@@ -26,7 +26,7 @@ func makePhotoURLChecker(tx *gorm.DB, mediaID int) func(purpose models.MediaPurp
 	return func(purpose models.MediaPurpose) (*models.MediaURL, error) {
 		var mediaURL []*models.MediaURL
 
-		result := tx.Where("purpose = ?", purpose).Find(&mediaURL, mediaID)
+		result := tx.Where("purpose = ?", purpose).Where("media_id = ?", mediaID).Find(&mediaURL)
 
 		if result.Error != nil {
 			return nil, result.Error

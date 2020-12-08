@@ -2,8 +2,6 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -85,34 +83,27 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 
 func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
 
-	log.Println("TODO: Album thumbnail migrated yet")
+	var media models.Media
 
-	return nil, nil
+	err := r.Database.Raw(`
+		WITH recursive sub_albums AS (
+			SELECT * FROM albums AS root WHERE id = ?
+			UNION ALL
+			SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
+		)
 
-	// row := r.Database.QueryRow(`
-	// 	WITH recursive sub_albums AS (
-	// 		SELECT * FROM album AS root WHERE album_id = ?
-	// 		UNION ALL
-	// 		SELECT child.* FROM album AS child JOIN sub_albums ON child.parent_album = sub_albums.album_id
-	// 	)
+		SELECT * FROM media WHERE media.album_id IN (
+			SELECT id FROM sub_albums
+		) AND media.id IN (
+			SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
+		) LIMIT 1
+	`, obj.ID).Scan(&media).Error
 
-	// 	SELECT * FROM media WHERE media.album_id IN (
-	// 		SELECT album_id FROM sub_albums
-	// 	) AND media.media_id IN (
-	// 		SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-	// 	) LIMIT 1
-	// `, obj.AlbumID)
+	if err != nil {
+		return nil, err
+	}
 
-	// media, err := models.NewMediaFromRow(row)
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		return nil, nil
-	// 	} else {
-	// 		return nil, err
-	// 	}
-	// }
-
-	// return media, nil
+	return &media, nil
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
@@ -147,26 +138,26 @@ func (r *albumResolver) Shares(ctx context.Context, album *models.Album) ([]*mod
 
 func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
 
-	fmt.Println("TODO: Album path not migrated yet")
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		empty := make([]*models.Album, 0)
+		return empty, nil
+	}
 
-	return make([]*models.Album, 0), nil
-	// user := auth.UserFromContext(ctx)
-	// if user == nil {
-	// 	empty := make([]*models.Album, 0)
-	// 	return empty, nil
-	// }
+	var album_path []*models.Album
 
-	// rows, err := r.Database.Query(`
-	// 	WITH recursive path_albums AS (
-	// 		SELECT * FROM album anchor WHERE anchor.album_id = ?
-	// 		UNION
-	// 		SELECT parent.* FROM path_albums child JOIN album parent ON parent.album_id = child.parent_album
-	// 	)
-	// 	SELECT * FROM path_albums WHERE album_id != ? AND owner_id = ?
-	// `, obj.AlbumID, obj.AlbumID, user.UserID)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err := r.Database.Raw(`
+		WITH recursive path_albums AS (
+			SELECT * FROM albums anchor WHERE anchor.id = ?
+			UNION
+			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
+		)
+		SELECT * FROM path_albums WHERE id != ? AND owner_id = ?
+	`, obj.ID, obj.ID, user.ID).Scan(&album_path).Error
 
-	// return models.NewAlbumsFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return album_path, nil
 }
