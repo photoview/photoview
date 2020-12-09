@@ -23,6 +23,9 @@ RUN npm run build -- --public-url $UI_PUBLIC_URL
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14-alpine AS api
 COPY --from=tonistiigi/xx:golang / /
 
+ARG TARGETPLATFORM
+RUN go env
+
 RUN mkdir -p /app
 WORKDIR /app
 
@@ -33,20 +36,15 @@ RUN go mod download
 # Copy api source
 COPY api /app
 
-ARG TARGETPLATFORM
-ARG TARGETOS
-ARG TARGETARCH
-
-RUN go env
 RUN go build -v -o photoview .
 
 # Copy api and ui to production environment
 FROM alpine:3.12
 
 # Install darktable for converting RAW images, and ffmpeg for encoding videos
-# Ignore errors if packages are not supported for the specified platform
-RUN apk --no-cache add darktable; exit 0
-RUN apk --no-cache add ffmpeg; exit 0
+# Ignore errors if packages are not supported for the specific platform
+# RUN apk --no-cache add darktable; exit 0
+# RUN apk --no-cache add ffmpeg; exit 0
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations
