@@ -23,11 +23,7 @@ RUN npm run build -- --public-url $UI_PUBLIC_URL
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14-alpine AS api
 COPY --from=tonistiigi/xx:golang / /
 
-ARG BUILDPLATFORM
 ARG TARGETPLATFORM
-
-RUN echo "Building API on ${BUILDPLATFORM} for ${TARGETPLATFORM}"
-
 RUN go env
 
 RUN mkdir -p /app
