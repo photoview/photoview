@@ -104,10 +104,20 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 })
 
+const memoryCache = new InMemoryCache({
+  typePolicies: {
+    // There only exists one global instance of SiteInfo,
+    // therefore it can always be merged
+    SiteInfo: {
+      merge: true,
+    },
+  },
+})
+
 const client = new ApolloClient({
   // link: ApolloLink.from([linkError, authLink.concat(link)]),
   link: ApolloLink.from([linkError, link]),
-  cache: new InMemoryCache(),
+  cache: memoryCache,
 })
 
 export default client
