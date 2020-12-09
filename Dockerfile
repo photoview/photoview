@@ -43,8 +43,8 @@ FROM alpine:3.12
 
 # Install darktable for converting RAW images, and ffmpeg for encoding videos
 # Ignore errors if packages are not supported for the specific platform
-# RUN apk --no-cache add darktable; exit 0
-# RUN apk --no-cache add ffmpeg; exit 0
+RUN ["/bin/sh", "-c", "apk --no-cache add darktable; exit 0"]
+RUN ["/bin/sh", "-c", "apk --no-cache add ffmpeg; exit 0"]
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/database/migrations /database/migrations
