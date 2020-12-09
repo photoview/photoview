@@ -15,7 +15,7 @@ import (
 	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
-func isFileExists(testPath string) bool {
+func fileExists(testPath string) bool {
 	_, err := os.Stat(testPath)
 
 	if os.IsNotExist(err) {
@@ -31,7 +31,7 @@ func isFileExists(testPath string) bool {
 func scanForSideCarFile(path string) *string {
 	testPath := path + ".xmp"
 
-	if isFileExists(testPath) {
+	if fileExists(testPath) {
 		return &testPath
 	}
 
@@ -49,18 +49,12 @@ func scanForRawCounterpartFile(imagePath string) *string {
 	}
 
 	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
-	for ext, mediaType := range fileExtensions {
-		for _, rawType := range RawMimeTypes {
-			if rawType == mediaType {
-				testPathLowercase := pathWithoutExt + ext
-				if isFileExists(testPathLowercase) {
-					return &testPathLowercase
-				}
 
-				testPathUppercase := pathWithoutExt + strings.ToUpper(ext)
-				if isFileExists(testPathUppercase) {
-					return &testPathUppercase
-				}
+	for _, rawType := range RawMimeTypes {
+		for _, ext := range rawType.FileExtensions() {
+			testPath := pathWithoutExt + ext
+			if fileExists(testPath) {
+				return &testPath
 			}
 		}
 	}
@@ -79,17 +73,10 @@ func scanForCompressedCounterpartFile(imagePath string) *string {
 	}
 
 	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
-	for ext, mediaType := range fileExtensions {
-		if TypeJpeg == mediaType {
-			testPathLowercase := pathWithoutExt + ext
-			if isFileExists(testPathLowercase) {
-				return &testPathLowercase
-			}
-
-			testPathUppercase := pathWithoutExt + strings.ToUpper(ext)
-			if isFileExists(testPathUppercase) {
-				return &testPathUppercase
-			}
+	for _, ext := range TypeJpeg.FileExtensions() {
+		testPath := pathWithoutExt + ext
+		if fileExists(testPath) {
+			return &testPath
 		}
 	}
 

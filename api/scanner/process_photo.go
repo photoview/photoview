@@ -112,7 +112,7 @@ func processPhoto(tx *sql.Tx, imageData *EncodeMediaData, photoCachePath *string
 
 		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
 		if counterpartFile != nil {
-			photo.CounterpartPath = *counterpartFile
+			photo.CounterpartPath = counterpartFile
 		}
 	}
 

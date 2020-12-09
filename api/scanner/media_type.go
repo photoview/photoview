@@ -304,3 +304,16 @@ func isPathMedia(mediaPath string, cache *AlbumScannerCache) bool {
 	log.Printf("File is not a supported media %s\n", mediaPath)
 	return false
 }
+
+func (mediaType MediaType) FileExtensions() []string {
+	var extensions []string
+
+	for ext, extType := range fileExtensions {
+		if extType == mediaType {
+			extensions = append(extensions, ext)
+			extensions = append(extensions, strings.ToUpper(ext))
+		}
+	}
+
+	return extensions
+}

@@ -127,7 +127,7 @@ func (img *EncodeMediaData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
 	}
 
 	// Use darktable if there is no counterpart JPEG file to use instead
-	if contentType.isRaw() && img.media.CounterpartPath != "" {
+	if contentType.isRaw() && img.media.CounterpartPath == nil {
 		if DarktableCli.IsInstalled() {
 			err := DarktableCli.EncodeJpeg(img.media.Path, outputPath, 70)
 			if err != nil {
@@ -172,8 +172,8 @@ func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
 	}
 
 	var photoPath string
-	if img.media.CounterpartPath != "" {
-		photoPath = img.media.CounterpartPath
+	if img.media.CounterpartPath != nil {
+		photoPath = *img.media.CounterpartPath
 	} else {
 		photoPath = img.media.Path
 	}
