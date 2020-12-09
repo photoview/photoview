@@ -53,6 +53,7 @@ jobs:
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
+            --progress=plain \
             --cache-from "type=local,src=/tmp/.buildx-cache" \
             --cache-to "type=local,dest=/tmp/.buildx-cache" \
             --build-arg VERSION=${VERSION} \
