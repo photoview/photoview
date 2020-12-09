@@ -19,16 +19,16 @@ require (
 	github.com/h2non/filetype v1.1.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/joho/godotenv v1.3.0
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.0.0-20201112155050-0c6587e931a9
+	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
-	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
+	golang.org/x/net v0.0.0-20201207224615-747e23833adb // indirect
+	golang.org/x/sys v0.0.0-20201207223542-d4d67f95c62d // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
