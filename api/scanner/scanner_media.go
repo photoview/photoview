@@ -19,10 +19,11 @@ func fileExists(testPath string) bool {
 	_, err := os.Stat(testPath)
 
 	if os.IsNotExist(err) {
+		log.Printf("DEBUG: The checked file %s is missing. %s", testPath, err)
 		return false
 	} else if err != nil {
 		// unexpected error logging
-		log.Printf("ERROR: %s", err)
+		log.Printf("Error: Checkfing for %s file existense returned an error %s", testPath, err)
 		return false
 	}
 	return true
