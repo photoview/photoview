@@ -98,6 +98,12 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB
 		photoPath := path.Join(album.Path, item.Name())
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
+			// Skip the JPEGs that are compressed version of raw files
+			counterpartFile := scanForRawCounterpartFile(photoPath)
+			if counterpartFile != nil {
+				continue
+			}
+
 			tx, err := db.Begin()
 			if err != nil {
 				ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)

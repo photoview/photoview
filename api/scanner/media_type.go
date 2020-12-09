@@ -209,12 +209,20 @@ func (imgType *MediaType) isVideo() bool {
 	return false
 }
 
-// isSupported determines if the given type can be processed
-func (imgType *MediaType) isSupported() bool {
-	for _, supported_mime := range SupportedMimetypes {
-		if supported_mime == *imgType {
+func (imgType *MediaType) isBasicTypeSupported() bool {
+	for _, img_mime := range SupportedMimetypes {
+		if img_mime == *imgType {
 			return true
 		}
+	}
+
+	return false
+}
+
+// isSupported determines if the given type can be processed
+func (imgType *MediaType) isSupported() bool {
+	if imgType.isBasicTypeSupported() {
+		return true
 	}
 
 	if DarktableCli.IsInstalled() && imgType.isRaw() {
@@ -295,4 +303,17 @@ func isPathMedia(mediaPath string, cache *AlbumScannerCache) bool {
 
 	log.Printf("File is not a supported media %s\n", mediaPath)
 	return false
+}
+
+func (mediaType MediaType) FileExtensions() []string {
+	var extensions []string
+
+	for ext, extType := range fileExtensions {
+		if extType == mediaType {
+			extensions = append(extensions, ext)
+			extensions = append(extensions, strings.ToUpper(ext))
+		}
+	}
+
+	return extensions
 }
