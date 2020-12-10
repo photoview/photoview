@@ -97,8 +97,13 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 		photoPath := path.Join(album.Path, item.Name())
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
+			// Skip the JPEGs that are compressed version of raw files
+			counterpartFile := scanForRawCounterpartFile(photoPath)
+			if counterpartFile != nil {
+				continue
+			}
 
-			db.Transaction(func(tx *gorm.DB) error {
+			err := db.Transaction(func(tx *gorm.DB) error {
 				photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.ID, cache)
 				if err != nil {
 					return errors.Wrapf(err, "Scanning media error (%s)", photoPath)
@@ -110,6 +115,11 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 
 				return nil
 			})
+
+			if err != nil {
+				ScannerError("Error scanning media for alum (%s): %s\n", album.ID, err)
+				continue
+			}
 
 		}
 	}

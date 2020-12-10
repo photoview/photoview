@@ -7,25 +7,80 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/viktorstrate/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 
-func scanForSideCarFile(path string) *string {
-	testPath := path + ".xmp"
+func fileExists(testPath string) bool {
 	_, err := os.Stat(testPath)
 
 	if os.IsNotExist(err) {
-		return nil
+		return false
 	} else if err != nil {
 		// unexpected error logging
-		log.Printf("ERROR: %s", err)
-		return nil
+		log.Printf("Error: checking for file existence (%s): %s", testPath, err)
+		return false
 	}
-	return &testPath
+	return true
+}
 
+func scanForSideCarFile(path string) *string {
+	testPath := path + ".xmp"
+
+	if fileExists(testPath) {
+		return &testPath
+	}
+
+	return nil
+}
+
+func scanForRawCounterpartFile(imagePath string) *string {
+	ext := filepath.Ext(imagePath)
+	fileExtType, found := fileExtensions[strings.ToLower(ext)]
+
+	if found {
+		if !fileExtType.isBasicTypeSupported() {
+			return nil
+		}
+	}
+
+	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
+
+	for _, rawType := range RawMimeTypes {
+		for _, ext := range rawType.FileExtensions() {
+			testPath := pathWithoutExt + ext
+			if fileExists(testPath) {
+				return &testPath
+			}
+		}
+	}
+
+	return nil
+}
+
+func scanForCompressedCounterpartFile(imagePath string) *string {
+	ext := filepath.Ext(imagePath)
+	fileExtType, found := fileExtensions[strings.ToLower(ext)]
+
+	if found {
+		if fileExtType.isBasicTypeSupported() {
+			return nil
+		}
+	}
+
+	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
+	for _, ext := range TypeJpeg.FileExtensions() {
+		testPath := pathWithoutExt + ext
+		if fileExists(testPath) {
+			return &testPath
+		}
+	}
+
+	return nil
 }
 
 func hashSideCarFile(path *string) *string {

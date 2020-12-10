@@ -126,7 +126,8 @@ func (img *EncodeMediaData) EncodeHighRes(tx *gorm.DB, outputPath string) error 
 		return errors.New("could not convert photo as file format is not supported")
 	}
 
-	if contentType.isRaw() {
+	// Use darktable if there is no counterpart JPEG file to use instead
+	if contentType.isRaw() && img.media.CounterpartPath == nil {
 		if DarktableCli.IsInstalled() {
 			err := DarktableCli.EncodeJpeg(img.media.Path, outputPath, 70)
 			if err != nil {
@@ -170,7 +171,14 @@ func (img *EncodeMediaData) photoImage(tx *gorm.DB) (image.Image, error) {
 		return img._photoImage, nil
 	}
 
-	photoImg, err := DecodeImage(img.media.Path)
+	var photoPath string
+	if img.media.CounterpartPath != nil {
+		photoPath = *img.media.CounterpartPath
+	} else {
+		photoPath = img.media.Path
+	}
+
+	photoImg, err := DecodeImage(photoPath)
 	if err != nil {
 		return nil, utils.HandleError("image decoding", err)
 	}

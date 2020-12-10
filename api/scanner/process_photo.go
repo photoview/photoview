@@ -104,6 +104,11 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		if err != nil {
 			return false, err
 		}
+
+		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
+		if counterpartFile != nil {
+			photo.CounterpartPath = counterpartFile
+		}
 	}
 
 	// Generate high res jpeg
@@ -167,11 +172,6 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
 		thumbnail_name = models.SanitizeMediaName(thumbnail_name)
 		thumbnail_name = thumbnail_name + ".jpg"
-
-		// thumbnailImage, err := imageData.ThumbnailImage(tx)
-		// if err != nil {
-		// 	return err
-		// }
 
 		err = generateSaveThumbnailJPEG(tx, photo, thumbnail_name, photoCachePath, baseImagePath, nil)
 		if err != nil {

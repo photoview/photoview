@@ -29,6 +29,9 @@ type Media struct {
 	VideoMetadata   *VideoMetadata
 	SideCarPath     *string
 	SideCarHash     *string
+
+	// Only used internally
+	CounterpartPath *string `gorm:-`
 }
 
 func (Media) TableName() string {
