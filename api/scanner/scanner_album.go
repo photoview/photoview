@@ -117,7 +117,7 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 			})
 
 			if err != nil {
-				ScannerError("Error scanning media for alum (%s): %s\n", album.ID, err)
+				ScannerError("Error scanning media for album (%d): %s\n", album.ID, err)
 				continue
 			}
 
