@@ -99,18 +99,6 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		return false, errors.Wrap(err, "could determine if media was photo or video")
 	}
 
-	if mediaType.isRaw() {
-		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
-		if err != nil {
-			return false, err
-		}
-
-		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
-		if counterpartFile != nil {
-			photo.CounterpartPath = counterpartFile
-		}
-	}
-
 	// Generate high res jpeg
 	if highResURL == nil {
 
@@ -128,10 +116,12 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 			baseImagePath = path.Join(*photoCachePath, highres_name)
 
-			err = generateSaveHighResJPEG(tx, photo, imageData, highres_name, baseImagePath, nil)
+			newHighResURL, err := generateSaveHighResJPEG(tx, photo, imageData, highres_name, baseImagePath, nil)
 			if err != nil {
 				return false, err
 			}
+
+			highResURL = newHighResURL
 		}
 	} else {
 		// Verify that highres photo still exists in cache
@@ -173,10 +163,12 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		thumbnail_name = models.SanitizeMediaName(thumbnail_name)
 		thumbnail_name = thumbnail_name + ".jpg"
 
-		err = generateSaveThumbnailJPEG(tx, photo, thumbnail_name, photoCachePath, baseImagePath, nil)
+		newThumbURL, err := generateSaveThumbnailJPEG(tx, photo, thumbnail_name, photoCachePath, baseImagePath, nil)
 		if err != nil {
 			return false, err
 		}
+
+		thumbURL = newThumbURL
 	} else {
 		// Verify that thumbnail photo still exists in cache
 		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
@@ -189,6 +181,18 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 			if err != nil {
 				return false, errors.Wrap(err, "could not create thumbnail cached image")
 			}
+		}
+	}
+
+	if mediaType.isRaw() {
+		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
+		if err != nil {
+			return false, err
+		}
+
+		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
+		if counterpartFile != nil {
+			photo.CounterpartPath = counterpartFile
 		}
 	}
 
@@ -258,21 +262,21 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 	return nil
 }
 
-func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) error {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error)  {
 
 	err := imageData.EncodeHighRes(tx, imagePath)
 	if err != nil {
-		return errors.Wrap(err, "creating high-res cached image")
+		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
 	photoDimensions, err := GetPhotoDimensions(imagePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fileStats, err := os.Stat(imagePath)
 	if err != nil {
-		return errors.Wrap(err, "reading file stats of highres photo")
+		return nil, errors.Wrap(err, "reading file stats of highres photo")
 	}
 
 	if mediaURL == nil {
@@ -288,7 +292,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *Encode
 		}
 
 		if err := tx.Create(&mediaURL).Error; err != nil {
-			return errors.Wrapf(err, "could not insert highres media url (%d, %s)", media.ID, highres_name)
+			return nil, errors.Wrapf(err, "could not insert highres media url (%d, %s)", media.ID, highres_name)
 		}
 	} else {
 		mediaURL.Width = photoDimensions.Width
@@ -296,24 +300,24 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *Encode
 		mediaURL.FileSize = fileStats.Size()
 
 		if err := tx.Save(&mediaURL).Error; err != nil {
-			return errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, highres_name)
+			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, highres_name)
 		}
 	}
 
-	return nil
+	return mediaURL, nil
 }
 
-func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name string, photoCachePath *string, baseImagePath string, mediaURL *models.MediaURL) error {
+func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name string, photoCachePath *string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
 
 	thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
 	if err != nil {
-		return errors.Wrap(err, "could not create thumbnail cached image")
+		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}
 
 	fileStats, err := os.Stat(thumbOutputPath)
 	if err != nil {
-		return errors.Wrap(err, "reading file stats of thumbnail photo")
+		return nil, errors.Wrap(err, "reading file stats of thumbnail photo")
 	}
 
 	if mediaURL == nil {
@@ -329,7 +333,7 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name 
 		}
 
 		if err := tx.Create(&mediaURL).Error; err != nil {
-			return errors.Wrapf(err, "could not insert thumbnail media url (%d, %s)", media.ID, thumbnail_name)
+			return nil, errors.Wrapf(err, "could not insert thumbnail media url (%d, %s)", media.ID, thumbnail_name)
 		}
 	} else {
 		mediaURL.Width = thumbSize.Width
@@ -337,11 +341,11 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name 
 		mediaURL.FileSize = fileStats.Size()
 
 		if err := tx.Save(&mediaURL).Error; err != nil {
-			return errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnail_name)
+			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnail_name)
 		}
 	}
 
-	return nil
+	return mediaURL, nil
 }
 
 func processRawSideCar(tx *gorm.DB, imageData *EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
@@ -366,7 +370,7 @@ func processRawSideCar(tx *gorm.DB, imageData *EncodeMediaData, highResURL *mode
 		baseImagePath := path.Join(*photoCachePath, highResURL.MediaName) // update base image path for thumbnail
 		tempHighResPath := baseImagePath + ".hold"
 		os.Rename(baseImagePath, tempHighResPath)
-		err := generateSaveHighResJPEG(tx, photo, imageData, highResURL.MediaName, baseImagePath, highResURL)
+		_, err := generateSaveHighResJPEG(tx, photo, imageData, highResURL.MediaName, baseImagePath, highResURL)
 		if err != nil {
 			os.Rename(tempHighResPath, baseImagePath)
 			return errors.Wrap(err, "recreating high-res cached image")
@@ -377,7 +381,7 @@ func processRawSideCar(tx *gorm.DB, imageData *EncodeMediaData, highResURL *mode
 		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
 		tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
 		os.Rename(thumbPath, tempThumbPath)
-		err = generateSaveThumbnailJPEG(tx, photo, thumbURL.MediaName, photoCachePath, baseImagePath, thumbURL)
+		_, err = generateSaveThumbnailJPEG(tx, photo, thumbURL.MediaName, photoCachePath, baseImagePath, thumbURL)
 		if err != nil {
 			os.Rename(tempThumbPath, thumbPath)
 			return errors.Wrap(err, "recreating thumbnail cached image")
