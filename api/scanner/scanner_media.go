@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 func fileExists(testPath string) bool {

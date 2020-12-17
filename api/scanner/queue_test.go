@@ -3,7 +3,7 @@ package scanner
 import (
 	"testing"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 func TestScannerQueue_AddJob(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	api "github.com/viktorstrate/photoview/api/graphql"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	api "github.com/photoview/photoview/api/graphql"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 //go:generate go run github.com/99designs/gqlgen

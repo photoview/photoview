@@ -1,4 +1,4 @@
-module github.com/viktorstrate/photoview/api
+module github.com/photoview/photoview/api
 
 go 1.13
 

@@ -10,9 +10,9 @@ import (
 	"path"
 
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/graphql/notification"
-	"github.com/viktorstrate/photoview/api/utils"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/utils"
 )
 
 func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {

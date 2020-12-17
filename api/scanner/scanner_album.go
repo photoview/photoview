@@ -7,9 +7,9 @@ import (
 	"path"
 	"time"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/graphql/notification"
-	"github.com/viktorstrate/photoview/api/utils"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/utils"
 )
 
 func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {

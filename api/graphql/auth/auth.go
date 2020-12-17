@@ -9,7 +9,7 @@ import (
 	"regexp"
 
 	"github.com/99designs/gqlgen/handler"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/utils"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/utils"
 )
 
 type geoJSONFeatureCollection struct {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )

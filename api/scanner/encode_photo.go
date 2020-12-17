@@ -8,8 +8,8 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/utils"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
