@@ -3,7 +3,7 @@ package scanner
 import (
 	"testing"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 func makeAlbumWithID(id int) *models.Album {

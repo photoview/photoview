@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/viktorstrate/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"gorm.io/gorm"
 )
 

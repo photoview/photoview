@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

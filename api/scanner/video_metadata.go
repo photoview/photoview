@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 

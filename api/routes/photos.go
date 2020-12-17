@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/scanner"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 )
 
 func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {

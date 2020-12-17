@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/viktorstrate/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/wsxiaoys/terminal/color"
 )
 

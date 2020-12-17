@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/graphql/notification"
-	"github.com/viktorstrate/photoview/api/utils"
 	"gorm.io/gorm"
 )
 

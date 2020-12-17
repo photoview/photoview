@@ -3,11 +3,11 @@ package resolvers
 import (
 	"context"
 
+	api "github.com/photoview/photoview/api/graphql"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/pkg/errors"
-	api "github.com/viktorstrate/photoview/api/graphql"
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/scanner"
 	"gorm.io/gorm"
 )
 

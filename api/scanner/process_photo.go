@@ -7,9 +7,9 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/utils"
 	"gorm.io/gorm"
 
 	// Image decoders
@@ -262,7 +262,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 	return nil
 }
 
-func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error)  {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
 	err := imageData.EncodeHighRes(tx, imagePath)
 	if err != nil {

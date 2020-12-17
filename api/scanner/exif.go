@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )

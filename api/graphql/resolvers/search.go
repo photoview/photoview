@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _limitAlbums *int) (*models.SearchResult, error) {

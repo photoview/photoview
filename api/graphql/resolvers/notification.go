@@ -3,9 +3,9 @@ package resolvers
 import (
 	"context"
 
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/notification"
 )
 
 func (r *subscriptionResolver) Notification(ctx context.Context) (<-chan *models.Notification, error) {

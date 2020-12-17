@@ -23,18 +23,18 @@ models:
   ID:
     model: github.com/99designs/gqlgen/graphql.IntID
   User:
-    model: github.com/viktorstrate/photoview/api/graphql/models.User
+    model: github.com/photoview/photoview/api/graphql/models.User
   Media:
-    model: github.com/viktorstrate/photoview/api/graphql/models.Media
+    model: github.com/photoview/photoview/api/graphql/models.Media
   MediaURL:
-    model: github.com/viktorstrate/photoview/api/graphql/models.MediaURL
+    model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:
-    model: github.com/viktorstrate/photoview/api/graphql/models.MediaEXIF
+    model: github.com/photoview/photoview/api/graphql/models.MediaEXIF
   VideoMetadata:
-    model: github.com/viktorstrate/photoview/api/graphql/models.VideoMetadata
+    model: github.com/photoview/photoview/api/graphql/models.VideoMetadata
   Album:
-    model: github.com/viktorstrate/photoview/api/graphql/models.Album
+    model: github.com/photoview/photoview/api/graphql/models.Album
   ShareToken:
-    model: github.com/viktorstrate/photoview/api/graphql/models.ShareToken
+    model: github.com/photoview/photoview/api/graphql/models.ShareToken
   SiteInfo:
-    model: github.com/viktorstrate/photoview/api/graphql/models.SiteInfo
+    model: github.com/photoview/photoview/api/graphql/models.SiteInfo

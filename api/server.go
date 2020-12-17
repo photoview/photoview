@@ -11,16 +11,16 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/viktorstrate/photoview/api/database"
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/routes"
-	"github.com/viktorstrate/photoview/api/scanner"
-	"github.com/viktorstrate/photoview/api/server"
-	"github.com/viktorstrate/photoview/api/utils"
+	"github.com/photoview/photoview/api/database"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/routes"
+	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/server"
+	"github.com/photoview/photoview/api/utils"
 
 	"github.com/99designs/gqlgen/handler"
-	photoview_graphql "github.com/viktorstrate/photoview/api/graphql"
-	"github.com/viktorstrate/photoview/api/graphql/resolvers"
+	photoview_graphql "github.com/photoview/photoview/api/graphql"
+	"github.com/photoview/photoview/api/graphql/resolvers"
 )
 
 func main() {

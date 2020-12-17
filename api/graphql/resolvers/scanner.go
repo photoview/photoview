@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
-	"github.com/viktorstrate/photoview/api/scanner"
 	"gorm.io/gorm"
 )
 

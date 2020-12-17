@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
-	"github.com/viktorstrate/photoview/api/graphql/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

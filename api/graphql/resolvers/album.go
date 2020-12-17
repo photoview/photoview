@@ -3,9 +3,9 @@ package resolvers
 import (
 	"context"
 
-	api "github.com/viktorstrate/photoview/api/graphql"
-	"github.com/viktorstrate/photoview/api/graphql/auth"
-	"github.com/viktorstrate/photoview/api/graphql/models"
+	api "github.com/photoview/photoview/api/graphql"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {

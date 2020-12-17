@@ -15,9 +15,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/photoview/photoview/api/graphql/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"github.com/viktorstrate/photoview/api/graphql/models"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -1584,7 +1584,7 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1608,7 +1608,7 @@ func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawA
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2055,7 +2055,7 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2097,7 +2097,7 @@ func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArg
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2193,7 +2193,7 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 	var arg0 *models.Filter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2349,7 +2349,7 @@ func (ec *executionContext) _Album_media(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2391,7 +2391,7 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_parentAlbum(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2423,7 +2423,7 @@ func (ec *executionContext) _Album_parentAlbum(ctx context.Context, field graphq
 	}
 	res := resTmp.(*models.Album)
 	fc.Result = res
-	return ec.marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2458,7 +2458,7 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(models.User)
 	fc.Result = res
-	return ec.marshalNUser2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_filePath(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2525,7 +2525,7 @@ func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_path(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2560,7 +2560,7 @@ func (ec *executionContext) _Album_path(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2592,7 +2592,7 @@ func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*models.ShareToken)
 	fc.Result = res
-	return ec.marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalOShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -2834,7 +2834,7 @@ func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -2866,7 +2866,7 @@ func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -2898,7 +2898,7 @@ func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_album(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -2933,7 +2933,7 @@ func (ec *executionContext) _Media_album(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -2965,7 +2965,7 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*models.MediaEXIF)
 	fc.Result = res
-	return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
+	return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -2997,7 +2997,7 @@ func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.VideoMetadata)
 	fc.Result = res
-	return ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx, field.Selections, res)
+	return ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3067,7 +3067,7 @@ func (ec *executionContext) _Media_type(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(models.MediaType)
 	fc.Result = res
-	return ec.marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, field.Selections, res)
+	return ec.marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3102,7 +3102,7 @@ func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*models.ShareToken)
 	fc.Result = res
-	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_downloads(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3137,7 +3137,7 @@ func (ec *executionContext) _Media_downloads(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*models.MediaDownload)
 	fc.Result = res
-	return ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx, field.Selections, res)
+	return ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaDownload_title(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
@@ -3207,7 +3207,7 @@ func (ec *executionContext) _MediaDownload_mediaUrl(ctx context.Context, field g
 	}
 	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -3277,7 +3277,7 @@ func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -3779,7 +3779,7 @@ func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field g
 	}
 	res := resTmp.(*models.AuthorizeResult)
 	fc.Result = res
-	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
+	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3821,7 +3821,7 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 	}
 	res := resTmp.(*models.AuthorizeResult)
 	fc.Result = res
-	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
+	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3860,7 +3860,7 @@ func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, fi
 	}
 	res := resTmp.(*models.AuthorizeResult)
 	fc.Result = res
-	return ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
+	return ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3901,7 +3901,7 @@ func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql
 		if data, ok := tmp.(*models.ScannerResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/viktorstrate/photoview/api/graphql/models.ScannerResult`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ScannerResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3915,7 +3915,7 @@ func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql
 	}
 	res := resTmp.(*models.ScannerResult)
 	fc.Result = res
-	return ec.marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, field.Selections, res)
+	return ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3957,7 +3957,7 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 	}
 	res := resTmp.(*models.ScannerResult)
 	fc.Result = res
-	return ec.marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, field.Selections, res)
+	return ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3996,7 +3996,7 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.ShareToken)
 	fc.Result = res
-	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4035,7 +4035,7 @@ func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.ShareToken)
 	fc.Result = res
-	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4074,7 +4074,7 @@ func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, fiel
 	}
 	res := resTmp.(*models.ShareToken)
 	fc.Result = res
-	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4113,7 +4113,7 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 	}
 	res := resTmp.(*models.ShareToken)
 	fc.Result = res
-	return ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4152,7 +4152,7 @@ func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field g
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4200,7 +4200,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/viktorstrate/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4211,7 +4211,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4259,7 +4259,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/viktorstrate/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4270,7 +4270,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4318,7 +4318,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/viktorstrate/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4329,7 +4329,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4483,7 +4483,7 @@ func (ec *executionContext) _Notification_type(ctx context.Context, field graphq
 	}
 	res := resTmp.(models.NotificationType)
 	fc.Result = res
-	return ec.marshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx, field.Selections, res)
+	return ec.marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Notification_header(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -4722,7 +4722,7 @@ func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*models.SiteInfo)
 	fc.Result = res
-	return ec.marshalNSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx, field.Selections, res)
+	return ec.marshalNSiteInfo2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4770,7 +4770,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		if data, ok := tmp.([]*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/viktorstrate/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4784,7 +4784,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*models.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4819,7 +4819,7 @@ func (ec *executionContext) _Query_myUser(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4861,7 +4861,7 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_album(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4903,7 +4903,7 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4945,7 +4945,7 @@ func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_media(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4987,7 +4987,7 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_mediaList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5029,7 +5029,7 @@ func (ec *executionContext) _Query_mediaList(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5138,7 +5138,7 @@ func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql
 	}
 	res := resTmp.(*models.ShareToken)
 	fc.Result = res
-	return ec.marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
+	return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_shareTokenValidatePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5222,7 +5222,7 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*models.SearchResult)
 	fc.Result = res
-	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, field.Selections, res)
+	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5497,7 +5497,7 @@ func (ec *executionContext) _SearchResult_albums(ctx context.Context, field grap
 	}
 	res := resTmp.([]*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _SearchResult_media(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
@@ -5532,7 +5532,7 @@ func (ec *executionContext) _SearchResult_media(ctx context.Context, field graph
 	}
 	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -5637,7 +5637,7 @@ func (ec *executionContext) _ShareToken_owner(ctx context.Context, field graphql
 	}
 	res := resTmp.(models.User)
 	fc.Result = res
-	return ec.marshalNUser2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_expire(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -5736,7 +5736,7 @@ func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql
 	}
 	res := resTmp.(*models.Album)
 	fc.Result = res
-	return ec.marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_media(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -5768,7 +5768,7 @@ func (ec *executionContext) _ShareToken_media(ctx context.Context, field graphql
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
@@ -5955,7 +5955,7 @@ func (ec *executionContext) _Subscription_notification(ctx context.Context, fiel
 			w.Write([]byte{'{'})
 			graphql.MarshalString(field.Alias).MarshalGQL(w)
 			w.Write([]byte{':'})
-			ec.marshalNNotification2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx, field.Selections, res).MarshalGQL(w)
+			ec.marshalNNotification2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx, field.Selections, res).MarshalGQL(w)
 			w.Write([]byte{'}'})
 		})
 	}
@@ -6188,7 +6188,7 @@ func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _VideoMetadata_width(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -7561,7 +7561,7 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order_direction"))
-			it.OrderDirection, err = ec.unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
+			it.OrderDirection, err = ec.unmarshalOOrderDirection2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8853,11 +8853,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAlbum2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
 	return ec._Album(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8881,7 +8881,7 @@ func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋph
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
+			ret[i] = ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8894,7 +8894,7 @@ func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋviktorstrateᚋph
 	return ret
 }
 
-func (ec *executionContext) marshalNAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8925,11 +8925,11 @@ func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNAuthorizeResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthorizeResult2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v models.AuthorizeResult) graphql.Marshaler {
 	return ec._AuthorizeResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9044,11 +9044,11 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNMedia2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {
+func (ec *executionContext) marshalNMedia2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v models.Media) graphql.Marshaler {
 	return ec._Media(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Media) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9072,7 +9072,7 @@ func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋph
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
+			ret[i] = ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9085,7 +9085,7 @@ func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋviktorstrateᚋph
 	return ret
 }
 
-func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
+func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9095,7 +9095,7 @@ func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋviktorstrateᚋphoto
 	return ec._Media(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9119,7 +9119,7 @@ func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstr
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
+			ret[i] = ec.marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9132,7 +9132,7 @@ func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋviktorstr
 	return ret
 }
 
-func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx context.Context, sel ast.SelectionSet, v *models.MediaDownload) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx context.Context, sel ast.SelectionSet, v *models.MediaDownload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9142,21 +9142,21 @@ func (ec *executionContext) marshalNMediaDownload2ᚖgithubᚗcomᚋviktorstrate
 	return ec._MediaDownload(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, v interface{}) (models.MediaType, error) {
+func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, v interface{}) (models.MediaType, error) {
 	var res models.MediaType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMediaType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNMediaURL2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaURL2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
 	return ec._MediaURL(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9166,11 +9166,11 @@ func (ec *executionContext) marshalNMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋph
 	return ec._MediaURL(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNNotification2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx context.Context, sel ast.SelectionSet, v models.Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx context.Context, sel ast.SelectionSet, v models.Notification) graphql.Marshaler {
 	return ec._Notification(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx context.Context, sel ast.SelectionSet, v *models.Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx context.Context, sel ast.SelectionSet, v *models.Notification) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9180,21 +9180,21 @@ func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋviktorstrate�
 	return ec._Notification(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, v interface{}) (models.NotificationType, error) {
+func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, v interface{}) (models.NotificationType, error) {
 	var res models.NotificationType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
+func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNScannerResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v models.ScannerResult) graphql.Marshaler {
+func (ec *executionContext) marshalNScannerResult2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v models.ScannerResult) graphql.Marshaler {
 	return ec._ScannerResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v *models.ScannerResult) graphql.Marshaler {
+func (ec *executionContext) marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v *models.ScannerResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9204,11 +9204,11 @@ func (ec *executionContext) marshalNScannerResult2ᚖgithubᚗcomᚋviktorstrate
 	return ec._ScannerResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v models.SearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v models.SearchResult) graphql.Marshaler {
 	return ec._SearchResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v *models.SearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v *models.SearchResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9218,11 +9218,11 @@ func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋviktorstrate�
 	return ec._SearchResult(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNShareToken2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
+func (ec *executionContext) marshalNShareToken2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v models.ShareToken) graphql.Marshaler {
 	return ec._ShareToken(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9246,7 +9246,7 @@ func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrate
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+			ret[i] = ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9259,7 +9259,7 @@ func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋviktorstrate
 	return ret
 }
 
-func (ec *executionContext) marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+func (ec *executionContext) marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9269,11 +9269,11 @@ func (ec *executionContext) marshalNShareToken2ᚖgithubᚗcomᚋviktorstrateᚋ
 	return ec._ShareToken(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSiteInfo2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v models.SiteInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSiteInfo2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v models.SiteInfo) graphql.Marshaler {
 	return ec._SiteInfo(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSiteInfo2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v *models.SiteInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSiteInfo2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v *models.SiteInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9298,11 +9298,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNUser2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.User) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9326,7 +9326,7 @@ func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋviktorstrateᚋpho
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9339,7 +9339,7 @@ func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋviktorstrateᚋpho
 	return ret
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9578,14 +9578,14 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {
+func (ec *executionContext) marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Album(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAuthorizeResult2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
+func (ec *executionContext) marshalOAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx context.Context, sel ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9616,7 +9616,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (*models.Filter, error) {
+func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (*models.Filter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -9654,28 +9654,28 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return graphql.MarshalInt(*v)
 }
 
-func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
+func (ec *executionContext) marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx context.Context, sel ast.SelectionSet, v *models.Media) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Media(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMediaEXIF2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
+func (ec *executionContext) marshalOMediaEXIF2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx context.Context, sel ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._MediaEXIF(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+func (ec *executionContext) marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._MediaURL(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (*models.OrderDirection, error) {
+func (ec *executionContext) unmarshalOOrderDirection2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, v interface{}) (*models.OrderDirection, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -9684,14 +9684,14 @@ func (ec *executionContext) unmarshalOOrderDirection2ᚖgithubᚗcomᚋviktorstr
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v *models.OrderDirection) graphql.Marshaler {
+func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrderDirection(ctx context.Context, sel ast.SelectionSet, v *models.OrderDirection) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9718,7 +9718,7 @@ func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrate
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+			ret[i] = ec.marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9731,7 +9731,7 @@ func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋviktorstrate
 	return ret
 }
 
-func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9777,14 +9777,14 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return graphql.MarshalTime(*v)
 }
 
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOVideoMetadata2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
+func (ec *executionContext) marshalOVideoMetadata2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx context.Context, sel ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
