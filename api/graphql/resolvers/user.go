@@ -14,7 +14,7 @@ func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*mod
 
 	var users []*models.User
 
-	if err := filter.FormatSQL(r.Database.Model(models.User{})).Error; err != nil {
+	if err := filter.FormatSQL(r.Database.Model(models.User{})).Scan(&users).Error; err != nil {
 		return nil, err
 	}
 

@@ -48,7 +48,7 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 		return 0, errors.New("interval must be 0 or above")
 	}
 
-	if err := r.Database.Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
+	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
 		return 0, err
 	}
 
