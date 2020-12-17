@@ -81,7 +81,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	albumIDs := make([]int, 0)
 	for _, album := range albums {
 		albumIDs = append(albumIDs, album.ID)
-		cachePath := path.Join("./photo_cache", strconv.Itoa(int(album.ID)))
+		cachePath := path.Join(PhotoCache(), strconv.Itoa(int(album.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))

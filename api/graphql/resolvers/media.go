@@ -17,22 +17,16 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		return nil, errors.New("unauthorized")
 	}
 
-	// filterSQL, err := filter.FormatSQL("media")
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	var media []*models.Media
 
-	// TODO: Incorporate filter.FormatSQL
-
-	err := r.Database.
+	query := r.Database.
 		Joins("Album").
 		Where("albums.owner_id = ?", user.ID).
-		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id")).
-		Scan(&media).Error
+		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
 
-	if err != nil {
+	query = filter.FormatSQL(query)
+
+	if err := query.Scan(&media).Error; err != nil {
 		return nil, err
 	}
 
@@ -77,17 +71,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 		Joins("Album").
 		Where("media.id IN ?", ids).
 		Where("album.owner_id = ?", user.ID).
-		// Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_id").Where("media_url.media_id = media.id")).
 		Scan(&media).Error
-
-	// err := r.Database.Raw(`
-	// 	SELECT media.* FROM media
-	// 	JOIN albums AS album ON media.album_id = album.id
-	// 	WHERE media.media_id IN ? AND album.owner_id = ?
-	// 	AND media.media_id IN (
-	// 		SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-	// 	)
-	// `, ids, user.ID).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")

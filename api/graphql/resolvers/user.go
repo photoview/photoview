@@ -10,22 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// func (r *Resolver) User() UserResolver {
-// 	return &userResolver{r}
-// }
-
-// type userResolver struct{ *Resolver }
-
 func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
 
-	filterSQL, err := filter.FormatSQL("user")
-	if err != nil {
-		return nil, err
-	}
-
 	var users []*models.User
-	err = r.Database.Raw("SELECT * FROM users" + filterSQL).Scan(&users).Error
-	if err != nil {
+
+	if err := filter.FormatSQL(r.Database.Model(models.User{})).Error; err != nil {
 		return nil, err
 	}
 

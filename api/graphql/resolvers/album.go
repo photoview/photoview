@@ -30,7 +30,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		query = query.Where("EXISTS (?)", subQuery)
 	}
 
-	// TODO: Incorporate models.FormatSQL
+	query = filter.FormatSQL(query)
 
 	var albums []*models.Album
 	if err := query.Find(&albums).Error; err != nil {
@@ -71,7 +71,7 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 		query = query.Where("media.favorite = 1")
 	}
 
-	// TODO: Incorporate filter.FormatSQL
+	query = filter.FormatSQL(query)
 
 	var media []*models.Media
 	if err := query.Find(&media).Error; err != nil {
@@ -109,11 +109,13 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
 
 	var albums []*models.Album
-	if err := r.Database.Where("parent_album_id = ?", parent.ID).Find(&albums).Error; err != nil {
+
+	query := r.Database.Where("parent_album_id = ?", parent.ID)
+	query = filter.FormatSQL(query)
+
+	if err := query.Find(&albums).Error; err != nil {
 		return nil, err
 	}
-
-	// TODO: Incorporate filter.FormatSQL
 
 	return albums, nil
 }
