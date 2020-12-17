@@ -52,7 +52,7 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 			}
 		}
 
-		if shareToken.AlbumID != nil && media.ID != *shareToken.AlbumID {
+		if shareToken.AlbumID != nil && media.AlbumID != *shareToken.AlbumID {
 			// Check child albums
 
 			result := db.Raw(`

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	api "github.com/viktorstrate/photoview/api/graphql"
 	"github.com/viktorstrate/photoview/api/graphql/auth"
@@ -22,36 +23,17 @@ func (r *Resolver) ShareToken() api.ShareTokenResolver {
 	return &shareTokenResolver{r}
 }
 
-// PROBABLY NOT NEEDED ANYMORE
+func (r *shareTokenResolver) Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error) {
+	return &obj.Owner, nil
+}
 
-// func (r *shareTokenResolver) Owner(ctx context.Context, obj *models.ShareToken) (*models.User, error) {
-// 	var user models.User
-// 	if err := r.Database.First(&user, obj.OwnerID).Error; err != nil {
-// 		return nil, err
-// 	}
+func (r *shareTokenResolver) Album(ctx context.Context, obj *models.ShareToken) (*models.Album, error) {
+	return obj.Album, nil
+}
 
-// 	return &user, nil
-// }
-
-// func (r *shareTokenResolver) Album(ctx context.Context, obj *models.ShareToken) (*models.Album, error) {
-
-// 	var album models.Album
-// 	if err := r.Database.First(&album, obj.AlbumID).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &album, nil
-// }
-
-// func (r *shareTokenResolver) Media(ctx context.Context, obj *models.ShareToken) (*models.Media, error) {
-
-// 	var media models.Media
-// 	if err := r.Database.First(&media, obj.MediaID).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &media, nil
-// }
+func (r *shareTokenResolver) Media(ctx context.Context, obj *models.ShareToken) (*models.Media, error) {
+	return obj.Media, nil
+}
 
 func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error) {
 	hasPassword := obj.Password != nil
@@ -61,7 +43,7 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
 
 	var token models.ShareToken
-	if err := r.Database.Where("value = ?", tokenValue).First(&token).Error; err != nil {
+	if err := r.Database.Preload(clause.Associations).Where("value = ?", tokenValue).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("share not found")
 		} else {
@@ -159,7 +141,8 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 	}
 
 	var media models.Media
-	if err := r.Database.Where("owner_id = ?", user.ID).First(&media, mediaID).Error; err != nil {
+
+	if err := r.Database.Joins("Album").Where("Album.owner_id = ?", user.ID).First(&media, mediaID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, auth.ErrUnauthorized
 		} else {
@@ -169,7 +152,7 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 
 	var count int64
 
-	err := r.Database.Raw("SELECT owner_id FROM album, media WHERE media.media_id = ? AND media.album_id = album.album_id AND album.owner_id = ?", mediaID, user.ID).Count(&count).Error
+	err := r.Database.Raw("SELECT owner_id FROM albums, media WHERE media.id = ? AND media.album_id = albums.id AND albums.owner_id = ?", mediaID, user.ID).Count(&count).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "error validating owner of media with database")
 	}
@@ -259,7 +242,7 @@ func hashSharePassword(password *string) (*string, error) {
 func getUserToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
 
 	var token models.ShareToken
-	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where("users.id = ? OR users.admin = TRUE").First(&token).Error
+	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where("Owner.id = ? OR Owner.admin = TRUE", user.ID).First(&token).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get user share token from database")

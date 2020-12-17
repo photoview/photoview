@@ -5734,9 +5734,9 @@ func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(models.Album)
+	res := resTmp.(*models.Album)
 	fc.Result = res
-	return ec.marshalOAlbum2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ShareToken_media(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -9576,10 +9576,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalOAlbum2githubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
-	return ec._Album(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOAlbum2ᚖgithubᚗcomᚋviktorstrateᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *models.Album) graphql.Marshaler {

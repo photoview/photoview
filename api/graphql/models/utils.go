@@ -7,6 +7,10 @@ import (
 
 func (filter *Filter) FormatSQL(tx *gorm.DB) *gorm.DB {
 
+	if filter == nil {
+		return tx
+	}
+
 	if filter.Limit != nil {
 		tx.Limit(*filter.Limit)
 	}

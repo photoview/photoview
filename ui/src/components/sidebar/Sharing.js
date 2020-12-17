@@ -17,6 +17,7 @@ const sharePhotoQuery = gql`
     media(id: $id) {
       id
       shares {
+        id
         token
         hasPassword
       }
@@ -29,6 +30,7 @@ const shareAlbumQuery = gql`
     album(id: $id) {
       id
       shares {
+        id
         token
         hasPassword
       }
@@ -211,7 +213,7 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
 }
 
 ShareItemMoreDropdown.propTypes = {
-  id: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
   isPhoto: PropTypes.bool.isRequired,
   share: PropTypes.object.isRequired,
 }
