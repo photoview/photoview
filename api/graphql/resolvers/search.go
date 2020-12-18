@@ -39,7 +39,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 				WithoutParentheses: true},
 		}).
 		Limit(limitMedia).
-		Preload("Album").
+		Joins("Album").
 		Find(&photos).Error
 
 	if err != nil {
