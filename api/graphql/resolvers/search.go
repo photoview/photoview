@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/pkg/errors"
 	"gorm.io/gorm/clause"
@@ -28,10 +29,10 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 
 	wildQuery := "%" + query + "%"
 
-	var photos []*models.Media
+	var media []*models.Media
 
-	err := r.Database.Joins("JOIN albums ON media.album_id = albums.id").
-		Where("albums.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )", user.ID, wildQuery, wildQuery).
+	err := r.Database.Joins("Album").
+		Where("Album.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )", user.ID, wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{
 				SQL:                "(CASE WHEN media.title LIKE ? THEN 2 WHEN media.path LIKE ? THEN 1 END) DESC",
@@ -39,8 +40,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 				WithoutParentheses: true},
 		}).
 		Limit(limitMedia).
-		Joins("Album").
-		Find(&photos).Error
+		Find(&media).Error
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "searching media")
@@ -64,7 +64,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 
 	result := models.SearchResult{
 		Query:  query,
-		Media:  photos,
+		Media:  media,
 		Albums: albums,
 	}
 
