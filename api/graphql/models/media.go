@@ -13,17 +13,17 @@ import (
 
 type Media struct {
 	Model
-	Title           string `gorm:"not null"`
-	Path            string `gorm:"not null"`
-	PathHash        string `gorm:"not null"`
-	AlbumID         int    `gorm:"not null"`
-	Album           Album
-	ExifID          *int
-	Exif            *MediaEXIF
-	MediaURL        []MediaURL
-	DateShot        time.Time `gorm:"not null"`
-	DateImported    time.Time `gorm:"not null"`
-	Favorite        bool      `gorm:"not null, default:false"`
+	Title        string `gorm:"not null"`
+	Path         string `gorm:"not null"`
+	PathHash     string `gorm:"not null"`
+	AlbumID      int    `gorm:"not null"`
+	Album        Album
+	ExifID       *int
+	Exif         *MediaEXIF
+	MediaURL     []MediaURL
+	DateShot     time.Time `gorm:"not null"`
+	DateImported time.Time `gorm:"not null"`
+	// Favorite        bool      `gorm:"not null, default:false"`
 	Type            MediaType `gorm:"not null"`
 	VideoMetadataID *int
 	VideoMetadata   *VideoMetadata

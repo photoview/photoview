@@ -58,13 +58,6 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  "Registers a new user, must be admin to call"
-  registerUser(
-    username: String!
-    password: String!
-    rootPath: String!
-  ): AuthorizeResult!
-
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!
@@ -92,13 +85,11 @@ type Mutation {
   updateUser(
     id: ID!
     username: String
-    rootPath: String
     password: String
     admin: Boolean
   ): User @isAdmin
   createUser(
     username: String!
-    rootPath: String!
     password: String
     admin: Boolean!
   ): User @isAdmin
@@ -180,8 +171,9 @@ type User {
   id: ID!
   username: String!
   #albums: [Album]
-  "Local filepath for the user's photos"
-  rootPath: String! @isAdmin
+  # rootPath: String! @isAdmin
+  "Top level albums owned by this user"
+  albums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }

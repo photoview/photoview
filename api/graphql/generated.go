@@ -115,20 +115,19 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser               func(childComplexity int, username string, password string) int
-		CreateUser                  func(childComplexity int, username string, rootPath string, password *string, admin bool) int
+		CreateUser                  func(childComplexity int, username string, password *string, admin bool) int
 		DeleteShareToken            func(childComplexity int, token string) int
 		DeleteUser                  func(childComplexity int, id int) int
 		FavoriteMedia               func(childComplexity int, mediaID int, favorite bool) int
 		InitialSetupWizard          func(childComplexity int, username string, password string, rootPath string) int
 		ProtectShareToken           func(childComplexity int, token string, password *string) int
-		RegisterUser                func(childComplexity int, username string, password string, rootPath string) int
 		ScanAll                     func(childComplexity int) int
 		ScanUser                    func(childComplexity int, userID int) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
 		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
 		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string) int
-		UpdateUser                  func(childComplexity int, id int, username *string, rootPath *string, password *string, admin *bool) int
+		UpdateUser                  func(childComplexity int, id int, username *string, password *string, admin *bool) int
 	}
 
 	Notification struct {
@@ -193,8 +192,8 @@ type ComplexityRoot struct {
 
 	User struct {
 		Admin    func(childComplexity int) int
+		Albums   func(childComplexity int) int
 		ID       func(childComplexity int) int
-		RootPath func(childComplexity int) int
 		Username func(childComplexity int) int
 	}
 
@@ -225,12 +224,13 @@ type MediaResolver interface {
 	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 
+	Favorite(ctx context.Context, obj *models.Media) (bool, error)
+
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
 }
 type MutationResolver interface {
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
-	RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
@@ -239,8 +239,8 @@ type MutationResolver interface {
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
-	UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error)
-	CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error)
+	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
+	CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
@@ -622,7 +622,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["username"].(string), args["rootPath"].(string), args["password"].(*string), args["admin"].(bool)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool)), true
 
 	case "Mutation.deleteShareToken":
 		if e.complexity.Mutation.DeleteShareToken == nil {
@@ -683,18 +683,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
-
-	case "Mutation.registerUser":
-		if e.complexity.Mutation.RegisterUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_registerUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.RegisterUser(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 
 	case "Mutation.scanAll":
 		if e.complexity.Mutation.ScanAll == nil {
@@ -773,7 +761,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["password"].(*string), args["admin"].(*bool)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
 
 	case "Notification.content":
 		if e.complexity.Notification.Content == nil {
@@ -1100,19 +1088,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Admin(childComplexity), true
 
+	case "User.albums":
+		if e.complexity.User.Albums == nil {
+			break
+		}
+
+		return e.complexity.User.Albums(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
 		}
 
 		return e.complexity.User.ID(childComplexity), true
-
-	case "User.rootPath":
-		if e.complexity.User.RootPath == nil {
-			break
-		}
-
-		return e.complexity.User.RootPath(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -1332,13 +1320,6 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  "Registers a new user, must be admin to call"
-  registerUser(
-    username: String!
-    password: String!
-    rootPath: String!
-  ): AuthorizeResult!
-
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!
@@ -1366,13 +1347,11 @@ type Mutation {
   updateUser(
     id: ID!
     username: String
-    rootPath: String
     password: String
     admin: Boolean
   ): User @isAdmin
   createUser(
     username: String!
-    rootPath: String!
     password: String
     admin: Boolean!
   ): User @isAdmin
@@ -1454,8 +1433,9 @@ type User {
   id: ID!
   username: String!
   #albums: [Album]
-  "Local filepath for the user's photos"
-  rootPath: String! @isAdmin
+  # rootPath: String! @isAdmin
+  "Top level albums owned by this user"
+  albums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }
@@ -1653,33 +1633,24 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 		}
 	}
 	args["username"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["rootPath"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootPath"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["rootPath"] = arg1
-	var arg2 *string
+	var arg1 *string
 	if tmp, ok := rawArgs["password"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["password"] = arg2
-	var arg3 bool
+	args["password"] = arg1
+	var arg2 bool
 	if tmp, ok := rawArgs["admin"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("admin"))
-		arg3, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["admin"] = arg3
+	args["admin"] = arg2
 	return args, nil
 }
 
@@ -1791,39 +1762,6 @@ func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Co
 		}
 	}
 	args["password"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["username"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["username"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["rootPath"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootPath"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["rootPath"] = arg2
 	return args, nil
 }
 
@@ -1960,32 +1898,23 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	}
 	args["username"] = arg1
 	var arg2 *string
-	if tmp, ok := rawArgs["rootPath"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootPath"))
+	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["rootPath"] = arg2
-	var arg3 *string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg3
-	var arg4 *bool
+	args["password"] = arg2
+	var arg3 *bool
 	if tmp, ok := rawArgs["admin"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("admin"))
-		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["admin"] = arg4
+	args["admin"] = arg3
 	return args, nil
 }
 
@@ -3011,14 +2940,14 @@ func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.C
 		Object:     "Media",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Favorite, nil
+		return ec.resolvers.Media().Favorite(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3782,48 +3711,6 @@ func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field g
 	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_registerUser_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RegisterUser(rctx, args["username"].(string), args["password"].(string), args["rootPath"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.AuthorizeResult)
-	fc.Result = res
-	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4181,7 +4068,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(int), args["username"].(*string), args["rootPath"].(*string), args["password"].(*string), args["admin"].(*bool))
+			return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -4240,7 +4127,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateUser(rctx, args["username"].(string), args["rootPath"].(string), args["password"].(*string), args["admin"].(bool))
+			return ec.resolvers.Mutation().CreateUser(rctx, args["username"].(string), args["password"].(*string), args["admin"].(bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -6031,7 +5918,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_rootPath(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_albums(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -6050,7 +5937,7 @@ func (ec *executionContext) _User_rootPath(ctx context.Context, field graphql.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return obj.RootPath, nil
+			return obj.Albums, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -6066,10 +5953,10 @@ func (ec *executionContext) _User_rootPath(ctx context.Context, field graphql.Co
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(string); ok {
+		if data, ok := tmp.([]models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/photoview/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6081,9 +5968,9 @@ func (ec *executionContext) _User_rootPath(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]models.Album)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_admin(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -7809,10 +7696,19 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "videoMetadata":
 			out.Values[i] = ec._Media_videoMetadata(ctx, field, obj)
 		case "favorite":
-			out.Values[i] = ec._Media_favorite(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_favorite(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "type":
 			out.Values[i] = ec._Media_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8000,11 +7896,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "authorizeUser":
 			out.Values[i] = ec._Mutation_authorizeUser(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "registerUser":
-			out.Values[i] = ec._Mutation_registerUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8530,8 +8421,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "rootPath":
-			out.Values[i] = ec._User_rootPath(ctx, field, obj)
+		case "albums":
+			out.Values[i] = ec._User_albums(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8855,6 +8746,43 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 func (ec *executionContext) marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
 	return ec._Album(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAlbum2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Album) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {

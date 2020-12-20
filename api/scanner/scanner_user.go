@@ -17,14 +17,12 @@ import (
 
 func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
 
-	// Check if user directory exists on the file system
-	if _, err := os.Stat(user.RootPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil, []error{errors.Errorf("Photo directory for user '%s' does not exist '%s'\n", user.Username, user.RootPath)}
-		} else {
-			return nil, []error{errors.Errorf("Could not read photo directory for user '%s': %s\n", user.Username, user.RootPath)}
-		}
+	var userRootAlbums []*models.Album
+	if err := db.Model(&user).Association("Albums").Find(&userRootAlbums); err != nil {
+		return nil, []error{errors.Wrapf(err, "get albums of user (%s)", user.Username)}
 	}
+
+	scanErrors := make([]error, 0)
 
 	type scanInfo struct {
 		path     string
@@ -32,14 +30,24 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	}
 
 	scanQueue := list.New()
-	scanQueue.PushBack(scanInfo{
-		path:     user.RootPath,
-		parentID: nil,
-	})
+
+	for _, album := range userRootAlbums {
+		// Check if user album directory exists on the file system
+		if _, err := os.Stat(album.Path); err != nil {
+			if os.IsNotExist(err) {
+				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
+			} else {
+				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
+			}
+		} else {
+			scanQueue.PushBack(scanInfo{
+				path:     album.Path,
+				parentID: nil,
+			})
+		}
+	}
 
 	userAlbums := make([]*models.Album, 0)
-	albumErrors := make([]error, 0)
-	// newPhotos := make([]*models.Photo, 0)
 
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
@@ -51,7 +59,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
 		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
+			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
 		}
 
@@ -81,7 +89,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 		})
 
 		if transErr != nil {
-			albumErrors = append(albumErrors, errors.Wrap(transErr, "begin database transaction"))
+			scanErrors = append(scanErrors, errors.Wrap(transErr, "begin database transaction"))
 			continue
 		}
 
@@ -104,9 +112,9 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	}
 
 	deleteErrors := deleteOldUserAlbums(db, userAlbums, user)
-	albumErrors = append(albumErrors, deleteErrors...)
+	scanErrors = append(scanErrors, deleteErrors...)
 
-	return userAlbums, albumErrors
+	return userAlbums, scanErrors
 }
 
 func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {

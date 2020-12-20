@@ -61,38 +61,6 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 		Token:   &token.Value,
 	}, nil
 }
-func (r *mutationResolver) RegisterUser(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
-
-	var token *models.AccessToken
-
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
-		user, err := models.RegisterUser(tx, username, &password, rootPath, false)
-		if err != nil {
-			return err
-		}
-
-		token, err = user.GenerateAccessToken(tx)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		return nil
-	})
-
-	if transactionError != nil {
-		return &models.AuthorizeResult{
-			Success: false,
-			Status:  transactionError.Error(),
-		}, transactionError
-	}
-
-	return &models.AuthorizeResult{
-		Success: true,
-		Status:  "ok",
-		Token:   &token.Value,
-	}, nil
-}
 
 func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
 	siteInfo, err := models.GetSiteInfo(r.Database)
@@ -111,7 +79,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 			return err
 		}
 
-		user, err := models.RegisterUser(tx, username, &password, rootPath, true)
+		user, err := models.RegisterUser(tx, username, &password, true)
 		if err != nil {
 			return err
 		}
@@ -139,9 +107,9 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 }
 
 // Admin queries
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, rootPath *string, password *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
 
-	if username == nil && rootPath == nil && password == nil && admin == nil {
+	if username == nil && password == nil && admin == nil {
 		return nil, errors.New("no updates requested")
 	}
 
@@ -152,10 +120,6 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 
 	if username != nil {
 		user.Username = *username
-	}
-
-	if rootPath != nil {
-		user.RootPath = *rootPath
 	}
 
 	if password != nil {
@@ -179,13 +143,13 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	return &user, nil
 }
 
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, rootPath string, password *string, admin bool) (*models.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error) {
 
 	var user *models.User
 
 	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
 		var err error
-		user, err = models.RegisterUser(tx, username, password, rootPath, admin)
+		user, err = models.RegisterUser(tx, username, password, admin)
 		if err != nil {
 			return err
 		}
