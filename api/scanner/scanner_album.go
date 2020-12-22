@@ -13,6 +13,25 @@ import (
 	"gorm.io/gorm"
 )
 
+func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+
+	owners := []models.User{
+		*owner,
+	}
+
+	album := models.Album{
+		Title:  path.Base(rootPath),
+		Path:   rootPath,
+		Owners: owners,
+	}
+
+	if err := db.Create(&album).Error; err != nil {
+		return nil, err
+	}
+
+	return &album, nil
+}
+
 func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_notify_key := utils.GenerateToken()

@@ -5,6 +5,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -80,6 +81,11 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 		}
 
 		user, err := models.RegisterUser(tx, username, &password, true)
+		if err != nil {
+			return err
+		}
+
+		_, err = scanner.NewRootAlbum(tx, rootPath, user)
 		if err != nil {
 			return err
 		}

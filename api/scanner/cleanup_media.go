@@ -4,7 +4,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
@@ -59,28 +58,32 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		return nil
 	}
 
-	albumPaths := make([]interface{}, len(scannedAlbums))
+	scannedAlbumIDs := make([]interface{}, len(scannedAlbums))
 	for i, album := range scannedAlbums {
-		albumPaths[i] = album.Path
+		scannedAlbumIDs[i] = album.ID
 	}
 
 	// Delete old albums
-	album_args := make([]interface{}, 0)
-	album_args = append(album_args, user.ID)
-	album_args = append(album_args, albumPaths...)
-
 	var albums []models.Album
 
-	albums_questions := strings.Repeat("MD5(?),", len(albumPaths))[:len(albumPaths)*7-1]
-	if err := db.Where("owner_id = ? AND path_hash NOT IN ("+albums_questions+")", album_args...).Find(&albums).Error; err != nil {
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	query := db.
+		Where("id IN (?)", userAlbumIDs).
+		Where("id NOT IN (?)", scannedAlbumIDs)
+
+	if err := query.Find(&albums).Error; err != nil {
 		return []error{errors.Wrap(err, "get albums to be deleted from database")}
 	}
 
 	deleteErrors := make([]error, 0)
 
-	albumIDs := make([]int, 0)
-	for _, album := range albums {
-		albumIDs = append(albumIDs, album.ID)
+	deleteAlbumIDs := make([]int, len(albums))
+	for i, album := range albums {
+		deleteAlbumIDs[i] = album.ID
 		cachePath := path.Join(PhotoCache(), strconv.Itoa(int(album.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
@@ -88,7 +91,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		}
 	}
 
-	if err := db.Where("id IN ?", albumIDs).Delete(models.Album{}).Error; err != nil {
+	if err := db.Where("id IN ?", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
 		ScannerError("Could not delete old albums from database:\n%s\n", err)
 		deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old albums from database"))
 	}

@@ -153,3 +153,30 @@ func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
 
 	return &user, nil
 }
+
+// FillAlbums fill user.Albums with albums from database
+func (user *User) FillAlbums(db *gorm.DB) error {
+	// Albums already present
+	if len(user.Albums) > 0 {
+		return nil
+	}
+
+	if err := db.Model(&user).Association("Albums").Find(&user.Albums); err != nil {
+		return errors.Wrap(err, "fill user albums")
+	}
+
+	return nil
+}
+
+func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
+
+	// user.QueryUserAlbums(db, db.Where("id = ?", album.ID))
+
+	// TODO: Implement this
+	return true, nil
+}
+
+func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
+	// TODO: implement this
+	return true, nil
+}

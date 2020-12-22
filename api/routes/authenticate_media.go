@@ -19,7 +19,12 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 			return false, "internal server error", http.StatusInternalServerError, err
 		}
 
-		if album.OwnerID != user.ID {
+		ownsAlbum, err := user.OwnsAlbum(db, &album)
+		if err != nil {
+			return false, "internal server error", http.StatusInternalServerError, err
+		}
+
+		if !ownsAlbum {
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {

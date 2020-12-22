@@ -215,6 +215,8 @@ type AlbumResolver interface {
 	Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error)
 	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
 
+	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
+
 	Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error)
 	Path(ctx context.Context, obj *models.Album) ([]*models.Album, error)
 	Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error)
@@ -2366,14 +2368,14 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 		Object:     "Album",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Owner, nil
+		return ec.resolvers.Album().Owner(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2385,9 +2387,9 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(models.User)
+	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Album_filePath(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -7534,10 +7536,19 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		case "parentAlbum":
 			out.Values[i] = ec._Album_parentAlbum(ctx, field, obj)
 		case "owner":
-			out.Values[i] = ec._Album_owner(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "filePath":
 			out.Values[i] = ec._Album_filePath(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

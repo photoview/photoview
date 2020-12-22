@@ -11,7 +11,7 @@ const USERS_QUERY = gql`
     user {
       id
       username
-      rootPath
+      # rootPath
       admin
     }
   }

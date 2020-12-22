@@ -18,11 +18,20 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		return nil, errors.New("unauthorized")
 	}
 
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
 	var media []*models.Media
 
 	query := r.Database.
 		Joins("Album").
-		Where("albums.owner_id = ?", user.ID).
+		Where("albums.id IN (?)", userAlbumIDs).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
 
 	query = filter.FormatSQL(query)

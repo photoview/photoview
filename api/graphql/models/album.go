@@ -12,10 +12,11 @@ type Album struct {
 	Title         string `gorm:"not null"`
 	ParentAlbumID *int
 	ParentAlbum   *Album
-	OwnerID       int `gorm:"not null"`
-	Owner         User
-	Path          string `gorm:"not null"`
-	PathHash      string `gorm:"unique"`
+	// OwnerID       int `gorm:"not null"`
+	// Owner         User
+	Owners   []User `gorm:"many2many:user_albums"`
+	Path     string `gorm:"not null"`
+	PathHash string `gorm:"unique"`
 }
 
 func (a *Album) FilePath() string {
