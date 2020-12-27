@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import Layout from '../../Layout'
 
 import ScannerSection from './ScannerSection'
-import UsersTable from './UsersTable'
+import UsersTable from './Users/UsersTable'
 
 export const SectionTitle = styled.h2`
   margin-top: ${({ nospace }) => (nospace ? '0' : '1.4em')} !important;
