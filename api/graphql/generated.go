@@ -44,6 +44,7 @@ type ResolverRoot interface {
 	Query() QueryResolver
 	ShareToken() ShareTokenResolver
 	Subscription() SubscriptionResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -191,10 +192,11 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Admin    func(childComplexity int) int
-		Albums   func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Username func(childComplexity int) int
+		Admin      func(childComplexity int) int
+		Albums     func(childComplexity int) int
+		ID         func(childComplexity int) int
+		RootAlbums func(childComplexity int) int
+		Username   func(childComplexity int) int
 	}
 
 	VideoMetadata struct {
@@ -267,6 +269,10 @@ type ShareTokenResolver interface {
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
+}
+type UserResolver interface {
+	Albums(ctx context.Context, obj *models.User) ([]*models.Album, error)
+	RootAlbums(ctx context.Context, obj *models.User) ([]*models.Album, error)
 }
 
 type executableSchema struct {
@@ -1104,6 +1110,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.rootAlbums":
+		if e.complexity.User.RootAlbums == nil {
+			break
+		}
+
+		return e.complexity.User.RootAlbums(childComplexity), true
+
 	case "User.username":
 		if e.complexity.User.Username == nil {
 			break
@@ -1436,8 +1449,10 @@ type User {
   username: String!
   #albums: [Album]
   # rootPath: String! @isAdmin
-  "Top level albums owned by this user"
+  "All albums owned by this user"
   albums: [Album!]! @isAdmin
+  "Top level albums owned by this user"
+  rootAlbums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }
@@ -5931,15 +5946,15 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		Object:     "User",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return obj.Albums, nil
+			return ec.resolvers.User().Albums(rctx, obj)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -5955,10 +5970,10 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.([]models.Album); ok {
+		if data, ok := tmp.([]*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5970,9 +5985,64 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]models.Album)
+	res := resTmp.([]*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_rootAlbums(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().RootAlbums(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAdmin == nil {
+				return nil, errors.New("directive isAdmin is not implemented")
+			}
+			return ec.directives.IsAdmin(ctx, obj, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*models.Album); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Album)
+	fc.Result = res
+	return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_admin(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -8425,22 +8495,45 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "id":
 			out.Values[i] = ec._User_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "username":
 			out.Values[i] = ec._User_username(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "albums":
-			out.Values[i] = ec._User_albums(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_albums(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "rootAlbums":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_rootAlbums(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "admin":
 			out.Values[i] = ec._User_admin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8757,43 +8850,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 func (ec *executionContext) marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx context.Context, sel ast.SelectionSet, v models.Album) graphql.Marshaler {
 	return ec._Album(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNAlbum2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Album) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {

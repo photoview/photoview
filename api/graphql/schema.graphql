@@ -172,8 +172,10 @@ type User {
   username: String!
   #albums: [Album]
   # rootPath: String! @isAdmin
-  "Top level albums owned by this user"
+  "All albums owned by this user"
   albums: [Album!]! @isAdmin
+  "Top level albums owned by this user"
+  rootAlbums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }

@@ -13,6 +13,10 @@ const USERS_QUERY = gql`
       username
       # rootPath
       admin
+      albums {
+        id
+        filePath
+      }
     }
   }
 `

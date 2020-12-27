@@ -3,6 +3,7 @@ package resolvers
 import (
 	"context"
 
+	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
@@ -10,6 +11,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+type userResolver struct {
+	*Resolver
+}
+
+func (r *Resolver) User() api.UserResolver {
+	return &userResolver{r}
+}
 
 func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
 
@@ -20,6 +29,30 @@ func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*mod
 	}
 
 	return users, nil
+}
+
+func (r *userResolver) Albums(ctx context.Context, user *models.User) ([]*models.Album, error) {
+	user.FillAlbums(r.Database)
+
+	pointerAlbums := make([]*models.Album, len(user.Albums))
+	for i, album := range user.Albums {
+		pointerAlbums[i] = &album
+	}
+
+	return pointerAlbums, nil
+}
+
+func (r *userResolver) RootAlbums(ctx context.Context, user *models.User) (albums []*models.Album, err error) {
+
+	err = r.Database.Model(&user).
+		Where("albums.parent_album_id NOT IN (?)",
+			r.Database.Table("user_albums").
+				Select("albums.id").
+				Joins("JOIN albums ON albums.id = user_albums.album_id AND user_albums.user_id = ?", user.ID),
+		).Or("albums.parent_album_id IS NULL").
+		Association("Albums").Find(&albums)
+
+	return
 }
 
 func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
