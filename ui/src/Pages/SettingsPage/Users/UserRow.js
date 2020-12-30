@@ -46,6 +46,7 @@ const UserRow = ({ user, refetchUsers }) => {
   const [state, setState] = useState({
     ...user,
     editing: false,
+    newRootPath: '',
   })
 
   const [showConfirmDelete, setConfirmDelete] = useState(false)

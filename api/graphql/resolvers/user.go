@@ -217,3 +217,39 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User
 
 	return &user, nil
 }
+
+func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
+
+	var user models.User
+	if err := r.Database.First(&user, id).Error; err != nil {
+		return nil, err
+	}
+
+	// TODO: Check if path exists and that user does not already own rootPath, directly or indirectly
+
+	newAlbum, err := scanner.NewRootAlbum(r.Database, rootPath, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return newAlbum, nil
+}
+
+func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error) {
+
+	var album models.Album
+	if err := r.Database.First(&album, albumID).Error; err != nil {
+		return nil, err
+	}
+
+	result := r.Database.Exec("DELETE FROM user_albums WHERE album_id = ? AND user_id = ?", albumID, userID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, errors.New("No relation deleted")
+	}
+
+	return &album, nil
+}

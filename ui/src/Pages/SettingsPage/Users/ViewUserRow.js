@@ -12,7 +12,7 @@ const PathList = styled.ul`
 
 const ViewUserRow = ({
   user,
-  state,
+  // state,
   setState,
   scanUser,
   deleteUser,
@@ -41,7 +41,7 @@ const ViewUserRow = ({
         <Button.Group>
           <Button
             onClick={() => {
-              setState({ ...state, editing: true, oldState: state })
+              setState(state => ({ ...state, editing: true, oldState: state }))
             }}
           >
             <Icon name="edit" />

@@ -95,6 +95,10 @@ type Mutation {
   ): User @isAdmin
   deleteUser(id: ID!): User @isAdmin
 
+  "Add a root path from where to look for media for the given user"
+  userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+  userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
+
   """
   Set how often, in seconds, the server should automatically scan for new media,
   a value of 0 will disable periodic scans

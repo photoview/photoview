@@ -6,7 +6,7 @@ import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
 import { SectionTitle } from '../SettingsPage'
 
-const USERS_QUERY = gql`
+export const USERS_QUERY = gql`
   query settingsUsersQuery {
     user {
       id
