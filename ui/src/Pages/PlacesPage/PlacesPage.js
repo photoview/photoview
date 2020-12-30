@@ -59,6 +59,9 @@ const MapPage = () => {
       zoom: 1,
     })
 
+    // Add map navigation control
+    map.current.addControl(new mapboxLibrary.NavigationControl())
+
     map.current.on('load', () => {
       map.current.addSource('media', {
         type: 'geojson',
