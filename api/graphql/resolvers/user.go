@@ -2,6 +2,9 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
+	"path"
+	"strings"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -105,6 +108,8 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	if !siteInfo.InitialSetup {
 		return nil, errors.New("not initial setup")
 	}
+
+	rootPath = path.Clean(rootPath)
 
 	var token *models.AccessToken
 
@@ -220,12 +225,45 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User
 
 func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
 
+	rootPath = path.Clean(rootPath)
+
 	var user models.User
 	if err := r.Database.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 
-	// TODO: Check if path exists and that user does not already own rootPath, directly or indirectly
+	if !models.ValidRootPath(rootPath) {
+		return nil, errors.New("invalid root path")
+	}
+
+	upperPaths := make([]string, 1)
+	upperPath := rootPath
+	upperPaths[0] = upperPath
+	for {
+
+		substrIndex := strings.LastIndex(upperPath, "/")
+		if substrIndex == -1 {
+			break
+		}
+
+		if substrIndex == 0 {
+			upperPaths = append(upperPaths, "/")
+			break
+		}
+
+		upperPath = upperPath[0:substrIndex]
+		upperPaths = append(upperPaths, upperPath)
+	}
+
+	var upperAlbums []models.Album
+	if err := r.Database.Model(&user).Association("Albums").Find(&upperAlbums, "albums.path IN (?)", upperPaths); err != nil {
+		// if err := r.Database.Model(models.Album{}).Where("path IN (?)", upperPaths).Find(&upperAlbums).Error; err != nil {
+		return nil, err
+	}
+
+	if len(upperAlbums) > 0 {
+		return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", upperAlbums[0].Path))
+	}
 
 	newAlbum, err := scanner.NewRootAlbum(r.Database, rootPath, &user)
 	if err != nil {
@@ -242,7 +280,22 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		return nil, err
 	}
 
-	result := r.Database.Exec("DELETE FROM user_albums WHERE album_id = ? AND user_id = ?", albumID, userID)
+	if err := r.Database.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
+		return nil, err
+	}
+
+	children, err := album.GetChildren(r.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	childAlbumIDs := make([]int, len(children))
+	for i, child := range children {
+		childAlbumIDs[i] = child.ID
+	}
+
+	// result := r.Database.Delete(models.Album{}, "id IN (?) OR id = ?", childAlbumIDs, album.ID)
+	result := r.Database.Exec("DELETE FROM user_albums WHERE user_id = ? and album_id IN (?)", userID, childAlbumIDs)
 	if result.Error != nil {
 		return nil, result.Error
 	}

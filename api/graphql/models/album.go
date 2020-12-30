@@ -28,3 +28,17 @@ func (a *Album) BeforeSave(tx *gorm.DB) (err error) {
 	a.PathHash = hex.EncodeToString(hash[:])
 	return nil
 }
+
+func (a *Album) GetChildren(db *gorm.DB) (children []*Album, err error) {
+	err = db.Raw(`
+	WITH recursive sub_albums AS (
+		SELECT * FROM albums AS root WHERE id = ?
+		UNION ALL
+		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
+	)
+
+	SELECT * FROM sub_albums
+	`, a.ID).Find(&children).Error
+
+	return children, err
+}
