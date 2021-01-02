@@ -32,7 +32,7 @@ const AlbumSidebar = ({ albumId }) => {
 }
 
 AlbumSidebar.propTypes = {
-  albumId: PropTypes.number.isRequired,
+  albumId: PropTypes.string.isRequired,
 }
 
 export default AlbumSidebar

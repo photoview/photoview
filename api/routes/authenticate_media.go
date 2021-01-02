@@ -60,20 +60,21 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 		if shareToken.AlbumID != nil && media.AlbumID != *shareToken.AlbumID {
 			// Check child albums
 
-			result := db.Raw(`
+			var count int
+			err := db.Raw(`
 					WITH recursive child_albums AS (
-						SELECT * FROM album WHERE parent_album = ?
+						SELECT * FROM albums WHERE parent_album_id = ?
 						UNION ALL
-						SELECT child.* FROM album child JOIN child_albums parent ON parent.album_id = child.parent_album
+						SELECT child.* FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id
 					)
-					SELECT * FROM child_albums WHERE album_id = ?
-				`, *shareToken.AlbumID, media.AlbumID)
+					SELECT COUNT(id) FROM child_albums WHERE id = ?
+				`, *shareToken.AlbumID, media.AlbumID).Find(&count).Error
 
-			if err := result.Error; err != nil {
+			if err != nil {
 				return false, "internal server error", http.StatusInternalServerError, err
 			}
 
-			if result.RowsAffected == 0 {
+			if count == 0 {
 				return false, "unauthorized", http.StatusForbidden, nil
 			}
 		}

@@ -28,7 +28,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	query := r.Database.Model(models.Album{}).Where("id IN (?)", userAlbumIDs)
 
 	if onlyRoot != nil && *onlyRoot == true {
-		query = query.Where("parent_album_id = (?)", r.Database.Model(&models.Album{}).Select("id").Where("parent_album_id IS NULL"))
+		query = query.Where("parent_album_id IS NULL")
 	}
 
 	if showEmpty == nil || *showEmpty == false {
