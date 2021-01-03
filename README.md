@@ -10,6 +10,8 @@
 Photoview is a simple and user-friendly photo gallery that can easily be installed on personal servers.
 It's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high resolution photos.
 
+> If you have questions regarding setup or development, feel free to join the Discord server https://discord.gg/pxybT4Sh
+
 ## Demo site
 
 Visit https://photos.qpqp.dk/
@@ -20,7 +22,6 @@ Password: **demo**
 ## Contents
 
 - [Demo site](#demo-site)
-- [Aim of the project](#aim-of-the-project)
 - [Main features](#main-features)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
