@@ -13,20 +13,20 @@ import (
 
 type Media struct {
 	Model
-	Title           string `gorm:"not null"`
-	Path            string `gorm:"not null"`
-	PathHash        string `gorm:"not null"`
-	AlbumID         int    `gorm:"not null"`
-	Album           Album
-	ExifID          *int
-	Exif            *MediaEXIF
-	MediaURL        []MediaURL
-	DateShot        time.Time `gorm:"not null"`
-	DateImported    time.Time `gorm:"not null"`
-	Favorite        bool      `gorm:"not null, default:false"`
+	Title        string `gorm:"not null"`
+	Path         string `gorm:"not null"`
+	PathHash     string `gorm:"not null"`
+	AlbumID      int    `gorm:"not null"`
+	Album        Album  `gorm:"constraint:OnDelete:CASCADE;"`
+	ExifID       *int
+	Exif         *MediaEXIF `gorm:"constraint:OnDelete:SET NULL;"`
+	MediaURL     []MediaURL `gorm:"constraint:OnDelete:CASCADE;"`
+	DateShot     time.Time  `gorm:"not null"`
+	DateImported time.Time  `gorm:"not null"`
+	// Favorite        bool      `gorm:"not null, default:false"`
 	Type            MediaType `gorm:"not null"`
 	VideoMetadataID *int
-	VideoMetadata   *VideoMetadata
+	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:SET NULL;"`
 	SideCarPath     *string
 	SideCarHash     *string
 
@@ -52,6 +52,18 @@ func (m *Media) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
+func (m *Media) BeforeDelete(tx *gorm.DB) error {
+	if err := tx.Model(m).Association("Exif").Clear(); err != nil {
+		return err
+	}
+
+	if err := tx.Model(m).Association("MediaURL").Clear(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type MediaPurpose string
 
 const (
@@ -64,8 +76,8 @@ const (
 
 type MediaURL struct {
 	Model
-	MediaID     int `gorm:"not null"`
-	Media       Media
+	MediaID     int          `gorm:"not null"`
+	Media       Media        `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaName   string       `gorm:"not null"`
 	Width       int          `gorm:"not null"`
 	Height      int          `gorm:"not null"`

@@ -9,6 +9,7 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error) {
@@ -17,11 +18,20 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		return nil, errors.New("unauthorized")
 	}
 
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
 	var media []*models.Media
 
 	query := r.Database.
 		Joins("Album").
-		Where("albums.owner_id = ?", user.ID).
+		Where("albums.id IN (?)", userAlbumIDs).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
 
 	query = filter.FormatSQL(query)
@@ -44,7 +54,7 @@ func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error
 	err := r.Database.
 		Joins("Album").
 		Where("media.id = ?", id).
-		Where("Album.owner_id = ?", user.ID).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)", user.ID).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
 		First(&media).Error
 
@@ -182,20 +192,45 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*mod
 	return &url, nil
 }
 
+func (r *mediaResolver) Favorite(ctx context.Context, media *models.Media) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	userMediaData := models.UserMediaData{
+		UserID:   user.ID,
+		MediaID:  media.ID,
+		Favorite: false,
+	}
+
+	if err := r.Database.FirstOrInit(&userMediaData).Error; err != nil {
+		return false, errors.Wrapf(err, "get user media data from database (user: %d, media: %d)", user.ID, media.ID)
+	}
+
+	return userMediaData.Favorite, nil
+}
+
 func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error) {
 
 	user := auth.UserFromContext(ctx)
-
-	var media models.Media
-
-	if err := r.Database.Joins("Album").Where("Album.owner_id = ?", user.ID).First(&media, mediaID).Error; err != nil {
-		return nil, err
+	if user == nil {
+		return nil, auth.ErrUnauthorized
 	}
 
-	media.Favorite = favorite
+	userMediaData := models.UserMediaData{
+		UserID:   user.ID,
+		MediaID:  mediaID,
+		Favorite: favorite,
+	}
 
-	if err := r.Database.Save(&media).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to update media favorite on database")
+	if err := r.Database.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
+		return nil, errors.Wrapf(err, "update user favorite media in database")
+	}
+
+	var media models.Media
+	if err := r.Database.First(&media, mediaID).Error; err != nil {
+		return nil, errors.Wrap(err, "get media from database after favorite update")
 	}
 
 	return &media, nil

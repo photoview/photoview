@@ -16,13 +16,17 @@ type User struct {
 	Model
 	Username string  `gorm:"unique,size:128"`
 	Password *string `gorm:"size:256`
-	RootPath string  `gorm:"size:512`
-	Admin    bool    `gorm:"default:false"`
+	// RootPath string  `gorm:"size:512`
+	Albums []Album `gorm:"many2many:user_albums"`
+	Admin  bool    `gorm:"default:false"`
 }
 
-// func (u *User) ID() int {
-// 	return u.UserID
-// }
+type UserMediaData struct {
+	ModelTimestamps
+	UserID   int  `gorm:"primaryKey;autoIncrement:false"`
+	MediaID  int  `gorm:"primaryKey;autoIncrement:false"`
+	Favorite bool `gorm:"not null;default:false"`
+}
 
 type AccessToken struct {
 	Model
@@ -34,35 +38,7 @@ type AccessToken struct {
 
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 
-// func NewUserFromRow(row *sql.Row) (*User, error) {
-// 	user := User{}
-
-// 	if err := row.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
-// 		return nil, errors.Wrap(err, "failed to scan user from database")
-// 	}
-
-// 	return &user, nil
-// }
-
-// func NewUsersFromRows(rows *sql.Rows) ([]*User, error) {
-// 	users := make([]*User, 0)
-
-// 	for rows.Next() {
-// 		var user User
-// 		if err := rows.Scan(&user.UserID, &user.Username, &user.Password, &user.RootPath, &user.Admin); err != nil {
-// 			return nil, errors.Wrap(err, "failed to scan users from database")
-// 		}
-// 		users = append(users, &user)
-// 	}
-
-// 	rows.Close()
-
-// 	return users, nil
-// }
-
 func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error) {
-	// row := database.QueryRow("SELECT * FROM user WHERE username = ?", username)
-
 	var user User
 
 	result := db.Where("username = ?", username).First(&user)
@@ -100,15 +76,15 @@ func ValidRootPath(rootPath string) bool {
 	return true
 }
 
-func RegisterUser(db *gorm.DB, username string, password *string, rootPath string, admin bool) (*User, error) {
-	if !ValidRootPath(rootPath) {
-		return nil, ErrorInvalidRootPath
-	}
+func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*User, error) {
+	// if !ValidRootPath(rootPath) {
+	// 	return nil, ErrorInvalidRootPath
+	// }
 
 	user := User{
 		Username: username,
-		RootPath: rootPath,
-		Admin:    admin,
+		// RootPath: rootPath,
+		Admin: admin,
 	}
 
 	if password != nil {
@@ -163,26 +139,11 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 
 func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
 
-	// row := database.QueryRow("SELECT (user_id) FROM access_token WHERE expire > ? AND value = ?", now, token)
-
 	var accessToken AccessToken
 	result := db.Where("expire > ? AND value = ?", time.Now(), token).First(&accessToken)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	// var userId string
-
-	// if err := row.Scan(&userId); err != nil {
-	// 	log.Println(err.Error())
-	// 	return nil, err
-	// }
-
-	// row = db.QueryRow("SELECT * FROM user WHERE user_id = ?", userId)
-	// user, err := NewUserFromRow(row)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	var user User
 	result = db.First(&user, accessToken.UserID)
@@ -191,4 +152,31 @@ func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+// FillAlbums fill user.Albums with albums from database
+func (user *User) FillAlbums(db *gorm.DB) error {
+	// Albums already present
+	if len(user.Albums) > 0 {
+		return nil
+	}
+
+	if err := db.Model(&user).Association("Albums").Find(&user.Albums); err != nil {
+		return errors.Wrap(err, "fill user albums")
+	}
+
+	return nil
+}
+
+func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
+
+	// user.QueryUserAlbums(db, db.Where("id = ?", album.ID))
+
+	// TODO: Implement this
+	return true, nil
+}
+
+func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
+	// TODO: implement this
+	return true, nil
 }

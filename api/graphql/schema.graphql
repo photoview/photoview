@@ -58,13 +58,6 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  "Registers a new user, must be admin to call"
-  registerUser(
-    username: String!
-    password: String!
-    rootPath: String!
-  ): AuthorizeResult!
-
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!
@@ -92,17 +85,19 @@ type Mutation {
   updateUser(
     id: ID!
     username: String
-    rootPath: String
     password: String
     admin: Boolean
   ): User @isAdmin
   createUser(
     username: String!
-    rootPath: String!
     password: String
     admin: Boolean!
   ): User @isAdmin
   deleteUser(id: ID!): User @isAdmin
+
+  "Add a root path from where to look for media for the given user"
+  userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+  userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   """
   Set how often, in seconds, the server should automatically scan for new media,
@@ -180,8 +175,11 @@ type User {
   id: ID!
   username: String!
   #albums: [Album]
-  "Local filepath for the user's photos"
-  rootPath: String! @isAdmin
+  # rootPath: String! @isAdmin
+  "All albums owned by this user"
+  albums: [Album!]! @isAdmin
+  "Top level albums owned by this user"
+  rootAlbums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }

@@ -100,7 +100,12 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 	}
 
 	var count int64
-	if err := r.Database.Model(&models.Album{}).Where("owner_id = ?", user.ID).Count(&count).Error; err != nil {
+	err := r.Database.
+		Model(&models.Album{}).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
+		Count(&count).Error
+
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to validate album owner with database")
 	}
 
@@ -142,23 +147,17 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 
 	var media models.Media
 
-	if err := r.Database.Joins("Album").Where("Album.owner_id = ?", user.ID).First(&media, mediaID).Error; err != nil {
+	err := r.Database.Joins("Album").
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)", user.ID).
+		First(&media, mediaID).
+		Error
+
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, auth.ErrUnauthorized
 		} else {
 			return nil, errors.Wrap(err, "failed to validate media owner with database")
 		}
-	}
-
-	var count int64
-
-	err := r.Database.Raw("SELECT owner_id FROM albums, media WHERE media.id = ? AND media.album_id = albums.id AND albums.owner_id = ?", mediaID, user.ID).Count(&count).Error
-	if err != nil {
-		return nil, errors.Wrap(err, "error validating owner of media with database")
-	}
-
-	if count == 0 {
-		return nil, auth.ErrUnauthorized
 	}
 
 	hashedPassword, err := hashSharePassword(password)

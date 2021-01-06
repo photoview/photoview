@@ -13,6 +13,40 @@ import (
 	"gorm.io/gorm"
 )
 
+func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+
+	owners := []models.User{
+		*owner,
+	}
+
+	var matchedAlbums []models.Album
+	if err := db.Where("path_hash = MD5(?)", rootPath).Find(&matchedAlbums).Error; err != nil {
+		return nil, err
+	}
+
+	if len(matchedAlbums) > 0 {
+		album := matchedAlbums[0]
+
+		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
+			return nil, errors.Wrap(err, "failed to add owner to already existing album")
+		}
+
+		return &album, nil
+	} else {
+		album := models.Album{
+			Title:  path.Base(rootPath),
+			Path:   rootPath,
+			Owners: owners,
+		}
+
+		if err := db.Create(&album).Error; err != nil {
+			return nil, err
+		}
+
+		return &album, nil
+	}
+}
+
 func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_notify_key := utils.GenerateToken()

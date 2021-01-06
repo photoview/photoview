@@ -2,10 +2,12 @@ package resolvers
 
 import (
 	"context"
+	"errors"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
 func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
@@ -14,10 +16,19 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		return nil, auth.ErrUnauthorized
 	}
 
-	query := r.Database.Where("owner_id = ?", user.ID)
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	query := r.Database.Model(models.Album{}).Where("id IN (?)", userAlbumIDs)
 
 	if onlyRoot != nil && *onlyRoot == true {
-		query = query.Where("parent_album_id = (?)", r.Database.Model(&models.Album{}).Select("id").Where("parent_album_id IS NULL AND owner_id = ?", user.ID))
+		query = query.Where("parent_album_id IS NULL")
 	}
 
 	if showEmpty == nil || *showEmpty == false {
@@ -33,7 +44,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 	query = filter.FormatSQL(query)
 
 	var albums []*models.Album
-	if err := query.Find(&albums).Error; err != nil {
+	if err := query.Scan(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -47,8 +58,20 @@ func (r *queryResolver) Album(ctx context.Context, id int) (*models.Album, error
 	}
 
 	var album models.Album
-	if err := r.Database.Where("owner_id = ?", user.ID).First(&album, id).Error; err != nil {
+	if err := r.Database.First(&album, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("album not found")
+		}
 		return nil, err
+	}
+
+	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ownsAlbum {
+		return nil, errors.New("forbidden")
 	}
 
 	return &album, nil
@@ -154,8 +177,24 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 			UNION
 			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
-		SELECT * FROM path_albums WHERE id != ? AND owner_id = ?
-	`, obj.ID, obj.ID, user.ID).Scan(&album_path).Error
+		SELECT * FROM path_albums WHERE id != ?
+	`, obj.ID, obj.ID).Scan(&album_path).Error
+
+	// Make sure to only return albums this user owns
+	for i := len(album_path) - 1; i >= 0; i-- {
+		album := album_path[i]
+
+		owns, err := user.OwnsAlbum(r.Database, album)
+		if err != nil {
+			return nil, err
+		}
+
+		if !owns {
+			album_path = album_path[i+1:]
+			break
+		}
+
+	}
 
 	if err != nil {
 		return nil, err

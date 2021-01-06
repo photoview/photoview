@@ -61,6 +61,8 @@ export const SHARE_TOKEN_QUERY = gql`
     }
     highRes {
       url
+      width
+      height
     }
     videoWeb {
       url

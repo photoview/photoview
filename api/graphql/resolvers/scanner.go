@@ -28,7 +28,6 @@ func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, 
 func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error) {
 
 	var user models.User
-
 	if err := r.Database.First(&user, userID).Error; err != nil {
 		return nil, errors.Wrap(err, "get user from database")
 	}

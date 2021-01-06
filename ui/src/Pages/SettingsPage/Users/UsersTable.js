@@ -4,15 +4,19 @@ import { Table, Loader, Button, Icon } from 'semantic-ui-react'
 import { useQuery, gql } from '@apollo/client'
 import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
-import { SectionTitle } from './SettingsPage'
+import { SectionTitle } from '../SettingsPage'
 
-const USERS_QUERY = gql`
+export const USERS_QUERY = gql`
   query settingsUsersQuery {
     user {
       id
       username
-      rootPath
+      # rootPath
       admin
+      rootAlbums {
+        id
+        filePath
+      }
     }
   }
 `
