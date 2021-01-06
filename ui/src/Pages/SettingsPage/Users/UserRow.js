@@ -5,21 +5,10 @@ import EditUserRow from './EditUserRow'
 import ViewUserRow from './ViewUserRow'
 
 const updateUserMutation = gql`
-  mutation updateUser(
-    $id: ID!
-    $username: String
-    $rootPath: String
-    $admin: Boolean
-  ) {
-    updateUser(
-      id: $id
-      username: $username
-      rootPath: $rootPath
-      admin: $admin
-    ) {
+  mutation updateUser($id: ID!, $username: String, $admin: Boolean) {
+    updateUser(id: $id, username: $username, admin: $admin) {
       id
       username
-      rootPath
       admin
     }
   }

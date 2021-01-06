@@ -93,6 +93,7 @@ const EditNewRootPath = ({ userID }) => {
           icon: 'add',
           content: 'Add',
           onClick: () => {
+            setValue('')
             addRootPath({
               variables: {
                 id: userID,

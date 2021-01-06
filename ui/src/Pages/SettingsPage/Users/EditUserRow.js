@@ -63,7 +63,6 @@ const EditUserRow = ({
                 variables: {
                   id: user.id,
                   username: state.username,
-                  rootPath: state.rootPath,
                   admin: state.admin,
                 },
               })

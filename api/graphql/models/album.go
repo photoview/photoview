@@ -11,7 +11,7 @@ type Album struct {
 	Model
 	Title         string `gorm:"not null"`
 	ParentAlbumID *int
-	ParentAlbum   *Album
+	ParentAlbum   *Album `gorm:"constraint:OnDelete:SET NULL;"`
 	// OwnerID       int `gorm:"not null"`
 	// Owner         User
 	Owners   []User `gorm:"many2many:user_albums"`

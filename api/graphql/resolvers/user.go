@@ -3,7 +3,9 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	api "github.com/photoview/photoview/api/graphql"
@@ -280,28 +282,65 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		return nil, err
 	}
 
-	if err := r.Database.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
-		return nil, err
-	}
+	var deletedAlbumIDs []int = nil
 
-	children, err := album.GetChildren(r.Database)
+	err := r.Database.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
+			return err
+		}
+
+		children, err := album.GetChildren(tx)
+		if err != nil {
+			return err
+		}
+
+		childAlbumIDs := make([]int, len(children))
+		for i, child := range children {
+			childAlbumIDs[i] = child.ID
+		}
+
+		result := tx.Exec("DELETE FROM user_albums WHERE user_id = ? and album_id IN (?)", userID, childAlbumIDs)
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			return errors.New("No relation deleted")
+		}
+
+		// Cleanup if no user owns the album anymore
+		var count int
+		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&count).Error; err != nil {
+			return err
+		}
+
+		if count == 0 {
+			deletedAlbumIDs = append(childAlbumIDs, albumID)
+			childAlbumIDs = nil
+
+			// Delete albums from database
+			if err := tx.Delete(&models.Album{}, "id IN (?)", deletedAlbumIDs).Error; err != nil {
+				deletedAlbumIDs = nil
+				return err
+			}
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	childAlbumIDs := make([]int, len(children))
-	for i, child := range children {
-		childAlbumIDs[i] = child.ID
-	}
+	if deletedAlbumIDs != nil {
+		// Delete albums from cache
+		for _, id := range deletedAlbumIDs {
+			cacheAlbumPath := path.Join(scanner.PhotoCache(), strconv.Itoa(id))
 
-	// result := r.Database.Delete(models.Album{}, "id IN (?) OR id = ?", childAlbumIDs, album.ID)
-	result := r.Database.Exec("DELETE FROM user_albums WHERE user_id = ? and album_id IN (?)", userID, childAlbumIDs)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return nil, errors.New("No relation deleted")
+			if err := os.RemoveAll(cacheAlbumPath); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return &album, nil

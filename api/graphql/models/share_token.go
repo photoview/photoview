@@ -8,13 +8,13 @@ type ShareToken struct {
 	Model
 	Value    string `gorm:"not null"`
 	OwnerID  int    `gorm:"not null"`
-	Owner    User
+	Owner    User   `gorm:"constraint:OnDelete:CASCADE;"`
 	Expire   *time.Time
 	Password *string
 	AlbumID  *int
-	Album    *Album
+	Album    *Album `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaID  *int
-	Media    *Media
+	Media    *Media `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 func (share *ShareToken) Token() string {
