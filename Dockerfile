@@ -47,7 +47,6 @@ RUN apk --no-cache add darktable; exit 0
 RUN apk --no-cache add ffmpeg; exit 0
 
 COPY --from=ui /app/dist /ui
-COPY --from=api /app/database/migrations /database/migrations
 COPY --from=api /app/photoview /app/photoview
 
 ENV API_LISTEN_IP 127.0.0.1
