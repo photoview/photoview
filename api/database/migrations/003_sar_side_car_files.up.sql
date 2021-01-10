@@ -1,4 +1,0 @@
-
-ALTER TABLE media
-  ADD COLUMN IF NOT EXISTS side_car_path varchar(1024) DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS side_car_hash varchar(32) DEFAULT NULL;
