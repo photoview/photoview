@@ -1,9 +1,11 @@
 package database
 
 import (
+	"context"
 	"log"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
@@ -39,11 +41,34 @@ func SetupDatabase() (*gorm.DB, error) {
 	config.Logger = logger.Default.LogMode(logger.Info)
 
 	db, err := gorm.Open(mysql.Open(address.String()), &config)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not connect to database")
+	sqlDB, dbErr := db.DB()
+	if dbErr != nil {
+		log.Println(dbErr)
+		return nil, dbErr
 	}
 
-	// TODO: Add connection retries
+	sqlDB.SetMaxOpenConns(80)
+
+	if err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		for retryCount := 1; retryCount <= 5; retryCount++ {
+			select {
+			case <-ctx.Done():
+				log.Println(ctx.Err())
+				return nil, err
+			default:
+				if err := sqlDB.PingContext(ctx); err != nil {
+					log.Printf("WARN: Could not ping database: %s, Will retry after 1 second", err)
+					time.Sleep(time.Second)
+				} else {
+					return db, nil
+				}
+			}
+		}
+		return nil, err
+	}
 
 	return db, nil
 }
