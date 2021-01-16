@@ -30,7 +30,7 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 				if uiEndpoint.Host == originURL.Host {
 					return true
 				} else {
-					log.Printf("Not allowing websocket request from %s because it doesn't match UI_ENDPOINT %s", originURL.Host, uiEndpoint.Host)
+					log.Printf("Not allowing websocket request from %s because it doesn't match PHOTOVIEW_UI_ENDPOINT %s", originURL.Host, uiEndpoint.Host)
 					return false
 				}
 			}

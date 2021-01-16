@@ -22,14 +22,14 @@ services:
 
     environment:
       - MYSQL_URL=photoview:photo-secret@tcp(db)/photoview
-      - API_LISTEN_IP=photoview
-      - API_LISTEN_PORT=80
+      - PHOTOVIEW_LISTEN_IP=photoview
+      - PHOTOVIEW_LISTEN_PORT=80
       - PHOTO_CACHE=/app/cache
 
       # Change This: The publicly exposed url
       # For example if the server is available from the domain example.com,
       # change this value to http://example.com/
-      - PUBLIC_ENDPOINT=http://localhost:8000/
+      - PHOTOVIEW_PUBLIC_ENDPOINT=http://localhost:8000/
 
       # Optional: To enable map related features, you need to create a mapbox token.
       # A token can be generated for free here https://account.mapbox.com/access-tokens/
