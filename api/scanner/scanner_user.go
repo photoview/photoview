@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"io/ioutil"
+	"bufio"
 	"log"
 	"os"
 	"path"
@@ -57,6 +58,14 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	}
 
 	userAlbums := make([]*models.Album, 0)
+
+	// Get .photoviewignore file content
+	log.Printf("Read .photoviewignore file")
+	photoviewIgnore, err := getPhotoviewIgnore(user.RootPath)
+	if err != nil {
+		albumErrors = append(albumErrors, errors.Wrapf(err, "searching for .photoviewignore file"))
+		log.Printf("Failed to get ignore file, err = %s", err)
+	}
 
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
