@@ -13,8 +13,8 @@ import urlJoin from 'url-join'
 import { clearTokenCookie } from './authentication'
 import { MessageState } from './components/messages/Messages'
 
-export const GRAPHQL_ENDPOINT = process.env.API_ENDPOINT
-  ? urlJoin(process.env.API_ENDPOINT, '/graphql')
+export const GRAPHQL_ENDPOINT = process.env.PHOTOVIEW_API_ENDPOINT
+  ? urlJoin(process.env.PHOTOVIEW_API_ENDPOINT, '/graphql')
   : urlJoin(location.origin, '/api/graphql')
 
 const httpLink = new HttpLink({

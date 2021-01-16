@@ -1,8 +1,8 @@
 # Build UI
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:10 as ui
 
-ARG API_ENDPOINT
-ENV API_ENDPOINT=${API_ENDPOINT}
+ARG PHOTOVIEW_API_ENDPOINT
+ENV PHOTOVIEW_API_ENDPOINT=${PHOTOVIEW_API_ENDPOINT}
 
 # Set environment variable UI_PUBLIC_URL from build args, uses "/" as default
 ARG UI_PUBLIC_URL
@@ -49,10 +49,10 @@ RUN apk --no-cache add ffmpeg; exit 0
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/photoview /app/photoview
 
-ENV API_LISTEN_IP 127.0.0.1
-ENV API_LISTEN_PORT 80
+ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
+ENV PHOTOVIEW_LISTEN_PORT 80
 
-ENV SERVE_UI 1
+ENV PHOTOVIEW_SERVE_UI 1
 
 EXPOSE 80
 
