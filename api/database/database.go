@@ -50,23 +50,20 @@ func SetupDatabase() (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(80)
 
 	if err != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
 		for retryCount := 1; retryCount <= 5; retryCount++ {
-			select {
-			case <-ctx.Done():
-				log.Println(ctx.Err())
-				return nil, err
-			default:
-				if err := sqlDB.PingContext(ctx); err != nil {
-					log.Printf("WARN: Could not ping database: %s, Will retry after 1 second", err)
-					time.Sleep(time.Second)
-				} else {
-					return db, nil
-				}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+			if err := sqlDB.PingContext(ctx); err == nil {
+				cancel()
+				return db, nil
 			}
+
+			cancel()
+
+			log.Printf("WARN: Could not ping database: %s. Will retry after 5 seconds\n", err)
+			time.Sleep(time.Duration(5) * time.Second)
 		}
+		
 		return nil, err
 	}
 
