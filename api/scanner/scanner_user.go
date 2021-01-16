@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"bufio"
 	"log"
 	"os"
 	"path"
@@ -13,7 +14,30 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/zabawaba99/go-gitignore"
 )
+
+func getPhotoviewIgnore(ignorePath string) ([]string , error){
+	var photoviewIgnore []string
+
+	// Open .photoviewignore file, if exists
+	photoviewIgnoreFile, err := os.Open(path.Join(ignorePath, ".photoviewignore"))
+	if err != nil {
+		return photoviewIgnore, err
+	}
+
+	// Close file on exit
+	defer photoviewIgnoreFile.Close()
+
+	// Read and save .photoviewignore data
+   	scanner := bufio.NewScanner(photoviewIgnoreFile)
+   	for scanner.Scan() {
+		photoviewIgnore = append(photoviewIgnore, scanner.Text())
+		log.Printf("Ignore found: %s", scanner.Text())
+	}
+
+   	return photoviewIgnore, scanner.Err()
+}
 
 func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
 
@@ -41,6 +65,14 @@ func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerC
 	albumErrors := make([]error, 0)
 	// newPhotos := make([]*models.Photo, 0)
 
+	// Get .photoviewignore file content
+	log.Printf("Read .photoviewignore file")
+	photoviewIgnore, err := getPhotoviewIgnore(user.RootPath)
+	if err != nil {
+		albumErrors = append(albumErrors, errors.Wrapf(err, "searching for .photoviewignore file"))
+		log.Printf("Failed to get ignore file, err = %s", err)
+	}
+
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
 		scanQueue.Remove(scanQueue.Front())
@@ -52,6 +84,20 @@ func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerC
 		dirContent, err := ioutil.ReadDir(albumPath)
 		if err != nil {
 			albumErrors = append(albumErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
+			continue
+		}
+
+		// Skip this dir if in ignore list
+		ignoreDir := false
+		for _, line := range photoviewIgnore {
+			if gitignore.Match(line, albumPath) {
+				log.Printf("Skip, directroy %s is in ignore file", albumPath)
+				ignoreDir = true
+				break
+			}
+		}
+
+		if ignoreDir {
 			continue
 		}
 
