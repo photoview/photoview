@@ -109,7 +109,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCa
 	{
 		var media []*models.Media
 
-		result := tx.Where("path_hash = MD5(?)", mediaPath).Find(&media)
+		result := tx.Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&media)
 
 		if result.Error != nil {
 			return nil, false, errors.Wrap(result.Error, "scan media fetch from database")

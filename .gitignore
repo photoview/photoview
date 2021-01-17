@@ -3,6 +3,7 @@
 cache/
 photo_cache/
 /photos_path
+photoview.db
 
 .env
 

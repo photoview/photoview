@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/pkg/errors"
@@ -64,6 +65,10 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error) {
 	if workers < 1 {
 		return 0, errors.New("concurrent workers must at least be 1")
+	}
+
+	if workers > 1 && drivers.DatabaseDriver() == drivers.DatabaseDriverSqlite {
+		return 0, errors.New("multiple workers not supported for SQLite databases")
 	}
 
 	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
