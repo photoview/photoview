@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"path"
 
 	"github.com/gorilla/handlers"
@@ -29,7 +28,7 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	devMode := os.Getenv("PHOTOVIEW_DEVELOPMENT_MODE") == "1"
+	devMode := utils.DevelopmentMode()
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -92,7 +91,7 @@ func main() {
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
 	routes.RegisterVideoRoutes(db, videoRouter)
 
-	shouldServeUI := os.Getenv("PHOTOVIEW_SERVE_UI") == "1"
+	shouldServeUI := utils.ShouldServeUI()
 
 	if shouldServeUI {
 		spa := routes.NewSpaHandler("/ui", "index.html")
@@ -111,7 +110,7 @@ func main() {
 		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
 
 		if !shouldServeUI {
-			log.Printf("Notice: UI is not served by the the api (PHOTOVIEW_SERVE_UI=0)")
+			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
 		}
 
 	}

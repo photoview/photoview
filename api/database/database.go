@@ -2,13 +2,14 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 
 	"gorm.io/driver/mysql"
@@ -18,13 +19,14 @@ import (
 )
 
 func getMysqlAddress() (*url.URL, error) {
-	address, err := url.Parse(os.Getenv("PHOTOVIEW_MYSQL_URL"))
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse mysql url")
+	addressString := utils.EnvMysqlURL.GetValue()
+	if addressString == "" {
+		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
 	}
 
-	if address.String() == "" {
-		return nil, errors.New("Environment variable PHOTOVIEW_MYSQL_URL missing, exiting")
+	address, err := url.Parse(addressString)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not parse mysql url")
 	}
 
 	queryValues := address.Query()
@@ -36,7 +38,7 @@ func getMysqlAddress() (*url.URL, error) {
 }
 
 func getSqliteAddress() (*url.URL, error) {
-	path := os.Getenv("PHOTOVIEW_SQLITE_PATH")
+	path := utils.EnvSqlitePath.GetValue()
 	if path == "" {
 		path = "photoview.db"
 	}
@@ -62,8 +64,12 @@ func SetupDatabase() (*gorm.DB, error) {
 
 	config := gorm.Config{}
 
-	// Enable database debug logging
-	config.Logger = logger.Default.LogMode(logger.Info)
+	// Configure database logging
+	if utils.DevelopmentMode() {
+		config.Logger = logger.Default.LogMode(logger.Info)
+	} else {
+		config.Logger = logger.Default.LogMode(logger.Warn)
+	}
 
 	var databaseDialect gorm.Dialector
 	switch drivers.DatabaseDriver() {

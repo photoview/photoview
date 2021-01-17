@@ -1,10 +1,12 @@
 package drivers
 
 import (
-	"os"
 	"strings"
+
+	"github.com/photoview/photoview/api/utils"
 )
 
+// DatabaseDriverType represents the name of a database driver
 type DatabaseDriverType string
 
 const (
@@ -15,7 +17,7 @@ const (
 func DatabaseDriver() DatabaseDriverType {
 
 	var driver DatabaseDriverType
-	driverString := strings.ToLower(os.Getenv("PHOTOVIEW_DATABASE_DRIVER"))
+	driverString := strings.ToLower(utils.EnvDatabaseDriver.GetValue())
 
 	switch driverString {
 	case "mysql":

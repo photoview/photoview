@@ -335,7 +335,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {
-			cacheAlbumPath := path.Join(scanner.PhotoCache(), strconv.Itoa(id))
+			cacheAlbumPath := path.Join(scanner.MediaCachePath(), strconv.Itoa(id))
 
 			if err := os.RemoveAll(cacheAlbumPath); err != nil {
 				return nil, err

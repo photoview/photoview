@@ -1,7 +1,7 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 cache/
-photo_cache/
+media_cache/
 /photos_path
 photoview.db
 

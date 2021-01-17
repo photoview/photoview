@@ -36,7 +36,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	for _, media := range mediaList {
 
 		mediaIDs = append(mediaIDs, media.ID)
-		cachePath := path.Join(PhotoCache(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
+		cachePath := path.Join(MediaCachePath(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
@@ -84,7 +84,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	deleteAlbumIDs := make([]int, len(albums))
 	for i, album := range albums {
 		deleteAlbumIDs[i] = album.ID
-		cachePath := path.Join(PhotoCache(), strconv.Itoa(int(album.ID)))
+		cachePath := path.Join(MediaCachePath(), strconv.Itoa(int(album.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))

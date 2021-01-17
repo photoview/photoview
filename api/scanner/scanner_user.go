@@ -207,10 +207,11 @@ func ScannerError(format string, args ...interface{}) {
 	})
 }
 
-func PhotoCache() string {
-	photoCache := os.Getenv("PHOTO_CACHE")
+// MediaCachePath returns the path for where the media cache is located on the file system
+func MediaCachePath() string {
+	photoCache := utils.EnvMediaCachePath.GetValue()
 	if photoCache == "" {
-		photoCache = "./photo_cache"
+		photoCache = "./media_cache"
 	}
 
 	return photoCache

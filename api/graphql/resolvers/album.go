@@ -20,6 +20,10 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		return nil, err
 	}
 
+	if len(user.Albums) == 0 {
+		return nil, nil
+	}
+
 	userAlbumIDs := make([]int, len(user.Albums))
 	for i, album := range user.Albums {
 		userAlbumIDs[i] = album.ID

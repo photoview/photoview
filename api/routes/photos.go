@@ -41,7 +41,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		var cachedPath string
 
 		if mediaURL.Purpose == models.PhotoThumbnail || mediaURL.Purpose == models.PhotoHighRes || mediaURL.Purpose == models.VideoThumbnail {
-			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+			cachedPath = path.Join(scanner.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
 		} else if mediaURL.Purpose == models.MediaOriginal {
 			cachedPath = media.Path
 		} else {

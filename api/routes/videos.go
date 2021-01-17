@@ -40,7 +40,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		var cachedPath string
 
 		if mediaURL.Purpose == models.VideoWeb {
-			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+			cachedPath = path.Join(scanner.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
 		} else {
 			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
