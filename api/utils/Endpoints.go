@@ -12,7 +12,7 @@ import (
 func ApiListenUrl() *url.URL {
 	const defaultPort = "4001"
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := os.Getenv("PHOTOVIEW_SERVE_UI") == "1"
 
 	apiPrefix := "/"
 	if shouldServeUI {
@@ -21,19 +21,19 @@ func ApiListenUrl() *url.URL {
 
 	var listenAddr string
 
-	listenAddr = os.Getenv("API_LISTEN_IP")
+	listenAddr = os.Getenv("PHOTOVIEW_LISTEN_IP")
 	if listenAddr == "" {
 		listenAddr = "127.0.0.1"
 	}
 
-	listenPortStr := os.Getenv("API_LISTEN_PORT")
+	listenPortStr := os.Getenv("PHOTOVIEW_LISTEN_PORT")
 	if listenPortStr == "" {
 		listenPortStr = defaultPort
 	}
 
 	listenPort, err := strconv.Atoi(listenPortStr)
 	if err != nil {
-		log.Fatalf("API_LISTEN_PORT must be a number: '%s'\n%s", listenPortStr, err)
+		log.Fatalf("PHOTOVIEW_LISTEN_PORT must be a number: '%s'\n%s", listenPortStr, err)
 	}
 
 	apiUrl, err := url.Parse(fmt.Sprintf("http://%s:%d", listenAddr, listenPort))
@@ -46,16 +46,16 @@ func ApiListenUrl() *url.URL {
 }
 
 func ApiEndpointUrl() *url.URL {
-	apiEndpointStr := os.Getenv("API_ENDPOINT")
+	apiEndpointStr := os.Getenv("PHOTOVIEW_API_ENDPOINT")
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := os.Getenv("PHOTOVIEW_SERVE_UI") == "1"
 	if shouldServeUI {
-		apiEndpointStr = os.Getenv("PUBLIC_ENDPOINT")
+		apiEndpointStr = os.Getenv("PHOTOVIEW_PUBLIC_ENDPOINT")
 	}
 
 	apiEndpointUrl, err := url.Parse(apiEndpointStr)
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable API_ENDPOINT is not a proper url")
+		log.Fatalf("ERROR: Environment variable PHOTOVIEW_API_ENDPOINT is not a proper url")
 	}
 
 	if shouldServeUI {
@@ -66,16 +66,16 @@ func ApiEndpointUrl() *url.URL {
 }
 
 func UiEndpointUrl() *url.URL {
-	uiEndpointStr := os.Getenv("UI_ENDPOINT")
+	uiEndpointStr := os.Getenv("PHOTOVIEW_UI_ENDPOINT")
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := os.Getenv("PHOTOVIEW_SERVE_UI") == "1"
 	if shouldServeUI {
-		uiEndpointStr = os.Getenv("PUBLIC_ENDPOINT")
+		uiEndpointStr = os.Getenv("PHOTOVIEW_PUBLIC_ENDPOINT")
 	}
 
 	uiEndpointUrl, err := url.Parse(uiEndpointStr)
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable UI_ENDPOINT is not a proper url")
+		log.Fatalf("ERROR: Environment variable PHOTOVIEW_UI_ENDPOINT is not a proper url")
 	}
 
 	return uiEndpointUrl

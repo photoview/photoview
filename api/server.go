@@ -29,7 +29,7 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	devMode := os.Getenv("DEVELOPMENT") == "1"
+	devMode := os.Getenv("PHOTOVIEW_DEVELOPMENT_MODE") == "1"
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -92,7 +92,7 @@ func main() {
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
 	routes.RegisterVideoRoutes(db, videoRouter)
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := os.Getenv("PHOTOVIEW_SERVE_UI") == "1"
 
 	if shouldServeUI {
 		spa := routes.NewSpaHandler("/ui", "index.html")
@@ -111,7 +111,7 @@ func main() {
 		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
 
 		if !shouldServeUI {
-			log.Printf("Notice: UI is not served by the the api (SERVE_UI=0)")
+			log.Printf("Notice: UI is not served by the the api (PHOTOVIEW_SERVE_UI=0)")
 		}
 
 	}
