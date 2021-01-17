@@ -1,6 +1,7 @@
 package models
 
 import (
+	db_drivers "github.com/photoview/photoview/api/database/drivers"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -22,10 +23,16 @@ func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 
 	if err := db.First(&siteInfo).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+
+			defaultConcurrentWorkers := 3
+			if db_drivers.DatabaseDriver() == db_drivers.DatabaseDriverSqlite {
+				defaultConcurrentWorkers = 1
+			}
+
 			siteInfo = SiteInfo{
 				InitialSetup:         true,
 				PeriodicScanInterval: 0,
-				ConcurrentWorkers:    3,
+				ConcurrentWorkers:    defaultConcurrentWorkers,
 			}
 
 			if err := db.Create(&siteInfo).Error; err != nil {

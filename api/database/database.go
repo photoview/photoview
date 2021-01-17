@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 
@@ -66,9 +66,8 @@ func SetupDatabase() (*gorm.DB, error) {
 	config.Logger = logger.Default.LogMode(logger.Info)
 
 	var databaseDialect gorm.Dialector
-	databaseDriver := strings.ToLower(os.Getenv("PHOTOVIEW_DATABASE_DRIVER"))
-	switch databaseDriver {
-	case "mysql":
+	switch drivers.DatabaseDriver() {
+	case drivers.DatabaseDriverMysql:
 		mysqlAddress, err := getMysqlAddress()
 		if err != nil {
 			return nil, err
@@ -76,7 +75,7 @@ func SetupDatabase() (*gorm.DB, error) {
 		log.Printf("Connecting to database: %s", mysqlAddress)
 		databaseDialect = mysql.Open(mysqlAddress.String())
 
-	case "sqlite":
+	case drivers.DatabaseDriverSqlite:
 		sqliteAddress, err := getSqliteAddress()
 		if err != nil {
 			return nil, err
