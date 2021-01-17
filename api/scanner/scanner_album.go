@@ -20,7 +20,7 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 	}
 
 	var matchedAlbums []models.Album
-	if err := db.Where("path_hash = MD5(?)", rootPath).Find(&matchedAlbums).Error; err != nil {
+	if err := db.Where("path_hash = ?", models.MD5Hash(rootPath)).Find(&matchedAlbums).Error; err != nil {
 		return nil, err
 	}
 

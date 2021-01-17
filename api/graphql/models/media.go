@@ -1,8 +1,6 @@
 package models
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"path"
 	"strings"
 	"time"
@@ -40,12 +38,10 @@ func (Media) TableName() string {
 
 func (m *Media) BeforeSave(tx *gorm.DB) error {
 	// Update hashes
-	hash := md5.Sum([]byte(m.Path))
-	m.PathHash = hex.EncodeToString(hash[:])
+	m.PathHash = MD5Hash(m.Path)
 
 	if m.SideCarPath != nil {
-		hash = md5.Sum([]byte(*m.SideCarPath))
-		encodedHash := hex.EncodeToString(hash[:])
+		encodedHash := MD5Hash(*m.SideCarPath)
 		m.SideCarHash = &encodedHash
 	}
 

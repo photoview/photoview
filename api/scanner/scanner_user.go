@@ -80,7 +80,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 			// check if album already exists
 			var albumResult []models.Album
-			result := tx.Where("path_hash = md5(?)", albumPath).Find(&albumResult)
+			result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
 			if result.Error != nil {
 				return result.Error
 			}

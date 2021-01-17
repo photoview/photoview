@@ -18,13 +18,13 @@ import (
 )
 
 func getMysqlAddress() (*url.URL, error) {
-	address, err := url.Parse(os.Getenv("MYSQL_URL"))
+	address, err := url.Parse(os.Getenv("PHOTOVIEW_MYSQL_URL"))
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not parse mysql url")
 	}
 
 	if address.String() == "" {
-		return nil, errors.New("Environment variable MYSQL_URL missing, exiting")
+		return nil, errors.New("Environment variable PHOTOVIEW_MYSQL_URL missing, exiting")
 	}
 
 	queryValues := address.Query()
@@ -32,6 +32,28 @@ func getMysqlAddress() (*url.URL, error) {
 	queryValues.Add("parseTime", "true")
 
 	address.RawQuery = queryValues.Encode()
+	return address, nil
+}
+
+func getSqliteAddress() (*url.URL, error) {
+	path := os.Getenv("PHOTOVIEW_SQLITE_PATH")
+	if path == "" {
+		path = "photoview.db"
+	}
+
+	address, err := url.Parse(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Could not parse sqlite url (%s)", path)
+	}
+
+	queryValues := address.Query()
+	queryValues.Add("cache", "shared")
+	queryValues.Add("mode", "rwc")
+	// queryValues.Add("_busy_timeout", "60000") // 1 minute
+	address.RawQuery = queryValues.Encode()
+
+	// log.Panicf("%s", address.String())
+
 	return address, nil
 }
 
@@ -44,7 +66,8 @@ func SetupDatabase() (*gorm.DB, error) {
 	config.Logger = logger.Default.LogMode(logger.Info)
 
 	var databaseDialect gorm.Dialector
-	switch strings.ToLower(os.Getenv("PHOTOVIEW_DATABASE_DRIVER")) {
+	databaseDriver := strings.ToLower(os.Getenv("PHOTOVIEW_DATABASE_DRIVER"))
+	switch databaseDriver {
 	case "mysql":
 		mysqlAddress, err := getMysqlAddress()
 		if err != nil {
@@ -54,11 +77,11 @@ func SetupDatabase() (*gorm.DB, error) {
 		databaseDialect = mysql.Open(mysqlAddress.String())
 
 	case "sqlite":
-		path := os.Getenv("PHOTOVIEW_SQLITE_PATH")
-		if path == "" {
-			path = "photoview.db"
+		sqliteAddress, err := getSqliteAddress()
+		if err != nil {
+			return nil, err
 		}
-		databaseDialect = sqlite.Open(path)
+		databaseDialect = sqlite.Open(sqliteAddress.String())
 	}
 
 	db, err := gorm.Open(databaseDialect, &config)
