@@ -78,14 +78,19 @@ func SetupDatabase() (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Connecting to database: %s", mysqlAddress)
-		databaseDialect = mysql.Open(mysqlAddress.String())
+		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
+		databaseDialect = mysql.New(mysql.Config{
+			DSN:                     mysqlAddress.String(),
+			DontSupportRenameIndex:  true,
+			DontSupportRenameColumn: true,
+		})
 
 	case drivers.DatabaseDriverSqlite:
 		sqliteAddress, err := getSqliteAddress()
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("Opening SQLITE database: %s", sqliteAddress)
 		databaseDialect = sqlite.Open(sqliteAddress.String())
 	}
 

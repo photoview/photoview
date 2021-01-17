@@ -13,7 +13,7 @@ services:
       - db_data:/var/lib/mysql
 
   photoview:
-    image: viktorstrate/photoview:1
+    image: viktorstrate/photoview:2
     restart: always
     ports:
       - "8000:80"
@@ -21,6 +21,7 @@ services:
       - db
 
     environment:
+      - PHOTOVIEW_DATABASE_DRIVER=mysql
       - PHOTOVIEW_MYSQL_URL=photoview:photosecret@tcp(db)/photoview
       - PHOTOVIEW_LISTEN_IP=photoview
       - PHOTOVIEW_LISTEN_PORT=80
