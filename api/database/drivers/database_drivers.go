@@ -22,6 +22,8 @@ func DatabaseDriver() DatabaseDriverType {
 		driver = DatabaseDriverMysql
 	case "sqlite":
 		driver = DatabaseDriverSqlite
+	default:
+		driver = DatabaseDriverMysql
 	}
 
 	return driver
