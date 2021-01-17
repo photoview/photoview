@@ -1,33 +1,63 @@
 package models
 
 import (
-	"database/sql"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
 type Media struct {
-	MediaID         int
-	Title           string
-	Path            string
-	PathHash        string
-	AlbumId         int
-	ExifId          *int
-	DateShot        time.Time
-	DateImported    time.Time
-	Favorite        bool
-	Type            MediaType
-	VideoMetadataId *int
+	Model
+	Title        string `gorm:"not null"`
+	Path         string `gorm:"not null"`
+	PathHash     string `gorm:"not null"`
+	AlbumID      int    `gorm:"not null"`
+	Album        Album  `gorm:"constraint:OnDelete:CASCADE;"`
+	ExifID       *int
+	Exif         *MediaEXIF `gorm:"constraint:OnDelete:SET NULL;"`
+	MediaURL     []MediaURL `gorm:"constraint:OnDelete:CASCADE;"`
+	DateShot     time.Time  `gorm:"not null"`
+	DateImported time.Time  `gorm:"not null"`
+	// Favorite        bool      `gorm:"not null, default:false"`
+	Type            MediaType `gorm:"not null"`
+	VideoMetadataID *int
+	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:SET NULL;"`
 	SideCarPath     *string
 	SideCarHash     *string
-	CounterpartPath *string
+
+	// Only used internally
+	CounterpartPath *string `gorm:-`
 }
 
-func (p *Media) ID() int {
-	return p.MediaID
+func (Media) TableName() string {
+	return "media"
+}
+
+func (m *Media) BeforeSave(tx *gorm.DB) error {
+	// Update hashes
+	m.PathHash = MD5Hash(m.Path)
+
+	if m.SideCarPath != nil {
+		encodedHash := MD5Hash(*m.SideCarPath)
+		m.SideCarHash = &encodedHash
+	}
+
+	return nil
+}
+
+func (m *Media) BeforeDelete(tx *gorm.DB) error {
+	if err := tx.Model(m).Association("Exif").Clear(); err != nil {
+		return err
+	}
+
+	if err := tx.Model(m).Association("MediaURL").Clear(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type MediaPurpose string
@@ -41,40 +71,15 @@ const (
 )
 
 type MediaURL struct {
-	UrlID       int
-	MediaId     int
-	MediaName   string
-	Width       int
-	Height      int
-	Purpose     MediaPurpose
-	ContentType string
-	FileSize    int
-}
-
-func NewMediaFromRow(row *sql.Row) (*Media, error) {
-	media := Media{}
-
-	if err := row.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId, &media.SideCarPath, &media.SideCarHash); err != nil {
-		return nil, err
-	}
-
-	return &media, nil
-}
-
-func NewMediaFromRows(rows *sql.Rows) ([]*Media, error) {
-	medias := make([]*Media, 0)
-
-	for rows.Next() {
-		var media Media
-		if err := rows.Scan(&media.MediaID, &media.Title, &media.Path, &media.PathHash, &media.AlbumId, &media.ExifId, &media.DateShot, &media.DateImported, &media.Favorite, &media.Type, &media.VideoMetadataId, &media.SideCarPath, &media.SideCarHash); err != nil {
-			return nil, err
-		}
-		medias = append(medias, &media)
-	}
-
-	rows.Close()
-
-	return medias, nil
+	Model
+	MediaID     int          `gorm:"not null"`
+	Media       Media        `gorm:"constraint:OnDelete:CASCADE;"`
+	MediaName   string       `gorm:"not null"`
+	Width       int          `gorm:"not null"`
+	Height      int          `gorm:"not null"`
+	Purpose     MediaPurpose `gorm:"not null"`
+	ContentType string       `gorm:"not null"`
+	FileSize    int64        `gorm:"not null"`
 }
 
 func (p *MediaURL) URL() string {
@@ -96,30 +101,4 @@ func SanitizeMediaName(mediaName string) string {
 	result = strings.ReplaceAll(result, " ", "_")
 	result = strings.ReplaceAll(result, ".", "_")
 	return result
-}
-
-func NewMediaURLFromRow(row *sql.Row) (*MediaURL, error) {
-	url := MediaURL{}
-
-	if err := row.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
-		return nil, err
-	}
-
-	return &url, nil
-}
-
-func NewMediaURLFromRows(rows *sql.Rows) ([]*MediaURL, error) {
-	urls := make([]*MediaURL, 0)
-
-	for rows.Next() {
-		var url MediaURL
-		if err := rows.Scan(&url.UrlID, &url.MediaId, &url.MediaName, &url.Width, &url.Height, &url.Purpose, &url.ContentType, &url.FileSize); err != nil {
-			return nil, err
-		}
-		urls = append(urls, &url)
-	}
-
-	rows.Close()
-
-	return urls, nil
 }

@@ -1,48 +1,47 @@
 package models
 
 import (
-	"database/sql"
-
+	db_drivers "github.com/photoview/photoview/api/database/drivers"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
-func initializeSiteInfoRow(db *sql.DB) (*SiteInfo, error) {
-	_, err := db.Exec("INSERT INTO site_info (initial_setup, periodic_scan_interval, concurrent_workers) VALUES (true, 0, 3)")
-	if err != nil {
-		return nil, errors.Wrap(err, "initialize site_info row")
-	}
+type SiteInfo struct {
+	InitialSetup         bool `gorm:"not null"`
+	PeriodicScanInterval int  `gorm:"not null"`
+	ConcurrentWorkers    int  `gorm:"not null"`
+}
 
-	siteInfo := &SiteInfo{}
-
-	row := db.QueryRow("SELECT * FROM site_info")
-	if err := row.Scan(&siteInfo.InitialSetup, &siteInfo.PeriodicScanInterval, &siteInfo.ConcurrentWorkers); err != nil {
-		return nil, errors.Wrap(err, "get site_info row after initialization")
-	}
-
-	return siteInfo, nil
+func (SiteInfo) TableName() string {
+	return "site_info"
 }
 
 // GetSiteInfo gets the site info row from the database, and creates it if it does not exist
-func GetSiteInfo(db *sql.DB) (*SiteInfo, error) {
-	rows, err := db.Query("SELECT * FROM site_info")
-	defer rows.Close()
-	if err != nil {
-		return nil, err
+func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
+
+	var siteInfo SiteInfo
+
+	if err := db.First(&siteInfo).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+
+			defaultConcurrentWorkers := 3
+			if db_drivers.DatabaseDriver() == db_drivers.DatabaseDriverSqlite {
+				defaultConcurrentWorkers = 1
+			}
+
+			siteInfo = SiteInfo{
+				InitialSetup:         true,
+				PeriodicScanInterval: 0,
+				ConcurrentWorkers:    defaultConcurrentWorkers,
+			}
+
+			if err := db.Create(&siteInfo).Error; err != nil {
+				return nil, errors.Wrap(err, "initialize site_info")
+			}
+		} else {
+			return nil, errors.Wrap(err, "get site info from database")
+		}
 	}
 
-	siteInfo := &SiteInfo{}
-
-	if !rows.Next() {
-		// Entry does not exist
-		siteInfo, err = initializeSiteInfoRow(db)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if err := rows.Scan(&siteInfo.InitialSetup, &siteInfo.PeriodicScanInterval, &siteInfo.ConcurrentWorkers); err != nil {
-			return nil, err
-		}
-	}
-
-	return siteInfo, nil
+	return &siteInfo, nil
 }

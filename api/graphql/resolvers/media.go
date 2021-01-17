@@ -2,14 +2,14 @@ package resolvers
 
 import (
 	"context"
-	"database/sql"
-	"strings"
 
-	"github.com/pkg/errors"
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error) {
@@ -18,23 +18,29 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		return nil, errors.New("unauthorized")
 	}
 
-	filterSQL, err := filter.FormatSQL("media")
-	if err != nil {
+	if err := user.FillAlbums(r.Database); err != nil {
 		return nil, err
 	}
 
-	rows, err := r.Database.Query(`
-		SELECT media.* FROM media, album
-		WHERE media.album_id = album.album_id AND album.owner_id = ?
-		AND media.media_id IN (
-			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-		)
-	`+filterSQL, user.UserID)
-	if err != nil {
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	var media []*models.Media
+
+	query := r.Database.
+		Joins("Album").
+		Where("albums.id IN (?)", userAlbumIDs).
+		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
+
+	query = filter.FormatSQL(query)
+
+	if err := query.Scan(&media).Error; err != nil {
 		return nil, err
 	}
 
-	return models.NewMediaFromRows(rows)
+	return media, nil
 }
 
 func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error) {
@@ -43,21 +49,20 @@ func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error
 		return nil, auth.ErrUnauthorized
 	}
 
-	row := r.Database.QueryRow(`
-		SELECT media.* FROM media
-		JOIN album ON media.album_id = album.album_id
-		WHERE media.media_id = ? AND album.owner_id = ?
-		AND media.media_id IN (
-			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-		)
-	`, id, user.UserID)
+	var media models.Media
 
-	media, err := models.NewMediaFromRow(row)
+	err := r.Database.
+		Joins("Album").
+		Where("media.id = ?", id).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)", user.ID).
+		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
+		First(&media).Error
+
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get media by media_id and user_id from database")
 	}
 
-	return media, nil
+	return &media, nil
 }
 
 func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Media, error) {
@@ -70,29 +75,16 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 		return nil, errors.New("no ids provided")
 	}
 
-	mediaIDQuestions := strings.Repeat("?,", len(ids))[:len(ids)*2-1]
+	var media []*models.Media
+	err := r.Database.
+		Select("media.*").
+		Joins("Album").
+		Where("media.id IN ?", ids).
+		Where("album.owner_id = ?", user.ID).
+		Scan(&media).Error
 
-	queryArgs := make([]interface{}, 0)
-	for _, id := range ids {
-		queryArgs = append(queryArgs, id)
-	}
-	queryArgs = append(queryArgs, user.UserID)
-
-	rows, err := r.Database.Query(`
-		SELECT media.* FROM media
-		JOIN album ON media.album_id = album.album_id
-		WHERE media.media_id IN (`+mediaIDQuestions+`) AND album.owner_id = ?
-		AND media.media_id IN (
-			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-		)
-	`, queryArgs...)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")
-	}
-
-	media, err := models.NewMediaFromRows(rows)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert database rows to media")
 	}
 
 	return media, nil
@@ -106,25 +98,20 @@ func (r *Resolver) Media() api.MediaResolver {
 	return &mediaResolver{r}
 }
 
-func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
-	rows, err := r.Database.Query("SELECT * FROM share_token WHERE media_id = ?", obj.MediaID)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get shares for media (%s)", obj.Path)
+func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
+	var shareTokens []*models.ShareToken
+	if err := r.Database.Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
+		return nil, errors.Wrapf(err, "get shares for media (%s)", media.Path)
 	}
 
-	return models.NewShareTokensFromRows(rows)
+	return shareTokens, nil
 }
 
-func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error) {
+func (r *mediaResolver) Downloads(ctx context.Context, media *models.Media) ([]*models.MediaDownload, error) {
 
-	rows, err := r.Database.Query("SELECT * FROM media_url WHERE media_id = ?", obj.MediaID)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get downloads for media (%s)", obj.Path)
-	}
-
-	mediaUrls, err := models.NewMediaURLFromRows(rows)
-	if err != nil {
-		return nil, err
+	var mediaUrls []*models.MediaURL
+	if err := r.Database.Where("media_id = ?", media.ID).Find(&mediaUrls).Error; err != nil {
+		return nil, errors.Wrapf(err, "get downloads for media (%s)", media.Path)
 	}
 
 	downloads := make([]*models.MediaDownload, 0)
@@ -154,112 +141,97 @@ func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*mo
 	return downloads, nil
 }
 
-func (r *mediaResolver) HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
-	// Try high res first, then
-	web_types_questions := strings.Repeat("?,", len(scanner.WebMimetypes))[:len(scanner.WebMimetypes)*2-1]
-	args := make([]interface{}, 0)
-	args = append(args, obj.MediaID, models.PhotoHighRes, models.MediaOriginal)
-	for _, webtype := range scanner.WebMimetypes {
-		args = append(args, webtype)
-	}
+func (r *mediaResolver) HighRes(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
+	var url models.MediaURL
+	err := r.Database.
+		Where("media_id = ?", media.ID).
+		Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, scanner.WebMimetypes).
+		First(&url).Error
 
-	row := r.Database.QueryRow(`
-		SELECT * FROM media_url WHERE media_id = ? AND
-		(
-			purpose = ? OR (purpose = ? AND content_type IN (`+web_types_questions+`))
-		) LIMIT 1
-	`, args...)
-
-	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		} else {
-			return nil, errors.Wrapf(err, "could not query high-res (%s)", obj.Path)
+			return nil, errors.Wrapf(err, "could not query high-res (%s)", media.Path)
 		}
 	}
 
-	return url, nil
+	return &url, nil
 }
 
-func (r *mediaResolver) Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND (purpose = ? OR purpose = ?)", obj.MediaID, models.PhotoThumbnail, models.VideoThumbnail)
+func (r *mediaResolver) Thumbnail(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
+	var url models.MediaURL
+	err := r.Database.
+		Where("media_id = ?", media.ID).
+		Where("purpose = ? OR purpose = ?", models.PhotoThumbnail, models.VideoThumbnail).
+		First(&url).Error
 
-	url, err := models.NewMediaURLFromRow(row)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not query thumbnail (%s)", obj.Path)
+		return nil, errors.Wrapf(err, "could not query thumbnail (%s)", media.Path)
 	}
 
-	return url, nil
+	return &url, nil
 }
 
-func (r *mediaResolver) VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error) {
-	row := r.Database.QueryRow("SELECT * FROM media_url WHERE media_id = ? AND (purpose = ?)", obj.MediaID, models.VideoWeb)
+func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
 
-	url, err := models.NewMediaURLFromRow(row)
+	var url models.MediaURL
+	err := r.Database.
+		Where("media_id = ?", media.ID).
+		Where("purpose = ?", models.VideoWeb).
+		First(&url).Error
+
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		} else {
-			return nil, errors.Wrapf(err, "could not query video web-format url (%s)", obj.Path)
+			return nil, errors.Wrapf(err, "could not query video web-format url (%s)", media.Path)
 		}
 	}
 
-	return url, nil
+	return &url, nil
 }
 
-func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
-	row := r.Database.QueryRow("SELECT album.* from media JOIN album ON media.album_id = album.album_id WHERE media_id = ?", obj.MediaID)
-	return models.NewAlbumFromRow(row)
-}
-
-func (r *mediaResolver) Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error) {
-	row := r.Database.QueryRow("SELECT media_exif.* FROM media NATURAL JOIN media_exif WHERE media.media_id = ?", obj.MediaID)
-
-	exif, err := models.NewMediaExifFromRow(row)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		} else {
-			return nil, errors.Wrapf(err, "could not get exif of media from database")
-		}
+func (r *mediaResolver) Favorite(ctx context.Context, media *models.Media) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
 	}
 
-	return exif, nil
-}
-
-func (r *mediaResolver) VideoMetadata(ctx context.Context, obj *models.Media) (*models.VideoMetadata, error) {
-	row := r.Database.QueryRow("SELECT video_metadata.* FROM media JOIN video_metadata ON media.video_metadata_id = video_metadata.metadata_id WHERE media.media_id = ?", obj.MediaID)
-
-	metadata, err := models.NewVideoMetadataFromRow(row)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		} else {
-			return nil, errors.Wrapf(err, "could not get video metadata of media from database")
-		}
+	userMediaData := models.UserMediaData{
+		UserID:   user.ID,
+		MediaID:  media.ID,
+		Favorite: false,
 	}
 
-	return metadata, nil
+	if err := r.Database.FirstOrInit(&userMediaData).Error; err != nil {
+		return false, errors.Wrapf(err, "get user media data from database (user: %d, media: %d)", user.ID, media.ID)
+	}
+
+	return userMediaData.Favorite, nil
 }
 
 func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error) {
 
 	user := auth.UserFromContext(ctx)
-
-	row := r.Database.QueryRow("SELECT media.* FROM media JOIN album ON media.album_id = album.album_id WHERE media.media_id = ? AND album.owner_id = ?", mediaID, user.UserID)
-
-	media, err := models.NewMediaFromRow(row)
-	if err != nil {
-		return nil, err
+	if user == nil {
+		return nil, auth.ErrUnauthorized
 	}
 
-	_, err = r.Database.Exec("UPDATE media SET favorite = ? WHERE media_id = ?", favorite, media.MediaID)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to update media favorite on database")
+	userMediaData := models.UserMediaData{
+		UserID:   user.ID,
+		MediaID:  mediaID,
+		Favorite: favorite,
 	}
 
-	media.Favorite = favorite
+	if err := r.Database.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
+		return nil, errors.Wrapf(err, "update user favorite media in database")
+	}
 
-	return media, nil
+	var media models.Media
+	if err := r.Database.First(&media, mediaID).Error; err != nil {
+		return nil, errors.Wrap(err, "get media from database after favorite update")
+	}
+
+	return &media, nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"os"
 	"path"
 	"strconv"
 )
@@ -12,7 +11,7 @@ import (
 func ApiListenUrl() *url.URL {
 	const defaultPort = "4001"
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := ShouldServeUI()
 
 	apiPrefix := "/"
 	if shouldServeUI {
@@ -21,19 +20,19 @@ func ApiListenUrl() *url.URL {
 
 	var listenAddr string
 
-	listenAddr = os.Getenv("API_LISTEN_IP")
+	listenAddr = EnvListenIP.GetValue()
 	if listenAddr == "" {
 		listenAddr = "127.0.0.1"
 	}
 
-	listenPortStr := os.Getenv("API_LISTEN_PORT")
+	listenPortStr := EnvListenPort.GetValue()
 	if listenPortStr == "" {
 		listenPortStr = defaultPort
 	}
 
 	listenPort, err := strconv.Atoi(listenPortStr)
 	if err != nil {
-		log.Fatalf("API_LISTEN_PORT must be a number: '%s'\n%s", listenPortStr, err)
+		log.Fatalf("%s must be a number: '%s'\n%s", EnvListenPort.GetName(), listenPortStr, err)
 	}
 
 	apiUrl, err := url.Parse(fmt.Sprintf("http://%s:%d", listenAddr, listenPort))
@@ -46,16 +45,16 @@ func ApiListenUrl() *url.URL {
 }
 
 func ApiEndpointUrl() *url.URL {
-	apiEndpointStr := os.Getenv("API_ENDPOINT")
+	apiEndpointStr := EnvAPIEndpoint.GetValue()
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
-		apiEndpointStr = os.Getenv("PUBLIC_ENDPOINT")
+		apiEndpointStr = EnvPublicEndpoint.GetValue()
 	}
 
 	apiEndpointUrl, err := url.Parse(apiEndpointStr)
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable API_ENDPOINT is not a proper url")
+		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue())
 	}
 
 	if shouldServeUI {
@@ -66,16 +65,16 @@ func ApiEndpointUrl() *url.URL {
 }
 
 func UiEndpointUrl() *url.URL {
-	uiEndpointStr := os.Getenv("UI_ENDPOINT")
+	uiEndpointStr := EnvUIEndpoint.GetValue()
 
-	shouldServeUI := os.Getenv("SERVE_UI") == "1"
+	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
-		uiEndpointStr = os.Getenv("PUBLIC_ENDPOINT")
+		uiEndpointStr = EnvPublicEndpoint.GetValue()
 	}
 
 	uiEndpointUrl, err := url.Parse(uiEndpointStr)
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable UI_ENDPOINT is not a proper url")
+		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvUIEndpoint.GetName(), EnvUIEndpoint.GetValue())
 	}
 
 	return uiEndpointUrl

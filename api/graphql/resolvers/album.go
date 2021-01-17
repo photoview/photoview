@@ -2,11 +2,12 @@ package resolvers
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"gorm.io/gorm"
 )
 
 func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
@@ -15,41 +16,39 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		return nil, auth.ErrUnauthorized
 	}
 
-	filterSQL, err := filter.FormatSQL("album")
-	if err != nil {
+	if err := user.FillAlbums(r.Database); err != nil {
 		return nil, err
 	}
 
-	var rows *sql.Rows
-
-	filterFavorites := " AND favorite = 1"
-	if onlyWithFavorites == nil || *onlyWithFavorites == false {
-		filterFavorites = ""
+	if len(user.Albums) == 0 {
+		return nil, nil
 	}
 
-	filterEmpty := " AND EXISTS (SELECT * FROM media WHERE album_id = album.album_id" + filterFavorites + ") "
-	if showEmpty != nil && *showEmpty == true && (onlyWithFavorites == nil || *onlyWithFavorites == false) {
-		filterEmpty = ""
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
 	}
 
-	if onlyRoot == nil || *onlyRoot == false {
-		rows, err = r.Database.Query("SELECT * FROM album WHERE owner_id = ?"+filterEmpty+filterSQL, user.UserID)
-		if err != nil {
-			return nil, err
+	query := r.Database.Model(models.Album{}).Where("id IN (?)", userAlbumIDs)
+
+	if onlyRoot != nil && *onlyRoot == true {
+		query = query.Where("parent_album_id IS NULL")
+	}
+
+	if showEmpty == nil || *showEmpty == false {
+		subQuery := r.Database.Model(&models.Media{}).Where("album_id = albums.id")
+
+		if onlyWithFavorites != nil && *onlyWithFavorites == true {
+			subQuery = subQuery.Where("favorite = 1")
 		}
-	} else {
-		rows, err = r.Database.Query(`
-			SELECT * FROM album WHERE owner_id = ? AND parent_album = (
-				SELECT album_id FROM album WHERE parent_album IS NULL AND owner_id = ?
-			)
-		`+filterEmpty+filterSQL, user.UserID, user.UserID)
-		if err != nil {
-			return nil, err
-		}
+
+		query = query.Where("EXISTS (?)", subQuery)
 	}
 
-	albums, err := models.NewAlbumsFromRows(rows)
-	if err != nil {
+	query = filter.FormatSQL(query)
+
+	var albums []*models.Album
+	if err := query.Scan(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -62,13 +61,24 @@ func (r *queryResolver) Album(ctx context.Context, id int) (*models.Album, error
 		return nil, auth.ErrUnauthorized
 	}
 
-	row := r.Database.QueryRow("SELECT * FROM album WHERE album_id = ? AND owner_id = ?", id, user.UserID)
-	album, err := models.NewAlbumFromRow(row)
+	var album models.Album
+	if err := r.Database.First(&album, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("album not found")
+		}
+		return nil, err
+	}
+
+	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
 	if err != nil {
 		return nil, err
 	}
 
-	return album, nil
+	if !ownsAlbum {
+		return nil, errors.New("forbidden")
+	}
+
+	return &album, nil
 }
 
 func (r *Resolver) Album() api.AlbumResolver {
@@ -77,32 +87,21 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
+func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
 
-	filterSQL, err := filter.FormatSQL("media")
-	if err != nil {
-		return nil, err
+	query := r.Database.
+		Joins("Album").
+		Where("Album.id = ?", album.ID).
+		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
+
+	if onlyFavorites != nil && *onlyFavorites == true {
+		query = query.Where("media.favorite = 1")
 	}
 
-	filterFavorites := " AND media.favorite = 1 "
-	if onlyFavorites == nil || *onlyFavorites == false {
-		filterFavorites = ""
-	}
+	query = filter.FormatSQL(query)
 
-	mediaRows, err := r.Database.Query(`
-		SELECT media.* FROM album, media
-		WHERE album.album_id = ? AND media.album_id = album.album_id
-		AND media.media_id IN (
-			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
-		)
-	`+filterFavorites+filterSQL, obj.AlbumID)
-	if err != nil {
-		return nil, err
-	}
-	defer mediaRows.Close()
-
-	media, err := models.NewMediaFromRows(mediaRows)
-	if err != nil {
+	var media []*models.Media
+	if err := query.Find(&media).Error; err != nil {
 		return nil, err
 	}
 
@@ -111,45 +110,37 @@ func (r *albumResolver) Media(ctx context.Context, obj *models.Album, filter *mo
 
 func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
 
-	row := r.Database.QueryRow(`
+	var media models.Media
+
+	err := r.Database.Raw(`
 		WITH recursive sub_albums AS (
-			SELECT * FROM album AS root WHERE album_id = ?
+			SELECT * FROM albums AS root WHERE id = ?
 			UNION ALL
-			SELECT child.* FROM album AS child JOIN sub_albums ON child.parent_album = sub_albums.album_id
+			SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
 		)
 
 		SELECT * FROM media WHERE media.album_id IN (
-			SELECT album_id FROM sub_albums
-		) AND media.media_id IN (
-			SELECT media_id FROM media_url WHERE media_url.media_id = media.media_id
+			SELECT id FROM sub_albums
+		) AND media.id IN (
+			SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
 		) LIMIT 1
-	`, obj.AlbumID)
+	`, obj.ID).Scan(&media).Error
 
-	media, err := models.NewMediaFromRow(row)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
-	return media, nil
+	return &media, nil
 }
 
-func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error) {
-	filterSQL, err := filter.FormatSQL("album")
-	if err != nil {
-		return nil, err
-	}
+func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
 
-	rows, err := r.Database.Query("SELECT * FROM album WHERE parent_album = ?"+filterSQL, obj.AlbumID)
-	if err != nil {
-		return nil, err
-	}
+	var albums []*models.Album
 
-	albums, err := models.NewAlbumsFromRows(rows)
-	if err != nil {
+	query := r.Database.Where("parent_album_id = ?", parent.ID)
+	query = filter.FormatSQL(query)
+
+	if err := query.Find(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -164,34 +155,54 @@ func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.U
 	panic("not implemented")
 }
 
-func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error) {
-	rows, err := r.Database.Query("SELECT * FROM share_token WHERE album_id = ?", obj.ID())
-	if err != nil {
+func (r *albumResolver) Shares(ctx context.Context, album *models.Album) ([]*models.ShareToken, error) {
+
+	var shareTokens []*models.ShareToken
+	if err := r.Database.Where("album_id = ?", album.ID).Find(&shareTokens).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	return models.NewShareTokensFromRows(rows)
+	return shareTokens, nil
 }
 
 func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.Album, error) {
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		empty := make([]*models.Album, 0)
 		return empty, nil
 	}
 
-	rows, err := r.Database.Query(`
+	var album_path []*models.Album
+
+	err := r.Database.Raw(`
 		WITH recursive path_albums AS (
-			SELECT * FROM album anchor WHERE anchor.album_id = ?
+			SELECT * FROM albums anchor WHERE anchor.id = ?
 			UNION
-			SELECT parent.* FROM path_albums child JOIN album parent ON parent.album_id = child.parent_album
+			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
-		SELECT * FROM path_albums WHERE album_id != ? AND owner_id = ?
-	`, obj.AlbumID, obj.AlbumID, user.UserID)
+		SELECT * FROM path_albums WHERE id != ?
+	`, obj.ID, obj.ID).Scan(&album_path).Error
+
+	// Make sure to only return albums this user owns
+	for i := len(album_path) - 1; i >= 0; i-- {
+		album := album_path[i]
+
+		owns, err := user.OwnsAlbum(r.Database, album)
+		if err != nil {
+			return nil, err
+		}
+
+		if !owns {
+			album_path = album_path[i+1:]
+			break
+		}
+
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewAlbumsFromRows(rows)
+	return album_path, nil
 }

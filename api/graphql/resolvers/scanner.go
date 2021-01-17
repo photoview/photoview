@@ -4,9 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
@@ -25,13 +27,13 @@ func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, 
 }
 
 func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error) {
-	row := r.Database.QueryRow("SELECT * FROM user WHERE user_id = ?", userID)
-	user, err := models.NewUserFromRow(row)
-	if err != nil {
+
+	var user models.User
+	if err := r.Database.First(&user, userID).Error; err != nil {
 		return nil, errors.Wrap(err, "get user from database")
 	}
 
-	scanner.AddUserToQueue(user)
+	scanner.AddUserToQueue(&user)
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{
@@ -46,21 +48,18 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 		return 0, errors.New("interval must be 0 or above")
 	}
 
-	_, err := r.Database.Exec("UPDATE site_info SET periodic_scan_interval = ?", interval)
-	if err != nil {
+	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
 		return 0, err
 	}
 
-	var dbInterval int
-
-	row := r.Database.QueryRow("SELECT periodic_scan_interval FROM site_info")
-	if err = row.Scan(&dbInterval); err != nil {
+	var siteInfo models.SiteInfo
+	if err := r.Database.First(&siteInfo).Error; err != nil {
 		return 0, err
 	}
 
-	scanner.ChangePeriodicScanInterval(time.Duration(dbInterval) * time.Second)
+	scanner.ChangePeriodicScanInterval(time.Duration(siteInfo.PeriodicScanInterval) * time.Second)
 
-	return dbInterval, nil
+	return siteInfo.PeriodicScanInterval, nil
 }
 
 func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error) {
@@ -68,19 +67,20 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, errors.New("concurrent workers must at least be 1")
 	}
 
-	_, err := r.Database.Exec("UPDATE site_info SET concurrent_workers = ?", workers)
-	if err != nil {
+	if workers > 1 && drivers.DatabaseDriver() == drivers.DatabaseDriverSqlite {
+		return 0, errors.New("multiple workers not supported for SQLite databases")
+	}
+
+	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
 		return 0, err
 	}
 
-	var dbWorkers int
-
-	row := r.Database.QueryRow("SELECT concurrent_workers FROM site_info")
-	if err = row.Scan(&dbWorkers); err != nil {
+	var siteInfo models.SiteInfo
+	if err := r.Database.First(&siteInfo).Error; err != nil {
 		return 0, err
 	}
 
-	scanner.ChangeScannerConcurrentWorkers(dbWorkers)
+	scanner.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
 
-	return dbWorkers, nil
+	return siteInfo.ConcurrentWorkers, nil
 }

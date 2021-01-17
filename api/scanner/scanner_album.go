@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -10,9 +9,45 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
-func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
+func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+
+	owners := []models.User{
+		*owner,
+	}
+
+	var matchedAlbums []models.Album
+	if err := db.Where("path_hash = ?", models.MD5Hash(rootPath)).Find(&matchedAlbums).Error; err != nil {
+		return nil, err
+	}
+
+	if len(matchedAlbums) > 0 {
+		album := matchedAlbums[0]
+
+		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
+			return nil, errors.Wrap(err, "failed to add owner to already existing album")
+		}
+
+		return &album, nil
+	} else {
+		album := models.Album{
+			Title:  path.Base(rootPath),
+			Path:   rootPath,
+			Owners: owners,
+		}
+
+		if err := db.Create(&album).Error; err != nil {
+			return nil, err
+		}
+
+		return &album, nil
+	}
+}
+
+func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_notify_key := utils.GenerateToken()
 	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
@@ -37,37 +72,35 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 
 	album_has_changes := false
 	for count, photo := range albumPhotos {
-		tx, err := db.Begin()
-		if err != nil {
-			ScannerError("Failed to begin database transaction: %s", err)
-		}
+		// tx, err := db.Begin()
 
-		processing_was_needed, err := ProcessMedia(tx, photo)
-		if err != nil {
-			tx.Rollback()
-			ScannerError("Failed to process photo (%s): %s", photo.Path, err)
-			continue
-		}
+		transactionError := db.Transaction(func(tx *gorm.DB) error {
+			processing_was_needed, err := ProcessMedia(tx, photo)
+			if err != nil {
+				return errors.Wrapf(err, "failed to process photo (%s)", photo.Path)
+			}
 
-		if processing_was_needed {
-			album_has_changes = true
-			progress := float64(count) / float64(len(albumPhotos)) * 100.0
-			notification.BroadcastNotification(&models.Notification{
-				Key:      album_notify_key,
-				Type:     models.NotificationTypeProgress,
-				Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
-				Content:  fmt.Sprintf("Processed media at %s", photo.Path),
-				Progress: &progress,
-			})
-		}
+			if processing_was_needed {
+				album_has_changes = true
+				progress := float64(count) / float64(len(albumPhotos)) * 100.0
+				notification.BroadcastNotification(&models.Notification{
+					Key:      album_notify_key,
+					Type:     models.NotificationTypeProgress,
+					Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
+					Content:  fmt.Sprintf("Processed media at %s", photo.Path),
+					Progress: &progress,
+				})
+			}
 
-		err = tx.Commit()
-		if err != nil {
-			ScannerError("Failed to commit database transaction: %s", err)
+			return nil
+		})
+
+		if transactionError != nil {
+			ScannerError("Failed to begin database transaction: %s", transactionError)
 		}
 	}
 
-	cleanup_errors := CleanupMedia(db, album.AlbumID, albumPhotos)
+	cleanup_errors := CleanupMedia(db, album.ID, albumPhotos)
 	for _, err := range cleanup_errors {
 		ScannerError("Failed to delete old media: %s", err)
 	}
@@ -85,7 +118,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB) {
 	}
 }
 
-func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
+func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
 	albumPhotos := make([]*models.Media, 0)
 
@@ -104,24 +137,24 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *sql.DB
 				continue
 			}
 
-			tx, err := db.Begin()
+			err := db.Transaction(func(tx *gorm.DB) error {
+				photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.ID, cache)
+				if err != nil {
+					return errors.Wrapf(err, "Scanning media error (%s)", photoPath)
+				}
+
+				onScanPhoto(photo, isNewPhoto)
+
+				albumPhotos = append(albumPhotos, photo)
+
+				return nil
+			})
+
 			if err != nil {
-				ScannerError("Could not begin database transaction for image %s: %s\n", photoPath, err)
+				ScannerError("Error scanning media for album (%d): %s\n", album.ID, err)
 				continue
 			}
 
-			photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.AlbumID, cache)
-			if err != nil {
-				ScannerError("Scanning media error (%s): %s", photoPath, err)
-				tx.Rollback()
-				continue
-			}
-
-			onScanPhoto(photo, isNewPhoto)
-
-			albumPhotos = append(albumPhotos, photo)
-
-			tx.Commit()
 		}
 	}
 

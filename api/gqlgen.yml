@@ -24,6 +24,9 @@ models:
     model: github.com/99designs/gqlgen/graphql.IntID
   User:
     model: github.com/photoview/photoview/api/graphql/models.User
+    fields:
+      albums:
+        resolver: true
   Media:
     model: github.com/photoview/photoview/api/graphql/models.Media
   MediaURL:
@@ -36,3 +39,5 @@ models:
     model: github.com/photoview/photoview/api/graphql/models.Album
   ShareToken:
     model: github.com/photoview/photoview/api/graphql/models.ShareToken
+  SiteInfo:
+    model: github.com/photoview/photoview/api/graphql/models.SiteInfo

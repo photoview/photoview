@@ -3,8 +3,10 @@ package resolvers
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/pkg/errors"
+	"gorm.io/gorm/clause"
+
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
@@ -27,45 +29,42 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 
 	wildQuery := "%" + query + "%"
 
-	photoRows, err := r.Database.Query(`
-		SELECT media.* FROM media JOIN album ON media.album_id = album.album_id
-		WHERE album.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )
-		ORDER BY (
-			case when media.title LIKE ? then 2
-			     when media.path LIKE ? then 1
-			end ) DESC
-		LIMIT ?
-	`, user.UserID, wildQuery, wildQuery, wildQuery, wildQuery, limitMedia)
+	var media []*models.Media
+
+	err := r.Database.Joins("Album").
+		Where("Album.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )", user.ID, wildQuery, wildQuery).
+		Clauses(clause.OrderBy{
+			Expression: clause.Expr{
+				SQL:                "(CASE WHEN media.title LIKE ? THEN 2 WHEN media.path LIKE ? THEN 1 END) DESC",
+				Vars:               []interface{}{wildQuery, wildQuery},
+				WithoutParentheses: true},
+		}).
+		Limit(limitMedia).
+		Find(&media).Error
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "searching media")
 	}
 
-	photos, err := models.NewMediaFromRows(photoRows)
-	if err != nil {
-		return nil, err
-	}
+	var albums []*models.Album
 
-	albumRows, err := r.Database.Query(`
-		SELECT * FROM album
-		WHERE owner_id = ? AND ( title LIKE ? OR path LIKE ? )
-		ORDER BY (
-			case when title LIKE ? then 2
-			     when path LIKE ? then 1
-			end ) DESC
-		LIMIT ?
-	`, user.UserID, wildQuery, wildQuery, wildQuery, wildQuery, limitAlbums)
+	err = r.Database.Where("owner_id = ? AND (title LIKE ? OR path LIKE ?)", user.ID, wildQuery, wildQuery).
+		Clauses(clause.OrderBy{
+			Expression: clause.Expr{
+				SQL:                "(CASE WHEN title LIKE ? THEN 2 WHEN path LIKE ? THEN 1 END) DESC",
+				Vars:               []interface{}{wildQuery, wildQuery},
+				WithoutParentheses: true},
+		}).
+		Limit(limitAlbums).
+		Find(&albums).Error
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "searching albums")
 	}
 
-	albums, err := models.NewAlbumsFromRows(albumRows)
-	if err != nil {
-		return nil, err
-	}
-
 	result := models.SearchResult{
 		Query:  query,
-		Media:  photos,
+		Media:  media,
 		Albums: albums,
 	}
 

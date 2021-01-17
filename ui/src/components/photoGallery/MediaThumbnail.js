@@ -7,7 +7,7 @@ import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
 
 const markFavoriteMutation = gql`
-  mutation markMediaFavorite($mediaId: Int!, $favorite: Boolean!) {
+  mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
     favoriteMedia(mediaId: $mediaId, favorite: $favorite) {
       id
       favorite

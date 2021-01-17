@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -11,29 +10,23 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"gorm.io/gorm"
 )
 
-func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
+func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
-		media_name := mux.Vars(r)["name"]
+		mediaName := mux.Vars(r)["name"]
 
-		row := db.QueryRow("SELECT media_url.* FROM media_url JOIN media ON media_url.media_id = media.media_id WHERE media_url.media_name = ?", media_name)
-		mediaURL, err := models.NewMediaURLFromRow(row)
-
-		if err != nil {
+		var mediaURL models.MediaURL
+		result := db.Model(&models.MediaURL{}).Select("media_urls.*").Where("media_url.media_name = ?", mediaName).Joins("media ON media_urls.media_id = media.id").Scan(&mediaURL)
+		if err := result.Error; err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
 		}
 
-		row = db.QueryRow("SELECT * FROM media WHERE media_id = ?", mediaURL.MediaId)
-		media, err := models.NewMediaFromRow(row)
-		if err != nil {
-			log.Printf("WARN: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
-		}
+		var media = &mediaURL.Media
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
@@ -47,7 +40,7 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 		var cachedPath string
 
 		if mediaURL.Purpose == models.VideoWeb {
-			cachedPath = path.Join(scanner.PhotoCache(), strconv.Itoa(media.AlbumId), strconv.Itoa(mediaURL.MediaId), mediaURL.MediaName)
+			cachedPath = path.Join(scanner.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
 		} else {
 			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -55,36 +48,28 @@ func RegisterVideoRoutes(db *sql.DB, router *mux.Router) {
 			return
 		}
 
-		_, err = os.Stat(cachedPath)
-		if err != nil {
+		if _, err := os.Stat(cachedPath); err != nil {
 			if os.IsNotExist(err) {
-				tx, err := db.Begin()
+				err := db.Transaction(func(tx *gorm.DB) error {
+					if _, err := scanner.ProcessMedia(tx, media); err != nil {
+						log.Printf("ERROR: processing video not found in cache: %s\n", err)
+						return err
+					}
+
+					if _, err := os.Stat(cachedPath); err != nil {
+						log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
+						return err
+					}
+
+					return nil
+				})
+
 				if err != nil {
 					log.Printf("ERROR: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte("internal server error"))
 					return
 				}
-
-				_, err = scanner.ProcessMedia(tx, media)
-				if err != nil {
-					log.Printf("ERROR: processing video not found in cache: %s\n", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					tx.Rollback()
-					return
-				}
-
-				_, err = os.Stat(cachedPath)
-				if err != nil {
-					log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					tx.Rollback()
-					return
-				}
-
-				tx.Commit()
 			}
 		}
 

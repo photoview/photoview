@@ -9,7 +9,7 @@ import SidebarDownload from './SidebarDownload'
 import SidebarItem from './SidebarItem'
 
 const mediaQuery = gql`
-  query sidebarPhoto($id: Int!) {
+  query sidebarPhoto($id: ID!) {
     media(id: $id) {
       id
       title

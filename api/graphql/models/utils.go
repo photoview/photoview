@@ -1,48 +1,49 @@
 package models
 
 import (
-	"fmt"
-	"log"
+	"crypto/md5"
+	"encoding/hex"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-func (filter *Filter) FormatSQL(context string) (string, error) {
+func (filter *Filter) FormatSQL(tx *gorm.DB) *gorm.DB {
+
 	if filter == nil {
-		return "", nil
-	}
-
-	orderByMap := make(map[string]string)
-	orderByMap["media_date_shot"] = "media.date_shot"
-	orderByMap["media_date_imported"] = "media.date_imported"
-	orderByMap["media_title"] = "media.title"
-	orderByMap["media_kind"] = "media.media_type, SUBSTRING_INDEX(media.path, '.', -1)"
-	orderByMap["album_title"] = "album.title"
-
-	result := ""
-
-	if filter.OrderBy != nil {
-		order_by, ok := orderByMap[context+"_"+*filter.OrderBy]
-		if !ok {
-			log.Printf("Invalid order column: '%s'\n", *filter.OrderBy)
-			return "", nil
-		}
-
-		direction := "ASC"
-		if filter.OrderDirection != nil && filter.OrderDirection.IsValid() {
-			direction = filter.OrderDirection.String()
-		}
-
-		result += fmt.Sprintf(" ORDER BY %s %s", order_by, direction)
+		return tx
 	}
 
 	if filter.Limit != nil {
-		offset := 0
-		if filter.Offset != nil && *filter.Offset >= 0 {
-			offset = *filter.Offset
-		}
-
-		result += fmt.Sprintf(" LIMIT %d OFFSET %d", *filter.Limit, offset)
+		tx.Limit(*filter.Limit)
 	}
 
-	log.Printf("SQL Filter: '%s'\n", result)
-	return result, nil
+	if filter.Offset != nil {
+		tx.Offset(*filter.Offset)
+	}
+
+	if filter.OrderBy != nil {
+
+		desc := true
+		if filter.OrderDirection != nil && filter.OrderDirection.IsValid() {
+			if *filter.OrderDirection == OrderDirectionAsc {
+				desc = false
+			}
+		}
+
+		tx.Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: *filter.OrderBy,
+			},
+			Desc: desc,
+		})
+	}
+
+	return tx
+}
+
+// MD5Hash hashes value to a 32 length digest, the result is the same as the MYSQL function md5()
+func MD5Hash(value string) string {
+	hash := md5.Sum([]byte(value))
+	return hex.EncodeToString(hash[:])
 }

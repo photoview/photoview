@@ -2,88 +2,127 @@ package scanner
 
 import (
 	"container/list"
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 
-	"github.com/pkg/errors"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
-func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
+func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
 
-	// Check if user directory exists on the file system
-	if _, err := os.Stat(user.RootPath); err != nil {
-		if os.IsNotExist(err) {
-			return nil, []error{errors.Errorf("Photo directory for user '%s' does not exist '%s'\n", user.Username, user.RootPath)}
-		} else {
-			return nil, []error{errors.Errorf("Could not read photo directory for user '%s': %s\n", user.Username, user.RootPath)}
-		}
+	if err := user.FillAlbums(db); err != nil {
+		return nil, []error{err}
 	}
 
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	var userRootAlbums []*models.Album
+	if err := db.Where("id IN (?)", userAlbumIDs).Where("parent_album_id IS NULL").Find(&userRootAlbums).Error; err != nil {
+		return nil, []error{err}
+	}
+
+	scanErrors := make([]error, 0)
+
 	type scanInfo struct {
-		path     string
-		parentId *int
+		path   string
+		parent *models.Album
 	}
 
 	scanQueue := list.New()
-	scanQueue.PushBack(scanInfo{
-		path:     user.RootPath,
-		parentId: nil,
-	})
+
+	for _, album := range userRootAlbums {
+		// Check if user album directory exists on the file system
+		if _, err := os.Stat(album.Path); err != nil {
+			if os.IsNotExist(err) {
+				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
+			} else {
+				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
+			}
+		} else {
+			scanQueue.PushBack(scanInfo{
+				path:   album.Path,
+				parent: nil,
+			})
+		}
+	}
 
 	userAlbums := make([]*models.Album, 0)
-	albumErrors := make([]error, 0)
-	// newPhotos := make([]*models.Photo, 0)
 
 	for scanQueue.Front() != nil {
 		albumInfo := scanQueue.Front().Value.(scanInfo)
 		scanQueue.Remove(scanQueue.Front())
 
 		albumPath := albumInfo.path
-		albumParentId := albumInfo.parentId
+		albumParent := albumInfo.parent
 
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
 		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
+			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
 		}
 
-		tx, err := db.Begin()
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "begin database transaction"))
-			continue
-		}
+		// Will become new album or album from db
+		var album *models.Album
 
-		log.Printf("Scanning directory: %s", albumPath)
+		transErr := db.Transaction(func(tx *gorm.DB) error {
+			log.Printf("Scanning directory: %s", albumPath)
 
-		// Make album if not exists
-		albumTitle := path.Base(albumPath)
-		_, err = tx.Exec("INSERT IGNORE INTO album (title, parent_album, owner_id, path, path_hash) VALUES (?, ?, ?, ?, MD5(path))", albumTitle, albumParentId, user.UserID, albumPath)
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "insert album into database"))
-			tx.Rollback()
-			continue
-		}
+			// check if album already exists
+			var albumResult []models.Album
+			result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
+			if result.Error != nil {
+				return result.Error
+			}
 
-		row := tx.QueryRow("SELECT * FROM album WHERE path_hash = MD5(?)", albumPath)
-		album, err := models.NewAlbumFromRow(row)
-		if err != nil {
-			albumErrors = append(albumErrors, errors.Wrapf(err, "get album from database (%s)", albumPath))
-			tx.Rollback()
-			continue
-		}
-		userAlbums = append(userAlbums, album)
+			// album does not exist, create new
+			if len(albumResult) == 0 {
+				albumTitle := path.Base(albumPath)
 
-		// Commit album transaction
-		if err := tx.Commit(); err != nil {
-			albumErrors = append(albumErrors, errors.Wrap(err, "commit database transaction"))
+				var albumParentID *int
+				parentOwners := make([]models.User, 0)
+				if albumParent != nil {
+					albumParentID = &albumParent.ID
+
+					if err := db.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
+						return err
+					}
+				}
+
+				album = &models.Album{
+					Title:         albumTitle,
+					ParentAlbumID: albumParentID,
+					Path:          albumPath,
+				}
+
+				if err := tx.Create(&album).Error; err != nil {
+					return errors.Wrap(err, "insert album into database")
+				}
+
+				if err := tx.Model(&album).Association("Owners").Append(parentOwners); err != nil {
+					return errors.Wrap(err, "add owners to album")
+				}
+			} else {
+				album = &albumResult[0]
+			}
+
+			userAlbums = append(userAlbums, album)
+
+			return nil
+		})
+
+		if transErr != nil {
+			scanErrors = append(scanErrors, errors.Wrap(transErr, "begin database transaction"))
 			continue
 		}
 
@@ -98,17 +137,17 @@ func findAlbumsForUser(db *sql.DB, user *models.User, album_cache *AlbumScannerC
 
 			if item.IsDir() && directoryContainsPhotos(subalbumPath, album_cache) {
 				scanQueue.PushBack(scanInfo{
-					path:     subalbumPath,
-					parentId: &album.AlbumID,
+					path:   subalbumPath,
+					parent: album,
 				})
 			}
 		}
 	}
 
 	deleteErrors := deleteOldUserAlbums(db, userAlbums, user)
-	albumErrors = append(albumErrors, deleteErrors...)
+	scanErrors = append(scanErrors, deleteErrors...)
 
-	return userAlbums, albumErrors
+	return userAlbums, scanErrors
 }
 
 func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
@@ -168,10 +207,11 @@ func ScannerError(format string, args ...interface{}) {
 	})
 }
 
-func PhotoCache() string {
-	photoCache := os.Getenv("PHOTO_CACHE")
+// MediaCachePath returns the path for where the media cache is located on the file system
+func MediaCachePath() string {
+	photoCache := utils.EnvMediaCachePath.GetValue()
 	if photoCache == "" {
-		photoCache = "./photo_cache"
+		photoCache = "./media_cache"
 	}
 
 	return photoCache

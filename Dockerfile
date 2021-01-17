@@ -1,8 +1,8 @@
-# Build UI
+### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:10 as ui
 
-ARG API_ENDPOINT
-ENV API_ENDPOINT=${API_ENDPOINT}
+ARG PHOTOVIEW_API_ENDPOINT
+ENV PHOTOVIEW_API_ENDPOINT=${PHOTOVIEW_API_ENDPOINT}
 
 # Set environment variable UI_PUBLIC_URL from build args, uses "/" as default
 ARG UI_PUBLIC_URL
@@ -19,8 +19,12 @@ COPY ui /app
 # Build frontend
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
-# Build API
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14-alpine AS api
+### Build API ###
+FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:3 AS api
+
+# Install required build dependencies
+RUN apk --no-cache add go build-base
+
 COPY --from=tonistiigi/xx:golang / /
 
 ARG TARGETPLATFORM
@@ -33,13 +37,17 @@ WORKDIR /app
 COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
+# Build go-sqlite3 dependency with CGO
+ENV CGO_ENABLED 1
+RUN go install github.com/mattn/go-sqlite3
+
 # Copy api source
 COPY api /app
 
 RUN go build -v -o photoview .
 
-# Copy api and ui to production environment
-FROM alpine:3.12
+### Copy api and ui to production environment ###
+FROM alpine:3
 
 # Install darktable for converting RAW images, and ffmpeg for encoding videos
 # Ignore errors if packages are not supported for the specific platform
@@ -47,13 +55,12 @@ RUN apk --no-cache add darktable; exit 0
 RUN apk --no-cache add ffmpeg; exit 0
 
 COPY --from=ui /app/dist /ui
-COPY --from=api /app/database/migrations /database/migrations
 COPY --from=api /app/photoview /app/photoview
 
-ENV API_LISTEN_IP 127.0.0.1
-ENV API_LISTEN_PORT 80
+ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
+ENV PHOTOVIEW_LISTEN_PORT 80
 
-ENV SERVE_UI 1
+ENV PHOTOVIEW_SERVE_UI 1
 
 EXPOSE 80
 

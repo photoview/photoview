@@ -5,7 +5,7 @@ import { useLazyQuery } from '@apollo/client'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
 
 const QUERY_MEDIA = gql`
-  query placePageQueryMedia($mediaIDs: [Int!]!) {
+  query placePageQueryMedia($mediaIDs: [ID!]!) {
     mediaList(ids: $mediaIDs) {
       id
       title

@@ -34,15 +34,15 @@ type Query {
     onlyWithFavorites: Boolean
   ): [Album!]!
   "Get album by id, user must own the album or be admin"
-  album(id: Int!): Album!
+  album(id: ID!): Album!
 
   "List of media owned by the logged in user"
   myMedia(filter: Filter): [Media!]!
   "Get media by id, user must own the media or be admin"
-  media(id: Int!): Media!
+  media(id: ID!): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
-  mediaList(ids: [Int!]!): [Media!]!
+  mediaList(ids: [ID!]!): [Media!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
@@ -58,13 +58,6 @@ type Query {
 type Mutation {
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
-  "Registers a new user, must be admin to call"
-  registerUser(
-    username: String!
-    password: String!
-    rootPath: String!
-  ): AuthorizeResult!
-
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!
@@ -75,34 +68,36 @@ type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
   "Scan a single user for new media"
-  scanUser(userId: Int!): ScannerResult!
+  scanUser(userId: ID!): ScannerResult!
 
   "Generate share token for album"
-  shareAlbum(albumId: Int!, expire: Time, password: String): ShareToken
+  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken
   "Generate share token for media"
-  shareMedia(mediaId: Int!, expire: Time, password: String): ShareToken
+  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken
 
   "Mark or unmark a media as being a favorite"
-  favoriteMedia(mediaId: Int!, favorite: Boolean!): Media
+  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media
 
   updateUser(
-    id: Int!
+    id: ID!
     username: String
-    rootPath: String
     password: String
     admin: Boolean
   ): User @isAdmin
   createUser(
     username: String!
-    rootPath: String!
     password: String
     admin: Boolean!
   ): User @isAdmin
-  deleteUser(id: Int!): User @isAdmin
+  deleteUser(id: ID!): User @isAdmin
+
+  "Add a root path from where to look for media for the given user"
+  userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+  userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   """
   Set how often, in seconds, the server should automatically scan for new media,
@@ -152,7 +147,7 @@ type ScannerResult {
 
 "A token used to publicly access an album or media"
 type ShareToken {
-  id: Int!
+  id: ID!
   token: String!
   "The user who created the token"
   owner: User!
@@ -177,17 +172,20 @@ type SiteInfo {
 }
 
 type User {
-  id: Int!
+  id: ID!
   username: String!
   #albums: [Album]
-  "Local filepath for the user's photos"
-  rootPath: String! @isAdmin
+  # rootPath: String! @isAdmin
+  "All albums owned by this user"
+  albums: [Album!]! @isAdmin
+  "Top level albums owned by this user"
+  rootAlbums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
 }
 
 type Album {
-  id: Int!
+  id: ID!
   title: String!
   "The media inside this album"
   media(
@@ -232,7 +230,7 @@ enum MediaType {
 }
 
 type Media {
-  id: Int!
+  id: ID!
   title: String!
   "Local filepath for the media"
   path: String!
@@ -255,7 +253,7 @@ type Media {
 
 "EXIF metadata from the camera"
 type MediaEXIF {
-  id: Int!
+  id: ID!
   media: Media!
   "The model name of the camera"
   camera: String
@@ -279,14 +277,14 @@ type MediaEXIF {
 }
 
 type VideoMetadata {
-  id: Int!
+  id: ID!
   media: Media!
   width: Int!
   height: Int!
   duration: Float!
   codec: String
   framerate: Float
-  bitrate: Int
+  bitrate: String
   colorProfile: String
   audio: String
 }

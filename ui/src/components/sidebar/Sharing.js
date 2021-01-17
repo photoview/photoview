@@ -13,10 +13,11 @@ import copy from 'copy-to-clipboard'
 import { authToken } from '../../authentication'
 
 const sharePhotoQuery = gql`
-  query sidbarGetPhotoShares($id: Int!) {
+  query sidbarGetPhotoShares($id: ID!) {
     media(id: $id) {
       id
       shares {
+        id
         token
         hasPassword
       }
@@ -25,10 +26,11 @@ const sharePhotoQuery = gql`
 `
 
 const shareAlbumQuery = gql`
-  query sidbarGetAlbumShares($id: Int!) {
+  query sidbarGetAlbumShares($id: ID!) {
     album(id: $id) {
       id
       shares {
+        id
         token
         hasPassword
       }
@@ -37,7 +39,7 @@ const shareAlbumQuery = gql`
 `
 
 const addPhotoShareMutation = gql`
-  mutation sidebarPhotoAddShare($id: Int!, $password: String, $expire: Time) {
+  mutation sidebarPhotoAddShare($id: ID!, $password: String, $expire: Time) {
     shareMedia(mediaId: $id, password: $password, expire: $expire) {
       token
     }
@@ -45,7 +47,7 @@ const addPhotoShareMutation = gql`
 `
 
 const addAlbumShareMutation = gql`
-  mutation sidebarAlbumAddShare($id: Int!, $password: String, $expire: Time) {
+  mutation sidebarAlbumAddShare($id: ID!, $password: String, $expire: Time) {
     shareAlbum(albumId: $id, password: $password, expire: $expire) {
       token
     }
@@ -211,7 +213,7 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
 }
 
 ShareItemMoreDropdown.propTypes = {
-  id: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
   isPhoto: PropTypes.bool.isRequired,
   share: PropTypes.object.isRequired,
 }

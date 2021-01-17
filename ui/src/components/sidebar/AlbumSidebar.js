@@ -4,7 +4,7 @@ import { useQuery, gql } from '@apollo/client'
 import SidebarShare from './Sharing'
 
 const albumQuery = gql`
-  query getAlbumSidebar($id: Int!) {
+  query getAlbumSidebar($id: ID!) {
     album(id: $id) {
       id
       title
@@ -32,7 +32,7 @@ const AlbumSidebar = ({ albumId }) => {
 }
 
 AlbumSidebar.propTypes = {
-  albumId: PropTypes.number.isRequired,
+  albumId: PropTypes.string.isRequired,
 }
 
 export default AlbumSidebar

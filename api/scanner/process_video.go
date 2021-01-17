@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -14,25 +13,23 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
+	"gorm.io/gorm"
 )
 
-func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string) (bool, error) {
+func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *string) (bool, error) {
 	video := mediaData.media
 	didProcess := false
 
 	log.Printf("Processing video: %s", video.Path)
 
-	mediaUrlFromDB, err := makePhotoURLChecker(tx, video.MediaID)
-	if err != nil {
-		return false, err
-	}
+	mediaURLFromDB := makePhotoURLChecker(tx, video.ID)
 
-	videoWebURL, err := mediaUrlFromDB(models.VideoWeb)
+	videoWebURL, err := mediaURLFromDB(models.VideoWeb)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing video web-format")
 	}
 
-	videoThumbnailURL, err := mediaUrlFromDB(models.VideoThumbnail)
+	videoThumbnailURL, err := mediaURLFromDB(models.VideoThumbnail)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing video thumbnail")
 	}
@@ -62,9 +59,17 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 			return false, errors.Wrap(err, "reading file stats of web-optimized video")
 		}
 
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			video.MediaID, web_video_name, webMetadata.Width, webMetadata.Height, models.VideoWeb, "video/mp4", fileStats.Size())
-		if err != nil {
+		mediaURL := models.MediaURL{
+			MediaID:     video.ID,
+			MediaName:   web_video_name,
+			Width:       webMetadata.Width,
+			Height:      webMetadata.Height,
+			Purpose:     models.VideoWeb,
+			ContentType: "video/mp4",
+			FileSize:    fileStats.Size(),
+		}
+
+		if err := tx.Create(&mediaURL).Error; err != nil {
 			return false, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
 		}
 	}
@@ -94,9 +99,17 @@ func processVideo(tx *sql.Tx, mediaData *EncodeMediaData, videoCachePath *string
 			return false, errors.Wrap(err, "reading file stats of video thumbnail")
 		}
 
-		_, err = tx.Exec("INSERT INTO media_url (media_id, media_name, width, height, purpose, content_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			video.MediaID, video_thumb_name, thumbDimensions.Width, thumbDimensions.Height, models.VideoThumbnail, "image/jpeg", fileStats.Size())
-		if err != nil {
+		thumbMediaURL := models.MediaURL{
+			MediaID:     video.ID,
+			MediaName:   video_thumb_name,
+			Width:       thumbDimensions.Width,
+			Height:      thumbDimensions.Height,
+			Purpose:     models.VideoThumbnail,
+			ContentType: "image/jpeg",
+			FileSize:    fileStats.Size(),
+		}
+
+		if err := tx.Create(&thumbMediaURL).Error; err != nil {
 			return false, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
 		}
 	}

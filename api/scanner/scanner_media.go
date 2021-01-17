@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"crypto/md5"
-	"database/sql"
 	"encoding/hex"
 	"io"
 	"log"
@@ -11,8 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func fileExists(testPath string) bool {
@@ -102,20 +102,22 @@ func hashSideCarFile(path *string) *string {
 	return &hash
 }
 
-func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
-	// Check if image already exists
+	// Check if media already exists
 	{
-		row := tx.QueryRow("SELECT * FROM media WHERE path_hash = MD5(?)", mediaPath)
-		photo, err := models.NewMediaFromRow(row)
-		if err != sql.ErrNoRows {
-			if err == nil {
-				log.Printf("Media already scanned: %s\n", mediaPath)
-				return photo, false, nil
-			} else {
-				return nil, false, errors.Wrap(err, "scan media fetch from database")
-			}
+		var media []*models.Media
+
+		result := tx.Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&media)
+
+		if result.Error != nil {
+			return nil, false, errors.Wrap(result.Error, "scan media fetch from database")
+		}
+
+		if result.RowsAffected > 0 {
+			log.Printf("Media already scanned: %s\n", mediaPath)
+			return media[0], false, nil
 		}
 	}
 
@@ -126,16 +128,15 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		return nil, false, errors.Wrap(err, "could determine if media was photo or video")
 	}
 
-	var mediaTypeText string
+	var mediaTypeText models.MediaType
 
-	var sideCarPath *string
-	sideCarPath = nil
-	var sideCarHash *string
-	sideCarHash = nil
+	var sideCarPath *string = nil
+	var sideCarHash *string = nil
+
 	if mediaType.isVideo() {
-		mediaTypeText = "video"
+		mediaTypeText = models.MediaTypeVideo
 	} else {
-		mediaTypeText = "photo"
+		mediaTypeText = models.MediaTypePhoto
 		// search for sidecar files
 		if mediaType.isRaw() {
 			sideCarPath = scanForSideCarFile(mediaPath)
@@ -150,31 +151,30 @@ func ScanMedia(tx *sql.Tx, mediaPath string, albumId int, cache *AlbumScannerCac
 		return nil, false, err
 	}
 
-	result, err := tx.Exec("INSERT INTO media (title, path, path_hash, side_car_path, side_car_hash, album_id, media_type, date_shot) VALUES (?, ?, MD5(path), ?, ?, ?, ?, ?)", mediaName, mediaPath, sideCarPath, sideCarHash, albumId, mediaTypeText, stat.ModTime())
-	if err != nil {
+	media := models.Media{
+		Title:       mediaName,
+		Path:        mediaPath,
+		SideCarPath: sideCarPath,
+		SideCarHash: sideCarHash,
+		AlbumID:     albumId,
+		Type:        mediaTypeText,
+		DateShot:    stat.ModTime(),
+	}
+
+	if err := tx.Create(&media).Error; err != nil {
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}
-	media_id, err := result.LastInsertId()
-	if err != nil {
-		return nil, false, err
-	}
 
-	row := tx.QueryRow("SELECT * FROM media WHERE media_id = ?", media_id)
-	media, err := models.NewMediaFromRow(row)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "failed to get media by id from database")
-	}
-
-	_, err = ScanEXIF(tx, media)
+	_, err = ScanEXIF(tx, &media)
 	if err != nil {
 		log.Printf("WARN: ScanEXIF for %s failed: %s\n", mediaName, err)
 	}
 
 	if media.Type == models.MediaTypeVideo {
-		if err = ScanVideoMetadata(tx, media); err != nil {
+		if err = ScanVideoMetadata(tx, &media); err != nil {
 			log.Printf("WARN: ScanVideoMetadata for %s failed: %s\n", mediaName, err)
 		}
 	}
 
-	return media, true, nil
+	return &media, true, nil
 }

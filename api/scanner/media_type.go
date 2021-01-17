@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -246,7 +245,7 @@ func getMediaType(path string) (*MediaType, error) {
 		if fileExtType.isSupported() {
 			return &fileExtType, nil
 		} else {
-			return nil, errors.New(fmt.Sprintf("unsupported file type '%s' (%s)", ext, fileExtType))
+			return nil, nil
 		}
 	}
 

@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"database/sql"
 	"image"
 	"image/jpeg"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
+	"gorm.io/gorm"
 )
 
 type PhotoDimensions struct {
@@ -116,7 +116,7 @@ func (img *EncodeMediaData) ContentType() (*MediaType, error) {
 	return imgType, nil
 }
 
-func (img *EncodeMediaData) EncodeHighRes(tx *sql.Tx, outputPath string) error {
+func (img *EncodeMediaData) EncodeHighRes(tx *gorm.DB, outputPath string) error {
 	contentType, err := img.ContentType()
 	if err != nil {
 		return err
@@ -166,7 +166,7 @@ func EncodeThumbnail(inputPath string, outputPath string) (*PhotoDimensions, err
 }
 
 // PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
-func (img *EncodeMediaData) photoImage(tx *sql.Tx) (image.Image, error) {
+func (img *EncodeMediaData) photoImage(tx *gorm.DB) (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}
