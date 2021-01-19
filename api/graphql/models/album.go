@@ -10,7 +10,7 @@ import (
 type Album struct {
 	Model
 	Title         string `gorm:"not null"`
-	ParentAlbumID *int
+	ParentAlbumID *int   `gorm:"index"`
 	ParentAlbum   *Album `gorm:"constraint:OnDelete:SET NULL;"`
 	// OwnerID       int `gorm:"not null"`
 	// Owner         User

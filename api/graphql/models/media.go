@@ -11,22 +11,22 @@ import (
 
 type Media struct {
 	Model
-	Title        string `gorm:"not null"`
-	Path         string `gorm:"not null"`
-	PathHash     string `gorm:"not null"`
-	AlbumID      int    `gorm:"not null"`
-	Album        Album  `gorm:"constraint:OnDelete:CASCADE;"`
-	ExifID       *int
+	Title        string     `gorm:"not null"`
+	Path         string     `gorm:"not null"`
+	PathHash     string     `gorm:"not null;unique"`
+	AlbumID      int        `gorm:"not null;index"`
+	Album        Album      `gorm:"constraint:OnDelete:CASCADE;"`
+	ExifID       *int       `gorm:"index"`
 	Exif         *MediaEXIF `gorm:"constraint:OnDelete:SET NULL;"`
 	MediaURL     []MediaURL `gorm:"constraint:OnDelete:CASCADE;"`
 	DateShot     time.Time  `gorm:"not null"`
 	DateImported time.Time  `gorm:"not null"`
 	// Favorite        bool      `gorm:"not null, default:false"`
-	Type            MediaType `gorm:"not null"`
-	VideoMetadataID *int
+	Type            MediaType      `gorm:"not null;index"`
+	VideoMetadataID *int           `gorm:"index"`
 	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:SET NULL;"`
 	SideCarPath     *string
-	SideCarHash     *string
+	SideCarHash     *string `gorm:"unique"`
 
 	// Only used internally
 	CounterpartPath *string `gorm:-`
@@ -72,12 +72,12 @@ const (
 
 type MediaURL struct {
 	Model
-	MediaID     int          `gorm:"not null"`
+	MediaID     int          `gorm:"not null;index"`
 	Media       Media        `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaName   string       `gorm:"not null"`
 	Width       int          `gorm:"not null"`
 	Height      int          `gorm:"not null"`
-	Purpose     MediaPurpose `gorm:"not null"`
+	Purpose     MediaPurpose `gorm:"not null;index"`
 	ContentType string       `gorm:"not null"`
 	FileSize    int64        `gorm:"not null"`
 }

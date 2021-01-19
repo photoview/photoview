@@ -14,7 +14,7 @@ import (
 
 type User struct {
 	Model
-	Username string  `gorm:"unique,size:128"`
+	Username string  `gorm:"unique;size:128"`
 	Password *string `gorm:"size:256`
 	// RootPath string  `gorm:"size:512`
 	Albums []Album `gorm:"many2many:user_albums"`
@@ -30,10 +30,10 @@ type UserMediaData struct {
 
 type AccessToken struct {
 	Model
-	UserID int       `gorm:"not null"`
+	UserID int       `gorm:"not null;index"`
 	User   User      `gorm:"constraint:OnDelete:CASCADE;"`
 	Value  string    `gorm:"not null, size:24`
-	Expire time.Time `gorm:"not null"`
+	Expire time.Time `gorm:"not null;index"`
 }
 
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")

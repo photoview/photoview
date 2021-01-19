@@ -6,14 +6,14 @@ import (
 
 type ShareToken struct {
 	Model
-	Value    string `gorm:"not null"`
-	OwnerID  int    `gorm:"not null"`
-	Owner    User   `gorm:"constraint:OnDelete:CASCADE;"`
-	Expire   *time.Time
+	Value    string     `gorm:"not null"`
+	OwnerID  int        `gorm:"not null;index"`
+	Owner    User       `gorm:"constraint:OnDelete:CASCADE;"`
+	Expire   *time.Time `gorm:"index"`
 	Password *string
-	AlbumID  *int
+	AlbumID  *int   `gorm:"index"`
 	Album    *Album `gorm:"constraint:OnDelete:CASCADE;"`
-	MediaID  *int
+	MediaID  *int   `gorm:"index"`
 	Media    *Media `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
