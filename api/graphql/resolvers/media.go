@@ -192,6 +192,19 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*mod
 	return &url, nil
 }
 
+func (r *mediaResolver) Exif(ctx context.Context, media *models.Media) (*models.MediaEXIF, error) {
+	if media.Exif != nil {
+		return media.Exif, nil
+	}
+
+	var exif models.MediaEXIF
+	if err := r.Database.Model(&media).Association("Exif").Find(&exif); err != nil {
+		return nil, err
+	}
+
+	return &exif, nil
+}
+
 func (r *mediaResolver) Favorite(ctx context.Context, media *models.Media) (bool, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {

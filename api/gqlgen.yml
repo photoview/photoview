@@ -29,6 +29,9 @@ models:
         resolver: true
   Media:
     model: github.com/photoview/photoview/api/graphql/models.Media
+    fields:
+      exif:
+        resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:

@@ -230,6 +230,8 @@ type MediaResolver interface {
 	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 
+	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
+
 	Favorite(ctx context.Context, obj *models.Media) (bool, error)
 
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
@@ -2973,14 +2975,14 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 		Object:     "Media",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Exif, nil
+		return ec.resolvers.Media().Exif(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7971,7 +7973,16 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "exif":
-			out.Values[i] = ec._Media_exif(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_exif(ctx, field, obj)
+				return res
+			})
 		case "videoMetadata":
 			out.Values[i] = ec._Media_videoMetadata(ctx, field, obj)
 		case "favorite":
