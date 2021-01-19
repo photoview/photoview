@@ -15,7 +15,7 @@ import (
 type User struct {
 	Model
 	Username string  `gorm:"unique;size:128"`
-	Password *string `gorm:"size:256`
+	Password *string `gorm:"size:256"`
 	// RootPath string  `gorm:"size:512`
 	Albums []Album `gorm:"many2many:user_albums"`
 	Admin  bool    `gorm:"default:false"`
@@ -32,7 +32,7 @@ type AccessToken struct {
 	Model
 	UserID int       `gorm:"not null;index"`
 	User   User      `gorm:"constraint:OnDelete:CASCADE;"`
-	Value  string    `gorm:"not null, size:24`
+	Value  string    `gorm:"not null;size:24;index"`
 	Expire time.Time `gorm:"not null;index"`
 }
 

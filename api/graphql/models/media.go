@@ -29,7 +29,7 @@ type Media struct {
 	SideCarHash     *string `gorm:"unique"`
 
 	// Only used internally
-	CounterpartPath *string `gorm:-`
+	CounterpartPath *string `gorm:"-"`
 }
 
 func (Media) TableName() string {
