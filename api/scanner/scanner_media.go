@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -165,9 +166,9 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCa
 		return nil, false, errors.Wrap(err, "could not insert media into database")
 	}
 
-	_, err = ScanEXIF(tx, &media)
+	_, err = exif.SaveEXIF(tx, &media)
 	if err != nil {
-		log.Printf("WARN: ScanEXIF for %s failed: %s\n", mediaName, err)
+		log.Printf("WARN: SaveEXIF for %s failed: %s\n", mediaName, err)
 	}
 
 	if media.Type == models.MediaTypeVideo {

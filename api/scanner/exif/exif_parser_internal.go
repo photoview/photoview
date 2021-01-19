@@ -1,4 +1,4 @@
-package scanner
+package exif
 
 import (
 	"fmt"
@@ -6,31 +6,16 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
-
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/pkg/errors"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )
 
-func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
+// internalExifParser is an exif parser that parses the media without the use of external tools
+type internalExifParser struct{}
 
-	log.Printf("Scanning for EXIF")
-
-	{
-		// Check if EXIF data already exists
-		if media.ExifID != nil {
-
-			var exif models.MediaEXIF
-			if err := tx.First(&exif, media.ExifID).Error; err != nil {
-				return nil, errors.Wrap(err, "get EXIF for media from database")
-			}
-
-			return &exif, nil
-		}
-	}
-
+func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
 	photoFile, err := os.Open(media.Path)
 	if err != nil {
 		return nil, err
@@ -53,17 +38,17 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 
 	newExif := models.MediaEXIF{}
 
-	model, err := readStringTag(exifTags, exif.Model, media)
+	model, err := p.readStringTag(exifTags, exif.Model, media)
 	if err == nil {
 		newExif.Camera = model
 	}
 
-	maker, err := readStringTag(exifTags, exif.Make, media)
+	maker, err := p.readStringTag(exifTags, exif.Make, media)
 	if err == nil {
 		newExif.Maker = maker
 	}
 
-	lens, err := readStringTag(exifTags, exif.LensModel, media)
+	lens, err := p.readStringTag(exifTags, exif.LensModel, media)
 	if err == nil {
 		newExif.Lens = lens
 	}
@@ -73,13 +58,13 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 		newExif.DateShot = &date
 	}
 
-	exposure, err := readRationalTag(exifTags, exif.ExposureTime, media)
+	exposure, err := p.readRationalTag(exifTags, exif.ExposureTime, media)
 	if err == nil {
 		exposureStr := exposure.RatString()
 		newExif.Exposure = &exposureStr
 	}
 
-	apertureRat, err := readRationalTag(exifTags, exif.FNumber, media)
+	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, media)
 	if err == nil {
 		aperture, _ := apertureRat.Float64()
 		newExif.Aperture = &aperture
@@ -125,12 +110,12 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 		newExif.Flash = &flash
 	}
 
-	orientation, err := readIntegerTag(exifTags, exif.Orientation, media)
+	orientation, err := p.readIntegerTag(exifTags, exif.Orientation, media)
 	if err == nil {
 		newExif.Orientation = orientation
 	}
 
-	exposureProgram, err := readIntegerTag(exifTags, exif.ExposureProgram, media)
+	exposureProgram, err := p.readIntegerTag(exifTags, exif.ExposureProgram, media)
 	if err == nil {
 		newExif.ExposureProgram = exposureProgram
 	}
@@ -141,20 +126,11 @@ func ScanEXIF(tx *gorm.DB, media *models.Media) (returnExif *models.MediaEXIF, r
 		newExif.GPSLonitude = &long
 	}
 
-	// If exif is empty
-	if newExif == (models.MediaEXIF{}) {
-		return nil, nil
-	}
-
-	// Add EXIF to database and link to media
-	if err := tx.Model(&media).Association("Exif").Replace(newExif); err != nil {
-		return nil, errors.Wrap(err, "save media exif to database")
-	}
-
-	return &newExif, nil
+	returnExif = &newExif
+	return
 }
 
-func readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*string, error) {
+func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*string, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
@@ -173,7 +149,7 @@ func readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*
 	return nil, errors.New("exif tag returned null")
 }
 
-func readRationalTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*big.Rat, error) {
+func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*big.Rat, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
@@ -192,7 +168,7 @@ func readRationalTag(tags *exif.Exif, name exif.FieldName, media *models.Media) 
 	return nil, errors.New("exif tag returned null")
 }
 
-func readIntegerTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*int, error) {
+func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*int, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
