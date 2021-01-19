@@ -59,6 +59,34 @@ func getSqliteAddress() (*url.URL, error) {
 	return address, nil
 }
 
+func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
+	var databaseDialect gorm.Dialector
+	switch drivers.DatabaseDriver() {
+	case drivers.DatabaseDriverMysql:
+		mysqlAddress, err := getMysqlAddress()
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
+		databaseDialect = mysql.Open(mysqlAddress.String())
+
+	case drivers.DatabaseDriverSqlite:
+		sqliteAddress, err := getSqliteAddress()
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("Opening SQLITE database: %s", sqliteAddress)
+		databaseDialect = sqlite.Open(sqliteAddress.String())
+	}
+
+	db, err := gorm.Open(databaseDialect, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 // SetupDatabase connects to the database using environment variables
 func SetupDatabase() (*gorm.DB, error) {
 
@@ -71,54 +99,29 @@ func SetupDatabase() (*gorm.DB, error) {
 		config.Logger = logger.Default.LogMode(logger.Warn)
 	}
 
-	var databaseDialect gorm.Dialector
-	switch drivers.DatabaseDriver() {
-	case drivers.DatabaseDriverMysql:
-		mysqlAddress, err := getMysqlAddress()
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
-		databaseDialect = mysql.New(mysql.Config{
-			DSN:                     mysqlAddress.String(),
-			DontSupportRenameIndex:  true,
-			DontSupportRenameColumn: true,
-		})
+	var db *gorm.DB
 
-	case drivers.DatabaseDriverSqlite:
-		sqliteAddress, err := getSqliteAddress()
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("Opening SQLITE database: %s", sqliteAddress)
-		databaseDialect = sqlite.Open(sqliteAddress.String())
-	}
+	for retryCount := 1; retryCount <= 5; retryCount++ {
 
-	db, err := gorm.Open(databaseDialect, &config)
-	sqlDB, dbErr := db.DB()
-	if dbErr != nil {
-		log.Println(dbErr)
-		return nil, dbErr
-	}
-
-	sqlDB.SetMaxOpenConns(80)
-
-	if err != nil {
-		for retryCount := 1; retryCount <= 5; retryCount++ {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
-			if err := sqlDB.PingContext(ctx); err == nil {
-				cancel()
-				return db, nil
+		var err error
+		db, err = configureDatabase(&config)
+		if err == nil {
+			sqlDB, dbErr := db.DB()
+			if dbErr != nil {
+				return nil, dbErr
 			}
 
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			err = sqlDB.PingContext(ctx)
 			cancel()
 
-			log.Printf("WARN: Could not ping database: %s. Will retry after 5 seconds\n", err)
-			time.Sleep(time.Duration(5) * time.Second)
+			if err == nil {
+				return db, nil
+			}
 		}
 
-		return nil, err
+		log.Printf("WARN: Could not ping database: %s. Will retry after 5 seconds\n", err)
+		time.Sleep(time.Duration(5) * time.Second)
 	}
 
 	return db, nil
