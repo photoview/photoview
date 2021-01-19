@@ -115,6 +115,8 @@ func SetupDatabase() (*gorm.DB, error) {
 			err = sqlDB.PingContext(ctx)
 			cancel()
 
+			sqlDB.SetMaxOpenConns(80)
+
 			if err == nil {
 				return db, nil
 			}
