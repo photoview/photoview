@@ -164,10 +164,6 @@ func (r *mediaResolver) HighRes(ctx context.Context, media *models.Media) (*mode
 }
 
 func (r *mediaResolver) Thumbnail(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
-	if media.Type != models.MediaTypePhoto {
-		return nil, nil
-	}
-
 	var url models.MediaURL
 	err := r.Database.
 		Where("media_id = ?", media.ID).
