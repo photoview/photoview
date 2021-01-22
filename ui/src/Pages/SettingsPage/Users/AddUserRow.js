@@ -4,16 +4,20 @@ import React, { useState } from 'react'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 
 const createUserMutation = gql`
-  mutation createUser(
-    $username: String!
-    $rootPath: String!
-    $admin: Boolean!
-  ) {
-    createUser(username: $username, rootPath: $rootPath, admin: $admin) {
+  mutation createUser($username: String!, $admin: Boolean!) {
+    createUser(username: $username, admin: $admin) {
       id
       username
-      rootPath
       admin
+      __typename
+    }
+  }
+`
+
+const addRootPathMutation = gql`
+  mutation userAddRootPath($id: ID!, $rootPath: String!) {
+    userAddRootPath(id: $id, rootPath: $rootPath) {
+      id
     }
   }
 `
@@ -22,16 +26,45 @@ const initialState = {
   username: '',
   rootPath: '',
   admin: false,
+  userAdded: false,
 }
 
 const AddUserRow = ({ setShow, show, onUserAdded }) => {
   const [state, setState] = useState(initialState)
 
-  const [createUser, { loading }] = useMutation(createUserMutation, {
-    onCompleted: () => {
-      onUserAdded()
-    },
-  })
+  const [addRootPath, { loading: addRootPathLoading }] = useMutation(
+    addRootPathMutation,
+    {
+      onCompleted: () => {
+        setState(initialState)
+        onUserAdded()
+      },
+      onError: () => {
+        setState(initialState)
+        onUserAdded()
+      },
+    }
+  )
+
+  const [createUser, { loading: createUserLoading }] = useMutation(
+    createUserMutation,
+    {
+      onCompleted: ({ createUser: { id } }) => {
+        if (state.rootPath) {
+          addRootPath({
+            variables: {
+              id: id,
+              rootPath: state.rootPath,
+            },
+          })
+        } else {
+          setState(initialState)
+        }
+      },
+    }
+  )
+
+  const loading = addRootPathLoading || createUserLoading
 
   function updateInput(event, key) {
     setState({
@@ -86,11 +119,9 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
               createUser({
                 variables: {
                   username: state.username,
-                  rootPath: state.rootPath,
                   admin: state.admin,
                 },
               })
-              setState(initialState)
             }}
           >
             Add User
