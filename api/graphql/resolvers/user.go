@@ -211,17 +211,50 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
-
 	var user models.User
+	deletedAlbumIDs := make([]int, 0)
 
-	if err := r.Database.First(&user, id).Error; err != nil {
+	err := r.Database.Transaction(func(tx *gorm.DB) error {
+		if err := r.Database.First(&user, id).Error; err != nil {
+			return err
+		}
+
+		if err := user.FillAlbums(r.Database); err != nil {
+			return err
+		}
+
+		for _, album := range user.Albums {
+			var associatedUsers = r.Database.Model(album).Association("Owners").Count()
+			if err := r.Database.Model(&user).Association("Albums").Delete(album); err != nil {
+				return err
+			}
+
+			if associatedUsers == 1 {
+				deletedAlbumIDs = append(deletedAlbumIDs, album.ID)
+				if dbc := r.Database.Delete(album); dbc.Error != nil {
+					return dbc.Error
+				}
+			}
+		}
+
+		if err := r.Database.Delete(&user).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
-	if err := r.Database.Delete(&user).Error; err != nil {
-		return nil, err
+	// If there is only one associated user, clean up the cache folder and delete the album row
+	for _, deletedAlbumID := range deletedAlbumIDs {
+		cachePath := path.Join(scanner.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
+		if err := os.RemoveAll(cachePath); err != nil {
+			return &user, err
+		}
 	}
-
 	return &user, nil
 }
 
