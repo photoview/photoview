@@ -215,29 +215,31 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User
 	deletedAlbumIDs := make([]int, 0)
 
 	err := r.Database.Transaction(func(tx *gorm.DB) error {
-		if err := r.Database.First(&user, id).Error; err != nil {
+		if err := tx.First(&user, id).Error; err != nil {
 			return err
 		}
 
-		if err := user.FillAlbums(r.Database); err != nil {
+		userAlbums := user.Albums
+		if err := tx.Model(&user).Association("Albums").Find(&userAlbums); err != nil {
 			return err
 		}
 
-		for _, album := range user.Albums {
-			var associatedUsers = r.Database.Model(album).Association("Owners").Count()
-			if err := r.Database.Model(&user).Association("Albums").Delete(album); err != nil {
-				return err
-			}
+		if err := tx.Model(&user).Association("Albums").Clear(); err != nil {
+			return err
+		}
 
-			if associatedUsers == 1 {
+		for _, album := range userAlbums {
+			var associatedUsers = tx.Model(album).Association("Owners").Count()
+
+			if associatedUsers == 0 {
 				deletedAlbumIDs = append(deletedAlbumIDs, album.ID)
-				if dbc := r.Database.Delete(album); dbc.Error != nil {
-					return dbc.Error
+				if err := tx.Delete(album).Error; err != nil {
+					return err
 				}
 			}
 		}
 
-		if err := r.Database.Delete(&user).Error; err != nil {
+		if err := tx.Delete(&user).Error; err != nil {
 			return err
 		}
 
