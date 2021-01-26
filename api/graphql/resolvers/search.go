@@ -32,7 +32,8 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 	var media []*models.Media
 
 	err := r.Database.Joins("Album").
-		Where("Album.owner_id = ? AND ( media.title LIKE ? OR media.path LIKE ? )", user.ID, wildQuery, wildQuery).
+		Where("EXISTS (?)", r.Database.Table("user_albums").Where("user_id = ?", user.ID).Where("album_id = Album.id")).
+		Where("media.title LIKE ? OR media.path LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{
 				SQL:                "(CASE WHEN media.title LIKE ? THEN 2 WHEN media.path LIKE ? THEN 1 END) DESC",
@@ -48,10 +49,12 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 
 	var albums []*models.Album
 
-	err = r.Database.Where("owner_id = ? AND (title LIKE ? OR path LIKE ?)", user.ID, wildQuery, wildQuery).
+	err = r.Database.
+		Where("EXISTS (?)", r.Database.Table("user_albums").Where("user_id = ?", user.ID).Where("album_id = albums.id")).
+		Where("albums.title LIKE ? OR albums.path LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{
-				SQL:                "(CASE WHEN title LIKE ? THEN 2 WHEN path LIKE ? THEN 1 END) DESC",
+				SQL:                "(CASE WHEN albums.title LIKE ? THEN 2 WHEN albums.path LIKE ? THEN 1 END) DESC",
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
 		}).
