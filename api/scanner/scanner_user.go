@@ -27,7 +27,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	}
 
 	var userRootAlbums []*models.Album
-	if err := db.Where("id IN (?)", userAlbumIDs).Where("parent_album_id IS NULL").Find(&userRootAlbums).Error; err != nil {
+	if err := db.Where("id IN (?)", userAlbumIDs).Where("parent_album_id IS NULL OR parent_album_id NOT IN (?)", userAlbumIDs).Find(&userRootAlbums).Error; err != nil {
 		return nil, []error{err}
 	}
 
@@ -94,7 +94,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 				if albumParent != nil {
 					albumParentID = &albumParent.ID
 
-					if err := db.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
+					if err := tx.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
 						return err
 					}
 				}
@@ -114,6 +114,20 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 				}
 			} else {
 				album = &albumResult[0]
+
+				// Add user as an owner of the album if not already
+				var userAlbumOwner []models.User
+				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
+					return err
+				}
+				if len(userAlbumOwner) == 0 {
+					newUser := models.User{}
+					newUser.ID = user.ID
+					if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+						return err
+					}
+				}
+
 			}
 
 			userAlbums = append(userAlbums, album)
