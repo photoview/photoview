@@ -39,7 +39,12 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		subQuery := r.Database.Model(&models.Media{}).Where("album_id = albums.id")
 
 		if onlyWithFavorites != nil && *onlyWithFavorites == true {
-			subQuery = subQuery.Where("favorite = 1")
+			favoritesSubquery := r.Database.
+				Model(&models.UserMediaData{UserID: user.ID}).
+				Where("user_media_data.media_id = media.id").
+				Where("user_media_data.favorite = 1")
+
+			subQuery = subQuery.Where("EXISTS (?)", favoritesSubquery)
 		}
 
 		query = query.Where("EXISTS (?)", subQuery)
@@ -95,7 +100,16 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
 
 	if onlyFavorites != nil && *onlyFavorites == true {
-		query = query.Where("media.favorite = 1")
+		user := auth.UserFromContext(ctx)
+		if user == nil {
+			return nil, errors.New("cannot get favorite media without being authorized")
+		}
+
+		favoriteQuery := r.Database.Model(&models.UserMediaData{
+			UserID: user.ID,
+		}).Where("user_media_data.media_id = media.id").Where("user_media_data.favorite = 1")
+
+		query = query.Where("EXISTS (?)", favoriteQuery)
 	}
 
 	query = filter.FormatSQL(query)
