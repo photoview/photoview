@@ -58,7 +58,7 @@ const (
 	TypeMPEG MediaType = "video/mpeg"
 	Type3GP  MediaType = "video/3gpp"
 	Type3G2  MediaType = "video/3gpp2"
-	TypeOGV  MediaType = "video/ogg"
+	TypeOGG  MediaType = "video/ogg"
 	TypeWMV  MediaType = "video/x-ms-wmv"
 	TypeAVI  MediaType = "video/x-msvideo"
 	TypeWEBM MediaType = "video/webm"
@@ -120,13 +120,21 @@ var VideoMimetypes = [...]MediaType{
 	TypeMPEG,
 	Type3GP,
 	Type3G2,
-	TypeOGV,
+	TypeOGG,
 	TypeWMV,
 	TypeAVI,
 	TypeWEBM,
 	TypeMOV,
 	TypeTS,
 	TypeMTS,
+}
+
+// WebVideoMimetypes are video types that can be played directly in the browser without transcoding
+var WebVideoMimetypes = [...]MediaType{
+	TypeMP4,
+	TypeMPEG,
+	TypeWEBM,
+	TypeOGG,
 }
 
 var fileExtensions = map[string]MediaType{
@@ -167,7 +175,7 @@ var fileExtensions = map[string]MediaType{
 	".mpeg": TypeMPEG,
 	".3gp":  Type3GP,
 	".3g2":  Type3G2,
-	".ogv":  TypeOGV,
+	".ogv":  TypeOGG,
 	".wmv":  TypeWMV,
 	".avi":  TypeAVI,
 	".webm": TypeWEBM,
@@ -190,6 +198,12 @@ func (imgType *MediaType) isRaw() bool {
 
 func (imgType *MediaType) isWebCompatible() bool {
 	for _, web_mime := range WebMimetypes {
+		if web_mime == *imgType {
+			return true
+		}
+	}
+
+	for _, web_mime := range WebVideoMimetypes {
 		if web_mime == *imgType {
 			return true
 		}

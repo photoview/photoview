@@ -40,6 +40,25 @@ func makePhotoURLChecker(tx *gorm.DB, mediaID int) func(purpose models.MediaPurp
 	}
 }
 
+func generateUniqueMediaNamePrefixed(prefix string, mediaPath string, extension string) string {
+	mediaName := fmt.Sprintf("%s_%s_%s", prefix, path.Base(mediaPath), utils.GenerateToken())
+	mediaName = models.SanitizeMediaName(mediaName)
+	mediaName = mediaName + extension
+	return mediaName
+}
+
+func generateUniqueMediaName(mediaPath string) string {
+
+	filename := path.Base(mediaPath)
+	baseName := filename[0 : len(filename)-len(path.Ext(filename))]
+	baseExt := path.Ext(filename)
+
+	mediaName := fmt.Sprintf("%s_%s", baseName, utils.GenerateToken())
+	mediaName = models.SanitizeMediaName(mediaName) + baseExt
+
+	return mediaName
+}
+
 func ProcessMedia(tx *gorm.DB, media *models.Media) (bool, error) {
 	imageData := EncodeMediaData{
 		media: media,
@@ -110,13 +129,11 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		if !contentType.isWebCompatible() {
 			didProcess = true
 
-			highres_name := fmt.Sprintf("highres_%s_%s", path.Base(photo.Path), utils.GenerateToken())
-			highres_name = models.SanitizeMediaName(highres_name)
-			highres_name = highres_name + ".jpg"
+			highresName := generateUniqueMediaNamePrefixed("highres", photo.Path, ".jpg")
 
-			baseImagePath = path.Join(*photoCachePath, highres_name)
+			baseImagePath = path.Join(*photoCachePath, highresName)
 
-			newHighResURL, err := generateSaveHighResJPEG(tx, photo, imageData, highres_name, baseImagePath, nil)
+			newHighResURL, err := generateSaveHighResJPEG(tx, photo, imageData, highresName, baseImagePath, nil)
 			if err != nil {
 				return false, err
 			}
@@ -159,11 +176,9 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 	if thumbURL == nil {
 		didProcess = true
 
-		thumbnail_name := fmt.Sprintf("thumbnail_%s_%s", path.Base(photo.Path), utils.GenerateToken())
-		thumbnail_name = models.SanitizeMediaName(thumbnail_name)
-		thumbnail_name = thumbnail_name + ".jpg"
+		thumbnailName := generateUniqueMediaNamePrefixed("thumbnail", photo.Path, ".jpg")
 
-		newThumbURL, err := generateSaveThumbnailJPEG(tx, photo, thumbnail_name, photoCachePath, baseImagePath, nil)
+		newThumbURL, err := generateSaveThumbnailJPEG(tx, photo, thumbnailName, photoCachePath, baseImagePath, nil)
 		if err != nil {
 			return false, err
 		}
@@ -228,12 +243,7 @@ func makeMediaCacheDir(media *models.Media) (*string, error) {
 }
 
 func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMediaData, photoDimensions *PhotoDimensions) error {
-	photoName := path.Base(photo.Path)
-	photoBaseName := photoName[0 : len(photoName)-len(path.Ext(photoName))]
-	photoBaseExt := path.Ext(photoName)
-
-	original_image_name := fmt.Sprintf("%s_%s", photoBaseName, utils.GenerateToken())
-	original_image_name = models.SanitizeMediaName(original_image_name) + photoBaseExt
+	originalImageName := generateUniqueMediaName(photo.Path)
 
 	contentType, err := imageData.ContentType()
 	if err != nil {
@@ -247,7 +257,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 
 	mediaURL := models.MediaURL{
 		Media:       *photo,
-		MediaName:   original_image_name,
+		MediaName:   originalImageName,
 		Width:       photoDimensions.Width,
 		Height:      photoDimensions.Height,
 		Purpose:     models.MediaOriginal,
@@ -256,7 +266,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 	}
 
 	if err := tx.Create(&mediaURL).Error; err != nil {
-		return errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photoName)
+		return errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photo.Title)
 	}
 
 	return nil

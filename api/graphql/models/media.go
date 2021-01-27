@@ -17,14 +17,14 @@ type Media struct {
 	AlbumID      int        `gorm:"not null;index"`
 	Album        Album      `gorm:"constraint:OnDelete:CASCADE;"`
 	ExifID       *int       `gorm:"index"`
-	Exif         *MediaEXIF `gorm:"constraint:OnDelete:SET NULL;"`
+	Exif         *MediaEXIF `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaURL     []MediaURL `gorm:"constraint:OnDelete:CASCADE;"`
 	DateShot     time.Time  `gorm:"not null"`
 	DateImported time.Time  `gorm:"not null"`
 	// Favorite        bool      `gorm:"not null, default:false"`
 	Type            MediaType      `gorm:"not null;index"`
 	VideoMetadataID *int           `gorm:"index"`
-	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:SET NULL;"`
+	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:CASCADE;"`
 	SideCarPath     *string
 	SideCarHash     *string `gorm:"unique"`
 

@@ -185,7 +185,7 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*mod
 	var url models.MediaURL
 	err := r.Database.
 		Where("media_id = ?", media.ID).
-		Where("purpose = ?", models.VideoWeb).
+		Where("purpose = ? OR purpose = ?", models.VideoWeb, models.MediaOriginal).
 		First(&url).Error
 
 	if err != nil {

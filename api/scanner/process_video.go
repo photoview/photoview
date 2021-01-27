@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"gorm.io/gorm"
 )
@@ -24,6 +24,11 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 
 	mediaURLFromDB := makePhotoURLChecker(tx, video.ID)
 
+	videoOriginalURL, err := mediaURLFromDB(models.MediaOriginal)
+	if err != nil {
+		return false, errors.Wrap(err, "error processing video original format")
+	}
+
 	videoWebURL, err := mediaURLFromDB(models.VideoWeb)
 	if err != nil {
 		return false, errors.Wrap(err, "error processing video web-format")
@@ -34,7 +39,44 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 		return false, errors.Wrap(err, "error processing video thumbnail")
 	}
 
-	if videoWebURL == nil {
+	videoType, err := mediaData.ContentType()
+	if err != nil {
+		return false, errors.Wrap(err, "error getting video content type")
+	}
+
+	if videoOriginalURL == nil && videoType.isWebCompatible() {
+		didProcess = true
+
+		origVideoPath := video.Path
+		videoMediaName := generateUniqueMediaName(video.Path)
+
+		webMetadata, err := readVideoStreamMetadata(origVideoPath)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to read metadata for original video (%s)", video.Title)
+		}
+
+		fileStats, err := os.Stat(origVideoPath)
+		if err != nil {
+			return false, errors.Wrap(err, "reading file stats of original video")
+		}
+
+		mediaURL := models.MediaURL{
+			MediaID:     video.ID,
+			MediaName:   videoMediaName,
+			Width:       webMetadata.Width,
+			Height:      webMetadata.Height,
+			Purpose:     models.MediaOriginal,
+			ContentType: string(*videoType),
+			FileSize:    fileStats.Size(),
+		}
+
+		if err := tx.Create(&mediaURL).Error; err != nil {
+			return false, errors.Wrapf(err, "failed to insert original video into database (%s)", video.Title)
+		}
+
+	}
+
+	if videoWebURL == nil && !videoType.isWebCompatible() {
 		didProcess = true
 
 		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
