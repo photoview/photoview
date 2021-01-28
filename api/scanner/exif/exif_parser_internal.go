@@ -123,7 +123,7 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 	lat, long, err := exifTags.LatLong()
 	if err == nil {
 		newExif.GPSLatitude = &lat
-		newExif.GPSLonitude = &long
+		newExif.GPSLongitude = &long
 	}
 
 	returnExif = &newExif

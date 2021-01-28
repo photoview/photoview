@@ -76,11 +76,10 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 	}
 
 	var media []*models.Media
-	err := r.Database.
-		Select("media.*").
-		Joins("Album").
+	err := r.Database.Model(&media).
+		Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
 		Where("media.id IN ?", ids).
-		Where("album.owner_id = ?", user.ID).
+		Where("user_albums.user_id = ?", user.ID).
 		Scan(&media).Error
 
 	if err != nil {

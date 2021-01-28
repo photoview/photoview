@@ -18,7 +18,7 @@ type MediaEXIF struct {
 	Orientation     *int
 	ExposureProgram *int
 	GPSLatitude     *float64
-	GPSLonitude     *float64
+	GPSLongitude    *float64
 }
 
 func (MediaEXIF) TableName() string {
