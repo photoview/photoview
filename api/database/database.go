@@ -130,7 +130,6 @@ func SetupDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-
 	db.AutoMigrate(
 		&models.User{},
 		&models.AccessToken{},

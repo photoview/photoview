@@ -2,8 +2,21 @@ package resolvers
 
 import (
 	"context"
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/utils"
 	"os"
+	"path"
 )
+
+type geoMedia struct {
+	MediaID         int
+	MediaTitle      string
+	ThumbnailName   string
+	ThumbnailWidth  int
+	ThumbnailHeight int
+	Latitude        float64
+	Longitude       float64
+}
 
 type geoJSONFeatureCollection struct {
 	Type     string           `json:"type"`
@@ -56,72 +69,58 @@ func makeGeoJSONFeatureGeometryPoint(lat float64, long float64) geoJSONFeatureGe
 }
 
 func (r *queryResolver) MyMediaGeoJSON(ctx context.Context) (interface{}, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
 
-	// user := auth.UserFromContext(ctx)
-	// if user == nil {
-	// 	return nil, errors.New("unauthorized")
-	// }
+	var media []*geoMedia
 
-	// rows, err := r.Database.Query(`
-	// SELECT media.media_id, media.title,
-	//   url.media_name AS thumbnail_name, url.width AS thumbnail_width, url.height AS thumbnail_height,
-	//   exif.gps_latitude, exif.gps_longitude FROM media_exif exif
-	// INNER JOIN media ON exif.exif_id = media.exif_id
-	// INNER JOIN media_url url ON media.media_id = url.media_id
-	// INNER JOIN album ON media.album_id = album.album_id
-	// WHERE exif.gps_latitude IS NOT NULL
-	//   AND exif.gps_longitude IS NOT NULL
-	// 	AND url.purpose = 'thumbnail'
-	// 	AND album.owner_id = ?;
-	// `, user.UserID)
-	// defer rows.Close()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err := r.Database.Table("media").
+		Select(
+			"media.id AS media_id, media.title AS media_title, "+
+				"media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, "+
+				"media_exif.gps_latitude AS latitude, media_exif.gps_longitude AS longitude").
+		Joins("INNER JOIN media_exif ON media.exif_id = media_exif.id").
+		Joins("INNER JOIN media_urls ON media.id = media_urls.media_id").
+		Joins("INNER JOIN user_albums ON media.album_id = user_albums.album_id").
+		Where("media_exif.gps_latitude IS NOT NULL").
+		Where("media_exif.gps_longitude IS NOT NULL").
+		Where("media_urls.purpose = 'thumbnail'").
+		Where("user_albums.user_id = ?", user.ID).
+		Scan(&media).Error
 
-	// features := make([]geoJSONFeature, 0)
+	if err != nil {
+		return nil, err
+	}
 
-	// for rows.Next() {
+	features := make([]geoJSONFeature, 0)
 
-	// 	var mediaID int
-	// 	var mediaTitle string
-	// 	var thumbnailName string
-	// 	var thumbnailWidth int
-	// 	var thumbnailHeight int
-	// 	var latitude float64
-	// 	var longitude float64
+	for _, item := range media {
+		geoPoint := makeGeoJSONFeatureGeometryPoint(item.Latitude, item.Longitude)
 
-	// 	if err := rows.Scan(&mediaID, &mediaTitle, &thumbnailName, &thumbnailWidth, &thumbnailHeight, &latitude, &longitude); err != nil {
-	// 		return nil, err
-	// 	}
+		thumbnailURL := utils.ApiEndpointUrl()
+		thumbnailURL.Path = path.Join(thumbnailURL.Path, "photo", item.ThumbnailName)
 
-	// 	geoPoint := makeGeoJSONFeatureGeometryPoint(latitude, longitude)
+		properties := geoJSONMediaProperties{
+			MediaID:    item.MediaID,
+			MediaTitle: item.MediaTitle,
+			Thumbnail: struct {
+				URL    string `json:"url"`
+				Width  int    `json:"width"`
+				Height int    `json:"height"`
+			}{
+				URL:    thumbnailURL.String(),
+				Width:  item.ThumbnailWidth,
+				Height: item.ThumbnailHeight,
+			},
+		}
 
-	// 	thumbnailURL := utils.ApiEndpointUrl()
-	// 	thumbnailURL.Path = path.Join(thumbnailURL.Path, "photo", thumbnailName)
+		features = append(features, makeGeoJSONFeature(properties, geoPoint))
+	}
 
-	// 	properties := geoJSONMediaProperties{
-	// 		MediaID:    mediaID,
-	// 		MediaTitle: mediaTitle,
-	// 		Thumbnail: struct {
-	// 			URL    string `json:"url"`
-	// 			Width  int    `json:"width"`
-	// 			Height int    `json:"height"`
-	// 		}{
-	// 			URL:    thumbnailURL.String(),
-	// 			Width:  thumbnailWidth,
-	// 			Height: thumbnailHeight,
-	// 		},
-	// 	}
-
-	// 	features = append(features, makeGeoJSONFeature(properties, geoPoint))
-	// }
-
-	// featureCollection := makeGeoJSONFeatureCollection(features)
-
-	// return featureCollection, nil
-
-	panic("to be migrated")
+	featureCollection := makeGeoJSONFeatureCollection(features)
+	return featureCollection, nil
 }
 
 func (r *queryResolver) MapboxToken(ctx context.Context) (*string, error) {
