@@ -130,8 +130,6 @@ func SetupDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-
-	db.Migrator().RenameColumn(&models.MediaEXIF{}, "gps_lonitude", "gps_longitude")
 	db.AutoMigrate(
 		&models.User{},
 		&models.AccessToken{},
