@@ -88,7 +88,7 @@ const PhotoGallery = ({
 
   useEffect(() => {
     !loading && forceCheck()
-    const onScroll = event => {
+    const onScroll = _ => {
       !loading && forceCheck();
     }
 
