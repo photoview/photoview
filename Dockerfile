@@ -48,12 +48,13 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM alpine:3
+FROM debian:buster
 
 # Install darktable for converting RAW images, and ffmpeg for encoding videos
-# Ignore errors if packages are not supported for the specific platform
-RUN apk --no-cache add darktable; exit 0
-RUN apk --no-cache add ffmpeg; exit 0
+RUN apt-get update
+RUN apt-get install -y darktable; exit 0
+RUN apt-get install -y ffmpeg; exit 0
+RUN rm -rf /var/lib/apt/lists/*
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/photoview /app/photoview
