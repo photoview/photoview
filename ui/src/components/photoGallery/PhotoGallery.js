@@ -88,11 +88,12 @@ const PhotoGallery = ({
 
   useEffect(() => {
     !loading && forceCheck()
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
     const onScroll = _ => {
-      !loading && forceCheck();
+      !loading && forceCheck()
     }
 
-    window.addEventListener("scroll", onScroll)
+    window.addEventListener('scroll', onScroll)
     return () => {
       window.removeEventListener('scroll', onScroll)
     }
