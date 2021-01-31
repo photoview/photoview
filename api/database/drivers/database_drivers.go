@@ -10,8 +10,9 @@ import (
 type DatabaseDriverType string
 
 const (
-	DatabaseDriverMysql  DatabaseDriverType = "mysql"
-	DatabaseDriverSqlite DatabaseDriverType = "sqlite"
+	DatabaseDriverMysql    DatabaseDriverType = "mysql"
+	DatabaseDriverSqlite   DatabaseDriverType = "sqlite"
+	DatabaseDriverPostgres DatabaseDriverType = "postgres"
 )
 
 func DatabaseDriver() DatabaseDriverType {
@@ -24,6 +25,8 @@ func DatabaseDriver() DatabaseDriverType {
 		driver = DatabaseDriverMysql
 	case "sqlite":
 		driver = DatabaseDriverSqlite
+	case "postgres":
+		driver = DatabaseDriverPostgres
 	default:
 		driver = DatabaseDriverMysql
 	}

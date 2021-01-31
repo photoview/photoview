@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -34,6 +35,20 @@ func getMysqlAddress() (*url.URL, error) {
 	queryValues.Add("parseTime", "true")
 
 	address.RawQuery = queryValues.Encode()
+	return address, nil
+}
+
+func getPostgresAddress() (*url.URL, error) {
+	addressString := utils.EnvPostgresURL.GetValue()
+	if addressString == "" {
+		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName()))
+	}
+
+	address, err := url.Parse(addressString)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not parse postgres url")
+	}
+
 	return address, nil
 }
 
@@ -77,6 +92,14 @@ func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		}
 		log.Printf("Opening SQLITE database: %s", sqliteAddress)
 		databaseDialect = sqlite.Open(sqliteAddress.String())
+
+	case drivers.DatabaseDriverPostgres:
+		postgresAddress, err := getPostgresAddress()
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("Connecting to POSTGRES database: %s", postgresAddress)
+		databaseDialect = postgres.Open(postgresAddress.String())
 	}
 
 	db, err := gorm.Open(databaseDialect, config)
