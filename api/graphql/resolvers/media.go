@@ -54,7 +54,7 @@ func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error
 	err := r.Database.
 		Joins("Album").
 		Where("media.id = ?", id).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)", user.ID).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)", user.ID).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
 		First(&media).Error
 

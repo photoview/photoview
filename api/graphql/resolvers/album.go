@@ -42,7 +42,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 			favoritesSubquery := r.Database.
 				Model(&models.UserMediaData{UserID: user.ID}).
 				Where("user_media_data.media_id = media.id").
-				Where("user_media_data.favorite = 1")
+				Where("user_media_data.favorite = true")
 
 			subQuery = subQuery.Where("EXISTS (?)", favoritesSubquery)
 		}
@@ -95,8 +95,7 @@ type albumResolver struct{ *Resolver }
 func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
 
 	query := r.Database.
-		Joins("Album").
-		Where("Album.id = ?", album.ID).
+		Where("media.album_id = ?", album.ID).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
 
 	if onlyFavorites != nil && *onlyFavorites == true {
@@ -107,7 +106,7 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 
 		favoriteQuery := r.Database.Model(&models.UserMediaData{
 			UserID: user.ID,
-		}).Where("user_media_data.media_id = media.id").Where("user_media_data.favorite = 1")
+		}).Where("user_media_data.media_id = media.id").Where("user_media_data.favorite = true")
 
 		query = query.Where("EXISTS (?)", favoriteQuery)
 	}
