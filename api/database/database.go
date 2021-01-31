@@ -98,7 +98,7 @@ func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Connecting to POSTGRES database: %s", postgresAddress)
+		log.Printf("Connecting to POSTGRES database: %s", postgresAddress.Redacted())
 		databaseDialect = postgres.Open(postgresAddress.String())
 	}
 
