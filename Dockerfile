@@ -20,10 +20,11 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:3 AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15-buster AS api
 
-# Install required build dependencies
-RUN apk --no-cache add go build-base
+# Install GCC cross compilers
+RUN apt-get update
+RUN apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
 
 COPY --from=tonistiigi/xx:golang / /
 
