@@ -4,6 +4,11 @@ import { Route, Switch } from 'react-router-dom'
 import RouterPropTypes from 'react-router-prop-types'
 import Layout from '../../Layout'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
+import styled from 'styled-components'
+
+const AlbumSharePageWrapper = styled.div`
+  height: 100%;
+`
 
 const AlbumSharePage = ({ album, match }) => {
   const SubAlbumRoute = subProps => {
@@ -25,7 +30,7 @@ const AlbumSharePage = ({ album, match }) => {
     return `${match.url}/${albumId}`
   }
   return (
-    <div data-testid="AlbumSharePage">
+    <AlbumSharePageWrapper data-testid="AlbumSharePage">
       <Switch>
         <Route path={`${match.url}/:subAlbum`} component={SubAlbumRoute} />
         <Route path="/">
@@ -34,7 +39,7 @@ const AlbumSharePage = ({ album, match }) => {
           </Layout>
         </Route>
       </Switch>
-    </div>
+    </AlbumSharePageWrapper>
   )
 }
 
