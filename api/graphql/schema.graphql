@@ -44,6 +44,8 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
+  myTimeline: [TimelineGroup!]!
+
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
   "Get the mapbox api token, returns null if mapbox is not enabled"
@@ -293,4 +295,11 @@ type SearchResult {
   query: String!
   albums: [Album!]!
   media: [Media!]!
+}
+
+type TimelineGroup {
+  album: Album!
+  media: [Media!]!
+  mediaTotal: Int!
+  date: Time!
 }
