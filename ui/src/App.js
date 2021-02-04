@@ -5,6 +5,11 @@ import Routes from './components/routes/Routes'
 import Messages from './components/messages/Messages'
 
 const GlobalStyle = createGlobalStyle`
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   html {
     font-size: 0.85rem;
   }

@@ -122,7 +122,6 @@ const VideoThumbnailIcon = styled(Icon)`
 export const MediaThumbnail = ({
   media,
   onSelectImage,
-  minWidth,
   index,
   active,
   setPresenting,
@@ -163,6 +162,13 @@ export const MediaThumbnail = ({
     videoIcon = <VideoThumbnailIcon name="play" size="big" />
   }
 
+  let minWidth = 100
+  if (media.thumbnail) {
+    minWidth = Math.floor(
+      (media.thumbnail.width / media.thumbnail.height) * 200
+    )
+  }
+
   return (
     <MediaContainer
       key={media.id}
@@ -174,7 +180,14 @@ export const MediaThumbnail = ({
         onSelectImage && onSelectImage(index)
       }}
     >
-      <LazyPhoto src={media.thumbnail && media.thumbnail.url} />
+      <div
+        style={{
+          minWidth: `${minWidth}px`,
+          height: `200px`,
+        }}
+      >
+        <LazyPhoto src={media.thumbnail && media.thumbnail.url} />
+      </div>
       <PhotoOverlay active={active}>
         {videoIcon}
         <HoverIcon

@@ -54,13 +54,6 @@ const PhotoGallery = ({
       photoElements = media.map((photo, index) => {
         const active = activeIndex == index
 
-        let minWidth = 100
-        if (photo.thumbnail) {
-          minWidth = Math.floor(
-            (photo.thumbnail.width / photo.thumbnail.height) * 200
-          )
-        }
-
         return (
           <MediaThumbnail
             key={photo.id}
@@ -71,7 +64,6 @@ const PhotoGallery = ({
             }}
             onFavorite={onFavorite}
             setPresenting={setPresenting}
-            minWidth={minWidth}
             index={index}
             active={active}
           />
