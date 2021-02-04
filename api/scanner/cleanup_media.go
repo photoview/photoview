@@ -45,7 +45,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	}
 
 	if len(mediaIDs) > 0 {
-		if err := db.Where("id IN (?)", mediaIDs).Delete(models.Media{}).Error; err != nil {
+		if err := db.Delete(models.Media{}, mediaIDs).Error; err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
 		}
 	}

@@ -48,18 +48,6 @@ func (m *Media) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
-func (m *Media) BeforeDelete(tx *gorm.DB) error {
-	if err := tx.Model(m).Association("Exif").Clear(); err != nil {
-		return err
-	}
-
-	if err := tx.Model(m).Association("MediaURL").Clear(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type MediaPurpose string
 
 const (
