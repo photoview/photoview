@@ -205,7 +205,6 @@ export const MediaThumbnail = ({
 MediaThumbnail.propTypes = {
   media: PropTypes.object.isRequired,
   onSelectImage: PropTypes.func,
-  minWidth: PropTypes.number.isRequired,
   index: PropTypes.number.isRequired,
   active: PropTypes.bool.isRequired,
   setPresenting: PropTypes.func.isRequired,

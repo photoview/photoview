@@ -7,7 +7,7 @@ const MediaWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  height: 200px;
+  height: 210px;
   position: relative;
   margin: -4px;
 
@@ -30,19 +30,20 @@ const GroupAlbumWrapper = styled.div`
   margin-top: 12px;
 `
 
-const TimelineGroupAlbum = ({ group: { album, media /* mediaTotal */ } }) => {
-  const mediaElms = media.map(media => (
+const TimelineGroupAlbum = ({
+  group: { album, media /* mediaTotal */ },
+  onSelectMedia,
+  setPresenting,
+  activeIndex,
+}) => {
+  const mediaElms = media.map((media, i) => (
     <MediaThumbnail
       key={media.id}
       media={media}
-      onSelectImage={() => {
-        // todo
-      }}
-      setPresenting={() => {
-        // todo
-      }}
-      index={0}
-      active={false}
+      onSelectImage={onSelectMedia}
+      setPresenting={setPresenting}
+      index={i}
+      active={activeIndex == i}
     />
   ))
 
@@ -56,6 +57,9 @@ const TimelineGroupAlbum = ({ group: { album, media /* mediaTotal */ } }) => {
 
 TimelineGroupAlbum.propTypes = {
   group: PropTypes.object.isRequired,
+  onSelectMedia: PropTypes.func.isRequired,
+  setPresenting: PropTypes.func.isRequired,
+  activeIndex: PropTypes.number.isRequired,
 }
 
 export default TimelineGroupAlbum

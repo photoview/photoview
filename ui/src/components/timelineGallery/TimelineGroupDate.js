@@ -18,9 +18,26 @@ const DateTitle = styled.h1`
   margin: 0 0 -12px;
 `
 
-const TimelineGroupDate = ({ date, groups }) => {
-  const groupElms = groups.map(group => (
-    <TimelineGroupAlbum key={`${group.date}_${group.album.id}`} group={group} />
+const TimelineGroupDate = ({
+  date,
+  groups,
+  onSelectDateGroup,
+  activeIndex,
+  setPresenting,
+}) => {
+  const albumGroupElms = groups.map((group, i) => (
+    <TimelineGroupAlbum
+      key={`${group.date}_${group.album.id}`}
+      group={group}
+      onSelectMedia={mediaIndex => {
+        onSelectDateGroup({
+          media: mediaIndex,
+          albumGroup: i,
+        })
+      }}
+      activeIndex={activeIndex.albumGroup == i ? activeIndex.media : -1}
+      setPresenting={setPresenting}
+    />
   ))
 
   const formattedDate = dateFormatter.format(new Date(date))
@@ -28,7 +45,7 @@ const TimelineGroupDate = ({ date, groups }) => {
   return (
     <GroupDateWrapper>
       <DateTitle>{formattedDate}</DateTitle>
-      <div>{groupElms}</div>
+      <div>{albumGroupElms}</div>
     </GroupDateWrapper>
   )
 }
@@ -36,6 +53,9 @@ const TimelineGroupDate = ({ date, groups }) => {
 TimelineGroupDate.propTypes = {
   date: PropTypes.string.isRequired,
   groups: PropTypes.array.isRequired,
+  onSelectDateGroup: PropTypes.func.isRequired,
+  activeIndex: PropTypes.object.isRequired,
+  setPresenting: PropTypes.func.isRequired,
 }
 
 export default TimelineGroupDate
