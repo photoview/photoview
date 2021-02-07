@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import PropTypes from 'prop-types'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
 import styled from 'styled-components'
+import { SidebarContext } from '../sidebar/Sidebar'
+import MediaSidebar from '../sidebar/MediaSidebar'
 
 const MediaWrapper = styled.div`
   display: flex;
@@ -36,11 +38,16 @@ const TimelineGroupAlbum = ({
   setPresenting,
   activeIndex,
 }) => {
+  const { updateSidebar } = useContext(SidebarContext)
+
   const mediaElms = media.map((media, i) => (
     <MediaThumbnail
       key={media.id}
       media={media}
-      onSelectImage={onSelectMedia}
+      onSelectImage={index => {
+        onSelectMedia(index)
+        updateSidebar(<MediaSidebar media={media} />)
+      }}
       setPresenting={setPresenting}
       index={i}
       active={activeIndex == i}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
@@ -50,7 +50,7 @@ const TimelineGallery = () => {
   })
   const [presenting, setPresenting] = useState(false)
 
-  const nextMedia = () => {
+  const nextMedia = useCallback(() => {
     setActiveIndex(activeIndex => {
       const albumGroups = dateGroupedAlbums[activeIndex.dateGroup].groups
       const albumMedia = albumGroups[activeIndex.albumGroup].media
@@ -78,15 +78,40 @@ const TimelineGallery = () => {
         }
       }
 
-      return {
-        dateGroup: 0,
-        albumGroup: 0,
-        media: 0,
-      }
+      // reached the end
+      return activeIndex
     })
-  }
+  }, [activeIndex])
 
-  const previousMedia = () => {}
+  const previousMedia = useCallback(() => {
+    setActiveIndex(activeIndex => {
+      if (activeIndex.media > 0) {
+        return {
+          ...activeIndex,
+          media: activeIndex.media - 1,
+        }
+      }
+
+      if (activeIndex.albumGroup > 0) {
+        return {
+          ...activeIndex,
+          albumGroup: activeIndex.albumGroup - 1,
+          media: 0,
+        }
+      }
+
+      if (activeIndex.dateGroup > 0) {
+        return {
+          dateGroup: activeIndex.dateGroup - 1,
+          albumGroup: 0,
+          media: 0,
+        }
+      }
+
+      // reached the start
+      return activeIndex
+    })
+  }, [activeIndex])
 
   const { data, error } = useQuery(MY_TIMELINE_QUERY)
 
