@@ -137,23 +137,6 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 	return &token, nil
 }
 
-func VerifyTokenAndGetUser(db *gorm.DB, token string) (*User, error) {
-
-	var accessToken AccessToken
-	result := db.Where("expire > ? AND value = ?", time.Now(), token).First(&accessToken)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	var user User
-	result = db.First(&user, accessToken.UserID)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return &user, nil
-}
-
 // FillAlbums fill user.Albums with albums from database
 func (user *User) FillAlbums(db *gorm.DB) error {
 	// Albums already present
