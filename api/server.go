@@ -12,6 +12,7 @@ import (
 
 	"github.com/photoview/photoview/api/database"
 	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/server"
@@ -52,6 +53,7 @@ func main() {
 
 	rootRouter := mux.NewRouter()
 
+	rootRouter.Use(dataloader.Middleware(db))
 	rootRouter.Use(auth.Middleware(db))
 	rootRouter.Use(server.LoggingMiddleware)
 	rootRouter.Use(server.CORSMiddleware(devMode))

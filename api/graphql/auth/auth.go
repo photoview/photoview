@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/99designs/gqlgen/handler"
+	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
@@ -28,7 +29,8 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
-				user, err := models.VerifyTokenAndGetUser(db, tokenCookie.Value)
+				user, err := dataloader.For(r.Context()).UserFromAccessToken.Load(tokenCookie.Value)
+				// user, err := models.VerifyTokenAndGetUser(db, tokenCookie.Value)
 				if err != nil {
 					log.Printf("Invalid token: %s\n", err)
 					http.Error(w, "invalid authorization token", http.StatusForbidden)
@@ -80,7 +82,8 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, handler.InitPayload) (
 			return nil, err
 		}
 
-		user, err := models.VerifyTokenAndGetUser(db, *token)
+		user, err := dataloader.For(ctx).UserFromAccessToken.Load(*token)
+		// user, err := models.VerifyTokenAndGetUser(db, *token)
 		if err != nil {
 			log.Printf("Invalid token in websocket: %s\n", err)
 			return nil, errors.New("invalid authorization token")
