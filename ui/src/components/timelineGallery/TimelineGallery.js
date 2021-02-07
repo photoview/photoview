@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
@@ -58,6 +58,7 @@ const TimelineGallery = () => {
 
   const onlyFavorites = getParam('favorites') == '1' ? true : false
   const setOnlyFavorites = favorites => setParam('favorites', favorites ? 1 : 0)
+  const favoritesNeedsRefresh = useRef(false)
 
   const nextMedia = useCallback(() => {
     setActiveIndex(activeIndex => {
@@ -122,11 +123,20 @@ const TimelineGallery = () => {
     })
   }, [activeIndex])
 
-  const { data, error, loading } = useQuery(MY_TIMELINE_QUERY, {
+  const { data, error, loading, refetch } = useQuery(MY_TIMELINE_QUERY, {
     variables: {
       onlyFavorites,
     },
   })
+
+  useEffect(() => {
+    if (favoritesNeedsRefresh) {
+      favoritesNeedsRefresh.current = false
+      refetch({
+        onlyFavorites: onlyFavorites,
+      })
+    }
+  }, [onlyFavorites])
 
   if (error) {
     return error
@@ -166,12 +176,15 @@ const TimelineGallery = () => {
             dateGroup: i,
           })
         }}
+        onFavorite={() => {
+          favoritesNeedsRefresh.current = true
+        }}
       />
     ))
   }
 
   return (
-    <div>
+    <>
       <Loader active={loading}>Loading timeline</Loader>
       <FavoritesCheckbox
         onlyFavorites={onlyFavorites}
@@ -191,7 +204,7 @@ const TimelineGallery = () => {
           setPresenting={setPresenting}
         />
       )}
-    </div>
+    </>
   )
 }
 

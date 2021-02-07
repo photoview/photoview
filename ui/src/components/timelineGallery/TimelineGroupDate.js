@@ -30,6 +30,7 @@ const TimelineGroupDate = ({
   onSelectDateGroup,
   activeIndex,
   setPresenting,
+  onFavorite,
 }) => {
   const albumGroupElms = groups.map((group, i) => (
     <TimelineGroupAlbum
@@ -43,6 +44,7 @@ const TimelineGroupDate = ({
       }}
       activeIndex={activeIndex.albumGroup == i ? activeIndex.media : -1}
       setPresenting={setPresenting}
+      onFavorite={onFavorite}
     />
   ))
 
@@ -62,6 +64,7 @@ TimelineGroupDate.propTypes = {
   onSelectDateGroup: PropTypes.func.isRequired,
   activeIndex: PropTypes.object.isRequired,
   setPresenting: PropTypes.func.isRequired,
+  onFavorite: PropTypes.func,
 }
 
 export default TimelineGroupDate

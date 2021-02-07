@@ -41,6 +41,7 @@ const TimelineGroupAlbum = ({
   onSelectMedia,
   setPresenting,
   activeIndex,
+  onFavorite,
 }) => {
   const { updateSidebar } = useContext(SidebarContext)
 
@@ -53,6 +54,7 @@ const TimelineGroupAlbum = ({
         updateSidebar(<MediaSidebar media={media} />)
       }}
       setPresenting={setPresenting}
+      onFavorite={onFavorite}
       index={i}
       active={activeIndex == i}
     />
@@ -73,6 +75,7 @@ TimelineGroupAlbum.propTypes = {
   onSelectMedia: PropTypes.func.isRequired,
   setPresenting: PropTypes.func.isRequired,
   activeIndex: PropTypes.number.isRequired,
+  onFavorite: PropTypes.func,
 }
 
 export default TimelineGroupAlbum
