@@ -1,6 +1,6 @@
+import React from 'react'
 import { authToken } from '../authentication'
 import { Checkbox, Dropdown, Button, Icon } from 'semantic-ui-react'
-import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'
 
@@ -22,7 +22,7 @@ const sortingOptions = [
   },
   {
     key: 'kind',
-    value: 'kind',
+    value: 'type',
     text: 'Kind',
   },
 ]
@@ -81,16 +81,10 @@ const AlbumFilter = ({
   setOrdering,
   ordering,
 }) => {
-  const [orderDirection, setOrderDirection] = useState(ordering.orderDirection)
-
   const onChangeOrderDirection = (e, data) => {
     const direction = data.children.props.name === 'arrow up' ? 'DESC' : 'ASC'
-    setOrderDirection(direction)
+    setOrdering({ orderDirection: direction })
   }
-
-  useEffect(() => {
-    setOrdering({ orderDirection })
-  }, [orderDirection])
 
   return (
     <>
@@ -113,7 +107,9 @@ const AlbumFilter = ({
         }}
       />
       <OrderDirectionButton icon basic onClick={onChangeOrderDirection}>
-        <Icon name={'arrow ' + (orderDirection === 'ASC' ? 'up' : 'down')} />
+        <Icon
+          name={'arrow ' + (ordering.orderDirection === 'ASC' ? 'up' : 'down')}
+        />
       </OrderDirectionButton>
     </>
   )
@@ -126,4 +122,4 @@ AlbumFilter.propTypes = {
   ordering: PropTypes.object,
 }
 
-export default React.memo(AlbumFilter)
+export default AlbumFilter
