@@ -92,7 +92,7 @@ func (r *queryResolver) MyTimeline(ctx context.Context, onlyFavorites *bool) ([]
 			date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 
 			timelineGroup := models.TimelineGroup{
-				Album:      groupAlbum,
+				Album:      &groupAlbum,
 				Media:      groupMedia,
 				MediaTotal: int(totalMedia),
 				Date:       date,
