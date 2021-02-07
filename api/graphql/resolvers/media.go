@@ -145,41 +145,10 @@ func (r *mediaResolver) HighRes(ctx context.Context, media *models.Media) (*mode
 	}
 
 	return dataloader.For(ctx).MediaHighres.Load(media.ID)
-
-	// var url models.MediaURL
-	// err := r.Database.
-	// 	Where("media_id = ?", media.ID).
-	// 	Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, scanner.WebMimetypes).
-	// 	First(&url).Error
-
-	// if err != nil {
-	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		return nil, nil
-	// 	} else {
-	// 		return nil, errors.Wrapf(err, "could not query high-res (%s)", media.Path)
-	// 	}
-	// }
-
-	// return &url, nil
 }
 
 func (r *mediaResolver) Thumbnail(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
 	return dataloader.For(ctx).MediaThumbnail.Load(media.ID)
-	// var url []*models.MediaURL
-	// err := r.Database.
-	// 	Where("media_id = ?", media.ID).
-	// 	Where("purpose = ? OR purpose = ?", models.PhotoThumbnail, models.VideoThumbnail).
-	// 	Find(&url).Error
-
-	// if err != nil {
-	// 	return nil, errors.Wrapf(err, "could not query thumbnail (%s)", media.Path)
-	// }
-
-	// if len(url) == 0 {
-	// 	return nil, nil
-	// }
-
-	// return url[0], nil
 }
 
 func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
@@ -188,22 +157,6 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*mod
 	}
 
 	return dataloader.For(ctx).MediaVideoWeb.Load(media.ID)
-
-	// var url models.MediaURL
-	// err := r.Database.
-	// 	Where("media_id = ?", media.ID).
-	// 	Where("purpose = ? OR purpose = ?", models.VideoWeb, models.MediaOriginal).
-	// 	First(&url).Error
-
-	// if err != nil {
-	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		return nil, nil
-	// 	} else {
-	// 		return nil, errors.Wrapf(err, "could not query video web-format url (%s)", media.Path)
-	// 	}
-	// }
-
-	// return &url, nil
 }
 
 func (r *mediaResolver) Exif(ctx context.Context, media *models.Media) (*models.MediaEXIF, error) {
@@ -229,12 +182,6 @@ func (r *mediaResolver) Favorite(ctx context.Context, media *models.Media) (bool
 		UserID:  user.ID,
 		MediaID: media.ID,
 	})
-
-	// if err := r.Database.FirstOrInit(&userMediaData).Error; err != nil {
-	// 	return false, errors.Wrapf(err, "get user media data from database (user: %d, media: %d)", user.ID, media.ID)
-	// }
-
-	// return userMediaData.Favorite, nil
 }
 
 func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error) {
