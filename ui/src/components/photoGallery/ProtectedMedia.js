@@ -2,6 +2,8 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const getProtectedUrl = url => {
+  if (url == null) return null
+
   const imgUrl = new URL(url)
 
   const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
@@ -26,7 +28,7 @@ export const ProtectedImage = ({ src, ...props }) => (
 )
 
 ProtectedImage.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
 }
 
 export const ProtectedVideo = ({ media, ...props }) => (
@@ -35,7 +37,7 @@ export const ProtectedVideo = ({ media, ...props }) => (
     controls
     key={media.id}
     crossOrigin="use-credentials"
-    poster={getProtectedUrl(media.thumbnail.url)}
+    poster={getProtectedUrl(media.thumbnail?.url)}
   >
     <source src={getProtectedUrl(media.videoWeb.url)} type="video/mp4" />
   </video>

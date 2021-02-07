@@ -25,10 +25,10 @@ const PresentMedia = ({ media, imageLoaded, ...otherProps }) => {
   if (media.type == 'photo') {
     return (
       <div {...otherProps}>
-        <StyledPhoto src={media.thumbnail.url} />
+        <StyledPhoto src={media.thumbnail?.url} />
         <StyledPhoto
           style={{ display: 'none' }}
-          src={media.highRes.url}
+          src={media.highRes?.url}
           onLoad={e => {
             e.target.style.display = 'initial'
             imageLoaded && imageLoaded()

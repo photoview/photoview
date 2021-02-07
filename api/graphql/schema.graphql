@@ -237,7 +237,7 @@ type Media {
   "Local filepath for the media"
   path: String!
   "URL to display the media in a smaller resolution"
-  thumbnail: MediaURL!
+  thumbnail: MediaURL
   "URL to display the photo in full resolution, will be null for videos"
   highRes: MediaURL
   "URL to get the video in a web format that can be played in the browser, will be null for photos"

@@ -163,17 +163,21 @@ func (r *mediaResolver) HighRes(ctx context.Context, media *models.Media) (*mode
 }
 
 func (r *mediaResolver) Thumbnail(ctx context.Context, media *models.Media) (*models.MediaURL, error) {
-	var url models.MediaURL
+	var url []*models.MediaURL
 	err := r.Database.
 		Where("media_id = ?", media.ID).
 		Where("purpose = ? OR purpose = ?", models.PhotoThumbnail, models.VideoThumbnail).
-		First(&url).Error
+		Find(&url).Error
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not query thumbnail (%s)", media.Path)
 	}
 
-	return &url, nil
+	if len(url) == 0 {
+		return nil, nil
+	}
+
+	return url[0], nil
 }
 
 func (r *mediaResolver) VideoWeb(ctx context.Context, media *models.Media) (*models.MediaURL, error) {

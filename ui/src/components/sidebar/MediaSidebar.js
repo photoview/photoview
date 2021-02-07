@@ -82,7 +82,7 @@ const PreviewVideo = styled(ProtectedVideo)`
 
 const PreviewMedia = ({ media, previewImage }) => {
   if (media.type == null || media.type == 'photo') {
-    return <PreviewImage src={previewImage.url} />
+    return <PreviewImage src={previewImage?.url} />
   }
 
   if (media.type == 'video') {
@@ -94,7 +94,7 @@ const PreviewMedia = ({ media, previewImage }) => {
 
 PreviewMedia.propTypes = {
   media: PropTypes.object.isRequired,
-  previewImage: PropTypes.object.isRequired,
+  previewImage: PropTypes.object,
 }
 
 const Name = styled.div`
@@ -194,12 +194,14 @@ const SidebarContent = ({ media, hidePreview }) => {
     else if (media.thumbnail) previewImage = media.thumbnail
   }
 
+  const imageAspect = previewImage
+    ? previewImage.height / previewImage.width
+    : 3 / 2
+
   return (
     <div>
       {!hidePreview && (
-        <PreviewImageWrapper
-          imageAspect={previewImage.height / previewImage.width}
-        >
+        <PreviewImageWrapper imageAspect={imageAspect}>
           <PreviewMedia previewImage={previewImage} media={media} />
         </PreviewImageWrapper>
       )}

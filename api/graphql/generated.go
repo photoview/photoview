@@ -1593,7 +1593,7 @@ type Media {
   "Local filepath for the media"
   path: String!
   "URL to display the media in a smaller resolution"
-  thumbnail: MediaURL!
+  thumbnail: MediaURL
   "URL to display the photo in full resolution, will be null for videos"
   highRes: MediaURL
   "URL to get the video in a web format that can be played in the browser, will be null for photos"
@@ -2928,14 +2928,11 @@ func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*models.MediaURL)
 	fc.Result = res
-	return ec.marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
+	return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -8195,9 +8192,6 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Media_thumbnail(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			})
 		case "highRes":
@@ -9669,10 +9663,6 @@ func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋphotoviewᚋphoto
 
 func (ec *executionContext) marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx context.Context, sel ast.SelectionSet, v models.MediaType) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNMediaURL2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v models.MediaURL) graphql.Marshaler {
-	return ec._MediaURL(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx context.Context, sel ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
