@@ -44,7 +44,7 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline: [TimelineGroup!]!
+  myTimeline(onlyFavorites: Boolean): [TimelineGroup!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!

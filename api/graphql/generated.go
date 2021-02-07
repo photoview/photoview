@@ -152,7 +152,7 @@ type ComplexityRoot struct {
 		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
 		MyMedia                    func(childComplexity int, filter *models.Filter) int
 		MyMediaGeoJSON             func(childComplexity int) int
-		MyTimeline                 func(childComplexity int) int
+		MyTimeline                 func(childComplexity int, onlyFavorites *bool) int
 		MyUser                     func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
 		ShareToken                 func(childComplexity int, token string, password *string) int
@@ -272,7 +272,7 @@ type QueryResolver interface {
 	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
 	Media(ctx context.Context, id int) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
-	MyTimeline(ctx context.Context) ([]*models.TimelineGroup, error)
+	MyTimeline(ctx context.Context, onlyFavorites *bool) ([]*models.TimelineGroup, error)
 	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	MapboxToken(ctx context.Context) (*string, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
@@ -945,7 +945,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.MyTimeline(childComplexity), true
+		args, err := ec.field_Query_myTimeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyTimeline(childComplexity, args["onlyFavorites"].(*bool)), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -1395,7 +1400,7 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline: [TimelineGroup!]!
+  myTimeline(onlyFavorites: Boolean): [TimelineGroup!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
@@ -2184,6 +2189,21 @@ func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArg
 		}
 	}
 	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myTimeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *bool
+	if tmp, ok := rawArgs["onlyFavorites"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyFavorites"))
+		arg0, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyFavorites"] = arg0
 	return args, nil
 }
 
@@ -5205,9 +5225,16 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_myTimeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyTimeline(rctx)
+		return ec.resolvers.Query().MyTimeline(rctx, args["onlyFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

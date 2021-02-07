@@ -4,10 +4,13 @@ import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
 import styled from 'styled-components'
 import PresentView from '../photoGallery/presentView/PresentView'
+import { Loader } from 'semantic-ui-react'
+import useURLParameters from '../useUrlParameters'
+import { FavoritesCheckbox } from '../AlbumFilter'
 
 const MY_TIMELINE_QUERY = gql`
-  query myTimeline {
-    myTimeline {
+  query myTimeline($onlyFavorites: Boolean) {
+    myTimeline(onlyFavorites: $onlyFavorites) {
       album {
         id
         title
@@ -38,6 +41,7 @@ const MY_TIMELINE_QUERY = gql`
 `
 
 const GalleryWrapper = styled.div`
+  margin: -12px;
   display: flex;
   flex-wrap: wrap;
 `
@@ -49,6 +53,11 @@ const TimelineGallery = () => {
     media: -1,
   })
   const [presenting, setPresenting] = useState(false)
+
+  const { getParam, setParam } = useURLParameters()
+
+  const onlyFavorites = getParam('favorites') == '1' ? true : false
+  const setOnlyFavorites = favorites => setParam('favorites', favorites ? 1 : 0)
 
   const nextMedia = useCallback(() => {
     setActiveIndex(activeIndex => {
@@ -113,7 +122,11 @@ const TimelineGallery = () => {
     })
   }, [activeIndex])
 
-  const { data, error } = useQuery(MY_TIMELINE_QUERY)
+  const { data, error, loading } = useQuery(MY_TIMELINE_QUERY, {
+    variables: {
+      onlyFavorites,
+    },
+  })
 
   if (error) {
     return error
@@ -158,8 +171,13 @@ const TimelineGallery = () => {
   }
 
   return (
-    <GalleryWrapper>
-      {timelineGroups}
+    <div>
+      <Loader active={loading}>Loading timeline</Loader>
+      <FavoritesCheckbox
+        onlyFavorites={onlyFavorites}
+        setOnlyFavorites={setOnlyFavorites}
+      />
+      <GalleryWrapper>{timelineGroups}</GalleryWrapper>
       {presenting && (
         <PresentView
           media={
@@ -173,7 +191,7 @@ const TimelineGallery = () => {
           setPresenting={setPresenting}
         />
       )}
-    </GalleryWrapper>
+    </div>
   )
 }
 

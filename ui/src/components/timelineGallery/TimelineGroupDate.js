@@ -18,6 +18,12 @@ const DateTitle = styled.h1`
   margin: 0 0 -12px;
 `
 
+const GroupAlbumWrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -8px;
+`
+
 const TimelineGroupDate = ({
   date,
   groups,
@@ -45,7 +51,7 @@ const TimelineGroupDate = ({
   return (
     <GroupDateWrapper>
       <DateTitle>{formattedDate}</DateTitle>
-      <div>{albumGroupElms}</div>
+      <GroupAlbumWrapper>{albumGroupElms}</GroupAlbumWrapper>
     </GroupDateWrapper>
   )
 }

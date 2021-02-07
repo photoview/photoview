@@ -4,6 +4,7 @@ import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
 import styled from 'styled-components'
 import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
+import { Link } from 'react-router-dom'
 
 const MediaWrapper = styled.div`
   display: flex;
@@ -22,14 +23,17 @@ const MediaWrapper = styled.div`
 `
 
 const AlbumTitle = styled.h2`
-  color: #212121;
   font-size: 1.25rem;
   font-weight: 200;
   margin: 0 0 4px;
+
+  & a:not(:hover) {
+    color: #212121;
+  }
 `
 
 const GroupAlbumWrapper = styled.div`
-  margin-top: 12px;
+  margin: 12px 8px 0;
 `
 
 const TimelineGroupAlbum = ({
@@ -56,7 +60,9 @@ const TimelineGroupAlbum = ({
 
   return (
     <GroupAlbumWrapper>
-      <AlbumTitle>{album.title}</AlbumTitle>
+      <AlbumTitle>
+        <Link to={`/album/${album.id}`}>{album.title}</Link>
+      </AlbumTitle>
       <MediaWrapper>{mediaElms}</MediaWrapper>
     </GroupAlbumWrapper>
   )

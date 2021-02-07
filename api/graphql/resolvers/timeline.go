@@ -4,17 +4,22 @@ import (
 	"context"
 	"time"
 
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 
-func (r *queryResolver) MyTimeline(ctx context.Context) ([]*models.TimelineGroup, error) {
+func (r *queryResolver) MyTimeline(ctx context.Context, onlyFavorites *bool) ([]*models.TimelineGroup, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
 
 	var timelineGroups []*models.TimelineGroup
 
 	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
 		// album_id, year, month, day
-		rows, err := tx.Select(
+		daysQuery := tx.Select(
 			"albums.id AS album_id",
 			"YEAR(media.date_shot) AS year",
 			"MONTH(media.date_shot) AS month",
@@ -22,7 +27,13 @@ func (r *queryResolver) MyTimeline(ctx context.Context) ([]*models.TimelineGroup
 		).
 			Table("media").
 			Joins("JOIN albums ON media.album_id = albums.id").
-			Group("albums.id, YEAR(media.date_shot), MONTH(media.date_shot), DAY(media.date_shot)").
+			Where("albums.id IN (?)", tx.Table("user_albums").Select("user_albums.album_id").Where("user_id = ?", user.ID))
+
+		if onlyFavorites != nil && *onlyFavorites == true {
+			daysQuery.Where("media.id IN (?)", tx.Table("user_media_data").Select("user_media_data.media_id").Where("user_media_data.user_id = ?", user.ID).Where("user_media_data.favorite = 1"))
+		}
+
+		rows, err := daysQuery.Group("albums.id, YEAR(media.date_shot), MONTH(media.date_shot), DAY(media.date_shot)").
 			Order("media.date_shot DESC").
 			Rows()
 
@@ -59,23 +70,21 @@ func (r *queryResolver) MyTimeline(ctx context.Context) ([]*models.TimelineGroup
 
 			// Fill media
 			var groupMedia []*models.Media
-			err := tx.Model(&models.Media{}).
+			mediaQuery := tx.Model(&models.Media{}).
 				Where("album_id = ? AND YEAR(date_shot) = ? AND MONTH(date_shot) = ? AND DAY(date_shot) = ?", group.albumID, group.year, group.month, group.day).
-				Order("date_shot DESC").
-				Limit(5).
-				Find(&groupMedia).Error
+				Order("date_shot DESC")
 
-			if err != nil {
+			if onlyFavorites != nil && *onlyFavorites == true {
+				mediaQuery.Where("media.id IN (?)", tx.Table("user_media_data").Select("user_media_data.media_id").Where("user_media_data.user_id = ?", user.ID).Where("user_media_data.favorite = 1"))
+			}
+
+			if err := mediaQuery.Limit(5).Find(&groupMedia).Error; err != nil {
 				return err
 			}
 
 			// Get total media count
 			var totalMedia int64
-			err = tx.Model(&models.Media{}).
-				Where("album_id = ? AND YEAR(date_shot) = ? AND MONTH(date_shot) = ? AND DAY(date_shot) = ?", group.albumID, group.year, group.month, group.day).
-				Count(&totalMedia).Error
-
-			if err != nil {
+			if err := mediaQuery.Count(&totalMedia).Error; err != nil {
 				return err
 			}
 

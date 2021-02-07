@@ -27,7 +27,7 @@ const sortingOptions = [
   },
 ]
 
-const FavoritesCheckbox = styled(Checkbox)`
+const FavoritesCheckboxStyle = styled(Checkbox)`
   margin-bottom: 16px;
   margin-right: 10px;
 
@@ -56,6 +56,20 @@ const FavoritesCheckbox = styled(Checkbox)`
   }
 `
 
+export const FavoritesCheckbox = ({ onlyFavorites, setOnlyFavorites }) => (
+  <FavoritesCheckboxStyle
+    toggle
+    label="Show only favorites"
+    checked={onlyFavorites}
+    onChange={(e, result) => setOnlyFavorites(result.checked)}
+  />
+)
+
+FavoritesCheckbox.propTypes = {
+  onlyFavorites: PropTypes.bool.isRequired,
+  setOnlyFavorites: PropTypes.func.isRequired,
+}
+
 const OrderDirectionButton = styled(Button)`
   padding: 0.88em;
   margin-left: 10px !important;
@@ -82,11 +96,8 @@ const AlbumFilter = ({
     <>
       {authToken() && (
         <FavoritesCheckbox
-          toggle
-          label="Show only favorites"
-          checked={onlyFavorites}
-          onClick={e => e.stopPropagation()}
-          onChange={(e, result) => setOnlyFavorites(result.checked)}
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
         />
       )}
       <strong> Sort by </strong>
