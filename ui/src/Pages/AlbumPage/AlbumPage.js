@@ -1,10 +1,10 @@
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
-import { useLocation } from 'react-router-dom'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
 import Layout from '../../Layout'
+import useURLParameters from '../../components/useURLParameters'
 
 const albumQuery = gql`
   query albumQuery(
@@ -56,36 +56,38 @@ let refetchNeededFavorites = false
 
 function AlbumPage({ match }) {
   const albumId = match.params.id
-  const [onlyFavorites, setOnlyFavorites] = useState(
-    match.params.subPage === 'favorites'
-  )
 
-  const urlParams = new URLSearchParams(useLocation().search)
-  const [ordering, setOrdering] = useState({
-    orderBy: urlParams.get('orderBy') || 'date_shot',
-    orderDirection: urlParams.get('orderDirection') || 'ASC',
-  })
+  const { getParam, setParam, setParams } = useURLParameters()
+
+  const onlyFavorites = getParam('favorites') == '1' ? true : false
+  const setOnlyFavorites = favorites => setParam('favorites', favorites ? 1 : 0)
+
+  const orderBy = getParam('orderBy', 'date_shot')
+  const orderDirection = getParam('orderDirection', 'ASC')
+
+  const setOrdering = useCallback(
+    ({ orderBy, orderDirection }) => {
+      let updatedParams = []
+      if (orderBy !== undefined) {
+        updatedParams.push({ key: 'orderBy', value: orderBy })
+      }
+      if (orderDirection !== undefined) {
+        updatedParams.push({ key: 'orderDirection', value: orderDirection })
+      }
+
+      setParams(updatedParams)
+    },
+    [setParams]
+  )
 
   const { loading, error, data, refetch } = useQuery(albumQuery, {
     variables: {
       id: albumId,
       onlyFavorites,
-      mediaOrderBy: ordering.orderBy,
-      mediaOrderDirection: ordering.orderDirection,
+      mediaOrderBy: orderBy,
+      mediaOrderDirection: orderDirection,
     },
   })
-
-  const setOrderingCallback = useCallback(
-    ordering => {
-      setOrdering(prevState => {
-        return {
-          ...prevState,
-          ...ordering,
-        }
-      })
-    },
-    [setOrdering, onlyFavorites]
-  )
 
   const toggleFavorites = useCallback(
     onlyFavorites => {
@@ -108,13 +110,6 @@ function AlbumPage({ match }) {
     [setOnlyFavorites, refetch]
   )
 
-  useEffect(() => {
-    const pathName = `/album/${albumId + (onlyFavorites ? '/favorites' : '')}`
-    const queryString = `orderBy=${ordering.orderBy}&orderDirection=${ordering.orderDirection}`
-
-    history.replaceState({}, '', pathName + '?' + queryString)
-  }, [onlyFavorites, ordering])
-
   if (error) return <div>Error</div>
 
   return (
@@ -127,8 +122,8 @@ function AlbumPage({ match }) {
         onlyFavorites={onlyFavorites}
         onFavorite={() => (refetchNeededAll = refetchNeededFavorites = true)}
         showFilter
-        setOrdering={setOrderingCallback}
-        ordering={ordering}
+        setOrdering={setOrdering}
+        ordering={{ orderBy, orderDirection }}
       />
     </Layout>
   )

@@ -1,13 +1,13 @@
 import React from 'react'
 import Layout from '../../Layout'
 import PropTypes from 'prop-types'
-import GalleryGroups from '../../components/photoGallery/GalleryGroups'
+import TimelineGallery from '../../components/timelineGallery/TimelineGallery'
 
-const PhotosPage = ({ match }) => {
+const PhotosPage = () => {
   return (
     <>
       <Layout title="Photos">
-        <GalleryGroups subPage={match.params.subPage} />
+        <TimelineGallery />
       </Layout>
     </>
   )

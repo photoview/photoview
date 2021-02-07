@@ -1,6 +1,6 @@
+import React from 'react'
 import { authToken } from '../authentication'
 import { Checkbox, Dropdown, Button, Icon } from 'semantic-ui-react'
-import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'
 
@@ -22,12 +22,12 @@ const sortingOptions = [
   },
   {
     key: 'kind',
-    value: 'kind',
+    value: 'type',
     text: 'Kind',
   },
 ]
 
-const FavoritesCheckbox = styled(Checkbox)`
+const FavoritesCheckboxStyle = styled(Checkbox)`
   margin-bottom: 16px;
   margin-right: 10px;
 
@@ -56,6 +56,20 @@ const FavoritesCheckbox = styled(Checkbox)`
   }
 `
 
+export const FavoritesCheckbox = ({ onlyFavorites, setOnlyFavorites }) => (
+  <FavoritesCheckboxStyle
+    toggle
+    label="Show only favorites"
+    checked={onlyFavorites}
+    onChange={(e, result) => setOnlyFavorites(result.checked)}
+  />
+)
+
+FavoritesCheckbox.propTypes = {
+  onlyFavorites: PropTypes.bool.isRequired,
+  setOnlyFavorites: PropTypes.func.isRequired,
+}
+
 const OrderDirectionButton = styled(Button)`
   padding: 0.88em;
   margin-left: 10px !important;
@@ -67,26 +81,17 @@ const AlbumFilter = ({
   setOrdering,
   ordering,
 }) => {
-  const [orderDirection, setOrderDirection] = useState(ordering.orderDirection)
-
   const onChangeOrderDirection = (e, data) => {
     const direction = data.children.props.name === 'arrow up' ? 'DESC' : 'ASC'
-    setOrderDirection(direction)
+    setOrdering({ orderDirection: direction })
   }
-
-  useEffect(() => {
-    setOrdering({ orderDirection })
-  }, [orderDirection])
 
   return (
     <>
       {authToken() && (
         <FavoritesCheckbox
-          toggle
-          label="Show only favorites"
-          checked={onlyFavorites}
-          onClick={e => e.stopPropagation()}
-          onChange={(e, result) => setOnlyFavorites(result.checked)}
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
         />
       )}
       <strong> Sort by </strong>
@@ -102,7 +107,9 @@ const AlbumFilter = ({
         }}
       />
       <OrderDirectionButton icon basic onClick={onChangeOrderDirection}>
-        <Icon name={'arrow ' + (orderDirection === 'ASC' ? 'up' : 'down')} />
+        <Icon
+          name={'arrow ' + (ordering.orderDirection === 'ASC' ? 'up' : 'down')}
+        />
       </OrderDirectionButton>
     </>
   )
@@ -115,4 +122,4 @@ AlbumFilter.propTypes = {
   ordering: PropTypes.object,
 }
 
-export default React.memo(AlbumFilter)
+export default AlbumFilter

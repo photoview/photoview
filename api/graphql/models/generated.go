@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
 
 type AuthorizeResult struct {
@@ -49,6 +50,13 @@ type SearchResult struct {
 	Query  string   `json:"query"`
 	Albums []*Album `json:"albums"`
 	Media  []*Media `json:"media"`
+}
+
+type TimelineGroup struct {
+	Album      *Album    `json:"album"`
+	Media      []*Media  `json:"media"`
+	MediaTotal int       `json:"mediaTotal"`
+	Date       time.Time `json:"date"`
 }
 
 type MediaType string
