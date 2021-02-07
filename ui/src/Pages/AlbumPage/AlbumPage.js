@@ -4,7 +4,7 @@ import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
 import Layout from '../../Layout'
-import useURLParameters from '../../components/useUrlParameters'
+import useURLParameters from '../../components/useURLParameters'
 
 const albumQuery = gql`
   query albumQuery(

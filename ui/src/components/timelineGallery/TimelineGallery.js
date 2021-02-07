@@ -5,7 +5,7 @@ import TimelineGroupDate from './TimelineGroupDate'
 import styled from 'styled-components'
 import PresentView from '../photoGallery/presentView/PresentView'
 import { Loader } from 'semantic-ui-react'
-import useURLParameters from '../useUrlParameters'
+import useURLParameters from '../useURLParameters'
 import { FavoritesCheckbox } from '../AlbumFilter'
 
 const MY_TIMELINE_QUERY = gql`
