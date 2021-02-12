@@ -5,12 +5,13 @@ import TimelineGroupDate from './TimelineGroupDate'
 import styled from 'styled-components'
 import PresentView from '../photoGallery/presentView/PresentView'
 import { Loader } from 'semantic-ui-react'
-import useURLParameters from '../useURLParameters'
+import useURLParameters from '../../hooks/useURLParameters'
 import { FavoritesCheckbox } from '../AlbumFilter'
+import useScrollPagination from '../../hooks/useScrollPagination'
 
 const MY_TIMELINE_QUERY = gql`
-  query myTimeline($onlyFavorites: Boolean) {
-    myTimeline(onlyFavorites: $onlyFavorites) {
+  query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
+    myTimeline(onlyFavorites: $onlyFavorites, limit: $limit, offset: $offset) {
       album {
         id
         title
@@ -123,9 +124,26 @@ const TimelineGallery = () => {
     })
   }, [activeIndex])
 
-  const { data, error, loading, refetch } = useQuery(MY_TIMELINE_QUERY, {
-    variables: {
-      onlyFavorites,
+  const { data, error, loading, refetch, fetchMore } = useQuery(
+    MY_TIMELINE_QUERY,
+    {
+      variables: {
+        onlyFavorites,
+        offset: 0,
+        limit: 10,
+      },
+    }
+  )
+
+  const { containerElem } = useScrollPagination({
+    loading,
+    fetchMore: () => {
+      console.log('fetching more')
+      fetchMore({
+        variables: {
+          offset: data.myTimeline.length,
+        },
+      })
     },
   })
 
@@ -190,7 +208,7 @@ const TimelineGallery = () => {
         onlyFavorites={onlyFavorites}
         setOnlyFavorites={setOnlyFavorites}
       />
-      <GalleryWrapper>{timelineGroups}</GalleryWrapper>
+      <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
       {presenting && (
         <PresentView
           media={
