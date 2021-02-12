@@ -4,7 +4,9 @@ import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import PropTypes from 'prop-types'
 import Layout from '../../Layout'
-import useURLParameters from '../../components/useURLParameters'
+import useURLParameters from '../../hooks/useURLParameters'
+import useScrollPagination from '../../hooks/useScrollPagination'
+import { Loader } from 'semantic-ui-react'
 
 const albumQuery = gql`
   query albumQuery(
@@ -12,6 +14,8 @@ const albumQuery = gql`
     $onlyFavorites: Boolean
     $mediaOrderBy: String
     $mediaOrderDirection: OrderDirection
+    $limit: Int
+    $offset: Int
   ) {
     album(id: $id) {
       id
@@ -27,6 +31,8 @@ const albumQuery = gql`
       }
       media(
         filter: {
+          limit: $limit
+          offset: $offset
           order_by: $mediaOrderBy
           order_direction: $mediaOrderDirection
         }
@@ -80,13 +86,22 @@ function AlbumPage({ match }) {
     [setParams]
   )
 
-  const { loading, error, data, refetch } = useQuery(albumQuery, {
+  const { loading, error, data, refetch, fetchMore } = useQuery(albumQuery, {
     variables: {
       id: albumId,
       onlyFavorites,
       mediaOrderBy: orderBy,
       mediaOrderDirection: orderDirection,
+      offset: 0,
+      limit: 200,
     },
+  })
+
+  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
+    loading,
+    fetchMore,
+    data,
+    getItems: data => data.album.media,
   })
 
   const toggleFavorites = useCallback(
@@ -115,6 +130,7 @@ function AlbumPage({ match }) {
   return (
     <Layout title={data ? data.album.title : 'Loading album'}>
       <AlbumGallery
+        ref={containerElem}
         album={data && data.album}
         loading={loading}
         showFavoritesToggle
@@ -125,6 +141,13 @@ function AlbumPage({ match }) {
         setOrdering={setOrdering}
         ordering={{ orderBy, orderDirection }}
       />
+      <Loader
+        style={{ margin: '42px 0 24px 0' }}
+        active={!finishedLoadingMore && !loading}
+        inline="centered"
+      >
+        Loading more media
+      </Loader>
     </Layout>
   )
 }

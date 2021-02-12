@@ -5,7 +5,10 @@ import {
   ApolloLink,
   HttpLink,
 } from '@apollo/client'
-import { getMainDefinition } from '@apollo/client/utilities'
+import {
+  getMainDefinition,
+  offsetLimitPagination,
+} from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
 import { WebSocketLink } from '@apollo/client/link/ws'
 
@@ -110,6 +113,25 @@ const memoryCache = new InMemoryCache({
     // therefore it can always be merged
     SiteInfo: {
       merge: true,
+    },
+    MediaURL: {
+      keyFields: ['url'],
+    },
+    Album: {
+      fields: {
+        media: {
+          keyArgs: ['onlyFavorites'],
+          merge(existing = [], incoming) {
+            console.log('merge media', existing, incoming)
+            return [...existing, ...incoming]
+          },
+        },
+      },
+    },
+    Query: {
+      fields: {
+        myTimeline: offsetLimitPagination(['onlyFavorites']),
+      },
     },
   },
 })
