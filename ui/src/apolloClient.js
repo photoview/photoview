@@ -122,7 +122,6 @@ const memoryCache = new InMemoryCache({
         media: {
           keyArgs: ['onlyFavorites'],
           merge(existing = [], incoming) {
-            console.log('merge media', existing, incoming)
             return [...existing, ...incoming]
           },
         },

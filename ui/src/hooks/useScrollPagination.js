@@ -19,17 +19,14 @@ const useScrollPagination = ({ loading, fetchMore, data, getItems }) => {
 
     // configure new observer
     observer.current = new IntersectionObserver(entities => {
-      console.log('Observing', entities)
       if (entities.find(x => x.isIntersecting == false)) {
         let itemCount = getItems(data).length
-        console.log('load more', itemCount)
         fetchMore({
           variables: {
             offset: itemCount,
           },
         }).then(result => {
           const newItemCount = getItems(result.data).length
-          console.log('then', result, itemCount, newItemCount)
           if (newItemCount == 0) {
             setFinished(true)
           }
