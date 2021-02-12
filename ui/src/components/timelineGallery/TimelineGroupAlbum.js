@@ -13,6 +13,7 @@ const MediaWrapper = styled.div`
   height: 210px;
   position: relative;
   margin: -4px;
+  padding-right: 16px;
 
   overflow: hidden;
 
@@ -36,8 +37,22 @@ const GroupAlbumWrapper = styled.div`
   margin: 12px 8px 0;
 `
 
+const TotalItemsBubble = styled(Link)`
+  position: absolute;
+  top: 24px;
+  right: 6px;
+  background-color: white;
+  border-radius: 50%;
+  padding: 8px 0;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+  color: black;
+  width: 36px;
+  height: 36px;
+  text-align: center;
+`
+
 const TimelineGroupAlbum = ({
-  group: { album, media /* mediaTotal */ },
+  group: { album, media, mediaTotal },
   onSelectMedia,
   setPresenting,
   activeIndex,
@@ -60,12 +75,25 @@ const TimelineGroupAlbum = ({
     />
   ))
 
+  let itemsBubble = null
+  const mediaVisibleCount = media.length
+  if (mediaTotal > mediaVisibleCount) {
+    itemsBubble = (
+      <TotalItemsBubble to={`/album/${album.id}`}>
+        {`+${Math.min(mediaTotal - mediaVisibleCount, 99)}`}
+      </TotalItemsBubble>
+    )
+  }
+
   return (
     <GroupAlbumWrapper>
       <AlbumTitle>
         <Link to={`/album/${album.id}`}>{album.title}</Link>
       </AlbumTitle>
-      <MediaWrapper>{mediaElms}</MediaWrapper>
+      <MediaWrapper>
+        {mediaElms}
+        {itemsBubble}
+      </MediaWrapper>
     </GroupAlbumWrapper>
   )
 }
