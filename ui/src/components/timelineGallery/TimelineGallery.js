@@ -130,21 +130,16 @@ const TimelineGallery = () => {
       variables: {
         onlyFavorites,
         offset: 0,
-        limit: 10,
+        limit: 50,
       },
     }
   )
 
-  const { containerElem } = useScrollPagination({
+  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
     loading,
-    fetchMore: () => {
-      console.log('fetching more')
-      fetchMore({
-        variables: {
-          offset: data.myTimeline.length,
-        },
-      })
-    },
+    fetchMore,
+    data,
+    getItems: data => data.myTimeline,
   })
 
   useEffect(() => {
@@ -209,6 +204,13 @@ const TimelineGallery = () => {
         setOnlyFavorites={setOnlyFavorites}
       />
       <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
+      <Loader
+        style={{ margin: '42px 0 24px 0' }}
+        active={!finishedLoadingMore && !loading}
+        inline="centered"
+      >
+        Loading more media
+      </Loader>
       {presenting && (
         <PresentView
           media={

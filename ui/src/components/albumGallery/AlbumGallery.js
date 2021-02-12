@@ -5,124 +5,129 @@ import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../AlbumFilter'
 
-const AlbumGallery = ({
-  album,
-  loading = false,
-  customAlbumLink,
-  showFilter = false,
-  setOnlyFavorites,
-  setOrdering,
-  ordering,
-  onlyFavorites = false,
-  onFavorite,
-}) => {
-  const [imageState, setImageState] = useState({
-    activeImage: -1,
-    presenting: false,
-  })
+const AlbumGallery = React.forwardRef(
+  (
+    {
+      album,
+      loading = false,
+      customAlbumLink,
+      showFilter = false,
+      setOnlyFavorites,
+      setOrdering,
+      ordering,
+      onlyFavorites = false,
+      onFavorite,
+    },
+    ref
+  ) => {
+    const [imageState, setImageState] = useState({
+      activeImage: -1,
+      presenting: false,
+    })
 
-  const setPresenting = presenting =>
-    setImageState(state => ({ ...state, presenting }))
+    const setPresenting = presenting =>
+      setImageState(state => ({ ...state, presenting }))
 
-  const setPresentingWithHistory = presenting => {
-    setPresenting(presenting)
-    if (presenting) {
-      history.pushState({ imageState }, '')
-    } else {
-      history.back()
-    }
-  }
-
-  const updateHistory = imageState => {
-    history.replaceState({ imageState }, '')
-    return imageState
-  }
-
-  const setActiveImage = activeImage => {
-    setImageState(state => updateHistory({ ...state, activeImage }))
-  }
-
-  const nextImage = () => {
-    setActiveImage((imageState.activeImage + 1) % album.media.length)
-  }
-
-  const previousImage = () => {
-    if (imageState.activeImage <= 0) {
-      setActiveImage(album.media.length - 1)
-    } else {
-      setActiveImage(imageState.activeImage - 1)
-    }
-  }
-
-  useEffect(() => {
-    const updateImageState = event => {
-      setImageState(event.state.imageState)
-    }
-    window.addEventListener('popstate', updateImageState)
-
-    return () => {
-      window.removeEventListener('popstate', updateImageState)
-    }
-  }, [imageState])
-
-  useEffect(() => {
-    setActiveImage(-1)
-  }, [album])
-
-  let subAlbumElement = null
-
-  if (album) {
-    if (album.subAlbums.length > 0) {
-      subAlbumElement = (
-        <AlbumBoxes
-          loading={loading}
-          albums={album.subAlbums}
-          getCustomLink={customAlbumLink}
-        />
-      )
-    }
-  } else {
-    subAlbumElement = <AlbumBoxes loading={loading} />
-  }
-
-  return (
-    <>
-      <AlbumTitle album={album} disableLink />
-      {showFilter && (
-        <AlbumFilter
-          onlyFavorites={onlyFavorites}
-          setOnlyFavorites={setOnlyFavorites}
-          setOrdering={setOrdering}
-          ordering={ordering}
-        />
-      )}
-      {subAlbumElement}
-      {
-        <h2
-          style={{
-            opacity: loading ? 0 : 1,
-            display: album && album.subAlbums.length > 0 ? 'block' : 'none',
-          }}
-        >
-          Images
-        </h2>
+    const setPresentingWithHistory = presenting => {
+      setPresenting(presenting)
+      if (presenting) {
+        history.pushState({ imageState }, '')
+      } else {
+        history.back()
       }
-      <PhotoGallery
-        loading={loading}
-        media={album && album.media}
-        activeIndex={imageState.activeImage}
-        presenting={imageState.presenting}
-        onSelectImage={index => {
-          setActiveImage(index)
-        }}
-        onFavorite={onFavorite}
-        setPresenting={setPresentingWithHistory}
-        nextImage={nextImage}
-        previousImage={previousImage}
-      />
-    </>
-  )
-}
+    }
+
+    const updateHistory = imageState => {
+      history.replaceState({ imageState }, '')
+      return imageState
+    }
+
+    const setActiveImage = activeImage => {
+      setImageState(state => updateHistory({ ...state, activeImage }))
+    }
+
+    const nextImage = () => {
+      setActiveImage((imageState.activeImage + 1) % album.media.length)
+    }
+
+    const previousImage = () => {
+      if (imageState.activeImage <= 0) {
+        setActiveImage(album.media.length - 1)
+      } else {
+        setActiveImage(imageState.activeImage - 1)
+      }
+    }
+
+    useEffect(() => {
+      const updateImageState = event => {
+        setImageState(event.state.imageState)
+      }
+      window.addEventListener('popstate', updateImageState)
+
+      return () => {
+        window.removeEventListener('popstate', updateImageState)
+      }
+    }, [imageState])
+
+    useEffect(() => {
+      setActiveImage(-1)
+    }, [album])
+
+    let subAlbumElement = null
+
+    if (album) {
+      if (album.subAlbums.length > 0) {
+        subAlbumElement = (
+          <AlbumBoxes
+            loading={loading}
+            albums={album.subAlbums}
+            getCustomLink={customAlbumLink}
+          />
+        )
+      }
+    } else {
+      subAlbumElement = <AlbumBoxes loading={loading} />
+    }
+
+    return (
+      <div ref={ref}>
+        <AlbumTitle album={album} disableLink />
+        {showFilter && (
+          <AlbumFilter
+            onlyFavorites={onlyFavorites}
+            setOnlyFavorites={setOnlyFavorites}
+            setOrdering={setOrdering}
+            ordering={ordering}
+          />
+        )}
+        {subAlbumElement}
+        {
+          <h2
+            style={{
+              opacity: loading ? 0 : 1,
+              display: album && album.subAlbums.length > 0 ? 'block' : 'none',
+            }}
+          >
+            Images
+          </h2>
+        }
+        <PhotoGallery
+          loading={loading}
+          media={album && album.media}
+          activeIndex={imageState.activeImage}
+          presenting={imageState.presenting}
+          onSelectImage={index => {
+            setActiveImage(index)
+          }}
+          onFavorite={onFavorite}
+          setPresenting={setPresentingWithHistory}
+          nextImage={nextImage}
+          previousImage={previousImage}
+        />
+      </div>
+    )
+  }
+)
 
 AlbumGallery.propTypes = {
   album: PropTypes.object,

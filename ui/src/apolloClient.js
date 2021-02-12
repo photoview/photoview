@@ -114,6 +114,20 @@ const memoryCache = new InMemoryCache({
     SiteInfo: {
       merge: true,
     },
+    MediaURL: {
+      keyFields: ['url'],
+    },
+    Album: {
+      fields: {
+        media: {
+          keyArgs: ['onlyFavorites'],
+          merge(existing = [], incoming) {
+            console.log('merge media', existing, incoming)
+            return [...existing, ...incoming]
+          },
+        },
+      },
+    },
     Query: {
       fields: {
         myTimeline: offsetLimitPagination(['onlyFavorites']),

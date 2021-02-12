@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-const useScrollPagination = ({ loading, fetchMore }) => {
+const useScrollPagination = ({ loading, fetchMore, data, getItems }) => {
   const observer = useRef(null)
   const observerElem = useRef(null)
+  const [finished, setFinished] = useState(false)
 
   const reconfigureIntersectionObserver = () => {
     var options = {
@@ -14,18 +15,32 @@ const useScrollPagination = ({ loading, fetchMore }) => {
     // delete old observer
     if (observer.current) observer.current.disconnect()
 
+    if (finished) return
+
     // configure new observer
     observer.current = new IntersectionObserver(entities => {
       console.log('Observing', entities)
       if (entities.find(x => x.isIntersecting == false)) {
-        console.log('load more')
-        fetchMore()
+        let itemCount = getItems(data).length
+        console.log('load more', itemCount)
+        fetchMore({
+          variables: {
+            offset: itemCount,
+          },
+        }).then(result => {
+          const newItemCount = getItems(result.data).length
+          console.log('then', result, itemCount, newItemCount)
+          if (newItemCount == 0) {
+            setFinished(true)
+          }
+        })
       }
     }, options)
 
     // activate new observer
-    if (observerElem.current && !loading)
+    if (observerElem.current && !loading) {
       observer.current.observe(observerElem.current)
+    }
   }
 
   const containerElem = useCallback(node => {
@@ -55,10 +70,11 @@ const useScrollPagination = ({ loading, fetchMore }) => {
   // reconfigure observer if fetchMore function changes
   useEffect(() => {
     reconfigureIntersectionObserver()
-  }, [fetchMore])
+  }, [fetchMore, data, finished])
 
   return {
     containerElem,
+    finished,
   }
 }
 
