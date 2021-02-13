@@ -47,5 +47,12 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		return nil, errors.Wrap(err, "save media exif to database")
 	}
 
+	if !exif.DateShot.Equal(media.DateShot) {
+		media.DateShot = *exif.DateShot
+		if err := tx.Save(media).Error; err != nil {
+			return nil, errors.Wrap(err, "update media date_shot")
+		}
+	}
+
 	return exif, nil
 }

@@ -48,6 +48,7 @@ const GalleryWrapper = styled.div`
   margin: -12px;
   display: flex;
   flex-wrap: wrap;
+  overflow-x: hidden;
 `
 
 const TimelineGallery = () => {
