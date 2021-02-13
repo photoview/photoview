@@ -166,5 +166,10 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.UserMediaData{},
 	)
 
+	// v2.1.0 - Replaced by Media.CreatedAt
+	if db.Migrator().HasColumn(&models.Media{}, "date_imported") {
+		db.Migrator().DropColumn(&models.Media{}, "date_imported")
+	}
+
 	return nil
 }
