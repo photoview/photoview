@@ -8,32 +8,29 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (filter *Filter) FormatSQL(tx *gorm.DB) *gorm.DB {
+func FormatSQL(tx *gorm.DB, order *Ordering, paginate *Pagination) *gorm.DB {
 
-	if filter == nil {
-		return tx
+	if paginate != nil {
+		if paginate.Limit != nil {
+			tx.Limit(*paginate.Limit)
+		}
+
+		if paginate.Offset != nil {
+			tx.Offset(*paginate.Offset)
+		}
 	}
 
-	if filter.Limit != nil {
-		tx.Limit(*filter.Limit)
-	}
-
-	if filter.Offset != nil {
-		tx.Offset(*filter.Offset)
-	}
-
-	if filter.OrderBy != nil {
-
+	if order != nil && order.OrderBy != nil {
 		desc := true
-		if filter.OrderDirection != nil && filter.OrderDirection.IsValid() {
-			if *filter.OrderDirection == OrderDirectionAsc {
+		if order.OrderDirection != nil && order.OrderDirection.IsValid() {
+			if *order.OrderDirection == OrderDirectionAsc {
 				desc = false
 			}
 		}
 
 		tx.Order(clause.OrderByColumn{
 			Column: clause.Column{
-				Name: *filter.OrderBy,
+				Name: *order.OrderBy,
 			},
 			Desc: desc,
 		})

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -50,7 +50,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, filter *models.Filter, onl
 		query = query.Where("EXISTS (?)", subQuery)
 	}
 
-	query = filter.FormatSQL(query)
+	query = models.FormatSQL(query, order, paginate)
 
 	var albums []*models.Album
 	if err := query.Scan(&albums).Error; err != nil {
@@ -92,7 +92,7 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error) {
+func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error) {
 
 	query := r.Database.
 		Where("media.album_id = ?", album.ID).
@@ -111,7 +111,7 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, filter *
 		query = query.Where("EXISTS (?)", favoriteQuery)
 	}
 
-	query = filter.FormatSQL(query)
+	query = models.FormatSQL(query, order, paginate)
 
 	var media []*models.Media
 	if err := query.Find(&media).Error; err != nil {
@@ -146,12 +146,12 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 	return &media, nil
 }
 
-func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, filter *models.Filter) ([]*models.Album, error) {
+func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error) {
 
 	var albums []*models.Album
 
 	query := r.Database.Where("parent_album_id = ?", parent.ID)
-	query = filter.FormatSQL(query)
+	query = models.FormatSQL(query, order, paginate)
 
 	if err := query.Find(&albums).Error; err != nil {
 		return nil, err

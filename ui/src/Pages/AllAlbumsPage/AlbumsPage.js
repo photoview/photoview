@@ -5,7 +5,7 @@ import { useQuery, gql } from '@apollo/client'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {
-    myAlbums(filter: { order_by: "title" }, onlyRoot: true, showEmpty: true) {
+    myAlbums(order: { order_by: "title" }, onlyRoot: true, showEmpty: true) {
       id
       title
       thumbnail {

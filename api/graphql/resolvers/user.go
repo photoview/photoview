@@ -25,11 +25,11 @@ func (r *Resolver) User() api.UserResolver {
 	return &userResolver{r}
 }
 
-func (r *queryResolver) User(ctx context.Context, filter *models.Filter) ([]*models.User, error) {
+func (r *queryResolver) User(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.User, error) {
 
 	var users []*models.User
 
-	if err := filter.FormatSQL(r.Database.Model(models.User{})).Scan(&users).Error; err != nil {
+	if err := models.FormatSQL(r.Database.Model(models.User{}), order, paginate).Scan(&users).Error; err != nil {
 		return nil, err
 	}
 

@@ -11,7 +11,10 @@ import useScrollPagination from '../../hooks/useScrollPagination'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
-    myTimeline(onlyFavorites: $onlyFavorites, limit: $limit, offset: $offset) {
+    myTimeline(
+      onlyFavorites: $onlyFavorites
+      paginate: { limit: $limit, offset: $offset }
+    ) {
       album {
         id
         title

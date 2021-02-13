@@ -11,8 +11,8 @@ const sortingOptions = [
     text: 'Date shot',
   },
   {
-    key: 'date_imported',
-    value: 'date_imported',
+    key: 'updated_at',
+    value: 'updated_at',
     text: 'Date imported',
   },
   {
@@ -21,7 +21,7 @@ const sortingOptions = [
     text: 'Title',
   },
   {
-    key: 'kind',
+    key: 'type',
     value: 'type',
     text: 'Kind',
   },

@@ -15,13 +15,6 @@ type AuthorizeResult struct {
 	Token   *string `json:"token"`
 }
 
-type Filter struct {
-	OrderBy        *string         `json:"order_by"`
-	OrderDirection *OrderDirection `json:"order_direction"`
-	Limit          *int            `json:"limit"`
-	Offset         *int            `json:"offset"`
-}
-
 type MediaDownload struct {
 	Title    string    `json:"title"`
 	MediaURL *MediaURL `json:"mediaUrl"`
@@ -37,6 +30,16 @@ type Notification struct {
 	Negative bool             `json:"negative"`
 	// Time in milliseconds before the notification will close
 	Timeout *int `json:"timeout"`
+}
+
+type Ordering struct {
+	OrderBy        *string         `json:"order_by"`
+	OrderDirection *OrderDirection `json:"order_direction"`
+}
+
+type Pagination struct {
+	Limit  *int `json:"limit"`
+	Offset *int `json:"offset"`
 }
 
 type ScannerResult struct {

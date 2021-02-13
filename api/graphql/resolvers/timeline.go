@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *queryResolver) MyTimeline(ctx context.Context, limit *int, offset *int, onlyFavorites *bool) ([]*models.TimelineGroup, error) {
+func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool) ([]*models.TimelineGroup, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -33,12 +33,14 @@ func (r *queryResolver) MyTimeline(ctx context.Context, limit *int, offset *int,
 			daysQuery.Where("media.id IN (?)", tx.Table("user_media_data").Select("user_media_data.media_id").Where("user_media_data.user_id = ?", user.ID).Where("user_media_data.favorite = 1"))
 		}
 
-		if limit != nil {
-			daysQuery.Limit(*limit)
-		}
+		if paginate != nil {
+			if paginate.Limit != nil {
+				daysQuery.Limit(*paginate.Limit)
+			}
 
-		if offset != nil {
-			daysQuery.Offset(*offset)
+			if paginate.Offset != nil {
+				daysQuery.Offset(*paginate.Offset)
+			}
 		}
 
 		rows, err := daysQuery.Group("albums.id, YEAR(media.date_shot), MONTH(media.date_shot), DAY(media.date_shot)").

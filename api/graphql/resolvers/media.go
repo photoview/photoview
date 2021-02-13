@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error) {
+func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -33,7 +33,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, filter *models.Filter) ([]*
 		Where("albums.id IN (?)", userAlbumIDs).
 		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
 
-	query = filter.FormatSQL(query)
+	query = models.FormatSQL(query, order, paginate)
 
 	if err := query.Scan(&media).Error; err != nil {
 		return nil, err

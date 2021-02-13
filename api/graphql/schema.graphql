@@ -8,24 +8,28 @@ enum OrderDirection {
   DESC
 }
 
-input Filter {
-  order_by: String
-  order_direction: OrderDirection
+input Pagination {
   limit: Int
   offset: Int
+}
+
+input Ordering {
+  order_by: String
+  order_direction: OrderDirection
 }
 
 type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  user(filter: Filter): [User!]! @isAdmin
+  user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
   "List of albums owned by the logged in user."
   myAlbums(
-    filter: Filter
+    order: Ordering,
+    paginate: Pagination
     "Return only albums from the root directory of the user"
     onlyRoot: Boolean
     "Return also albums with no media directly in them"
@@ -37,14 +41,14 @@ type Query {
   album(id: ID!): Album!
 
   "List of media owned by the logged in user"
-  myMedia(filter: Filter): [Media!]!
+  myMedia(order: Ordering, paginate: Pagination): [Media!]!
   "Get media by id, user must own the media or be admin"
   media(id: ID!): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline(limit: Int, offset: Int, onlyFavorites: Boolean): [TimelineGroup!]!
+  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
@@ -189,14 +193,21 @@ type User {
 type Album {
   id: ID!
   title: String!
+
   "The media inside this album"
   media(
-    filter: Filter,
+    order: Ordering,
+    paginate: Pagination
     "Return only the favorited media"
     onlyFavorites: Boolean
   ): [Media!]!
+
   "The albums contained in this album"
-  subAlbums(filter: Filter): [Album!]!
+  subAlbums(
+    order: Ordering,
+    paginate: Pagination
+  ): [Album!]!
+
   "The album witch contains this album"
   parentAlbum: Album
   "The user who owns this album"

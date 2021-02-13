@@ -11,17 +11,15 @@ import (
 
 type Media struct {
 	Model
-	Title        string     `gorm:"not null"`
-	Path         string     `gorm:"not null"`
-	PathHash     string     `gorm:"not null;unique"`
-	AlbumID      int        `gorm:"not null;index"`
-	Album        Album      `gorm:"constraint:OnDelete:CASCADE;"`
-	ExifID       *int       `gorm:"index"`
-	Exif         *MediaEXIF `gorm:"constraint:OnDelete:CASCADE;"`
-	MediaURL     []MediaURL `gorm:"constraint:OnDelete:CASCADE;"`
-	DateShot     time.Time  `gorm:"not null"`
-	DateImported time.Time  `gorm:"not null"`
-	// Favorite        bool      `gorm:"not null, default:false"`
+	Title           string         `gorm:"not null"`
+	Path            string         `gorm:"not null"`
+	PathHash        string         `gorm:"not null;unique"`
+	AlbumID         int            `gorm:"not null;index"`
+	Album           Album          `gorm:"constraint:OnDelete:CASCADE;"`
+	ExifID          *int           `gorm:"index"`
+	Exif            *MediaEXIF     `gorm:"constraint:OnDelete:CASCADE;"`
+	MediaURL        []MediaURL     `gorm:"constraint:OnDelete:CASCADE;"`
+	DateShot        time.Time      `gorm:"not null"`
 	Type            MediaType      `gorm:"not null;index"`
 	VideoMetadataID *int           `gorm:"index"`
 	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:CASCADE;"`

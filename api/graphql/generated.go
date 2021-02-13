@@ -55,12 +55,12 @@ type ComplexityRoot struct {
 	Album struct {
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Media       func(childComplexity int, filter *models.Filter, onlyFavorites *bool) int
+		Media       func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
 		Owner       func(childComplexity int) int
 		ParentAlbum func(childComplexity int) int
 		Path        func(childComplexity int) int
 		Shares      func(childComplexity int) int
-		SubAlbums   func(childComplexity int, filter *models.Filter) int
+		SubAlbums   func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 		Thumbnail   func(childComplexity int) int
 		Title       func(childComplexity int) int
 	}
@@ -149,16 +149,16 @@ type ComplexityRoot struct {
 		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int) int
 		MediaList                  func(childComplexity int, ids []int) int
-		MyAlbums                   func(childComplexity int, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
-		MyMedia                    func(childComplexity int, filter *models.Filter) int
+		MyAlbums                   func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
+		MyMedia                    func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 		MyMediaGeoJSON             func(childComplexity int) int
-		MyTimeline                 func(childComplexity int, limit *int, offset *int, onlyFavorites *bool) int
+		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool) int
 		MyUser                     func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
 		ShareToken                 func(childComplexity int, token string, password *string) int
 		ShareTokenValidatePassword func(childComplexity int, token string, password *string) int
 		SiteInfo                   func(childComplexity int) int
-		User                       func(childComplexity int, filter *models.Filter) int
+		User                       func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 	}
 
 	ScannerResult struct {
@@ -224,8 +224,8 @@ type ComplexityRoot struct {
 }
 
 type AlbumResolver interface {
-	Media(ctx context.Context, obj *models.Album, filter *models.Filter, onlyFavorites *bool) ([]*models.Media, error)
-	SubAlbums(ctx context.Context, obj *models.Album, filter *models.Filter) ([]*models.Album, error)
+	Media(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error)
+	SubAlbums(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error)
 
 	Owner(ctx context.Context, obj *models.Album) (*models.User, error)
 
@@ -265,14 +265,14 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
-	User(ctx context.Context, filter *models.Filter) ([]*models.User, error)
+	User(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
-	MyAlbums(ctx context.Context, filter *models.Filter, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
+	MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
 	Album(ctx context.Context, id int) (*models.Album, error)
-	MyMedia(ctx context.Context, filter *models.Filter) ([]*models.Media, error)
+	MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error)
 	Media(ctx context.Context, id int) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
-	MyTimeline(ctx context.Context, limit *int, offset *int, onlyFavorites *bool) ([]*models.TimelineGroup, error)
+	MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool) ([]*models.TimelineGroup, error)
 	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	MapboxToken(ctx context.Context) (*string, error)
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
@@ -329,7 +329,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Album.Media(childComplexity, args["filter"].(*models.Filter), args["onlyFavorites"].(*bool)), true
+		return e.complexity.Album.Media(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
 
 	case "Album.owner":
 		if e.complexity.Album.Owner == nil {
@@ -369,7 +369,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Album.SubAlbums(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Album.SubAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 
 	case "Album.thumbnail":
 		if e.complexity.Album.Thumbnail == nil {
@@ -919,7 +919,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
+		return e.complexity.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
 
 	case "Query.myMedia":
 		if e.complexity.Query.MyMedia == nil {
@@ -931,7 +931,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyMedia(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Query.MyMedia(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 
 	case "Query.myMediaGeoJson":
 		if e.complexity.Query.MyMediaGeoJSON == nil {
@@ -950,7 +950,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyTimeline(childComplexity, args["limit"].(*int), args["offset"].(*int), args["onlyFavorites"].(*bool)), true
+		return e.complexity.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -1012,7 +1012,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["filter"].(*models.Filter)), true
+		return e.complexity.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 
 	case "ScannerResult.finished":
 		if e.complexity.ScannerResult.Finished == nil {
@@ -1364,24 +1364,28 @@ enum OrderDirection {
   DESC
 }
 
-input Filter {
-  order_by: String
-  order_direction: OrderDirection
+input Pagination {
   limit: Int
   offset: Int
+}
+
+input Ordering {
+  order_by: String
+  order_direction: OrderDirection
 }
 
 type Query {
   siteInfo: SiteInfo!
 
   "List of registered users, must be admin to call"
-  user(filter: Filter): [User!]! @isAdmin
+  user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
   "Information about the currently logged in user"
   myUser: User!
 
   "List of albums owned by the logged in user."
   myAlbums(
-    filter: Filter
+    order: Ordering,
+    paginate: Pagination
     "Return only albums from the root directory of the user"
     onlyRoot: Boolean
     "Return also albums with no media directly in them"
@@ -1393,14 +1397,14 @@ type Query {
   album(id: ID!): Album!
 
   "List of media owned by the logged in user"
-  myMedia(filter: Filter): [Media!]!
+  myMedia(order: Ordering, paginate: Pagination): [Media!]!
   "Get media by id, user must own the media or be admin"
   media(id: ID!): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline(limit: Int, offset: Int, onlyFavorites: Boolean): [TimelineGroup!]!
+  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]!
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any!
@@ -1545,14 +1549,21 @@ type User {
 type Album {
   id: ID!
   title: String!
+
   "The media inside this album"
   media(
-    filter: Filter,
+    order: Ordering,
+    paginate: Pagination
     "Return only the favorited media"
     onlyFavorites: Boolean
   ): [Media!]!
+
   "The albums contained in this album"
-  subAlbums(filter: Filter): [Album!]!
+  subAlbums(
+    order: Ordering,
+    paginate: Pagination
+  ): [Album!]!
+
   "The album witch contains this album"
   parentAlbum: Album
   "The user who owns this album"
@@ -1670,39 +1681,57 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *models.Filter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+	var arg0 *models.Ordering
+	if tmp, ok := rawArgs["order"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+		arg0, err = ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
-	var arg1 *bool
+	args["order"] = arg0
+	var arg1 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg1
+	var arg2 *bool
 	if tmp, ok := rawArgs["onlyFavorites"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyFavorites"))
-		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["onlyFavorites"] = arg1
+	args["onlyFavorites"] = arg2
 	return args, nil
 }
 
 func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *models.Filter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+	var arg0 *models.Ordering
+	if tmp, ok := rawArgs["order"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+		arg0, err = ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
+	args["order"] = arg0
+	var arg1 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg1
 	return args, nil
 }
 
@@ -2138,90 +2167,99 @@ func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *models.Filter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+	var arg0 *models.Ordering
+	if tmp, ok := rawArgs["order"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+		arg0, err = ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
-	var arg1 *bool
+	args["order"] = arg0
+	var arg1 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg1
+	var arg2 *bool
 	if tmp, ok := rawArgs["onlyRoot"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyRoot"))
-		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["onlyRoot"] = arg1
-	var arg2 *bool
-	if tmp, ok := rawArgs["showEmpty"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("showEmpty"))
 		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["showEmpty"] = arg2
+	args["onlyRoot"] = arg2
 	var arg3 *bool
-	if tmp, ok := rawArgs["onlyWithFavorites"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyWithFavorites"))
+	if tmp, ok := rawArgs["showEmpty"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("showEmpty"))
 		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["onlyWithFavorites"] = arg3
+	args["showEmpty"] = arg3
+	var arg4 *bool
+	if tmp, ok := rawArgs["onlyWithFavorites"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyWithFavorites"))
+		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyWithFavorites"] = arg4
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *models.Filter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+	var arg0 *models.Ordering
+	if tmp, ok := rawArgs["order"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+		arg0, err = ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
+	args["order"] = arg0
+	var arg1 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg1
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_myTimeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["limit"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+	var arg0 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limit"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["offset"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["offset"] = arg1
-	var arg2 *bool
+	args["paginate"] = arg0
+	var arg1 *bool
 	if tmp, ok := rawArgs["onlyFavorites"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyFavorites"))
-		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["onlyFavorites"] = arg2
+	args["onlyFavorites"] = arg1
 	return args, nil
 }
 
@@ -2309,15 +2347,24 @@ func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, raw
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *models.Filter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx, tmp)
+	var arg0 *models.Ordering
+	if tmp, ok := rawArgs["order"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+		arg0, err = ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
+	args["order"] = arg0
+	var arg1 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg1, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg1
 	return args, nil
 }
 
@@ -2454,7 +2501,7 @@ func (ec *executionContext) _Album_media(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().Media(rctx, obj, args["filter"].(*models.Filter), args["onlyFavorites"].(*bool))
+		return ec.resolvers.Album().Media(rctx, obj, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2496,7 +2543,7 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Album().SubAlbums(rctx, obj, args["filter"].(*models.Filter))
+		return ec.resolvers.Album().SubAlbums(rctx, obj, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4943,7 +4990,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().User(rctx, args["filter"].(*models.Filter))
+			return ec.resolvers.Query().User(rctx, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -5039,7 +5086,7 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyAlbums(rctx, args["filter"].(*models.Filter), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool))
+		return ec.resolvers.Query().MyAlbums(rctx, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5123,7 +5170,7 @@ func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyMedia(rctx, args["filter"].(*models.Filter))
+		return ec.resolvers.Query().MyMedia(rctx, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5249,7 +5296,7 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MyTimeline(rctx, args["limit"].(*int), args["offset"].(*int), args["onlyFavorites"].(*bool))
+		return ec.resolvers.Query().MyTimeline(rctx, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7972,8 +8019,8 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (models.Filter, error) {
-	var it models.Filter
+func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj interface{}) (models.Ordering, error) {
+	var it models.Ordering
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -7994,6 +8041,18 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interf
 			if err != nil {
 				return it, err
 			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (models.Pagination, error) {
+	var it models.Pagination
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
 		case "limit":
 			var err error
 
@@ -10205,14 +10264,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFilter(ctx context.Context, v interface{}) (*models.Filter, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
 	if v == nil {
 		return nil, nil
@@ -10278,6 +10329,22 @@ func (ec *executionContext) marshalOOrderDirection2ᚖgithubᚗcomᚋphotoview�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx context.Context, v interface{}) (*models.Ordering, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrdering(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx context.Context, v interface{}) (*models.Pagination, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPagination(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {

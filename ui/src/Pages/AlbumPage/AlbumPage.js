@@ -20,7 +20,7 @@ const albumQuery = gql`
     album(id: $id) {
       id
       title
-      subAlbums(filter: { order_by: "title" }) {
+      subAlbums(order: { order_by: "title" }) {
         id
         title
         thumbnail {
@@ -30,9 +30,8 @@ const albumQuery = gql`
         }
       }
       media(
-        filter: {
-          limit: $limit
-          offset: $offset
+        paginate: { limit: $limit, offset: $offset }
+        order: {
           order_by: $mediaOrderBy
           order_direction: $mediaOrderDirection
         }

@@ -120,7 +120,7 @@ const memoryCache = new InMemoryCache({
     Album: {
       fields: {
         media: {
-          keyArgs: ['onlyFavorites'],
+          keyArgs: ['onlyFavorites', 'order'],
           merge(existing = [], incoming) {
             return [...existing, ...incoming]
           },

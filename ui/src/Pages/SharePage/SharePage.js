@@ -36,7 +36,7 @@ export const SHARE_TOKEN_QUERY = gql`
         url
       }
     }
-    media(filter: { order_by: "title", order_direction: DESC }) {
+    media(order: { order_by: "title", order_direction: DESC }) {
       ...MediaProps
     }
   }
