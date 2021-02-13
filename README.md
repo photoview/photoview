@@ -5,7 +5,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview)
 [![Docker Build Status](https://img.shields.io/github/workflow/status/viktorstrate/photoview/Docker%20builds?label=docker%20build)](https://hub.docker.com/r/viktorstrate/photoview/)
 
-![screenshot](./screenshots/main-window.png)
+![screenshot](./screenshots/timeline.png)
 
 Photoview is a simple and user-friendly photo gallery that can easily be installed on personal servers.
 It's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high resolution photos.
