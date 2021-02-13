@@ -5,10 +5,7 @@ import {
   ApolloLink,
   HttpLink,
 } from '@apollo/client'
-import {
-  getMainDefinition,
-  offsetLimitPagination,
-} from '@apollo/client/utilities'
+import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
 import { WebSocketLink } from '@apollo/client/link/ws'
 
@@ -129,7 +126,12 @@ const memoryCache = new InMemoryCache({
     },
     Query: {
       fields: {
-        myTimeline: offsetLimitPagination(['onlyFavorites']),
+        myTimeline: {
+          keyArgs: ['onlyFavorites'],
+          merge(existing = [], incoming) {
+            return [...existing, ...incoming]
+          },
+        },
       },
     },
   },
