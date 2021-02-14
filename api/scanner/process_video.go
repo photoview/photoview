@@ -154,6 +154,37 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 		if err := tx.Create(&thumbMediaURL).Error; err != nil {
 			return false, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
 		}
+	} else {
+		// Verify that video thumbnail still exists in cache
+		thumbImagePath := path.Join(*videoCachePath, videoThumbnailURL.MediaName)
+
+		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
+			fmt.Printf("Video thumbnail found in database but not in cache, re-encoding photo to cache: %s\n", videoThumbnailURL.MediaName)
+			didProcess = true
+
+			err = FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, mediaData)
+			if err != nil {
+				return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
+			}
+
+			thumbDimensions, err := GetPhotoDimensions(thumbImagePath)
+			if err != nil {
+				return false, errors.Wrap(err, "get dimensions of video thumbnail image")
+			}
+
+			fileStats, err := os.Stat(thumbImagePath)
+			if err != nil {
+				return false, errors.Wrap(err, "reading file stats of video thumbnail")
+			}
+
+			videoThumbnailURL.Width = thumbDimensions.Width
+			videoThumbnailURL.Height = thumbDimensions.Height
+			videoThumbnailURL.FileSize = fileStats.Size()
+
+			if err := tx.Save(videoThumbnailURL).Error; err != nil {
+				return false, errors.Wrap(err, "updating video thumbnail url in database after re-encoding")
+			}
+		}
 	}
 
 	return didProcess, nil
