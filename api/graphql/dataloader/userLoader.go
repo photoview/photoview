@@ -33,14 +33,20 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 			}
 			rows.Close()
 
-			var users []*models.User
-			if err := db.Where("id IN (?)", userIDs).Find(&users).Error; err != nil {
-				return nil, []error{err}
-			}
+			var userMap map[int]*models.User
+			if len(userIDs) > 0 {
 
-			userMap := make(map[int]*models.User, len(users))
-			for _, user := range users {
-				userMap[user.ID] = user
+				var users []*models.User
+				if err := db.Where("id IN (?)", userIDs).Find(&users).Error; err != nil {
+					return nil, []error{err}
+				}
+
+				userMap = make(map[int]*models.User, len(users))
+				for _, user := range users {
+					userMap[user.ID] = user
+				}
+			} else {
+				userMap = make(map[int]*models.User, 0)
 			}
 
 			tokenMap := make(map[string]*models.AccessToken, len(tokens))
@@ -51,11 +57,11 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 			result := make([]*models.User, len(tokens))
 			for i, token := range tokens {
 				accessToken, tokenFound := tokenMap[token]
-				user, userFound := userMap[accessToken.UserID]
-				if tokenFound && userFound {
-					result[i] = user
-				} else {
-					result[i] = nil
+				if tokenFound {
+					user, userFound := userMap[accessToken.UserID]
+					if userFound {
+						result[i] = user
+					}
 				}
 			}
 

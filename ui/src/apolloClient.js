@@ -70,6 +70,12 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         content: `Received ${graphQLErrors.length} errors from the server. See the console for more information`,
       })
     }
+
+    if (graphQLErrors.find(x => x.message == 'unauthorized')) {
+      console.log('Unauthorized, clearing token cookie')
+      clearTokenCookie()
+      location.reload()
+    }
   }
 
   if (networkError) {
