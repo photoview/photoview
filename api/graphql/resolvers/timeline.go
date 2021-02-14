@@ -2,8 +2,10 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/photoview/photoview/api/database"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
@@ -21,9 +23,9 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 		// album_id, year, month, day
 		daysQuery := tx.Select(
 			"albums.id AS album_id",
-			"YEAR(media.date_shot) AS year",
-			"MONTH(media.date_shot) AS month",
-			"DAY(media.date_shot) AS day",
+			fmt.Sprintf("%s AS year", database.DateExtract(tx, database.DateCompYear, "media.date_shot")),
+			fmt.Sprintf("%s AS month", database.DateExtract(tx, database.DateCompMonth, "media.date_shot")),
+			fmt.Sprintf("%s AS day", database.DateExtract(tx, database.DateCompDay, "media.date_shot")),
 		).
 			Table("media").
 			Joins("JOIN albums ON media.album_id = albums.id").
@@ -43,7 +45,12 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 			}
 		}
 
-		rows, err := daysQuery.Group("albums.id, YEAR(media.date_shot), MONTH(media.date_shot), DAY(media.date_shot)").
+		rows, err := daysQuery.Group(
+			fmt.Sprintf("albums.id, %s, %s, %s",
+				database.DateExtract(tx, database.DateCompYear, "media.date_shot"),
+				database.DateExtract(tx, database.DateCompMonth, "media.date_shot"),
+				database.DateExtract(tx, database.DateCompDay, "media.date_shot")),
+		).
 			Order("media.date_shot DESC").
 			Rows()
 
@@ -81,7 +88,10 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 			// Fill media
 			var groupMedia []*models.Media
 			mediaQuery := tx.Model(&models.Media{}).
-				Where("album_id = ? AND YEAR(date_shot) = ? AND MONTH(date_shot) = ? AND DAY(date_shot) = ?", group.albumID, group.year, group.month, group.day).
+				Where("album_id = ?", group.albumID).
+				Where(fmt.Sprintf("%s = ?", database.DateExtract(tx, database.DateCompYear, "media.date_shot")), group.year).
+				Where(fmt.Sprintf("%s = ?", database.DateExtract(tx, database.DateCompMonth, "media.date_shot")), group.month).
+				Where(fmt.Sprintf("%s = ?", database.DateExtract(tx, database.DateCompDay, "media.date_shot")), group.day).
 				Order("date_shot DESC")
 
 			if onlyFavorites != nil && *onlyFavorites == true {

@@ -4,6 +4,7 @@ cache/
 media_cache/
 /photos_path
 photoview.db
+photoview.db-journal
 
 .env
 
