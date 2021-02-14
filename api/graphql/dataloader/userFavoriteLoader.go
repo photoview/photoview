@@ -36,7 +36,7 @@ func NewUserFavoriteLoader(db *gorm.DB) *UserFavoritesLoader {
 			}
 
 			var userMediaFavorites []*models.UserMediaData
-			err := db.Where("user_id IN (?)", uniqueUserIDs).Where("media_id IN (?)", uniqueMediaIDs).Where("favorite = 1").Find(&userMediaFavorites).Error
+			err := db.Where("user_id IN (?)", uniqueUserIDs).Where("media_id IN (?)", uniqueMediaIDs).Where("favorite = TRUE").Find(&userMediaFavorites).Error
 			if err != nil {
 				return nil, []error{err}
 			}

@@ -45,14 +45,12 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 			}
 		}
 
-		rows, err := daysQuery.Group(
-			fmt.Sprintf("albums.id, %s, %s, %s",
-				database.DateExtract(tx, database.DateCompYear, "media.date_shot"),
-				database.DateExtract(tx, database.DateCompMonth, "media.date_shot"),
-				database.DateExtract(tx, database.DateCompDay, "media.date_shot")),
-		).
-			Order("media.date_shot DESC").
-			Rows()
+		dateChain := fmt.Sprintf("%s, %s, %s",
+			database.DateExtract(tx, database.DateCompYear, "media.date_shot"),
+			database.DateExtract(tx, database.DateCompMonth, "media.date_shot"),
+			database.DateExtract(tx, database.DateCompDay, "media.date_shot"))
+
+		rows, err := daysQuery.Group("albums.id").Group(dateChain).Order(dateChain).Rows()
 
 		defer rows.Close()
 

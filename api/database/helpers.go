@@ -23,7 +23,7 @@ func DateExtract(db *gorm.DB, component DateComponent, attribute string) string 
 	var result string
 
 	switch db.Dialector.Name() {
-	case "mysql", "postgress":
+	case "mysql", "postgres":
 		result = fmt.Sprintf("EXTRACT(%s FROM %s)", component, attribute)
 		break
 	case "sqlite":
