@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -27,7 +25,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		media := &mediaURL.Media
+		media := mediaURL.Media
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
@@ -38,14 +36,9 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		var cachedPath string
-
-		if mediaURL.Purpose == models.PhotoThumbnail || mediaURL.Purpose == models.PhotoHighRes || mediaURL.Purpose == models.VideoThumbnail {
-			cachedPath = path.Join(scanner.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-		} else if mediaURL.Purpose == models.MediaOriginal {
-			cachedPath = media.Path
-		} else {
-			log.Printf("ERROR: Can not handle media_purpose for photo: %s\n", mediaURL.Purpose)
+		cachedPath, err := mediaURL.CachedPath()
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("internal server error"))
 			return

@@ -8,6 +8,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -54,7 +55,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 	notifyThrottle.Trigger(nil)
 
 	// Scan for photos
-	albumPhotos, err := findMediaForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
+	albumMedia, err := findMediaForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
 		if newPhoto {
 			notifyThrottle.Trigger(func() {
 				notification.BroadcastNotification(&models.Notification{
@@ -71,25 +72,33 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 	}
 
 	album_has_changes := false
-	for count, photo := range albumPhotos {
+	for count, media := range albumMedia {
 		// tx, err := db.Begin()
 
 		transactionError := db.Transaction(func(tx *gorm.DB) error {
-			processing_was_needed, err := ProcessMedia(tx, photo)
+			processing_was_needed, err := ProcessMedia(tx, media)
 			if err != nil {
-				return errors.Wrapf(err, "failed to process photo (%s)", photo.Path)
+				return errors.Wrapf(err, "failed to process photo (%s)", media.Path)
 			}
 
 			if processing_was_needed {
 				album_has_changes = true
-				progress := float64(count) / float64(len(albumPhotos)) * 100.0
+				progress := float64(count) / float64(len(albumMedia)) * 100.0
 				notification.BroadcastNotification(&models.Notification{
 					Key:      album_notify_key,
 					Type:     models.NotificationTypeProgress,
 					Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
-					Content:  fmt.Sprintf("Processed media at %s", photo.Path),
+					Content:  fmt.Sprintf("Processed media at %s", media.Path),
 					Progress: &progress,
 				})
+
+				if media.Type == models.MediaTypePhoto {
+					go func() {
+						if err := face_detection.GlobalFaceDetector.DetectFaces(media); err != nil {
+							ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
+						}
+					}()
+				}
 			}
 
 			return nil
@@ -100,7 +109,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 		}
 	}
 
-	cleanup_errors := CleanupMedia(db, album.ID, albumPhotos)
+	cleanup_errors := CleanupMedia(db, album.ID, albumMedia)
 	for _, err := range cleanup_errors {
 		ScannerError("Failed to delete old media: %s", err)
 	}
@@ -138,14 +147,14 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 			}
 
 			err := db.Transaction(func(tx *gorm.DB) error {
-				photo, isNewPhoto, err := ScanMedia(tx, photoPath, album.ID, cache)
+				media, isNewMedia, err := ScanMedia(tx, photoPath, album.ID, cache)
 				if err != nil {
 					return errors.Wrapf(err, "Scanning media error (%s)", photoPath)
 				}
 
-				onScanPhoto(photo, isNewPhoto)
+				onScanPhoto(media, isNewMedia)
 
-				albumPhotos = append(albumPhotos, photo)
+				albumPhotos = append(albumPhotos, media)
 
 				return nil
 			})

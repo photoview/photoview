@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +27,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		var media = &mediaURL.Media
+		var media = mediaURL.Media
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
@@ -40,7 +41,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		var cachedPath string
 
 		if mediaURL.Purpose == models.VideoWeb {
-			cachedPath = path.Join(scanner.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+			cachedPath = path.Join(utils.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
 		} else {
 			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
