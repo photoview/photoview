@@ -110,6 +110,23 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 })
 
+// Modified version of Apollo's offsetLimitPagination()
+const paginateCache = keyArgs => ({
+  keyArgs,
+  merge(existing, incoming, { args, fieldName }) {
+    const merged = existing ? existing.slice(0) : []
+    if (args?.paginate) {
+      const { offset = 0 } = args.paginate
+      for (let i = 0; i < incoming.length; ++i) {
+        merged[offset + i] = incoming[i]
+      }
+    } else {
+      throw new Error(`Paginate argument is missing for query: ${fieldName}`)
+    }
+    return merged
+  },
+})
+
 const memoryCache = new InMemoryCache({
   typePolicies: {
     // There only exists one global instance of SiteInfo,
@@ -122,22 +139,12 @@ const memoryCache = new InMemoryCache({
     },
     Album: {
       fields: {
-        media: {
-          keyArgs: ['onlyFavorites', 'order'],
-          merge(existing = [], incoming) {
-            return [...existing, ...incoming]
-          },
-        },
+        media: paginateCache(['onlyFavorites', 'order']),
       },
     },
     Query: {
       fields: {
-        myTimeline: {
-          keyArgs: ['onlyFavorites'],
-          merge(existing = [], incoming) {
-            return [...existing, ...incoming]
-          },
-        },
+        myTimeline: paginateCache(['onlyFavorites']),
       },
     },
   },
