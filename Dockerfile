@@ -26,6 +26,9 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15-buster AS api
 RUN apt-get update
 RUN apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
 
+# Install go-face dependencies
+RUN apt-get install -y libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev
+
 COPY --from=tonistiigi/xx:golang / /
 
 ARG TARGETPLATFORM
@@ -41,6 +44,9 @@ RUN go mod download
 # Build go-sqlite3 dependency with CGO
 ENV CGO_ENABLED 1
 RUN go install github.com/mattn/go-sqlite3
+
+# Build go-face
+RUN go install github.com/Kagami/go-face
 
 # Copy api source
 COPY api /app
