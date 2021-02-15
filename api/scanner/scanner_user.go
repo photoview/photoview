@@ -263,13 +263,3 @@ func ScannerError(format string, args ...interface{}) {
 		Negative: true,
 	})
 }
-
-// MediaCachePath returns the path for where the media cache is located on the file system
-func MediaCachePath() string {
-	photoCache := utils.EnvMediaCachePath.GetValue()
-	if photoCache == "" {
-		photoCache = "./media_cache"
-	}
-
-	return photoCache
-}

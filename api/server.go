@@ -15,6 +15,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
@@ -50,6 +51,10 @@ func main() {
 	}
 
 	scanner.InitializeExecutableWorkers()
+
+	if err := face_detection.InitializeFaceDetector(db); err != nil {
+		log.Panicf("Could not initialize face detector: %s\n", err)
+	}
 
 	rootRouter := mux.NewRouter()
 

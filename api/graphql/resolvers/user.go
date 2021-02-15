@@ -12,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -252,7 +253,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User
 
 	// If there is only one associated user, clean up the cache folder and delete the album row
 	for _, deletedAlbumID := range deletedAlbumIDs {
-		cachePath := path.Join(scanner.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
+		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
 		if err := os.RemoveAll(cachePath); err != nil {
 			return &user, err
 		}
@@ -370,7 +371,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {
-			cacheAlbumPath := path.Join(scanner.MediaCachePath(), strconv.Itoa(id))
+			cacheAlbumPath := path.Join(utils.MediaCachePath(), strconv.Itoa(id))
 
 			if err := os.RemoveAll(cacheAlbumPath); err != nil {
 				return nil, err
