@@ -46,12 +46,25 @@ func InitializeFaceDetector(db *gorm.DB) error {
 }
 
 func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, cats []int32, err error) {
-	samples = make([]face.Descriptor, 0)
-	cats = make([]int32, 0)
+
+	var imageFaces []*models.ImageFace
+
+	if err = db.Find(&imageFaces).Error; err != nil {
+		return
+	}
+
+	samples = make([]face.Descriptor, len(imageFaces))
+	cats = make([]int32, len(imageFaces))
+
+	for i, imgFace := range imageFaces {
+		samples[i] = face.Descriptor(imgFace.Descriptor)
+		cats[i] = int32(imgFace.FaceGroupID)
+	}
 
 	return
 }
 
+// DetectFaces finds the faces in the given image and saves them to the database
 func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 	if err := fd.db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
 		return err
