@@ -13,7 +13,7 @@ jobs:
   analyze:
     name: Analyze
     if: github.repository == 'photoview/photoview'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
