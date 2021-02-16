@@ -34,6 +34,8 @@ const MY_FACES_QUERY = gql`
 `
 
 const CircleImageWrapper = styled.div`
+  background-color: #eee;
+  position: relative;
   border-radius: 50%;
   width: 150px;
   height: 150px;
@@ -43,8 +45,16 @@ const CircleImageWrapper = styled.div`
 `
 
 const FaceImage = styled(ProtectedImage)`
+  position: absolute;
   width: 100%;
-  height: 100%;
+  top: 50%;
+  transform: translateY(-50%)
+    ${({ origin, scale }) =>
+      `translate(${(0.5 - origin.x) * 100}%, ${
+        (0.5 - origin.y) * 100
+      }%) scale(${scale * 0.8})`};
+
+  transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
   object-fit: cover;
 `
 
@@ -54,14 +64,33 @@ const FaceLabel = styled.div`
   text-align: center;
 `
 
-const FaceGroup = ({ group }) => (
-  <Link to={`/people/${group.id}`}>
-    <CircleImageWrapper>
-      <FaceImage src={group.imageFaces[0].media.thumbnail.url} />
-    </CircleImageWrapper>
-    <FaceLabel labeled={!!group.label}>{group.label ?? 'Unlabeled'}</FaceLabel>
-  </Link>
-)
+const FaceGroup = ({ group }) => {
+  const previewFace = group.imageFaces[0]
+
+  const rect = previewFace.rectangle
+
+  let scale = Math.min(1 / (rect.maxX - rect.minX), 1 / (rect.maxY - rect.minY))
+
+  let origin = {
+    x: (rect.minX + rect.maxX) / 2,
+    y: (rect.minY + rect.maxY) / 2,
+  }
+
+  return (
+    <Link to={`/people/${group.id}`}>
+      <CircleImageWrapper>
+        <FaceImage
+          scale={scale}
+          origin={origin}
+          src={previewFace.media.thumbnail.url}
+        />
+      </CircleImageWrapper>
+      <FaceLabel labeled={!!group.label}>
+        {group.label ?? 'Unlabeled'}
+      </FaceLabel>
+    </Link>
+  )
+}
 
 FaceGroup.propTypes = {
   group: PropTypes.any,
