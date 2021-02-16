@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/image_helpers"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -131,7 +132,7 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 			return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
 
-		thumbDimensions, err := GetPhotoDimensions(thumbImagePath)
+		thumbDimensions, err := image_helpers.GetPhotoDimensions(thumbImagePath)
 		if err != nil {
 			return false, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
@@ -167,7 +168,7 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 				return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
 
-			thumbDimensions, err := GetPhotoDimensions(thumbImagePath)
+			thumbDimensions, err := image_helpers.GetPhotoDimensions(thumbImagePath)
 			if err != nil {
 				return false, errors.Wrap(err, "get dimensions of video thumbnail image")
 			}

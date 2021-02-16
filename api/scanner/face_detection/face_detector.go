@@ -97,21 +97,27 @@ func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(&face, media)
+		fd.classifyFace(&face, media, thumbnailPath)
 	}
 
 	return nil
 }
 
-func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media) error {
+func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, imagePath string) error {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
 	match := fd.rec.ClassifyThreshold(face.Descriptor, 0.2)
 
+	faceRect, err := models.ToDBFaceRectangle(face.Rectangle, imagePath)
+	if err != nil {
+		return err
+	}
+
 	imageFace := models.ImageFace{
 		MediaID:    media.ID,
 		Descriptor: models.FaceDescriptor(face.Descriptor),
+		Rectangle:  *faceRect,
 	}
 
 	var faceGroup models.FaceGroup
