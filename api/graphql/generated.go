@@ -71,6 +71,25 @@ type ComplexityRoot struct {
 		Token   func(childComplexity int) int
 	}
 
+	FaceGroup struct {
+		ID         func(childComplexity int) int
+		ImageFaces func(childComplexity int) int
+		Label      func(childComplexity int) int
+	}
+
+	FaceRectangle struct {
+		MaxX func(childComplexity int) int
+		MaxY func(childComplexity int) int
+		MinX func(childComplexity int) int
+		MinY func(childComplexity int) int
+	}
+
+	ImageFace struct {
+		ID        func(childComplexity int) int
+		Media     func(childComplexity int) int
+		Rectangle func(childComplexity int) int
+	}
+
 	Media struct {
 		Album         func(childComplexity int) int
 		Downloads     func(childComplexity int) int
@@ -150,6 +169,7 @@ type ComplexityRoot struct {
 		Media                      func(childComplexity int, id int) int
 		MediaList                  func(childComplexity int, ids []int) int
 		MyAlbums                   func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
+		MyFaceGroups               func(childComplexity int, paginate *models.Pagination) int
 		MyMedia                    func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 		MyMediaGeoJSON             func(childComplexity int) int
 		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool) int
@@ -278,6 +298,7 @@ type QueryResolver interface {
 	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
+	MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error)
 }
 type ShareTokenResolver interface {
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
@@ -405,6 +426,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthorizeResult.Token(childComplexity), true
+
+	case "FaceGroup.id":
+		if e.complexity.FaceGroup.ID == nil {
+			break
+		}
+
+		return e.complexity.FaceGroup.ID(childComplexity), true
+
+	case "FaceGroup.imageFaces":
+		if e.complexity.FaceGroup.ImageFaces == nil {
+			break
+		}
+
+		return e.complexity.FaceGroup.ImageFaces(childComplexity), true
+
+	case "FaceGroup.label":
+		if e.complexity.FaceGroup.Label == nil {
+			break
+		}
+
+		return e.complexity.FaceGroup.Label(childComplexity), true
+
+	case "FaceRectangle.maxX":
+		if e.complexity.FaceRectangle.MaxX == nil {
+			break
+		}
+
+		return e.complexity.FaceRectangle.MaxX(childComplexity), true
+
+	case "FaceRectangle.maxY":
+		if e.complexity.FaceRectangle.MaxY == nil {
+			break
+		}
+
+		return e.complexity.FaceRectangle.MaxY(childComplexity), true
+
+	case "FaceRectangle.minX":
+		if e.complexity.FaceRectangle.MinX == nil {
+			break
+		}
+
+		return e.complexity.FaceRectangle.MinX(childComplexity), true
+
+	case "FaceRectangle.minY":
+		if e.complexity.FaceRectangle.MinY == nil {
+			break
+		}
+
+		return e.complexity.FaceRectangle.MinY(childComplexity), true
+
+	case "ImageFace.id":
+		if e.complexity.ImageFace.ID == nil {
+			break
+		}
+
+		return e.complexity.ImageFace.ID(childComplexity), true
+
+	case "ImageFace.media":
+		if e.complexity.ImageFace.Media == nil {
+			break
+		}
+
+		return e.complexity.ImageFace.Media(childComplexity), true
+
+	case "ImageFace.rectangle":
+		if e.complexity.ImageFace.Rectangle == nil {
+			break
+		}
+
+		return e.complexity.ImageFace.Rectangle(childComplexity), true
 
 	case "Media.album":
 		if e.complexity.Media.Album == nil {
@@ -921,6 +1012,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
 
+	case "Query.myFaceGroups":
+		if e.complexity.Query.MyFaceGroups == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myFaceGroups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyFaceGroups(childComplexity, args["paginate"].(*models.Pagination)), true
+
 	case "Query.myMedia":
 		if e.complexity.Query.MyMedia == nil {
 			break
@@ -1415,6 +1518,8 @@ type Query {
   shareTokenValidatePassword(token: String!, password: String): Boolean!
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
+
+  myFaceGroups(paginate: Pagination): [FaceGroup!]!
 }
 
 type Mutation {
@@ -1669,6 +1774,25 @@ type TimelineGroup {
   media: [Media!]!
   mediaTotal: Int!
   date: Time!
+}
+
+type FaceGroup {
+  id: ID!
+  label: String
+  imageFaces: [ImageFace!]!
+}
+
+type ImageFace {
+  id: ID!
+  media: Media!
+  rectangle: FaceRectangle
+}
+
+type FaceRectangle {
+  minX: Float!
+  maxX: Float!
+  minY: Float!
+  maxY: Float!
 }
 `, BuiltIn: false},
 }
@@ -2212,6 +2336,21 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 		}
 	}
 	args["onlyWithFavorites"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myFaceGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Pagination
+	if tmp, ok := rawArgs["paginate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginate"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginate"] = arg0
 	return args, nil
 }
 
@@ -2861,6 +3000,350 @@ func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field gr
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceGroup_id(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceGroup_label(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceGroup_imageFaces(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ImageFaces, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]models.ImageFace)
+	fc.Result = res
+	return ec.marshalNImageFace2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceRectangle_minX(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceRectangle",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MinX, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceRectangle_maxX(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceRectangle",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxX, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceRectangle_minY(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceRectangle",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MinY, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FaceRectangle_maxY(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FaceRectangle",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxY, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImageFace_id(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImageFace",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImageFace",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Media, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.Media)
+	fc.Result = res
+	return ec.marshalNMedia2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImageFace_rectangle(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImageFace",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rectangle, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(models.FaceRectangle)
+	fc.Result = res
+	return ec.marshalOFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_id(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -5504,6 +5987,48 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 	res := resTmp.(*models.SearchResult)
 	fc.Result = res
 	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_myFaceGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_myFaceGroups_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyFaceGroups(rctx, args["paginate"].(*models.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.FaceGroup)
+	fc.Result = res
+	return ec.marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8234,6 +8759,116 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 	return out
 }
 
+var faceGroupImplementors = []string{"FaceGroup"}
+
+func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet, obj *models.FaceGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, faceGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FaceGroup")
+		case "id":
+			out.Values[i] = ec._FaceGroup_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "label":
+			out.Values[i] = ec._FaceGroup_label(ctx, field, obj)
+		case "imageFaces":
+			out.Values[i] = ec._FaceGroup_imageFaces(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var faceRectangleImplementors = []string{"FaceRectangle"}
+
+func (ec *executionContext) _FaceRectangle(ctx context.Context, sel ast.SelectionSet, obj *models.FaceRectangle) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, faceRectangleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FaceRectangle")
+		case "minX":
+			out.Values[i] = ec._FaceRectangle_minX(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "maxX":
+			out.Values[i] = ec._FaceRectangle_maxX(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "minY":
+			out.Values[i] = ec._FaceRectangle_minY(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "maxY":
+			out.Values[i] = ec._FaceRectangle_maxY(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var imageFaceImplementors = []string{"ImageFace"}
+
+func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet, obj *models.ImageFace) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, imageFaceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ImageFace")
+		case "id":
+			out.Values[i] = ec._ImageFace_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "media":
+			out.Values[i] = ec._ImageFace_media(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "rectangle":
+			out.Values[i] = ec._ImageFace_rectangle(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mediaImplementors = []string{"Media"}
 
 func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, obj *models.Media) graphql.Marshaler {
@@ -8827,6 +9462,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "myFaceGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myFaceGroups(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -9544,6 +10193,53 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.FaceGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx context.Context, sel ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._FaceGroup(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	res, err := graphql.UnmarshalFloat(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9601,6 +10297,47 @@ func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.Se
 		ret[i] = ec.marshalNID2int(ctx, sel, v[i])
 	}
 
+	return ret
+}
+
+func (ec *executionContext) marshalNImageFace2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx context.Context, sel ast.SelectionSet, v models.ImageFace) graphql.Marshaler {
+	return ec._ImageFace(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNImageFace2ᚕgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx context.Context, sel ast.SelectionSet, v []models.ImageFace) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNImageFace2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
 	return ret
 }
 
@@ -10262,6 +10999,10 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalOFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx context.Context, sel ast.SelectionSet, v models.FaceRectangle) graphql.Marshaler {
+	return ec._FaceRectangle(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
