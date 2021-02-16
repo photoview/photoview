@@ -30,10 +30,10 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 
 	faceGroupMap := make(map[int][]models.ImageFace)
 	for _, face := range imageFaces {
-		group, found := faceGroupMap[face.FaceGroupID]
+		_, found := faceGroupMap[face.FaceGroupID]
 
 		if found {
-			group = append(group, *face)
+			faceGroupMap[face.FaceGroupID] = append(faceGroupMap[face.FaceGroupID], *face)
 		} else {
 			faceGroupMap[face.FaceGroupID] = make([]models.ImageFace, 1)
 			faceGroupMap[face.FaceGroupID][0] = *face
