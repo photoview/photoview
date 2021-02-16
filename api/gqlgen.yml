@@ -42,5 +42,11 @@ models:
     model: github.com/photoview/photoview/api/graphql/models.Album
   ShareToken:
     model: github.com/photoview/photoview/api/graphql/models.ShareToken
+  FaceGroup:
+    model: github.com/photoview/photoview/api/graphql/models.FaceGroup
+  ImageFace:
+    model: github.com/photoview/photoview/api/graphql/models.ImageFace
+  FaceRectangle:
+    model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
   SiteInfo:
     model: github.com/photoview/photoview/api/graphql/models.SiteInfo

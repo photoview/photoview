@@ -59,6 +59,8 @@ type Query {
   shareTokenValidatePassword(token: String!, password: String): Boolean!
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
+
+  myFaceGroups(paginate: Pagination): [FaceGroup!]!
 }
 
 type Mutation {
@@ -313,4 +315,23 @@ type TimelineGroup {
   media: [Media!]!
   mediaTotal: Int!
   date: Time!
+}
+
+type FaceGroup {
+  id: ID!
+  label: String
+  imageFaces: [ImageFace!]!
+}
+
+type ImageFace {
+  id: ID!
+  media: Media!
+  rectangle: FaceRectangle
+}
+
+type FaceRectangle {
+  minX: Float!
+  maxX: Float!
+  minY: Float!
+  maxY: Float!
 }

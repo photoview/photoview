@@ -54,8 +54,8 @@ func (fd FaceDescriptor) Value() (driver.Value, error) {
 }
 
 type FaceRectangle struct {
-	minX, maxX float32
-	minY, maxY float32
+	MinX, MaxX float64
+	MinY, MaxY float64
 }
 
 // ToDBFaceRectangle converts a pixel absolute rectangle to a relative FaceRectangle to be saved in the database
@@ -66,10 +66,10 @@ func ToDBFaceRectangle(imgRec image.Rectangle, imagePath string) (*FaceRectangle
 	}
 
 	return &FaceRectangle{
-		minX: float32(imgRec.Min.X) / float32(size.Width),
-		maxX: float32(imgRec.Max.X) / float32(size.Width),
-		minY: float32(imgRec.Min.Y) / float32(size.Height),
-		maxY: float32(imgRec.Max.Y) / float32(size.Height),
+		MinX: float64(imgRec.Min.X) / float64(size.Width),
+		MaxX: float64(imgRec.Max.X) / float64(size.Width),
+		MinY: float64(imgRec.Min.Y) / float64(size.Height),
+		MaxY: float64(imgRec.Max.Y) / float64(size.Height),
 	}, nil
 }
 
@@ -107,16 +107,16 @@ func (fr *FaceRectangle) Scan(value interface{}) error {
 		return err
 	}
 
-	fr.minX = float32(minX)
-	fr.minX = float32(maxX)
-	fr.minX = float32(minY)
-	fr.minX = float32(maxY)
+	fr.MinX = float64(minX)
+	fr.MinX = float64(maxX)
+	fr.MinX = float64(minY)
+	fr.MinX = float64(maxY)
 
 	return nil
 }
 
 // Value tells GORM how to save into the database
 func (fr FaceRectangle) Value() (driver.Value, error) {
-	result := fmt.Sprintf("%f:%f:%f:%f", fr.minX, fr.maxX, fr.minY, fr.maxY)
+	result := fmt.Sprintf("%f:%f:%f:%f", fr.MinX, fr.MaxX, fr.MinY, fr.MaxY)
 	return result, nil
 }
