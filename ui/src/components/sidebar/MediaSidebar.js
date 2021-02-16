@@ -7,6 +7,7 @@ import { ProtectedImage, ProtectedVideo } from '../photoGallery/ProtectedMedia'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 import SidebarItem from './SidebarItem'
+import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 
 const mediaQuery = gql`
   query sidebarPhoto($id: ID!) {
@@ -41,6 +42,7 @@ const mediaQuery = gql`
         audio
       }
       exif {
+        id
         camera
         maker
         lens
@@ -51,6 +53,15 @@ const mediaQuery = gql`
         focalLength
         flash
         exposureProgram
+      }
+      faces {
+        id
+        rectangle {
+          minX
+          maxX
+          minY
+          maxY
+        }
       }
     }
   }
@@ -203,6 +214,7 @@ const SidebarContent = ({ media, hidePreview }) => {
       {!hidePreview && (
         <PreviewImageWrapper imageAspect={imageAspect}>
           <PreviewMedia previewImage={previewImage} media={media} />
+          <SidebarFacesOverlay media={media} />
         </PreviewImageWrapper>
       )}
       <Name>{media && media.title}</Name>
