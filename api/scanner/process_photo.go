@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/image_helpers"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -110,7 +111,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		return false, errors.Wrap(err, "error processing photo highres")
 	}
 
-	var photoDimensions *PhotoDimensions
+	var photoDimensions *image_helpers.PhotoDimensions
 	var baseImagePath string = photo.Path
 
 	mediaType, err := getMediaType(photo.Path)
@@ -161,7 +162,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 		// Make sure photo dimensions is set
 		if photoDimensions == nil {
-			photoDimensions, err = GetPhotoDimensions(baseImagePath)
+			photoDimensions, err = image_helpers.GetPhotoDimensions(baseImagePath)
 			if err != nil {
 				return false, err
 			}
@@ -242,7 +243,7 @@ func makeMediaCacheDir(media *models.Media) (*string, error) {
 	return &photoCachePath, nil
 }
 
-func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMediaData, photoDimensions *PhotoDimensions) error {
+func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMediaData, photoDimensions *image_helpers.PhotoDimensions) error {
 	originalImageName := generateUniqueMediaName(photo.Path)
 
 	contentType, err := imageData.ContentType()
@@ -279,7 +280,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *Encode
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
-	photoDimensions, err := GetPhotoDimensions(imagePath)
+	photoDimensions, err := image_helpers.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return nil, err
 	}
