@@ -31,7 +31,12 @@ const SingleFaceGroup = ({ faceGroup }) => {
     <div>
       Face group: {faceGroup.id}
       <div>
-        <PhotoGallery media={media} loading={false} setPresenting={() => {}} />
+        <PhotoGallery
+          media={media}
+          loading={false}
+          setPresenting={() => {}}
+          onSelectImage={() => {}}
+        />
       </div>
     </div>
   )

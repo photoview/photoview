@@ -32,6 +32,8 @@ models:
     fields:
       exif:
         resolver: true
+      faces:
+        resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:

@@ -27,7 +27,8 @@ type Media struct {
 	VideoMetadataID *int           `gorm:"index"`
 	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:CASCADE;"`
 	SideCarPath     *string
-	SideCarHash     *string `gorm:"unique"`
+	SideCarHash     *string      `gorm:"unique"`
+	Faces           []*ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
 
 	// Only used internally
 	CounterpartPath *string `gorm:"-"`

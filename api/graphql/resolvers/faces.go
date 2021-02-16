@@ -23,8 +23,12 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		userAlbumIDs[i] = album.ID
 	}
 
+	imageFaceQuery := r.Database.
+		Joins("Media").
+		Where("media.album_id IN (?)", userAlbumIDs)
+
 	var imageFaces []*models.ImageFace
-	if err := r.Database.Joins("Media").Where("media.album_id IN (?)", userAlbumIDs).Find(&imageFaces).Error; err != nil {
+	if err := imageFaceQuery.Find(&imageFaces).Error; err != nil {
 		return nil, err
 	}
 
@@ -47,8 +51,12 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		i++
 	}
 
+	faceGroupQuery := r.Database.
+		Where("id IN (?)", faceGroupIDs).
+		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END")
+
 	var faceGroups []*models.FaceGroup
-	if err := r.Database.Where("id IN (?)", faceGroupIDs).Find(&faceGroups).Error; err != nil {
+	if err := faceGroupQuery.Find(&faceGroups).Error; err != nil {
 		return nil, err
 	}
 

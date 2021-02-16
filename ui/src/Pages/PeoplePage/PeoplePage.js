@@ -48,11 +48,18 @@ const FaceImage = styled(ProtectedImage)`
   object-fit: cover;
 `
 
+const FaceLabel = styled.div`
+  color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
+  margin: 12px 12px 24px;
+  text-align: center;
+`
+
 const FaceGroup = ({ group }) => (
   <Link to={`/people/${group.id}`}>
     <CircleImageWrapper>
       <FaceImage src={group.imageFaces[0].media.thumbnail.url} />
     </CircleImageWrapper>
+    <FaceLabel labeled={!!group.label}>{group.label ?? 'Unlabeled'}</FaceLabel>
   </Link>
 )
 

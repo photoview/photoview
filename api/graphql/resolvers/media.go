@@ -208,3 +208,16 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 
 	return &media, nil
 }
+
+func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
+	if media.Faces != nil {
+		return media.Faces, nil
+	}
+
+	var faces []*models.ImageFace
+	if err := r.Database.Model(&media).Association("Faces").Find(&faces); err != nil {
+		return nil, err
+	}
+
+	return faces, nil
+}
