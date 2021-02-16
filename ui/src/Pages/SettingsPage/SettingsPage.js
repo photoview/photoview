@@ -25,7 +25,7 @@ export const InputLabelDescription = styled.p`
 
 const SettingsPage = () => {
   return (
-    <Layout>
+    <Layout title="Settings">
       <ScannerSection />
       <UsersTable />
     </Layout>

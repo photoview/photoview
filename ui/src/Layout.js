@@ -117,9 +117,9 @@ export const SideMenu = () => {
           <SideButtonLabel>Places</SideButtonLabel>
         </SideButton>
       ) : null}
-      <SideButton to="/faces" exact>
+      <SideButton to="/people" exact>
         <Icon name="user outline" />
-        <SideButtonLabel>Faces</SideButtonLabel>
+        <SideButtonLabel>People</SideButtonLabel>
       </SideButton>
       {isAdmin ? (
         <SideButton to="/settings" exact>

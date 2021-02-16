@@ -49,7 +49,7 @@ const FaceImage = styled(ProtectedImage)`
 `
 
 const FaceGroup = ({ group }) => (
-  <Link to={`/faces/${group.id}`}>
+  <Link to={`/people/${group.id}`}>
     <CircleImageWrapper>
       <FaceImage src={group.imageFaces[0].media.thumbnail.url} />
     </CircleImageWrapper>
@@ -65,14 +65,14 @@ const FaceGroupsWrapper = styled.div`
   flex-wrap: wrap;
 `
 
-const FacesPage = ({ match }) => {
+const PeoplePage = ({ match }) => {
   const { data, error } = useQuery(MY_FACES_QUERY)
 
   if (error) {
     return error.message
   }
 
-  const faceGroup = match.params.face
+  const faceGroup = match.params.person
   if (faceGroup) {
     return (
       <Layout>
@@ -91,14 +91,14 @@ const FacesPage = ({ match }) => {
   }
 
   return (
-    <Layout>
+    <Layout title={'People'}>
       <FaceGroupsWrapper>{faces}</FaceGroupsWrapper>
     </Layout>
   )
 }
 
-FacesPage.propTypes = {
+PeoplePage.propTypes = {
   match: PropTypes.object.isRequired,
 }
 
-export default FacesPage
+export default PeoplePage
