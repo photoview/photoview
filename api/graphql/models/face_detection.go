@@ -87,30 +87,27 @@ func (fr *FaceRectangle) Scan(value interface{}) error {
 		return fmt.Errorf("Invalid face rectangle format, expected 4 values, got %d", len(slices))
 	}
 
-	minX, err := strconv.ParseFloat(slices[0], 32)
+	var err error
+
+	fr.MinX, err = strconv.ParseFloat(slices[0], 32)
 	if err != nil {
 		return err
 	}
 
-	maxX, err := strconv.ParseFloat(slices[0], 32)
+	fr.MaxX, err = strconv.ParseFloat(slices[1], 32)
 	if err != nil {
 		return err
 	}
 
-	minY, err := strconv.ParseFloat(slices[0], 32)
+	fr.MinY, err = strconv.ParseFloat(slices[2], 32)
 	if err != nil {
 		return err
 	}
 
-	maxY, err := strconv.ParseFloat(slices[0], 32)
+	fr.MaxY, err = strconv.ParseFloat(slices[3], 32)
 	if err != nil {
 		return err
 	}
-
-	fr.MinX = float64(minX)
-	fr.MinX = float64(maxX)
-	fr.MinX = float64(minY)
-	fr.MinX = float64(maxY)
 
 	return nil
 }
