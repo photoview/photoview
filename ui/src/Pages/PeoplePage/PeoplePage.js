@@ -44,7 +44,7 @@ const CircleImageWrapper = styled.div`
   overflow: hidden;
 `
 
-const FaceImage = styled(ProtectedImage)`
+const FaceImagePortrait = styled(ProtectedImage)`
   position: absolute;
   width: 100%;
   top: 50%;
@@ -52,7 +52,21 @@ const FaceImage = styled(ProtectedImage)`
     ${({ origin, scale }) =>
       `translate(${(0.5 - origin.x) * 100}%, ${
         (0.5 - origin.y) * 100
-      }%) scale(${scale * 0.8})`};
+      }%) scale(${Math.max(scale * 0.8, 1)})`};
+
+  transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
+  object-fit: cover;
+`
+
+const FaceImageLandscape = styled(ProtectedImage)`
+  position: absolute;
+  height: 100%;
+  left: 50%;
+  transform: translateX(-50%)
+    ${({ origin, scale }) =>
+      `translate(${(0.5 - origin.x) * 100}%, ${
+        (0.5 - origin.y) * 100
+      }%) scale(${Math.max(scale * 0.8, 1)})`};
 
   transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
   object-fit: cover;
@@ -75,6 +89,11 @@ const FaceGroup = ({ group }) => {
     x: (rect.minX + rect.maxX) / 2,
     y: (rect.minY + rect.maxY) / 2,
   }
+
+  const FaceImage =
+    previewFace.media.thumbnail.width > previewFace.media.thumbnail.height
+      ? FaceImageLandscape
+      : FaceImagePortrait
 
   return (
     <Link to={`/people/${group.id}`}>

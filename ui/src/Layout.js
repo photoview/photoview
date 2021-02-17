@@ -104,21 +104,21 @@ export const SideMenu = () => {
   return (
     <SideMenuContainer>
       <SideButton to="/photos" exact>
-        <Icon name="image outline" />
+        <Icon name="image" />
         <SideButtonLabel>Photos</SideButtonLabel>
       </SideButton>
       <SideButton to="/albums" exact>
-        <Icon name="images outline" />
+        <Icon name="images" />
         <SideButtonLabel>Albums</SideButtonLabel>
       </SideButton>
       {mapboxEnabled ? (
         <SideButton to="/places" exact>
-          <Icon name="map outline" />
+          <Icon name="map" />
           <SideButtonLabel>Places</SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/people" exact>
-        <Icon name="user outline" />
+        <Icon name="user" />
         <SideButtonLabel>People</SideButtonLabel>
       </SideButton>
       {isAdmin ? (
