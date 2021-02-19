@@ -62,6 +62,9 @@ const mediaQuery = gql`
           minY
           maxY
         }
+        faceGroup {
+          id
+        }
       }
     }
   }

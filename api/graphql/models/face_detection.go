@@ -21,7 +21,8 @@ type FaceGroup struct {
 
 type ImageFace struct {
 	Model
-	FaceGroupID int            `gorm:"not null;index"`
+	FaceGroupID int `gorm:"not null;index"`
+	FaceGroup   *FaceGroup
 	MediaID     int            `gorm:"not null;index"`
 	Media       Media          `gorm:"constraint:OnDelete:CASCADE;"`
 	Descriptor  FaceDescriptor `gorm:"not null"`
