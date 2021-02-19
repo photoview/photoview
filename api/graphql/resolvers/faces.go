@@ -5,6 +5,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -119,6 +120,8 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, updateError
 	}
 
+	face_detection.GlobalFaceDetector.MergeCategories(int32(sourceFaceGroupID), int32(destinationFaceGroupID))
+
 	return destinationFaceGroup, nil
 }
 
@@ -127,7 +130,25 @@ func (r *mutationResolver) MoveImageFace(ctx context.Context, imageFaceID int, n
 }
 
 func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error) {
-	panic("not implemented")
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	var updatedImageFaces []*models.ImageFace
+
+	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+		var err error
+		updatedImageFaces, err = face_detection.GlobalFaceDetector.RecognizeUnlabeledFaces(tx, user)
+
+		return err
+	})
+
+	if transactionError != nil {
+		return nil, transactionError
+	}
+
+	return updatedImageFaces, nil
 }
 
 func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
