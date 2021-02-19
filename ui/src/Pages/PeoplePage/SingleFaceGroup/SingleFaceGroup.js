@@ -1,7 +1,8 @@
-import React from 'react'
 import PropTypes from 'prop-types'
-import { ProtectedImage } from '../../components/photoGallery/ProtectedMedia'
-import PhotoGallery from '../../components/photoGallery/PhotoGallery'
+import React from 'react'
+import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
+import { ProtectedImage } from '../../../components/photoGallery/ProtectedMedia'
+import FaceGroupTitle from './FaceGroupTitle'
 
 const ImageFace = ({ imageFace }) => {
   return (
@@ -17,19 +18,10 @@ ImageFace.propTypes = {
 }
 
 const SingleFaceGroup = ({ faceGroup }) => {
-  if (!faceGroup) {
-    return null
-  }
-
-  // const images = faceGroup.imageFaces.map(imgFace => (
-  //   <ImageFace key={imgFace.id} imageFace={imgFace} />
-  // ))
-
-  const media = faceGroup.imageFaces.map(x => x.media)
-
-  return (
-    <div>
-      Face group: {faceGroup.id}
+  let mediaGallery = null
+  if (faceGroup) {
+    const media = faceGroup.imageFaces.map(x => x.media)
+    mediaGallery = (
       <div>
         <PhotoGallery
           media={media}
@@ -38,6 +30,13 @@ const SingleFaceGroup = ({ faceGroup }) => {
           onSelectImage={() => {}}
         />
       </div>
+    )
+  }
+
+  return (
+    <div>
+      <FaceGroupTitle faceGroup={faceGroup} />
+      {mediaGallery}
     </div>
   )
 }

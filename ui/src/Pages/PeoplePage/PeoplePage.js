@@ -1,13 +1,14 @@
-import React from 'react'
+import React, { createRef, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import { gql, useQuery } from '@apollo/client'
+import { gql, useMutation, useQuery } from '@apollo/client'
 import Layout from '../../Layout'
-import { ProtectedImage } from '../../components/photoGallery/ProtectedMedia'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
-import SingleFaceGroup from './SingleFaceGroup'
+import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
+import { Icon, Input } from 'semantic-ui-react'
+import FaceCircleImage from './FaceCircleImage'
 
-const MY_FACES_QUERY = gql`
+export const MY_FACES_QUERY = gql`
   query myFaces {
     myFaceGroups {
       id
@@ -33,81 +34,145 @@ const MY_FACES_QUERY = gql`
   }
 `
 
-const CircleImageWrapper = styled.div`
-  background-color: #eee;
-  position: relative;
-  border-radius: 50%;
-  width: 150px;
-  height: 150px;
-  object-fit: fill;
-  margin: 12px;
-  overflow: hidden;
+export const SET_GROUP_LABEL_MUTATION = gql`
+  mutation($groupID: ID!, $label: String) {
+    setFaceGroupLabel(faceGroupID: $groupID, label: $label) {
+      id
+      label
+    }
+  }
 `
 
-const FaceImagePortrait = styled(ProtectedImage)`
-  position: absolute;
-  width: 100%;
-  top: 50%;
-  transform: translateY(-50%)
-    ${({ origin, scale }) =>
-      `translate(${(0.5 - origin.x) * 100}%, ${
-        (0.5 - origin.y) * 100
-      }%) scale(${Math.max(scale * 0.8, 1)})`};
-
-  transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
-  object-fit: cover;
-`
-
-const FaceImageLandscape = styled(ProtectedImage)`
-  position: absolute;
-  height: 100%;
-  left: 50%;
-  transform: translateX(-50%)
-    ${({ origin, scale }) =>
-      `translate(${(0.5 - origin.x) * 100}%, ${
-        (0.5 - origin.y) * 100
-      }%) scale(${Math.max(scale * 0.8, 1)})`};
-
-  transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
-  object-fit: cover;
-`
-
-const FaceLabel = styled.div`
+const FaceDetailsButton = styled.button`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
-  margin: 12px 12px 24px;
+  margin: 12px auto 24px;
   text-align: center;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: #2683ca;
+  }
+`
+
+const FaceLabel = styled.span``
+
+const FaceDetails = ({ group }) => {
+  const [editLabel, setEditLabel] = useState(false)
+  const [inputValue, setInputValue] = useState(group.label ?? '')
+  const inputRef = createRef()
+
+  const [setGroupLabel, { loading }] = useMutation(SET_GROUP_LABEL_MUTATION, {
+    variables: {
+      groupID: group.id,
+    },
+  })
+
+  const resetLabel = () => {
+    setInputValue(group.label ?? '')
+    setEditLabel(false)
+  }
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [inputRef])
+
+  useEffect(() => {
+    if (!loading) {
+      resetLabel()
+    }
+  }, [loading])
+
+  const onKeyUp = e => {
+    if (e.key == 'Escape') {
+      resetLabel()
+      return
+    }
+
+    if (e.key == 'Enter') {
+      setGroupLabel({
+        variables: {
+          label: e.target.value == '' ? null : e.target.value,
+        },
+      })
+      return
+    }
+  }
+
+  let label
+  if (!editLabel) {
+    label = (
+      <FaceDetailsButton
+        labeled={!!group.label}
+        onClick={() => setEditLabel(true)}
+      >
+        <FaceImagesCount>{group.imageFaces.length}</FaceImagesCount>
+        <FaceLabel>{group.label ?? 'Unlabeled'}</FaceLabel>
+        <EditIcon name="pencil" />
+      </FaceDetailsButton>
+    )
+  } else {
+    label = (
+      <FaceDetailsButton labeled={!!group.label}>
+        <Input
+          loading={loading}
+          ref={inputRef}
+          size="mini"
+          placeholder="Label"
+          icon="arrow right"
+          value={inputValue}
+          onKeyUp={onKeyUp}
+          onChange={e => setInputValue(e.target.value)}
+          onBlur={() => {
+            resetLabel()
+          }}
+        />
+      </FaceDetailsButton>
+    )
+  }
+
+  return label
+}
+
+FaceDetails.propTypes = {
+  group: PropTypes.object.isRequired,
+}
+
+const FaceImagesCount = styled.span`
+  background-color: #eee;
+  color: #222;
+  font-size: 0.9em;
+  padding: 0 4px;
+  margin-right: 6px;
+  border-radius: 4px;
+`
+
+const EditIcon = styled(Icon)`
+  margin-left: 6px !important;
+  opacity: 0 !important;
+
+  transition: opacity 100ms;
+
+  ${FaceDetailsButton}:hover &, ${FaceDetailsButton}:focus-visible & {
+    opacity: 1 !important;
+  }
 `
 
 const FaceGroup = ({ group }) => {
   const previewFace = group.imageFaces[0]
 
-  const rect = previewFace.rectangle
-
-  let scale = Math.min(1 / (rect.maxX - rect.minX), 1 / (rect.maxY - rect.minY))
-
-  let origin = {
-    x: (rect.minX + rect.maxX) / 2,
-    y: (rect.minY + rect.maxY) / 2,
-  }
-
-  const FaceImage =
-    previewFace.media.thumbnail.width > previewFace.media.thumbnail.height
-      ? FaceImageLandscape
-      : FaceImagePortrait
-
   return (
-    <Link to={`/people/${group.id}`}>
-      <CircleImageWrapper>
-        <FaceImage
-          scale={scale}
-          origin={origin}
-          src={previewFace.media.thumbnail.url}
-        />
-      </CircleImageWrapper>
-      <FaceLabel labeled={!!group.label}>
-        {group.label ?? 'Unlabeled'}
-      </FaceLabel>
-    </Link>
+    <div style={{ margin: '12px' }}>
+      <Link to={`/people/${group.id}`}>
+        <FaceCircleImage imageFace={previewFace} selectable />
+      </Link>
+      <FaceDetails group={group} />
+    </div>
   )
 }
 
