@@ -3,12 +3,36 @@ package resolvers
 import (
 	"context"
 
+	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
+
+type imageFaceResolver struct {
+	*Resolver
+}
+
+func (r *Resolver) ImageFace() api.ImageFaceResolver {
+	return imageFaceResolver{r}
+}
+
+func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace) (*models.FaceGroup, error) {
+	if obj.FaceGroup != nil {
+		return obj.FaceGroup, nil
+	}
+
+	var faceGroup models.FaceGroup
+	if err := r.Database.Model(&obj).Association("FaceGroup").Find(&faceGroup); err != nil {
+		return nil, err
+	}
+
+	obj.FaceGroup = &faceGroup
+
+	return &faceGroup, nil
+}
 
 func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error) {
 	user := auth.UserFromContext(ctx)

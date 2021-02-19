@@ -1,19 +1,28 @@
 import PropTypes from 'prop-types'
 import React from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-const FaceBoxStyle = styled.div`
+const FaceBoxStyle = styled(Link)`
   box-shadow: inset 0 0 2px 1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgb(255, 255, 255);
   border-radius: 50%;
   position: absolute;
-  top: ${({ minY }) => minY * 100}%;
-  bottom: ${({ maxY }) => (1 - maxY) * 100}%;
-  left: ${({ minX }) => minX * 100}%;
-  right: ${({ maxX }) => (1 - maxX) * 100}%;
+  top: ${({ $minY }) => $minY * 100}%;
+  bottom: ${({ $maxY }) => (1 - $maxY) * 100}%;
+  left: ${({ $minX }) => $minX * 100}%;
+  right: ${({ $maxX }) => (1 - $maxX) * 100}%;
 `
 
 const FaceBox = ({ face /*media*/ }) => {
-  return <FaceBoxStyle {...face.rectangle}></FaceBoxStyle>
+  return (
+    <FaceBoxStyle
+      to={`/people/${face.faceGroup.id}`}
+      $minX={face.rectangle.minX}
+      $maxX={face.rectangle.maxX}
+      $minY={face.rectangle.minY}
+      $maxY={face.rectangle.maxY}
+    ></FaceBoxStyle>
+  )
 }
 
 FaceBox.propTypes = {
