@@ -103,11 +103,15 @@ func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 	return nil
 }
 
+func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
+	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
+}
+
 func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, imagePath string) error {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
-	match := fd.rec.ClassifyThreshold(face.Descriptor, 0.2)
+	match := fd.classifyDescriptor(face.Descriptor)
 
 	faceRect, err := models.ToDBFaceRectangle(face.Rectangle, imagePath)
 	if err != nil {
@@ -151,4 +155,99 @@ func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, image
 
 	fd.rec.SetSamples(fd.samples, fd.cats)
 	return nil
+}
+
+func (fd *FaceDetector) MergeCategories(sourceID int32, destID int32) {
+	fd.mutex.Lock()
+	defer fd.mutex.Unlock()
+
+	for i := range fd.cats {
+		if fd.cats[i] == sourceID {
+			fd.cats[i] = destID
+		}
+	}
+}
+
+func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) ([]*models.ImageFace, error) {
+	unrecognizedSamples := make([]face.Descriptor, 0)
+	unrecognizedCats := make([]int32, 0)
+
+	newCats := make([]int32, 0)
+	newSamples := make([]face.Descriptor, 0)
+
+	var unlabeledFaceGroups []*models.FaceGroup
+
+	err := tx.
+		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
+		Joins("JOIN media ON image_faces.media_id = media.id").
+		Where("face_groups.label IS NULL").
+		Where("media.album_id IN (?)",
+			tx.Select("album_id").Table("user_albums").Where("user_id = ?", user.ID),
+		).
+		Find(&unlabeledFaceGroups).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	fd.mutex.Lock()
+	defer fd.mutex.Unlock()
+
+	for i := range fd.samples {
+		cat := fd.cats[i]
+		sample := fd.samples[i]
+
+		catIsUnlabeled := false
+		for _, unlabeledFaceGroup := range unlabeledFaceGroups {
+			if cat == int32(unlabeledFaceGroup.ID) {
+				catIsUnlabeled = true
+				continue
+			}
+		}
+
+		if catIsUnlabeled {
+			unrecognizedCats = append(unrecognizedCats, cat)
+			unrecognizedSamples = append(unrecognizedSamples, sample)
+		} else {
+			newCats = append(newCats, cat)
+			newSamples = append(newSamples, sample)
+		}
+	}
+
+	fd.cats = newCats
+	fd.samples = newSamples
+
+	updatedImageFaces := make([]*models.ImageFace, 0)
+
+	for i := range unrecognizedSamples {
+		cat := unrecognizedCats[i]
+		sample := unrecognizedSamples[i]
+
+		match := fd.classifyDescriptor(sample)
+
+		if match < 0 {
+			// still no match, we can readd it to the list
+			fd.cats = append(fd.cats, cat)
+			fd.samples = append(fd.samples, sample)
+		} else {
+			// found new match, update the database
+			var imageFace models.ImageFace
+			if err := tx.Model(&models.ImageFace{
+				Descriptor: models.FaceDescriptor(sample),
+			}).First(imageFace).Error; err != nil {
+				return nil, err
+			}
+
+			if err := tx.Model(&imageFace).Update("face_group_id", int(cat)).Error; err != nil {
+				return nil, err
+			}
+
+			updatedImageFaces = append(updatedImageFaces, &imageFace)
+
+			fd.cats = append(fd.cats, match)
+			fd.samples = append(fd.samples, sample)
+		}
+	}
+
+	return updatedImageFaces, nil
 }

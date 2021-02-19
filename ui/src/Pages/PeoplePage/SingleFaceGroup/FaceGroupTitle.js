@@ -42,7 +42,7 @@ const FaceGroupTitle = ({ faceGroup }) => {
   )
 
   const resetLabel = () => {
-    setInputValue(faceGroup.label ?? '')
+    setInputValue(faceGroup?.label ?? '')
     setEditLabel(false)
   }
 

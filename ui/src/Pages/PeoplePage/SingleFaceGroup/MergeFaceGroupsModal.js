@@ -12,7 +12,7 @@ import FaceCircleImage from '../FaceCircleImage'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import { MY_FACES_QUERY } from '../PeoplePage'
 import styled from 'styled-components'
-import { Redirect } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 
 const COMBINE_FACES_MUTATION = gql`
   mutation($destID: ID!, $srcID: ID!) {
@@ -69,13 +69,14 @@ FaceGroupRow.propTypes = {
 
 const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
   const [page, setPage] = useState(0)
+  const [searchValue, setSearchValue] = useState('')
   const [selectedRow, setSelectedRow] = useState(null)
-  const [mergedFaceGroup, setMergedFaceGroup] = useState(false)
-  const PAGE_SIZE = 8
+  const PAGE_SIZE = 6
+  let history = useHistory()
   const { data } = useQuery(MY_FACES_QUERY)
   const [combineFacesMutation] = useMutation(COMBINE_FACES_MUTATION, {
     variables: {
-      srcID: sourceFaceGroup.id,
+      srcID: sourceFaceGroup?.id,
     },
     refetchQueries: [
       {
@@ -84,27 +85,33 @@ const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
     ],
   })
 
+  if (open == false) return null
+
+  const filteredFaceGroups =
+    data?.myFaceGroups
+      .filter(
+        x =>
+          searchValue == '' ||
+          (x.label && x.label.toLowerCase().includes(searchValue.toLowerCase()))
+      )
+      .filter(x => x.id != sourceFaceGroup?.id) ?? []
+
+  console.log(filteredFaceGroups)
+
   const mergeFaceGroups = () => {
-    const destFaceGroup = data.myFaceGroups.filter(
-      x => x.id != sourceFaceGroup.id
-    )[selectedRow]
+    const destFaceGroup = filteredFaceGroups[selectedRow]
 
     combineFacesMutation({
       variables: {
         destID: destFaceGroup.id,
       },
-      onCompleted() {
-        setMergedFaceGroup(destFaceGroup.id)
-      },
+    }).then(() => {
+      setOpen(false)
+      history.push(`/people/${destFaceGroup.id}`)
     })
   }
 
-  if (mergedFaceGroup) {
-    return <Redirect to={`/people/${mergedFaceGroup}`} />
-  }
-
-  const rows = data?.myFaceGroups
-    .filter(x => x.id != sourceFaceGroup.id)
+  const rows = filteredFaceGroups
     .filter((_, i) => i >= page * PAGE_SIZE && i < (page + 1) * PAGE_SIZE)
     .map((face, i) => (
       <FaceGroupRow
@@ -132,7 +139,13 @@ const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
               </Table.Row>
               <Table.Row>
                 <Table.HeaderCell>
-                  <Input icon="search" placeholder="Search faces..." fluid />
+                  <Input
+                    value={searchValue}
+                    onChange={e => setSearchValue(e.target.value)}
+                    icon="search"
+                    placeholder="Search faces..."
+                    fluid
+                  />
                 </Table.HeaderCell>
               </Table.Row>
             </Table.Header>
@@ -176,7 +189,7 @@ const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
 MergeFaceGroupsModal.propTypes = {
   open: PropTypes.bool.isRequired,
   setOpen: PropTypes.func.isRequired,
-  sourceFaceGroup: PropTypes.object.isRequired,
+  sourceFaceGroup: PropTypes.object,
 }
 
 export default MergeFaceGroupsModal

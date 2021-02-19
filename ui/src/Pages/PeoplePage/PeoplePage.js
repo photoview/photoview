@@ -5,7 +5,7 @@ import Layout from '../../Layout'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
-import { Icon, Input } from 'semantic-ui-react'
+import { Button, Icon, Input } from 'semantic-ui-react'
 import FaceCircleImage from './FaceCircleImage'
 
 export const MY_FACES_QUERY = gql`
@@ -39,6 +39,14 @@ export const SET_GROUP_LABEL_MUTATION = gql`
     setFaceGroupLabel(faceGroupID: $groupID, label: $label) {
       id
       label
+    }
+  }
+`
+
+const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
+  mutation recognizeUnlabeledFaces {
+    recognizeUnlabeledFaces {
+      id
     }
   }
 `
@@ -188,6 +196,11 @@ const FaceGroupsWrapper = styled.div`
 const PeoplePage = ({ match }) => {
   const { data, error } = useQuery(MY_FACES_QUERY)
 
+  const [
+    recognizeUnlabeled,
+    { loading: recognizeUnlabeledLoading },
+  ] = useMutation(RECOGNIZE_UNLABELED_FACES_MUTATION)
+
   if (error) {
     return error.message
   }
@@ -213,6 +226,16 @@ const PeoplePage = ({ match }) => {
   return (
     <Layout title={'People'}>
       <FaceGroupsWrapper>{faces}</FaceGroupsWrapper>
+      <Button
+        loading={recognizeUnlabeledLoading}
+        disabled={recognizeUnlabeledLoading}
+        onClick={() => {
+          recognizeUnlabeled()
+        }}
+      >
+        <Icon name="sync" />
+        Recognize unlabeled faces
+      </Button>
     </Layout>
   )
 }
