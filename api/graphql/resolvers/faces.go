@@ -150,7 +150,83 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 }
 
 func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error) {
-	panic("not implemented")
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	userOwnedImageFaceIDs := make([]int, 0)
+	var destFaceGroup *models.FaceGroup
+
+	transErr := r.Database.Transaction(func(tx *gorm.DB) error {
+
+		var err error
+		destFaceGroup, err = userOwnedFaceGroup(tx, user, destinationFaceGroupID)
+		if err != nil {
+			return err
+		}
+
+		var userOwnedImageFaces []*models.ImageFace
+		if err := tx.
+			Joins("JOIN media ON media.id = image_faces.media_id").
+			Where("media.album_id IN (?)", userAlbumIDs).
+			Where("image_faces.id IN (?)", imageFaceIDs).
+			Find(&userOwnedImageFaces).Error; err != nil {
+			return err
+		}
+
+		for _, imageFace := range userOwnedImageFaces {
+			userOwnedImageFaceIDs = append(userOwnedImageFaceIDs, imageFace.ID)
+		}
+
+		var sourceFaceGroups []*models.FaceGroup
+		if err := tx.
+			Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
+			Where("image_faces.id IN (?)", userOwnedImageFaceIDs).
+			Find(&sourceFaceGroups).Error; err != nil {
+			return err
+		}
+
+		if err := tx.
+			Model(&models.ImageFace{}).
+			Where("id IN (?)", userOwnedImageFaceIDs).
+			Update("face_group_id", destFaceGroup.ID).Error; err != nil {
+			return err
+		}
+
+		// delete face groups if they have become empty
+		for _, faceGroup := range sourceFaceGroups {
+			var count int64
+			if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", faceGroup.ID).Count(&count).Error; err != nil {
+				return err
+			}
+
+			if count == 0 {
+				if err := tx.Delete(&faceGroup).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if transErr != nil {
+		return nil, transErr
+	}
+
+	face_detection.GlobalFaceDetector.MergeImageFaces(userOwnedImageFaceIDs, int32(destFaceGroup.ID))
+
+	return destFaceGroup, nil
 }
 
 func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error) {

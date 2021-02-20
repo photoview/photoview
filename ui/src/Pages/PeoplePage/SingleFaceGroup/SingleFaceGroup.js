@@ -1,21 +1,7 @@
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
-import { ProtectedImage } from '../../../components/photoGallery/ProtectedMedia'
 import FaceGroupTitle from './FaceGroupTitle'
-
-const ImageFace = ({ imageFace }) => {
-  return (
-    <div>
-      Image face: {imageFace.id}
-      <ProtectedImage src={imageFace.media.thumbnail.url} />
-    </div>
-  )
-}
-
-ImageFace.propTypes = {
-  imageFace: PropTypes.object.isRequired,
-}
 
 const SingleFaceGroup = ({ faceGroup }) => {
   const [presenting, setPresenting] = useState(false)
