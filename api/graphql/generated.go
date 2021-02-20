@@ -144,7 +144,7 @@ type ComplexityRoot struct {
 		DeleteUser                  func(childComplexity int, id int) int
 		FavoriteMedia               func(childComplexity int, mediaID int, favorite bool) int
 		InitialSetupWizard          func(childComplexity int, username string, password string, rootPath string) int
-		MoveImageFace               func(childComplexity int, imageFaceID int, newFaceGroupID int) int
+		MoveImageFaces              func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
 		ProtectShareToken           func(childComplexity int, token string, password *string) int
 		RecognizeUnlabeledFaces     func(childComplexity int) int
 		ScanAll                     func(childComplexity int) int
@@ -295,7 +295,7 @@ type MutationResolver interface {
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
 	SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error)
 	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error)
-	MoveImageFace(ctx context.Context, imageFaceID int, newFaceGroupID int) (*models.ImageFace, error)
+	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
 	RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error)
 }
 type QueryResolver interface {
@@ -827,17 +827,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 
-	case "Mutation.moveImageFace":
-		if e.complexity.Mutation.MoveImageFace == nil {
+	case "Mutation.moveImageFaces":
+		if e.complexity.Mutation.MoveImageFaces == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_moveImageFace_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_moveImageFaces_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MoveImageFace(childComplexity, args["imageFaceID"].(int), args["newFaceGroupID"].(int)), true
+		return e.complexity.Mutation.MoveImageFaces(childComplexity, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int)), true
 
 	case "Mutation.protectShareToken":
 		if e.complexity.Mutation.ProtectShareToken == nil {
@@ -1651,8 +1651,8 @@ type Mutation {
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
   combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup!
-  "Move a single ImageFace to another face group"
-  moveImageFace(imageFaceID: ID!, newFaceGroupID: ID!): ImageFace!
+  "Move a list of ImageFaces to another face group"
+  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
   "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
   recognizeUnlabeledFaces: [ImageFace!]!
 }
@@ -2111,27 +2111,27 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_moveImageFace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_moveImageFaces_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["imageFaceID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageFaceID"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+	var arg0 []int
+	if tmp, ok := rawArgs["imageFaceIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageFaceIDs"))
+		arg0, err = ec.unmarshalNID2ᚕintᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["imageFaceID"] = arg0
+	args["imageFaceIDs"] = arg0
 	var arg1 int
-	if tmp, ok := rawArgs["newFaceGroupID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newFaceGroupID"))
+	if tmp, ok := rawArgs["destinationFaceGroupID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationFaceGroupID"))
 		arg1, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["newFaceGroupID"] = arg1
+	args["destinationFaceGroupID"] = arg1
 	return args, nil
 }
 
@@ -5448,7 +5448,7 @@ func (ec *executionContext) _Mutation_combineFaceGroups(ctx context.Context, fie
 	return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_moveImageFace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_moveImageFaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5465,7 +5465,7 @@ func (ec *executionContext) _Mutation_moveImageFace(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_moveImageFace_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_moveImageFaces_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -5473,7 +5473,7 @@ func (ec *executionContext) _Mutation_moveImageFace(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MoveImageFace(rctx, args["imageFaceID"].(int), args["newFaceGroupID"].(int))
+		return ec.resolvers.Mutation().MoveImageFaces(rctx, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5485,9 +5485,9 @@ func (ec *executionContext) _Mutation_moveImageFace(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.ImageFace)
+	res := resTmp.(*models.FaceGroup)
 	fc.Result = res
-	return ec.marshalNImageFace2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, field.Selections, res)
+	return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_recognizeUnlabeledFaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -9617,8 +9617,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "moveImageFace":
-			out.Values[i] = ec._Mutation_moveImageFace(ctx, field)
+		case "moveImageFaces":
+			out.Values[i] = ec._Mutation_moveImageFaces(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
