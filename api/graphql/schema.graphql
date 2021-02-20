@@ -120,8 +120,8 @@ type Mutation {
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
   combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup!
-  "Move a single ImageFace to another face group"
-  moveImageFace(imageFaceID: ID!, newFaceGroupID: ID!): ImageFace!
+  "Move a list of ImageFaces to another face group"
+  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
   "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
   recognizeUnlabeledFaces: [ImageFace!]!
 }

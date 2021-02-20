@@ -149,7 +149,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	return destinationFaceGroup, nil
 }
 
-func (r *mutationResolver) MoveImageFace(ctx context.Context, imageFaceID int, newFaceGroupID int) (*models.ImageFace, error) {
+func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error) {
 	panic("not implemented")
 }
 

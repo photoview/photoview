@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import React from 'react'
+import React, { useState } from 'react'
 import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
 import { ProtectedImage } from '../../../components/photoGallery/ProtectedMedia'
 import FaceGroupTitle from './FaceGroupTitle'
@@ -18,16 +18,29 @@ ImageFace.propTypes = {
 }
 
 const SingleFaceGroup = ({ faceGroup }) => {
+  const [presenting, setPresenting] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
+
   let mediaGallery = null
   if (faceGroup) {
     const media = faceGroup.imageFaces.map(x => x.media)
+
+    const nextImage = () =>
+      setActiveIndex(i => Math.min(i + 1, media.length - 1))
+
+    const previousImage = () => setActiveIndex(i => Math.max(i - 1, 0))
+
     mediaGallery = (
       <div>
         <PhotoGallery
           media={media}
           loading={false}
-          setPresenting={() => {}}
-          onSelectImage={() => {}}
+          presenting={presenting}
+          setPresenting={setPresenting}
+          onSelectImage={setActiveIndex}
+          activeIndex={activeIndex}
+          nextImage={nextImage}
+          previousImage={previousImage}
         />
       </div>
     )
