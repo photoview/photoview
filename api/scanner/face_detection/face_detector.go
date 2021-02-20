@@ -12,11 +12,12 @@ import (
 )
 
 type FaceDetector struct {
-	mutex   sync.Mutex
-	db      *gorm.DB
-	rec     *face.Recognizer
-	samples []face.Descriptor
-	cats    []int32
+	mutex           sync.Mutex
+	db              *gorm.DB
+	rec             *face.Recognizer
+	faceDescriptors []face.Descriptor
+	faceGroupIDs    []int32
+	imageFaceIDs    []int
 }
 
 var GlobalFaceDetector FaceDetector
@@ -30,22 +31,23 @@ func InitializeFaceDetector(db *gorm.DB) error {
 		return errors.Wrap(err, "initialize facedetect recognizer")
 	}
 
-	samples, cats, err := getSamplesFromDatabase(db)
+	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(db)
 	if err != nil {
 		return errors.Wrap(err, "get face detection samples from database")
 	}
 
 	GlobalFaceDetector = FaceDetector{
-		db:      db,
-		rec:     rec,
-		samples: samples,
-		cats:    cats,
+		db:              db,
+		rec:             rec,
+		faceDescriptors: faceDescriptors,
+		faceGroupIDs:    faceGroupIDs,
+		imageFaceIDs:    imageFaceIDs,
 	}
 
 	return nil
 }
 
-func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, cats []int32, err error) {
+func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, faceGroupIDs []int32, imageFaceIDs []int, err error) {
 
 	var imageFaces []*models.ImageFace
 
@@ -54,11 +56,13 @@ func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, cats []int3
 	}
 
 	samples = make([]face.Descriptor, len(imageFaces))
-	cats = make([]int32, len(imageFaces))
+	faceGroupIDs = make([]int32, len(imageFaces))
+	imageFaceIDs = make([]int, len(imageFaces))
 
 	for i, imgFace := range imageFaces {
 		samples[i] = face.Descriptor(imgFace.Descriptor)
-		cats[i] = int32(imgFace.FaceGroupID)
+		faceGroupIDs[i] = int32(imgFace.FaceGroupID)
+		imageFaceIDs[i] = imgFace.ID
 	}
 
 	return
@@ -150,10 +154,11 @@ func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, image
 		}
 	}
 
-	fd.samples = append(fd.samples, face.Descriptor)
-	fd.cats = append(fd.cats, int32(faceGroup.ID))
+	fd.faceDescriptors = append(fd.faceDescriptors, face.Descriptor)
+	fd.faceGroupIDs = append(fd.faceGroupIDs, int32(faceGroup.ID))
+	fd.imageFaceIDs = append(fd.imageFaceIDs, imageFace.ID)
 
-	fd.rec.SetSamples(fd.samples, fd.cats)
+	fd.rec.SetSamples(fd.faceDescriptors, fd.faceGroupIDs)
 	return nil
 }
 
@@ -161,19 +166,37 @@ func (fd *FaceDetector) MergeCategories(sourceID int32, destID int32) {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
-	for i := range fd.cats {
-		if fd.cats[i] == sourceID {
-			fd.cats[i] = destID
+	for i := range fd.faceGroupIDs {
+		if fd.faceGroupIDs[i] == sourceID {
+			fd.faceGroupIDs[i] = destID
+		}
+	}
+}
+
+func (fd *FaceDetector) MergeImageFaces(imageFaceIDs []int, destFaceGroupID int32) {
+	fd.mutex.Lock()
+	defer fd.mutex.Unlock()
+
+	for i := range fd.faceGroupIDs {
+		imageFaceID := fd.imageFaceIDs[i]
+
+		for _, id := range imageFaceIDs {
+			if imageFaceID == id {
+				fd.faceGroupIDs[i] = destFaceGroupID
+				break
+			}
 		}
 	}
 }
 
 func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) ([]*models.ImageFace, error) {
-	unrecognizedSamples := make([]face.Descriptor, 0)
-	unrecognizedCats := make([]int32, 0)
+	unrecognizedDescriptors := make([]face.Descriptor, 0)
+	unrecognizedFaceGroupIDs := make([]int32, 0)
+	unrecognizedImageFaceIDs := make([]int, 0)
 
-	newCats := make([]int32, 0)
-	newSamples := make([]face.Descriptor, 0)
+	newFaceGroupIDs := make([]int32, 0)
+	newDescriptors := make([]face.Descriptor, 0)
+	newImageFaceIDs := make([]int, 0)
 
 	var unlabeledFaceGroups []*models.FaceGroup
 
@@ -193,59 +216,64 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
-	for i := range fd.samples {
-		cat := fd.cats[i]
-		sample := fd.samples[i]
+	for i := range fd.faceDescriptors {
+		descriptor := fd.faceDescriptors[i]
+		faceGroupID := fd.faceGroupIDs[i]
+		imageFaceID := fd.imageFaceIDs[i]
 
-		catIsUnlabeled := false
+		isUnlabeled := false
 		for _, unlabeledFaceGroup := range unlabeledFaceGroups {
-			if cat == int32(unlabeledFaceGroup.ID) {
-				catIsUnlabeled = true
+			if faceGroupID == int32(unlabeledFaceGroup.ID) {
+				isUnlabeled = true
 				continue
 			}
 		}
 
-		if catIsUnlabeled {
-			unrecognizedCats = append(unrecognizedCats, cat)
-			unrecognizedSamples = append(unrecognizedSamples, sample)
+		if isUnlabeled {
+			unrecognizedFaceGroupIDs = append(unrecognizedFaceGroupIDs, faceGroupID)
+			unrecognizedDescriptors = append(unrecognizedDescriptors, descriptor)
+			unrecognizedImageFaceIDs = append(unrecognizedImageFaceIDs, imageFaceID)
 		} else {
-			newCats = append(newCats, cat)
-			newSamples = append(newSamples, sample)
+			newFaceGroupIDs = append(newFaceGroupIDs, faceGroupID)
+			newDescriptors = append(newDescriptors, descriptor)
+			newImageFaceIDs = append(newImageFaceIDs, imageFaceID)
 		}
 	}
 
-	fd.cats = newCats
-	fd.samples = newSamples
+	fd.faceGroupIDs = newFaceGroupIDs
+	fd.faceDescriptors = newDescriptors
+	fd.imageFaceIDs = newImageFaceIDs
 
 	updatedImageFaces := make([]*models.ImageFace, 0)
 
-	for i := range unrecognizedSamples {
-		cat := unrecognizedCats[i]
-		sample := unrecognizedSamples[i]
+	for i := range unrecognizedDescriptors {
+		descriptor := unrecognizedDescriptors[i]
+		faceGroupID := unrecognizedFaceGroupIDs[i]
+		imageFaceID := unrecognizedImageFaceIDs[i]
 
-		match := fd.classifyDescriptor(sample)
+		match := fd.classifyDescriptor(descriptor)
 
 		if match < 0 {
 			// still no match, we can readd it to the list
-			fd.cats = append(fd.cats, cat)
-			fd.samples = append(fd.samples, sample)
+			fd.faceGroupIDs = append(fd.faceGroupIDs, faceGroupID)
+			fd.faceDescriptors = append(fd.faceDescriptors, descriptor)
+			fd.imageFaceIDs = append(fd.imageFaceIDs, imageFaceID)
 		} else {
 			// found new match, update the database
 			var imageFace models.ImageFace
-			if err := tx.Model(&models.ImageFace{
-				Descriptor: models.FaceDescriptor(sample),
-			}).First(imageFace).Error; err != nil {
+			if err := tx.Model(&models.ImageFace{}).First(imageFace, imageFaceID).Error; err != nil {
 				return nil, err
 			}
 
-			if err := tx.Model(&imageFace).Update("face_group_id", int(cat)).Error; err != nil {
+			if err := tx.Model(&imageFace).Update("face_group_id", int(faceGroupID)).Error; err != nil {
 				return nil, err
 			}
 
 			updatedImageFaces = append(updatedImageFaces, &imageFace)
 
-			fd.cats = append(fd.cats, match)
-			fd.samples = append(fd.samples, sample)
+			fd.faceGroupIDs = append(fd.faceGroupIDs, match)
+			fd.faceDescriptors = append(fd.faceDescriptors, descriptor)
+			fd.imageFaceIDs = append(fd.imageFaceIDs, imageFaceID)
 		}
 	}
 

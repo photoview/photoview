@@ -1,18 +1,10 @@
-import React, { useState } from 'react'
-import PropTypes from 'prop-types'
-import {
-  Modal,
-  Button,
-  Header,
-  Table,
-  Input,
-  Pagination,
-} from 'semantic-ui-react'
-import FaceCircleImage from '../FaceCircleImage'
 import { gql, useMutation, useQuery } from '@apollo/client'
-import { MY_FACES_QUERY } from '../PeoplePage'
-import styled from 'styled-components'
+import PropTypes from 'prop-types'
+import React, { useState } from 'react'
 import { useHistory } from 'react-router-dom'
+import { Button, Modal } from 'semantic-ui-react'
+import { MY_FACES_QUERY } from '../PeoplePage'
+import SelectFaceGroupTable from './SelectFaceGroupTable'
 
 const COMBINE_FACES_MUTATION = gql`
   mutation($destID: ID!, $srcID: ID!) {
@@ -25,53 +17,9 @@ const COMBINE_FACES_MUTATION = gql`
   }
 `
 
-const FaceCircleWrapper = styled.div`
-  display: inline-block;
-  border-radius: 50%;
-  border: 2px solid
-    ${({ $selected }) => ($selected ? `#2185c9` : 'rgba(255,255,255,0)')};
-`
-
-const FaceGroupRowStyled = styled(Table.Row)``
-
-const FaceGroupCell = styled(Table.Cell)`
-  display: flex;
-  align-items: center;
-`
-
-const RowLabel = styled.span`
-  ${({ $selected }) => $selected && `font-weight: bold;`}
-  margin-left: 12px;
-`
-
-const FaceGroupRow = ({ faceGroup, faceSelected, setFaceSelected }) => {
-  return (
-    <FaceGroupRowStyled
-      $selected={faceSelected}
-      key={faceGroup.id}
-      onClick={setFaceSelected}
-    >
-      <FaceGroupCell>
-        <FaceCircleWrapper $selected={faceSelected}>
-          <FaceCircleImage imageFace={faceGroup.imageFaces[0]} size="50px" />
-        </FaceCircleWrapper>
-        <RowLabel $selected={faceSelected}>{faceGroup.label}</RowLabel>
-      </FaceGroupCell>
-    </FaceGroupRowStyled>
-  )
-}
-
-FaceGroupRow.propTypes = {
-  faceGroup: PropTypes.object.isRequired,
-  faceSelected: PropTypes.bool.isRequired,
-  setFaceSelected: PropTypes.func.isRequired,
-}
-
 const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
-  const [page, setPage] = useState(0)
-  const [searchValue, setSearchValue] = useState('')
-  const [selectedRow, setSelectedRow] = useState(null)
-  const PAGE_SIZE = 6
+  const [selectedFaceGroup, setSelectedFaceGroup] = useState(null)
+
   let history = useHistory()
   const { data } = useQuery(MY_FACES_QUERY)
   const [combineFacesMutation] = useMutation(COMBINE_FACES_MUTATION, {
@@ -88,39 +36,18 @@ const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
   if (open == false) return null
 
   const filteredFaceGroups =
-    data?.myFaceGroups
-      .filter(
-        x =>
-          searchValue == '' ||
-          (x.label && x.label.toLowerCase().includes(searchValue.toLowerCase()))
-      )
-      .filter(x => x.id != sourceFaceGroup?.id) ?? []
-
-  console.log(filteredFaceGroups)
+    data?.myFaceGroups.filter(x => x.id != sourceFaceGroup?.id) ?? []
 
   const mergeFaceGroups = () => {
-    const destFaceGroup = filteredFaceGroups[selectedRow]
-
     combineFacesMutation({
       variables: {
-        destID: destFaceGroup.id,
+        destID: selectedFaceGroup.id,
       },
     }).then(() => {
       setOpen(false)
-      history.push(`/people/${destFaceGroup.id}`)
+      history.push(`/people/${selectedFaceGroup.id}`)
     })
   }
-
-  const rows = filteredFaceGroups
-    .filter((_, i) => i >= page * PAGE_SIZE && i < (page + 1) * PAGE_SIZE)
-    .map((face, i) => (
-      <FaceGroupRow
-        key={face.id}
-        faceGroup={face}
-        faceSelected={selectedRow == i + page * PAGE_SIZE}
-        setFaceSelected={() => setSelectedRow(i + page * PAGE_SIZE)}
-      />
-    ))
 
   return (
     <Modal
@@ -129,52 +56,24 @@ const MergeFaceGroupsModal = ({ open, setOpen, sourceFaceGroup }) => {
       open={open}
     >
       <Modal.Header>Merge Face Groups</Modal.Header>
-      <Modal.Content>
+      <Modal.Content scrolling>
         <Modal.Description>
-          <Header>Select the destination face below</Header>
-          <Table selectable>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Face group</Table.HeaderCell>
-              </Table.Row>
-              <Table.Row>
-                <Table.HeaderCell>
-                  <Input
-                    value={searchValue}
-                    onChange={e => setSearchValue(e.target.value)}
-                    icon="search"
-                    placeholder="Search faces..."
-                    fluid
-                  />
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>{rows}</Table.Body>
-            <Table.Footer>
-              <Table.Row>
-                <Table.HeaderCell>
-                  <Pagination
-                    floated="right"
-                    firstItem={null}
-                    lastItem={null}
-                    // nextItem={null}
-                    // prevItem={null}
-                    activePage={page + 1}
-                    totalPages={data?.myFaceGroups.length / PAGE_SIZE}
-                    onPageChange={(_, { activePage }) => {
-                      setPage(Math.ceil(activePage) - 1)
-                    }}
-                  />
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Footer>
-          </Table>
+          <p>
+            All images within this face group will be merged into the selected
+            face group.
+          </p>
+          <SelectFaceGroupTable
+            title="Select the destination face"
+            faceGroups={filteredFaceGroups}
+            selectedFaceGroup={selectedFaceGroup}
+            setSelectedFaceGroup={setSelectedFaceGroup}
+          />
         </Modal.Description>
       </Modal.Content>
       <Modal.Actions>
         <Button onClick={() => setOpen(false)}>Cancel</Button>
         <Button
-          disabled={selectedRow == null}
+          disabled={selectedFaceGroup == null}
           content="Merge"
           labelPosition="right"
           icon="checkmark"

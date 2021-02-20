@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -88,6 +89,7 @@ func main() {
 		handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig),
 			handler.IntrospectionEnabled(devMode),
 			handler.WebsocketUpgrader(server.WebsocketUpgrader(devMode)),
+			handler.WebsocketKeepAliveDuration(time.Second*10),
 			handler.WebsocketInitFunc(auth.AuthWebsocketInit(db)),
 		),
 	)

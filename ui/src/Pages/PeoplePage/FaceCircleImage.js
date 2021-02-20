@@ -63,6 +63,10 @@ const CircleImageWrapper = styled.div`
 `
 
 const FaceCircleImage = ({ imageFace, selectable, size = '150px' }) => {
+  if (!imageFace) {
+    return null
+  }
+
   const rect = imageFace.rectangle
 
   let scale = Math.min(1 / (rect.maxX - rect.minX), 1 / (rect.maxY - rect.minY))
@@ -89,7 +93,7 @@ const FaceCircleImage = ({ imageFace, selectable, size = '150px' }) => {
 }
 
 FaceCircleImage.propTypes = {
-  imageFace: PropTypes.object.isRequired,
+  imageFace: PropTypes.object,
   selectable: PropTypes.bool,
   size: PropTypes.string,
 }

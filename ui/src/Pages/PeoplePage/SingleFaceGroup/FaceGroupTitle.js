@@ -5,6 +5,7 @@ import { Dropdown, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
 import MergeFaceGroupsModal from './MergeFaceGroupsModal'
+import MoveImageFacesModal from './MoveImageFacesModal'
 
 const TitleWrapper = styled.div`
   min-height: 3.5em;
@@ -31,6 +32,7 @@ const FaceGroupTitle = ({ faceGroup }) => {
   const [inputValue, setInputValue] = useState(faceGroup?.label ?? '')
   const inputRef = createRef()
   const [mergeModalOpen, setMergeModalOpen] = useState(false)
+  const [moveModalOpen, setMoveModalOpen] = useState(false)
 
   const [setGroupLabel, { loading: setLabelLoading }] = useMutation(
     SET_GROUP_LABEL_MUTATION,
@@ -94,10 +96,19 @@ const FaceGroupTitle = ({ faceGroup }) => {
               onClick={() => setEditLabel(true)}
             />
             <Dropdown.Item
-              icon="object ungroup"
+              icon="object group"
               text="Merge Face"
-              alt="Merge this group into another"
               onClick={() => setMergeModalOpen(true)}
+            />
+            <Dropdown.Item
+              icon="object ungroup"
+              text="Detach Faces"
+              onClick={() => setMergeModalOpen(true)}
+            />
+            <Dropdown.Item
+              icon="clone"
+              text="Move Faces"
+              onClick={() => setMoveModalOpen(true)}
             />
           </Dropdown.Menu>
         </TitleDropdown>
@@ -129,6 +140,11 @@ const FaceGroupTitle = ({ faceGroup }) => {
         open={mergeModalOpen}
         setOpen={setMergeModalOpen}
         sourceFaceGroup={faceGroup}
+      />
+      <MoveImageFacesModal
+        open={moveModalOpen}
+        setOpen={setMoveModalOpen}
+        faceGroup={faceGroup}
       />
     </>
   )
