@@ -51,7 +51,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 
 	imageFaceQuery := r.Database.
 		Joins("Media").
-		Where("media.album_id IN (?)", userAlbumIDs)
+		Where("Media.album_id IN (?)", userAlbumIDs)
 
 	var imageFaces []*models.ImageFace
 	if err := imageFaceQuery.Find(&imageFaces).Error; err != nil {
