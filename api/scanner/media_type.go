@@ -303,7 +303,7 @@ func getMediaType(path string) (*MediaType, error) {
 func isPathMedia(mediaPath string, cache *AlbumScannerCache) bool {
 	mediaType, err := cache.GetMediaType(mediaPath)
 	if err != nil {
-		ScannerError("%s (%s)", err, mediaPath)
+		ScannerError("isPathMedia (%s): %s", mediaPath, err)
 		return false
 	}
 
