@@ -155,15 +155,6 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 		return nil, errors.New("unauthorized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
-		return nil, err
-	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
-	}
-
 	userOwnedImageFaceIDs := make([]int, 0)
 	var destFaceGroup *models.FaceGroup
 
@@ -175,12 +166,8 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 			return err
 		}
 
-		var userOwnedImageFaces []*models.ImageFace
-		if err := tx.
-			Joins("JOIN media ON media.id = image_faces.media_id").
-			Where("media.album_id IN (?)", userAlbumIDs).
-			Where("image_faces.id IN (?)", imageFaceIDs).
-			Find(&userOwnedImageFaces).Error; err != nil {
+		userOwnedImageFaces, err := getUserOwnedImageFaces(tx, user, imageFaceIDs)
+		if err != nil {
 			return err
 		}
 
@@ -251,6 +238,49 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	return updatedImageFaces, nil
 }
 
+func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	userOwnedImageFaceIDs := make([]int, 0)
+	newFaceGroup := models.FaceGroup{}
+
+	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+
+		userOwnedImageFaces, err := getUserOwnedImageFaces(tx, user, imageFaceIDs)
+		if err != nil {
+			return err
+		}
+
+		for _, imageFace := range userOwnedImageFaces {
+			userOwnedImageFaceIDs = append(userOwnedImageFaceIDs, imageFace.ID)
+		}
+
+		if err := tx.Save(&newFaceGroup).Error; err != nil {
+			return err
+		}
+
+		if err := tx.
+			Model(&models.ImageFace{}).
+			Where("id IN (?)", userOwnedImageFaceIDs).
+			Update("face_group_id", newFaceGroup.ID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if transactionError != nil {
+		return nil, transactionError
+	}
+
+	face_detection.GlobalFaceDetector.MergeImageFaces(userOwnedImageFaceIDs, int32(newFaceGroup.ID))
+
+	return &newFaceGroup, nil
+}
+
 func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
 	if user.Admin {
 		var faceGroup models.FaceGroup
@@ -292,4 +322,26 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 	}
 
 	return &faceGroup, nil
+}
+
+func getUserOwnedImageFaces(tx *gorm.DB, user *models.User, imageFaceIDs []int) ([]*models.ImageFace, error) {
+	if err := user.FillAlbums(tx); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	var userOwnedImageFaces []*models.ImageFace
+	if err := tx.
+		Joins("JOIN media ON media.id = image_faces.media_id").
+		Where("media.album_id IN (?)", userAlbumIDs).
+		Where("image_faces.id IN (?)", imageFaceIDs).
+		Find(&userOwnedImageFaces).Error; err != nil {
+		return nil, err
+	}
+
+	return userOwnedImageFaces, nil
 }

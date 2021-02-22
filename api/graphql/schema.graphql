@@ -124,6 +124,8 @@ type Mutation {
   moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
   "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
   recognizeUnlabeledFaces: [ImageFace!]!
+  "Move a list of ImageFaces to a new face group"
+  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup!
 }
 
 type Subscription {

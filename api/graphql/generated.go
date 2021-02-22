@@ -142,6 +142,7 @@ type ComplexityRoot struct {
 		CreateUser                  func(childComplexity int, username string, password *string, admin bool) int
 		DeleteShareToken            func(childComplexity int, token string) int
 		DeleteUser                  func(childComplexity int, id int) int
+		DetachImageFaces            func(childComplexity int, imageFaceIDs []int) int
 		FavoriteMedia               func(childComplexity int, mediaID int, favorite bool) int
 		InitialSetupWizard          func(childComplexity int, username string, password string, rootPath string) int
 		MoveImageFaces              func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
@@ -297,6 +298,7 @@ type MutationResolver interface {
 	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error)
 	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
 	RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error)
+	DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error)
 }
 type QueryResolver interface {
 	SiteInfo(ctx context.Context) (*models.SiteInfo, error)
@@ -802,6 +804,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
+
+	case "Mutation.detachImageFaces":
+		if e.complexity.Mutation.DetachImageFaces == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_detachImageFaces_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DetachImageFaces(childComplexity, args["imageFaceIDs"].([]int)), true
 
 	case "Mutation.favoriteMedia":
 		if e.complexity.Mutation.FavoriteMedia == nil {
@@ -1655,6 +1669,8 @@ type Mutation {
   moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
   "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
   recognizeUnlabeledFaces: [ImageFace!]!
+  "Move a list of ImageFaces to a new face group"
+  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup!
 }
 
 type Subscription {
@@ -2051,6 +2067,21 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_detachImageFaces_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []int
+	if tmp, ok := rawArgs["imageFaceIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageFaceIDs"))
+		arg0, err = ec.unmarshalNID2ᚕintᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["imageFaceIDs"] = arg0
 	return args, nil
 }
 
@@ -5523,6 +5554,48 @@ func (ec *executionContext) _Mutation_recognizeUnlabeledFaces(ctx context.Contex
 	res := resTmp.([]*models.ImageFace)
 	fc.Result = res
 	return ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_detachImageFaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_detachImageFaces_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DetachImageFaces(rctx, args["imageFaceIDs"].([]int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.FaceGroup)
+	fc.Result = res
+	return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Notification_key(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -9624,6 +9697,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "recognizeUnlabeledFaces":
 			out.Values[i] = ec._Mutation_recognizeUnlabeledFaces(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "detachImageFaces":
+			out.Values[i] = ec._Mutation_detachImageFaces(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
