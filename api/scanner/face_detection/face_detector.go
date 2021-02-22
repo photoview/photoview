@@ -108,7 +108,7 @@ func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 }
 
 func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
-	return int32(fd.rec.ClassifyThreshold(descriptor, 0.3))
+	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
 }
 
 func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, imagePath string) error {
