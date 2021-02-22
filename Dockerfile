@@ -66,9 +66,16 @@ RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
 FROM debian:buster
+WORKDIR /app
+
+COPY api/data /app/data
+
+RUN apt-get update
+
+# Install runtime dependencies
+RUN apt-get install -y libdlib19
 
 # Install darktable for converting RAW images, and ffmpeg for encoding videos
-RUN apt-get update
 RUN apt-get install -y darktable; exit 0
 RUN apt-get install -y ffmpeg; exit 0
 RUN rm -rf /var/lib/apt/lists/*
