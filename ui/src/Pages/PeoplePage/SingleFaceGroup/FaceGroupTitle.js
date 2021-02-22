@@ -4,6 +4,7 @@ import React, { useState, useEffect, createRef } from 'react'
 import { Dropdown, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
+import DetachImageFacesModal from './DetachImageFacesModal'
 import MergeFaceGroupsModal from './MergeFaceGroupsModal'
 import MoveImageFacesModal from './MoveImageFacesModal'
 
@@ -33,6 +34,7 @@ const FaceGroupTitle = ({ faceGroup }) => {
   const inputRef = createRef()
   const [mergeModalOpen, setMergeModalOpen] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
+  const [detachModalOpen, setDetachModalOpen] = useState(false)
 
   const [setGroupLabel, { loading: setLabelLoading }] = useMutation(
     SET_GROUP_LABEL_MUTATION,
@@ -103,7 +105,7 @@ const FaceGroupTitle = ({ faceGroup }) => {
             <Dropdown.Item
               icon="object ungroup"
               text="Detach Faces"
-              onClick={() => setMergeModalOpen(true)}
+              onClick={() => setDetachModalOpen(true)}
             />
             <Dropdown.Item
               icon="clone"
@@ -144,6 +146,11 @@ const FaceGroupTitle = ({ faceGroup }) => {
       <MoveImageFacesModal
         open={moveModalOpen}
         setOpen={setMoveModalOpen}
+        faceGroup={faceGroup}
+      />
+      <DetachImageFacesModal
+        open={detachModalOpen}
+        setOpen={setDetachModalOpen}
         faceGroup={faceGroup}
       />
     </>
