@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Script to configure environment variables for Go compiler
+# to allow cross compilation
+
 : ${TARGETPLATFORM=}
 : ${TARGETOS=}
 : ${TARGETARCH=}
