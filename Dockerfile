@@ -37,7 +37,7 @@ RUN apt-get install -y \
 
 RUN echo $PATH
 
-COPY docker_go_wrapper.sh /go/bin/go
+COPY docker/go_wrapper.sh /go/bin/go
 RUN chmod +x /go/bin/go
 
 ENV CGO_ENABLED 1
