@@ -59,6 +59,8 @@ type Query {
   shareTokenValidatePassword(token: String!, password: String): Boolean!
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
+
+  myFaceGroups(paginate: Pagination): [FaceGroup!]!
 }
 
 type Mutation {
@@ -113,6 +115,17 @@ type Mutation {
 
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int!
+
+  "Assign a label to a face group, set label to null to remove the current one"
+  setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
+  "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
+  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup!
+  "Move a list of ImageFaces to another face group"
+  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
+  "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
+  recognizeUnlabeledFaces: [ImageFace!]!
+  "Move a list of ImageFaces to a new face group"
+  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup!
 }
 
 type Subscription {
@@ -262,6 +275,8 @@ type Media {
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!
+
+  faces: [ImageFace!]!
 }
 
 "EXIF metadata from the camera"
@@ -313,4 +328,24 @@ type TimelineGroup {
   media: [Media!]!
   mediaTotal: Int!
   date: Time!
+}
+
+type FaceGroup {
+  id: ID!
+  label: String
+  imageFaces: [ImageFace!]!
+}
+
+type ImageFace {
+  id: ID!
+  media: Media!
+  rectangle: FaceRectangle
+  faceGroup: FaceGroup!
+}
+
+type FaceRectangle {
+  minX: Float!
+  maxX: Float!
+  minY: Float!
+  maxY: Float!
 }

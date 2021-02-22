@@ -32,6 +32,8 @@ models:
     fields:
       exif:
         resolver: true
+      faces:
+        resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:
@@ -42,5 +44,14 @@ models:
     model: github.com/photoview/photoview/api/graphql/models.Album
   ShareToken:
     model: github.com/photoview/photoview/api/graphql/models.ShareToken
+  FaceGroup:
+    model: github.com/photoview/photoview/api/graphql/models.FaceGroup
+  ImageFace:
+    model: github.com/photoview/photoview/api/graphql/models.ImageFace
+    fields:
+      faceGroup:
+        resolver: true
+  FaceRectangle:
+    model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
   SiteInfo:
     model: github.com/photoview/photoview/api/graphql/models.SiteInfo

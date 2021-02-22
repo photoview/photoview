@@ -6,17 +6,13 @@ import (
 	"os"
 
 	"github.com/disintegration/imaging"
-	"github.com/pkg/errors"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/image_helpers"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"gorm.io/gorm"
 )
-
-type PhotoDimensions struct {
-	Width  int
-	Height int
-}
 
 func DecodeImage(imagePath string) (image.Image, error) {
 	file, err := os.Open(imagePath)
@@ -31,32 +27,6 @@ func DecodeImage(imagePath string) (image.Image, error) {
 	}
 
 	return image, nil
-}
-
-func PhotoDimensionsFromRect(rect image.Rectangle) PhotoDimensions {
-	return PhotoDimensions{
-		Width:  rect.Bounds().Max.X,
-		Height: rect.Bounds().Max.Y,
-	}
-}
-
-func (dimensions *PhotoDimensions) ThumbnailScale() PhotoDimensions {
-	aspect := float64(dimensions.Width) / float64(dimensions.Height)
-
-	var width, height int
-
-	if aspect > 1 {
-		width = 1024
-		height = int(1024 / aspect)
-	} else {
-		width = int(1024 * aspect)
-		height = 1024
-	}
-
-	return PhotoDimensions{
-		Width:  width,
-		Height: height,
-	}
 }
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
@@ -81,24 +51,6 @@ func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 	}
 
 	return nil
-}
-
-func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
-	photoFile, err := os.Open(imagePath)
-	if err != nil {
-		return nil, err
-	}
-	defer photoFile.Close()
-
-	config, _, err := image.DecodeConfig(photoFile)
-	if err != nil {
-		return nil, err
-	}
-
-	return &PhotoDimensions{
-		Width:  config.Width,
-		Height: config.Height,
-	}, nil
 }
 
 // ContentType reads the image to determine its content type
@@ -148,13 +100,13 @@ func (img *EncodeMediaData) EncodeHighRes(tx *gorm.DB, outputPath string) error 
 	return nil
 }
 
-func EncodeThumbnail(inputPath string, outputPath string) (*PhotoDimensions, error) {
+func EncodeThumbnail(inputPath string, outputPath string) (*image_helpers.PhotoDimensions, error) {
 	inputImage, err := DecodeImage(inputPath)
 	if err != nil {
 		return nil, err
 	}
 
-	dimensions := PhotoDimensionsFromRect(inputImage.Bounds())
+	dimensions := image_helpers.PhotoDimensionsFromRect(inputImage.Bounds())
 	dimensions = dimensions.ThumbnailScale()
 
 	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)

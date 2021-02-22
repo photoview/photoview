@@ -22,11 +22,25 @@ RUN npm run build -- --public-url $UI_PUBLIC_URL
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15-buster AS api
 
-# Install GCC cross compilers
+# Install G++/GCC cross compilers
+RUN dpkg --add-architecture arm64
+RUN dpkg --add-architecture armhf
 RUN apt-get update
-RUN apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+RUN apt-get install -y g++-aarch64-linux-gnu libc6-dev-arm64-cross g++-arm-linux-gnueabihf libc6-dev-armhf-cross
 
-COPY --from=tonistiigi/xx:golang / /
+# Install go-face dependencies
+RUN apt-get install -y \
+  libdlib-dev libdlib-dev:arm64 libdlib-dev:armhf \
+  libblas-dev libblas-dev:arm64 libblas-dev:armhf \
+  liblapack-dev liblapack-dev:arm64 liblapack-dev:armhf \
+  libjpeg62-turbo-dev libjpeg62-turbo-dev:arm64 libjpeg62-turbo-dev:armhf
+
+RUN echo $PATH
+
+COPY docker/go_wrapper.sh /go/bin/go
+RUN chmod +x /go/bin/go
+
+ENV CGO_ENABLED 1
 
 ARG TARGETPLATFORM
 RUN go env
@@ -38,8 +52,11 @@ WORKDIR /app
 COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
+# Build go-face
+RUN sed -i 's/-march=native//g' /go/pkg/mod/github.com/!kagami/go-face*/face.go
+RUN go install github.com/Kagami/go-face
+
 # Build go-sqlite3 dependency with CGO
-ENV CGO_ENABLED 1
 RUN go install github.com/mattn/go-sqlite3
 
 # Copy api source

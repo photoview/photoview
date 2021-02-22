@@ -41,3 +41,13 @@ func HandleError(message string, err error) PhotoviewError {
 		original: err,
 	}
 }
+
+// MediaCachePath returns the path for where the media cache is located on the file system
+func MediaCachePath() string {
+	photoCache := EnvMediaCachePath.GetValue()
+	if photoCache == "" {
+		photoCache = "./media_cache"
+	}
+
+	return photoCache
+}

@@ -164,6 +164,10 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.VideoMetadata{},
 		&models.ShareToken{},
 		&models.UserMediaData{},
+
+		// Face detection
+		&models.FaceGroup{},
+		&models.ImageFace{},
 	)
 
 	// v2.1.0 - Replaced by Media.CreatedAt

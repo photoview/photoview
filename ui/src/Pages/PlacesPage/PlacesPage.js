@@ -112,7 +112,7 @@ const MapPage = () => {
   }
 
   return (
-    <Layout>
+    <Layout title="Places">
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>
       </MapWrapper>

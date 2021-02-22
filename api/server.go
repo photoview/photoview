@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -15,6 +16,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
@@ -51,6 +53,10 @@ func main() {
 
 	scanner.InitializeExecutableWorkers()
 
+	if err := face_detection.InitializeFaceDetector(db); err != nil {
+		log.Panicf("Could not initialize face detector: %s\n", err)
+	}
+
 	rootRouter := mux.NewRouter()
 
 	rootRouter.Use(dataloader.Middleware(db))
@@ -83,6 +89,7 @@ func main() {
 		handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig),
 			handler.IntrospectionEnabled(devMode),
 			handler.WebsocketUpgrader(server.WebsocketUpgrader(devMode)),
+			handler.WebsocketKeepAliveDuration(time.Second*10),
 			handler.WebsocketInitFunc(auth.AuthWebsocketInit(db)),
 		),
 	)

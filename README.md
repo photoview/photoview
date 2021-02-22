@@ -35,6 +35,7 @@ Password: **demo**
 - **Sharing**. Albums, as well as individual media, can easily be shared with a public link, the link can optinally be password protected.
 - **Made for photography**. Photoview is built with photographers in mind, and thus supports **RAW** file formats, and **EXIF** parsing.
 - **Video support**. Many common video formats are supported. Videos will automatically be optimized for web.
+- **Face recognition**. Faces will automatically be detected in photos, and photos of the same person will be grouped together.
 - **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high resolution image has been fully loaded.
 - **Secure**. All media resources are protected with a cookie-token, all passwords are properly hashed, and the API uses a strict [CORS policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
@@ -107,6 +108,20 @@ The photos will have to be scanned before they show up, you can start a scan man
 ### Start API server
 
 Make sure [golang](https://golang.org/) is installed.
+
+Some C libraries are needed to compile the API, see [go-face requirements](https://github.com/Kagami/go-face#requirements) for more details.
+They can be installed as shown below:
+
+```sh
+# Ubuntu
+sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev
+# Debian
+sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev
+# macOS
+brew install dlib
+
+```
+
 Then run the following commands:
 
 ```bash

@@ -1,11 +1,14 @@
 package models
 
 import (
+	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +27,8 @@ type Media struct {
 	VideoMetadataID *int           `gorm:"index"`
 	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:CASCADE;"`
 	SideCarPath     *string
-	SideCarHash     *string `gorm:"unique"`
+	SideCarHash     *string      `gorm:"unique"`
+	Faces           []*ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
 
 	// Only used internally
 	CounterpartPath *string `gorm:"-"`
@@ -59,7 +63,7 @@ const (
 type MediaURL struct {
 	Model
 	MediaID     int          `gorm:"not null;index"`
-	Media       Media        `gorm:"constraint:OnDelete:CASCADE;"`
+	Media       *Media       `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaName   string       `gorm:"not null"`
 	Width       int          `gorm:"not null"`
 	Height      int          `gorm:"not null"`
@@ -78,6 +82,24 @@ func (p *MediaURL) URL() string {
 	}
 
 	return imageUrl.String()
+}
+
+func (p *MediaURL) CachedPath() (string, error) {
+	var cachedPath string
+
+	if p.Media == nil {
+		return "", errors.New("mediaURL.Media is nil")
+	}
+
+	if p.Purpose == PhotoThumbnail || p.Purpose == PhotoHighRes || p.Purpose == VideoThumbnail {
+		cachedPath = path.Join(utils.MediaCachePath(), strconv.Itoa(int(p.Media.AlbumID)), strconv.Itoa(int(p.MediaID)), p.MediaName)
+	} else if p.Purpose == MediaOriginal {
+		cachedPath = p.Media.Path
+	} else {
+		return "", errors.New(fmt.Sprintf("cannot determine cache path for purpose (%s)", p.Purpose))
+	}
+
+	return cachedPath, nil
 }
 
 func SanitizeMediaName(mediaName string) string {
