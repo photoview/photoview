@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"bufio"
 	"container/list"
 	"fmt"
 	"io/ioutil"
@@ -12,8 +13,31 @@ import (
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
+
+func getPhotoviewIgnore(ignorePath string) ([]string , error){
+	var photoviewIgnore []string
+
+	// Open .photoviewignore file, if exists
+	photoviewIgnoreFile, err := os.Open(path.Join(ignorePath, ".photoviewignore"))
+	if err != nil {
+		return photoviewIgnore, err
+	}
+
+	// Close file on exit
+	defer photoviewIgnoreFile.Close()
+
+	// Read and save .photoviewignore data
+   	scanner := bufio.NewScanner(photoviewIgnoreFile)
+   	for scanner.Scan() {
+		photoviewIgnore = append(photoviewIgnore, scanner.Text())
+		log.Printf("Ignore found: %s", scanner.Text())
+	}
+
+   	return photoviewIgnore, scanner.Err()
+}
 
 func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
 
@@ -36,6 +60,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	type scanInfo struct {
 		path   string
 		parent *models.Album
+		ignore []string
 	}
 
 	scanQueue := list.New()
@@ -52,6 +77,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 			scanQueue.PushBack(scanInfo{
 				path:   album.Path,
 				parent: nil,
+				ignore: nil,
 			})
 		}
 	}
@@ -64,12 +90,28 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 		albumPath := albumInfo.path
 		albumParent := albumInfo.parent
+		albumIgnore := albumInfo.ignore
 
 		// Read path
 		dirContent, err := ioutil.ReadDir(albumPath)
 		if err != nil {
 			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
+		}
+
+		// Skip this dir if in ignore list
+		ignorePaths := ignore.CompileIgnoreLines(albumIgnore...)
+		if (ignorePaths.MatchesPath(albumPath)) {
+			log.Printf("Skip, directroy %s is in ignore file", albumPath)
+			continue
+		}
+
+		// Update ignore dir list
+		photoviewIgnore, err := getPhotoviewIgnore(albumPath)
+		if err != nil {
+			log.Printf("Failed to get ignore file, err = %s", err)
+		} else {
+			albumIgnore = append(albumIgnore, photoviewIgnore...)
 		}
 
 		// Will become new album or album from db
@@ -153,6 +195,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
+					ignore: albumIgnore,
 				})
 			}
 		}
