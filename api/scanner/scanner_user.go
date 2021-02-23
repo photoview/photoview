@@ -101,7 +101,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 		// Skip this dir if in ignore list
 		ignorePaths := ignore.CompileIgnoreLines(albumIgnore...)
-		if (ignorePaths.MatchesPath(albumPath)) {
+		if (ignorePaths.MatchesPath(albumPath + "/")) {
 			log.Printf("Skip, directroy %s is in ignore file", albumPath)
 			continue
 		}
