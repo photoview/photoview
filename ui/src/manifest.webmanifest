@@ -8,15 +8,15 @@
   "background_color": "white",
   "icons": [
     {
-      "src": "./assets/logo192.png",
+      "src": "/assets/logo192.png",
       "sizes": "192x192"
     },
     {
-      "src": "./assets/logo512.png",
+      "src": "/assets/logo512.png",
       "sizes": "512x512"
     },
     {
-      "src": "./assets/photoview-logo.svg",
+      "src": "/assets/photoview-logo.svg",
       "sizes": "150x150"
     }
   ]
