@@ -1,22 +1,25 @@
 const fs = require('fs')
+const esbuild = require('esbuild')
 const bs = require('browser-sync').create()
 const historyApiFallback = require('connect-history-api-fallback')
 
 const production = process.env.NODE_ENV == 'production'
+const watchMode = process.argv[2] == 'watch'
 
-let builderPromise = require('esbuild').build({
+const esbuildOptions = {
   entryPoints: ['src/index.js'],
+  publicPath: '/',
   outdir: 'dist',
-  // format: 'esm',
+  format: 'esm',
   bundle: true,
   platform: 'browser',
   target: ['chrome58', 'firefox57', 'safari11', 'edge16'],
-  // splitting: true,
+  splitting: true,
   minify: production,
   sourcemap: !production,
   loader: {
     '.js': 'jsx',
-    '.svg': 'text',
+    '.svg': 'file',
     '.woff': 'file',
     '.woff2': 'file',
     '.ttf': 'file',
@@ -24,24 +27,35 @@ let builderPromise = require('esbuild').build({
     '.png': 'file',
   },
   define: {
+    'process.env.PHOTOVIEW_API_ENDPOINT': '"http://localhost:4001/"',
     'process.env.NODE_ENV': '"development"',
   },
-  incremental: true,
-})
+  incremental: watchMode,
+}
 
+fs.rmdirSync('dist/', {
+  recursive: true,
+})
+fs.mkdirSync('dist/')
 fs.copyFileSync('src/index.html', 'dist/index.html')
 
-bs.init({
-  server: {
-    baseDir: './dist',
-    middleware: [historyApiFallback()],
-  },
-  port: 1234,
-  open: false,
-})
+if (watchMode) {
+  let builderPromise = esbuild.build(esbuildOptions)
 
-bs.watch('src/**/*.js').on('change', async args => {
-  console.log('reloading', args)
-  builderPromise = (await builderPromise).rebuild()
-  bs.reload(args)
-})
+  bs.init({
+    server: {
+      baseDir: './dist',
+      middleware: [historyApiFallback()],
+    },
+    port: 1234,
+    open: false,
+  })
+
+  bs.watch('src/**/*.js').on('change', async args => {
+    console.log('reloading', args)
+    builderPromise = (await builderPromise).rebuild()
+    bs.reload(args)
+  })
+} else {
+  esbuild.buildSync(esbuildOptions)
+}

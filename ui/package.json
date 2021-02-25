@@ -23,8 +23,8 @@
     "url-join": "^4.0.1"
   },
   "scripts": {
-    "start": "parcel start src/index.html",
-    "build": "parcel build src/index.html --no-source-maps",
+    "start": "node build.js watch",
+    "build": "NODE_ENV=production node build.js",
     "test": "npm run lint && npm run jest",
     "lint": "eslint ./src --max-warnings 0 --cache",
     "jest": "jest"
