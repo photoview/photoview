@@ -72,9 +72,9 @@ COPY api/data /app/data
 
 RUN apt-get update \
   # Required dependencies
-  && apt-get install -y libdlib19 \
+  && apt-get install -y libdlib19 ffmpeg \
   # Optional dependencies
-  && apt-get install -y ffmpeg darktable; exit 0 \
+  && apt-get install -y darktable; exit 0 \
   # Cleanup
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 

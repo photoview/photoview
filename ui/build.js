@@ -64,4 +64,10 @@ if (watchMode) {
   })
 } else {
   esbuild.buildSync(esbuildOptions)
+
+  require('workbox-build').generateSW({
+    globDirectory: 'dist/',
+    globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
+    swDest: 'dist/service-worker.js',
+  })
 }
