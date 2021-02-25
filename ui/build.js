@@ -3,8 +3,17 @@ const esbuild = require('esbuild')
 const bs = require('browser-sync').create()
 const historyApiFallback = require('connect-history-api-fallback')
 
+require('dotenv').config()
+
 const production = process.env.NODE_ENV == 'production'
 const watchMode = process.argv[2] == 'watch'
+
+const ENVIRONMENT_VARIABLES = ['NODE_ENV', 'PHOTOVIEW_API_ENDPOINT']
+
+const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
+  acc[`process.env.${key}`] = `"${process.env[key]}"`
+  return acc
+}, {})
 
 const esbuildOptions = {
   entryPoints: ['src/index.js'],
@@ -26,10 +35,7 @@ const esbuildOptions = {
     '.eot': 'file',
     '.png': 'file',
   },
-  define: {
-    'process.env.PHOTOVIEW_API_ENDPOINT': '"http://localhost:4001/"',
-    'process.env.NODE_ENV': '"development"',
-  },
+  define: defineEnv,
   incremental: watchMode,
 }
 

@@ -43,6 +43,7 @@
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
     "browser-sync": "^2.26.14",
     "connect-history-api-fallback": "^1.6.0",
+    "dotenv": "^8.2.0",
     "esbuild": "^0.8.52",
     "eslint": "^7.15.0",
     "eslint-plugin-jest": "^24.1.3",
