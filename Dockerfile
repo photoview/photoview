@@ -14,28 +14,28 @@ WORKDIR /app
 # Download dependencies
 COPY ui/package*.json /app/
 RUN npm install
-COPY ui /app
 
 # Build frontend
+COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15-buster AS api
 
 # Install G++/GCC cross compilers
-RUN dpkg --add-architecture arm64
-RUN dpkg --add-architecture armhf
-RUN apt-get update
-RUN apt-get install -y g++-aarch64-linux-gnu libc6-dev-arm64-cross g++-arm-linux-gnueabihf libc6-dev-armhf-cross
-
-# Install go-face dependencies
-RUN apt-get install -y \
+RUN dpkg --add-architecture arm64 && dpkg --add-architecture armhf
+RUN apt-get update && apt-get install -y \
+  g++-aarch64-linux-gnu \
+  libc6-dev-arm64-cross \
+  g++-arm-linux-gnueabihf \
+  libc6-dev-armhf-cross \
+  # Install go-face dependencies
   libdlib-dev libdlib-dev:arm64 libdlib-dev:armhf \
   libblas-dev libblas-dev:arm64 libblas-dev:armhf \
   liblapack-dev liblapack-dev:arm64 liblapack-dev:armhf \
-  libjpeg62-turbo-dev libjpeg62-turbo-dev:arm64 libjpeg62-turbo-dev:armhf
-
-RUN echo $PATH
+  libjpeg62-turbo-dev libjpeg62-turbo-dev:arm64 libjpeg62-turbo-dev:armhf \
+  # Cleanup
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY docker/go_wrapper.sh /go/bin/go
 RUN chmod +x /go/bin/go
@@ -52,16 +52,16 @@ WORKDIR /app
 COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
-# Build go-face
+# Patch go-face
 RUN sed -i 's/-march=native//g' /go/pkg/mod/github.com/!kagami/go-face*/face.go
-RUN go install github.com/Kagami/go-face
 
-# Build go-sqlite3 dependency with CGO
-RUN go install github.com/mattn/go-sqlite3
+# Build dependencies that use CGO
+RUN go install \
+  github.com/mattn/go-sqlite3 \
+  github.com/Kagami/go-face
 
-# Copy api source
+# Copy and build api source
 COPY api /app
-
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
@@ -70,15 +70,13 @@ WORKDIR /app
 
 COPY api/data /app/data
 
-RUN apt-get update
-
-# Install runtime dependencies
-RUN apt-get install -y libdlib19
-
-# Install darktable for converting RAW images, and ffmpeg for encoding videos
-RUN apt-get install -y darktable; exit 0
-RUN apt-get install -y ffmpeg; exit 0
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+  # Required dependencies
+  && apt-get install -y libdlib19 \
+  # Optional dependencies
+  && apt-get install -y ffmpeg darktable; exit 0 \
+  # Cleanup
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/photoview /app/photoview

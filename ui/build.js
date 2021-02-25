@@ -17,7 +17,7 @@ const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
 
 const esbuildOptions = {
   entryPoints: ['src/index.js'],
-  publicPath: '/',
+  publicPath: process.env.UI_PUBLIC_URL || '/',
   outdir: 'dist',
   format: 'esm',
   bundle: true,
