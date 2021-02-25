@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs-extra')
 const esbuild = require('esbuild')
 const bs = require('browser-sync').create()
 const historyApiFallback = require('connect-history-api-fallback')
@@ -38,6 +38,9 @@ fs.rmdirSync('dist/', {
 })
 fs.mkdirSync('dist/')
 fs.copyFileSync('src/index.html', 'dist/index.html')
+fs.copyFileSync('src/manifest.webmanifest', 'dist/manifest.json')
+fs.copyFileSync('src/favicon.ico', 'dist/favicon.ico')
+fs.copySync('src/assets/', 'dist/assets/')
 
 if (watchMode) {
   let builderPromise = esbuild.build(esbuildOptions)
