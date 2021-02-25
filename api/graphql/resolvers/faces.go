@@ -63,6 +63,34 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 	return int(count), nil
 }
 
+func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGroup, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	faceGroupQuery := r.Database.
+		Joins("LEFT JOIN image_faces ON image_faces.id = face_groups.id").
+		Where("face_groups.id = ?", id).
+		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs))
+
+	var faceGroup models.FaceGroup
+	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
+		return nil, err
+	}
+
+	return &faceGroup, nil
+}
+
 func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -80,7 +108,6 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 
 	faceGroupQuery := r.Database.
 		Joins("LEFT JOIN image_faces ON image_faces.id = face_groups.id").
-		// Where("face_groups.id IN (?)", faceGroupIDs).
 		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END")
 
@@ -90,10 +117,6 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 	if err := faceGroupQuery.Find(&faceGroups).Error; err != nil {
 		return nil, err
 	}
-
-	// for _, faceGroup := range faceGroups {
-	// 	faceGroup.ImageFaces = faceGroupMap[faceGroup.ID]
-	// }
 
 	return faceGroups, nil
 }

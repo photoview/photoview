@@ -1,11 +1,66 @@
+import { gql, useQuery } from '@apollo/client'
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
+import PaginateLoader from '../../../components/PaginateLoader'
 import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
+import useScrollPagination from '../../../hooks/useScrollPagination'
 import FaceGroupTitle from './FaceGroupTitle'
 
-const SingleFaceGroup = ({ faceGroup }) => {
+export const SINGLE_FACE_GROUP = gql`
+  query singleFaceGroup($id: ID!, $limit: Int!, $offset: Int!) {
+    faceGroup(id: $id) {
+      id
+      label
+      imageFaces(paginate: { limit: $limit, offset: $offset }) {
+        id
+        rectangle {
+          minX
+          maxX
+          minY
+          maxY
+        }
+        media {
+          id
+          type
+          title
+          thumbnail {
+            url
+            width
+            height
+          }
+          highRes {
+            url
+          }
+          favorite
+        }
+      }
+    }
+  }
+`
+
+const SingleFaceGroup = ({ faceGroupID }) => {
+  const { data, error, loading, fetchMore } = useQuery(SINGLE_FACE_GROUP, {
+    variables: {
+      limit: 2,
+      offset: 0,
+      id: faceGroupID,
+    },
+  })
   const [presenting, setPresenting] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+
+  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
+    loading,
+    fetchMore,
+    data,
+    getItems: data => data.faceGroup.imageFaces,
+  })
+
+  const faceGroup = data?.faceGroup
+
+  if (error) {
+    return <div>{error.message}</div>
+  }
 
   let mediaGallery = null
   if (faceGroup) {
@@ -28,12 +83,16 @@ const SingleFaceGroup = ({ faceGroup }) => {
           nextImage={nextImage}
           previousImage={previousImage}
         />
+        <PaginateLoader
+          active={!finishedLoadingMore && !loading}
+          text="Loading more photos"
+        />
       </div>
     )
   }
 
   return (
-    <div>
+    <div ref={containerElem}>
       <FaceGroupTitle faceGroup={faceGroup} />
       {mediaGallery}
     </div>
@@ -41,7 +100,7 @@ const SingleFaceGroup = ({ faceGroup }) => {
 }
 
 SingleFaceGroup.propTypes = {
-  faceGroup: PropTypes.object,
+  faceGroupID: PropTypes.string,
 }
 
 export default SingleFaceGroup

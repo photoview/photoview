@@ -6,7 +6,7 @@ import PropTypes from 'prop-types'
 import Layout from '../../Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
-import { Loader } from 'semantic-ui-react'
+import PaginateLoader from '../../components/PaginateLoader'
 
 const albumQuery = gql`
   query albumQuery(
@@ -140,13 +140,10 @@ function AlbumPage({ match }) {
         setOrdering={setOrdering}
         ordering={{ orderBy, orderDirection }}
       />
-      <Loader
-        style={{ margin: '42px 0 24px 0' }}
+      <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        inline="centered"
-      >
-        Loading more media
-      </Loader>
+        text="Loading more media"
+      />
     </Layout>
   )
 }

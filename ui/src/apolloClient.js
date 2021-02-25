@@ -142,9 +142,15 @@ const memoryCache = new InMemoryCache({
         media: paginateCache(['onlyFavorites', 'order']),
       },
     },
+    FaceGroup: {
+      fields: {
+        imageFaces: paginateCache([]),
+      },
+    },
     Query: {
       fields: {
         myTimeline: paginateCache(['onlyFavorites']),
+        myFaceGroups: paginateCache([]),
       },
     },
   },

@@ -8,6 +8,7 @@ import { Loader } from 'semantic-ui-react'
 import useURLParameters from '../../hooks/useURLParameters'
 import { FavoritesCheckbox } from '../AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
+import PaginateLoader from '../PaginateLoader'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
@@ -208,13 +209,10 @@ const TimelineGallery = () => {
         setOnlyFavorites={setOnlyFavorites}
       />
       <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
-      <Loader
-        style={{ margin: '42px 0 24px 0' }}
+      <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        inline="centered"
-      >
-        Loading more media
-      </Loader>
+        text="Loading more media"
+      />
       {presenting && (
         <PresentView
           media={

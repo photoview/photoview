@@ -7,10 +7,12 @@ import { Link } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
 import { Button, Icon, Input } from 'semantic-ui-react'
 import FaceCircleImage from './FaceCircleImage'
+import useScrollPagination from '../../hooks/useScrollPagination'
+import PaginateLoader from '../../components/PaginateLoader'
 
 export const MY_FACES_QUERY = gql`
-  query myFaces {
-    myFaceGroups {
+  query myFaces($limit: Int!, $offset: Int!) {
+    myFaceGroups(paginate: { limit: $limit, offset: $offset }) {
       id
       label
       imageFaceCount
@@ -24,17 +26,11 @@ export const MY_FACES_QUERY = gql`
         }
         media {
           id
-          type
-          title
           thumbnail {
             url
             width
             height
           }
-          highRes {
-            url
-          }
-          favorite
         }
       }
     }
@@ -198,29 +194,31 @@ FaceGroup.propTypes = {
 const FaceGroupsWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;
+  margin-top: 24px;
 `
 
-const PeoplePage = ({ match }) => {
-  const { data, error } = useQuery(MY_FACES_QUERY)
+const PeopleGallery = () => {
+  const { data, error, loading, fetchMore } = useQuery(MY_FACES_QUERY, {
+    variables: {
+      limit: 50,
+      offset: 0,
+    },
+  })
 
   const [
     recognizeUnlabeled,
     { loading: recognizeUnlabeledLoading },
   ] = useMutation(RECOGNIZE_UNLABELED_FACES_MUTATION)
 
+  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
+    loading,
+    fetchMore,
+    data,
+    getItems: data => data.myFaceGroups,
+  })
+
   if (error) {
     return error.message
-  }
-
-  const faceGroup = match.params.person
-  if (faceGroup) {
-    return (
-      <Layout>
-        <SingleFaceGroup
-          faceGroup={data?.myFaceGroups?.find(x => x.id == faceGroup)}
-        />
-      </Layout>
-    )
   }
 
   let faces = null
@@ -232,7 +230,6 @@ const PeoplePage = ({ match }) => {
 
   return (
     <Layout title={'People'}>
-      <FaceGroupsWrapper>{faces}</FaceGroupsWrapper>
       <Button
         loading={recognizeUnlabeledLoading}
         disabled={recognizeUnlabeledLoading}
@@ -243,8 +240,26 @@ const PeoplePage = ({ match }) => {
         <Icon name="sync" />
         Recognize unlabeled faces
       </Button>
+      <FaceGroupsWrapper ref={containerElem}>{faces}</FaceGroupsWrapper>
+      <PaginateLoader
+        active={!finishedLoadingMore && !loading}
+        text="Loading more people"
+      />
     </Layout>
   )
+}
+
+const PeoplePage = ({ match }) => {
+  const faceGroup = match.params.person
+  if (faceGroup) {
+    return (
+      <Layout>
+        <SingleFaceGroup faceGroupID={faceGroup} />
+      </Layout>
+    )
+  } else {
+    return <PeopleGallery />
+  }
 }
 
 PeoplePage.propTypes = {

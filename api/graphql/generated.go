@@ -175,6 +175,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Album                      func(childComplexity int, id int) int
+		FaceGroup                  func(childComplexity int, id int) int
 		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int) int
 		MediaList                  func(childComplexity int, ids []int) int
@@ -322,6 +323,7 @@ type QueryResolver interface {
 	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error)
+	FaceGroup(ctx context.Context, id int) (*models.FaceGroup, error)
 }
 type ShareTokenResolver interface {
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
@@ -1073,6 +1075,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
 
+	case "Query.faceGroup":
+		if e.complexity.Query.FaceGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Query_faceGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.FaceGroup(childComplexity, args["id"].(int)), true
+
 	case "Query.mapboxToken":
 		if e.complexity.Query.MapboxToken == nil {
 			break
@@ -1624,6 +1638,7 @@ type Query {
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 
   myFaceGroups(paginate: Pagination): [FaceGroup!]!
+  faceGroup(id: ID!): FaceGroup!
 }
 
 type Mutation {
@@ -2465,6 +2480,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_faceGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -6567,6 +6597,48 @@ func (ec *executionContext) _Query_myFaceGroups(ctx context.Context, field graph
 	return ec.marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_faceGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_faceGroup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().FaceGroup(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.FaceGroup)
+	fc.Result = res
+	return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10088,6 +10160,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_myFaceGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "faceGroup":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_faceGroup(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
