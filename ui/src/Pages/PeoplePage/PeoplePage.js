@@ -13,7 +13,8 @@ export const MY_FACES_QUERY = gql`
     myFaceGroups {
       id
       label
-      imageFaces {
+      imageFaceCount
+      imageFaces(paginate: { limit: 1 }) {
         id
         rectangle {
           minX
@@ -125,7 +126,7 @@ const FaceDetails = ({ group }) => {
         labeled={!!group.label}
         onClick={() => setEditLabel(true)}
       >
-        <FaceImagesCount>{group.imageFaces.length}</FaceImagesCount>
+        <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
         <FaceLabel>{group.label ?? 'Unlabeled'}</FaceLabel>
         <EditIcon name="pencil" />
       </FaceDetailsButton>

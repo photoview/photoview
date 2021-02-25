@@ -46,6 +46,9 @@ models:
     model: github.com/photoview/photoview/api/graphql/models.ShareToken
   FaceGroup:
     model: github.com/photoview/photoview/api/graphql/models.FaceGroup
+    fields:
+      imageFaces:
+        resolver: true
   ImageFace:
     model: github.com/photoview/photoview/api/graphql/models.ImageFace
     fields:

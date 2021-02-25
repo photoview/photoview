@@ -15,8 +15,16 @@ type imageFaceResolver struct {
 	*Resolver
 }
 
+type faceGroupResolver struct {
+	*Resolver
+}
+
 func (r *Resolver) ImageFace() api.ImageFaceResolver {
 	return imageFaceResolver{r}
+}
+
+func (r *Resolver) FaceGroup() api.FaceGroupResolver {
+	return faceGroupResolver{r}
 }
 
 func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace) (*models.FaceGroup, error) {
@@ -34,6 +42,27 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 	return &faceGroup, nil
 }
 
+func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup, paginate *models.Pagination) ([]*models.ImageFace, error) {
+	query := r.Database.Joins("Media").Where("face_group_id = ?", obj.ID)
+	query = models.FormatSQL(query, nil, paginate)
+
+	var imageFaces []*models.ImageFace
+	if err := query.Find(&imageFaces).Error; err != nil {
+		return nil, err
+	}
+
+	return imageFaces, nil
+}
+
+func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceGroup) (int, error) {
+	var count int64
+	if err := r.Database.Model(&models.ImageFace{}).Where("face_group_id = ?", obj.ID).Count(&count).Error; err != nil {
+		return -1, err
+	}
+
+	return int(count), nil
+}
+
 func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -49,47 +78,22 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		userAlbumIDs[i] = album.ID
 	}
 
-	imageFaceQuery := r.Database.
-		Joins("Media").
-		Where("Media.album_id IN (?)", userAlbumIDs)
-
-	var imageFaces []*models.ImageFace
-	if err := imageFaceQuery.Find(&imageFaces).Error; err != nil {
-		return nil, err
-	}
-
-	faceGroupMap := make(map[int][]models.ImageFace)
-	for _, face := range imageFaces {
-		_, found := faceGroupMap[face.FaceGroupID]
-
-		if found {
-			faceGroupMap[face.FaceGroupID] = append(faceGroupMap[face.FaceGroupID], *face)
-		} else {
-			faceGroupMap[face.FaceGroupID] = make([]models.ImageFace, 1)
-			faceGroupMap[face.FaceGroupID][0] = *face
-		}
-	}
-
-	faceGroupIDs := make([]int, len(faceGroupMap))
-	i := 0
-	for groupID := range faceGroupMap {
-		faceGroupIDs[i] = groupID
-		i++
-	}
-
 	faceGroupQuery := r.Database.
 		Joins("LEFT JOIN image_faces ON image_faces.id = face_groups.id").
-		Where("face_groups.id IN (?)", faceGroupIDs).
+		// Where("face_groups.id IN (?)", faceGroupIDs).
+		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END")
+
+	faceGroupQuery = models.FormatSQL(faceGroupQuery, nil, paginate)
 
 	var faceGroups []*models.FaceGroup
 	if err := faceGroupQuery.Find(&faceGroups).Error; err != nil {
 		return nil, err
 	}
 
-	for _, faceGroup := range faceGroups {
-		faceGroup.ImageFaces = faceGroupMap[faceGroup.ID]
-	}
+	// for _, faceGroup := range faceGroups {
+	// 	faceGroup.ImageFaces = faceGroupMap[faceGroup.ID]
+	// }
 
 	return faceGroups, nil
 }

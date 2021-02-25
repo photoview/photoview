@@ -333,7 +333,8 @@ type TimelineGroup {
 type FaceGroup {
   id: ID!
   label: String
-  imageFaces: [ImageFace!]!
+  imageFaces(paginate: Pagination): [ImageFace!]!
+  imageFaceCount: Int!
 }
 
 type ImageFace {
