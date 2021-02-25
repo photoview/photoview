@@ -33,10 +33,7 @@ const esbuildOptions = {
   incremental: watchMode,
 }
 
-fs.rmdirSync('dist/', {
-  recursive: true,
-})
-fs.mkdirSync('dist/')
+fs.emptyDirSync('dist/')
 fs.copyFileSync('src/index.html', 'dist/index.html')
 fs.copyFileSync('src/manifest.webmanifest', 'dist/manifest.json')
 fs.copyFileSync('src/favicon.ico', 'dist/favicon.ico')
