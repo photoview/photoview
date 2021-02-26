@@ -108,8 +108,8 @@ Required |Variable | Default | Notes
 :heavy_check_mark: | PHOTOVIEW_DATABASE_DRIVER | "" | Driver to use for database- ie. "mysql"
 :heavy_check_mark: | PHOTOVIEW_LISTEN_PORT | "" | Port that photoview listens on
 :heavy_check_mark: | PHOTOVIEW_LISTEN_IP | "" | IP that photoview listens on 
+  |  |  |
 :eight_spoked_asterisk: | **_Cache related variables_** | :eight_spoked_asterisk: | :eight_spoked_asterisk:
----------|---------|---------|------
 :heavy_check_mark: | PHOTOVIEW_PUBLIC_ENDPOINT | "" | URL where endpoint can be accessed. Specify FQDN with proper protocol- ie. http://localhost:8000 or https://photos.example.com
 :white_check_mark: | PHOTOVIEW_MEDIA_CACHE | ./photo_cache | Filepath for where to store generated media such as thumbnails and optimized videos
 :white_check_mark: | PHOTOVIEW_MAPBOX_TOKEN | "" | To enable map related features, you need to create a mapbox token. A token can be generated for free at https://account.mapbox.com/access-tokens/ It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
