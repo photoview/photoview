@@ -12,30 +12,29 @@ import (
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 
-	"gorm.io/driver/mysql"
+	"github.com/go-sql-driver/mysql"
+	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func getMysqlAddress() (*url.URL, error) {
+func getMysqlAddress() (string, error) {
 	addressString := utils.EnvMysqlURL.GetValue()
 	if addressString == "" {
-		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
+		return "", errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
 	}
 
-	address, err := url.Parse(addressString)
+	config, err := mysql.ParseDSN(addressString)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse mysql url")
+		return "", errors.Wrap(err, "Could not parse mysql url")
 	}
 
-	queryValues := address.Query()
-	queryValues.Add("multiStatements", "true")
-	queryValues.Add("parseTime", "true")
+	config.MultiStatements = true
+	config.ParseTime = true
 
-	address.RawQuery = queryValues.Encode()
-	return address, nil
+	return config.FormatDSN(), nil
 }
 
 func getPostgresAddress() (*url.URL, error) {
@@ -83,7 +82,7 @@ func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
 			return nil, err
 		}
 		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
-		databaseDialect = mysql.Open(mysqlAddress.String())
+		databaseDialect = gorm_mysql.Open(mysqlAddress)
 
 	case drivers.DatabaseDriverSqlite:
 		sqliteAddress, err := getSqliteAddress()

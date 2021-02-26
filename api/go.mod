@@ -7,6 +7,7 @@ require (
 	github.com/Kagami/go-face v0.0.0-20200825065730-3dd2d74dccfb
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/disintegration/imaging v1.6.2
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
