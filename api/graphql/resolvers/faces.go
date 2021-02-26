@@ -91,7 +91,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 		Model(&models.ImageFace{}).
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
-		Where("media.album_id IN (?)", userAlbumIDs)
+		Where("Media.album_id IN (?)", userAlbumIDs)
 
 	var count int64
 	if err := query.Count(&count).Error; err != nil {
