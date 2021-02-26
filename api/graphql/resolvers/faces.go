@@ -79,7 +79,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 	}
 
 	faceGroupQuery := r.Database.
-		Joins("LEFT JOIN image_faces ON image_faces.id = face_groups.id").
+		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
 		Where("face_groups.id = ?", id).
 		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs))
 
@@ -107,8 +107,8 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 	}
 
 	faceGroupQuery := r.Database.
-		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
+		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
+		Where("image_faces.media_id IN (?)", r.Database.Select("media.id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
 		Group("image_faces.face_group_id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
 		Order("COUNT(image_faces.id) DESC")

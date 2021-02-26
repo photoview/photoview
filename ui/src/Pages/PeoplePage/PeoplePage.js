@@ -11,7 +11,7 @@ import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 
 export const MY_FACES_QUERY = gql`
-  query myFaces($limit: Int!, $offset: Int!) {
+  query myFaces($limit: Int, $offset: Int) {
     myFaceGroups(paginate: { limit: $limit, offset: $offset }) {
       id
       label

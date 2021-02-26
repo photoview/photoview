@@ -41,7 +41,7 @@ export const SINGLE_FACE_GROUP = gql`
 const SingleFaceGroup = ({ faceGroupID }) => {
   const { data, error, loading, fetchMore } = useQuery(SINGLE_FACE_GROUP, {
     variables: {
-      limit: 2,
+      limit: 200,
       offset: 0,
       id: faceGroupID,
     },
