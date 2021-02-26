@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useQuery, gql } from '@apollo/client'
 import styled from 'styled-components'
 
+// Will be bundled to dist/src/Pages/PlacesPage/PlacesPage.css
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import Layout from '../../Layout'
 import { makeUpdateMarkers } from './mapboxHelperFunctions'
 import MapPresentMarker from './MapPresentMarker'
+import { Helmet } from 'react-helmet'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -35,7 +37,7 @@ const MapPage = () => {
 
   useEffect(() => {
     async function loadMapboxLibrary() {
-      const mapbox = await import('mapbox-gl')
+      const mapbox = (await import('mapbox-gl')).default
       setMapboxLibrary(mapbox)
     }
     loadMapboxLibrary()
@@ -113,6 +115,9 @@ const MapPage = () => {
 
   return (
     <Layout title="Places">
+      <Helmet>
+        <link rel="stylesheet" href="/src/Pages/PlacesPage/PlacesPage.css" />
+      </Helmet>
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>
       </MapWrapper>
