@@ -101,7 +101,7 @@ The photos will have to be scanned before they show up, you can start a scan man
 ## Available Environment Variables
 > This section describes all available environment variables that can be configured.
 
-> database related
+#### database related
 
 Required |Variable | Default | Notes 
 ---------|---------|---------|------
@@ -110,7 +110,7 @@ Required |Variable | Default | Notes
 :heavy_check_mark: | PHOTOVIEW_LISTEN_PORT | "" | Port that photoview listens on
 :heavy_check_mark: | PHOTOVIEW_LISTEN_IP | "" | IP that photoview listens on 
 
-> cache related
+#### cache related
 
 Required |Variable | Default | Notes 
 ---------|---------|---------|------
