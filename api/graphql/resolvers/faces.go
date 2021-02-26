@@ -43,7 +43,25 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 }
 
 func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup, paginate *models.Pagination) ([]*models.ImageFace, error) {
-	query := r.Database.Joins("Media").Where("face_group_id = ?", obj.ID)
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	if err := user.FillAlbums(r.Database); err != nil {
+		return nil, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	query := r.Database.
+		Joins("Media").
+		Where("face_group_id = ?", obj.ID).
+		Where("media.album_id IN (?)", userAlbumIDs)
+
 	query = models.FormatSQL(query, nil, paginate)
 
 	var imageFaces []*models.ImageFace
@@ -55,8 +73,28 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 }
 
 func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceGroup) (int, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return -1, errors.New("unauthorized")
+	}
+
+	if err := user.FillAlbums(r.Database); err != nil {
+		return -1, err
+	}
+
+	userAlbumIDs := make([]int, len(user.Albums))
+	for i, album := range user.Albums {
+		userAlbumIDs[i] = album.ID
+	}
+
+	query := r.Database.
+		Model(&models.ImageFace{}).
+		Joins("Media").
+		Where("face_group_id = ?", obj.ID).
+		Where("media.album_id IN (?)", userAlbumIDs)
+
 	var count int64
-	if err := r.Database.Model(&models.ImageFace{}).Where("face_group_id = ?", obj.ID).Count(&count).Error; err != nil {
+	if err := query.Count(&count).Error; err != nil {
 		return -1, err
 	}
 
