@@ -60,7 +60,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 	query := r.Database.
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
-		Where("media.album_id IN (?)", userAlbumIDs)
+		Where("Media.album_id IN (?)", userAlbumIDs)
 
 	query = models.FormatSQL(query, nil, paginate)
 
