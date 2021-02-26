@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
@@ -16,6 +17,21 @@ import (
 	"github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
+
+func isFileIgnore(ignoreEntry string) (bool){
+	if (strings.Contains(ignoreEntry, "/")){
+		// Folder ignore if entry contains '/'
+		return false
+	}
+
+	if (strings.Contains(ignoreEntry, ".")){
+		// File ignore if entry contains '.' and not '/'
+		return true
+	}
+
+	// Otherwise folder ignore entry
+	return false
+}
 
 func getPhotoviewIgnore(ignorePath string) ([]string , error){
 	var photoviewIgnore []string
@@ -37,6 +53,20 @@ func getPhotoviewIgnore(ignorePath string) ([]string , error){
 	}
 
    	return photoviewIgnore, scanner.Err()
+}
+
+func getIgnoreFiles(ignoreAll []string) (string) {
+	var ignoreFiles []string
+
+	if (len(ignoreAll) > 0) {
+		for _, ignoreItem := range ignoreAll {
+			if (isFileIgnore(ignoreItem)) {
+				ignoreFiles = append(ignoreFiles, ignoreItem)
+			}
+		}
+	}
+
+	return strings.Join(ignoreFiles, ",")
 }
 
 func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
@@ -145,6 +175,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 					Title:         albumTitle,
 					ParentAlbumID: albumParentID,
 					Path:          albumPath,
+					IgnoreFiles:   getIgnoreFiles(albumIgnore),
 				}
 
 				if err := tx.Create(&album).Error; err != nil {
@@ -169,7 +200,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 						return err
 					}
 				}
-
+				album.IgnoreFiles = getIgnoreFiles(albumIgnore)
 			}
 
 			userAlbums = append(userAlbums, album)

@@ -3,7 +3,10 @@ package scanner
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -136,8 +139,28 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 		return nil, err
 	}
 
+	// Get file ignores
+	var ignores []string
+	if (len(album.IgnoreFiles) > 0) {
+		ignores = strings.Split(album.IgnoreFiles, ",")
+	}
+
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
+
+		skipFile := false
+		for _, ignore := range ignores {
+			match, _ := filepath.Match(ignore, item.Name())
+			if (match) {
+				// Skip file if it matches an ignore entry
+				log.Printf("Ignore match, ignore = %s, file = %s\n", ignore, item.Name())
+				skipFile = true
+				break
+			}
+		}
+		if (skipFile) {
+			continue
+		}
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
 			// Skip the JPEGs that are compressed version of raw files
