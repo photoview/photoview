@@ -11,7 +11,9 @@ const watchMode = process.argv[2] == 'watch'
 const ENVIRONMENT_VARIABLES = ['NODE_ENV', 'PHOTOVIEW_API_ENDPOINT']
 
 const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
-  acc[`process.env.${key}`] = `"${process.env[key]}"`
+  if (process.env[key]) {
+    acc[`process.env.${key}`] = `"${process.env[key]}"`
+  }
   return acc
 }, {})
 
