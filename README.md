@@ -103,7 +103,7 @@ The photos will have to be scanned before they show up, you can start a scan man
 
 Required |Variable | Default | Notes 
 ---------|---------|---------|------
-|:eight_pointed_black_star: |*_Database related_* | :eight_pointed_black_star: |:eight_pointed_black_star:     
+|:eight_pointed_black_star: |**_Database related variables_** | :eight_pointed_black_star: |:eight_pointed_black_star:     
 :heavy_check_mark: | PHOTOVIEW_MYSQL_URL | "" | The URL of the MYSQL database to connect to. Formatting [here](https://github.com/go-sql-driver/mysql#dsn-data-source-name)
 :heavy_check_mark: | PHOTOVIEW_DATABASE_DRIVER | "" | Driver to use for database- ie. "mysql"
 :heavy_check_mark: | PHOTOVIEW_LISTEN_PORT | "" | Port that photoview listens on
