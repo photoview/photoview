@@ -103,7 +103,7 @@ func main() {
 	shouldServeUI := utils.ShouldServeUI()
 
 	if shouldServeUI {
-		spa := routes.NewSpaHandler("/ui", "index.html")
+		spa := routes.NewSpaHandler(utils.UIPath(), "index.html")
 		rootRouter.PathPrefix("/").Handler(spa)
 	}
 

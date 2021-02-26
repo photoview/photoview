@@ -9,6 +9,7 @@ type EnvironmentVariable string
 const (
 	EnvDevelopmentMode EnvironmentVariable = "PHOTOVIEW_DEVELOPMENT_MODE"
 	EnvServeUI         EnvironmentVariable = "PHOTOVIEW_SERVE_UI"
+	EnvUIPath          EnvironmentVariable = "PHOTOVIEW_UI_PATH"
 	EnvMediaCachePath  EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
 )
 
@@ -48,4 +49,13 @@ func ShouldServeUI() bool {
 // and should thus print debug informations and enable other features related to developing.
 func DevelopmentMode() bool {
 	return EnvDevelopmentMode.GetValue() == "1"
+}
+
+// UIPath returns the value from where the static UI files are located if SERVE_UI=1
+func UIPath() string {
+	if path := EnvUIPath.GetValue(); path != "" {
+		return path
+	}
+
+	return "./ui"
 }
