@@ -68,6 +68,23 @@ func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, faceGroupID
 	return
 }
 
+// ReloadFacesFromDatabase replaces the in-memory face descriptors with the ones in the database
+func (fd *FaceDetector) ReloadFacesFromDatabase() error {
+	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(fd.db)
+	if err != nil {
+		return err
+	}
+
+	fd.mutex.Lock()
+	defer fd.mutex.Unlock()
+
+	fd.faceDescriptors = faceDescriptors
+	fd.faceGroupIDs = faceGroupIDs
+	fd.imageFaceIDs = imageFaceIDs
+
+	return nil
+}
+
 // DetectFaces finds the faces in the given image and saves them to the database
 func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 	if err := fd.db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {

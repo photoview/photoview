@@ -12,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -357,6 +358,10 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 			// Delete albums from database
 			if err := tx.Delete(&models.Album{}, "id IN (?)", deletedAlbumIDs).Error; err != nil {
 				deletedAlbumIDs = nil
+				return err
+			}
+
+			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(); err != nil {
 				return err
 			}
 		}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -48,6 +49,11 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	if len(mediaIDs) > 0 {
 		if err := db.Delete(models.Media{}, mediaIDs).Error; err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
+		}
+
+		// Reload faces after deleting media
+		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(); err != nil {
+			deleteErrors = append(deleteErrors, errors.Wrap(err, "reload faces from database"))
 		}
 	}
 
@@ -113,6 +119,11 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 
 	if err != nil {
 		ScannerError("Could not delete old albums from database:\n%s\n", err)
+		deleteErrors = append(deleteErrors, err)
+	}
+
+	// Reload faces after deleting albums
+	if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(); err != nil {
 		deleteErrors = append(deleteErrors, err)
 	}
 
