@@ -45,43 +45,37 @@ func ApiListenUrl() *url.URL {
 }
 
 func ApiEndpointUrl() *url.URL {
-	apiEndpointStr := EnvAPIEndpoint.GetValue()
+	var apiEndpointStr string
 
 	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
-		apiEndpointStr = EnvPublicEndpoint.GetValue()
-		if apiEndpointStr == "" {
-			apiEndpointStr = "/"
-		}
+		apiEndpointStr = "/"
+	} else {
+		apiEndpointStr = EnvAPIEndpoint.GetValue()
 	}
 
-	apiEndpointUrl, err := url.Parse(apiEndpointStr)
+	apiEndpointURL, err := url.Parse(apiEndpointStr)
 	if err != nil {
 		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue())
 	}
 
 	if shouldServeUI {
-		apiEndpointUrl.Path = path.Join(apiEndpointUrl.Path, "/api")
+		apiEndpointURL.Path = path.Join(apiEndpointURL.Path, "/api")
 	}
 
-	return apiEndpointUrl
+	return apiEndpointURL
 }
 
 func UiEndpointUrl() *url.URL {
-	uiEndpointStr := EnvUIEndpoint.GetValue()
-
 	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
-		uiEndpointStr = EnvPublicEndpoint.GetValue()
-		if uiEndpointStr == "" {
-			return nil
-		}
+		return nil
 	}
 
-	uiEndpointUrl, err := url.Parse(uiEndpointStr)
+	uiEndpointURL, err := url.Parse(EnvUIEndpoint.GetValue())
 	if err != nil {
 		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvUIEndpoint.GetName(), EnvUIEndpoint.GetValue())
 	}
 
-	return uiEndpointUrl
+	return uiEndpointURL
 }

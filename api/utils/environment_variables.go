@@ -15,11 +15,10 @@ const (
 
 // Network related
 const (
-	EnvListenIP       EnvironmentVariable = "PHOTOVIEW_LISTEN_IP"
-	EnvListenPort     EnvironmentVariable = "PHOTOVIEW_LISTEN_PORT"
-	EnvAPIEndpoint    EnvironmentVariable = "PHOTOVIEW_API_ENDPOINT"
-	EnvUIEndpoint     EnvironmentVariable = "PHOTOVIEW_UI_ENDPOINT"
-	EnvPublicEndpoint EnvironmentVariable = "PHOTOVIEW_PUBLIC_ENDPOINT"
+	EnvListenIP    EnvironmentVariable = "PHOTOVIEW_LISTEN_IP"
+	EnvListenPort  EnvironmentVariable = "PHOTOVIEW_LISTEN_PORT"
+	EnvAPIEndpoint EnvironmentVariable = "PHOTOVIEW_API_ENDPOINT"
+	EnvUIEndpoint  EnvironmentVariable = "PHOTOVIEW_UI_ENDPOINT"
 )
 
 // Database related

@@ -117,6 +117,8 @@ func main() {
 
 		if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
 			log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+		} else {
+			log.Println("Photoview UI public endpoint ready at /")
 		}
 
 		if !shouldServeUI {
