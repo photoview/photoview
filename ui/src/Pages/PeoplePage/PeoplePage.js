@@ -56,6 +56,7 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
 
 const FaceDetailsButton = styled.button`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
+  width: 150px;
   margin: 12px auto 24px;
   text-align: center;
   display: block;

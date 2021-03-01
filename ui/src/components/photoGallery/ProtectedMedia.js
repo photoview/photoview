@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 const getProtectedUrl = url => {
   if (url == null) return null
 
-  const imgUrl = new URL(url)
+  const imgUrl = new URL(url, location.origin)
 
   const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
   if (tokenRegex) {

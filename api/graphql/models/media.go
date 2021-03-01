@@ -74,14 +74,14 @@ type MediaURL struct {
 
 func (p *MediaURL) URL() string {
 
-	imageUrl := utils.ApiEndpointUrl()
+	imageURL := utils.ApiEndpointUrl()
 	if p.Purpose != VideoWeb {
-		imageUrl.Path = path.Join(imageUrl.Path, "photo", p.MediaName)
+		imageURL.Path = path.Join(imageURL.Path, "photo", p.MediaName)
 	} else {
-		imageUrl.Path = path.Join(imageUrl.Path, "video", p.MediaName)
+		imageURL.Path = path.Join(imageURL.Path, "video", p.MediaName)
 	}
 
-	return imageUrl.String()
+	return imageURL.String()
 }
 
 func (p *MediaURL) CachedPath() (string, error) {

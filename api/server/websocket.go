@@ -16,6 +16,9 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 				return true
 			} else {
 				uiEndpoint := utils.UiEndpointUrl()
+				if uiEndpoint == nil {
+					return true
+				}
 
 				if r.Header.Get("origin") == "" {
 					return true

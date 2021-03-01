@@ -2,7 +2,7 @@ package server
 
 import (
 	"net/http"
-	"path"
+	"net/url"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -13,17 +13,7 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-			methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-			requestHeaders := []string{"authorization", "content-type", "content-length", "TokenPassword"}
-			responseHeaders := []string{"content-length"}
-
-			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ", "))
-			w.Header().Set("Access-Control-Allow-Headers", strings.Join(requestHeaders, ", "))
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Expose-Headers", strings.Join(responseHeaders, ", "))
-
-			endpoint := utils.ApiEndpointUrl()
-			endpoint.Path = path.Join(endpoint.Path, "graphql")
+			var uiEndpoint *url.URL = nil
 
 			if devMode {
 				// Development environment
@@ -31,8 +21,23 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 				w.Header().Set("Vary", "Origin")
 			} else {
 				// Production environment
-				uiEndpoint := utils.UiEndpointUrl()
-				w.Header().Set("Access-Control-Allow-Origin", uiEndpoint.Scheme+"://"+uiEndpoint.Host)
+				uiEndpoint = utils.UiEndpointUrl()
+				if uiEndpoint != nil {
+					// Only allow CORS if UI endpoint is defined
+					w.Header().Set("Access-Control-Allow-Origin", uiEndpoint.Scheme+"://"+uiEndpoint.Host)
+				}
+			}
+
+			corsEnabled := devMode || uiEndpoint != nil
+			if corsEnabled {
+				methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
+				requestHeaders := []string{"authorization", "content-type", "content-length", "TokenPassword"}
+				responseHeaders := []string{"content-length"}
+
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ", "))
+				w.Header().Set("Access-Control-Allow-Headers", strings.Join(requestHeaders, ", "))
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				w.Header().Set("Access-Control-Expose-Headers", strings.Join(responseHeaders, ", "))
 			}
 
 			if req.Method != http.MethodOptions {

@@ -73,12 +73,12 @@ func main() {
 		Directives: graphqlDirective,
 	}
 
-	apiListenUrl := utils.ApiListenUrl()
+	apiListenURL := utils.ApiListenUrl()
 
-	endpointRouter := rootRouter.PathPrefix(apiListenUrl.Path).Subrouter()
+	endpointRouter := rootRouter.PathPrefix(apiListenURL.Path).Subrouter()
 
 	if devMode {
-		endpointRouter.Handle("/", handler.Playground("GraphQL playground", path.Join(apiListenUrl.Path, "/graphql")))
+		endpointRouter.Handle("/", handler.Playground("GraphQL playground", path.Join(apiListenURL.Path, "/graphql")))
 	} else {
 		endpointRouter.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte("photoview api endpoint"))
@@ -108,15 +108,16 @@ func main() {
 	}
 
 	if devMode {
-		log.Printf("🚀 Graphql playground ready at %s\n", apiListenUrl.String())
+		log.Printf("🚀 Graphql playground ready at %s\n", apiListenURL.String())
 	} else {
-		log.Printf("Photoview API endpoint listening at %s\n", apiListenUrl.String())
+		log.Printf("Photoview API endpoint listening at %s\n", apiListenURL.String())
 
-		uiEndpoint := utils.UiEndpointUrl()
 		apiEndpoint := utils.ApiEndpointUrl()
-
 		log.Printf("Photoview API public endpoint ready at %s\n", apiEndpoint.String())
-		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+
+		if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
+			log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+		}
 
 		if !shouldServeUI {
 			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
@@ -124,5 +125,5 @@ func main() {
 
 	}
 
-	log.Panic(http.ListenAndServe(":"+apiListenUrl.Port(), handlers.CompressHandler(rootRouter)))
+	log.Panic(http.ListenAndServe(":"+apiListenURL.Port(), handlers.CompressHandler(rootRouter)))
 }

@@ -50,6 +50,9 @@ func ApiEndpointUrl() *url.URL {
 	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
 		apiEndpointStr = EnvPublicEndpoint.GetValue()
+		if apiEndpointStr == "" {
+			apiEndpointStr = "/"
+		}
 	}
 
 	apiEndpointUrl, err := url.Parse(apiEndpointStr)
@@ -70,6 +73,9 @@ func UiEndpointUrl() *url.URL {
 	shouldServeUI := ShouldServeUI()
 	if shouldServeUI {
 		uiEndpointStr = EnvPublicEndpoint.GetValue()
+		if uiEndpointStr == "" {
+			return nil
+		}
 	}
 
 	uiEndpointUrl, err := url.Parse(uiEndpointStr)

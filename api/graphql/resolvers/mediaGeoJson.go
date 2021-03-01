@@ -2,10 +2,11 @@ package resolvers
 
 import (
 	"context"
-	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/utils"
 	"os"
 	"path"
+
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/photoview/photoview/api/utils"
 )
 
 type geoMedia struct {
