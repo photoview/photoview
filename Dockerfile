@@ -70,6 +70,10 @@ WORKDIR /app
 
 COPY api/data /app/data
 
+# Use official PPA for Darktable to get the latest version
+RUN echo 'deb http://download.opensuse.org/repositories/graphics:/darktable/Debian_10/ /' | tee /etc/apt/sources.list.d/graphics:darktable.list \
+  curl -fsSL https://download.opensuse.org/repositories/graphics:darktable/Debian_10/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
+
 RUN apt-get update \
   # Required dependencies
   && apt-get install -y libdlib19 ffmpeg \
