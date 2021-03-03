@@ -27,6 +27,8 @@ import (
 
 func main() {
 
+	log.Println("Starting Photoview...")
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}

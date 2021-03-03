@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -35,7 +36,13 @@ func newDarktableWorker() *DarktableWorker {
 	if err != nil {
 		log.Println("Executable worker not found: darktable")
 	} else {
-		log.Println("Found executable worker: darktable")
+		version, err := exec.Command(path, "--version").Output()
+		if err != nil {
+			log.Printf("Error getting version of darktable: %s\n", err)
+			return nil
+		}
+
+		log.Printf("Found executable worker: darktable (%s)\n", strings.Split(string(version), "\n")[0])
 
 		return &DarktableWorker{
 			path: path,
@@ -50,7 +57,13 @@ func newFfmpegWorker() *FfmpegWorker {
 	if err != nil {
 		log.Println("Executable worker not found: ffmpeg")
 	} else {
-		log.Println("Found executable worker: ffmpeg")
+		version, err := exec.Command(path, "-version").Output()
+		if err != nil {
+			log.Printf("Error getting version of ffmpeg: %s\n", err)
+			return nil
+		}
+
+		log.Printf("Found executable worker: ffmpeg (%s)\n", strings.Split(string(version), "\n")[0])
 
 		return &FfmpegWorker{
 			path: path,
