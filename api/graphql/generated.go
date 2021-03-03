@@ -174,10 +174,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Album                      func(childComplexity int, id int) int
+		Album                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		FaceGroup                  func(childComplexity int, id int) int
 		MapboxToken                func(childComplexity int) int
-		Media                      func(childComplexity int, id int) int
+		Media                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		MediaList                  func(childComplexity int, ids []int) int
 		MyAlbums                   func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
 		MyFaceGroups               func(childComplexity int, paginate *models.Pagination) int
@@ -186,8 +186,8 @@ type ComplexityRoot struct {
 		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool) int
 		MyUser                     func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
-		ShareToken                 func(childComplexity int, token string, password *string) int
-		ShareTokenValidatePassword func(childComplexity int, token string, password *string) int
+		ShareToken                 func(childComplexity int, credentials models.ShareTokenCredentials) int
+		ShareTokenValidatePassword func(childComplexity int, credentials models.ShareTokenCredentials) int
 		SiteInfo                   func(childComplexity int) int
 		User                       func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 	}
@@ -312,15 +312,15 @@ type QueryResolver interface {
 	User(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.User, error)
 	MyUser(ctx context.Context) (*models.User, error)
 	MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
-	Album(ctx context.Context, id int) (*models.Album, error)
+	Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error)
 	MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error)
-	Media(ctx context.Context, id int) (*models.Media, error)
+	Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool) ([]*models.TimelineGroup, error)
 	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	MapboxToken(ctx context.Context) (*string, error)
-	ShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
-	ShareTokenValidatePassword(ctx context.Context, token string, password *string) (bool, error)
+	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
+	ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error)
 	FaceGroup(ctx context.Context, id int) (*models.FaceGroup, error)
@@ -1073,7 +1073,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Album(childComplexity, args["id"].(int)), true
+		return e.complexity.Query.Album(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 
 	case "Query.faceGroup":
 		if e.complexity.Query.FaceGroup == nil {
@@ -1104,7 +1104,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Media(childComplexity, args["id"].(int)), true
+		return e.complexity.Query.Media(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 
 	case "Query.mediaList":
 		if e.complexity.Query.MediaList == nil {
@@ -1202,7 +1202,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
+		return e.complexity.Query.ShareToken(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 
 	case "Query.shareTokenValidatePassword":
 		if e.complexity.Query.ShareTokenValidatePassword == nil {
@@ -1214,7 +1214,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareTokenValidatePassword(childComplexity, args["token"].(string), args["password"].(*string)), true
+		return e.complexity.Query.ShareTokenValidatePassword(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 
 	case "Query.siteInfo":
 		if e.complexity.Query.SiteInfo == nil {
@@ -1595,6 +1595,12 @@ input Ordering {
   order_direction: OrderDirection
 }
 
+"Credentials used to identify and authenticate a share token"
+input ShareTokenCredentials {
+  token: String!
+  password: String
+}
+
 type Query {
   siteInfo: SiteInfo!
 
@@ -1614,13 +1620,19 @@ type Query {
     "Show only albums having favorites"
     onlyWithFavorites: Boolean
   ): [Album!]!
-  "Get album by id, user must own the album or be admin"
-  album(id: ID!): Album!
+  """
+  Get album by id, user must own the album or be admin
+  If valid tokenCredentials are provided, the album may be retrived without further authentication
+  """
+  album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
 
   "List of media owned by the logged in user"
   myMedia(order: Ordering, paginate: Pagination): [Media!]!
-  "Get media by id, user must own the media or be admin"
-  media(id: ID!): Media!
+  """
+  Get media by id, user must own the media or be admin.
+  If valid tokenCredentials are provided, the media may be retrived without further authentication
+  """
+  media(id: ID!, tokenCredentials: ShareTokenCredentials): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
@@ -1632,8 +1644,8 @@ type Query {
   "Get the mapbox api token, returns null if mapbox is not enabled"
   mapboxToken: String
 
-  shareToken(token: String!, password: String): ShareToken!
-  shareTokenValidatePassword(token: String!, password: String): Boolean!
+  shareToken(credentials: ShareTokenCredentials!): ShareToken!
+  shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 
@@ -2491,6 +2503,15 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	var arg1 *models.ShareTokenCredentials
+	if tmp, ok := rawArgs["tokenCredentials"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tokenCredentials"))
+		arg1, err = ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["tokenCredentials"] = arg1
 	return args, nil
 }
 
@@ -2536,6 +2557,15 @@ func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	var arg1 *models.ShareTokenCredentials
+	if tmp, ok := rawArgs["tokenCredentials"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tokenCredentials"))
+		arg1, err = ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["tokenCredentials"] = arg1
 	return args, nil
 }
 
@@ -2689,48 +2719,30 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["token"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 models.ShareTokenCredentials
+	if tmp, ok := rawArgs["credentials"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentials"))
+		arg0, err = ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["token"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
+	args["credentials"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["token"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 models.ShareTokenCredentials
+	if tmp, ok := rawArgs["credentials"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentials"))
+		arg0, err = ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["token"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg1
+	args["credentials"] = arg0
 	return args, nil
 }
 
@@ -6177,7 +6189,7 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Album(rctx, args["id"].(int))
+		return ec.resolvers.Query().Album(rctx, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6261,7 +6273,7 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Media(rctx, args["id"].(int))
+		return ec.resolvers.Query().Media(rctx, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6454,7 +6466,7 @@ func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ShareToken(rctx, args["token"].(string), args["password"].(*string))
+		return ec.resolvers.Query().ShareToken(rctx, args["credentials"].(models.ShareTokenCredentials))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6496,7 +6508,7 @@ func (ec *executionContext) _Query_shareTokenValidatePassword(ctx context.Contex
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ShareTokenValidatePassword(rctx, args["token"].(string), args["password"].(*string))
+		return ec.resolvers.Query().ShareTokenValidatePassword(rctx, args["credentials"].(models.ShareTokenCredentials))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9208,6 +9220,34 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputShareTokenCredentials(ctx context.Context, obj interface{}) (models.ShareTokenCredentials, error) {
+	var it models.ShareTokenCredentials
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "token":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
+			it.Token, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -11300,6 +11340,11 @@ func (ec *executionContext) marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋpho
 	return ec._ShareToken(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx context.Context, v interface{}) (models.ShareTokenCredentials, error) {
+	res, err := ec.unmarshalInputShareTokenCredentials(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNSiteInfo2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx context.Context, sel ast.SelectionSet, v models.SiteInfo) graphql.Marshaler {
 	return ec._SiteInfo(ctx, sel, &v)
 }
@@ -11841,6 +11886,14 @@ func (ec *executionContext) marshalOShareToken2ᚖgithubᚗcomᚋphotoviewᚋpho
 		return graphql.Null
 	}
 	return ec._ShareToken(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx context.Context, v interface{}) (*models.ShareTokenCredentials, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputShareTokenCredentials(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

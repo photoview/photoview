@@ -55,6 +55,12 @@ type SearchResult struct {
 	Media  []*Media `json:"media"`
 }
 
+// Credentials used to identify and authenticate a share token
+type ShareTokenCredentials struct {
+	Token    string  `json:"token"`
+	Password *string `json:"password"`
+}
+
 type TimelineGroup struct {
 	Album      *Album    `json:"album"`
 	Media      []*Media  `json:"media"`

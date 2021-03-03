@@ -16,6 +16,7 @@ import SharePage, {
 } from './SharePage'
 
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownload'
+import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
 
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'
@@ -48,13 +49,13 @@ describe('load correct share page, based on graphql query', () => {
       request: {
         query: SIDEBAR_DOWNLOAD_QUERY,
         variables: {
-          mediaId: 1,
+          mediaId: '1',
         },
       },
       result: {
         data: {
           media: {
-            id: 1,
+            id: '1',
             downloads: [],
           },
         },
@@ -77,7 +78,7 @@ describe('load correct share page, based on graphql query', () => {
             token: token,
             album: null,
             media: {
-              id: 1,
+              id: '1',
               title: 'shared_image.jpg',
               type: 'photo',
               highRes: {
@@ -114,20 +115,42 @@ describe('load correct share page, based on graphql query', () => {
   })
 
   test('load album share page', async () => {
-    const albumPageMock = {
-      request: {
-        query: SHARE_TOKEN_QUERY,
-        variables: {
-          token,
-          password: null,
+    const albumPageMock = [
+      {
+        request: {
+          query: SHARE_TOKEN_QUERY,
+          variables: {
+            token,
+            password: null,
+          },
+        },
+        result: {
+          data: {
+            shareToken: {
+              token: token,
+              album: {
+                id: '1',
+              },
+              media: null,
+            },
+          },
         },
       },
-      result: {
-        data: {
-          shareToken: {
+      {
+        request: {
+          query: SHARE_ALBUM_QUERY,
+          variables: {
+            id: '1',
             token: token,
+            password: null,
+            limit: 200,
+            offset: 0,
+          },
+        },
+        result: {
+          data: {
             album: {
-              id: 1,
+              id: '1',
               title: 'album_title',
               subAlbums: [],
               thumbnail: {
@@ -135,15 +158,14 @@ describe('load correct share page, based on graphql query', () => {
               },
               media: [],
             },
-            media: null,
           },
         },
       },
-    }
+    ]
 
     render(
       <MockedProvider
-        mocks={[...graphqlMocks, albumPageMock]}
+        mocks={[...graphqlMocks, ...albumPageMock]}
         addTypename={false}
         defaultOptions={{
           // disable cache, required to make fragments work

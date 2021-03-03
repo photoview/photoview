@@ -18,6 +18,12 @@ input Ordering {
   order_direction: OrderDirection
 }
 
+"Credentials used to identify and authenticate a share token"
+input ShareTokenCredentials {
+  token: String!
+  password: String
+}
+
 type Query {
   siteInfo: SiteInfo!
 
@@ -37,13 +43,19 @@ type Query {
     "Show only albums having favorites"
     onlyWithFavorites: Boolean
   ): [Album!]!
-  "Get album by id, user must own the album or be admin"
-  album(id: ID!): Album!
+  """
+  Get album by id, user must own the album or be admin
+  If valid tokenCredentials are provided, the album may be retrived without further authentication
+  """
+  album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
 
   "List of media owned by the logged in user"
   myMedia(order: Ordering, paginate: Pagination): [Media!]!
-  "Get media by id, user must own the media or be admin"
-  media(id: ID!): Media!
+  """
+  Get media by id, user must own the media or be admin.
+  If valid tokenCredentials are provided, the media may be retrived without further authentication
+  """
+  media(id: ID!, tokenCredentials: ShareTokenCredentials): Media!
 
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
@@ -55,8 +67,8 @@ type Query {
   "Get the mapbox api token, returns null if mapbox is not enabled"
   mapboxToken: String
 
-  shareToken(token: String!, password: String): ShareToken!
-  shareTokenValidatePassword(token: String!, password: String): Boolean!
+  shareToken(credentials: ShareTokenCredentials!): ShareToken!
+  shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 

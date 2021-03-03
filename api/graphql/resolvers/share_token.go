@@ -40,10 +40,10 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 	return hasPassword, nil
 }
 
-func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
+func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 
 	var token models.ShareToken
-	if err := r.Database.Preload(clause.Associations).Where("value = ?", tokenValue).First(&token).Error; err != nil {
+	if err := r.Database.Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("share not found")
 		} else {
@@ -52,7 +52,7 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 	}
 
 	if token.Password != nil {
-		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
 				return nil, errors.New("unauthorized")
 			} else {
@@ -64,9 +64,9 @@ func (r *queryResolver) ShareToken(ctx context.Context, tokenValue string, passw
 	return &token, nil
 }
 
-func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenValue string, password *string) (bool, error) {
+func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error) {
 	var token models.ShareToken
-	if err := r.Database.Where("value = ?", tokenValue).First(&token).Error; err != nil {
+	if err := r.Database.Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, errors.New("share not found")
 		} else {
@@ -78,11 +78,11 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, tokenVal
 		return true, nil
 	}
 
-	if password == nil {
+	if credentials.Password == nil {
 		return false, nil
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil
 		} else {

@@ -11,90 +11,70 @@ import MediaSharePage from './MediaSharePage'
 
 export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
-    shareToken(token: $token, password: $password) {
+    shareToken(credentials: { token: $token, password: $password }) {
       token
       album {
-        ...AlbumProps
-        subAlbums {
-          ...AlbumProps
-          subAlbums {
-            ...AlbumProps
-          }
-        }
+        id
       }
       media {
-        ...MediaProps
+        id
+        title
+        type
+        thumbnail {
+          url
+          width
+          height
+        }
+        downloads {
+          title
+          mediaUrl {
+            url
+            width
+            height
+            fileSize
+          }
+        }
+        highRes {
+          url
+          width
+          height
+        }
+        videoWeb {
+          url
+        }
+        exif {
+          camera
+          maker
+          lens
+          dateShot
+          exposure
+          aperture
+          iso
+          focalLength
+          flash
+          exposureProgram
+        }
       }
-    }
-  }
-
-  fragment AlbumProps on Album {
-    id
-    title
-    thumbnail {
-      thumbnail {
-        url
-      }
-    }
-    media(order: { order_by: "title", order_direction: DESC }) {
-      ...MediaProps
-    }
-  }
-
-  fragment MediaProps on Media {
-    id
-    title
-    type
-    thumbnail {
-      url
-      width
-      height
-    }
-    downloads {
-      title
-      mediaUrl {
-        url
-        width
-        height
-        fileSize
-      }
-    }
-    highRes {
-      url
-      width
-      height
-    }
-    videoWeb {
-      url
-    }
-    exif {
-      camera
-      maker
-      lens
-      dateShot
-      exposure
-      aperture
-      iso
-      focalLength
-      flash
-      exposureProgram
     }
   }
 `
 
 export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   query ShareTokenValidatePassword($token: String!, $password: String) {
-    shareTokenValidatePassword(token: $token, password: $password)
+    shareTokenValidatePassword(
+      credentials: { token: $token, password: $password }
+    )
   }
 `
 
 const AuthorizedTokenRoute = ({ match }) => {
   const token = match.params.token
+  const password = getSharePassword(token)
 
   const { loading, error, data } = useQuery(SHARE_TOKEN_QUERY, {
     variables: {
       token,
-      password: getSharePassword(token),
+      password,
     },
   })
 
@@ -102,7 +82,39 @@ const AuthorizedTokenRoute = ({ match }) => {
   if (loading) return 'Loading...'
 
   if (data.shareToken.album) {
-    return <AlbumSharePage album={data.shareToken.album} match={match} />
+    console.log('match', match)
+
+    const SharedSubAlbumPage = ({ match }) => {
+      console.log('subalbum match', match)
+      return (
+        <AlbumSharePage
+          albumID={match.params.subAlbum}
+          token={token}
+          password={password}
+        />
+      )
+    }
+
+    SharedSubAlbumPage.propTypes = {
+      match: PropTypes.any,
+    }
+
+    return (
+      <Switch>
+        <Route
+          exact
+          path={`${match.path}/:subAlbum`}
+          component={SharedSubAlbumPage}
+        />
+        <Route exact path={match.path}>
+          <AlbumSharePage
+            albumID={data.shareToken.album.id}
+            token={token}
+            password={password}
+          />
+        </Route>
+      </Switch>
+    )
   }
 
   if (data.shareToken.media) {

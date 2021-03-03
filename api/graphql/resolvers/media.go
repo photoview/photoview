@@ -42,7 +42,19 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 	return media, nil
 }
 
-func (r *queryResolver) Media(ctx context.Context, id int) (*models.Media, error) {
+func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
+	if tokenCredentials != nil {
+
+		shareToken, err := r.ShareToken(ctx, *tokenCredentials)
+		if err != nil {
+			return nil, err
+		}
+
+		if *shareToken.MediaID == id {
+			return shareToken.Media, nil
+		}
+	}
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

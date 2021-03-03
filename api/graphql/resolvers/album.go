@@ -2,11 +2,11 @@ package resolvers
 
 import (
 	"context"
-	"errors"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -60,7 +60,30 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 	return albums, nil
 }
 
-func (r *queryResolver) Album(ctx context.Context, id int) (*models.Album, error) {
+func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error) {
+	if tokenCredentials != nil {
+
+		shareToken, err := r.ShareToken(ctx, *tokenCredentials)
+		if err != nil {
+			return nil, err
+		}
+
+		if shareToken.Album != nil {
+			if *shareToken.AlbumID == id {
+				return shareToken.Album, nil
+			}
+
+			subAlbum, err := shareToken.Album.GetChildren(r.Database, func(query *gorm.DB) *gorm.DB { return query.Where("sub_albums.id = ?", id) })
+			if err != nil {
+				return nil, errors.Wrapf(err, "find sub album of share token (%s)", tokenCredentials.Token)
+			}
+
+			if len(subAlbum) > 0 {
+				return subAlbum[0], nil
+			}
+		}
+	}
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

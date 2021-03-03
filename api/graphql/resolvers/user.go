@@ -326,7 +326,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 			return err
 		}
 
-		children, err := album.GetChildren(tx)
+		children, err := album.GetChildren(tx, nil)
 		if err != nil {
 			return err
 		}
