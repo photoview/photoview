@@ -108,7 +108,7 @@ const SelectImageFacesTable = ({
               // nextItem={null}
               // prevItem={null}
               activePage={page + 1}
-              totalPages={rows.length / PAGE_SIZE}
+              totalPages={Math.ceil(rows.length / PAGE_SIZE)}
               onPageChange={(_, { activePage }) => {
                 setPage(Math.ceil(activePage) - 1)
               }}
