@@ -3,14 +3,14 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Message, Progress } from 'semantic-ui-react'
 
-const MessageProgress = ({ header, content, percent = 0, ...props }) => {
-  const StyledProgress = styled(Progress)`
-    position: absolute !important;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-  `
+const StyledProgress = styled(Progress)`
+  position: absolute !important;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+`
 
+const MessageProgress = ({ header, content, percent = 0, ...props }) => {
   return (
     <Message floating {...props}>
       <Message.Content>
