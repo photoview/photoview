@@ -11,6 +11,7 @@ import {
 } from 'semantic-ui-react'
 import copy from 'copy-to-clipboard'
 import { authToken } from '../../authentication'
+import styled from 'styled-components'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: ID!) {
@@ -218,6 +219,10 @@ ShareItemMoreDropdown.propTypes = {
   share: PropTypes.object.isRequired,
 }
 
+const ShareButtonGroup = styled(Button.Group)`
+  flex-wrap: wrap;
+`
+
 const SidebarShare = ({ photo, album }) => {
   if ((!photo || !photo.id) && (!album || !album.id)) return null
   if (!authToken()) return null
@@ -264,7 +269,7 @@ const SidebarShare = ({ photo, album }) => {
           <b>Public Link</b> {share.token}
         </Table.Cell>
         <Table.Cell>
-          <Button.Group>
+          <ShareButtonGroup>
             <Button
               icon="chain"
               content="Copy link"
@@ -273,7 +278,7 @@ const SidebarShare = ({ photo, album }) => {
               }}
             />
             <ShareItemMoreDropdown share={share} id={id} isPhoto={isPhoto} />
-          </Button.Group>
+          </ShareButtonGroup>
         </Table.Cell>
       </Table.Row>
     ))

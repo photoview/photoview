@@ -31,7 +31,7 @@ function formatBytes(bytes) {
 }
 
 const downloadMedia = async url => {
-  const imgUrl = new URL(url)
+  const imgUrl = new URL(url, location.origin)
 
   if (authToken() == null) {
     // Get share token if not authorized
