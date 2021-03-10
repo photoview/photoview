@@ -10,6 +10,7 @@ import (
 type AlbumScannerCache struct {
 	path_contains_photos map[string]bool
 	photo_types          map[string]MediaType
+	ignore_data          map[string][]string
 	mutex                sync.Mutex
 }
 
@@ -17,6 +18,7 @@ func MakeAlbumCache() *AlbumScannerCache {
 	return &AlbumScannerCache{
 		path_contains_photos: make(map[string]bool),
 		photo_types:          make(map[string]MediaType),
+		ignore_data:          make(map[string][]string),
 	}
 }
 
@@ -83,4 +85,23 @@ func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
 	}
 
 	return mediaType, nil
+}
+
+func (c *AlbumScannerCache) GetAlbumIgnore(path string) (*[]string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	ignore_data, found := c.ignore_data[path]
+	if found {
+		return &ignore_data
+	}
+
+	return nil
+}
+
+func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignore_data []string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.ignore_data[path] = ignore_data
 }

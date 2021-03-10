@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"path"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -14,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -139,30 +138,19 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 		return nil, err
 	}
 
-	// Get file ignores
-	var ignores []string
-	if (len(album.IgnoreFiles) > 0) {
-		ignores = strings.Split(album.IgnoreFiles, ",")
-	}
+	// Get ignore data
+	 albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
 
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
-		skipFile := false
-		for _, ignore := range ignores {
-			match, _ := filepath.Match(ignore, item.Name())
-			if (match) {
-				// Skip file if it matches an ignore entry
-				log.Printf("Ignore match, ignore = %s, file = %s\n", ignore, item.Name())
-				skipFile = true
-				break
-			}
-		}
-		if (skipFile) {
-			continue
-		}
-
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
+			// Match file against ignore data
+			if (albumIgnore.MatchesPath(item.Name())) {
+				log.Printf("File %s ignored\n", item.Name())
+				continue
+			}
+
 			// Skip the JPEGs that are compressed version of raw files
 			counterpartFile := scanForRawCounterpartFile(photoPath)
 			if counterpartFile != nil {

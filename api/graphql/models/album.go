@@ -17,7 +17,6 @@ type Album struct {
 	Owners   []User `gorm:"many2many:user_albums"`
 	Path     string `gorm:"not null"`
 	PathHash string `gorm:"unique"`
-	IgnoreFiles string
 }
 
 func (a *Album) FilePath() string {

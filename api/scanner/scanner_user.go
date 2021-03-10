@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
@@ -17,21 +16,6 @@ import (
 	"github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
-
-func isFileIgnore(ignoreEntry string) (bool){
-	if (strings.Contains(ignoreEntry, "/")){
-		// Folder ignore if entry contains '/'
-		return false
-	}
-
-	if (strings.Contains(ignoreEntry, ".")){
-		// File ignore if entry contains '.' and not '/'
-		return true
-	}
-
-	// Otherwise folder ignore entry
-	return false
-}
 
 func getPhotoviewIgnore(ignorePath string) ([]string , error){
 	var photoviewIgnore []string
@@ -53,20 +37,6 @@ func getPhotoviewIgnore(ignorePath string) ([]string , error){
 	}
 
    	return photoviewIgnore, scanner.Err()
-}
-
-func getIgnoreFiles(ignoreAll []string) (string) {
-	var ignoreFiles []string
-
-	if (len(ignoreAll) > 0) {
-		for _, ignoreItem := range ignoreAll {
-			if (isFileIgnore(ignoreItem)) {
-				ignoreFiles = append(ignoreFiles, ignoreItem)
-			}
-		}
-	}
-
-	return strings.Join(ignoreFiles, ",")
 }
 
 func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
@@ -175,8 +145,10 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 					Title:         albumTitle,
 					ParentAlbumID: albumParentID,
 					Path:          albumPath,
-					IgnoreFiles:   getIgnoreFiles(albumIgnore),
 				}
+
+				// Store album ignore
+				album_cache.InsertAlbumIgnore(albumPath, albumIgnore)
 
 				if err := tx.Create(&album).Error; err != nil {
 					return errors.Wrap(err, "insert album into database")
@@ -200,7 +172,9 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 						return err
 					}
 				}
-				album.IgnoreFiles = getIgnoreFiles(albumIgnore)
+
+				// Update album ignore
+				album_cache.InsertAlbumIgnore(albumPath, albumIgnore)
 			}
 
 			userAlbums = append(userAlbums, album)
@@ -222,7 +196,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 				continue
 			}
 
-			if item.IsDir() && directoryContainsPhotos(subalbumPath, album_cache) {
+			if item.IsDir() && directoryContainsPhotos(subalbumPath, album_cache, albumIgnore) {
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
@@ -238,7 +212,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	return userAlbums, scanErrors
 }
 
-func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
+func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache, albumIgnore []string) bool {
 
 	if contains_image := cache.AlbumContainsPhotos(rootPath); contains_image != nil {
 		return *contains_image
@@ -256,6 +230,15 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
 
 		scanned_directories = append(scanned_directories, dirPath)
 
+		// Update ignore dir list
+		photoviewIgnore, err := getPhotoviewIgnore(dirPath)
+		if err != nil {
+			log.Printf("Failed to get ignore file, err = %s", err)
+		} else {
+			albumIgnore = append(albumIgnore, photoviewIgnore...)
+		}
+		ignoreEntries := ignore.CompileIgnoreLines(albumIgnore...)
+
 		dirContent, err := ioutil.ReadDir(dirPath)
 		if err != nil {
 			ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
@@ -268,6 +251,11 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
 				scanQueue.PushBack(filePath)
 			} else {
 				if isPathMedia(filePath, cache) {
+					if ignoreEntries.MatchesPath(fileInfo.Name()) {
+						log.Printf("Match found %s, continue search for media", fileInfo.Name())
+						continue
+					}
+					log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
 					cache.InsertAlbumPaths(dirPath, rootPath, true)
 					return true
 				}
@@ -277,6 +265,7 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache) bool {
 	}
 
 	for _, scanned_path := range scanned_directories {
+		log.Printf("Insert Album %s, contains photo is false", scanned_path)
 		cache.InsertAlbumPath(scanned_path, false)
 	}
 	return false
