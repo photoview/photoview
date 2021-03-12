@@ -60,7 +60,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 	query := r.Database.
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
-		Where("Media.album_id IN (?)", userAlbumIDs)
+		Where("album_id IN (?)", userAlbumIDs)
 
 	query = models.FormatSQL(query, nil, paginate)
 
@@ -91,7 +91,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 		Model(&models.ImageFace{}).
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
-		Where("Media.album_id IN (?)", userAlbumIDs)
+		Where("album_id IN (?)", userAlbumIDs)
 
 	var count int64
 	if err := query.Count(&count).Error; err != nil {
@@ -148,6 +148,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
 		Where("image_faces.media_id IN (?)", r.Database.Select("media.id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
 		Group("image_faces.face_group_id").
+		Group("face_groups.id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
 		Order("COUNT(image_faces.id) DESC")
 
@@ -371,7 +372,7 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 	imageFaceQuery := db.
 		Select("image_faces.id").
 		Table("image_faces").
-		Joins("LEFT JOIN media ON media.id = image_faces.media_id").
+		Joins("JOIN media ON media.id = image_faces.media_id").
 		Where("media.album_id IN (?)", userAlbumIDs)
 
 	faceGroupQuery := db.

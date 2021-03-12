@@ -11,6 +11,8 @@ import (
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/scanner/image_helpers"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 type FaceGroup struct {
@@ -32,8 +34,14 @@ type ImageFace struct {
 type FaceDescriptor face.Descriptor
 
 // GormDataType datatype used in database
-func (fd FaceDescriptor) GormDataType() string {
-	return "BLOB"
+func (FaceDescriptor) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "mysql", "sqlite":
+		return "BLOB"
+	case "postgres":
+		return "BYTEA"
+	}
+	return ""
 }
 
 // Scan tells GORM how to convert database data to Go format
@@ -81,8 +89,13 @@ func (fr FaceRectangle) GormDataType() string {
 
 // Scan tells GORM how to convert database data to Go format
 func (fr *FaceRectangle) Scan(value interface{}) error {
-	byteArray := value.([]uint8)
-	slices := strings.Split(string(byteArray), ":")
+	stringArray, ok := value.(string)
+	if !ok {
+		byteArray := value.([]uint8)
+		stringArray = string(byteArray)
+	}
+
+	slices := strings.Split(stringArray, ":")
 
 	if len(slices) != 4 {
 		return fmt.Errorf("Invalid face rectangle format, expected 4 values, got %d", len(slices))

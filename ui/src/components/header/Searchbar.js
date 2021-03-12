@@ -192,7 +192,7 @@ const RowTitle = styled.span`
 
 const PhotoRow = ({ query, media }) => (
   <RowLink to={`/album/${media.album.id}`}>
-    <PhotoSearchThumbnail src={media.thumbnail.url} />
+    <PhotoSearchThumbnail src={media?.thumbnail?.url} />
     <RowTitle>{searchHighlighted(query, media.title)}</RowTitle>
   </RowLink>
 )
@@ -204,7 +204,7 @@ PhotoRow.propTypes = {
 
 const AlbumRow = ({ query, album }) => (
   <RowLink to={`/album/${album.id}`}>
-    <AlbumSearchThumbnail src={album.thumbnail.thumbnail.url} />
+    <AlbumSearchThumbnail src={album?.thumbnail?.thumbnail?.url} />
     <RowTitle>{searchHighlighted(query, album.title)}</RowTitle>
   </RowLink>
 )

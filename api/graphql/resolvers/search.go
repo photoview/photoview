@@ -31,8 +31,15 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 
 	var media []*models.Media
 
+	userSubquery := r.Database.Table("user_albums").Where("user_id = ?", user.ID)
+	if r.Database.Dialector.Name() == "postgres" {
+		userSubquery = userSubquery.Where("album_id = \"Album\".id")
+	} else {
+		userSubquery = userSubquery.Where("album_id = Album.id")
+	}
+
 	err := r.Database.Joins("Album").
-		Where("EXISTS (?)", r.Database.Table("user_albums").Where("user_id = ?", user.ID).Where("album_id = Album.id")).
+		Where("EXISTS (?)", userSubquery).
 		Where("media.title LIKE ? OR media.path LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{
@@ -40,8 +47,7 @@ func (r *Resolver) Search(ctx context.Context, query string, _limitMedia *int, _
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
 		}).
-		Limit(limitMedia).
-		Find(&media).Error
+		Limit(limitMedia).Find(&media).Error
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "searching media")
