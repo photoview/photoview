@@ -3,6 +3,7 @@ package scanner
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -136,10 +138,19 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 		return nil, err
 	}
 
+	// Get ignore data
+	 albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
+
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
+			// Match file against ignore data
+			if (albumIgnore.MatchesPath(item.Name())) {
+				log.Printf("File %s ignored\n", item.Name())
+				continue
+			}
+
 			// Skip the JPEGs that are compressed version of raw files
 			counterpartFile := scanForRawCounterpartFile(photoPath)
 			if counterpartFile != nil {
