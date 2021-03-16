@@ -75,10 +75,11 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_has_changes := false
 	for count, media := range albumMedia {
-		// tx, err := db.Begin()
+		processing_was_needed := false
 
 		transactionError := db.Transaction(func(tx *gorm.DB) error {
-			processing_was_needed, err := ProcessMedia(tx, media)
+			log.Printf("Process media transaction enter (%s)", media.Path)
+			processing_was_needed, err = ProcessMedia(tx, media)
 			if err != nil {
 				return errors.Wrapf(err, "failed to process photo (%s)", media.Path)
 			}
@@ -93,21 +94,22 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 					Content:  fmt.Sprintf("Processed media at %s", media.Path),
 					Progress: &progress,
 				})
-
-				if media.Type == models.MediaTypePhoto {
-					go func() {
-						if err := face_detection.GlobalFaceDetector.DetectFaces(tx, media); err != nil {
-							ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
-						}
-					}()
-				}
 			}
 
+			log.Printf("Process media transaction exit (%s)", media.Path)
 			return nil
 		})
 
 		if transactionError != nil {
 			ScannerError("Failed to begin database transaction: %s", transactionError)
+		}
+
+		if processing_was_needed && media.Type == models.MediaTypePhoto {
+			go func(media *models.Media) {
+				if err := face_detection.GlobalFaceDetector.DetectFaces(db, media); err != nil {
+					ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
+				}
+			}(media)
 		}
 	}
 

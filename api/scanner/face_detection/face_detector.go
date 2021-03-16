@@ -84,8 +84,8 @@ func (fd *FaceDetector) ReloadFacesFromDatabase(db *gorm.DB) error {
 }
 
 // DetectFaces finds the faces in the given image and saves them to the database
-func (fd *FaceDetector) DetectFaces(tx *gorm.DB, media *models.Media) error {
-	if err := tx.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
+func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
+	if err := db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
 		return err
 	}
 
@@ -116,7 +116,7 @@ func (fd *FaceDetector) DetectFaces(tx *gorm.DB, media *models.Media) error {
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(tx, &face, media, thumbnailPath)
+		fd.classifyFace(db, &face, media, thumbnailPath)
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
 }
 
-func (fd *FaceDetector) classifyFace(tx *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
+func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
@@ -153,18 +153,18 @@ func (fd *FaceDetector) classifyFace(tx *gorm.DB, face *face.Face, media *models
 			ImageFaces: []models.ImageFace{imageFace},
 		}
 
-		if err := tx.Create(&faceGroup).Error; err != nil {
+		if err := db.Create(&faceGroup).Error; err != nil {
 			return err
 		}
 
 	} else {
 		log.Println("Found match")
 
-		if err := tx.First(&faceGroup, int(match)).Error; err != nil {
+		if err := db.First(&faceGroup, int(match)).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Model(&faceGroup).Association("ImageFaces").Append(&imageFace); err != nil {
+		if err := db.Model(&faceGroup).Association("ImageFaces").Append(&imageFace); err != nil {
 			return err
 		}
 	}
