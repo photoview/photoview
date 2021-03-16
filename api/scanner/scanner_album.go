@@ -12,7 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	"github.com/sabhiram/go-gitignore"
+	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -96,7 +96,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 				if media.Type == models.MediaTypePhoto {
 					go func() {
-						if err := face_detection.GlobalFaceDetector.DetectFaces(media); err != nil {
+						if err := face_detection.GlobalFaceDetector.DetectFaces(tx, media); err != nil {
 							ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
 						}
 					}()
@@ -139,14 +139,14 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 	}
 
 	// Get ignore data
-	 albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
+	albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
 
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
 			// Match file against ignore data
-			if (albumIgnore.MatchesPath(item.Name())) {
+			if albumIgnore.MatchesPath(item.Name()) {
 				log.Printf("File %s ignored\n", item.Name())
 				continue
 			}

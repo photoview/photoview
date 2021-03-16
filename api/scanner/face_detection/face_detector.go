@@ -13,7 +13,6 @@ import (
 
 type FaceDetector struct {
 	mutex           sync.Mutex
-	db              *gorm.DB
 	rec             *face.Recognizer
 	faceDescriptors []face.Descriptor
 	faceGroupIDs    []int32
@@ -37,7 +36,6 @@ func InitializeFaceDetector(db *gorm.DB) error {
 	}
 
 	GlobalFaceDetector = FaceDetector{
-		db:              db,
 		rec:             rec,
 		faceDescriptors: faceDescriptors,
 		faceGroupIDs:    faceGroupIDs,
@@ -69,8 +67,8 @@ func getSamplesFromDatabase(db *gorm.DB) (samples []face.Descriptor, faceGroupID
 }
 
 // ReloadFacesFromDatabase replaces the in-memory face descriptors with the ones in the database
-func (fd *FaceDetector) ReloadFacesFromDatabase() error {
-	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(fd.db)
+func (fd *FaceDetector) ReloadFacesFromDatabase(db *gorm.DB) error {
+	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(db)
 	if err != nil {
 		return err
 	}
@@ -86,8 +84,8 @@ func (fd *FaceDetector) ReloadFacesFromDatabase() error {
 }
 
 // DetectFaces finds the faces in the given image and saves them to the database
-func (fd *FaceDetector) DetectFaces(media *models.Media) error {
-	if err := fd.db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
+func (fd *FaceDetector) DetectFaces(tx *gorm.DB, media *models.Media) error {
+	if err := tx.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
 		return err
 	}
 
@@ -118,7 +116,7 @@ func (fd *FaceDetector) DetectFaces(media *models.Media) error {
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(&face, media, thumbnailPath)
+		fd.classifyFace(tx, &face, media, thumbnailPath)
 	}
 
 	return nil
@@ -128,7 +126,7 @@ func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
 }
 
-func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, imagePath string) error {
+func (fd *FaceDetector) classifyFace(tx *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
@@ -155,18 +153,18 @@ func (fd *FaceDetector) classifyFace(face *face.Face, media *models.Media, image
 			ImageFaces: []models.ImageFace{imageFace},
 		}
 
-		if err := fd.db.Create(&faceGroup).Error; err != nil {
+		if err := tx.Create(&faceGroup).Error; err != nil {
 			return err
 		}
 
 	} else {
 		log.Println("Found match")
 
-		if err := fd.db.First(&faceGroup, int(match)).Error; err != nil {
+		if err := tx.First(&faceGroup, int(match)).Error; err != nil {
 			return err
 		}
 
-		if err := fd.db.Model(&faceGroup).Association("ImageFaces").Append(&imageFace); err != nil {
+		if err := tx.Model(&faceGroup).Association("ImageFaces").Append(&imageFace); err != nil {
 			return err
 		}
 	}

@@ -361,7 +361,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 				return err
 			}
 
-			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(); err != nil {
+			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(tx); err != nil {
 				return err
 			}
 		}
