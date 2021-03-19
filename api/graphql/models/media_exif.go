@@ -12,11 +12,11 @@ type MediaEXIF struct {
 	DateShot        *time.Time
 	Exposure        *string
 	Aperture        *float64
-	Iso             *int
+	Iso             *int64
 	FocalLength     *float64
 	Flash           *string
-	Orientation     *int
-	ExposureProgram *int
+	Orientation     *int64
+	ExposureProgram *string
 	GPSLatitude     *float64
 	GPSLongitude    *float64
 }
