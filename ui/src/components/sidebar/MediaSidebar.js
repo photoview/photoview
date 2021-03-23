@@ -134,6 +134,20 @@ const exifNameLookup = {
   flash: 'Flash',
 }
 
+// From https://exiftool.org/TagNames/EXIF.html
+const exposurePrograms = {
+  0: 'Not defined',
+  1: 'Manual',
+  2: 'Normal program',
+  3: 'Aperture priority',
+  4: 'Shutter priority',
+  5: 'Creative program',
+  6: 'Action program',
+  7: 'Portrait mode',
+  8: 'Landscape mode ',
+  9: 'Bulb',
+}
+
 const SidebarContent = ({ media, hidePreview }) => {
   let exifItems = []
 
@@ -152,7 +166,7 @@ const SidebarContent = ({ media, hidePreview }) => {
 
     exif.dateShot = new Date(exif.dateShot).toLocaleString()
     if (exif.exposureProgram) {
-      exif.exposureProgram = `${exif.exposureProgram}`
+      exif.exposureProgram = exposurePrograms[exif.exposureProgram]
     }
 
     if (exif.aperture) {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/barasher/go-exiftool"
+	"github.com/kjeldgaard/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
@@ -14,7 +14,10 @@ type externalExifParser struct{}
 
 func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
 	// Init ExifTool
-	et, err := exiftool.NewExiftool()
+
+	et2 := exiftool.Charset("-n")
+
+	et, err := 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																			.NewExiftool(et2)
 	if err != nil {
 		log.Printf("Error initializing ExifTool: %s\n", err)
 		return nil, err
@@ -60,7 +63,6 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 			if err == nil {
 				newExif.DateShot = &dateTime
 			}
-
 		}
 
 		// Get exposure time
@@ -88,7 +90,7 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		focalLen, err := fileInfo.GetString("FocalLength")
 		if err == nil {
 			log.Printf("Focal length: %s", focalLen)
-			reg, err := regexp.Compile("[0-9.]+")
+			reg, _ := regexp.Compile("[0-9.]+")
 			focalLenStr := reg.FindString(focalLen)
 			focalLenFloat, err := strconv.ParseFloat(focalLenStr, 64)
 			if err == nil {
@@ -104,44 +106,19 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 
 		// Get orientation
-		orientation, err := fileInfo.GetString("Orientation")
-		log.Printf("Orientation: %s", orientation)
+		orientation, err := fileInfo.GetInt("Orientation")
 		if err == nil {
-			if orientation == "Horizontal (normal)" {
-				var orientationInt int64 = 0
-				newExif.Orientation = &orientationInt
-			} else {
-				reg, err := regexp.Compile("CCW")
-				if err == nil {
-					if reg.MatchString(orientation) {
-						//Counter clockwise
-						reg, err := regexp.Compile("[0-9.]+")
-						orientationStr := reg.FindString(orientation)
-						orientationInt, err := strconv.ParseInt(orientationStr, 10, 64)
-						if err == nil {
-							log.Printf("Orientation: %d", orientationInt)
-							newExif.Orientation = &orientationInt
-						}
-					} else {
-						// Clockwise
-						reg, err := regexp.Compile("[0-9.]+")
-						orientationStr := reg.FindString(orientation)
-						orientationInt, err := strconv.ParseInt(orientationStr, 10, 64)
-						if err == nil {
-							orientationInt = orientationInt * -1
-							log.Printf("Orientation: %d", orientationInt)
-							newExif.Orientation = &orientationInt
-						}
-					}
-				}
-			}
+			log.Printf("Orientation: %d", orientation)
+			newExif.Orientation = &orientation
 		}
 
 		// Get exposure program
-		expProgram, err := fileInfo.GetString("ExposureProgram")
+		expProgram, err := fileInfo.GetStrings("ExposureProgram")
 		if err == nil {
-			log.Printf("Exposure Program: %s", expProgram)
-			newExif.ExposureProgram = &expProgram
+			for _, value := range expProgram {
+				log.Printf("%s", value)
+			}
+			//log.Printf("Exposure Program: %d", expProgram)
 		}
 
 		// GPS coordinates - longitude
