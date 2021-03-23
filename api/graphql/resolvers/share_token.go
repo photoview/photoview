@@ -147,8 +147,15 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 
 	var media models.Media
 
+	var query string
+	if r.Database.Dialector.Name() == "postgres" {
+		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = \"Album\".id AND user_albums.user_id = ?)"
+	} else {
+		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)"
+	}
+
 	err := r.Database.Joins("Album").
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)", user.ID).
+		Where(query, user.ID).
 		First(&media, mediaID).
 		Error
 
