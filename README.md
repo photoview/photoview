@@ -139,3 +139,10 @@ cd ./ui && npm start
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
 And the graphql playground at [localhost:4001](http://localhost:4001)
+
+# Sponsors
+
+<a href="url">
+  <img src="https://avatars.githubusercontent.com/u/79728329?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+  <b>@ericerkz</b>
+</a>
