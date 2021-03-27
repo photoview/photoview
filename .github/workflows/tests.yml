@@ -28,7 +28,7 @@ jobs:
       - name: Get C dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev
+          sudo apt-get install -y libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
 
       - name: Get GO dependencies
         run: |
