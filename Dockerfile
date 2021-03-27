@@ -22,9 +22,12 @@ RUN npm run build -- --public-url $UI_PUBLIC_URL
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15-buster AS api
 
+# Use latest unstable packages for libheif
+RUN echo 'deb http://deb.debian.org/debian bullseye main' >> /etc/apt/sources.list.d/sources.list
+
 # Install G++/GCC cross compilers
 RUN dpkg --add-architecture arm64 && dpkg --add-architecture armhf
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -t buster -y \
   g++-aarch64-linux-gnu \
   libc6-dev-arm64-cross \
   g++-arm-linux-gnueabihf \
@@ -34,6 +37,8 @@ RUN apt-get update && apt-get install -y \
   libblas-dev libblas-dev:arm64 libblas-dev:armhf \
   liblapack-dev liblapack-dev:arm64 liblapack-dev:armhf \
   libjpeg62-turbo-dev libjpeg62-turbo-dev:arm64 libjpeg62-turbo-dev:armhf \
+  # Install libheif for HEIF media decoding
+  && apt-get install -t bullseye -y libheif-dev/bullseye libheif-dev:arm64/bullseye libheif-dev:armhf/bullseye \
   # Cleanup
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -71,9 +76,13 @@ WORKDIR /app
 
 COPY api/data /app/data
 
+# Use latest unstable packages for libheif
+RUN echo 'deb http://deb.debian.org/debian bullseye main' >> /etc/apt/sources.list.d/sources.list
+
 RUN apt-get update \
   # Required dependencies
-  && apt-get install -y curl gpg libdlib19 ffmpeg
+  && apt-get install -t buster -y curl gpg libdlib19 ffmpeg \
+  && apt-get install -t bullseye -y libheif1
 
 # Install Darktable if building for a supported architecture
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
