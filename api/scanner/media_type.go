@@ -20,6 +20,7 @@ const (
 	TypeTiff MediaType = "image/tiff"
 	TypeWebp MediaType = "image/webp"
 	TypeBmp  MediaType = "image/bmp"
+	TypeHeic MediaType = "image/heic"
 
 	// Raw formats
 	TypeDNG MediaType = "image/x-adobe-dng"
@@ -73,6 +74,7 @@ var SupportedMimetypes = [...]MediaType{
 	TypeTiff,
 	TypeWebp,
 	TypeBmp,
+	TypeHeic,
 }
 
 var WebMimetypes = [...]MediaType{
@@ -144,6 +146,7 @@ var fileExtensions = map[string]MediaType{
 	".tif":  TypeTiff,
 	".tiff": TypeTiff,
 	".bmp":  TypeBmp,
+	".heic": TypeHeic,
 
 	// RAW formats
 	".dng": TypeDNG,

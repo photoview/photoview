@@ -11,34 +11,29 @@ import (
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
-	"gorm.io/gorm"
+
+	_ "github.com/strukturag/libheif/go/heif"
 )
 
-func DecodeImage(imagePath string) (image.Image, error) {
-	file, err := os.Open(imagePath)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open file to decode image (%s)", imagePath)
-	}
-	defer file.Close()
+func EncodeThumbnail(inputPath string, outputPath string) (*image_helpers.PhotoDimensions, error) {
 
-	image, err := imaging.Decode(file, imaging.AutoOrientation(true))
+	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to decode image (%s)", imagePath)
+		return nil, err
 	}
 
-	return image, nil
+	dimensions := image_helpers.PhotoDimensionsFromRect(inputImage.Bounds())
+	dimensions = dimensions.ThumbnailScale()
+
+	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
+	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
+		return nil, err
+	}
+
+	return &dimensions, nil
 }
 
-// EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
-type EncodeMediaData struct {
-	media           *models.Media
-	_photoImage     image.Image
-	_thumbnailImage image.Image
-	_contentType    *MediaType
-	_videoMetadata  *ffprobe.ProbeData
-}
-
-func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
+func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
 	photo_file, err := os.Create(outputPath)
 	if err != nil {
 		return errors.Wrapf(err, "could not create file: %s", outputPath)
@@ -51,6 +46,14 @@ func EncodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 	}
 
 	return nil
+}
+
+// EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
+type EncodeMediaData struct {
+	media          *models.Media
+	_photoImage    image.Image
+	_contentType   *MediaType
+	_videoMetadata *ffprobe.ProbeData
 }
 
 // ContentType reads the image to determine its content type
@@ -68,7 +71,7 @@ func (img *EncodeMediaData) ContentType() (*MediaType, error) {
 	return imgType, nil
 }
 
-func (img *EncodeMediaData) EncodeHighRes(tx *gorm.DB, outputPath string) error {
+func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 	contentType, err := img.ContentType()
 	if err != nil {
 		return err
@@ -89,36 +92,19 @@ func (img *EncodeMediaData) EncodeHighRes(tx *gorm.DB, outputPath string) error 
 			return errors.New("could not convert photo as no RAW converter was found")
 		}
 	} else {
-		image, err := img.photoImage(tx)
+		image, err := img.photoImage()
 		if err != nil {
 			return err
 		}
 
-		EncodeImageJPEG(image, outputPath, 70)
+		encodeImageJPEG(image, outputPath, 70)
 	}
 
 	return nil
 }
 
-func EncodeThumbnail(inputPath string, outputPath string) (*image_helpers.PhotoDimensions, error) {
-	inputImage, err := DecodeImage(inputPath)
-	if err != nil {
-		return nil, err
-	}
-
-	dimensions := image_helpers.PhotoDimensionsFromRect(inputImage.Bounds())
-	dimensions = dimensions.ThumbnailScale()
-
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
-	if err = EncodeImageJPEG(thumbImage, outputPath, 60); err != nil {
-		return nil, err
-	}
-
-	return &dimensions, nil
-}
-
-// PhotoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
-func (img *EncodeMediaData) photoImage(tx *gorm.DB) (image.Image, error) {
+// photoImage reads and decodes the image file and saves it in a cache so the photo in only decoded once
+func (img *EncodeMediaData) photoImage() (image.Image, error) {
 	if img._photoImage != nil {
 		return img._photoImage, nil
 	}
@@ -130,11 +116,40 @@ func (img *EncodeMediaData) photoImage(tx *gorm.DB) (image.Image, error) {
 		photoPath = img.media.Path
 	}
 
-	photoImg, err := DecodeImage(photoPath)
+	photoImg, err := img.decodeImage(photoPath)
 	if err != nil {
 		return nil, utils.HandleError("image decoding", err)
 	}
 
 	img._photoImage = photoImg
 	return img._photoImage, nil
+}
+
+func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open file to decode image (%s)", imagePath)
+	}
+	defer file.Close()
+
+	mediaType, err := img.ContentType()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get media content type needed to decode it (%s)", imagePath)
+	}
+
+	var decodedImage image.Image
+
+	if *mediaType == TypeHeic {
+		decodedImage, _, err = image.Decode(file)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to decode HEIF image (%s)", imagePath)
+		}
+	} else {
+		decodedImage, err = imaging.Decode(file, imaging.AutoOrientation(true))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to decode image (%s)", imagePath)
+		}
+	}
+
+	return decodedImage, nil
 }
