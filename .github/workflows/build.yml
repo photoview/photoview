@@ -81,8 +81,7 @@ jobs:
 
       - name: Docker Build
         run: |
-          mkdir -p /tmp/docker-image-${{ matrix.target_platform }}
-          docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args
+          docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
           
       - name: Docker Login
         run: |
