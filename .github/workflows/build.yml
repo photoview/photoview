@@ -105,15 +105,15 @@ jobs:
     steps:
       - name: Docker Login
         run: |
-          echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
+          echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
           
       - name: Create Manifest
         run: |
-          DOCKER_IMAGES="viktorstrate/photoview:linux-amd64-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} viktorstrate/photoview:linux-arm64-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} viktorstrate/photoview:linux-arm-v7-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} viktorstrate/photoview:linux-arm-v6-${GITHUB_SHA::8}"
+          DOCKER_IMAGES="${DOCKER_IMAGE}:linux-amd64-${GITHUB_SHA::8}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm64-${GITHUB_SHA::8}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v7-${GITHUB_SHA::8}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v6-${GITHUB_SHA::8}"
           
-          docker manifest create viktorstrate/photoview:test ${DOCKER_IMAGES}
-          docker manifest push viktorstrate/photoview:test
+          docker manifest create ${DOCKER_IMAGE}:test ${DOCKER_IMAGES}
+          docker manifest push ${DOCKER_IMAGE}:test
 
