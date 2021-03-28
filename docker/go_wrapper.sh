@@ -104,4 +104,4 @@ if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; th
   export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
 fi
 
-exec /usr/local/go/bin/go "$@"
+exec /usr/bin/go "$@"
