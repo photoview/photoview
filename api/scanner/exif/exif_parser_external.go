@@ -14,10 +14,8 @@ type externalExifParser struct{}
 
 func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
 	// Init ExifTool
-
-	et2 := exiftool.Charset("-n")
-
-	et, err := 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																			.NewExiftool(et2)
+	extraInitArgs := []string{"-n"}
+	et, err := exiftool.NewExiftool(exiftool.AddInitArgs(extraInitArgs))
 	if err != nil {
 		log.Printf("Error initializing ExifTool: %s\n", err)
 		return nil, err
@@ -99,9 +97,9 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 
 		// Get flash info
-		flash, err := fileInfo.GetString("Flash")
+		flash, err := fileInfo.GetInt("Flash")
 		if err == nil {
-			log.Printf("Flash: %s", flash)
+			log.Printf("Flash: %d", flash)
 			newExif.Flash = &flash
 		}
 
@@ -113,71 +111,27 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 
 		// Get exposure program
-		expProgram, err := fileInfo.GetStrings("ExposureProgram")
+		expProgram, err := fileInfo.GetInt("ExposureProgram")
 		if err == nil {
-			for _, value := range expProgram {
-				log.Printf("%s", value)
-			}
-			//log.Printf("Exposure Program: %d", expProgram)
+			log.Printf("Exposure Program: %d", expProgram)
+			newExif.ExposureProgram = &expProgram
 		}
 
 		// GPS coordinates - longitude
-		longitudeRaw, err := fileInfo.GetString("GPSLongitude")
+		longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
 		if err == nil {
-			log.Printf("GPS longitude: %s", longitudeRaw)
-			value, err := ConvertCoodinateToFloat(longitudeRaw)
-			if err == nil {
-				newExif.GPSLongitude = &value
-			}
+			log.Printf("GPS longitude: %f", longitudeRaw)
+			newExif.GPSLongitude = &longitudeRaw
 		}
 
 		// GPS coordinates - latitude
-		latitudeRaw, err := fileInfo.GetString("GPSLatitude")
+		latitudeRaw, err := fileInfo.GetFloat("GPSLatitude")
 		if err == nil {
-			log.Printf("GPS latitude: %s", latitudeRaw)
-			value, err := ConvertCoodinateToFloat(latitudeRaw)
-			if err == nil {
-				newExif.GPSLatitude = &value
-			}
+			log.Printf("GPS latitude: %f", latitudeRaw)
+			newExif.GPSLatitude = &latitudeRaw
 		}
 	}
 
 	returnExif = &newExif
 	return
-}
-
-func ConvertCoodinateToFloat(coordinate string) (value float64, err error) {
-	reg, err := regexp.Compile("[0-9.]+")
-	if err != nil {
-		return 0, err
-	}
-
-	coordinateStr := reg.FindAllString(coordinate, -1)
-	log.Printf("GPS: %s length: %d\n", coordinateStr, len(coordinateStr))
-	if len(coordinateStr) != 3 {
-		return 0, err
-	}
-
-	deg, err := strconv.ParseFloat(coordinateStr[0], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	minute, err := strconv.ParseFloat(coordinateStr[1], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	second, err := strconv.ParseFloat(coordinateStr[2], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	var multiplier float64 = 1
-	if deg < 0 {
-		multiplier = -1
-	}
-
-	value = (deg + minute / 60 + second / 3600) * multiplier
-	return value, nil
 }

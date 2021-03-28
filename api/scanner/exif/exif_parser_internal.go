@@ -106,9 +106,10 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 	}
 
-	flash, err := exifTags.Flash()
+	flash, err := p.readIntegerTag(exifTags, exif.Flash, media)
 	if err == nil {
-		newExif.Flash = &flash
+		flash64 := int64(*flash)
+		newExif.Flash = &flash64
 	}
 
 	orientation, err := p.readIntegerTag(exifTags, exif.Orientation, media)

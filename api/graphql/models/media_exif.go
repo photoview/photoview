@@ -14,7 +14,7 @@ type MediaEXIF struct {
 	Aperture        *float64
 	Iso             *int64
 	FocalLength     *float64
-	Flash           *string
+	Flash           *int64
 	Orientation     *int64
 	ExposureProgram *int64
 	GPSLatitude     *float64

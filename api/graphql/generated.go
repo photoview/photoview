@@ -1889,7 +1889,7 @@ type MediaEXIF {
   "The focal length of the lens, when the image was taken"
   focalLength: Float
   "A formatted description of the flash settings, when the image was taken"
-  flash: String
+  flash: Int
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
 }
@@ -4584,9 +4584,9 @@ func (ec *executionContext) _MediaEXIF_flash(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_exposureProgram(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
