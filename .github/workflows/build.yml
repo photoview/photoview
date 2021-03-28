@@ -77,17 +77,20 @@ jobs:
             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
             --build-arg VCS_REF=${GITHUB_SHA::8} \
             ${TAGS} --file Dockerfile .
+            
+          OUTPUT_PLATFORM=$(echo ${{ matrix.target_platform }} | sed 's/\//-/g')
+          echo ::set-output name=output_platform::${OUTPUT_PLATFORM}
 
       - name: Docker Build
         run: |
           mkdir -p /tmp/docker-image-${{ matrix.target_platform }}
-          docker buildx build --output "type=oci,dest=/tmp/docker-image-${{ matrix.target_platform }}/${{ github.sha }}.oci" ${{ steps.prepare.outputs.buildx_args }}
+          docker buildx build --output "type=oci,dest=/tmp/docker-image-${{ steps.prepare.outputs.output_platform }}-${{ github.sha }}.oci" ${{ steps.prepare.outputs.buildx_args }}
           
       - name: Save Image
         uses: actions/upload-artifact@v2
         with:
-          name: docker-image-${{ matrix.target_platform }}
-          path: /tmp/docker-image-${{ matrix.target_platform }}/${{ github.sha }}.oci
+          name: docker-image-${{ steps.prepare.outputs.output_platform }}
+          path: /tmp/docker-image-${{ steps.prepare.outputs.output_platform }}-${{ github.sha }}.oci
 
   push:
     name: Push Docker Images
