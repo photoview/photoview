@@ -102,11 +102,9 @@ jobs:
     steps:
       - name: Load Images
         uses: actions/download-artifact@v2
-        with:
-          path: /docker-images
           
       - name: Print Artifacts
-        run: ls -lah /docker-images
+        run: ls -R
     
       #- name: Docker Login
       #  env:
