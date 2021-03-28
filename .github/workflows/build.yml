@@ -80,7 +80,8 @@ jobs:
 
       - name: Docker Build
         run: |
-          docker buildx build --output "type=oci,dest=/tmp/docker-image-${{ matrix.target_platform }}-${{ github.sha }}.oci" ${{ steps.prepare.outputs.buildx_args }}
+          mkdir -p /tmp/docker-image-${{ matrix.target_platform }}
+          docker buildx build --output "type=oci,dest=/tmp/docker-image-${{ matrix.target_platform }}/${{ github.sha }}.oci" ${{ steps.prepare.outputs.buildx_args }}
           
       - name: Save Image
         uses: actions/upload-artifact@v2
