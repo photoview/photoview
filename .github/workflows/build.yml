@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Build and deploy docker images
+    name: Build Docker Image
     runs-on: ubuntu-20.04
     
     strategy:
@@ -78,21 +78,41 @@ jobs:
             --build-arg VCS_REF=${GITHUB_SHA::8} \
             ${TAGS} --file Dockerfile .
 
-      - name: Build Docker images
+      - name: Docker Build
         run: |
-          docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
+          docker buildx build --output "type=oci,dest=/tmp/docker-image-${{ matrix.target_platform }}-${{ github.sha }}.oci" ${{ steps.prepare.outputs.buildx_args }}
+          
+      - name: Save Image
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-image-${{ matrix.target_platform }}
+          path: /tmp/docker-image-${{ matrix.target_platform }}-${{ github.sha }}.oci
 
-      - name: Docker Login
-        if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        env:
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
+  push:
+    name: Push Docker Images
+    runs-on: ubuntu-20.04
+    if: github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
+    
+    needs: [build]
 
-      - name: Push to Docker Hub
-        if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        run: |
-          docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
+    steps:
+      - name: Load Images
+        uses: actions/download-artifact@v2
+        with:
+          path: /docker-images
+          
+      - name: Print Artifacts
+        run: ls -lah /docker-images
+    
+      #- name: Docker Login
+      #  env:
+      #    DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      #  run: |
+      #    echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
+
+      #- name: Push to Docker Hub
+      #  run: |
+      #    docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
 
       # - name: Docker Check Manifest
       #   if: always() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
@@ -100,6 +120,5 @@ jobs:
       #     docker run --rm mplatform/mquery ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
 
       - name: Clear
-        if: always() && github.event_name != 'pull_request'
         run: |
           rm -f ${HOME}/.docker/config.json
