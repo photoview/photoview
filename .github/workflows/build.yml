@@ -87,7 +87,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: docker-image-${{ matrix.target_platform }}
-          path: /tmp/docker-image-${{ matrix.target_platform }}-${{ github.sha }}.oci
+          path: /tmp/docker-image-${{ matrix.target_platform }}/${{ github.sha }}.oci
 
   push:
     name: Push Docker Images
