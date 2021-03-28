@@ -65,7 +65,7 @@ jobs:
           OUTPUT_PLATFORM=$(echo ${{ matrix.target_platform }} | sed 's/\//-/g')
           echo ::set-output name=output_platform::${OUTPUT_PLATFORM}
           
-          TAG="--tag ${OUTPUT_PLATFORM}-${GITHUB_SHA::8}"
+          TAG="--tag ${DOCKER_IMAGE}:${OUTPUT_PLATFORM}-${GITHUB_SHA::8}"
 
           echo ::set-output name=docker_username::${DOCKER_USERNAME}
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
