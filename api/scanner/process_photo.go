@@ -149,7 +149,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.MediaName)
 			didProcess = true
 
-			err = imageData.EncodeHighRes(tx, baseImagePath)
+			err = imageData.EncodeHighRes(baseImagePath)
 			if err != nil {
 				return false, errors.Wrap(err, "creating high-res cached image")
 			}
@@ -275,7 +275,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 
 func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
-	err := imageData.EncodeHighRes(tx, imagePath)
+	err := imageData.EncodeHighRes(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}

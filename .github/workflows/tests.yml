@@ -27,8 +27,10 @@ jobs:
 
       - name: Get C dependencies
         run: |
+          sudo add-apt-repository ppa:strukturag/libheif
+          sudo add-apt-repository ppa:strukturag/libde265
           sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev
+          sudo apt-get install -y libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
 
       - name: Get GO dependencies
         run: |

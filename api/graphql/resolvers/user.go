@@ -321,7 +321,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 
 	var deletedAlbumIDs []int = nil
 
-	err := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
 			return err
 		}
@@ -346,12 +346,12 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		}
 
 		// Cleanup if no user owns the album anymore
-		var count int
-		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&count).Error; err != nil {
+		var userAlbumCount int
+		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&userAlbumCount).Error; err != nil {
 			return err
 		}
 
-		if count == 0 {
+		if userAlbumCount == 0 {
 			deletedAlbumIDs = append(childAlbumIDs, albumID)
 			childAlbumIDs = nil
 
@@ -360,17 +360,13 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 				deletedAlbumIDs = nil
 				return err
 			}
-
-			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(); err != nil {
-				return err
-			}
 		}
 
 		return nil
 	})
 
-	if err != nil {
-		return nil, err
+	if transactionError != nil {
+		return nil, transactionError
 	}
 
 	if deletedAlbumIDs != nil {
@@ -381,6 +377,11 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 			if err := os.RemoveAll(cacheAlbumPath); err != nil {
 				return nil, err
 			}
+		}
+
+		// Reload faces as media might have been deleted
+		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(r.Database); err != nil {
+			return nil, err
 		}
 	}
 

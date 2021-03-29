@@ -12,7 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	"github.com/sabhiram/go-gitignore"
+	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -75,10 +75,11 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	album_has_changes := false
 	for count, media := range albumMedia {
-		// tx, err := db.Begin()
+		processing_was_needed := false
 
 		transactionError := db.Transaction(func(tx *gorm.DB) error {
-			processing_was_needed, err := ProcessMedia(tx, media)
+			log.Printf("Process media transaction enter (%s)", media.Path)
+			processing_was_needed, err = ProcessMedia(tx, media)
 			if err != nil {
 				return errors.Wrapf(err, "failed to process photo (%s)", media.Path)
 			}
@@ -93,21 +94,22 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 					Content:  fmt.Sprintf("Processed media at %s", media.Path),
 					Progress: &progress,
 				})
-
-				if media.Type == models.MediaTypePhoto {
-					go func() {
-						if err := face_detection.GlobalFaceDetector.DetectFaces(media); err != nil {
-							ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
-						}
-					}()
-				}
 			}
 
+			log.Printf("Process media transaction exit (%s)", media.Path)
 			return nil
 		})
 
 		if transactionError != nil {
 			ScannerError("Failed to begin database transaction: %s", transactionError)
+		}
+
+		if processing_was_needed && media.Type == models.MediaTypePhoto {
+			go func(media *models.Media) {
+				if err := face_detection.GlobalFaceDetector.DetectFaces(db, media); err != nil {
+					ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
+				}
+			}(media)
 		}
 	}
 
@@ -139,14 +141,14 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 	}
 
 	// Get ignore data
-	 albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
+	albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
 
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
 		if !item.IsDir() && isPathMedia(photoPath, cache) {
 			// Match file against ignore data
-			if (albumIgnore.MatchesPath(item.Name())) {
+			if albumIgnore.MatchesPath(item.Name()) {
 				log.Printf("File %s ignored\n", item.Name())
 				continue
 			}
