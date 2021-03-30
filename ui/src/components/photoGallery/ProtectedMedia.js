@@ -1,6 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+const isNativeLazyLoadSupported = false //'loading' in HTMLImageElement.prototype
+const placeholder = 'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
 const getProtectedUrl = url => {
   if (url == null) return null
 
@@ -18,17 +21,24 @@ const getProtectedUrl = url => {
 /**
  * An image that needs authorization to load
  */
-export const ProtectedImage = ({ src, ...props }) => (
-  <img
-    key={src}
-    {...props}
-    src={getProtectedUrl(src)}
-    crossOrigin="use-credentials"
-  />
-)
+export const ProtectedImage = ({ src, loading, ...props }) => {
+  if (!isNativeLazyLoadSupported && loading === 'lazy') {
+    props['data-src'] = getProtectedUrl(src)
+  }
+
+  return (
+    <img
+      key={src}
+      {...props}
+      src={loading === 'lazy' ? placeholder : getProtectedUrl(src)}
+      crossOrigin="use-credentials"
+    />
+  )
+}
 
 ProtectedImage.propTypes = {
   src: PropTypes.string,
+  loading: PropTypes.string,
 }
 
 export const ProtectedVideo = ({ media, ...props }) => (

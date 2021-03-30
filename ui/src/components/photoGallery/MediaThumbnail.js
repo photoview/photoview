@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useMutation, gql } from '@apollo/client'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import LazyLoad from 'react-lazyload'
 import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
 
@@ -35,30 +34,20 @@ const StyledPhoto = styled(ProtectedImage)`
   transition: opacity 300ms;
 `
 
-const PhotoImg = photoProps => {
+const LazyPhoto = photoProps => {
   const [loaded, setLoaded] = useState(false)
 
   return (
     <StyledPhoto
       {...photoProps}
+      loading="lazy"
       loaded={loaded ? 1 : 0}
-      onLoad={() => {
-        setLoaded(true)
+      onLoad={e => {
+        !e.target.dataset.src && setLoaded(true)
       }}
     />
   )
 }
-
-const LazyPhoto = React.memo(
-  props => {
-    return (
-      <LazyLoad scrollContainer="#layout-content">
-        <PhotoImg {...props} />
-      </LazyLoad>
-    )
-  },
-  (prevProps, nextProps) => prevProps.src === nextProps.src
-)
 
 LazyPhoto.propTypes = {
   src: PropTypes.string,

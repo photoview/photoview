@@ -9,6 +9,7 @@ import useURLParameters from '../../hooks/useURLParameters'
 import { FavoritesCheckbox } from '../AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
+import lazyLoad from '../../helpers/LazyLoad'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
@@ -155,6 +156,12 @@ const TimelineGallery = () => {
       })
     }
   }, [onlyFavorites])
+
+  useEffect(() => {
+    if (!loading) {
+      lazyLoad(document.querySelectorAll('img[data-src]'))
+    }
+  }, [finishedLoadingMore, onlyFavorites, loading])
 
   if (error) {
     return error
