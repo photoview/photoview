@@ -139,7 +139,7 @@ jobs:
             -d '{"username":"${DOCKER_USERNAME}","password":"${DOCKER_PASSWORD}"}' \
             https://hub.docker.com/v2/users/login/ | jq --raw-output '.token')
           
-          PLATFORMS=("amd64", "arm64", "arm-v7", "arm-v6"}
+          PLATFORMS=("amd64", "arm64", "arm-v7", "arm-v6")
           for PLATFORM in ${PLATFORMS[@]}; do
             TAG="linux-${PLATFORM}-${GITHUB_SHA::8}"
             echo "Deleting tag: ${DOCKER_IMAGE}:${TAG}"
