@@ -2,7 +2,8 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const isNativeLazyLoadSupported = 'loading' in HTMLImageElement.prototype
-const placeholder = 'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+const placeholder =
+  'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
 const getProtectedUrl = url => {
   if (url == null) return null
@@ -30,7 +31,12 @@ export const ProtectedImage = ({ src, loading, ...props }) => {
     <img
       key={src}
       {...props}
-      src={loading === 'lazy' ? placeholder : getProtectedUrl(src)}
+      loading={loading || 'eager'}
+      src={
+        loading === 'lazy' && !isNativeLazyLoadSupported
+          ? placeholder
+          : getProtectedUrl(src)
+      }
       crossOrigin="use-credentials"
     />
   )

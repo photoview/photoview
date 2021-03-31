@@ -29,7 +29,6 @@ const PresentMedia = ({ media, imageLoaded, ...otherProps }) => {
         <StyledPhoto
           style={{ display: 'none' }}
           src={media.highRes?.url}
-          loading="eager"
           onLoad={e => {
             e.target.style.display = 'initial'
             imageLoaded && imageLoaded()
