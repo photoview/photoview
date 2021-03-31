@@ -10,7 +10,7 @@ type MediaEXIF struct {
 	Maker           *string
 	Lens            *string
 	DateShot        *time.Time
-	Exposure        *string
+	Exposure        *float64
 	Aperture        *float64
 	Iso             *int64
 	FocalLength     *float64

@@ -1881,7 +1881,7 @@ type MediaEXIF {
   lens: String
   dateShot: Time
   "The exposure time of the image"
-  exposure: String
+  exposure: Float
   "The aperature stops of the image"
   aperture: Float
   "The ISO setting of the image"
@@ -4456,9 +4456,9 @@ func (ec *executionContext) _MediaEXIF_exposure(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_aperture(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {

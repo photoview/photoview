@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/kjeldgaard/go-exiftool"
+	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 )
 

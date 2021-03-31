@@ -58,10 +58,12 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		newExif.DateShot = &date
 	}
 
-	exposure, err := p.readRationalTag(exifTags, exif.ExposureTime, media)
+	exposure, err := exifTags.Get(exif.ExposureTime)
 	if err == nil {
-		exposureStr := exposure.RatString()
-		newExif.Exposure = &exposureStr
+		exposureFloat, err := exposure.Float(0)
+		if err == nil {
+			newExif.Exposure = &exposureFloat
+		}
 	}
 
 	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, media)

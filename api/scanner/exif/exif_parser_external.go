@@ -6,16 +6,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kjeldgaard/go-exiftool"
+	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
 type externalExifParser struct{}
 
 func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
-	// Init ExifTool
-	extraInitArgs := []string{"-n"}
-	et, err := exiftool.NewExiftool(exiftool.AddInitArgs(extraInitArgs))
+	// ExifTool - No print conversion mode
+	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
 	if err != nil {
 		log.Printf("Error initializing ExifTool: %s\n", err)
 		return nil, err
@@ -64,7 +63,7 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 
 		// Get exposure time
-		exposureTime, err := fileInfo.GetString("ExposureTime")
+		exposureTime, err := fileInfo.GetFloat("ExposureTime")
 		if err == nil {
 			log.Printf("Exposure time: %s", exposureTime)
 			newExif.Exposure = &exposureTime

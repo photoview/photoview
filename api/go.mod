@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/Kagami/go-face v0.0.0-20200825065730-3dd2d74dccfb
-	github.com/barasher/go-exiftool v1.3.2 // indirect
+	github.com/barasher/go-exiftool v1.4.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/handlers v1.5.1
@@ -13,7 +13,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/h2non/filetype v1.1.1
 	github.com/joho/godotenv v1.3.0
-	github.com/kjeldgaard/go-exiftool v1.3.3
 	github.com/pkg/errors v0.9.1
 	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f
 	github.com/strukturag/libheif v1.11.0
