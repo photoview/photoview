@@ -27,11 +27,14 @@ export const ProtectedImage = ({ src, loading, ...props }) => {
     props['data-src'] = getProtectedUrl(src)
   }
 
+  if (isNativeLazyLoadSupported) {
+    props.loading = loading || 'eager'
+  }
+
   return (
     <img
       key={src}
       {...props}
-      loading={loading || 'eager'}
       src={
         loading === 'lazy' && !isNativeLazyLoadSupported
           ? placeholder

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useMutation, gql } from '@apollo/client'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
@@ -36,15 +36,16 @@ const StyledPhoto = styled(ProtectedImage)`
 
 const LazyPhoto = photoProps => {
   const [loaded, setLoaded] = useState(false)
+  const onLoad = useCallback(e => {
+    !e.target.dataset.src && setLoaded(true)
+  }, [])
 
   return (
     <StyledPhoto
       {...photoProps}
       loading="lazy"
       loaded={loaded ? 1 : 0}
-      onLoad={e => {
-        !e.target.dataset.src && setLoaded(true)
-      }}
+      onLoad={onLoad}
     />
   )
 }

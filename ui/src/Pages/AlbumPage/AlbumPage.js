@@ -7,7 +7,7 @@ import Layout from '../../Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
-import lazyLoad from '../../helpers/LazyLoad'
+import LazyLoad from '../../helpers/LazyLoad'
 
 const albumQuery = gql`
   query albumQuery(
@@ -126,12 +126,13 @@ function AlbumPage({ match }) {
   )
 
   useEffect(() => {
-    lazyLoad(document.querySelectorAll('img[data-src]'))
+    LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
+    return () => LazyLoad.disconnect()
   })
 
   useEffect(() => {
     if (!loading) {
-      lazyLoad(document.querySelectorAll('img[data-src]'))
+      LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
     }
   }, [finishedLoadingMore, onlyFavorites, loading])
 
