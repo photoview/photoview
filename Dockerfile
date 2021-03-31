@@ -28,6 +28,8 @@ RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependenci
 
 COPY docker/go_wrapper.sh /go/bin/go
 RUN chmod +x /go/bin/go
+ENV GOPATH="/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
 
 ENV CGO_ENABLED 1
 
@@ -41,7 +43,7 @@ COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
 # Patch go-face
-RUN sed -i 's/-march=native//g' /root/go/pkg/mod/github.com/!kagami/go-face*/face.go
+RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
 
 # Build dependencies that use CGO
 RUN go install \

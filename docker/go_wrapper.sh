@@ -66,39 +66,33 @@ fi
 if [ "$CGO_ENABLED" = "1" ]; then
   case "$GOARCH" in
   "amd64")
-    export CC="x86_64-linux-gnu-gcc"
-    export CXX="x86_64-linux-gnu-g++"
+    export COMPILER_ARCH="x86_64-linux-gnu"
     ;;
   "ppc64le")
-    export CC="powerpc64le-linux-gnu-gcc"
-    export CXX="powerpc64le-linux-gnu-g++"
+    export COMPILER_ARCH="powerpc64le-linux-gnu"
     ;;
   "s390x")
-    export CC="s390x-linux-gnu-gcc"
-    export CXX="s390x-linux-gnu-g++"
+    export COMPILER_ARCH="s390x-linux-gnu"
     ;;
   "arm64")
-    export CC="aarch64-linux-gnu-gcc"
-    export CXX="aarch64-linux-gnu-g++"
+    export COMPILER_ARCH="aarch64-linux-gnu"
     ;;
   "arm")
     case "$GOARM" in
     "5")
-      export CC="arm-linux-gnueabi-gcc"
-      export CXX="arm-linux-gnueabi-g++"
+      export COMPILER_ARCH="arm-linux-gnueabi"
       ;;
     *)
-      export CC="arm-linux-gnueabihf-gcc"
-      export CXX="arm-linux-gnueabihf-g++"
+      export COMPILER_ARCH="arm-linux-gnueabihf"
       ;;
     esac
     ;;
   esac
 fi
 
-if [ "$GOOS" = "wasi" ]; then
-  export GOOS="js"
-fi
+export CC="${COMPILER_ARCH}-gcc"
+export CXX="${COMPILER_ARCH}-g++"
+export PKG_CONFIG_PATH="/usr/lib/${COMPILER_ARCH}/pkgconfig/"
 
 if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; then
   export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
