@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-const isNativeLazyLoadSupported = false //'loading' in HTMLImageElement.prototype
+const isNativeLazyLoadSupported = 'loading' in HTMLImageElement.prototype
 const placeholder = 'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
 const getProtectedUrl = url => {
