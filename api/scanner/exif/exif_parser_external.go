@@ -65,7 +65,7 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		// Get exposure time
 		exposureTime, err := fileInfo.GetFloat("ExposureTime")
 		if err == nil {
-			log.Printf("Exposure time: %s", exposureTime)
+			log.Printf("Exposure time: %f", exposureTime)
 			newExif.Exposure = &exposureTime
 		}
 
