@@ -57,7 +57,7 @@
     "mapbox-gl": "^1.13.0",
     "prettier": "^2.2.1",
     "react-router-prop-types": "^1.0.5",
-    "react-test-renderer": "^17.0.1",
+    "react-test-renderer": "^17.0.2",
     "workbox-build": "^6.1.1"
   },
   "cache": {
