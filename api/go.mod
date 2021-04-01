@@ -21,8 +21,8 @@ require (
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
-	gorm.io/driver/mysql v1.0.4
+	gorm.io/driver/mysql v1.0.5
 	gorm.io/driver/postgres v1.0.8
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.20.12
+	gorm.io/gorm v1.21.3
 )
