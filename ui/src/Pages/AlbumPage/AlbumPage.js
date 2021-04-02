@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import ReactRouterPropTypes from 'react-router-prop-types'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
@@ -7,6 +7,7 @@ import Layout from '../../Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
+import LazyLoad from '../../helpers/LazyLoad'
 
 const albumQuery = gql`
   query albumQuery(
@@ -123,6 +124,17 @@ function AlbumPage({ match }) {
     },
     [setOnlyFavorites, refetch]
   )
+
+  useEffect(() => {
+    LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
+    return () => LazyLoad.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!loading) {
+      LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
+    }
+  }, [finishedLoadingMore, onlyFavorites, loading])
 
   if (error) return <div>Error</div>
 

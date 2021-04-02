@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
 import Layout from '../../Layout'
 import { useQuery, gql } from '@apollo/client'
+import LazyLoad from '../../helpers/LazyLoad'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {
@@ -19,6 +20,14 @@ const getAlbumsQuery = gql`
 
 const AlbumsPage = () => {
   const { loading, error, data } = useQuery(getAlbumsQuery)
+
+  useEffect(() => {
+    return () => LazyLoad.disconnect()
+  }, [])
+
+  useEffect(() => {
+    !loading && LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
+  }, [loading])
 
   return (
     <Layout title="Albums">
