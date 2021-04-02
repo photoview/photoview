@@ -63,7 +63,7 @@ COPY api/data /app/data
 
 RUN apt-get update \
   # Required dependencies
-  && apt-get install -y curl gpg libdlib19 ffmpeg libheif1
+  && apt-get install -y curl gpg libdlib19 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \

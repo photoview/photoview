@@ -58,10 +58,12 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		newExif.DateShot = &date
 	}
 
-	exposure, err := p.readRationalTag(exifTags, exif.ExposureTime, media)
+	exposure, err := exifTags.Get(exif.ExposureTime)
 	if err == nil {
-		exposureStr := exposure.RatString()
-		newExif.Exposure = &exposureStr
+		exposureFloat, err := exposure.Float(0)
+		if err == nil {
+			newExif.Exposure = &exposureFloat
+		}
 	}
 
 	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, media)
@@ -78,7 +80,8 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		if err != nil {
 			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %s\n", media.Title)
 		} else {
-			newExif.Iso = &iso
+			iso64 := int64(iso)
+			newExif.Iso = &iso64
 		}
 	}
 
@@ -105,19 +108,22 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 	}
 
-	flash, err := exifTags.Flash()
+	flash, err := p.readIntegerTag(exifTags, exif.Flash, media)
 	if err == nil {
-		newExif.Flash = &flash
+		flash64 := int64(*flash)
+		newExif.Flash = &flash64
 	}
 
 	orientation, err := p.readIntegerTag(exifTags, exif.Orientation, media)
 	if err == nil {
-		newExif.Orientation = orientation
+		orientation64 := int64(*orientation)
+		newExif.Orientation = &orientation64
 	}
 
 	exposureProgram, err := p.readIntegerTag(exifTags, exif.ExposureProgram, media)
 	if err == nil {
-		newExif.ExposureProgram = exposureProgram
+		exposureProgram64 := int64(*exposureProgram)
+		newExif.ExposureProgram = &exposureProgram64
 	}
 
 	lat, long, err := exifTags.LatLong()

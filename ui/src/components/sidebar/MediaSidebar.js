@@ -134,6 +134,7 @@ const exifNameLookup = {
   flash: 'Flash',
 }
 
+// From https://exiftool.org/TagNames/EXIF.html
 const exposurePrograms = {
   0: 'Not defined',
   1: 'Manual',
@@ -144,14 +145,58 @@ const exposurePrograms = {
   6: 'Action program',
   7: 'Portrait mode',
   8: 'Landscape mode ',
+  9: 'Bulb',
 }
+
+// From https://exiftool.org/TagNames/EXIF.html#Flash
+const flash = {
+  0x0: 'No Flash',
+  0x1: 'Fired',
+  0x5: 'Fired, Return not detected',
+  0x7: 'Fired, Return detected',
+  0x8: 'On, Did not fire',
+  0x9: 'On, Fired',
+  0xd: 'On, Return not detected',
+  0xf: 'On, Return detected',
+  0x10: 'Off, Did not fire',
+  0x14: 'Off, Did not fire, Return not detected',
+  0x18: 'Auto, Did not fire',
+  0x19: 'Auto, Fired',
+  0x1d: 'Auto, Fired, Return not detected',
+  0x1f: 'Auto, Fired, Return detected',
+  0x20: 'No flash function',
+  0x30: 'Off, No flash function',
+  0x41: 'Fired, Red-eye reduction',
+  0x45: 'Fired, Red-eye reduction, Return not detected',
+  0x47: 'Fired, Red-eye reduction, Return detected',
+  0x49: 'On, Red-eye reduction',
+  0x4d: 'On, Red-eye reduction, Return not detected',
+  0x4f: 'On, Red-eye reduction, Return detected',
+  0x50: 'Off, Red-eye reduction',
+  0x58: 'Auto, Did not fire, Red-eye reduction',
+  0x59: 'Auto, Fired, Red-eye reduction',
+  0x5d: 'Auto, Fired, Red-eye reduction, Return not detected',
+  0x5f: 'Auto, Fired, Red-eye reduction, Return detected',
+}
+
+// From https://exiftool.org/TagNames/EXIF.html
+// const orientation = {
+//   1: 'Horizontal (normal)',
+//   2: 'Mirror horizontal',
+//   3: 'Rotate 180',
+//   4: 'Mirror vertical',
+//   5: 'Mirror horizontal and rotate 270 CW',
+//   6: 'Rotate 90 CW',
+//   7: 'Mirror horizontal and rotate 90 CW',
+//   8: 'Rotate 270 CW',
+// }
 
 const SidebarContent = ({ media, hidePreview }) => {
   let exifItems = []
 
   if (media && media.exif) {
     let exifKeys = Object.keys(exifNameLookup).filter(
-      x => !!media.exif[x] && x != '__typename'
+      x => media.exif[x] !== undefined && x != '__typename'
     )
 
     let exif = exifKeys.reduce(
@@ -163,16 +208,25 @@ const SidebarContent = ({ media, hidePreview }) => {
     )
 
     exif.dateShot = new Date(exif.dateShot).toLocaleString()
-    if (exif.exposureProgram) {
+
+    if (
+      exif.exposureProgram !== undefined &&
+      exif.exposureProgram !== 0 &&
+      exposurePrograms[exif.exposureProgram]
+    ) {
       exif.exposureProgram = exposurePrograms[exif.exposureProgram]
     }
 
-    if (exif.aperture) {
+    if (exif.aperture !== undefined) {
       exif.aperture = `f/${exif.aperture}`
     }
 
-    if (exif.focalLength) {
+    if (exif.focalLength !== undefined) {
       exif.focalLength = `${exif.focalLength}mm`
+    }
+
+    if (exif.flash !== undefined && flash[exif.flash]) {
+      exif.flash = flash[exif.flash]
     }
 
     exifItems = exifKeys.map(key => (

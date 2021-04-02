@@ -304,7 +304,7 @@ type MediaEXIF {
   lens: String
   dateShot: Time
   "The exposure time of the image"
-  exposure: String
+  exposure: Float
   "The aperature stops of the image"
   aperture: Float
   "The ISO setting of the image"
@@ -312,7 +312,7 @@ type MediaEXIF {
   "The focal length of the lens, when the image was taken"
   focalLength: Float
   "A formatted description of the flash settings, when the image was taken"
-  flash: String
+  flash: Int
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
 }

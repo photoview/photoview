@@ -10,13 +10,13 @@ type MediaEXIF struct {
 	Maker           *string
 	Lens            *string
 	DateShot        *time.Time
-	Exposure        *string
+	Exposure        *float64
 	Aperture        *float64
-	Iso             *int
+	Iso             *int64
 	FocalLength     *float64
-	Flash           *string
-	Orientation     *int
-	ExposureProgram *int
+	Flash           *int64
+	Orientation     *int64
+	ExposureProgram *int64
 	GPSLatitude     *float64
 	GPSLongitude    *float64
 }

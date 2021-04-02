@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
+	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
@@ -31,7 +32,16 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		}
 	}
 
-	var parser exifParser = &internalExifParser{}
+	// Decide between internal or external Exif parser
+	et, err := exiftool.NewExiftool()
+	et.Close()
+	var parser exifParser
+	if err != nil {
+		parser = &internalExifParser{}
+	} else {
+		parser = &externalExifParser{}
+	}
+
 
 	exif, err := parser.ParseExif(media)
 	if err != nil {
