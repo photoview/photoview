@@ -128,7 +128,7 @@ function AlbumPage({ match }) {
   useEffect(() => {
     LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
     return () => LazyLoad.disconnect()
-  })
+  }, [])
 
   useEffect(() => {
     if (!loading) {

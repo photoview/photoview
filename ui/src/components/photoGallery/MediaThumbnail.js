@@ -43,7 +43,7 @@ const LazyPhoto = photoProps => {
   return (
     <StyledPhoto
       {...photoProps}
-      loading="lazy"
+      lazyLoading
       loaded={loaded ? 1 : 0}
       onLoad={onLoad}
     />

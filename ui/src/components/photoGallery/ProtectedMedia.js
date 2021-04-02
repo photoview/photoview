@@ -2,8 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const isNativeLazyLoadSupported = 'loading' in HTMLImageElement.prototype
-const placeholder =
-  'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+const placeholder = 'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
 const getProtectedUrl = url => {
   if (url == null) return null
@@ -21,14 +20,17 @@ const getProtectedUrl = url => {
 
 /**
  * An image that needs authorization to load
+ * Set lazyLoading to true if you want the image to be loaded once it enters the viewport
+ * Native lazy load via HTMLImageElement.loading attribute will be preferred if it is supported by the browser,
+ * otherwise IntersectionObserver will be used.
  */
-export const ProtectedImage = ({ src, loading, ...props }) => {
-  if (!isNativeLazyLoadSupported && loading === 'lazy') {
+export const ProtectedImage = ({ src, lazyLoading, ...props }) => {
+  if (!isNativeLazyLoadSupported && lazyLoading) {
     props['data-src'] = getProtectedUrl(src)
   }
 
-  if (isNativeLazyLoadSupported) {
-    props.loading = loading || 'eager'
+  if (isNativeLazyLoadSupported && lazyLoading) {
+    props.loading = 'lazy'
   }
 
   return (
@@ -36,7 +38,7 @@ export const ProtectedImage = ({ src, loading, ...props }) => {
       key={src}
       {...props}
       src={
-        loading === 'lazy' && !isNativeLazyLoadSupported
+        lazyLoading && !isNativeLazyLoadSupported
           ? placeholder
           : getProtectedUrl(src)
       }
@@ -47,7 +49,7 @@ export const ProtectedImage = ({ src, loading, ...props }) => {
 
 ProtectedImage.propTypes = {
   src: PropTypes.string,
-  loading: PropTypes.string,
+  lazyLoading: PropTypes.bool,
 }
 
 export const ProtectedVideo = ({ media, ...props }) => (
