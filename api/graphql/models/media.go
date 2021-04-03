@@ -39,13 +39,8 @@ func (Media) TableName() string {
 }
 
 func (m *Media) BeforeSave(tx *gorm.DB) error {
-	// Update hashes
+	// Update path hash
 	m.PathHash = MD5Hash(m.Path)
-
-	if m.SideCarPath != nil {
-		encodedHash := MD5Hash(*m.SideCarPath)
-		m.SideCarHash = &encodedHash
-	}
 
 	return nil
 }
