@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func getPhotoviewIgnore(ignorePath string) ([]string , error){
+func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	var photoviewIgnore []string
 
 	// Open .photoviewignore file, if exists
@@ -30,13 +30,13 @@ func getPhotoviewIgnore(ignorePath string) ([]string , error){
 	defer photoviewIgnoreFile.Close()
 
 	// Read and save .photoviewignore data
-   	scanner := bufio.NewScanner(photoviewIgnoreFile)
-   	for scanner.Scan() {
+	scanner := bufio.NewScanner(photoviewIgnoreFile)
+	for scanner.Scan() {
 		photoviewIgnore = append(photoviewIgnore, scanner.Text())
 		log.Printf("Ignore found: %s", scanner.Text())
 	}
 
-   	return photoviewIgnore, scanner.Err()
+	return photoviewIgnore, scanner.Err()
 }
 
 func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
@@ -101,7 +101,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 
 		// Skip this dir if in ignore list
 		ignorePaths := ignore.CompileIgnoreLines(albumIgnore...)
-		if (ignorePaths.MatchesPath(albumPath + "/")) {
+		if ignorePaths.MatchesPath(albumPath + "/") {
 			log.Printf("Skip, directroy %s is in ignore file", albumPath)
 			continue
 		}
