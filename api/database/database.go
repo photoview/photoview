@@ -174,5 +174,12 @@ func MigrateDatabase(db *gorm.DB) error {
 		db.Migrator().DropColumn(&models.Media{}, "date_imported")
 	}
 
+	// v2.3.0 - Changed type of MediaEXIF.Exposure and MediaEXIF.Flash
+	// from string values to decimal and int respectively
+	err := migrate_exif_fields(db)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
