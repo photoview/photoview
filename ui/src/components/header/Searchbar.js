@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useLazyQuery, gql } from '@apollo/client'
-import debounce from '../../helpers/debounce'
+import { debounce } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink } from 'react-router-dom'
 

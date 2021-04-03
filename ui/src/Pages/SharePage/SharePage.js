@@ -85,8 +85,6 @@ const AuthorizedTokenRoute = ({ match }) => {
   if (loading) return 'Loading...'
 
   if (data.shareToken.album) {
-    console.log('match', match)
-
     const SharedSubAlbumPage = ({ match }) => {
       console.log('subalbum match', match)
       return (

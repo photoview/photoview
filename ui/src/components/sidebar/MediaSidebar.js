@@ -8,6 +8,7 @@ import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
+import { isNil } from '../../helpers/utils'
 
 const mediaQuery = gql`
   query sidebarPhoto($id: ID!) {
@@ -117,9 +118,93 @@ const Name = styled.div`
   margin: 0.75rem 0 1rem;
 `
 
-const MetadataInfo = styled.div`
+const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
 `
+
+export const MetadataInfo = ({ media }) => {
+  let exifItems = []
+
+  if (media?.exif) {
+    let exifKeys = Object.keys(exifNameLookup).filter(
+      x => media.exif[x] !== null && x != '__typename'
+    )
+
+    let exif = exifKeys.reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: media.exif[curr],
+      }),
+      {}
+    )
+
+    if (!isNil(exif.dateShot)) {
+      exif.dateShot = new Date(exif.dateShot).toLocaleString()
+    }
+
+    if (!isNil(exif.exposure) && exif.exposure !== 0) {
+      exif.exposure = `1/${1 / exif.exposure}`
+    }
+
+    if (
+      !isNil(exif.exposureProgram) &&
+      exposurePrograms[exif.exposureProgram]
+    ) {
+      exif.exposureProgram = exposurePrograms[exif.exposureProgram]
+    } else if (exif.exposureProgram !== 0) {
+      delete exif.exposureProgram
+    }
+
+    if (!isNil(exif.aperture)) {
+      exif.aperture = `f/${exif.aperture}`
+    }
+
+    if (!isNil(exif.focalLength)) {
+      exif.focalLength = `${exif.focalLength}mm`
+    }
+
+    if (!isNil(exif.flash) && flash[exif.flash]) {
+      exif.flash = flash[exif.flash]
+    }
+
+    exifItems = exifKeys.map(key => (
+      <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
+    ))
+  }
+
+  let videoMetadataItems = []
+  if (media?.videoMetadata) {
+    let metadata = Object.keys(media.videoMetadata)
+      .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
+      .reduce(
+        (prev, curr) => ({
+          ...prev,
+          [curr]: media.videoMetadata[curr],
+        }),
+        {}
+      )
+
+    metadata = {
+      dimensions: `${media.videoMetadata.width}x${media.videoMetadata.height}`,
+      ...metadata,
+    }
+
+    videoMetadataItems = Object.keys(metadata).map(key => (
+      <SidebarItem key={key} name={key} value={metadata[key]} />
+    ))
+  }
+
+  return (
+    <div>
+      <MetadataInfoContainer>{videoMetadataItems}</MetadataInfoContainer>
+      <MetadataInfoContainer>{exifItems}</MetadataInfoContainer>
+    </div>
+  )
+}
+
+MetadataInfo.propTypes = {
+  media: PropTypes.object,
+}
 
 const exifNameLookup = {
   camera: 'Camera',
@@ -192,70 +277,6 @@ const flash = {
 // }
 
 const SidebarContent = ({ media, hidePreview }) => {
-  let exifItems = []
-
-  if (media && media.exif) {
-    let exifKeys = Object.keys(exifNameLookup).filter(
-      x => media.exif[x] !== undefined && x != '__typename'
-    )
-
-    let exif = exifKeys.reduce(
-      (prev, curr) => ({
-        ...prev,
-        [curr]: media.exif[curr],
-      }),
-      {}
-    )
-
-    exif.dateShot = new Date(exif.dateShot).toLocaleString()
-
-    if (
-      exif.exposureProgram !== undefined &&
-      exif.exposureProgram !== 0 &&
-      exposurePrograms[exif.exposureProgram]
-    ) {
-      exif.exposureProgram = exposurePrograms[exif.exposureProgram]
-    }
-
-    if (exif.aperture !== undefined) {
-      exif.aperture = `f/${exif.aperture}`
-    }
-
-    if (exif.focalLength !== undefined) {
-      exif.focalLength = `${exif.focalLength}mm`
-    }
-
-    if (exif.flash !== undefined && flash[exif.flash]) {
-      exif.flash = flash[exif.flash]
-    }
-
-    exifItems = exifKeys.map(key => (
-      <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
-    ))
-  }
-
-  let videoMetadataItems = []
-  if (media && media.videoMetadata) {
-    let metadata = Object.keys(media.videoMetadata)
-      .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
-      .reduce(
-        (prev, curr) => ({
-          ...prev,
-          [curr]: media.videoMetadata[curr],
-        }),
-        {}
-      )
-
-    metadata = {
-      dimensions: `${media.videoMetadata.width}x${media.videoMetadata.height}`,
-      ...metadata,
-    }
-
-    videoMetadataItems = Object.keys(metadata).map(key => (
-      <SidebarItem key={key} name={key} value={metadata[key]} />
-    ))
-  }
-
   let previewImage = null
   if (media) {
     if (media.highRes) previewImage = media.highRes
@@ -275,8 +296,7 @@ const SidebarContent = ({ media, hidePreview }) => {
         </PreviewImageWrapper>
       )}
       <Name>{media && media.title}</Name>
-      <MetadataInfo>{videoMetadataItems}</MetadataInfo>
-      <MetadataInfo>{exifItems}</MetadataInfo>
+      <MetadataInfo media={media} />
       <SidebarDownload photo={media} />
       <SidebarShare photo={media} />
     </div>
