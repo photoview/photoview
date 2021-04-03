@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client'
-import { saveTokenCookie } from '../../authentication'
+import { saveTokenCookie } from '../../helpers/authentication'
 import styled from 'styled-components'
 import { Container as SemanticContainer } from 'semantic-ui-react'
 

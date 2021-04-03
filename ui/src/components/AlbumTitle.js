@@ -7,7 +7,7 @@ import { Icon } from 'semantic-ui-react'
 import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 import { useLazyQuery, gql } from '@apollo/client'
-import { authToken } from '../authentication'
+import { authToken } from '../helpers/authentication'
 
 const Header = styled.h1`
   margin: 24px 0 8px 0 !important;

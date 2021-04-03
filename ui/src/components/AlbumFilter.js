@@ -1,5 +1,5 @@
 import React from 'react'
-import { authToken } from '../authentication'
+import { authToken } from '../helpers/authentication'
 import { Checkbox, Dropdown, Button, Icon } from 'semantic-ui-react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'

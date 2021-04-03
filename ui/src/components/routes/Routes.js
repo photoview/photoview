@@ -3,7 +3,7 @@ import { Route, Switch, Redirect } from 'react-router-dom'
 
 import { Loader } from 'semantic-ui-react'
 import Layout from '../../Layout'
-import { clearTokenCookie } from '../../authentication'
+import { clearTokenCookie } from '../../helpers/authentication'
 
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
 

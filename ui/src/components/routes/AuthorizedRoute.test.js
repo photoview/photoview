@@ -5,9 +5,9 @@ import AuthorizedRoute from './AuthorizedRoute'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route } from 'react-router-dom'
 
-import * as authentication from '../../authentication'
+import * as authentication from '../../helpers/authentication'
 
-jest.mock('../../authentication.js')
+jest.mock('../../helpers/authentication.js')
 
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>

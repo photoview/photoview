@@ -7,9 +7,9 @@ import { render, screen } from '@testing-library/react'
 import Layout, { ADMIN_QUERY, MAPBOX_QUERY, SideMenu } from './Layout'
 import { MemoryRouter } from 'react-router-dom'
 
-import * as authentication from './authentication'
+import * as authentication from './helpers/authentication'
 
-jest.mock('./authentication.js')
+jest.mock('./helpers/authentication.js')
 
 test('Layout component', async () => {
   render(

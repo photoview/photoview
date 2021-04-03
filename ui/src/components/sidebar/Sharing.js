@@ -10,7 +10,7 @@ import {
   Icon,
 } from 'semantic-ui-react'
 import copy from 'copy-to-clipboard'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 import styled from 'styled-components'
 
 const sharePhotoQuery = gql`

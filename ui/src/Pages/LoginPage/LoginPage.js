@@ -4,7 +4,7 @@ import { Redirect } from 'react-router-dom'
 import styled from 'styled-components'
 import { Button, Form, Message, Header } from 'semantic-ui-react'
 import { checkInitialSetupQuery, login, Container } from './loginUtilities'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
 

@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
 import { useQuery, gql } from '@apollo/client'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
