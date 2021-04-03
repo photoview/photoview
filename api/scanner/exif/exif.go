@@ -14,6 +14,22 @@ type exifParser interface {
 	ParseExif(media *models.Media) (*models.MediaEXIF, error)
 }
 
+var use_exiftool bool = false
+
+func InitializeEXIFParser() {
+	// Decide between internal or external Exif parser
+	et, err := exiftool.NewExiftool()
+
+	if err != nil {
+		use_exiftool = false
+		log.Printf("Failed to get exiftool, using internal exif parser instead: %v\n", err)
+	} else {
+		et.Close()
+		log.Println("Found exiftool")
+		use_exiftool = true
+	}
+}
+
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
 func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 
@@ -32,14 +48,11 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		}
 	}
 
-	// Decide between internal or external Exif parser
-	et, err := exiftool.NewExiftool()
-	et.Close()
 	var parser exifParser
-	if err != nil {
-		parser = &internalExifParser{}
-	} else {
+	if use_exiftool {
 		parser = &externalExifParser{}
+	} else {
+		parser = &internalExifParser{}
 	}
 
 	exif, err := parser.ParseExif(media)
