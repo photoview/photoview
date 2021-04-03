@@ -87,7 +87,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
 	return mediaType, nil
 }
 
-func (c *AlbumScannerCache) GetAlbumIgnore(path string) (*[]string) {
+func (c *AlbumScannerCache) GetAlbumIgnore(path string) *[]string {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

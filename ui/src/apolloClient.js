@@ -10,7 +10,7 @@ import { onError } from '@apollo/client/link/error'
 import { WebSocketLink } from '@apollo/client/link/ws'
 
 import urlJoin from 'url-join'
-import { clearTokenCookie } from './authentication'
+import { clearTokenCookie } from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
 
 export const GRAPHQL_ENDPOINT = process.env.PHOTOVIEW_API_ENDPOINT

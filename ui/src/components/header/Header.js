@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import SearchBar from './Searchbar'
 
 import logoPath from '../../assets/photoview-logo.svg'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 const Container = styled.div`
   height: 60px;

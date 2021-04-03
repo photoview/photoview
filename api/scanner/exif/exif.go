@@ -42,7 +42,6 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		parser = &externalExifParser{}
 	}
 
-
 	exif, err := parser.ParseExif(media)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse exif data")

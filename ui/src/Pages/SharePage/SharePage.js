@@ -5,7 +5,10 @@ import { Route, Switch } from 'react-router-dom'
 import RouterProps from 'react-router-prop-types'
 import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'
 import styled from 'styled-components'
-import { getSharePassword, saveSharePassword } from '../../authentication'
+import {
+  getSharePassword,
+  saveSharePassword,
+} from '../../helpers/authentication'
 import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
 
@@ -82,8 +85,6 @@ const AuthorizedTokenRoute = ({ match }) => {
   if (loading) return 'Loading...'
 
   if (data.shareToken.album) {
-    console.log('match', match)
-
     const SharedSubAlbumPage = ({ match }) => {
       console.log('subalbum match', match)
       return (

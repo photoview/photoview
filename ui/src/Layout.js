@@ -8,7 +8,7 @@ import { useQuery, gql } from '@apollo/client'
 import { Authorized } from './components/routes/AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
-import { authToken } from './authentication'
+import { authToken } from './helpers/authentication'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 const notificationSubscription = gql`
   subscription notificationSubscription {

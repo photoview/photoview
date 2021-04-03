@@ -4,7 +4,7 @@ import { Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { MessageState } from '../messages/Messages'
 import { useLazyQuery, gql } from '@apollo/client'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {

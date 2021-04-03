@@ -1,4 +1,4 @@
-export default function debounce(func, wait, triggerRising) {
+export function debounce(func, wait, triggerRising) {
   let timeout = null
 
   const debounced = (...args) => {
@@ -21,4 +21,8 @@ export default function debounce(func, wait, triggerRising) {
   }
 
   return debounced
+}
+
+export function isNil(value) {
+  return value === undefined || value === null
 }

@@ -5,7 +5,7 @@ import { Button, Form, Message, Header } from 'semantic-ui-react'
 import { Container } from './loginUtilities'
 
 import { checkInitialSetupQuery, login } from './loginUtilities'
-import { authToken } from '../../authentication'
+import { authToken } from '../../helpers/authentication'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
