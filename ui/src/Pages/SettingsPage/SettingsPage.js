@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import Layout from '../../Layout'
@@ -24,8 +25,10 @@ export const InputLabelDescription = styled.p`
 `
 
 const SettingsPage = () => {
+  const { t } = useTranslation()
+
   return (
-    <Layout title="Settings">
+    <Layout title={t('title.settings', 'Settings')}>
       <ScannerSection />
       <UsersTable />
     </Layout>

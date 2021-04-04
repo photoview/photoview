@@ -1,0 +1,66 @@
+{
+  "albums_page": {
+    "title": "Album"
+  },
+  "loading": {
+    "paginate": {
+      "media": "Loader flere medier"
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Adgangskode",
+      "submit": "Log ind",
+      "username": "Brugernavn"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": "Billedesti"
+      },
+      "field-photo_path": {
+        "placeholder": "/sti/til/billeder"
+      },
+      "field-submit": "Opsæt Photoview",
+      "title": "Førstegangsopsætning"
+    },
+    "welcome": "Velkommen til Photoview"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Det maksimale antal medier som må skannes samtidig",
+      "title": "Samtidige scanner-arbejdere"
+    },
+    "periodic_scanner": {
+      "checkbox_label": "Aktiver periodiske scanner",
+      "field": {
+        "description": "Hvor ofte scanneren bør udføre automatiske scanninger af alle brugere",
+        "label": "Periodiske scanningsintervaller"
+      },
+      "interval_unit": {
+        "days": "Dage",
+        "hour": "Timer",
+        "minutes": "Minutter",
+        "months": "Måneder",
+        "seconds": "Sekunder"
+      },
+      "title": "Periodisk scanner"
+    },
+    "scanner": {
+      "description": "Vil scanne alle brugere for nye eller opdaterede medier",
+      "scan_all_users": "Scan alle brugere",
+      "title": "Scanner"
+    }
+  },
+  "sidemenu": {
+    "albums": null,
+    "logout": "Log af",
+    "people": "Personer",
+    "photos": "Billeder",
+    "places": "Kort",
+    "settings": "Indstillinger"
+  },
+  "title": {
+    "loading_album": "Loader album",
+    "settings": "Indstillinger"
+  }
+}

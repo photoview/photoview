@@ -7,6 +7,7 @@ import { checkInitialSetupQuery, login, Container } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
+import { useTranslation } from 'react-i18next'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -22,18 +23,26 @@ const StyledLogo = styled.img`
   max-height: 128px;
 `
 
-const LogoHeader = props => (
-  <Header {...props} as="h1" textAlign="center">
-    <StyledLogo src={logoPath} alt="photoview logo" />
-    <p style={{ fontWeight: 400 }}>Welcome to Photoview</p>
-  </Header>
-)
+const LogoHeader = props => {
+  const { t } = useTranslation()
+
+  return (
+    <Header {...props} as="h1" textAlign="center">
+      <StyledLogo src={logoPath} alt="photoview logo" />
+      <p style={{ fontWeight: 400 }}>
+        {t('login_page.welcome', 'Welcome to Photoview')}
+      </p>
+    </Header>
+  )
+}
 
 const LogoHeaderStyled = styled(LogoHeader)`
   margin-bottom: 72px !important;
 `
 
 const LoginPage = () => {
+  const { t } = useTranslation()
+
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
@@ -99,14 +108,18 @@ const LoginPage = () => {
           loading={loading || (data && data.authorizeUser.success)}
         >
           <Form.Field>
-            <label htmlFor="username_field">Username</label>
+            <label htmlFor="username_field">
+              {t('login_page.field.username', 'Username')}
+            </label>
             <input
               id="username_field"
               onChange={e => handleChange(e, 'username')}
             />
           </Form.Field>
           <Form.Field>
-            <label htmlFor="password_field">Password</label>
+            <label htmlFor="password_field">
+              {t('login_page.field.password', 'Password')}
+            </label>
             <input
               type="password"
               id="password_field"
@@ -114,7 +127,9 @@ const LoginPage = () => {
             />
           </Form.Field>
           <Message error content={errorMessage} />
-          <Button type="submit">Sign in</Button>
+          <Button type="submit">
+            {t('login_page.field.submit', 'Sign in')}
+          </Button>
         </Form>
       </Container>
     </div>

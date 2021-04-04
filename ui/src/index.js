@@ -20,10 +20,17 @@ i18n.use(initReactI18next).init({
   },
   lng: 'en',
   fallbackLng: 'en',
+  returnNull: false,
 
   interpolation: {
     escapeValue: false,
   },
+})
+
+import('../extractedTranslations/da/translation.json').then(danish => {
+  i18n.addResourceBundle('da', 'translation', danish)
+  console.log('loaded danish')
+  i18n.changeLanguage('da')
 })
 
 const Main = () => (

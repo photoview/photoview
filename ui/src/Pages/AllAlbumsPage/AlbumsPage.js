@@ -3,6 +3,7 @@ import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
 import Layout from '../../Layout'
 import { useQuery, gql } from '@apollo/client'
 import LazyLoad from '../../helpers/LazyLoad'
+import { useTranslation } from 'react-i18next'
 
 const getAlbumsQuery = gql`
   query getMyAlbums {
@@ -19,6 +20,7 @@ const getAlbumsQuery = gql`
 `
 
 const AlbumsPage = () => {
+  const { t } = useTranslation()
   const { loading, error, data } = useQuery(getAlbumsQuery)
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const AlbumsPage = () => {
 
   return (
     <Layout title="Albums">
-      <h1>Albums</h1>
+      <h1>{t('albums_page.title', 'Albums')}</h1>
       {!loading && (
         <AlbumBoxes
           loading={loading}

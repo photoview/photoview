@@ -1,0 +1,66 @@
+{
+  "albums_page": {
+    "title": "Albums"
+  },
+  "loading": {
+    "paginate": {
+      "media": "Loading more media"
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Password",
+      "submit": "Sign in",
+      "username": "Username"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": "Photo path"
+      },
+      "field-photo_path": {
+        "placeholder": "/path/to/photos"
+      },
+      "field-submit": "Setup Photoview",
+      "title": "Initial Setup"
+    },
+    "welcome": "Welcome to Photoview"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "The maximum amount of scanner jobs that is allowed to run at once",
+      "title": "Scanner concurrent workers"
+    },
+    "periodic_scanner": {
+      "checkbox_label": "Enable periodic scanner",
+      "field": {
+        "description": "How often the scanner should perform automatic scans of all users",
+        "label": "Periodic scan interval"
+      },
+      "interval_unit": {
+        "days": "Days",
+        "hour": "Hour",
+        "minutes": "Minutes",
+        "months": "Months",
+        "seconds": "Seconds"
+      },
+      "title": "Periodic scanner"
+    },
+    "scanner": {
+      "description": "Will scan all users for new or updated media",
+      "scan_all_users": "Scan all users",
+      "title": "Scanner"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albums",
+    "logout": "Log out",
+    "people": "People",
+    "photos": "Photos",
+    "places": "Places",
+    "settings": "Settings"
+  },
+  "title": {
+    "loading_album": "Loading album",
+    "settings": "Settings"
+  }
+}

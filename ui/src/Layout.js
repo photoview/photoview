@@ -108,31 +108,33 @@ export const SideMenu = () => {
     <SideMenuContainer>
       <SideButton to="/photos" exact>
         <Icon name="image" />
-        <SideButtonLabel>{t('Photos')}</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.photos', 'Photos')}</SideButtonLabel>
       </SideButton>
       <SideButton to="/albums" exact>
         <Icon name="images" />
-        <SideButtonLabel>{t('Albums')}</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.albums', 'Albums')}</SideButtonLabel>
       </SideButton>
       {mapboxEnabled ? (
         <SideButton to="/places" exact>
           <Icon name="map" />
-          <SideButtonLabel>{t('Places')}</SideButtonLabel>
+          <SideButtonLabel>{t('sidemenu.places', 'Places')}</SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/people" exact>
         <Icon name="user" />
-        <SideButtonLabel>{t('People')}</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.people', 'People')}</SideButtonLabel>
       </SideButton>
       {isAdmin ? (
         <SideButton to="/settings" exact>
           <Icon name="settings" />
-          <SideButtonLabel>{t('Settings')}</SideButtonLabel>
+          <SideButtonLabel>
+            {t('sidemenu.settings', 'Settings')}
+          </SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/logout">
         <Icon name="lock" />
-        <SideButtonLabel>{t('Log out')}</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.logout', 'Log out')}</SideButtonLabel>
       </SideButton>
     </SideMenuContainer>
   )

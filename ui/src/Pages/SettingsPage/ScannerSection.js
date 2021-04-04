@@ -4,6 +4,7 @@ import { Button, Icon } from 'semantic-ui-react'
 import PeriodicScanner from './PeriodicScanner'
 import ScannerConcurrentWorkers from './ScannerConcurrentWorkers'
 import { SectionTitle, InputLabelDescription } from './SettingsPage'
+import { useTranslation } from 'react-i18next'
 
 const SCAN_MUTATION = gql`
   mutation scanAllMutation {
@@ -15,13 +16,19 @@ const SCAN_MUTATION = gql`
 `
 
 const ScannerSection = () => {
+  const { t } = useTranslation()
   const [startScanner, { called }] = useMutation(SCAN_MUTATION)
 
   return (
     <div>
-      <SectionTitle nospace>Scanner</SectionTitle>
+      <SectionTitle nospace>
+        {t('settings.scanner.title', 'Scanner')}
+      </SectionTitle>
       <InputLabelDescription>
-        Will scan all users for new or updated media
+        {t(
+          'settings.scanner.description',
+          'Will scan all users for new or updated media'
+        )}
       </InputLabelDescription>
       <Button
         icon
@@ -32,7 +39,7 @@ const ScannerSection = () => {
         disabled={called}
       >
         <Icon name="sync" />
-        Scan all users
+        {t('settings.scanner.scan_all_users', 'Scan all users')}
       </Button>
       <PeriodicScanner />
       <ScannerConcurrentWorkers />
