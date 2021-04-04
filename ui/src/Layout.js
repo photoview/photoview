@@ -9,6 +9,7 @@ import { Authorized } from './components/routes/AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
 import { authToken } from './helpers/authentication'
+import { useTranslation } from 'react-i18next'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -95,6 +96,8 @@ const SideButtonLabel = styled.div`
 `
 
 export const SideMenu = () => {
+  const { t } = useTranslation()
+
   const adminQuery = authToken() ? useQuery(ADMIN_QUERY) : null
   const mapboxQuery = authToken() ? useQuery(MAPBOX_QUERY) : null
 
@@ -105,31 +108,31 @@ export const SideMenu = () => {
     <SideMenuContainer>
       <SideButton to="/photos" exact>
         <Icon name="image" />
-        <SideButtonLabel>Photos</SideButtonLabel>
+        <SideButtonLabel>{t('Photos')}</SideButtonLabel>
       </SideButton>
       <SideButton to="/albums" exact>
         <Icon name="images" />
-        <SideButtonLabel>Albums</SideButtonLabel>
+        <SideButtonLabel>{t('Albums')}</SideButtonLabel>
       </SideButton>
       {mapboxEnabled ? (
         <SideButton to="/places" exact>
           <Icon name="map" />
-          <SideButtonLabel>Places</SideButtonLabel>
+          <SideButtonLabel>{t('Places')}</SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/people" exact>
         <Icon name="user" />
-        <SideButtonLabel>People</SideButtonLabel>
+        <SideButtonLabel>{t('People')}</SideButtonLabel>
       </SideButton>
       {isAdmin ? (
         <SideButton to="/settings" exact>
           <Icon name="settings" />
-          <SideButtonLabel>Settings</SideButtonLabel>
+          <SideButtonLabel>{t('Settings')}</SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/logout">
         <Icon name="lock" />
-        <SideButtonLabel>Log out</SideButtonLabel>
+        <SideButtonLabel>{t('Log out')}</SideButtonLabel>
       </SideButton>
     </SideMenuContainer>
   )
