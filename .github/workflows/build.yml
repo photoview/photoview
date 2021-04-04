@@ -60,7 +60,7 @@ jobs:
           OUTPUT_PLATFORM=$(echo ${{ matrix.target_platform }} | sed 's/\//-/g')
           echo ::set-output name=output_platform::${OUTPUT_PLATFORM}
 
-          TAG="--tag ${DOCKER_IMAGE}:${OUTPUT_PLATFORM}-${GITHUB_SHA::8}"
+          TAG="--tag ${DOCKER_IMAGE}:${OUTPUT_PLATFORM}-${GITHUB_SHA::8}-${{ github.event_name }}"
 
           echo ::set-output name=docker_username::${DOCKER_USERNAME}
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
@@ -110,10 +110,10 @@ jobs:
 
       - name: Create Manifests
         run: |
-          DOCKER_IMAGES="${DOCKER_IMAGE}:linux-amd64-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm64-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v7-${GITHUB_SHA::8}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v6-${GITHUB_SHA::8}"
+          DOCKER_IMAGES="${DOCKER_IMAGE}:linux-amd64-${GITHUB_SHA::8}-${{ github.event_name }}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm64-${GITHUB_SHA::8}-${{ github.event_name }}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v7-${GITHUB_SHA::8}-${{ github.event_name }}"
+          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v6-${GITHUB_SHA::8}-${{ github.event_name }}"
 
           VERSION=edge
           if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -144,7 +144,7 @@ jobs:
           
           PLATFORMS=("amd64" "arm64" "arm-v7" "arm-v6")
           for PLATFORM in ${PLATFORMS[@]}; do
-            TAG="linux-${PLATFORM}-${GITHUB_SHA::8}"
+            TAG="linux-${PLATFORM}-${GITHUB_SHA::8}-${{ github.event_name }}"
             echo "Deleting tag: ${DOCKER_IMAGE}:${TAG}"
             
             curl -X DELETE \
@@ -152,3 +152,8 @@ jobs:
               -H "Authorization: JWT ${ACCESS_TOKEN}" \
               https://hub.docker.com/v2/repositories/${DOCKER_IMAGE}/tags/${TAG}/
           done
+          
+      - name: Clear
+        if: always()
+        run: |
+          rm -f ${HOME}/.docker/config.json
