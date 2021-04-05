@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 import { EditRootPaths } from './EditUserRowRootPaths'
 import { UserRowProps } from './UserRow'
@@ -10,6 +11,7 @@ const EditUserRow = ({
   updateUser,
   updateUserLoading,
 }) => {
+  const { t } = useTranslation()
   function updateInput(event, key) {
     setState(state => ({
       ...state,
@@ -52,7 +54,7 @@ const EditUserRow = ({
               }))
             }
           >
-            Cancel
+            {t('general.action.cancel', 'Cancel')}
           </Button>
           <Button
             loading={updateUserLoading}
@@ -68,7 +70,7 @@ const EditUserRow = ({
               })
             }
           >
-            Save
+            {t('general.action.save', 'Save')}
           </Button>
         </Button.Group>
       </Table.Cell>

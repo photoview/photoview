@@ -2,6 +2,14 @@
   "albums_page": {
     "title": "Album"
   },
+  "general": {
+    "action": {
+      "add": "Tilføj",
+      "cancel": "Annuller",
+      "remove": "Slet",
+      "save": "Gem"
+    }
+  },
   "loading": {
     "paginate": {
       "media": "Loader flere medier"
@@ -15,12 +23,12 @@
     },
     "initial_setup": {
       "field": {
-        "photo_path": "Billedesti"
+        "photo_path": {
+          "label": "Billedesti",
+          "placeholder": "/sti/til/billeder"
+        },
+        "submit": "Opsæt Photoview"
       },
-      "field-photo_path": {
-        "placeholder": "/sti/til/billeder"
-      },
-      "field-submit": "Opsæt Photoview",
       "title": "Førstegangsopsætning"
     },
     "welcome": "Velkommen til Photoview"
@@ -49,10 +57,47 @@
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
       "scan_all_users": "Scan alle brugere",
       "title": "Scanner"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Tilføj bruger"
+      },
+      "confirm_delete_user": {
+        "action": "Slet {user}",
+        "description": "<0>Er du sikker på at du vil slette <1></1>?</0><p>Denne handling kan ikke fortrydes</p>",
+        "title": "Slet bruger"
+      },
+      "password_reset": {
+        "description": "Ændre adgangskode for <1></1>",
+        "form": {
+          "label": "Ny adgangskode",
+          "placeholder": "adgangskode",
+          "submit": "Ændre adgangskode"
+        },
+        "title": "Ændre adgangskode"
+      },
+      "table": {
+        "column_names": {
+          "action": "Handling",
+          "admin": "Admin",
+          "photo_path": "Billedesti",
+          "username": "Brugernavn"
+        },
+        "new_user": "Ny bruger",
+        "row": {
+          "action": {
+            "change_password": "Ændre adgangskode",
+            "delete": "Slet",
+            "edit": "Rediger",
+            "scan": "Scan"
+          }
+        }
+      },
+      "title": "Brugere"
     }
   },
   "sidemenu": {
-    "albums": null,
+    "albums": "Albums",
     "logout": "Log af",
     "people": "Personer",
     "photos": "Billeder",

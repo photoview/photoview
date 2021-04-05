@@ -4,6 +4,7 @@ import { gql, useMutation } from '@apollo/client'
 import { Button, Icon, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { USERS_QUERY } from './UsersTable'
+import { useTranslation } from 'react-i18next'
 
 const userAddRootPathMutation = gql`
   mutation userAddRootPath($id: ID!, $rootPath: String!) {
@@ -28,6 +29,7 @@ const RootPathListItem = styled.li`
 `
 
 const EditRootPath = ({ album, user }) => {
+  const { t } = useTranslation()
   const [removeAlbumPath, { loading }] = useMutation(
     userRemoveAlbumPathMutation,
     {
@@ -55,7 +57,7 @@ const EditRootPath = ({ album, user }) => {
         }
       >
         <Icon name="remove" />
-        Remove
+        {t('general.action.remove', 'Remove')}
       </Button>
     </RootPathListItem>
   )
@@ -72,6 +74,7 @@ const NewRootPathInput = styled(Input)`
 `
 
 const EditNewRootPath = ({ userID }) => {
+  const { t } = useTranslation()
   const [value, setValue] = useState('')
   const [addRootPath, { loading }] = useMutation(userAddRootPathMutation, {
     refetchQueries: [
@@ -91,7 +94,7 @@ const EditNewRootPath = ({ userID }) => {
         action={{
           positive: true,
           icon: 'add',
-          content: 'Add',
+          content: t('general.action.add', 'Add'),
           onClick: () => {
             setValue('')
             addRootPath({

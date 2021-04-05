@@ -5,6 +5,7 @@ import { useQuery, gql } from '@apollo/client'
 import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
 import { SectionTitle } from '../SettingsPage'
+import { useTranslation } from 'react-i18next'
 
 export const USERS_QUERY = gql`
   query settingsUsersQuery {
@@ -22,6 +23,7 @@ export const USERS_QUERY = gql`
 `
 
 const UsersTable = () => {
+  const { t } = useTranslation()
   const [showAddUser, setShowAddUser] = useState(false)
 
   const { loading, error, data, refetch } = useQuery(USERS_QUERY)
@@ -39,15 +41,23 @@ const UsersTable = () => {
 
   return (
     <div>
-      <SectionTitle>Users</SectionTitle>
+      <SectionTitle>{t('settings.users.title', 'Users')}</SectionTitle>
       <Loader active={loading} />
       <Table celled>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Username</Table.HeaderCell>
-            <Table.HeaderCell>Photo path</Table.HeaderCell>
-            <Table.HeaderCell>Admin</Table.HeaderCell>
-            <Table.HeaderCell>Action</Table.HeaderCell>
+            <Table.HeaderCell>
+              {t('settings.users.table.column_names.username', 'Username')}
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              {t('settings.users.table.column_names.photo_path', 'Photo path')}
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              {t('settings.users.table.column_names.admin', 'Admin')}
+            </Table.HeaderCell>
+            <Table.HeaderCell>
+              {t('settings.users.table.column_names.action', 'Action')}
+            </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
@@ -73,7 +83,7 @@ const UsersTable = () => {
                 onClick={() => setShowAddUser(true)}
               >
                 <Icon name="add" />
-                New user
+                {t('settings.users.table.new_user', 'New user')}
               </Button>
             </Table.HeaderCell>
           </Table.Row>

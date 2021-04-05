@@ -111,11 +111,14 @@ const InitialSetupPage = () => {
           </Form.Field>
           <Form.Field>
             <label>
-              {t('login_page.initial_setup.field.photo_path', 'Photo path')}
+              {t(
+                'login_page.initial_setup.field.photo_path.label',
+                'Photo path'
+              )}
             </label>
             <input
               placeholder={t(
-                'login_page.initial_setup.field-photo_path.placeholder',
+                'login_page.initial_setup.field.photo_path.placeholder',
                 '/path/to/photos'
               )}
               type="text"
@@ -124,7 +127,7 @@ const InitialSetupPage = () => {
           </Form.Field>
           <Message error content={errorMessage} />
           <Button type="submit">
-            {t('login_page.initial_setup.field-submit', 'Setup Photoview')}
+            {t('login_page.initial_setup.field.submit', 'Setup Photoview')}
           </Button>
         </Form>
       </Container>

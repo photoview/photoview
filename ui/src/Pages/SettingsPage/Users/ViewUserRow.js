@@ -1,4 +1,5 @@
 import React from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { Button, Icon, Table, Modal } from 'semantic-ui-react'
 import styled from 'styled-components'
 import ChangePasswordModal from './UserChangePassword'
@@ -22,6 +23,7 @@ const ViewUserRow = ({
   showChangePassword,
   showConfirmDelete,
 }) => {
+  const { t } = useTranslation()
   const paths = (
     <PathList>
       {user.rootAlbums.map(album => (
@@ -45,18 +47,21 @@ const ViewUserRow = ({
             }}
           >
             <Icon name="edit" />
-            Edit
+            {t('settings.users.table.row.action.edit', 'Edit')}
           </Button>
           <Button
             disabled={scanUserCalled}
             onClick={() => scanUser({ variables: { userId: user.id } })}
           >
             <Icon name="sync" />
-            Scan
+            {t('settings.users.table.row.action.scan', 'Scan')}
           </Button>
           <Button onClick={() => setChangePassword(true)}>
             <Icon name="key" />
-            Change password
+            {t(
+              'settings.users.table.row.action.change_password',
+              'Change password'
+            )}
           </Button>
           <ChangePasswordModal
             user={user}
@@ -70,19 +75,28 @@ const ViewUserRow = ({
             }}
           >
             <Icon name="delete" />
-            Delete
+            {t('settings.users.table.row.action.delete', 'Delete')}
           </Button>
           <Modal open={showConfirmDelete}>
-            <Modal.Header>Delete user</Modal.Header>
+            <Modal.Header>
+              {t('settings.users.confirm_delete_user.title', 'Delete user')}
+            </Modal.Header>
             <Modal.Content>
-              <p>
-                {`Are you sure, you want to delete `}
-                <b>{user.username}</b>?
-              </p>
-              <p>{`This action cannot be undone`}</p>
+              <Trans
+                t={t}
+                i18nKey="settings.users.confirm_delete_user.description"
+              >
+                <p>
+                  {`Are you sure, you want to delete `}
+                  <b>{user.username}</b>?
+                </p>
+                <p>{`This action cannot be undone`}</p>
+              </Trans>
             </Modal.Content>
             <Modal.Actions>
-              <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
+              <Button onClick={() => setConfirmDelete(false)}>
+                {t('general.action.cancel', 'Cancel')}
+              </Button>
               <Button
                 negative
                 onClick={() => {
@@ -94,7 +108,11 @@ const ViewUserRow = ({
                   })
                 }}
               >
-                Delete {user.username}
+                {t(
+                  'settings.users.confirm_delete_user.action',
+                  'Delete {{user}}',
+                  { user: user.username }
+                )}
               </Button>
             </Modal.Actions>
           </Modal>

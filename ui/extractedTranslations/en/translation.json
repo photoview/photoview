@@ -2,6 +2,14 @@
   "albums_page": {
     "title": "Albums"
   },
+  "general": {
+    "action": {
+      "add": "Add",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "save": "Save"
+    }
+  },
   "loading": {
     "paginate": {
       "media": "Loading more media"
@@ -15,12 +23,12 @@
     },
     "initial_setup": {
       "field": {
-        "photo_path": "Photo path"
+        "photo_path": {
+          "label": "Photo path",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Setup Photoview"
       },
-      "field-photo_path": {
-        "placeholder": "/path/to/photos"
-      },
-      "field-submit": "Setup Photoview",
       "title": "Initial Setup"
     },
     "welcome": "Welcome to Photoview"
@@ -49,6 +57,43 @@
       "description": "Will scan all users for new or updated media",
       "scan_all_users": "Scan all users",
       "title": "Scanner"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Add user"
+      },
+      "confirm_delete_user": {
+        "action": "Delete {user}",
+        "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
+        "title": "Delete user"
+      },
+      "password_reset": {
+        "description": "Change password for <1></1>",
+        "form": {
+          "label": "New password",
+          "placeholder": "password",
+          "submit": "Change password"
+        },
+        "title": "Change password"
+      },
+      "table": {
+        "column_names": {
+          "action": "Action",
+          "admin": "Admin",
+          "photo_path": "Photo path",
+          "username": "Username"
+        },
+        "new_user": "New user",
+        "row": {
+          "action": {
+            "change_password": "Change password",
+            "delete": "Delete",
+            "edit": "Edit",
+            "scan": "Scan"
+          }
+        }
+      },
+      "title": "Users"
     }
   },
   "sidemenu": {
