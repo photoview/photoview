@@ -1,5 +1,5 @@
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:10 as ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:15 as ui
 
 ARG PHOTOVIEW_API_ENDPOINT
 ENV PHOTOVIEW_API_ENDPOINT=${PHOTOVIEW_API_ENDPOINT}
