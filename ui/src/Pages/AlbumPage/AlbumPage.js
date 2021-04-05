@@ -161,7 +161,7 @@ function AlbumPage({ match }) {
       />
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        text={t('loading.paginate.media', 'Loading more media')}
+        text={t('general.loading.paginate.media', 'Loading more media')}
       />
     </Layout>
   )

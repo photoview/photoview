@@ -6,6 +6,7 @@ import PresentView from './presentView/PresentView'
 import PropTypes from 'prop-types'
 import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
+import { useTranslation } from 'react-i18next'
 
 const Gallery = styled.div`
   display: flex;
@@ -41,6 +42,7 @@ const PhotoGallery = ({
   previousImage,
   onFavorite,
 }) => {
+  const { t } = useTranslation()
   const { updateSidebar } = useContext(SidebarContext)
 
   const activeImage = media && activeIndex != -1 && media[activeIndex]
@@ -80,7 +82,9 @@ const PhotoGallery = ({
   return (
     <ClearWrap>
       <Gallery>
-        <Loader active={loading}>Loading images</Loader>
+        <Loader active={loading}>
+          {t('general.loading.media', 'Loading media')}
+        </Loader>
         {getPhotoElements(updateSidebar)}
         <PhotoFiller />
       </Gallery>

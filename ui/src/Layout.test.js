@@ -9,6 +9,8 @@ import { MemoryRouter } from 'react-router-dom'
 
 import * as authentication from './helpers/authentication'
 
+require('./localization').default()
+
 jest.mock('./helpers/authentication.js')
 
 test('Layout component', async () => {

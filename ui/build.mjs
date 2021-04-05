@@ -72,11 +72,19 @@ if (watchMode) {
     bs.reload(args)
   })
 } else {
-  esbuild.build(esbuildOptions).then(() => console.log('esbuild done'))
+  const esbuildPromise = esbuild
+    .build(esbuildOptions)
+    .then(() => console.log('esbuild done'))
 
-  workboxBuild.generateSW({
-    globDirectory: 'dist/',
-    globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
-    swDest: 'dist/service-worker.js',
-  })
+  const workboxPromise = workboxBuild
+    .generateSW({
+      globDirectory: 'dist/',
+      globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
+      swDest: 'dist/service-worker.js',
+    })
+    .then(() => console.log('workbox done'))
+
+  Promise.all([esbuildPromise, workboxPromise]).then(() =>
+    console.log('build complete')
+  )
 }

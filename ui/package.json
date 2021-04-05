@@ -53,8 +53,8 @@
     "workbox-build": "^6.1.2"
   },
   "scripts": {
-    "start": "node build.mjs watch",
-    "build": "NODE_ENV=production node build.mjs",
+    "start": "node --experimental-modules build.mjs watch",
+    "build": "NODE_ENV=production node --experimental-modules build.mjs",
     "test": "npm run lint && npm run jest",
     "lint": "eslint ./src --max-warnings 0 --cache",
     "jest": "jest",

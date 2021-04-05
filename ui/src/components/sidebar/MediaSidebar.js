@@ -169,6 +169,7 @@ export const MetadataInfo = ({ media }) => {
       exif.focalLength = `${exif.focalLength}mm`
     }
 
+    const flash = flashLookup(t)
     if (!isNil(exif.flash) && flash[exif.flash]) {
       exif.flash = flash[exif.flash]
     }
@@ -249,7 +250,7 @@ const exposureProgramsLookup = t => ({
 })
 
 // From https://exiftool.org/TagNames/EXIF.html#Flash
-const flash = t => {
+const flashLookup = t => {
   const values = {
     no_flash: t('sidebar.media.exif.flash.no_flash', 'No Flash'),
     fired: t('sidebar.media.exif.flash.fired', 'Fired'),

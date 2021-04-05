@@ -21,8 +21,16 @@
       "save": "Save"
     },
     "loading": {
+      "album": "Loading album",
       "default": "Loading...",
-      "shares": "Loading shares..."
+      "media": "Loading media",
+      "page": "Loading page",
+      "paginate": {
+        "faces": "Loading more people",
+        "media": "Loading more media"
+      },
+      "shares": "Loading shares...",
+      "timeline": "Loading timeline"
     }
   },
   "header": {
@@ -34,11 +42,6 @@
         "albums": "Albums",
         "photos": "Photos"
       }
-    }
-  },
-  "loading": {
-    "paginate": {
-      "media": "Loading more media"
     }
   },
   "login_page": {
@@ -58,6 +61,16 @@
       "title": "Initial Setup"
     },
     "welcome": "Welcome to Photoview"
+  },
+  "people_page": {
+    "face_group": {
+      "label_placeholder": "Label",
+      "unlabeled": "Unlabeled"
+    },
+    "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
+  },
+  "routes": {
+    "page_not_found": "Page not found"
   },
   "settings": {
     "concurrent_workers": {
@@ -89,7 +102,7 @@
         "submit": "Add user"
       },
       "confirm_delete_user": {
-        "action": "Delete {user}",
+        "action": "Delete {{user}}",
         "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
         "title": "Delete user"
       },
@@ -121,6 +134,15 @@
       },
       "title": "Users"
     }
+  },
+  "share_page": {
+    "protected_share": {
+      "description": "This share is protected with a password.",
+      "title": "Protected share"
+    },
+    "share_not_found": "Share not found",
+    "share_not_found_description": "Maybe the share has expired or has been deleted.",
+    "wrong_password": "Wrong password, please try again."
   },
   "sidebar": {
     "album": {
@@ -202,6 +224,7 @@
   },
   "title": {
     "loading_album": "Loading album",
+    "people": "People",
     "settings": "Settings"
   }
 }

@@ -21,8 +21,16 @@
       "save": "Gem"
     },
     "loading": {
+      "album": "Loader album",
       "default": "Loader...",
-      "shares": null
+      "media": "Loader medier",
+      "page": "Loader side",
+      "paginate": {
+        "faces": "Loader flere personer",
+        "media": "Loader flere medier"
+      },
+      "shares": "Loader delinger...",
+      "timeline": "Loader tidslinje"
     }
   },
   "header": {
@@ -34,11 +42,6 @@
         "albums": "Albums",
         "photos": "Billeder"
       }
-    }
-  },
-  "loading": {
-    "paginate": {
-      "media": "Loader flere medier"
     }
   },
   "login_page": {
@@ -58,6 +61,16 @@
       "title": "Førstegangsopsætning"
     },
     "welcome": "Velkommen til Photoview"
+  },
+  "people_page": {
+    "face_group": {
+      "label_placeholder": "Navn",
+      "unlabeled": "Ikke navngivet"
+    },
+    "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter"
+  },
+  "routes": {
+    "page_not_found": "Side ikke fundet"
   },
   "settings": {
     "concurrent_workers": {
@@ -121,6 +134,15 @@
       },
       "title": "Brugere"
     }
+  },
+  "share_page": {
+    "protected_share": {
+      "description": "Denne deling er låst med en adgangskode.",
+      "title": "Beskyttet deling"
+    },
+    "share_not_found": "Deling blev ikke fundet",
+    "share_not_found_description": "Måske er delingen udløbet eller blevet slettet.",
+    "wrong_password": "Forkert adgangskode, prøv venligst igen."
   },
   "sidebar": {
     "album": {
@@ -202,6 +224,7 @@
   },
   "title": {
     "loading_album": "Loader album",
+    "people": "Personer",
     "settings": "Indstillinger"
   }
 }
