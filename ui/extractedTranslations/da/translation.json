@@ -1,4 +1,14 @@
 {
+  "album_filter": {
+    "only_favorites": "Vis kun favoritter",
+    "sort_by": "Sorter efter",
+    "sorting_options": {
+      "date_imported": "Dato for importering",
+      "date_shot": "Dato",
+      "title": "Titel",
+      "type": "Type"
+    }
+  },
   "albums_page": {
     "title": "Album"
   },
@@ -6,8 +16,24 @@
     "action": {
       "add": "Tilføj",
       "cancel": "Annuller",
-      "remove": "Slet",
+      "delete": "Slet",
+      "remove": "Fjern",
       "save": "Gem"
+    },
+    "loading": {
+      "default": "Loader...",
+      "shares": null
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Loader resultater...",
+      "no_results": "Fandt ingen resultater",
+      "placeholder": "Søg",
+      "result_type": {
+        "albums": "Albums",
+        "photos": "Billeder"
+      }
     }
   },
   "loading": {
@@ -94,6 +120,76 @@
         }
       },
       "title": "Brugere"
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Album indstillinger"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimension",
+        "file_size": "Størrelse",
+        "file_type": "Type",
+        "name": "Navn"
+      },
+      "title": "Download"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Actionprogram",
+          "aperture_priority": "Blændeprioritet",
+          "bulb": "Bulb",
+          "creative_program": "Kreativ program",
+          "landscape_mode": "Landskabsmode",
+          "manual": "Manuel",
+          "normal_program": "Normal program",
+          "not_defined": "Ikke defineret",
+          "portrait_mode": "Portræt mode",
+          "shutter_priority": "Lukkerprioritet"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Blitz affyrede ikke",
+          "fired": "Affyrede",
+          "no_flash": "Ingen blitz",
+          "no_flash_function": "Ingen blitz-funktion",
+          "off": "Slukket",
+          "on": "Tændt",
+          "red_eye_reduction": "Røde øjne reduktion",
+          "return_detected": "Retur registreret",
+          "return_not_detected": "Retur ikke registreret"
+        },
+        "name": {
+          "aperture": "Blænde",
+          "camera": "Kamera",
+          "date_shot": "Dato",
+          "exposure": "Lukketid",
+          "exposure_program": "Lukketid program",
+          "flash": "Blitz",
+          "focal_length": "Fokallængde",
+          "iso": "ISO",
+          "lens": "Lense",
+          "maker": "Mærke"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Tilføj deling",
+      "copy_link": "Kopier link",
+      "no_shares_found": "Ingen delinger fundet",
+      "public_link": "Offentligt link",
+      "table_header": "Offentlige delinger",
+      "title": "Indstillinger for deling"
     }
   },
   "sidemenu": {

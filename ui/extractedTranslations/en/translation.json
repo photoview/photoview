@@ -1,4 +1,14 @@
 {
+  "album_filter": {
+    "only_favorites": "Show only favorites",
+    "sort_by": "Sort by",
+    "sorting_options": {
+      "date_imported": "Date imported",
+      "date_shot": "Date shot",
+      "title": "Title",
+      "type": "Kind"
+    }
+  },
   "albums_page": {
     "title": "Albums"
   },
@@ -6,8 +16,24 @@
     "action": {
       "add": "Add",
       "cancel": "Cancel",
+      "delete": "Delete",
       "remove": "Remove",
       "save": "Save"
+    },
+    "loading": {
+      "default": "Loading...",
+      "shares": "Loading shares..."
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Loading results...",
+      "no_results": "No results found",
+      "placeholder": "Search",
+      "result_type": {
+        "albums": "Albums",
+        "photos": "Photos"
+      }
     }
   },
   "loading": {
@@ -94,6 +120,76 @@
         }
       },
       "title": "Users"
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Album options"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimensions",
+        "file_size": "Size",
+        "file_type": "Type",
+        "name": "Name"
+      },
+      "title": "Download"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Aperture priority",
+          "bulb": "Bulb",
+          "creative_program": "Creative program",
+          "landscape_mode": "Landscape mode",
+          "manual": "Manual",
+          "normal_program": "Normal program",
+          "not_defined": "Not defined",
+          "portrait_mode": "Portrait mode",
+          "shutter_priority": "Shutter priority"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Did not fire",
+          "fired": "Fired",
+          "no_flash": "No Flash",
+          "no_flash_function": "No flash function",
+          "off": "Off",
+          "on": "On",
+          "red_eye_reduction": "Red-eye reduction",
+          "return_detected": "Return detected",
+          "return_not_detected": "Return not detected"
+        },
+        "name": {
+          "aperture": "Aperture",
+          "camera": "Camera",
+          "date_shot": "Date shot",
+          "exposure": "Exposure",
+          "exposure_program": "Program",
+          "flash": "Flash",
+          "focal_length": "Focal length",
+          "iso": "ISO",
+          "lens": "Lens",
+          "maker": "Maker"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Add shares",
+      "copy_link": "Copy Link",
+      "no_shares_found": "No shares found",
+      "public_link": "Public Link",
+      "table_header": "Public shares",
+      "title": "Sharing options"
     }
   },
   "sidemenu": {

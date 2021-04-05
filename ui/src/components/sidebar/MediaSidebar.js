@@ -9,6 +9,7 @@ import SidebarDownload from './SidebarDownload'
 import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 import { isNil } from '../../helpers/utils'
+import { useTranslation } from 'react-i18next'
 
 const mediaQuery = gql`
   query sidebarPhoto($id: ID!) {
@@ -123,10 +124,13 @@ const MetadataInfoContainer = styled.div`
 `
 
 export const MetadataInfo = ({ media }) => {
+  const { t } = useTranslation()
   let exifItems = []
 
+  const exifName = exifNameLookup(t)
+
   if (media?.exif) {
-    let exifKeys = Object.keys(exifNameLookup).filter(
+    let exifKeys = Object.keys(exifName).filter(
       x => media.exif[x] !== null && x != '__typename'
     )
 
@@ -145,6 +149,8 @@ export const MetadataInfo = ({ media }) => {
     if (!isNil(exif.exposure) && exif.exposure !== 0) {
       exif.exposure = `1/${1 / exif.exposure}`
     }
+
+    const exposurePrograms = exposureProgramsLookup(t)
 
     if (
       !isNil(exif.exposureProgram) &&
@@ -168,7 +174,7 @@ export const MetadataInfo = ({ media }) => {
     }
 
     exifItems = exifKeys.map(key => (
-      <SidebarItem key={key} name={exifNameLookup[key]} value={exif[key]} />
+      <SidebarItem key={key} name={exifName[key]} value={exif[key]} />
     ))
   }
 
@@ -206,62 +212,98 @@ MetadataInfo.propTypes = {
   media: PropTypes.object,
 }
 
-const exifNameLookup = {
-  camera: 'Camera',
-  maker: 'Maker',
-  lens: 'Lens',
-  exposureProgram: 'Program',
-  dateShot: 'Date Shot',
-  exposure: 'Exposure',
-  aperture: 'Aperture',
-  iso: 'ISO',
-  focalLength: 'Focal Length',
-  flash: 'Flash',
-}
+const exifNameLookup = t => ({
+  camera: t('sidebar.media.exif.name.camera', 'Camera'),
+  maker: t('sidebar.media.exif.name.maker', 'Maker'),
+  lens: t('sidebar.media.exif.name.lens', 'Lens'),
+  exposureProgram: t('sidebar.media.exif.name.exposure_program', 'Program'),
+  dateShot: t('sidebar.media.exif.name.date_shot', 'Date shot'),
+  exposure: t('sidebar.media.exif.name.exposure', 'Exposure'),
+  aperture: t('sidebar.media.exif.name.aperture', 'Aperture'),
+  iso: t('sidebar.media.exif.name.iso', 'ISO'),
+  focalLength: t('sidebar.media.exif.name.focal_length', 'Focal length'),
+  flash: t('sidebar.media.exif.name.flash', 'Flash'),
+})
 
 // From https://exiftool.org/TagNames/EXIF.html
-const exposurePrograms = {
-  0: 'Not defined',
-  1: 'Manual',
-  2: 'Normal program',
-  3: 'Aperture priority',
-  4: 'Shutter priority',
-  5: 'Creative program',
-  6: 'Action program',
-  7: 'Portrait mode',
-  8: 'Landscape mode ',
-  9: 'Bulb',
-}
+const exposureProgramsLookup = t => ({
+  0: t('sidebar.media.exif.exposure_program.not_defined', 'Not defined'),
+  1: t('sidebar.media.exif.exposure_program.manual', 'Manual'),
+  2: t('sidebar.media.exif.exposure_program.normal_program', 'Normal program'),
+  3: t(
+    'sidebar.media.exif.exposure_program.aperture_priority',
+    'Aperture priority'
+  ),
+  4: t(
+    'sidebar.media.exif.exposure_program.shutter_priority',
+    'Shutter priority'
+  ),
+  5: t(
+    'sidebar.media.exif.exposure_program.creative_program',
+    'Creative program'
+  ),
+  6: t('sidebar.media.exif.exposure_program.action_program', 'Action program'),
+  7: t('sidebar.media.exif.exposure_program.portrait_mode', 'Portrait mode'),
+  8: t('sidebar.media.exif.exposure_program.landscape_mode', 'Landscape mode'),
+  9: t('sidebar.media.exif.exposure_program.bulb', 'Bulb'),
+})
 
 // From https://exiftool.org/TagNames/EXIF.html#Flash
-const flash = {
-  0x0: 'No Flash',
-  0x1: 'Fired',
-  0x5: 'Fired, Return not detected',
-  0x7: 'Fired, Return detected',
-  0x8: 'On, Did not fire',
-  0x9: 'On, Fired',
-  0xd: 'On, Return not detected',
-  0xf: 'On, Return detected',
-  0x10: 'Off, Did not fire',
-  0x14: 'Off, Did not fire, Return not detected',
-  0x18: 'Auto, Did not fire',
-  0x19: 'Auto, Fired',
-  0x1d: 'Auto, Fired, Return not detected',
-  0x1f: 'Auto, Fired, Return detected',
-  0x20: 'No flash function',
-  0x30: 'Off, No flash function',
-  0x41: 'Fired, Red-eye reduction',
-  0x45: 'Fired, Red-eye reduction, Return not detected',
-  0x47: 'Fired, Red-eye reduction, Return detected',
-  0x49: 'On, Red-eye reduction',
-  0x4d: 'On, Red-eye reduction, Return not detected',
-  0x4f: 'On, Red-eye reduction, Return detected',
-  0x50: 'Off, Red-eye reduction',
-  0x58: 'Auto, Did not fire, Red-eye reduction',
-  0x59: 'Auto, Fired, Red-eye reduction',
-  0x5d: 'Auto, Fired, Red-eye reduction, Return not detected',
-  0x5f: 'Auto, Fired, Red-eye reduction, Return detected',
+const flash = t => {
+  const values = {
+    no_flash: t('sidebar.media.exif.flash.no_flash', 'No Flash'),
+    fired: t('sidebar.media.exif.flash.fired', 'Fired'),
+    did_not_fire: t('sidebar.media.exif.flash.did_not_fire', 'Did not fire'),
+    on: t('sidebar.media.exif.flash.on', 'On'),
+    off: t('sidebar.media.exif.flash.off', 'Off'),
+    auto: t('sidebar.media.exif.flash.auto', 'Auto'),
+    return_not_detected: t(
+      'sidebar.media.exif.flash.return_not_detected',
+      'Return not detected'
+    ),
+    return_detected: t(
+      'sidebar.media.exif.flash.return_detected',
+      'Return detected'
+    ),
+    no_flash_function: t(
+      'sidebar.media.exif.flash.no_flash_function',
+      'No flash function'
+    ),
+    red_eye_reduction: t(
+      'sidebar.media.exif.flash.red_eye_reduction',
+      'Red-eye reduction'
+    ),
+  }
+
+  return {
+    0x0: values['no_flash'],
+    0x1: values['fired'],
+    0x5: `${values['fired']}, ${values['return_not_detected']}`,
+    0x7: `${values['fired']}, ${values['return_detected']}`,
+    0x8: `${values['on']}, ${values['did_not_fire']}`,
+    0x9: `${values['on']}, ${values['fired']}`,
+    0xd: `${values['on']}, ${values['return_not_detected']}`,
+    0xf: `${values['on']}, ${values['return_detected']}`,
+    0x10: `${values['off']}, ${values['did_not_fire']}`,
+    0x14: `${values['off']}, ${values['did_not_fire']}, ${values['return_not_detected']}`,
+    0x18: `${values['auto']}, ${values['did_not_fire']}`,
+    0x19: `${values['auto']}, ${values['fired']}`,
+    0x1d: `${values['auto']}, ${values['fired']}, ${values['return_not_detected']}`,
+    0x1f: `${values['auto']}, ${values['fired']}, ${values['return_detected']}`,
+    0x20: `${values['no_flash_function']}`,
+    0x30: `${values['off']}, ${values['no_flash_function']}`,
+    0x41: `${values['fired']}, ${values['red_eye_reduction']}`,
+    0x45: `${values['fired']}, ${values['red_eye_reduction']}, ${values['return_not_detected']}`,
+    0x47: `${values['fired']}, ${values['red_eye_reduction']}, ${values['return_detected']}`,
+    0x49: `${values['on']}, ${values['red_eye_reduction']}`,
+    0x4d: `${values['on']}, ${values['red_eye_reduction']}, ${values['return_not_detected']}`,
+    0x4f: `${values['on']}, ${values['red_eye_reduction']}, ${values['return_detected']}`,
+    0x50: `${values['off']}, ${values['red_eye_reduction']}`,
+    0x58: `${values['auto']}, ${values['did_not_fire']}, ${values['red_eye_reduction']}`,
+    0x59: `${values['auto']}, ${values['fired']}, ${values['red_eye_reduction']}`,
+    0x5d: `${values['auto']}, ${values['red_eye_reduction']}, ${values['return_not_detected']}`,
+    0x5f: `${values['auto']}, ${values['red_eye_redcution']}, ${values['return_detected']}`,
+  }
 }
 
 // From https://exiftool.org/TagNames/EXIF.html

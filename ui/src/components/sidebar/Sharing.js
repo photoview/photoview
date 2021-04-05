@@ -12,6 +12,7 @@ import {
 import copy from 'copy-to-clipboard'
 import { authToken } from '../../helpers/authentication'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 const sharePhotoQuery = gql`
   query sidbarGetPhotoShares($id: ID!) {
@@ -73,6 +74,7 @@ const deleteShareMutation = gql`
 `
 
 const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
+  const { t } = useTranslation()
   const query = isPhoto ? sharePhotoQuery : shareAlbumQuery
 
   const [deleteShare, { loading: deleteShareLoading }] = useMutation(
@@ -187,7 +189,7 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
           }}
         >
           <Checkbox
-            label="Password"
+            label={t('login_page.field.password', 'Password')}
             onClick={e => e.stopPropagation()}
             checked={showPasswordInput}
             onChange={() => {
@@ -197,7 +199,7 @@ const ShareItemMoreDropdown = ({ id, share, isPhoto }) => {
           {addPasswordInput}
         </Dropdown.Item>
         <Dropdown.Item
-          text="Delete"
+          text={t('general.action.delete', 'Delete')}
           icon="delete"
           disabled={deleteShareLoading}
           onClick={() => {
@@ -224,6 +226,7 @@ const ShareButtonGroup = styled(Button.Group)`
 `
 
 const SidebarShare = ({ photo, album }) => {
+  const { t } = useTranslation()
   if ((!photo || !photo.id) && (!album || !album.id)) return null
   if (!authToken()) return null
 
@@ -257,7 +260,7 @@ const SidebarShare = ({ photo, album }) => {
   }
 
   if (!content && sharesLoading) {
-    content = <div>Loading shares...</div>
+    content = <div>{t('general.loading.shares', 'Loading shares...')}</div>
   }
 
   if (!content) {
@@ -266,13 +269,13 @@ const SidebarShare = ({ photo, album }) => {
     const optionsRows = shares.map(share => (
       <Table.Row key={share.token}>
         <Table.Cell>
-          <b>Public Link</b> {share.token}
+          <b>{t('sidebar.sharing.public_link', 'Public Link')}</b> {share.token}
         </Table.Cell>
         <Table.Cell>
           <ShareButtonGroup>
             <Button
               icon="chain"
-              content="Copy link"
+              content={t('sidebar.sharing.copy_link', 'Copy Link')}
               onClick={() => {
                 copy(`${location.origin}/share/${share.token}`)
               }}
@@ -286,7 +289,9 @@ const SidebarShare = ({ photo, album }) => {
     if (optionsRows.length == 0) {
       optionsRows.push(
         <Table.Row key="no-shares">
-          <Table.Cell colSpan="2">No shares found</Table.Cell>
+          <Table.Cell colSpan="2">
+            {t('sidebar.sharing.no_shares_found', 'No shares found')}
+          </Table.Cell>
         </Table.Row>
       )
     }
@@ -296,7 +301,9 @@ const SidebarShare = ({ photo, album }) => {
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell colSpan="2">Public Shares</Table.HeaderCell>
+              <Table.HeaderCell colSpan="2">
+                {t('sidebar.sharing.table_header', 'Public shares')}
+              </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>{optionsRows}</Table.Body>
@@ -304,7 +311,7 @@ const SidebarShare = ({ photo, album }) => {
             <Table.Row>
               <Table.HeaderCell colSpan="2">
                 <Button
-                  content="Add share"
+                  content={t('sidebar.sharing.add_share', 'Add shares')}
                   icon="add"
                   floated="right"
                   positive
@@ -328,7 +335,7 @@ const SidebarShare = ({ photo, album }) => {
 
   return (
     <div>
-      <h2>Sharing options</h2>
+      <h2>{t('sidebar.sharing.title', 'Sharing options')}</h2>
       {content}
     </div>
   )
