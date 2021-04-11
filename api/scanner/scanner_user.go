@@ -13,7 +13,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	"github.com/sabhiram/go-gitignore"
+	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +23,9 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	// Open .photoviewignore file, if exists
 	photoviewIgnoreFile, err := os.Open(path.Join(ignorePath, ".photoviewignore"))
 	if err != nil {
+		if err == os.ErrNotExist {
+			return photoviewIgnore, nil
+		}
 		return photoviewIgnore, err
 	}
 
