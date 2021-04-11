@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client'
 import { Input, Loader } from 'semantic-ui-react'
 import { InputLabelTitle, InputLabelDescription } from './SettingsPage'
+import { useTranslation } from 'react-i18next'
 
 const CONCURRENT_WORKERS_QUERY = gql`
   query concurrentWorkersQuery {
@@ -18,6 +19,8 @@ const SET_CONCURRENT_WORKERS_MUTATION = gql`
 `
 
 const ScannerConcurrentWorkers = () => {
+  const { t } = useTranslation()
+
   const workerAmountQuery = useQuery(CONCURRENT_WORKERS_QUERY, {
     onCompleted(data) {
       setWorkerAmount(data.siteInfo.concurrentWorkers)
@@ -46,9 +49,14 @@ const ScannerConcurrentWorkers = () => {
   return (
     <div style={{ marginTop: 32 }}>
       <label htmlFor="scanner_concurrent_workers_field">
-        <InputLabelTitle>Scanner Concurrent Workers</InputLabelTitle>
+        <InputLabelTitle>
+          {t('settings.concurrent_workers.title', 'Scanner concurrent workers')}
+        </InputLabelTitle>
         <InputLabelDescription>
-          The maximum amount of scanner jobs that is allowed to run at once
+          {t(
+            'settings.concurrent_workers.description',
+            'The maximum amount of scanner jobs that is allowed to run at once'
+          )}
         </InputLabelDescription>
       </label>
       <Input

@@ -8,6 +8,7 @@ import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
+import { useTranslation } from 'react-i18next'
 
 const albumQuery = gql`
   query albumQuery(
@@ -62,6 +63,8 @@ let refetchNeededFavorites = false
 
 function AlbumPage({ match }) {
   const albumId = match.params.id
+
+  const { t } = useTranslation()
 
   const { getParam, setParam, setParams } = useURLParameters()
 
@@ -139,7 +142,11 @@ function AlbumPage({ match }) {
   if (error) return <div>Error</div>
 
   return (
-    <Layout title={data ? data.album.title : 'Loading album'}>
+    <Layout
+      title={
+        data ? data.album.title : t('title.loading_album', 'Loading album')
+      }
+    >
       <AlbumGallery
         ref={containerElem}
         album={data && data.album}
@@ -154,7 +161,7 @@ function AlbumPage({ match }) {
       />
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        text="Loading more media"
+        text={t('general.loading.paginate.media', 'Loading more media')}
       />
     </Layout>
   )

@@ -1,6 +1,7 @@
 import { gql, useMutation } from '@apollo/client'
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 
 const createUserMutation = gql`
@@ -30,6 +31,7 @@ const initialState = {
 }
 
 const AddUserRow = ({ setShow, show, onUserAdded }) => {
+  const { t } = useTranslation()
   const [state, setState] = useState(initialState)
 
   const [addRootPath, { loading: addRootPathLoading }] = useMutation(
@@ -81,14 +83,17 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
     <Table.Row>
       <Table.Cell>
         <Input
-          placeholder="Username"
+          placeholder={t('login_page.field.username', 'Username')}
           value={state.username}
           onChange={e => updateInput(e, 'username')}
         />
       </Table.Cell>
       <Table.Cell>
         <Input
-          placeholder="/path/to/photos"
+          placeholder={t(
+            'login_page.initial_setup.field.photo_path.placeholder',
+            '/path/to/photos'
+          )}
           value={state.rootPath}
           onChange={e => updateInput(e, 'rootPath')}
         />
@@ -108,7 +113,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
       <Table.Cell>
         <Button.Group>
           <Button negative onClick={() => setShow(false)}>
-            Cancel
+            {t('general.action.cancel', 'Cancel')}
           </Button>
           <Button
             type="submit"
@@ -124,7 +129,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
               })
             }}
           >
-            Add User
+            {t('settings.users.add_user.submit', 'Add user')}
           </Button>
         </Button.Group>
       </Table.Cell>

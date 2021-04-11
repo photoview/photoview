@@ -1,9 +1,13 @@
-const fs = require('fs-extra')
-const esbuild = require('esbuild')
-const bs = require('browser-sync').create()
-const historyApiFallback = require('connect-history-api-fallback')
+import fs from 'fs-extra'
+import esbuild from 'esbuild'
+import babel from 'esbuild-plugin-babel'
+import browserSync from 'browser-sync'
+import historyApiFallback from 'connect-history-api-fallback'
+import dotenv from 'dotenv'
+import workboxBuild from 'workbox-build'
 
-require('dotenv').config()
+dotenv.config()
+const bs = browserSync.create()
 
 const production = process.env.NODE_ENV == 'production'
 const watchMode = process.argv[2] == 'watch'
@@ -17,6 +21,11 @@ const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
 
 const esbuildOptions = {
   entryPoints: ['src/index.js'],
+  plugins: [
+    babel({
+      filter: /photoview\/ui\/src\/.*\.js$/,
+    }),
+  ],
   publicPath: process.env.UI_PUBLIC_URL || '/',
   outdir: 'dist',
   format: 'esm',
@@ -63,11 +72,19 @@ if (watchMode) {
     bs.reload(args)
   })
 } else {
-  esbuild.buildSync(esbuildOptions)
+  const esbuildPromise = esbuild
+    .build(esbuildOptions)
+    .then(() => console.log('esbuild done'))
 
-  require('workbox-build').generateSW({
-    globDirectory: 'dist/',
-    globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
-    swDest: 'dist/service-worker.js',
-  })
+  const workboxPromise = workboxBuild
+    .generateSW({
+      globDirectory: 'dist/',
+      globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
+      swDest: 'dist/service-worker.js',
+    })
+    .then(() => console.log('workbox done'))
+
+  Promise.all([esbuildPromise, workboxPromise]).then(() =>
+    console.log('build complete')
+  )
 }

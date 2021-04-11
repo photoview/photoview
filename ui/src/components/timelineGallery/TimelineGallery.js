@@ -10,6 +10,7 @@ import { FavoritesCheckbox } from '../AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
+import { useTranslation } from 'react-i18next'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
@@ -54,6 +55,7 @@ const GalleryWrapper = styled.div`
 `
 
 const TimelineGallery = () => {
+  const { t } = useTranslation()
   const [activeIndex, setActiveIndex] = useState({
     dateGroup: -1,
     albumGroup: -1,
@@ -212,7 +214,9 @@ const TimelineGallery = () => {
 
   return (
     <>
-      <Loader active={loading}>Loading timeline</Loader>
+      <Loader active={loading}>
+        {t('general.loading.timeline', 'Loading timeline')}
+      </Loader>
       <FavoritesCheckbox
         onlyFavorites={onlyFavorites}
         setOnlyFavorites={setOnlyFavorites}
@@ -220,7 +224,7 @@ const TimelineGallery = () => {
       <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        text="Loading more media"
+        text={t('general.loading.paginate.media', 'Loading more media')}
       />
       {presenting && (
         <PresentView

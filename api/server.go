@@ -71,7 +71,8 @@ func main() {
 
 	graphqlResolver := resolvers.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
-	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
+	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin
+	graphqlDirective.IsAuthorized = photoview_graphql.IsAuthorized
 
 	graphqlConfig := photoview_graphql.Config{
 		Resolvers:  &graphqlResolver,

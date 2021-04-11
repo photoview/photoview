@@ -4,6 +4,7 @@ import { Route, Switch, Redirect } from 'react-router-dom'
 import { Loader } from 'semantic-ui-react'
 import Layout from '../../Layout'
 import { clearTokenCookie } from '../../helpers/authentication'
+import { useTranslation } from 'react-i18next'
 
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
 
@@ -26,11 +27,13 @@ const SettingsPage = React.lazy(() =>
 )
 
 const Routes = () => {
+  const { t } = useTranslation()
+
   return (
     <React.Suspense
       fallback={
         <Layout>
-          <Loader active>Loading page</Loader>
+          <Loader active>{t('general.loading.page', 'Loading page')}</Loader>
         </Layout>
       }
     >
@@ -49,9 +52,13 @@ const Routes = () => {
         <AuthorizedRoute path="/photos" component={PhotosPage} />
         <AuthorizedRoute path="/places" component={PlacesPage} />
         <AuthorizedRoute path="/people/:person?" component={PeoplePage} />
-        <AuthorizedRoute admin path="/settings" component={SettingsPage} />
+        <AuthorizedRoute path="/settings" component={SettingsPage} />
         <Route path="/" exact render={() => <Redirect to="/photos" />} />
-        <Route render={() => <div>Page not found</div>} />
+        <Route
+          render={() => (
+            <div>{t('routes.page_not_found', 'Page not found')}</div>
+          )}
+        />
       </Switch>
     </React.Suspense>
   )

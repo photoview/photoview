@@ -6,6 +6,7 @@ import { Container } from './loginUtilities'
 
 import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
+import { useTranslation } from 'react-i18next'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -26,6 +27,8 @@ const initialSetupMutation = gql`
 `
 
 const InitialSetupPage = () => {
+  const { t } = useTranslation()
+
   const [state, setState] = useState({
     username: '',
     password: '',
@@ -85,7 +88,7 @@ const InitialSetupPage = () => {
       {initialSetupRedirect}
       <Container>
         <Header as="h1" textAlign="center">
-          Initial Setup
+          {t('login_page.initial_setup.title', 'Initial Setup')}
         </Header>
         <Form
           style={{ width: 500, margin: 'auto' }}
@@ -96,26 +99,36 @@ const InitialSetupPage = () => {
           }
         >
           <Form.Field>
-            <label>Username</label>
+            <label>{t('login_page.field.username', 'Username')}</label>
             <input onChange={e => handleChange(e, 'username')} />
           </Form.Field>
           <Form.Field>
-            <label>Password</label>
+            <label>{t('login_page.field.password', 'Password')}</label>
             <input
               type="password"
               onChange={e => handleChange(e, 'password')}
             />
           </Form.Field>
           <Form.Field>
-            <label>Photo Path</label>
+            <label>
+              {t(
+                'login_page.initial_setup.field.photo_path.label',
+                'Photo path'
+              )}
+            </label>
             <input
-              placeholder="/path/to/photos"
+              placeholder={t(
+                'login_page.initial_setup.field.photo_path.placeholder',
+                '/path/to/photos'
+              )}
               type="text"
               onChange={e => handleChange(e, 'rootPath')}
             />
           </Form.Field>
           <Message error content={errorMessage} />
-          <Button type="submit">Setup Photoview</Button>
+          <Button type="submit">
+            {t('login_page.initial_setup.field.submit', 'Setup Photoview')}
+          </Button>
         </Form>
       </Container>
     </div>

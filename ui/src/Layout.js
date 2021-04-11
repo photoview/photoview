@@ -9,6 +9,7 @@ import { Authorized } from './components/routes/AuthorizedRoute'
 import { Helmet } from 'react-helmet'
 import Header from './components/header/Header'
 import { authToken } from './helpers/authentication'
+import { useTranslation } from 'react-i18next'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -95,41 +96,35 @@ const SideButtonLabel = styled.div`
 `
 
 export const SideMenu = () => {
-  const adminQuery = authToken() ? useQuery(ADMIN_QUERY) : null
+  const { t } = useTranslation()
+
   const mapboxQuery = authToken() ? useQuery(MAPBOX_QUERY) : null
 
-  const isAdmin = adminQuery?.data?.myUser?.admin
   const mapboxEnabled = !!mapboxQuery?.data?.mapboxToken
 
   return (
     <SideMenuContainer>
       <SideButton to="/photos" exact>
         <Icon name="image" />
-        <SideButtonLabel>Photos</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.photos', 'Photos')}</SideButtonLabel>
       </SideButton>
       <SideButton to="/albums" exact>
         <Icon name="images" />
-        <SideButtonLabel>Albums</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.albums', 'Albums')}</SideButtonLabel>
       </SideButton>
       {mapboxEnabled ? (
         <SideButton to="/places" exact>
           <Icon name="map" />
-          <SideButtonLabel>Places</SideButtonLabel>
+          <SideButtonLabel>{t('sidemenu.places', 'Places')}</SideButtonLabel>
         </SideButton>
       ) : null}
       <SideButton to="/people" exact>
         <Icon name="user" />
-        <SideButtonLabel>People</SideButtonLabel>
+        <SideButtonLabel>{t('sidemenu.people', 'People')}</SideButtonLabel>
       </SideButton>
-      {isAdmin ? (
-        <SideButton to="/settings" exact>
-          <Icon name="settings" />
-          <SideButtonLabel>Settings</SideButtonLabel>
-        </SideButton>
-      ) : null}
-      <SideButton to="/logout">
-        <Icon name="lock" />
-        <SideButtonLabel>Log out</SideButtonLabel>
+      <SideButton to="/settings" exact>
+        <Icon name="settings" />
+        <SideButtonLabel>{t('sidemenu.settings', 'Settings')}</SideButtonLabel>
       </SideButton>
     </SideMenuContainer>
   )

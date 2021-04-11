@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
 import { Checkbox, Dropdown, Input, Loader } from 'semantic-ui-react'
 import { InputLabelDescription, InputLabelTitle } from './SettingsPage'
+import { useTranslation } from 'react-i18next'
 
 const SCAN_INTERVAL_QUERY = gql`
   query scanIntervalQuery {
@@ -74,6 +75,8 @@ const convertToAppropriateUnit = ({ value, unit }) => {
 }
 
 const PeriodicScanner = () => {
+  const { t } = useTranslation()
+
   const [enablePeriodicScanner, setEnablePeriodicScanner] = useState(false)
   const [scanInterval, setScanInterval] = useState({
     value: 4,
@@ -131,38 +134,41 @@ const PeriodicScanner = () => {
   const scanIntervalUnits = [
     {
       key: 'second',
-      text: 'Seconds',
+      text: t('settings.periodic_scanner.interval_unit.seconds', 'Seconds'),
       value: 'second',
     },
     {
       key: 'minute',
-      text: 'Minutes',
+      text: t('settings.periodic_scanner.interval_unit.minutes', 'Minutes'),
       value: 'minute',
     },
     {
       key: 'hour',
-      text: 'Hours',
+      text: t('settings.periodic_scanner.interval_unit.hour', 'Hour'),
       value: 'hour',
     },
     {
       key: 'day',
-      text: 'Days',
+      text: t('settings.periodic_scanner.interval_unit.days', 'Days'),
       value: 'day',
     },
     {
       key: 'month',
-      text: 'Months',
+      text: t('settings.periodic_scanner.interval_unit.months', 'Months'),
       value: 'month',
     },
   ]
 
   return (
     <>
-      <h3>Periodic scanner</h3>
+      <h3>{t('settings.periodic_scanner.title', 'Periodic scanner')}</h3>
 
       <div style={{ margin: '12px 0' }}>
         <Checkbox
-          label="Enable periodic scanner"
+          label={t(
+            'settings.periodic_scanner.checkbox_label',
+            'Enable periodic scanner'
+          )}
           disabled={scanIntervalQuery.loading}
           checked={enablePeriodicScanner}
           onChange={(_, { checked }) => onScanIntervalCheckboxChange(checked)}
@@ -172,9 +178,17 @@ const PeriodicScanner = () => {
       {enablePeriodicScanner && (
         <>
           <label htmlFor="periodic_scan_field">
-            <InputLabelTitle>Periodic scan interval</InputLabelTitle>
+            <InputLabelTitle>
+              {t(
+                'settings.periodic_scanner.field.label',
+                'Periodic scan interval'
+              )}
+            </InputLabelTitle>
             <InputLabelDescription>
-              How often the scanner should perform automatic scans of all users
+              {t(
+                'settings.periodic_scanner.field.description',
+                'How often the scanner should perform automatic scans of all users'
+              )}
             </InputLabelDescription>
           </label>
           <Input

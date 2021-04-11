@@ -1,3 +1,4 @@
+directive @isAuthorized on FIELD_DEFINITION
 directive @isAdmin on FIELD_DEFINITION
 
 scalar Time
@@ -30,7 +31,9 @@ type Query {
   "List of registered users, must be admin to call"
   user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
   "Information about the currently logged in user"
-  myUser: User!
+  myUser: User! @isAuthorized
+
+  myUserPreferences: UserPreferences! @isAuthorized
 
   "List of albums owned by the logged in user."
   myAlbums(
@@ -42,7 +45,7 @@ type Query {
     showEmpty: Boolean
     "Show only albums having favorites"
     onlyWithFavorites: Boolean
-  ): [Album!]!
+  ): [Album!]! @isAuthorized
   """
   Get album by id, user must own the album or be admin
   If valid tokenCredentials are provided, the album may be retrived without further authentication
@@ -50,7 +53,7 @@ type Query {
   album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
 
   "List of media owned by the logged in user"
-  myMedia(order: Ordering, paginate: Pagination): [Media!]!
+  myMedia(order: Ordering, paginate: Pagination): [Media!]! @isAuthorized
   """
   Get media by id, user must own the media or be admin.
   If valid tokenCredentials are provided, the media may be retrived without further authentication
@@ -60,10 +63,10 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]!
+  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]! @isAuthorized
 
   "Get media owned by the logged in user, returned in GeoJson format"
-  myMediaGeoJson: Any!
+  myMediaGeoJson: Any! @isAuthorized
   "Get the mapbox api token, returns null if mapbox is not enabled"
   mapboxToken: String
 
@@ -72,8 +75,8 @@ type Query {
 
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 
-  myFaceGroups(paginate: Pagination): [FaceGroup!]!
-  faceGroup(id: ID!): FaceGroup!
+  myFaceGroups(paginate: Pagination): [FaceGroup!]! @isAuthorized
+  faceGroup(id: ID!): FaceGroup! @isAuthorized
 }
 
 type Mutation {
@@ -89,19 +92,19 @@ type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
   "Scan a single user for new media"
-  scanUser(userId: ID!): ScannerResult!
+  scanUser(userId: ID!): ScannerResult! @isAdmin
 
   "Generate share token for album"
-  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken
+  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken @isAuthorized
   "Generate share token for media"
-  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken
+  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken @isAuthorized
   "Delete a share token by it's token value"
-  deleteShareToken(token: String!): ShareToken
+  deleteShareToken(token: String!): ShareToken @isAuthorized
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
-  protectShareToken(token: String!, password: String): ShareToken
+  protectShareToken(token: String!, password: String): ShareToken @isAuthorized
 
   "Mark or unmark a media as being a favorite"
-  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media
+  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media @isAuthorized
 
   updateUser(
     id: ID!
@@ -124,21 +127,23 @@ type Mutation {
   Set how often, in seconds, the server should automatically scan for new media,
   a value of 0 will disable periodic scans
   """
-  setPeriodicScanInterval(interval: Int!): Int!
+  setPeriodicScanInterval(interval: Int!): Int! @isAdmin
 
   "Set max number of concurrent scanner jobs running at once"
-  setScannerConcurrentWorkers(workers: Int!): Int!
+  setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
+
+  changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
   "Assign a label to a face group, set label to null to remove the current one"
-  setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
+  setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
-  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup!
+  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup! @isAuthorized
   "Move a list of ImageFaces to another face group"
-  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup!
+  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup! @isAuthorized
   "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
-  recognizeUnlabeledFaces: [ImageFace!]!
+  recognizeUnlabeledFaces: [ImageFace!]! @isAuthorized
   "Move a list of ImageFaces to a new face group"
-  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup!
+  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup! @isAuthorized
 }
 
 type Subscription {
@@ -214,6 +219,16 @@ type User {
   rootAlbums: [Album!]! @isAdmin
   admin: Boolean!
   #shareTokens: [ShareToken]
+}
+
+enum LanguageTranslation {
+  en,
+  da
+}
+
+type UserPreferences {
+  id: ID!
+  language: LanguageTranslation
 }
 
 type Album {

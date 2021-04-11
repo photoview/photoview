@@ -5,6 +5,7 @@ import { useLazyQuery, gql } from '@apollo/client'
 import { debounce } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   height: 60px;
@@ -77,6 +78,7 @@ const SEARCH_QUERY = gql`
 `
 
 const SearchBar = () => {
+  const { t } = useTranslation()
   const [fetchSearches, fetchResult] = useLazyQuery(SEARCH_QUERY)
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
@@ -111,7 +113,11 @@ const SearchBar = () => {
 
   return (
     <Container>
-      <SearchField type="search" placeholder="Search" onChange={fetchEvent} />
+      <SearchField
+        type="search"
+        placeholder={t('header.search.placeholder', 'Search')}
+        onChange={fetchEvent}
+      />
       {results}
     </Container>
   )
@@ -123,6 +129,7 @@ const ResultTitle = styled.h1`
 `
 
 const SearchResults = ({ result }) => {
+  const { t } = useTranslation()
   const { data, loading } = result
   const query = data && data.search.query
 
@@ -130,9 +137,9 @@ const SearchResults = ({ result }) => {
   const albums = (data && data.search.albums) || []
 
   let message = null
-  if (loading) message = 'Loading results...'
+  if (loading) message = t('header.search.loading', 'Loading results...')
   else if (data && media.length == 0 && albums.length == 0)
-    message = 'No results found'
+    message = t('header.search.no_results', 'No results found')
 
   const albumElements = albums.map(album => (
     <AlbumRow key={album.id} query={query} album={album} />
@@ -151,9 +158,17 @@ const SearchResults = ({ result }) => {
       show={data}
     >
       {message}
-      {albumElements.length > 0 && <ResultTitle>Albums</ResultTitle>}
+      {albumElements.length > 0 && (
+        <ResultTitle>
+          {t('header.search.result_type.albums', 'Albums')}
+        </ResultTitle>
+      )}
       {albumElements}
-      {mediaElements.length > 0 && <ResultTitle>Photos</ResultTitle>}
+      {mediaElements.length > 0 && (
+        <ResultTitle>
+          {t('header.search.result_type.photos', 'Photos')}
+        </ResultTitle>
+      )}
       {mediaElements}
     </Results>
   )

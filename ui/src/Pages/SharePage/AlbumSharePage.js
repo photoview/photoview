@@ -4,6 +4,7 @@ import Layout from '../../Layout'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import styled from 'styled-components'
 import { gql, useQuery } from '@apollo/client'
+import { useTranslation } from 'react-i18next'
 
 export const SHARE_ALBUM_QUERY = gql`
   query shareAlbumQuery(
@@ -73,6 +74,7 @@ const AlbumSharePageWrapper = styled.div`
 `
 
 const AlbumSharePage = ({ albumID, token, password }) => {
+  const { t } = useTranslation()
   const { data, loading, error } = useQuery(SHARE_ALBUM_QUERY, {
     variables: {
       id: albumID,
@@ -88,14 +90,18 @@ const AlbumSharePage = ({ albumID, token, password }) => {
   }
 
   if (loading) {
-    return 'Loading...'
+    return t('general.loading.default', 'Loading...')
   }
 
   const album = data.album
 
   return (
     <AlbumSharePageWrapper data-testid="AlbumSharePage">
-      <Layout title={album ? album.title : 'Loading album'}>
+      <Layout
+        title={
+          album ? album.title : t('general.loading.album', 'Loading album')
+        }
+      >
         <AlbumGallery
           album={album}
           customAlbumLink={albumId => `/share/${token}/${albumId}`}
