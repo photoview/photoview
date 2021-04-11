@@ -3,6 +3,7 @@ module.exports = {
     browser: true,
     es6: true,
   },
+  ignorePatterns: ['**/*.ts', '**/*.tsx'],
   extends: ['eslint:recommended', 'plugin:react/recommended'],
   globals: {
     Atomics: 'readonly',

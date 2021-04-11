@@ -7,7 +7,7 @@ import { MY_FACES_QUERY } from '../PeoplePage'
 import SelectFaceGroupTable from './SelectFaceGroupTable'
 
 const COMBINE_FACES_MUTATION = gql`
-  mutation($destID: ID!, $srcID: ID!) {
+  mutation combineFaces($destID: ID!, $srcID: ID!) {
     combineFaceGroups(
       destinationFaceGroupID: $destID
       sourceFaceGroupID: $srcID

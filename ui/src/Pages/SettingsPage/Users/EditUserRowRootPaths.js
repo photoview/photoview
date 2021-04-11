@@ -5,14 +5,7 @@ import { Button, Icon, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { USERS_QUERY } from './UsersTable'
 import { useTranslation } from 'react-i18next'
-
-const userAddRootPathMutation = gql`
-  mutation userAddRootPath($id: ID!, $rootPath: String!) {
-    userAddRootPath(id: $id, rootPath: $rootPath) {
-      id
-    }
-  }
-`
+import { userAddRootPathMutation } from './AddUserRow'
 
 const userRemoveAlbumPathMutation = gql`
   mutation userRemoveAlbumPathMutation($userId: ID!, $albumId: ID!) {

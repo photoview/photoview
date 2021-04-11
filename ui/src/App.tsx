@@ -30,9 +30,12 @@ const GlobalStyle = createGlobalStyle`
 `
 
 import 'semantic-ui-css/semantic.min.css'
+import { siteTranslation } from './__generated__/siteTranslation'
+import { LanguageTranslation } from '../__generated__/globalTypes'
+import { useTranslation } from 'react-i18next'
 
 const SITE_TRANSLATION = gql`
-  query {
+  query siteTranslation {
     myUserPreferences {
       id
       language
@@ -41,7 +44,7 @@ const SITE_TRANSLATION = gql`
 `
 
 const loadTranslations = () => {
-  const [loadLang, { data }] = useLazyQuery(SITE_TRANSLATION)
+  const [loadLang, { data }] = useLazyQuery<siteTranslation>(SITE_TRANSLATION)
 
   useEffect(() => {
     if (authToken()) {
@@ -51,7 +54,7 @@ const loadTranslations = () => {
 
   useEffect(() => {
     switch (data?.myUserPreferences.language) {
-      case 'da':
+      case LanguageTranslation.Danish:
         import('../extractedTranslations/da/translation.json').then(danish => {
           i18n.addResourceBundle('da', 'translation', danish)
           i18n.changeLanguage('da')
@@ -64,6 +67,7 @@ const loadTranslations = () => {
 }
 
 const App = () => {
+  const { t } = useTranslation()
   loadTranslations()
 
   return (
@@ -71,7 +75,10 @@ const App = () => {
       <Helmet>
         <meta
           name="description"
-          content="Simple and User-friendly Photo Gallery for Personal Servers"
+          content={t(
+            'meta.description',
+            'Simple and User-friendly Photo Gallery for Personal Servers'
+          )}
         />
       </Helmet>
       <GlobalStyle />

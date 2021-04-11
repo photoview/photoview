@@ -1842,8 +1842,8 @@ type User {
 }
 
 enum LanguageTranslation {
-  en,
-  da
+  English,
+  Danish
 }
 
 type UserPreferences {
@@ -1899,8 +1899,8 @@ type MediaDownload {
 }
 
 enum MediaType {
-  photo
-  video
+  Photo
+  Video
 }
 
 type Media {

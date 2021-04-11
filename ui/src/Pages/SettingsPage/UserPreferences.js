@@ -13,7 +13,7 @@ const languagePreferences = [
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
-  mutation($language: String) {
+  mutation changeUserPreferences($language: String) {
     changeUserPreferences(language: $language) {
       id
       language
@@ -22,7 +22,7 @@ const CHANGE_USER_PREFERENCES = gql`
 `
 
 const MY_USER_PREFERENCES = gql`
-  query {
+  query myUserPreferences {
     myUserPreferences {
       id
       language

@@ -158,7 +158,7 @@
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
+        "byte_plural": null,
         "giga_byte": "{{count}} GB",
         "kilo_byte": "{{count}} KB",
         "mega_byte": "{{count}} MB",

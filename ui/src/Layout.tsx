@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactChild, ReactChildren } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
@@ -79,16 +79,28 @@ const SideButtonLink = styled(NavLink)`
   }
 `
 
-const SideButton = props => {
-  return (
-    <SideButtonLink {...props} activeStyle={{ color: '#4183c4' }}>
-      {props.children}
-    </SideButtonLink>
-  )
+type SideButtonProps = {
+  children: any
+  to: string
+  exact: boolean
 }
 
-SideButton.propTypes = {
-  children: PropTypes.any,
+const SideButton = ({
+  children,
+  to,
+  exact,
+  ...otherProps
+}: SideButtonProps) => {
+  return (
+    <SideButtonLink
+      {...otherProps}
+      to={to}
+      exact={exact}
+      activeStyle={{ color: '#4183c4' }}
+    >
+      {children}
+    </SideButtonLink>
+  )
 }
 
 const SideButtonLabel = styled.div`
@@ -130,7 +142,12 @@ export const SideMenu = () => {
   )
 }
 
-const Layout = ({ children, title, ...otherProps }) => {
+type LayoutProps = {
+  children: ReactChild | ReactChildren
+  title: string
+}
+
+const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
   return (
     <Container {...otherProps} data-testid="Layout">
       <Helmet>

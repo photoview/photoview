@@ -1,16 +1,9 @@
 import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
-import { gql, useLazyQuery } from '@apollo/client'
+import { useLazyQuery } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
-
-export const ADMIN_QUERY = gql`
-  query adminQuery {
-    myUser {
-      admin
-    }
-  }
-`
+import { ADMIN_QUERY } from '../../Layout'
 
 export const useIsAdmin = (enabled = true) => {
   const [fetchAdminQuery, { data }] = useLazyQuery(ADMIN_QUERY)

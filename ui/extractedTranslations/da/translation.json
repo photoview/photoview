@@ -1,12 +1,12 @@
 {
   "album_filter": {
-    "only_favorites": "Vis kun favoritter",
-    "sort_by": "Sorter efter",
+    "only_favorites": null,
+    "sort_by": null,
     "sorting_options": {
-      "date_imported": "Dato for importering",
-      "date_shot": "Dato",
-      "title": "Titel",
-      "type": "Type"
+      "date_imported": null,
+      "date_shot": null,
+      "title": null,
+      "type": null
     }
   },
   "albums_page": {
@@ -14,33 +14,33 @@
   },
   "general": {
     "action": {
-      "add": "Tilføj",
-      "cancel": "Annuller",
-      "delete": "Slet",
-      "remove": "Fjern",
-      "save": "Gem"
+      "add": null,
+      "cancel": null,
+      "delete": null,
+      "remove": null,
+      "save": null
     },
     "loading": {
-      "album": "Loader album",
+      "album": null,
       "default": "Loader...",
-      "media": "Loader medier",
+      "media": null,
       "page": "Loader side",
       "paginate": {
         "faces": "Loader flere personer",
         "media": "Loader flere medier"
       },
-      "shares": "Loader delinger...",
+      "shares": null,
       "timeline": "Loader tidslinje"
     }
   },
   "header": {
     "search": {
-      "loading": "Loader resultater...",
-      "no_results": "Fandt ingen resultater",
-      "placeholder": "Søg",
+      "loading": null,
+      "no_results": null,
+      "placeholder": null,
       "result_type": {
-        "albums": "Albums",
-        "photos": "Billeder"
+        "albums": null,
+        "photos": null
       }
     }
   },
@@ -74,24 +74,24 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "Det maksimale antal medier som må skannes samtidig",
-      "title": "Samtidige scanner-arbejdere"
+      "description": null,
+      "title": null
     },
     "logout": null,
     "periodic_scanner": {
-      "checkbox_label": "Aktiver periodiske scanner",
+      "checkbox_label": null,
       "field": {
-        "description": "Hvor ofte scanneren bør udføre automatiske scanninger af alle brugere",
-        "label": "Periodiske scanningsintervaller"
+        "description": null,
+        "label": null
       },
       "interval_unit": {
-        "days": "Dage",
-        "hour": "Timer",
-        "minutes": "Minutter",
-        "months": "Måneder",
-        "seconds": "Sekunder"
+        "days": null,
+        "hour": null,
+        "minutes": null,
+        "months": null,
+        "seconds": null
       },
-      "title": "Periodisk scanner"
+      "title": null
     },
     "scanner": {
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
@@ -106,21 +106,21 @@
     },
     "users": {
       "add_user": {
-        "submit": "Tilføj bruger"
+        "submit": null
       },
       "confirm_delete_user": {
-        "action": "Slet {user}",
-        "description": "<0>Er du sikker på at du vil slette <1></1>?</0><p>Denne handling kan ikke fortrydes</p>",
-        "title": "Slet bruger"
+        "action": null,
+        "description": null,
+        "title": null
       },
       "password_reset": {
-        "description": "Ændre adgangskode for <1></1>",
+        "description": null,
         "form": {
-          "label": "Ny adgangskode",
-          "placeholder": "adgangskode",
-          "submit": "Ændre adgangskode"
+          "label": null,
+          "placeholder": null,
+          "submit": null
         },
-        "title": "Ændre adgangskode"
+        "title": null
       },
       "table": {
         "column_names": {
@@ -132,10 +132,10 @@
         "new_user": "Ny bruger",
         "row": {
           "action": {
-            "change_password": "Ændre adgangskode",
-            "delete": "Slet",
-            "edit": "Rediger",
-            "scan": "Scan"
+            "change_password": null,
+            "delete": null,
+            "edit": null,
+            "scan": null
           }
         }
       },
@@ -153,72 +153,72 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album indstillinger"
+      "title": null
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "kilo_byte": "{{count}} KB",
-        "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "byte": null,
+        "byte_plural": null,
+        "giga_byte": null,
+        "kilo_byte": null,
+        "mega_byte": null,
+        "tera_byte": null
       },
       "table_columns": {
-        "dimensions": "Dimension",
-        "file_size": "Størrelse",
-        "file_type": "Type",
-        "name": "Navn"
+        "dimensions": null,
+        "file_size": null,
+        "file_type": null,
+        "name": null
       },
-      "title": "Download"
+      "title": null
     },
     "media": {
       "exif": {
         "exposure_program": {
-          "action_program": "Actionprogram",
-          "aperture_priority": "Blændeprioritet",
-          "bulb": "Bulb",
-          "creative_program": "Kreativ program",
-          "landscape_mode": "Landskabsmode",
-          "manual": "Manuel",
-          "normal_program": "Normal program",
-          "not_defined": "Ikke defineret",
-          "portrait_mode": "Portræt mode",
-          "shutter_priority": "Lukkerprioritet"
+          "action_program": null,
+          "aperture_priority": null,
+          "bulb": null,
+          "creative_program": null,
+          "landscape_mode": null,
+          "manual": null,
+          "normal_program": null,
+          "not_defined": null,
+          "portrait_mode": null,
+          "shutter_priority": null
         },
         "flash": {
-          "auto": "Auto",
-          "did_not_fire": "Blitz affyrede ikke",
-          "fired": "Affyrede",
-          "no_flash": "Ingen blitz",
-          "no_flash_function": "Ingen blitz-funktion",
-          "off": "Slukket",
-          "on": "Tændt",
-          "red_eye_reduction": "Røde øjne reduktion",
-          "return_detected": "Retur registreret",
-          "return_not_detected": "Retur ikke registreret"
+          "auto": null,
+          "did_not_fire": null,
+          "fired": null,
+          "no_flash": null,
+          "no_flash_function": null,
+          "off": null,
+          "on": null,
+          "red_eye_reduction": null,
+          "return_detected": null,
+          "return_not_detected": null
         },
         "name": {
-          "aperture": "Blænde",
-          "camera": "Kamera",
-          "date_shot": "Dato",
-          "exposure": "Lukketid",
-          "exposure_program": "Lukketid program",
-          "flash": "Blitz",
-          "focal_length": "Fokallængde",
-          "iso": "ISO",
-          "lens": "Lense",
-          "maker": "Mærke"
+          "aperture": null,
+          "camera": null,
+          "date_shot": null,
+          "exposure": null,
+          "exposure_program": null,
+          "flash": null,
+          "focal_length": null,
+          "iso": null,
+          "lens": null,
+          "maker": null
         }
       }
     },
     "sharing": {
-      "add_share": "Tilføj deling",
-      "copy_link": "Kopier link",
-      "no_shares_found": "Ingen delinger fundet",
-      "public_link": "Offentligt link",
-      "table_header": "Offentlige delinger",
-      "title": "Indstillinger for deling"
+      "add_share": null,
+      "copy_link": null,
+      "no_shares_found": null,
+      "public_link": null,
+      "table_header": null,
+      "title": null
     }
   },
   "sidemenu": {

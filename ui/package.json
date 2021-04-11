@@ -9,11 +9,11 @@
   "license": "GPL-3.0",
   "description": "UI app for Photoview",
   "dependencies": {
-    "@apollo/client": "^3.3.13",
-    "@babel/core": "^7.13.14",
+    "@apollo/client": "^3.3.14",
+    "@babel/core": "^7.13.15",
     "@babel/plugin-transform-modules-commonjs": "^7.13.8",
-    "@babel/plugin-transform-runtime": "^7.13.10",
-    "@babel/preset-env": "^7.13.12",
+    "@babel/plugin-transform-runtime": "^7.13.15",
+    "@babel/preset-env": "^7.13.15",
     "@babel/preset-react": "^7.13.13",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.3",
@@ -27,14 +27,13 @@
     "dotenv": "^8.2.0",
     "esbuild": "^0.8.52",
     "esbuild-plugin-babel": "^0.2.3",
-    "eslint": "^7.23.0",
-    "eslint-plugin-jest": "^24.3.3",
-    "eslint-plugin-jest-dom": "^3.7.0",
-    "eslint-plugin-react": "^7.23.1",
+    "eslint": "^7.24.0",
+    "eslint-plugin-jest": "^24.3.5",
+    "eslint-plugin-jest-dom": "^3.8.0",
+    "eslint-plugin-react": "^7.23.2",
     "eslint-plugin-react-hooks": "^4.2.0",
     "fs-extra": "^9.1.0",
-    "graphql": "^15.5.0",
-    "i18next": "^20.1.0",
+    "i18next": "^20.2.1",
     "mapbox-gl": "^2.2.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
@@ -49,6 +48,7 @@
     "semantic-ui-react": "^2.0.3",
     "styled-components": "^5.2.3",
     "subscriptions-transport-ws": "^0.9.18",
+    "typescript": "^4.2.4",
     "url-join": "^4.0.1",
     "workbox-build": "^6.1.2"
   },
@@ -58,12 +58,17 @@
     "test": "npm run lint && npm run jest",
     "lint": "eslint ./src --max-warnings 0 --cache",
     "jest": "jest",
+    "genSchemaTypes": "npx apollo client:codegen --target=typescript",
     "prepare": "(cd .. && npx husky install)"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.2.6",
     "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-helmet": "^6.1.1",
+    "@types/react-router-dom": "^5.1.7",
+    "@types/styled-components": "^5.1.9",
     "husky": "^6.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^10.5.4",
@@ -91,9 +96,5 @@
   "lint-staged": {
     "*.{js,json,css,md,graphql}": "prettier --write",
     "*.js": "eslint --cache --fix --max-warnings 0"
-  },
-  "sideEffects": [
-    "./src/index.js",
-    "./src/localization.js"
-  ]
+  }
 }

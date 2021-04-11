@@ -15,7 +15,7 @@ const createUserMutation = gql`
   }
 `
 
-const addRootPathMutation = gql`
+export const userAddRootPathMutation = gql`
   mutation userAddRootPath($id: ID!, $rootPath: String!) {
     userAddRootPath(id: $id, rootPath: $rootPath) {
       id
@@ -35,7 +35,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
   const [state, setState] = useState(initialState)
 
   const [addRootPath, { loading: addRootPathLoading }] = useMutation(
-    addRootPathMutation,
+    userAddRootPathMutation,
     {
       onCompleted: () => {
         setState(initialState)

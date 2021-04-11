@@ -39,7 +39,7 @@ export const MY_FACES_QUERY = gql`
 `
 
 export const SET_GROUP_LABEL_MUTATION = gql`
-  mutation($groupID: ID!, $label: String) {
+  mutation setGroupLabel($groupID: ID!, $label: String) {
     setFaceGroupLabel(faceGroupID: $groupID, label: $label) {
       id
       label

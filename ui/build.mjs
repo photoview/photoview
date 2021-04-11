@@ -20,7 +20,7 @@ const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
 }, {})
 
 const esbuildOptions = {
-  entryPoints: ['src/index.js'],
+  entryPoints: ['src/index.tsx'],
   plugins: [
     babel({
       filter: /photoview\/ui\/src\/.*\.js$/,
