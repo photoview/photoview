@@ -27,6 +27,8 @@ models:
     fields:
       albums:
         resolver: true
+  UserPreferences:
+    model: github.com/photoview/photoview/api/graphql/models.UserPreferences
   Media:
     model: github.com/photoview/photoview/api/graphql/models.Media
     fields:

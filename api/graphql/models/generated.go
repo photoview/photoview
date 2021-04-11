@@ -68,6 +68,47 @@ type TimelineGroup struct {
 	Date       time.Time `json:"date"`
 }
 
+type LanguageTranslation string
+
+const (
+	LanguageTranslationEn LanguageTranslation = "en"
+	LanguageTranslationDa LanguageTranslation = "da"
+)
+
+var AllLanguageTranslation = []LanguageTranslation{
+	LanguageTranslationEn,
+	LanguageTranslationDa,
+}
+
+func (e LanguageTranslation) IsValid() bool {
+	switch e {
+	case LanguageTranslationEn, LanguageTranslationDa:
+		return true
+	}
+	return false
+}
+
+func (e LanguageTranslation) String() string {
+	return string(e)
+}
+
+func (e *LanguageTranslation) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LanguageTranslation(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LanguageTranslation", str)
+	}
+	return nil
+}
+
+func (e LanguageTranslation) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type MediaType string
 
 const (

@@ -163,6 +163,7 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.VideoMetadata{},
 		&models.ShareToken{},
 		&models.UserMediaData{},
+		&models.UserPreferences{},
 
 		// Face detection
 		&models.FaceGroup{},

@@ -36,6 +36,13 @@ type AccessToken struct {
 	Expire time.Time `gorm:"not null;index"`
 }
 
+type UserPreferences struct {
+	Model
+	UserID   int  `gorm:"not null;index"`
+	User     User `gorm:"constraint:OnDelete:CASCADE;"`
+	Language *LanguageTranslation
+}
+
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 
 func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error) {

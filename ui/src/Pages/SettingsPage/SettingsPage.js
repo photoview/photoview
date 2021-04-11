@@ -1,10 +1,13 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button } from 'semantic-ui-react'
 import styled from 'styled-components'
+import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 
 import Layout from '../../Layout'
 
 import ScannerSection from './ScannerSection'
+import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
 
 export const SectionTitle = styled.h2`
@@ -26,11 +29,25 @@ export const InputLabelDescription = styled.p`
 
 const SettingsPage = () => {
   const { t } = useTranslation()
+  const isAdmin = useIsAdmin()
 
   return (
     <Layout title={t('title.settings', 'Settings')}>
-      <ScannerSection />
-      <UsersTable />
+      <UserPreferences />
+      {isAdmin && (
+        <>
+          <ScannerSection />
+          <UsersTable />
+        </>
+      )}
+      <Button
+        style={{ marginTop: 24 }}
+        onClick={() => {
+          location.href = '/logout'
+        }}
+      >
+        {t('settings.logout', 'Log out')}
+      </Button>
     </Layout>
   )
 }

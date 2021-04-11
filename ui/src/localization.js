@@ -17,5 +17,9 @@ export default function setupLocalization() {
     interpolation: {
       escapeValue: false,
     },
+
+    react: {
+      useSuspense: process.env.NODE_ENV === 'production',
+    },
   })
 }

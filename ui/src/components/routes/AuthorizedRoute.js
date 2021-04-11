@@ -12,6 +12,11 @@ export const ADMIN_QUERY = gql`
   }
 `
 
+export const useIsAdmin = () => {
+  const { data } = useQuery(ADMIN_QUERY)
+  return data?.myUser?.admin
+}
+
 export const Authorized = ({ children }) => {
   const token = authToken()
 
@@ -20,6 +25,7 @@ export const Authorized = ({ children }) => {
 
 const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
   const token = authToken()
+  const isAdmin = useIsAdmin()
 
   let unauthorizedRedirect = null
   if (!token) {
@@ -28,11 +34,7 @@ const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
 
   let adminRedirect = null
   if (token && admin) {
-    const { error, data } = useQuery(ADMIN_QUERY)
-
-    if (error) alert(error)
-
-    if (data && data.myUser && !data.myUser.admin) {
+    if (isAdmin === false) {
       adminRedirect = <Redirect to="/" />
     }
   }

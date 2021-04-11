@@ -91,5 +91,9 @@
   "lint-staged": {
     "*.{js,json,css,md,graphql}": "prettier --write",
     "*.js": "eslint --cache --fix --max-warnings 0"
-  }
+  },
+  "sideEffects": [
+    "./src/index.js",
+    "./src/localization.js"
+  ]
 }

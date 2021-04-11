@@ -98,10 +98,8 @@ const SideButtonLabel = styled.div`
 export const SideMenu = () => {
   const { t } = useTranslation()
 
-  const adminQuery = authToken() ? useQuery(ADMIN_QUERY) : null
   const mapboxQuery = authToken() ? useQuery(MAPBOX_QUERY) : null
 
-  const isAdmin = adminQuery?.data?.myUser?.admin
   const mapboxEnabled = !!mapboxQuery?.data?.mapboxToken
 
   return (
@@ -124,17 +122,9 @@ export const SideMenu = () => {
         <Icon name="user" />
         <SideButtonLabel>{t('sidemenu.people', 'People')}</SideButtonLabel>
       </SideButton>
-      {isAdmin ? (
-        <SideButton to="/settings" exact>
-          <Icon name="settings" />
-          <SideButtonLabel>
-            {t('sidemenu.settings', 'Settings')}
-          </SideButtonLabel>
-        </SideButton>
-      ) : null}
-      <SideButton to="/logout">
-        <Icon name="lock" />
-        <SideButtonLabel>{t('sidemenu.logout', 'Log out')}</SideButtonLabel>
+      <SideButton to="/settings" exact>
+        <Icon name="settings" />
+        <SideButtonLabel>{t('sidemenu.settings', 'Settings')}</SideButtonLabel>
       </SideButton>
     </SideMenuContainer>
   )

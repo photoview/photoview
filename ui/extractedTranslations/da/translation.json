@@ -77,6 +77,7 @@
       "description": "Det maksimale antal medier som må skannes samtidig",
       "title": "Samtidige scanner-arbejdere"
     },
+    "logout": null,
     "periodic_scanner": {
       "checkbox_label": "Aktiver periodiske scanner",
       "field": {
@@ -96,6 +97,12 @@
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
       "scan_all_users": "Scan alle brugere",
       "title": "Scanner"
+    },
+    "user_preferences": {
+      "language_selector": {
+        "placeholder": "Vælg sprog"
+      },
+      "title": "Brugerindstillinger"
     },
     "users": {
       "add_user": {
@@ -216,7 +223,6 @@
   },
   "sidemenu": {
     "albums": "Albums",
-    "logout": "Log af",
     "people": "Personer",
     "photos": "Billeder",
     "places": "Kort",

@@ -77,6 +77,7 @@
       "description": "The maximum amount of scanner jobs that is allowed to run at once",
       "title": "Scanner concurrent workers"
     },
+    "logout": "Log out",
     "periodic_scanner": {
       "checkbox_label": "Enable periodic scanner",
       "field": {
@@ -96,6 +97,12 @@
       "description": "Will scan all users for new or updated media",
       "scan_all_users": "Scan all users",
       "title": "Scanner"
+    },
+    "user_preferences": {
+      "language_selector": {
+        "placeholder": "Select language"
+      },
+      "title": "User preferences"
     },
     "users": {
       "add_user": {
@@ -216,7 +223,6 @@
   },
   "sidemenu": {
     "albums": "Albums",
-    "logout": "Log out",
     "people": "People",
     "photos": "Photos",
     "places": "Places",

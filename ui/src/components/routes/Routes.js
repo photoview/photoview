@@ -52,7 +52,7 @@ const Routes = () => {
         <AuthorizedRoute path="/photos" component={PhotosPage} />
         <AuthorizedRoute path="/places" component={PlacesPage} />
         <AuthorizedRoute path="/people/:person?" component={PeoplePage} />
-        <AuthorizedRoute admin path="/settings" component={SettingsPage} />
+        <AuthorizedRoute path="/settings" component={SettingsPage} />
         <Route path="/" exact render={() => <Redirect to="/photos" />} />
         <Route
           render={() => (
