@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
-import { useQuery, gql } from '@apollo/client'
+import { gql, useLazyQuery } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 
 export const ADMIN_QUERY = gql`
@@ -12,8 +12,19 @@ export const ADMIN_QUERY = gql`
   }
 `
 
-export const useIsAdmin = () => {
-  const { data } = useQuery(ADMIN_QUERY)
+export const useIsAdmin = (enabled = true) => {
+  const [fetchAdminQuery, { data }] = useLazyQuery(ADMIN_QUERY)
+
+  useEffect(() => {
+    if (authToken() && !data && enabled) {
+      fetchAdminQuery()
+    }
+  }, [authToken(), enabled])
+
+  if (!authToken()) {
+    return false
+  }
+
   return data?.myUser?.admin
 }
 
@@ -25,7 +36,7 @@ export const Authorized = ({ children }) => {
 
 const AuthorizedRoute = ({ component: Component, admin = false, ...props }) => {
   const token = authToken()
-  const isAdmin = useIsAdmin()
+  const isAdmin = useIsAdmin(admin)
 
   let unauthorizedRedirect = null
   if (!token) {
