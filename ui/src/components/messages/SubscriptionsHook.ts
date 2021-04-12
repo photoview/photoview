@@ -5,7 +5,7 @@ import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { NotificationType } from '../../../__generated__/globalTypes'
 
-const notificationSubscription = gql`
+const NOTIFICATION_SUBSCRIPTION = gql`
   subscription notificationSubscription {
     notification {
       key
@@ -49,7 +49,7 @@ const SubscriptionsHook = ({
   }
 
   const { data, error } = useSubscription<notificationSubscription>(
-    notificationSubscription
+    NOTIFICATION_SUBSCRIPTION
   )
 
   useEffect(() => {

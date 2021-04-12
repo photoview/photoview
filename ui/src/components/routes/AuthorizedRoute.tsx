@@ -1,6 +1,6 @@
 import React, { ReactChild, useEffect } from 'react'
 import PropTypes, { ReactComponentLike } from 'prop-types'
-import { Route, Redirect } from 'react-router-dom'
+import { Route, Redirect, RouteProps } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { ADMIN_QUERY } from '../../Layout'
@@ -27,9 +27,9 @@ export const Authorized = ({ children }: { children: JSX.Element }) => {
   return token ? children : null
 }
 
-type AuthorizedRouteProps = {
+interface AuthorizedRouteProps extends Omit<RouteProps, 'component'> {
   component: ReactComponentLike
-  admin: boolean
+  admin?: boolean
 }
 
 const AuthorizedRoute = ({

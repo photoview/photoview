@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 
-const SidebarContainer = styled.div`
+const SidebarContainer = styled.div<{ highlighted: boolean }>`
   width: 28vw;
   max-width: 500px;
   min-width: 300px;
@@ -38,15 +38,34 @@ const SidebarDismissButton = styled(Icon)`
   }
 `
 
-export const SidebarContext = createContext()
+export type UpdateSidebarFn = (content: React.ReactNode) => void
+
+interface SidebarContextType {
+  updateSidebar: UpdateSidebarFn
+  content: React.ReactNode
+}
+
+export const SidebarContext = createContext<SidebarContextType>({
+  updateSidebar: content => {
+    console.warn(
+      'SidebarContext: updateSidebar was called before initialezed',
+      content
+    )
+  },
+  content: null,
+})
 SidebarContext.displayName = 'SidebarContext'
 
-const Sidebar = ({ children }) => {
-  const [state, setState] = useState({
+type SidebarProps = {
+  children: React.ReactElement
+}
+
+const Sidebar = ({ children }: SidebarProps) => {
+  const [state, setState] = useState<{ content: React.ReactNode | null }>({
     content: null,
   })
 
-  const update = content => {
+  const update = (content: React.ReactNode | null) => {
     setState({ content })
   }
 

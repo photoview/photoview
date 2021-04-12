@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
@@ -28,7 +27,7 @@ const Image = styled(ProtectedImage)`
   object-position: center;
 `
 
-const Placeholder = styled.div`
+const Placeholder = styled.div<{ overlap?: boolean; loaded?: boolean }>`
   width: 220px;
   height: 220px;
   border-radius: 4%;
@@ -47,14 +46,18 @@ const Placeholder = styled.div`
   `}
 `
 
-const AlbumBoxImage = ({ src, ...props }) => {
+interface AlbumBoxImageProps {
+  src?: string
+}
+
+const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
   const [loaded, setLoaded] = useState(false)
 
   if (src) {
     return (
       <ImageWrapper>
-        <Image {...props} onLoad={loaded => setLoaded(loaded)} src={src} />
-        <Placeholder overlap loaded={loaded ? 1 : 0} />
+        <Image {...props} onLoad={() => setLoaded(true)} src={src} />
+        <Placeholder overlap loaded={loaded} />
       </ImageWrapper>
     )
   }
@@ -62,11 +65,16 @@ const AlbumBoxImage = ({ src, ...props }) => {
   return <Placeholder />
 }
 
-AlbumBoxImage.propTypes = {
-  src: PropTypes.string,
+type AlbumBoxProps = {
+  album?: {
+    id: string
+    title: string
+    thumbnail?: { thumbnail?: { url: string } }
+  }
+  customLink?: string
 }
 
-export const AlbumBox = ({ album, customLink, ...props }) => {
+export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
   if (!album) {
     return (
       <AlbumBoxLink {...props} to="#">
@@ -75,7 +83,7 @@ export const AlbumBox = ({ album, customLink, ...props }) => {
     )
   }
 
-  let thumbnail = album.thumbnail?.thumbnail?.url
+  const thumbnail = album.thumbnail?.thumbnail?.url
 
   return (
     <AlbumBoxLink {...props} to={customLink || `/album/${album.id}`}>
@@ -83,9 +91,4 @@ export const AlbumBox = ({ album, customLink, ...props }) => {
       <p>{album.title}</p>
     </AlbumBoxLink>
   )
-}
-
-AlbumBox.propTypes = {
-  album: PropTypes.object,
-  customLink: PropTypes.string,
 }

@@ -8,8 +8,8 @@ import { useTranslation } from 'react-i18next'
 
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
 
-const AlbumsPage = React.lazy(() =>
-  import('../../Pages/AllAlbumsPage/AlbumsPage')
+const AlbumsPage = React.lazy(
+  () => import('../../Pages/AllAlbumsPage/AlbumsPage')
 )
 const AlbumPage = React.lazy(() => import('../../Pages/AlbumPage/AlbumPage'))
 const PhotosPage = React.lazy(() => import('../../Pages/PhotosPage/PhotosPage'))
@@ -18,12 +18,12 @@ const SharePage = React.lazy(() => import('../../Pages/SharePage/SharePage'))
 const PeoplePage = React.lazy(() => import('../../Pages/PeoplePage/PeoplePage'))
 
 const LoginPage = React.lazy(() => import('../../Pages/LoginPage/LoginPage'))
-const InitialSetupPage = React.lazy(() =>
-  import('../../Pages/LoginPage/InitialSetupPage')
+const InitialSetupPage = React.lazy(
+  () => import('../../Pages/LoginPage/InitialSetupPage')
 )
 
-const SettingsPage = React.lazy(() =>
-  import('../../Pages/SettingsPage/SettingsPage')
+const SettingsPage = React.lazy(
+  () => import('../../Pages/SettingsPage/SettingsPage')
 )
 
 const Routes = () => {
@@ -32,7 +32,7 @@ const Routes = () => {
   return (
     <React.Suspense
       fallback={
-        <Layout>
+        <Layout title={t('general.loading.page', 'Loading page')}>
           <Loader active>{t('general.loading.page', 'Loading page')}</Loader>
         </Layout>
       }

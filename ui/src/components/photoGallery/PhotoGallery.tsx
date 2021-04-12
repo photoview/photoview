@@ -3,8 +3,7 @@ import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import PropTypes from 'prop-types'
-import { SidebarContext } from '../sidebar/Sidebar'
+import { SidebarContext, UpdateSidebarFn } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 
@@ -31,6 +30,24 @@ const ClearWrap = styled.div`
   clear: both;
 `
 
+type PhotoGalleryProps = {
+  loading: boolean
+  media: {
+    id: string
+    title: string
+    thumbnail?: {
+      url: string
+    }
+  }[]
+  activeIndex: number
+  presenting: boolean
+  onSelectImage(index: number): void
+  setPresenting(callback: (presenting: boolean) => void): void
+  nextImage(): void
+  previousImage(): void
+  onFavorite(): void
+}
+
 const PhotoGallery = ({
   activeIndex = -1,
   media,
@@ -41,17 +58,15 @@ const PhotoGallery = ({
   nextImage,
   previousImage,
   onFavorite,
-}) => {
+}: PhotoGalleryProps) => {
   const { t } = useTranslation()
   const { updateSidebar } = useContext(SidebarContext)
 
-  const activeImage = media && activeIndex != -1 && media[activeIndex]
+  const activeImage = (media && activeIndex != -1 && media[activeIndex]) || {}
 
-  const getPhotoElements = updateSidebar => {
+  const getPhotoElements = (updateSidebar: UpdateSidebarFn) => {
     let photoElements = []
     if (media) {
-      media.filter(media => media.thumbnail)
-
       photoElements = media.map((photo, index) => {
         const active = activeIndex == index
 
@@ -96,18 +111,6 @@ const PhotoGallery = ({
       )}
     </ClearWrap>
   )
-}
-
-PhotoGallery.propTypes = {
-  loading: PropTypes.bool,
-  media: PropTypes.array,
-  activeIndex: PropTypes.number,
-  presenting: PropTypes.bool,
-  onSelectImage: PropTypes.func,
-  setPresenting: PropTypes.func,
-  nextImage: PropTypes.func,
-  previousImage: PropTypes.func,
-  onFavorite: PropTypes.func,
 }
 
 export default PhotoGallery

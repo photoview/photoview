@@ -370,7 +370,7 @@ const MediaSidebar = ({ media, hidePreview }) => {
     return <SidebarContent media={media} hidePreview={hidePreview} />
   }
 
-  if (error) return error
+  if (error) return <div>{error.message}</div>
 
   if (loading || data == null) {
     return <SidebarContent media={media} hidePreview={hidePreview} />
