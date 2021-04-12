@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react'
-import PropTypes from 'prop-types'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
-import PresentMedia from './PresentMedia'
+import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -21,6 +20,15 @@ const PreventScroll = createGlobalStyle`
   }
 `
 
+type PresentViewProps = {
+  media: PresentMediaProps_Media
+  className?: string
+  imageLoaded?(): void
+  nextImage(): void
+  previousImage(): void
+  setPresenting(presenting: boolean): void
+}
+
 const PresentView = ({
   className,
   media,
@@ -28,16 +36,16 @@ const PresentView = ({
   nextImage,
   previousImage,
   setPresenting,
-}) => {
+}: PresentViewProps) => {
   useEffect(() => {
-    const keyDownEvent = e => {
+    const keyDownEvent = (e: KeyboardEvent) => {
       if (e.key == 'ArrowRight') {
-        nextImage && nextImage()
+        nextImage()
         e.stopPropagation()
       }
 
       if (e.key == 'ArrowLeft') {
-        nextImage && previousImage()
+        previousImage()
         e.stopPropagation()
       }
 
@@ -64,15 +72,6 @@ const PresentView = ({
       </PresentNavigationOverlay>
     </StyledContainer>
   )
-}
-
-PresentView.propTypes = {
-  media: PropTypes.object.isRequired,
-  imageLoaded: PropTypes.func,
-  className: PropTypes.string,
-  nextImage: PropTypes.func.isRequired,
-  previousImage: PropTypes.func.isRequired,
-  setPresenting: PropTypes.func.isRequired,
 }
 
 export default PresentView

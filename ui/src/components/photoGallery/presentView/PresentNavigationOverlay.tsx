@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { debounce } from '../../../helpers/utils'
+import { debounce, DebouncedFn } from '../../../helpers/utils'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -50,7 +49,7 @@ const ExitButton = styled(OverlayButton)`
   top: 28px;
 `
 
-const NavigationButton = styled(OverlayButton)`
+const NavigationButton = styled(OverlayButton)<{ float: 'left' | 'right' }>`
   height: 80%;
   width: 20%;
   top: 10%;
@@ -64,14 +63,21 @@ const NavigationButton = styled(OverlayButton)`
   }
 `
 
+type PresentNavigationOverlayProps = {
+  children?: React.ReactChild
+  nextImage(): void
+  previousImage(): void
+  setPresenting(presenting: boolean): void
+}
+
 const PresentNavigationOverlay = ({
   children,
   nextImage,
   previousImage,
   setPresenting,
-}) => {
+}: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
-  const onMouseMove = useRef(null)
+  const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
 
   useEffect(() => {
     onMouseMove.current = debounce(
@@ -83,46 +89,39 @@ const PresentNavigationOverlay = ({
     )
 
     return () => {
-      onMouseMove.current.cancel()
+      onMouseMove.current?.cancel()
     }
   }, [])
 
   return (
     <StyledOverlayContainer
       onMouseMove={() => {
-        onMouseMove.current()
+        onMouseMove.current && onMouseMove.current()
       }}
     >
       {children}
       <NavigationButton
-        className={hide && 'hide'}
+        className={hide ? 'hide' : undefined}
         float="left"
         onClick={() => previousImage()}
       >
         <PrevIcon />
       </NavigationButton>
       <NavigationButton
-        className={hide && 'hide'}
+        className={hide ? 'hide' : undefined}
         float="right"
         onClick={() => nextImage()}
       >
         <NextIcon />
       </NavigationButton>
       <ExitButton
-        className={hide && 'hide'}
+        className={hide ? 'hide' : undefined}
         onClick={() => setPresenting(false)}
       >
         <ExitIcon />
       </ExitButton>
     </StyledOverlayContainer>
   )
-}
-
-PresentNavigationOverlay.propTypes = {
-  children: PropTypes.element,
-  nextImage: PropTypes.func.isRequired,
-  previousImage: PropTypes.func.isRequired,
-  setPresenting: PropTypes.func.isRequired,
 }
 
 export default PresentNavigationOverlay

@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-function SvgNext(props) {
+function SvgNext(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 28 52"

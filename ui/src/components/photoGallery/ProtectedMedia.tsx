@@ -19,10 +19,12 @@ const getProtectedUrl = (url?: string) => {
 }
 
 export interface ProtectedImageProps
-  extends DetailedHTMLProps<
-    ImgHTMLAttributes<HTMLImageElement>,
-    HTMLImageElement
+  extends Omit<
+    DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>,
+    'src'
   > {
+  src?: string
+  key?: string
   lazyLoading?: boolean
 }
 
@@ -34,6 +36,7 @@ export interface ProtectedImageProps
  */
 export const ProtectedImage = ({
   src,
+  key,
   lazyLoading,
   ...props
 }: ProtectedImageProps) => {
@@ -47,16 +50,17 @@ export const ProtectedImage = ({
     lazyLoadProps.loading = 'lazy'
   }
 
+  const imgSrc: string =
+    lazyLoading && !isNativeLazyLoadSupported
+      ? placeholder
+      : getProtectedUrl(src) || placeholder
+
   return (
     <img
-      key={src}
+      key={key}
       {...props}
       {...lazyLoadProps}
-      src={
-        lazyLoading && !isNativeLazyLoadSupported
-          ? placeholder
-          : getProtectedUrl(src)
-      }
+      src={imgSrc}
       crossOrigin="use-credentials"
     />
   )

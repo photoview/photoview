@@ -1,9 +1,9 @@
 import * as React from 'react'
 
-function SvgExit(props) {
+function SvgPrevious(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 36 36"
+      viewBox="0 0 28 52"
       fillRule="evenodd"
       clipRule="evenodd"
       strokeLinecap="round"
@@ -13,11 +13,9 @@ function SvgExit(props) {
       height="1em"
       {...props}
     >
-      <g fill="none" stroke="#000" strokeWidth={3}>
-        <path d="M2 2l32 32M2 34L34 2" />
-      </g>
+      <path d="M26 2L2 26l24 24" fill="none" stroke="#000" strokeWidth={3} />
     </svg>
   )
 }
 
-export default SvgExit
+export default SvgPrevious

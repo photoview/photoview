@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react'
 import { useMutation, gql } from '@apollo/client'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
+import { MediaType } from '../../../__generated__/globalTypes'
 
 const markFavoriteMutation = gql`
   mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
@@ -24,7 +24,7 @@ const MediaContainer = styled.div`
   overflow: hidden;
 `
 
-const StyledPhoto = styled(ProtectedImage)`
+const StyledPhoto = styled(ProtectedImage)<{ loaded: boolean }>`
   height: 200px;
   min-width: 100%;
   position: relative;
@@ -34,35 +34,30 @@ const StyledPhoto = styled(ProtectedImage)`
   transition: opacity 300ms;
 `
 
-const LazyPhoto = photoProps => {
+type LazyPhotoProps = {
+  src?: string
+}
+
+const LazyPhoto = (photoProps: LazyPhotoProps) => {
   const [loaded, setLoaded] = useState(false)
   const onLoad = useCallback(e => {
     !e.target.dataset.src && setLoaded(true)
   }, [])
 
   return (
-    <StyledPhoto
-      {...photoProps}
-      lazyLoading
-      loaded={loaded ? 1 : 0}
-      onLoad={onLoad}
-    />
+    <StyledPhoto {...photoProps} lazyLoading loaded={loaded} onLoad={onLoad} />
   )
 }
 
-LazyPhoto.propTypes = {
-  src: PropTypes.string,
-}
-
-const PhotoOverlay = styled.div`
+const PhotoOverlay = styled.div<{ active: boolean }>`
   width: 100%;
   height: 100%;
   position: absolute;
   top: 0;
   left: 0;
 
-  ${props =>
-    props.active &&
+  ${({ active }) =>
+    active &&
     `
       border: 4px solid rgba(65, 131, 196, 0.6);
 
@@ -109,6 +104,24 @@ const VideoThumbnailIcon = styled(Icon)`
   top: calc(50% - 13px);
 `
 
+type MediaThumbnailProps = {
+  media: {
+    id: string
+    type: MediaType
+    favorite?: boolean
+    thumbnail: null | {
+      url: string
+      width: number
+      height: number
+    }
+  }
+  onSelectImage(index: number): void
+  index: number
+  active: boolean
+  setPresenting(presenting: boolean): void
+  onFavorite(): void
+}
+
 export const MediaThumbnail = ({
   media,
   onSelectImage,
@@ -116,16 +129,16 @@ export const MediaThumbnail = ({
   active,
   setPresenting,
   onFavorite,
-}) => {
+}: MediaThumbnailProps) => {
   const [markFavorite] = useMutation(markFavoriteMutation)
 
   let heartIcon = null
-  if (typeof media.favorite == 'boolean') {
+  if (media.favorite !== undefined) {
     heartIcon = (
       <FavoriteIcon
         favorite={media.favorite.toString()}
         name={media.favorite ? 'heart' : 'heart outline'}
-        onClick={event => {
+        onClick={(event: MouseEvent) => {
           event.stopPropagation()
           const favorite = !media.favorite
           markFavorite({
@@ -148,7 +161,7 @@ export const MediaThumbnail = ({
   }
 
   let videoIcon = null
-  if (media.type == 'video') {
+  if (media.type == MediaType.Video) {
     videoIcon = <VideoThumbnailIcon name="play" size="big" />
   }
 
@@ -163,11 +176,11 @@ export const MediaThumbnail = ({
     <MediaContainer
       key={media.id}
       style={{
-        cursor: onSelectImage ? 'pointer' : null,
+        cursor: 'pointer',
         minWidth: `clamp(124px, ${minWidth}px, 100% - 8px)`,
       }}
       onClick={() => {
-        onSelectImage && onSelectImage(index)
+        onSelectImage(index)
       }}
     >
       <div
@@ -176,7 +189,7 @@ export const MediaThumbnail = ({
           height: `200px`,
         }}
       >
-        <LazyPhoto src={media.thumbnail && media.thumbnail.url} />
+        <LazyPhoto src={media.thumbnail?.url} />
       </div>
       <PhotoOverlay active={active}>
         {videoIcon}
@@ -190,15 +203,6 @@ export const MediaThumbnail = ({
       </PhotoOverlay>
     </MediaContainer>
   )
-}
-
-MediaThumbnail.propTypes = {
-  media: PropTypes.object.isRequired,
-  onSelectImage: PropTypes.func,
-  index: PropTypes.number.isRequired,
-  active: PropTypes.bool.isRequired,
-  setPresenting: PropTypes.func.isRequired,
-  onFavorite: PropTypes.func,
 }
 
 export const PhotoThumbnail = styled.div`

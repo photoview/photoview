@@ -6,6 +6,7 @@ import PresentView from './presentView/PresentView'
 import { SidebarContext, UpdateSidebarFn } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
+import { PresentMediaProps_Media } from './presentView/PresentMedia'
 
 const Gallery = styled.div`
   display: flex;
@@ -30,19 +31,21 @@ const ClearWrap = styled.div`
   clear: both;
 `
 
+interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
+  thumbnail: null | {
+    url: string
+    width: number
+    height: number
+  }
+}
+
 type PhotoGalleryProps = {
   loading: boolean
-  media: {
-    id: string
-    title: string
-    thumbnail?: {
-      url: string
-    }
-  }[]
+  media: PhotoGalleryProps_Media[]
   activeIndex: number
   presenting: boolean
   onSelectImage(index: number): void
-  setPresenting(callback: (presenting: boolean) => void): void
+  setPresenting(presenting: boolean): void
   nextImage(): void
   previousImage(): void
   onFavorite(): void
@@ -62,7 +65,15 @@ const PhotoGallery = ({
   const { t } = useTranslation()
   const { updateSidebar } = useContext(SidebarContext)
 
-  const activeImage = (media && activeIndex != -1 && media[activeIndex]) || {}
+  if (
+    media === undefined ||
+    activeIndex === -1 ||
+    media[activeIndex] === undefined
+  ) {
+    return null
+  }
+
+  const activeImage = media[activeIndex]
 
   const getPhotoElements = (updateSidebar: UpdateSidebarFn) => {
     let photoElements = []
