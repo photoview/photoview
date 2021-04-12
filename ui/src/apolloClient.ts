@@ -4,6 +4,8 @@ import {
   split,
   ApolloLink,
   HttpLink,
+  ServerError,
+  FieldMergeFunction,
 } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
@@ -12,6 +14,7 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 import urlJoin from 'url-join'
 import { clearTokenCookie } from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
+import { Message } from './components/messages/SubscriptionsHook'
 
 export const GRAPHQL_ENDPOINT = process.env.PHOTOVIEW_API_ENDPOINT
   ? urlJoin(process.env.PHOTOVIEW_API_ENDPOINT, '/graphql')
@@ -26,12 +29,12 @@ console.log('GRAPHQL ENDPOINT', GRAPHQL_ENDPOINT)
 
 const apiProtocol = new URL(GRAPHQL_ENDPOINT).protocol
 
-let websocketUri = new URL(GRAPHQL_ENDPOINT)
+const websocketUri = new URL(GRAPHQL_ENDPOINT)
 websocketUri.protocol = apiProtocol === 'https:' ? 'wss:' : 'ws:'
 
 const wsLink = new WebSocketLink({
-  uri: websocketUri,
-  credentials: 'include',
+  uri: websocketUri.toString(),
+  // credentials: 'include',
 })
 
 const link = split(
@@ -48,7 +51,7 @@ const link = split(
 )
 
 const linkError = onError(({ graphQLErrors, networkError }) => {
-  let errorMessages = []
+  const errorMessages = []
 
   if (graphQLErrors) {
     graphQLErrors.map(({ message, locations, path }) =>
@@ -82,7 +85,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
     clearTokenCookie()
 
-    const errors = networkError.result.errors
+    const errors = (networkError as ServerError).result.errors
 
     if (errors.length == 1) {
       errorMessages.push({
@@ -92,7 +95,9 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${graphQLErrors.length} errors from the server. You are being logged out in an attempt to recover.`,
+        content: `Received ${
+          graphQLErrors?.length || 0
+        } errors from the server. You are being logged out in an attempt to recover.`,
       })
     }
   }
@@ -106,26 +111,32 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         ...msg,
       },
     }))
-    MessageState.set(messages => [...messages, ...newMessages])
+    MessageState.set((messages: Message[]) => [...messages, ...newMessages])
   }
 })
 
+type PaginateCacheType = {
+  keyArgs: string[]
+  merge: FieldMergeFunction
+}
+
 // Modified version of Apollo's offsetLimitPagination()
-const paginateCache = keyArgs => ({
-  keyArgs,
-  merge(existing, incoming, { args, fieldName }) {
-    const merged = existing ? existing.slice(0) : []
-    if (args?.paginate) {
-      const { offset = 0 } = args.paginate
-      for (let i = 0; i < incoming.length; ++i) {
-        merged[offset + i] = incoming[i]
+const paginateCache = (keyArgs: string[]) =>
+  ({
+    keyArgs,
+    merge(existing, incoming, { args, fieldName }) {
+      const merged = existing ? existing.slice(0) : []
+      if (args?.paginate) {
+        const { offset = 0 } = args.paginate
+        for (let i = 0; i < incoming.length; ++i) {
+          merged[offset + i] = incoming[i]
+        }
+      } else {
+        throw new Error(`Paginate argument is missing for query: ${fieldName}`)
       }
-    } else {
-      throw new Error(`Paginate argument is missing for query: ${fieldName}`)
-    }
-    return merged
-  },
-})
+      return merged
+    },
+  } as PaginateCacheType)
 
 const memoryCache = new InMemoryCache({
   typePolicies: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useContext } from 'react'
 import PropTypes from 'prop-types'
-import { Breadcrumb } from 'semantic-ui-react'
+import { Breadcrumb, IconProps } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
@@ -8,6 +8,7 @@ import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../helpers/authentication'
+import { albumPathQuery } from './__generated__/albumPathQuery'
 
 const Header = styled.h1`
   margin: 24px 0 8px 0 !important;
@@ -32,7 +33,7 @@ const StyledIcon = styled(Icon)`
   }
 `
 
-const SettingsIcon = props => {
+const SettingsIcon = (props: IconProps) => {
   return <StyledIcon name="settings" size="small" {...props} />
 }
 
@@ -48,8 +49,18 @@ const ALBUM_PATH_QUERY = gql`
   }
 `
 
-const AlbumTitle = ({ album, disableLink = false }) => {
-  const [fetchPath, { data: pathData }] = useLazyQuery(ALBUM_PATH_QUERY)
+type AlbumTitleProps = {
+  album: {
+    id: string
+    title: string
+  }
+  disableLink: boolean
+}
+
+const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
+  const [fetchPath, { data: pathData }] = useLazyQuery<albumPathQuery>(
+    ALBUM_PATH_QUERY
+  )
   const { updateSidebar } = useContext(SidebarContext)
 
   useEffect(() => {
@@ -68,10 +79,7 @@ const AlbumTitle = ({ album, disableLink = false }) => {
 
   let title = <span>{album.title}</span>
 
-  let path = []
-  if (pathData) {
-    path = pathData.album.path
-  }
+  const path = pathData?.album.path || []
 
   const breadcrumbSections = path
     .slice()

@@ -1,26 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const useScrollPagination = ({ loading, fetchMore, data, getItems }) => {
-  const observer = useRef(null)
-  const observerElem = useRef(null)
+interface ScrollPaginationArgs<D> {
+  loading: boolean
+  data: D
+  fetchMore(args: { variables: { offset: number } }): Promise<{ data: D }>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getItems(data: D): any[]
+}
+
+type ScrollPaginationResult = {
+  finished: boolean
+  containerElem(node: null | Element): void
+}
+
+function useScrollPagination<D>({
+  loading,
+  fetchMore,
+  data,
+  getItems,
+}: ScrollPaginationArgs<D>): ScrollPaginationResult {
+  const observer = useRef<IntersectionObserver | null>(null)
+  const observerElem = useRef<Element | null>(null)
   const [finished, setFinished] = useState(false)
 
   const reconfigureIntersectionObserver = () => {
-    var options = {
+    const options = {
       root: null,
       rootMargin: '-100% 0px 0px 0px',
       threshold: 0,
     }
 
     // delete old observer
-    if (observer.current) observer.current.disconnect()
+    observer.current?.disconnect()
 
     if (finished) return
 
     // configure new observer
     observer.current = new IntersectionObserver(entities => {
       if (entities.find(x => x.isIntersecting == false)) {
-        let itemCount = getItems(data).length
+        const itemCount = getItems(data).length
         fetchMore({
           variables: {
             offset: itemCount,
@@ -40,7 +58,7 @@ const useScrollPagination = ({ loading, fetchMore, data, getItems }) => {
     }
   }
 
-  const containerElem = useCallback(node => {
+  const containerElem = useCallback((node: null | Element): void => {
     observerElem.current = node
 
     // cleanup
@@ -55,7 +73,7 @@ const useScrollPagination = ({ loading, fetchMore, data, getItems }) => {
 
   // only observe when not loading
   useEffect(() => {
-    if (observer.current != null) {
+    if (observer.current && observerElem.current) {
       if (loading) {
         observer.current.unobserve(observerElem.current)
       } else {

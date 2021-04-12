@@ -1,4 +1,4 @@
-export function saveTokenCookie(token) {
+export function saveTokenCookie(token: string) {
   const maxAge = 14 * 24 * 60 * 60
 
   document.cookie = `auth-token=${token} ;max-age=${maxAge} ;path=/ ;sameSite=Lax`
@@ -13,11 +13,11 @@ export function authToken() {
   return match && match[1]
 }
 
-export function saveSharePassword(shareToken, password) {
+export function saveSharePassword(shareToken: string, password: string) {
   document.cookie = `share-token-pw-${shareToken}=${password} ;path=/ ;sameSite=Lax`
 }
 
-export function getSharePassword(shareToken) {
+export function getSharePassword(shareToken: string) {
   const match = document.cookie.match(
     `share-token-pw-${shareToken}=([\\d\\w]+)`
   )

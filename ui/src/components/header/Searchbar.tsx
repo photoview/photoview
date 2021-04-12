@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useLazyQuery, gql } from '@apollo/client'
-import { debounce } from '../../helpers/utils'
+import { debounce, DebouncedFn } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import {
+  searchQuery,
+  searchQuery_search_albums,
+  searchQuery_search_media,
+} from './__generated__/searchQuery'
 
 const Container = styled.div`
   height: 60px;
@@ -30,7 +34,7 @@ const SearchField = styled.input`
   }
 `
 
-const Results = styled.div`
+const Results = styled.div<{ show: boolean }>`
   display: ${({ show }) => (show ? 'block' : 'none')};
   position: absolute;
   width: 100%;
@@ -79,27 +83,29 @@ const SEARCH_QUERY = gql`
 
 const SearchBar = () => {
   const { t } = useTranslation()
-  const [fetchSearches, fetchResult] = useLazyQuery(SEARCH_QUERY)
+  const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
 
-  let debouncedFetch = useRef(null)
+  type QueryFn = (query: string) => void
+
+  const debouncedFetch = useRef<null | DebouncedFn<QueryFn>>(null)
   useEffect(() => {
-    debouncedFetch.current = debounce(query => {
+    debouncedFetch.current = debounce<QueryFn>(query => {
       fetchSearches({ variables: { query } })
       setFetched(true)
     }, 250)
 
     return () => {
-      debouncedFetch.current.cancel()
+      debouncedFetch.current?.cancel()
     }
   }, [])
 
-  const fetchEvent = e => {
+  const fetchEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()
 
     setQuery(e.target.value)
-    if (e.target.value.trim() != '') {
+    if (e.target.value.trim() != '' && debouncedFetch.current) {
       debouncedFetch.current(e.target.value.trim())
     } else {
       setFetched(false)
@@ -108,7 +114,12 @@ const SearchBar = () => {
 
   let results = null
   if (query.trim().length > 0 && fetched) {
-    results = <SearchResults result={fetchResult} />
+    results = (
+      <SearchResults
+        searchData={fetchResult.data}
+        loading={fetchResult.loading}
+      />
+    )
   }
 
   return (
@@ -128,17 +139,21 @@ const ResultTitle = styled.h1`
   margin: 12px 0 0.25rem;
 `
 
-const SearchResults = ({ result }) => {
-  const { t } = useTranslation()
-  const { data, loading } = result
-  const query = data && data.search.query
+type SearchResultsProps = {
+  searchData?: searchQuery
+  loading: boolean
+}
 
-  const media = (data && data.search.media) || []
-  const albums = (data && data.search.albums) || []
+const SearchResults = ({ searchData, loading }: SearchResultsProps) => {
+  const { t } = useTranslation()
+  const query = searchData?.search.query || ''
+
+  const media = searchData?.search.media || []
+  const albums = searchData?.search.albums || []
 
   let message = null
   if (loading) message = t('header.search.loading', 'Loading results...')
-  else if (data && media.length == 0 && albums.length == 0)
+  else if (searchData && media.length == 0 && albums.length == 0)
     message = t('header.search.no_results', 'No results found')
 
   const albumElements = albums.map(album => (
@@ -155,7 +170,7 @@ const SearchResults = ({ result }) => {
         // Prevent input blur event
         e.preventDefault()
       }}
-      show={data}
+      show={!!searchData}
     >
       {message}
       {albumElements.length > 0 && (
@@ -172,10 +187,6 @@ const SearchResults = ({ result }) => {
       {mediaElements}
     </Results>
   )
-}
-
-SearchResults.propTypes = {
-  result: PropTypes.object,
 }
 
 const RowLink = styled(NavLink)`
@@ -205,31 +216,31 @@ const RowTitle = styled.span`
   padding-left: 8px;
 `
 
-const PhotoRow = ({ query, media }) => (
+type PhotoRowArgs = {
+  query: string
+  media: searchQuery_search_media
+}
+
+const PhotoRow = ({ query, media }: PhotoRowArgs) => (
   <RowLink to={`/album/${media.album.id}`}>
     <PhotoSearchThumbnail src={media?.thumbnail?.url} />
     <RowTitle>{searchHighlighted(query, media.title)}</RowTitle>
   </RowLink>
 )
 
-PhotoRow.propTypes = {
-  query: PropTypes.string.isRequired,
-  media: PropTypes.object.isRequired,
+type AlbumRowArgs = {
+  query: string
+  album: searchQuery_search_albums
 }
 
-const AlbumRow = ({ query, album }) => (
+const AlbumRow = ({ query, album }: AlbumRowArgs) => (
   <RowLink to={`/album/${album.id}`}>
     <AlbumSearchThumbnail src={album?.thumbnail?.thumbnail?.url} />
     <RowTitle>{searchHighlighted(query, album.title)}</RowTitle>
   </RowLink>
 )
 
-AlbumRow.propTypes = {
-  query: PropTypes.string.isRequired,
-  album: PropTypes.object.isRequired,
-}
-
-const searchHighlighted = (query, text) => {
+const searchHighlighted = (query: string, text: string) => {
   const i = text.toLowerCase().indexOf(query.toLowerCase())
 
   if (i == -1) {

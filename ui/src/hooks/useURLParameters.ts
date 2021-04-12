@@ -6,7 +6,7 @@ function useURLParameters() {
   const url = new URL(urlString)
   const params = new URLSearchParams(url.search)
 
-  const getParam = (key, defaultValue = null) => {
+  const getParam = (key: string, defaultValue = null) => {
     return params.has(key) ? params.get(key) : defaultValue
   }
 
@@ -15,12 +15,12 @@ function useURLParameters() {
     setUrlString(document.location.href)
   }
 
-  const setParam = (key, value) => {
+  const setParam = (key: string, value: string) => {
     params.set(key, value)
     updateParams()
   }
 
-  const setParams = pairs => {
+  const setParams = (pairs: { key: string; value: string }[]) => {
     for (const pair of pairs) {
       params.set(pair.key, pair.value)
     }

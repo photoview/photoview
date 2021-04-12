@@ -80,7 +80,7 @@ const SideButtonLink = styled(NavLink)`
 `
 
 type SideButtonProps = {
-  children: any
+  children: ReactChild | ReactChild[]
   to: string
   exact: boolean
 }

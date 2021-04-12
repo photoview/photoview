@@ -1,4 +1,6 @@
 class LazyLoad {
+  observer: null | IntersectionObserver
+
   constructor() {
     this.observe = this.observe.bind(this)
     this.loadImages = this.loadImages.bind(this)
@@ -6,22 +8,22 @@ class LazyLoad {
     this.observer = null
   }
 
-  observe(images) {
+  observe(images: Element[]) {
     if (!this.observer) {
       this.observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting || entry.intersectionRatio > 0) {
             const element = entry.target
             this.setSrcAttribute(element)
-            this.observer.unobserve(element)
+            this.observer?.unobserve(element)
           }
         })
       })
     }
-    Array.from(images).forEach(image => this.observer.observe(image))
+    Array.from(images).forEach(image => this.observer?.observe(image))
   }
 
-  loadImages(elements) {
+  loadImages(elements: Element[]) {
     const images = Array.from(elements)
     if (images.length) {
       if ('IntersectionObserver' in window) {
@@ -36,11 +38,18 @@ class LazyLoad {
     this.observer && this.observer.disconnect()
   }
 
-  setSrcAttribute(element) {
+  setSrcAttribute(element: Element) {
     if (element.hasAttribute('data-src')) {
       const src = element.getAttribute('data-src')
-      element.removeAttribute('data-src')
-      element.setAttribute('src', src)
+      if (src) {
+        element.removeAttribute('data-src')
+        element.setAttribute('src', src)
+      } else {
+        console.warn(
+          'WARN: expected element to have `data-src` property',
+          element
+        )
+      }
     }
   }
 }

@@ -1,7 +1,9 @@
+import { notificationSubscription } from './__generated__/notificationSubscription'
 import PropTypes from 'prop-types'
 import { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
+import { NotificationType } from '../../../__generated__/globalTypes'
 
 const notificationSubscription = gql`
   subscription notificationSubscription {
@@ -18,14 +20,37 @@ const notificationSubscription = gql`
   }
 `
 
-let messageTimeoutHandles = new Map()
+const messageTimeoutHandles = new Map()
 
-const SubscriptionsHook = ({ messages, setMessages }) => {
+export interface Message {
+  key: string
+  type: NotificationType
+  timeout?: number
+  props: {
+    header: string
+    content: string
+    negative?: boolean
+    positive?: boolean
+    percent?: number
+  }
+}
+
+type SubscriptionHookProps = {
+  messages: Message[]
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+}
+
+const SubscriptionsHook = ({
+  messages,
+  setMessages,
+}: SubscriptionHookProps) => {
   if (!authToken()) {
     return null
   }
 
-  const { data, error } = useSubscription(notificationSubscription)
+  const { data, error } = useSubscription<notificationSubscription>(
+    notificationSubscription
+  )
 
   useEffect(() => {
     if (error) {
@@ -33,7 +58,7 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
         ...state,
         {
           key: Math.random().toString(26),
-          type: 'message',
+          type: NotificationType.Message,
           props: {
             header: 'Network error',
             content: error.message,
@@ -54,16 +79,16 @@ const SubscriptionsHook = ({ messages, setMessages }) => {
       return
     }
 
-    const newNotification = {
+    const newNotification: Message = {
       key: msg.key,
-      type: msg.type.toLowerCase(),
-      timeout: msg.timeout,
+      type: msg.type,
+      timeout: msg.timeout || undefined,
       props: {
         header: msg.header,
         content: msg.content,
         negative: msg.negative,
         positive: msg.positive,
-        percent: msg.progress,
+        percent: msg.progress || undefined,
       },
     }
 

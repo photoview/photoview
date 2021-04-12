@@ -23,7 +23,7 @@ const esbuildOptions = {
   entryPoints: ['src/index.tsx'],
   plugins: [
     babel({
-      filter: /photoview\/ui\/src\/.*\.js$/,
+      filter: /photoview\/ui\/src\/.*\.(js|tsx?)$/,
     }),
   ],
   publicPath: process.env.UI_PUBLIC_URL || '/',
@@ -66,25 +66,25 @@ if (watchMode) {
     open: false,
   })
 
-  bs.watch('src/**/*.js').on('change', async args => {
+  bs.watch('src/**/*.@(js|tsx|ts)').on('change', async args => {
     console.log('reloading', args)
     builderPromise = (await builderPromise).rebuild()
     bs.reload(args)
   })
 } else {
-  const esbuildPromise = esbuild
-    .build(esbuildOptions)
-    .then(() => console.log('esbuild done'))
+  const build = async () => {
+    await esbuild.build(esbuildOptions)
 
-  const workboxPromise = workboxBuild
-    .generateSW({
+    console.log('esbuild done')
+
+    await workboxBuild.generateSW({
       globDirectory: 'dist/',
       globPatterns: ['**/*.{png,svg,woff2,ttf,eot,woff,js,ico,html,json,css}'],
       swDest: 'dist/service-worker.js',
     })
-    .then(() => console.log('workbox done'))
 
-  Promise.all([esbuildPromise, workboxPromise]).then(() =>
+    console.log('workbox done')
     console.log('build complete')
-  )
+  }
+  build()
 }

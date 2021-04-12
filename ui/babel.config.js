@@ -2,7 +2,7 @@ module.exports = function (api) {
   const isTest = api.env('test')
   const isProduction = api.env('NODE_ENV') == 'production'
 
-  let presets = ['@babel/preset-react']
+  let presets = ['@babel/preset-typescript', '@babel/preset-react']
   let plugins = []
 
   if (isTest) {
