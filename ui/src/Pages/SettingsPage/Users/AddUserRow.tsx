@@ -1,10 +1,9 @@
 import { gql, useMutation } from '@apollo/client'
-import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 
-const createUserMutation = gql`
+const CREATE_USER_MUTATION = gql`
   mutation createUser($username: String!, $admin: Boolean!) {
     createUser(username: $username, admin: $admin) {
       id
@@ -15,7 +14,7 @@ const createUserMutation = gql`
   }
 `
 
-export const userAddRootPathMutation = gql`
+export const USER_ADD_ROOT_PATH_MUTATION = gql`
   mutation userAddRootPath($id: ID!, $rootPath: String!) {
     userAddRootPath(id: $id, rootPath: $rootPath) {
       id
@@ -30,12 +29,18 @@ const initialState = {
   userAdded: false,
 }
 
-const AddUserRow = ({ setShow, show, onUserAdded }) => {
+type AddUserRowProps = {
+  setShow: React.Dispatch<React.SetStateAction<boolean>>
+  show: boolean
+  onUserAdded(): void
+}
+
+const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
   const { t } = useTranslation()
   const [state, setState] = useState(initialState)
 
   const [addRootPath, { loading: addRootPathLoading }] = useMutation(
-    userAddRootPathMutation,
+    USER_ADD_ROOT_PATH_MUTATION,
     {
       onCompleted: () => {
         setState(initialState)
@@ -49,7 +54,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
   )
 
   const [createUser, { loading: createUserLoading }] = useMutation(
-    createUserMutation,
+    CREATE_USER_MUTATION,
     {
       onCompleted: ({ createUser: { id } }) => {
         if (state.rootPath) {
@@ -68,7 +73,10 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
 
   const loading = addRootPathLoading || createUserLoading
 
-  function updateInput(event, key) {
+  function updateInput(
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: string
+  ) {
     setState({
       ...state,
       [key]: event.target.value,
@@ -105,7 +113,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
           onChange={(e, data) => {
             setState({
               ...state,
-              admin: data.checked,
+              admin: data.checked || false,
             })
           }}
         />
@@ -135,12 +143,6 @@ const AddUserRow = ({ setShow, show, onUserAdded }) => {
       </Table.Cell>
     </Table.Row>
   )
-}
-
-AddUserRow.propTypes = {
-  setShow: PropTypes.func.isRequired,
-  show: PropTypes.bool.isRequired,
-  onUserAdded: PropTypes.func.isRequired,
 }
 
 export default AddUserRow

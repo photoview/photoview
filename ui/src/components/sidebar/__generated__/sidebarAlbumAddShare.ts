@@ -8,19 +8,19 @@
 // ====================================================
 
 export interface sidebarAlbumAddShare_shareAlbum {
-  __typename: "ShareToken";
-  token: string;
+  __typename: 'ShareToken'
+  token: string
 }
 
 export interface sidebarAlbumAddShare {
   /**
    * Generate share token for album
    */
-  shareAlbum: sidebarAlbumAddShare_shareAlbum | null;
+  shareAlbum: sidebarAlbumAddShare_shareAlbum
 }
 
 export interface sidebarAlbumAddShareVariables {
-  id: string;
-  password?: string | null;
-  expire?: any | null;
+  id: string
+  password?: string | null
+  expire?: any | null
 }

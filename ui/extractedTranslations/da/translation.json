@@ -72,6 +72,9 @@
     },
     "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter"
   },
+  "photos_page": {
+    "title": "Billeder"
+  },
   "routes": {
     "page_not_found": "Side ikke fundet"
   },
@@ -102,6 +105,10 @@
       "title": "Scanner"
     },
     "user_preferences": {
+      "change_language": {
+        "description": "Set sidens sprog specifikt for denne bruger",
+        "label": "Sprog"
+      },
       "language_selector": {
         "placeholder": "Vælg sprog"
       },
@@ -211,7 +218,7 @@
           "exposure": "Lukketid",
           "exposure_program": "Lukketid program",
           "flash": "Blitz",
-          "focal_length": "Fokallængde",
+          "focal_length": "Brændvidde",
           "iso": "ISO",
           "lens": "Lense",
           "maker": "Mærke"

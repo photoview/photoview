@@ -1,13 +1,21 @@
-import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import { gql, useMutation } from '@apollo/client'
 import { Button, Icon, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { USERS_QUERY } from './UsersTable'
 import { useTranslation } from 'react-i18next'
-import { userAddRootPathMutation } from './AddUserRow'
+import { USER_ADD_ROOT_PATH_MUTATION } from './AddUserRow'
+import {
+  userRemoveAlbumPathMutation,
+  userRemoveAlbumPathMutationVariables,
+} from './__generated__/userRemoveAlbumPathMutation'
+import {
+  settingsUsersQuery_user,
+  settingsUsersQuery_user_rootAlbums,
+} from './__generated__/settingsUsersQuery'
+import { userAddRootPath } from './__generated__/userAddRootPath'
 
-const userRemoveAlbumPathMutation = gql`
+const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
   mutation userRemoveAlbumPathMutation($userId: ID!, $albumId: ID!) {
     userRemoveRootAlbum(userId: $userId, albumId: $albumId) {
       id
@@ -21,18 +29,23 @@ const RootPathListItem = styled.li`
   align-items: center;
 `
 
-const EditRootPath = ({ album, user }) => {
+type EditRootPathProps = {
+  album: settingsUsersQuery_user_rootAlbums
+  user: settingsUsersQuery_user
+}
+
+const EditRootPath = ({ album, user }: EditRootPathProps) => {
   const { t } = useTranslation()
-  const [removeAlbumPath, { loading }] = useMutation(
+  const [removeAlbumPath, { loading }] = useMutation<
     userRemoveAlbumPathMutation,
-    {
-      refetchQueries: [
-        {
-          query: USERS_QUERY,
-        },
-      ],
-    }
-  )
+    userRemoveAlbumPathMutationVariables
+  >(USER_REMOVE_ALBUM_PATH_MUTATION, {
+    refetchQueries: [
+      {
+        query: USERS_QUERY,
+      },
+    ],
+  })
 
   return (
     <RootPathListItem>
@@ -56,33 +69,37 @@ const EditRootPath = ({ album, user }) => {
   )
 }
 
-EditRootPath.propTypes = {
-  album: PropTypes.object.isRequired,
-  user: PropTypes.object.isRequired,
-}
-
 const NewRootPathInput = styled(Input)`
   width: 100%;
   margin-top: 24px;
 `
 
-const EditNewRootPath = ({ userID }) => {
+type EditNewRootPathProps = {
+  userID: string
+}
+
+const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
   const { t } = useTranslation()
   const [value, setValue] = useState('')
-  const [addRootPath, { loading }] = useMutation(userAddRootPathMutation, {
-    refetchQueries: [
-      {
-        query: USERS_QUERY,
-      },
-    ],
-  })
+  const [addRootPath, { loading }] = useMutation<userAddRootPath>(
+    USER_ADD_ROOT_PATH_MUTATION,
+    {
+      refetchQueries: [
+        {
+          query: USERS_QUERY,
+        },
+      ],
+    }
+  )
 
   return (
     <li>
       <NewRootPathInput
         style={{ width: '100%' }}
         value={value}
-        onChange={e => setValue(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setValue(e.target.value)
+        }
         disabled={loading}
         action={{
           positive: true,
@@ -103,17 +120,17 @@ const EditNewRootPath = ({ userID }) => {
   )
 }
 
-EditNewRootPath.propTypes = {
-  userID: PropTypes.string.isRequired,
-}
-
 const RootPathList = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
 `
 
-export const EditRootPaths = ({ user }) => {
+type EditRootPathsProps = {
+  user: settingsUsersQuery_user
+}
+
+export const EditRootPaths = ({ user }: EditRootPathsProps) => {
   const editRows = user.rootAlbums.map(album => (
     <EditRootPath key={album.id} album={album} user={user} />
   ))
@@ -124,8 +141,4 @@ export const EditRootPaths = ({ user }) => {
       <EditNewRootPath userID={user.id} />
     </RootPathList>
   )
-}
-
-EditRootPaths.propTypes = {
-  user: PropTypes.object.isRequired,
 }

@@ -72,6 +72,9 @@
     },
     "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
   },
+  "photos_page": {
+    "title": "Photos"
+  },
   "routes": {
     "page_not_found": "Page not found"
   },
@@ -102,6 +105,10 @@
       "title": "Scanner"
     },
     "user_preferences": {
+      "change_language": {
+        "description": "Change website language specific for this user",
+        "label": "Website language"
+      },
       "language_selector": {
         "placeholder": "Select language"
       },

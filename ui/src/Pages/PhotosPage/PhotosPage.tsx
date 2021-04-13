@@ -1,24 +1,18 @@
 import React from 'react'
 import Layout from '../../Layout'
-import PropTypes from 'prop-types'
 import TimelineGallery from '../../components/timelineGallery/TimelineGallery'
+import { useTranslation } from 'react-i18next'
 
 const PhotosPage = () => {
+  const { t } = useTranslation()
+
   return (
     <>
-      <Layout title="Photos">
+      <Layout title={t('photos_page.title', 'Photos')}>
         <TimelineGallery />
       </Layout>
     </>
   )
-}
-
-PhotosPage.propTypes = {
-  match: PropTypes.shape({
-    params: PropTypes.shape({
-      subPage: PropTypes.string,
-    }),
-  }),
 }
 
 export default PhotosPage

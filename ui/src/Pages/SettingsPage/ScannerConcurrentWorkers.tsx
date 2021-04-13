@@ -3,6 +3,11 @@ import { useQuery, useMutation, gql } from '@apollo/client'
 import { Input, Loader } from 'semantic-ui-react'
 import { InputLabelTitle, InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
+import { concurrentWorkersQuery } from './__generated__/concurrentWorkersQuery'
+import {
+  setConcurrentWorkers,
+  setConcurrentWorkersVariables,
+} from './__generated__/setConcurrentWorkers'
 
 const CONCURRENT_WORKERS_QUERY = gql`
   query concurrentWorkersQuery {
@@ -21,21 +26,25 @@ const SET_CONCURRENT_WORKERS_MUTATION = gql`
 const ScannerConcurrentWorkers = () => {
   const { t } = useTranslation()
 
-  const workerAmountQuery = useQuery(CONCURRENT_WORKERS_QUERY, {
-    onCompleted(data) {
-      setWorkerAmount(data.siteInfo.concurrentWorkers)
-      workerAmountServerValue.current = data.siteInfo.concurrentWorkers
-    },
-  })
-
-  const [setWorkersMutation, workersMutationData] = useMutation(
-    SET_CONCURRENT_WORKERS_MUTATION
+  const workerAmountQuery = useQuery<concurrentWorkersQuery>(
+    CONCURRENT_WORKERS_QUERY,
+    {
+      onCompleted(data) {
+        setWorkerAmount(data.siteInfo.concurrentWorkers)
+        workerAmountServerValue.current = data.siteInfo.concurrentWorkers
+      },
+    }
   )
 
-  const workerAmountServerValue = useRef(null)
-  const [workerAmount, setWorkerAmount] = useState('')
+  const [setWorkersMutation, workersMutationData] = useMutation<
+    setConcurrentWorkers,
+    setConcurrentWorkersVariables
+  >(SET_CONCURRENT_WORKERS_MUTATION)
 
-  const updateWorkerAmount = workerAmount => {
+  const workerAmountServerValue = useRef<null | number>(null)
+  const [workerAmount, setWorkerAmount] = useState(0)
+
+  const updateWorkerAmount = (workerAmount: number) => {
     if (workerAmountServerValue.current != workerAmount) {
       workerAmountServerValue.current = workerAmount
       setWorkersMutation({
@@ -67,10 +76,10 @@ const ScannerConcurrentWorkers = () => {
         id="scanner_concurrent_workers_field"
         value={workerAmount}
         onChange={(_, { value }) => {
-          setWorkerAmount(value)
+          setWorkerAmount(parseInt(value))
         }}
         onBlur={() => updateWorkerAmount(workerAmount)}
-        onKeyDown={({ key }) =>
+        onKeyDown={({ key }: KeyboardEvent) =>
           key == 'Enter' && updateWorkerAmount(workerAmount)
         }
       />

@@ -8,19 +8,19 @@
 // ====================================================
 
 export interface sidebarPhotoAddShare_shareMedia {
-  __typename: "ShareToken";
-  token: string;
+  __typename: 'ShareToken'
+  token: string
 }
 
 export interface sidebarPhotoAddShare {
   /**
    * Generate share token for media
    */
-  shareMedia: sidebarPhotoAddShare_shareMedia | null;
+  shareMedia: sidebarPhotoAddShare_shareMedia
 }
 
 export interface sidebarPhotoAddShareVariables {
-  id: string;
-  password?: string | null;
-  expire?: any | null;
+  id: string
+  password?: string | null
+  expire?: any | null
 }

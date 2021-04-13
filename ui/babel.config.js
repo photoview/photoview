@@ -9,8 +9,6 @@ module.exports = function (api) {
     presets.push('@babel/preset-env')
     plugins.push('@babel/plugin-transform-runtime')
   } else {
-    plugins.push(['styled-components', { pure: true }])
-    plugins.push('graphql-tag')
     if (!isProduction) {
       plugins.push([
         'i18next-extract',
@@ -20,6 +18,9 @@ module.exports = function (api) {
         },
       ])
     }
+
+    plugins.push(['styled-components', { pure: true }])
+    plugins.push('graphql-tag')
   }
 
   return {

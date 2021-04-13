@@ -168,7 +168,7 @@ const TimelineGallery = () => {
   }, [])
 
   if (error) {
-    return error
+    return <div>{error.message}</div>
   }
 
   let timelineGroups = null

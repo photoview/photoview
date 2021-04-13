@@ -7,6 +7,7 @@ import { Container } from './loginUtilities'
 import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
+import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -35,31 +36,13 @@ const InitialSetupPage = () => {
     rootPath: '',
   })
 
-  const handleChange = (event, key) => {
-    const value = event.target.value
-    setState(prevState => ({
-      ...prevState,
-      [key]: value,
-    }))
-  }
-
-  const signIn = (event, authorize) => {
-    event.preventDefault()
-
-    authorize({
-      variables: {
-        username: state.username,
-        password: state.password,
-        rootPath: state.rootPath,
-      },
-    })
-  }
-
   if (authToken()) {
     return <Redirect to="/" />
   }
 
-  const { data: initialSetupData } = useQuery(checkInitialSetupQuery)
+  const { data: initialSetupData } = useQuery<CheckInitialSetup>(
+    checkInitialSetupQuery
+  )
   const initialSetupRedirect = initialSetupData?.siteInfo
     ?.initialSetup ? null : (
     <Redirect to="/" />
@@ -78,6 +61,29 @@ const InitialSetupPage = () => {
     },
   })
 
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: string
+  ) => {
+    const value = event.target.value
+    setState(prevState => ({
+      ...prevState,
+      [key]: value,
+    }))
+  }
+
+  const signIn = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    authorize({
+      variables: {
+        username: state.username,
+        password: state.password,
+        rootPath: state.rootPath,
+      },
+    })
+  }
+
   let errorMessage = null
   if (authorizationData && !authorizationData.initialSetupWizard.success) {
     errorMessage = authorizationData.initialSetupWizard.status
@@ -93,7 +99,7 @@ const InitialSetupPage = () => {
         <Form
           style={{ width: 500, margin: 'auto' }}
           error={!!errorMessage}
-          onSubmit={e => signIn(e, authorize)}
+          onSubmit={signIn}
           loading={
             authorizeLoading || authorizationData?.initialSetupWizard?.success
           }

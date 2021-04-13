@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Button, Icon, Table, Modal } from 'semantic-ui-react'
 import styled from 'styled-components'
 import ChangePasswordModal from './UserChangePassword'
-import { UserRowProps } from './UserRow'
+import { UserRowChildProps, UserRowProps } from './UserRow'
 
 const PathList = styled.ul`
   margin: 0;
@@ -22,7 +22,7 @@ const ViewUserRow = ({
   scanUserCalled,
   showChangePassword,
   showConfirmDelete,
-}) => {
+}: UserRowChildProps) => {
   const { t } = useTranslation()
   const paths = (
     <PathList>
@@ -43,7 +43,11 @@ const ViewUserRow = ({
         <Button.Group>
           <Button
             onClick={() => {
-              setState(state => ({ ...state, editing: true, oldState: state }))
+              setState(state => {
+                const oldState = { ...state }
+                delete oldState.oldState
+                return { ...state, editing: true, oldState }
+              })
             }}
           >
             <Icon name="edit" />

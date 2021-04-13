@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect } from 'react'
-import ReactRouterPropTypes from 'react-router-prop-types'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
-import PropTypes from 'prop-types'
 import Layout from '../../Layout'
-import useURLParameters from '../../hooks/useURLParameters'
+import useURLParameters, { UrlKeyValuePair } from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'
+import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
+import { OrderDirection } from '../../../__generated__/globalTypes'
 
-const albumQuery = gql`
+const ALBUM_QUERY = gql`
   query albumQuery(
     $id: ID!
     $onlyFavorites: Boolean
@@ -61,7 +61,16 @@ const albumQuery = gql`
 let refetchNeededAll = false
 let refetchNeededFavorites = false
 
-function AlbumPage({ match }) {
+type AlbumPageProps = {
+  match: {
+    params: {
+      id: string
+      subPage: string
+    }
+  }
+}
+
+function AlbumPage({ match }: AlbumPageProps) {
   const albumId = match.params.id
 
   const { t } = useTranslation()
@@ -69,14 +78,22 @@ function AlbumPage({ match }) {
   const { getParam, setParam, setParams } = useURLParameters()
 
   const onlyFavorites = getParam('favorites') == '1' ? true : false
-  const setOnlyFavorites = favorites => setParam('favorites', favorites ? 1 : 0)
+  const setOnlyFavorites = (favorites: boolean) =>
+    setParam('favorites', favorites ? '1' : '0')
 
   const orderBy = getParam('orderBy', 'date_shot')
-  const orderDirection = getParam('orderDirection', 'ASC')
 
-  const setOrdering = useCallback(
+  const orderDirStr = getParam('orderDirection', 'ASC') || 'hello'
+  const orderDirection = orderDirStr as OrderDirection
+
+  type setOrderingFn = (args: {
+    orderBy?: string
+    orderDirection?: OrderDirection
+  }) => void
+
+  const setOrdering: setOrderingFn = useCallback(
     ({ orderBy, orderDirection }) => {
-      let updatedParams = []
+      const updatedParams: UrlKeyValuePair[] = []
       if (orderBy !== undefined) {
         updatedParams.push({ key: 'orderBy', value: orderBy })
       }
@@ -89,7 +106,10 @@ function AlbumPage({ match }) {
     [setParams]
   )
 
-  const { loading, error, data, refetch, fetchMore } = useQuery(albumQuery, {
+  const { loading, error, data, refetch, fetchMore } = useQuery<
+    albumQuery,
+    albumQueryVariables
+  >(ALBUM_QUERY, {
     variables: {
       id: albumId,
       onlyFavorites,
@@ -100,7 +120,10 @@ function AlbumPage({ match }) {
     },
   })
 
-  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
+  const {
+    containerElem,
+    finished: finishedLoadingMore,
+  } = useScrollPagination<albumQuery>({
     loading,
     fetchMore,
     data,
@@ -151,7 +174,6 @@ function AlbumPage({ match }) {
         ref={containerElem}
         album={data && data.album}
         loading={loading}
-        showFavoritesToggle
         setOnlyFavorites={toggleFavorites}
         onlyFavorites={onlyFavorites}
         onFavorite={() => (refetchNeededAll = refetchNeededFavorites = true)}
@@ -165,16 +187,6 @@ function AlbumPage({ match }) {
       />
     </Layout>
   )
-}
-
-AlbumPage.propTypes = {
-  ...ReactRouterPropTypes,
-  match: PropTypes.shape({
-    params: PropTypes.shape({
-      id: PropTypes.string,
-      subPage: PropTypes.string,
-    }),
-  }),
 }
 
 export default AlbumPage

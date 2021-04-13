@@ -23,7 +23,7 @@ class LazyLoad {
     Array.from(images).forEach(image => this.observer?.observe(image))
   }
 
-  loadImages(elements: Element[]) {
+  loadImages(elements: NodeListOf<Element>) {
     const images = Array.from(elements)
     if (images.length) {
       if ('IntersectionObserver' in window) {

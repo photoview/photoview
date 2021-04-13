@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 import { EditRootPaths } from './EditUserRowRootPaths'
-import { UserRowProps } from './UserRow'
+import { UserRowProps, UserRowChildProps } from './UserRow'
 
 const EditUserRow = ({
   user,
@@ -10,9 +10,13 @@ const EditUserRow = ({
   setState,
   updateUser,
   updateUserLoading,
-}) => {
+}: UserRowChildProps) => {
   const { t } = useTranslation()
-  function updateInput(event, key) {
+
+  function updateInput(
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: string
+  ) {
     setState(state => ({
       ...state,
       [key]: event.target.value,
@@ -39,7 +43,7 @@ const EditUserRow = ({
           onChange={(_, data) => {
             setState(state => ({
               ...state,
-              admin: data.checked,
+              admin: data.checked || false,
             }))
           }}
         />
@@ -50,6 +54,7 @@ const EditUserRow = ({
             negative
             onClick={() =>
               setState(state => ({
+                ...state,
                 ...state.oldState,
               }))
             }

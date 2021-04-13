@@ -11,9 +11,9 @@ export const checkInitialSetupQuery = gql`
   }
 `
 
-export function login(token) {
+export function login(token: string) {
   saveTokenCookie(token)
-  window.location = '/'
+  window.location.href = '/'
 }
 
 export const Container = styled(SemanticContainer)`

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { Redirect } from 'react-router-dom'
 import styled from 'styled-components'
-import { Button, Form, Message, Header } from 'semantic-ui-react'
+import { Button, Form, Message, Header, HeaderProps } from 'semantic-ui-react'
 import { checkInitialSetupQuery, login, Container } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
@@ -23,7 +23,7 @@ const StyledLogo = styled.img`
   max-height: 128px;
 `
 
-const LogoHeader = props => {
+const LogoHeader = (props: HeaderProps) => {
   const { t } = useTranslation()
 
   return (

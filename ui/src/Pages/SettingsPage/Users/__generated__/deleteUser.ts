@@ -8,15 +8,15 @@
 // ====================================================
 
 export interface deleteUser_deleteUser {
-  __typename: "User";
-  id: string;
-  username: string;
+  __typename: 'User'
+  id: string
+  username: string
 }
 
 export interface deleteUser {
-  deleteUser: deleteUser_deleteUser | null;
+  deleteUser: deleteUser_deleteUser
 }
 
 export interface deleteUserVariables {
-  id: string;
+  id: string
 }

@@ -8,22 +8,22 @@
 // ====================================================
 
 export interface sidebarProtectShare_protectShareToken {
-  __typename: "ShareToken";
-  token: string;
+  __typename: 'ShareToken'
+  token: string
   /**
    * Whether or not a password is needed to access the share
    */
-  hasPassword: boolean;
+  hasPassword: boolean
 }
 
 export interface sidebarProtectShare {
   /**
    * Set a password for a token, if null is passed for the password argument, the password will be cleared
    */
-  protectShareToken: sidebarProtectShare_protectShareToken | null;
+  protectShareToken: sidebarProtectShare_protectShareToken
 }
 
 export interface sidebarProtectShareVariables {
-  token: string;
-  password?: string | null;
+  token: string
+  password?: string | null
 }

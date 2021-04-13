@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
+import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
 
 const AlbumBoxLink = styled(Link)`
   width: 240px;
@@ -66,11 +67,7 @@ const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
 }
 
 type AlbumBoxProps = {
-  album?: {
-    id: string
-    title: string
-    thumbnail?: { thumbnail?: { url: string } }
-  }
+  album?: albumQuery_album_subAlbums
   customLink?: string
 }
 

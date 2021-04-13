@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import PropTypes from 'prop-types'
 import { gql, useMutation } from '@apollo/client'
-import { Button, Form, Input, Modal } from 'semantic-ui-react'
+import { Button, Form, Input, Modal, ModalProps } from 'semantic-ui-react'
 import { Trans, useTranslation } from 'react-i18next'
+import { settingsUsersQuery_user } from './__generated__/settingsUsersQuery'
 
 const changeUserPasswordMutation = gql`
   mutation changeUserPassword($userId: ID!, $password: String!) {
@@ -12,7 +12,18 @@ const changeUserPasswordMutation = gql`
   }
 `
 
-const ChangePasswordModal = ({ onClose, user, ...props }) => {
+interface ChangePasswordModalProps extends ModalProps {
+  onClose(): void
+  open: boolean
+  user: settingsUsersQuery_user
+}
+
+const ChangePasswordModal = ({
+  onClose,
+  user,
+  open,
+  ...props
+}: ChangePasswordModalProps) => {
   const { t } = useTranslation()
   const [passwordInput, setPasswordInput] = useState('')
 
@@ -23,7 +34,7 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
   })
 
   return (
-    <Modal {...props}>
+    <Modal open={open} {...props}>
       <Modal.Header>
         {t('settings.users.password_reset.title', 'Change password')}
       </Modal.Header>
@@ -69,11 +80,6 @@ const ChangePasswordModal = ({ onClose, user, ...props }) => {
       </Modal.Actions>
     </Modal>
   )
-}
-
-ChangePasswordModal.propTypes = {
-  onClose: PropTypes.func,
-  user: PropTypes.object.isRequired,
 }
 
 export default ChangePasswordModal

@@ -6,13 +6,13 @@ import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
 import { SectionTitle } from '../SettingsPage'
 import { useTranslation } from 'react-i18next'
+import { settingsUsersQuery } from './__generated__/settingsUsersQuery'
 
 export const USERS_QUERY = gql`
   query settingsUsersQuery {
     user {
       id
       username
-      # rootPath
       admin
       rootAlbums {
         id
@@ -26,14 +26,16 @@ const UsersTable = () => {
   const { t } = useTranslation()
   const [showAddUser, setShowAddUser] = useState(false)
 
-  const { loading, error, data, refetch } = useQuery(USERS_QUERY)
+  const { loading, error, data, refetch } = useQuery<settingsUsersQuery>(
+    USERS_QUERY
+  )
 
   if (error) {
     return <div>{`Users table error: ${error.message}`}</div>
   }
 
-  let userRows = []
-  if (data && data.user) {
+  let userRows: JSX.Element[] = []
+  if (data?.user) {
     userRows = data.user.map(user => (
       <UserRow user={user} refetchUsers={refetch} key={user.id} />
     ))

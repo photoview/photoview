@@ -5,7 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { Dropdown } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { LanguageTranslation } from '../../../__generated__/globalTypes'
-import { SectionTitle } from './SettingsPage'
+import {
+  InputLabelDescription,
+  InputLabelTitle,
+  SectionTitle,
+} from './SettingsPage'
 import {
   changeUserPreferences,
   changeUserPreferencesVariables,
@@ -13,8 +17,8 @@ import {
 import { myUserPreferences } from './__generated__/myUserPreferences'
 
 const languagePreferences = [
-  { key: 1, text: 'English', value: LanguageTranslation.English },
-  { key: 2, text: 'Dansk', value: LanguageTranslation.Danish },
+  { key: 1, text: 'English', flag: 'uk', value: LanguageTranslation.English },
+  { key: 2, text: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
@@ -58,7 +62,22 @@ const UserPreferences = () => {
       <SectionTitle nospace>
         {t('settings.user_preferences.title', 'User preferences')}
       </SectionTitle>
+      <label id="user_pref_change_language_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.change_language.label',
+            'Website language'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.change_language.description',
+            'Change website language specific for this user'
+          )}
+        </InputLabelDescription>
+      </label>
       <Dropdown
+        id="user_pref_change_language_field"
         placeholder={t(
           'settings.user_preferences.language_selector.placeholder',
           'Select language'
@@ -73,6 +92,7 @@ const UserPreferences = () => {
           })
         }}
         selection
+        search
         value={data?.myUserPreferences.language || undefined}
         loading={loadingPrefs}
         disabled={loadingPrefs}

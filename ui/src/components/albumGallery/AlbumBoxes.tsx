@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types'
 import React from 'react'
 import styled from 'styled-components'
+import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import { AlbumBox } from './AlbumBox'
 
 const Container = styled.div`
@@ -8,7 +8,14 @@ const Container = styled.div`
   position: relative;
 `
 
-const AlbumBoxes = ({ error, albums, getCustomLink }) => {
+type AlbumBoxesProps = {
+  loading: boolean
+  error?: Error
+  albums?: albumQuery_album_subAlbums[]
+  getCustomLink?(albumID: string): string
+}
+
+const AlbumBoxes = ({ error, albums, getCustomLink }: AlbumBoxesProps) => {
   if (error) return <div>Error {error.message}</div>
 
   let albumElements = []
@@ -18,7 +25,7 @@ const AlbumBoxes = ({ error, albums, getCustomLink }) => {
       <AlbumBox
         key={album.id}
         album={album}
-        customLink={getCustomLink ? getCustomLink(album.id) : null}
+        customLink={getCustomLink ? getCustomLink(album.id) : undefined}
       />
     ))
   } else {
@@ -28,13 +35,6 @@ const AlbumBoxes = ({ error, albums, getCustomLink }) => {
   }
 
   return <Container>{albumElements}</Container>
-}
-
-AlbumBoxes.propTypes = {
-  loading: PropTypes.bool.isRequired,
-  error: PropTypes.object,
-  albums: PropTypes.array,
-  getCustomLink: PropTypes.func,
 }
 
 export default AlbumBoxes

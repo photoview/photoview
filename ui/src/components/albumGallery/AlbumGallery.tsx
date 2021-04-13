@@ -4,6 +4,7 @@ import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
+import { OrderDirection } from '../../../__generated__/globalTypes'
 
 type AlbumGalleryProps = {
   album?: albumQuery_album
@@ -12,7 +13,7 @@ type AlbumGalleryProps = {
   showFilter?: boolean
   setOnlyFavorites?(favorites: boolean): void
   setOrdering?(ordering: { orderBy: string }): void
-  ordering?: { orderBy: string }
+  ordering?: { orderBy: string | null; orderDirection: OrderDirection | null }
   onlyFavorites?: boolean
   onFavorite?(): void
 }

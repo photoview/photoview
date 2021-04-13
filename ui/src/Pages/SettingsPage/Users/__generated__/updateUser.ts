@@ -8,18 +8,18 @@
 // ====================================================
 
 export interface updateUser_updateUser {
-  __typename: "User";
-  id: string;
-  username: string;
-  admin: boolean;
+  __typename: 'User'
+  id: string
+  username: string
+  admin: boolean
 }
 
 export interface updateUser {
-  updateUser: updateUser_updateUser | null;
+  updateUser: updateUser_updateUser
 }
 
 export interface updateUserVariables {
-  id: string;
-  username?: string | null;
-  admin?: boolean | null;
+  id: string
+  username?: string | null
+  admin?: boolean | null
 }

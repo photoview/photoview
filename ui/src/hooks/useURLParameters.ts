@@ -1,12 +1,14 @@
 import { useState } from 'react'
 
+export type UrlKeyValuePair = { key: string; value: string }
+
 function useURLParameters() {
   const [urlString, setUrlString] = useState(document.location.href)
 
   const url = new URL(urlString)
   const params = new URLSearchParams(url.search)
 
-  const getParam = (key: string, defaultValue = null) => {
+  const getParam = (key: string, defaultValue: string | null = null) => {
     return params.has(key) ? params.get(key) : defaultValue
   }
 
@@ -20,7 +22,7 @@ function useURLParameters() {
     updateParams()
   }
 
-  const setParams = (pairs: { key: string; value: string }[]) => {
+  const setParams = (pairs: UrlKeyValuePair[]) => {
     for (const pair of pairs) {
       params.set(pair.key, pair.value)
     }

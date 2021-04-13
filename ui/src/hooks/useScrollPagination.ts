@@ -1,9 +1,12 @@
+import { ApolloQueryResult } from '@apollo/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface ScrollPaginationArgs<D> {
   loading: boolean
-  data: D
-  fetchMore(args: { variables: { offset: number } }): Promise<{ data: D }>
+  data: D | undefined
+  fetchMore(args: {
+    variables: { offset: number }
+  }): Promise<ApolloQueryResult<D>>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getItems(data: D): any[]
 }
@@ -38,7 +41,7 @@ function useScrollPagination<D>({
     // configure new observer
     observer.current = new IntersectionObserver(entities => {
       if (entities.find(x => x.isIntersecting == false)) {
-        const itemCount = getItems(data).length
+        const itemCount = data !== undefined ? getItems(data).length : 0
         fetchMore({
           variables: {
             offset: itemCount,
