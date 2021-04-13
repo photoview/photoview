@@ -34,6 +34,6 @@ export function debounce<T extends (...args: any[]) => any>(
   return debounced
 }
 
-export function isNil(value: any) {
+export function isNil(value: any): value is undefined | null {
   return value === undefined || value === null
 }

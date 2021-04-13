@@ -48,7 +48,7 @@ type PhotoGalleryProps = {
   setPresenting(presenting: boolean): void
   nextImage(): void
   previousImage(): void
-  onFavorite(): void
+  onFavorite?(): void
 }
 
 const PhotoGallery = ({

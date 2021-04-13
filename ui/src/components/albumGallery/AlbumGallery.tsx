@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../AlbumFilter'
+import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
+
+type AlbumGalleryProps = {
+  album: albumQuery_album
+  loading?: boolean
+  customAlbumLink?(albumID: string): string
+  showFilter?: boolean
+  setOnlyFavorites?(favorites: boolean): void
+  setOrdering?(ordering: { orderBy: string }): void
+  ordering?: { orderBy: string }
+  onlyFavorites?: boolean
+  onFavorite?(): void
+}
 
 const AlbumGallery = React.forwardRef(
   (
@@ -17,18 +29,23 @@ const AlbumGallery = React.forwardRef(
       ordering,
       onlyFavorites = false,
       onFavorite,
-    },
-    ref
+    }: AlbumGalleryProps,
+    ref: React.ForwardedRef<HTMLDivElement>
   ) => {
-    const [imageState, setImageState] = useState({
+    type ImageStateType = {
+      activeImage: number
+      presenting: boolean
+    }
+
+    const [imageState, setImageState] = useState<ImageStateType>({
       activeImage: -1,
       presenting: false,
     })
 
-    const setPresenting = presenting =>
+    const setPresenting = (presenting: boolean) =>
       setImageState(state => ({ ...state, presenting }))
 
-    const setPresentingWithHistory = presenting => {
+    const setPresentingWithHistory = (presenting: boolean) => {
       setPresenting(presenting)
       if (presenting) {
         history.pushState({ imageState }, '')
@@ -37,12 +54,12 @@ const AlbumGallery = React.forwardRef(
       }
     }
 
-    const updateHistory = imageState => {
+    const updateHistory = (imageState: ImageStateType) => {
       history.replaceState({ imageState }, '')
       return imageState
     }
 
-    const setActiveImage = activeImage => {
+    const setActiveImage = (activeImage: number) => {
       setImageState(state => updateHistory({ ...state, activeImage }))
     }
 
@@ -59,9 +76,10 @@ const AlbumGallery = React.forwardRef(
     }
 
     useEffect(() => {
-      const updateImageState = event => {
+      const updateImageState = (event: PopStateEvent) => {
         setImageState(event.state.imageState)
       }
+
       window.addEventListener('popstate', updateImageState)
 
       return () => {
@@ -128,17 +146,5 @@ const AlbumGallery = React.forwardRef(
     )
   }
 )
-
-AlbumGallery.propTypes = {
-  album: PropTypes.object,
-  loading: PropTypes.bool,
-  customAlbumLink: PropTypes.func,
-  showFilter: PropTypes.bool,
-  setOnlyFavorites: PropTypes.func,
-  onlyFavorites: PropTypes.bool,
-  onFavorite: PropTypes.func,
-  setOrdering: PropTypes.func,
-  ordering: PropTypes.object,
-}
 
 export default AlbumGallery

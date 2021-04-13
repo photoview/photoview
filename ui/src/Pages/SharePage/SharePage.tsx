@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import { useQuery, gql } from '@apollo/client'
-import { Route, Switch } from 'react-router-dom'
-import RouterProps from 'react-router-prop-types'
+import { match as MatchType, Route, Switch } from 'react-router-dom'
 import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'
 import styled from 'styled-components'
 import {
@@ -71,7 +70,7 @@ export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   }
 `
 
-const AuthorizedTokenRoute = ({ match }) => {
+const AuthorizedTokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
   const { t } = useTranslation()
 
   const token = match.params.token
@@ -84,11 +83,11 @@ const AuthorizedTokenRoute = ({ match }) => {
     },
   })
 
-  if (error) return error.message
-  if (loading) return 'Loading...'
+  if (error) return <div>{error.message}</div>
+  if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
   if (data.shareToken.album) {
-    const SharedSubAlbumPage = ({ match }) => {
+    const SharedSubAlbumPage = ({ match }: MatchProps<SubalbumRouteMatch>) => {
       return (
         <AlbumSharePage
           albumID={match.params.subAlbum}
@@ -136,10 +135,15 @@ const MessageContainer = styled.div`
   margin: 100px auto 0;
 `
 
+type ProtectedTokenEnterPasswordProps = {
+  refetchWithPassword(password: string): void
+  loading: boolean
+}
+
 const ProtectedTokenEnterPassword = ({
   refetchWithPassword,
   loading = false,
-}) => {
+}: ProtectedTokenEnterPasswordProps) => {
   const { t } = useTranslation()
 
   const [passwordValue, setPasswordValue] = useState('')
@@ -178,7 +182,9 @@ const ProtectedTokenEnterPassword = ({
           <Input
             loading={loading}
             disabled={loading}
-            onKeyUp={event => event.key == 'Enter' && onSubmit()}
+            onKeyUp={(event: KeyboardEvent) =>
+              event.key == 'Enter' && onSubmit()
+            }
             onChange={e => setPasswordValue(e.target.value)}
             placeholder={t('login_page.field.password', 'Password')}
             type="password"
@@ -191,12 +197,19 @@ const ProtectedTokenEnterPassword = ({
   )
 }
 
-ProtectedTokenEnterPassword.propTypes = {
-  refetchWithPassword: PropTypes.func.isRequired,
-  loading: PropTypes.bool,
+interface TokenRouteMatch {
+  token: string
 }
 
-const TokenRoute = ({ match }) => {
+interface SubalbumRouteMatch extends TokenRouteMatch {
+  subAlbum: string
+}
+
+interface MatchProps<Route> {
+  match: MatchType<Route>
+}
+
+const TokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
   const { t } = useTranslation()
 
   const token = match.params.token
@@ -227,13 +240,12 @@ const TokenRoute = ({ match }) => {
       )
     }
 
-    return error.message
+    return <div>{error.message}</div>
   }
 
   if (data && data.shareTokenValidatePassword == false) {
     return (
       <ProtectedTokenEnterPassword
-        match={match}
         refetchWithPassword={password => {
           saveSharePassword(token, password)
           refetch({ token, password })
@@ -243,32 +255,24 @@ const TokenRoute = ({ match }) => {
     )
   }
 
-  if (loading) return t('general.loading.default', 'Loading...')
+  if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
   return <AuthorizedTokenRoute match={match} />
 }
 
-TokenRoute.propTypes = {
-  match: PropTypes.object.isRequired,
-}
-
-const SharePage = ({ match }) => {
+const SharePage = ({ match }: { match: MatchType }) => {
   const { t } = useTranslation()
 
   return (
     <Switch>
       <Route path={`${match.url}/:token`}>
-        {({ match }) => {
+        {({ match }: { match: MatchType<TokenRouteMatch> }) => {
           return <TokenRoute match={match} />
         }}
       </Route>
       <Route path="/">{t('routes.page_not_found', 'Page not found')}</Route>
     </Switch>
   )
-}
-
-SharePage.propTypes = {
-  ...RouterProps,
 }
 
 export default SharePage

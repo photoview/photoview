@@ -71,7 +71,7 @@ export interface ProtectedVideoProps_Media {
   thumbnail: null | {
     url: string
   }
-  videoWeb: {
+  videoWeb: null | {
     url: string
   }
 }
@@ -80,14 +80,21 @@ export interface ProtectedVideoProps {
   media: ProtectedVideoProps_Media
 }
 
-export const ProtectedVideo = ({ media, ...props }: ProtectedVideoProps) => (
-  <video
-    {...props}
-    controls
-    key={media.id}
-    crossOrigin="use-credentials"
-    poster={getProtectedUrl(media.thumbnail?.url)}
-  >
-    <source src={getProtectedUrl(media.videoWeb.url)} type="video/mp4" />
-  </video>
-)
+export const ProtectedVideo = ({ media, ...props }: ProtectedVideoProps) => {
+  if (media.videoWeb === null) {
+    console.error('ProetctedVideo called with media.videoWeb = null')
+    return null
+  }
+
+  return (
+    <video
+      {...props}
+      controls
+      key={media.id}
+      crossOrigin="use-credentials"
+      poster={getProtectedUrl(media.thumbnail?.url)}
+    >
+      <source src={getProtectedUrl(media.videoWeb.url)} type="video/mp4" />
+    </video>
+  )
+}

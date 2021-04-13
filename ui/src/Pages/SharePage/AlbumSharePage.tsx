@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import React from 'react'
 import Layout from '../../Layout'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
@@ -73,7 +72,13 @@ const AlbumSharePageWrapper = styled.div`
   height: 100%;
 `
 
-const AlbumSharePage = ({ albumID, token, password }) => {
+type AlbumSharePageProps = {
+  albumID: string
+  token: string
+  password: string | null
+}
+
+const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
   const { t } = useTranslation()
   const { data, loading, error } = useQuery(SHARE_ALBUM_QUERY, {
     variables: {
@@ -86,11 +91,11 @@ const AlbumSharePage = ({ albumID, token, password }) => {
   })
 
   if (error) {
-    return error.message
+    return <div>{error.message}</div>
   }
 
   if (loading) {
-    return t('general.loading.default', 'Loading...')
+    return <div>{t('general.loading.default', 'Loading...')}</div>
   }
 
   const album = data.album
@@ -109,12 +114,6 @@ const AlbumSharePage = ({ albumID, token, password }) => {
       </Layout>
     </AlbumSharePageWrapper>
   )
-}
-
-AlbumSharePage.propTypes = {
-  albumID: PropTypes.string.isRequired,
-  token: PropTypes.string.isRequired,
-  password: PropTypes.string,
 }
 
 export default AlbumSharePage

@@ -119,7 +119,7 @@ type MediaThumbnailProps = {
   index: number
   active: boolean
   setPresenting(presenting: boolean): void
-  onFavorite(): void
+  onFavorite?(): void
 }
 
 export const MediaThumbnail = ({
