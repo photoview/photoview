@@ -129,7 +129,7 @@ const PreviewMedia = ({ media, previewImage }: PreviewMediaProps) => {
     return <PreviewVideo media={media} />
   }
 
-  throw new Error('Unknown media type')
+  return <div>ERROR: Unknown media type: {media.type}</div>
 }
 
 const Name = styled.div`
