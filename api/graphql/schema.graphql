@@ -95,29 +95,29 @@ type Mutation {
   scanUser(userId: ID!): ScannerResult! @isAdmin
 
   "Generate share token for album"
-  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken @isAuthorized
+  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken! @isAuthorized
   "Generate share token for media"
-  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken @isAuthorized
+  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken! @isAuthorized
   "Delete a share token by it's token value"
-  deleteShareToken(token: String!): ShareToken @isAuthorized
+  deleteShareToken(token: String!): ShareToken! @isAuthorized
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
-  protectShareToken(token: String!, password: String): ShareToken @isAuthorized
+  protectShareToken(token: String!, password: String): ShareToken! @isAuthorized
 
   "Mark or unmark a media as being a favorite"
-  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media @isAuthorized
+  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media! @isAuthorized
 
   updateUser(
     id: ID!
     username: String
     password: String
     admin: Boolean
-  ): User @isAdmin
+  ): User! @isAdmin
   createUser(
     username: String!
     password: String
     admin: Boolean!
-  ): User @isAdmin
-  deleteUser(id: ID!): User @isAdmin
+  ): User! @isAdmin
+  deleteUser(id: ID!): User! @isAdmin
 
   "Add a root path from where to look for media for the given user"
   userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
@@ -222,8 +222,8 @@ type User {
 }
 
 enum LanguageTranslation {
-  en,
-  da
+  English,
+  Danish
 }
 
 type UserPreferences {
@@ -279,8 +279,8 @@ type MediaDownload {
 }
 
 enum MediaType {
-  photo
-  video
+  Photo
+  Video
 }
 
 type Media {

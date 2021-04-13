@@ -17,9 +17,11 @@ const Container = styled.div`
   }
 `
 
-export let MessageState = {
-  set: null,
-  get: null,
+export const MessageState = {
+  set: fn => {
+    console.warn('set function is not defined yet, called with', fn)
+  },
+  get: [],
   add: message => {
     MessageState.set(messages => {
       const newMessages = messages.filter(msg => msg.key != message.key)

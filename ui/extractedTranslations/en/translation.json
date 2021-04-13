@@ -62,12 +62,18 @@
     },
     "welcome": "Welcome to Photoview"
   },
+  "meta": {
+    "description": "Simple and User-friendly Photo Gallery for Personal Servers"
+  },
   "people_page": {
     "face_group": {
       "label_placeholder": "Label",
       "unlabeled": "Unlabeled"
     },
     "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
+  },
+  "photos_page": {
+    "title": "Photos"
   },
   "routes": {
     "page_not_found": "Page not found"
@@ -99,6 +105,10 @@
       "title": "Scanner"
     },
     "user_preferences": {
+      "change_language": {
+        "description": "Change website language specific for this user",
+        "label": "Website language"
+      },
       "language_selector": {
         "placeholder": "Select language"
       },
@@ -143,6 +153,9 @@
     }
   },
   "share_page": {
+    "media": {
+      "title": "Shared media"
+    },
     "protected_share": {
       "description": "This share is protected with a password.",
       "title": "Protected share"

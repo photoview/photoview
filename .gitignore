@@ -21,6 +21,7 @@ node_modules/
 .cache/
 dist/
 build/
+*.tsbuildinfo
 
 # misc
 .DS_Store

@@ -11,7 +11,7 @@ import * as authentication from './helpers/authentication'
 
 require('./localization').default()
 
-jest.mock('./helpers/authentication.js')
+jest.mock('./helpers/authentication.ts')
 
 test('Layout component', async () => {
   render(

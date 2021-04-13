@@ -72,6 +72,16 @@ func migrate_exif_fields_exposure(db *gorm.DB) error {
 
 		return tx.Model(&exifModel{}).Table("media_exif").Where("exposure LIKE '%/%'").FindInBatches(&results, 100, func(tx *gorm.DB, batch int) error {
 			for _, result := range results {
+
+				if result.Exposure == nil {
+					continue
+				}
+
+				if *result.Exposure == "" {
+					result.Exposure = nil
+					continue
+				}
+
 				frac := strings.Split(*result.Exposure, "/")
 				if len(frac) != 2 {
 					return errors.Errorf("failed to convert exposure value (%s) expected format x/y", frac)
@@ -147,6 +157,16 @@ func migrate_exif_fields_flash(db *gorm.DB) error {
 
 		return tx.Model(&exifModel{}).Table("media_exif").Where("flash IS NOT NULL").FindInBatches(&results, 100, func(tx *gorm.DB, batch int) error {
 			for _, result := range results {
+
+				if result.Flash == nil {
+					continue
+				}
+
+				if *result.Flash == "" {
+					result.Flash = nil
+					continue
+				}
+
 				for index, name := range flashDescriptions {
 					if *result.Flash == name {
 						*result.Flash = fmt.Sprintf("%d", index)

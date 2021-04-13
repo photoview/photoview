@@ -82,7 +82,7 @@ describe('load correct share page, based on graphql query', () => {
             media: {
               id: '1',
               title: 'shared_image.jpg',
-              type: 'photo',
+              type: 'Photo',
               highRes: {
                 url: 'https://example.com/shared_image.jpg',
               },

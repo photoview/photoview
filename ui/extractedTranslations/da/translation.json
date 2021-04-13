@@ -62,12 +62,18 @@
     },
     "welcome": "Velkommen til Photoview"
   },
+  "meta": {
+    "description": "Simpelt og Brugervenligt Photo-galleri for Personlige Servere"
+  },
   "people_page": {
     "face_group": {
       "label_placeholder": "Navn",
       "unlabeled": "Ikke navngivet"
     },
     "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter"
+  },
+  "photos_page": {
+    "title": "Billeder"
   },
   "routes": {
     "page_not_found": "Side ikke fundet"
@@ -77,7 +83,7 @@
       "description": "Det maksimale antal medier som må skannes samtidig",
       "title": "Samtidige scanner-arbejdere"
     },
-    "logout": null,
+    "logout": "Log ud",
     "periodic_scanner": {
       "checkbox_label": "Aktiver periodiske scanner",
       "field": {
@@ -99,6 +105,10 @@
       "title": "Scanner"
     },
     "user_preferences": {
+      "change_language": {
+        "description": "Set sidens sprog specifikt for denne bruger",
+        "label": "Sprog"
+      },
       "language_selector": {
         "placeholder": "Vælg sprog"
       },
@@ -143,6 +153,9 @@
     }
   },
   "share_page": {
+    "media": {
+      "title": "Delt medie"
+    },
     "protected_share": {
       "description": "Denne deling er låst med en adgangskode.",
       "title": "Beskyttet deling"
@@ -205,7 +218,7 @@
           "exposure": "Lukketid",
           "exposure_program": "Lukketid program",
           "flash": "Blitz",
-          "focal_length": "Fokallængde",
+          "focal_length": "Brændvidde",
           "iso": "ISO",
           "lens": "Lense",
           "maker": "Mærke"

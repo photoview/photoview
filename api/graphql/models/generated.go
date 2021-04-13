@@ -71,18 +71,18 @@ type TimelineGroup struct {
 type LanguageTranslation string
 
 const (
-	LanguageTranslationEn LanguageTranslation = "en"
-	LanguageTranslationDa LanguageTranslation = "da"
+	LanguageTranslationEnglish LanguageTranslation = "English"
+	LanguageTranslationDanish  LanguageTranslation = "Danish"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
-	LanguageTranslationEn,
-	LanguageTranslationDa,
+	LanguageTranslationEnglish,
+	LanguageTranslationDanish,
 }
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEn, LanguageTranslationDa:
+	case LanguageTranslationEnglish, LanguageTranslationDanish:
 		return true
 	}
 	return false
@@ -112,8 +112,8 @@ func (e LanguageTranslation) MarshalGQL(w io.Writer) {
 type MediaType string
 
 const (
-	MediaTypePhoto MediaType = "photo"
-	MediaTypeVideo MediaType = "video"
+	MediaTypePhoto MediaType = "Photo"
+	MediaTypeVideo MediaType = "Video"
 )
 
 var AllMediaType = []MediaType{
