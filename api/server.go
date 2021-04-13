@@ -16,6 +16,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
@@ -55,6 +56,8 @@ func main() {
 
 	scanner.InitializeExecutableWorkers()
 
+	exif.InitializeEXIFParser()
+
 	if err := face_detection.InitializeFaceDetector(db); err != nil {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
@@ -68,7 +71,8 @@ func main() {
 
 	graphqlResolver := resolvers.Resolver{Database: db}
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
-	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin(db)
+	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin
+	graphqlDirective.IsAuthorized = photoview_graphql.IsAuthorized
 
 	graphqlConfig := photoview_graphql.Config{
 		Resolvers:  &graphqlResolver,

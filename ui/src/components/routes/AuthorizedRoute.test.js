@@ -7,7 +7,7 @@ import { MemoryRouter, Route } from 'react-router-dom'
 
 import * as authentication from '../../helpers/authentication'
 
-jest.mock('../../helpers/authentication.js')
+jest.mock('../../helpers/authentication.ts')
 
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>

@@ -154,6 +154,49 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	}, nil
 }
 
+func (r *queryResolver) MyUserPreferences(ctx context.Context) (*models.UserPreferences, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	userPref := models.UserPreferences{
+		UserID: user.ID,
+	}
+	if err := r.Database.Where("user_id = ?", user.ID).FirstOrCreate(&userPref).Error; err != nil {
+		return nil, err
+	}
+
+	return &userPref, nil
+}
+
+func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var langTrans *models.LanguageTranslation = nil
+	if language != nil {
+		lng := models.LanguageTranslation(*language)
+		langTrans = &lng
+	}
+
+	var userPref models.UserPreferences
+	if err := r.Database.Where("user_id = ?", user.ID).FirstOrInit(&userPref).Error; err != nil {
+		return nil, err
+	}
+
+	userPref.UserID = user.ID
+	userPref.Language = langTrans
+
+	if err := r.Database.Save(&userPref).Error; err != nil {
+		return nil, err
+	}
+
+	return &userPref, nil
+}
+
 // Admin queries
 func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
 

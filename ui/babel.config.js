@@ -1,16 +1,30 @@
-module.exports = {
-  presets: ['@babel/preset-env', '@babel/preset-react'],
-  plugins: [
-    'styled-components',
-    '@babel/plugin-transform-runtime',
-    '@babel/plugin-transform-modules-commonjs',
-    'graphql-tag',
-    // [
-    //   'transform-semantic-ui-react-imports',
-    //   {
-    //     convertMemberImports: true,
-    //     addCssImports: true,
-    //   },
-    // ],
-  ],
+module.exports = function (api) {
+  const isTest = api.env('test')
+  const isProduction = api.env('NODE_ENV') == 'production'
+
+  let presets = ['@babel/preset-react', '@babel/preset-typescript']
+  let plugins = []
+
+  if (isTest) {
+    presets.push('@babel/preset-env')
+    plugins.push('@babel/plugin-transform-runtime')
+  } else {
+    if (!isProduction) {
+      plugins.push([
+        'i18next-extract',
+        {
+          locales: ['en', 'da'],
+          defaultValue: null,
+        },
+      ])
+    }
+
+    plugins.push(['styled-components', { pure: true }])
+    plugins.push('graphql-tag')
+  }
+
+  return {
+    presets: presets,
+    plugins: plugins,
+  }
 }

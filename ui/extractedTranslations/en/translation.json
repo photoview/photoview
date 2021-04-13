@@ -1,0 +1,249 @@
+{
+  "album_filter": {
+    "only_favorites": "Show only favorites",
+    "sort_by": "Sort by",
+    "sorting_options": {
+      "date_imported": "Date imported",
+      "date_shot": "Date shot",
+      "title": "Title",
+      "type": "Kind"
+    }
+  },
+  "albums_page": {
+    "title": "Albums"
+  },
+  "general": {
+    "action": {
+      "add": "Add",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "remove": "Remove",
+      "save": "Save"
+    },
+    "loading": {
+      "album": "Loading album",
+      "default": "Loading...",
+      "media": "Loading media",
+      "page": "Loading page",
+      "paginate": {
+        "faces": "Loading more people",
+        "media": "Loading more media"
+      },
+      "shares": "Loading shares...",
+      "timeline": "Loading timeline"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Loading results...",
+      "no_results": "No results found",
+      "placeholder": "Search",
+      "result_type": {
+        "albums": "Albums",
+        "photos": "Photos"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Password",
+      "submit": "Sign in",
+      "username": "Username"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Photo path",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Setup Photoview"
+      },
+      "title": "Initial Setup"
+    },
+    "welcome": "Welcome to Photoview"
+  },
+  "meta": {
+    "description": "Simple and User-friendly Photo Gallery for Personal Servers"
+  },
+  "people_page": {
+    "face_group": {
+      "label_placeholder": "Label",
+      "unlabeled": "Unlabeled"
+    },
+    "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
+  },
+  "photos_page": {
+    "title": "Photos"
+  },
+  "routes": {
+    "page_not_found": "Page not found"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "The maximum amount of scanner jobs that is allowed to run at once",
+      "title": "Scanner concurrent workers"
+    },
+    "logout": "Log out",
+    "periodic_scanner": {
+      "checkbox_label": "Enable periodic scanner",
+      "field": {
+        "description": "How often the scanner should perform automatic scans of all users",
+        "label": "Periodic scan interval"
+      },
+      "interval_unit": {
+        "days": "Days",
+        "hour": "Hour",
+        "minutes": "Minutes",
+        "months": "Months",
+        "seconds": "Seconds"
+      },
+      "title": "Periodic scanner"
+    },
+    "scanner": {
+      "description": "Will scan all users for new or updated media",
+      "scan_all_users": "Scan all users",
+      "title": "Scanner"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Change website language specific for this user",
+        "label": "Website language"
+      },
+      "language_selector": {
+        "placeholder": "Select language"
+      },
+      "title": "User preferences"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Add user"
+      },
+      "confirm_delete_user": {
+        "action": "Delete {{user}}",
+        "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
+        "title": "Delete user"
+      },
+      "password_reset": {
+        "description": "Change password for <1></1>",
+        "form": {
+          "label": "New password",
+          "placeholder": "password",
+          "submit": "Change password"
+        },
+        "title": "Change password"
+      },
+      "table": {
+        "column_names": {
+          "action": "Action",
+          "admin": "Admin",
+          "photo_path": "Photo path",
+          "username": "Username"
+        },
+        "new_user": "New user",
+        "row": {
+          "action": {
+            "change_password": "Change password",
+            "delete": "Delete",
+            "edit": "Edit",
+            "scan": "Scan"
+          }
+        }
+      },
+      "title": "Users"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Shared media"
+    },
+    "protected_share": {
+      "description": "This share is protected with a password.",
+      "title": "Protected share"
+    },
+    "share_not_found": "Share not found",
+    "share_not_found_description": "Maybe the share has expired or has been deleted.",
+    "wrong_password": "Wrong password, please try again."
+  },
+  "sidebar": {
+    "album": {
+      "title": "Album options"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimensions",
+        "file_size": "Size",
+        "file_type": "Type",
+        "name": "Name"
+      },
+      "title": "Download"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Aperture priority",
+          "bulb": "Bulb",
+          "creative_program": "Creative program",
+          "landscape_mode": "Landscape mode",
+          "manual": "Manual",
+          "normal_program": "Normal program",
+          "not_defined": "Not defined",
+          "portrait_mode": "Portrait mode",
+          "shutter_priority": "Shutter priority"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Did not fire",
+          "fired": "Fired",
+          "no_flash": "No Flash",
+          "no_flash_function": "No flash function",
+          "off": "Off",
+          "on": "On",
+          "red_eye_reduction": "Red-eye reduction",
+          "return_detected": "Return detected",
+          "return_not_detected": "Return not detected"
+        },
+        "name": {
+          "aperture": "Aperture",
+          "camera": "Camera",
+          "date_shot": "Date shot",
+          "exposure": "Exposure",
+          "exposure_program": "Program",
+          "flash": "Flash",
+          "focal_length": "Focal length",
+          "iso": "ISO",
+          "lens": "Lens",
+          "maker": "Maker"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Add shares",
+      "copy_link": "Copy Link",
+      "no_shares_found": "No shares found",
+      "public_link": "Public Link",
+      "table_header": "Public shares",
+      "title": "Sharing options"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albums",
+    "people": "People",
+    "photos": "Photos",
+    "places": "Places",
+    "settings": "Settings"
+  },
+  "title": {
+    "loading_album": "Loading album",
+    "people": "People",
+    "settings": "Settings"
+  }
+}

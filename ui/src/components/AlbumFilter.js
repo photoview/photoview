@@ -3,29 +3,7 @@ import { authToken } from '../helpers/authentication'
 import { Checkbox, Dropdown, Button, Icon } from 'semantic-ui-react'
 import styled from 'styled-components'
 import PropTypes from 'prop-types'
-
-const sortingOptions = [
-  {
-    key: 'date_shot',
-    value: 'date_shot',
-    text: 'Date shot',
-  },
-  {
-    key: 'updated_at',
-    value: 'updated_at',
-    text: 'Date imported',
-  },
-  {
-    key: 'title',
-    value: 'title',
-    text: 'Title',
-  },
-  {
-    key: 'type',
-    value: 'type',
-    text: 'Kind',
-  },
-]
+import { useTranslation } from 'react-i18next'
 
 const FavoritesCheckboxStyle = styled(Checkbox)`
   margin-bottom: 16px;
@@ -56,14 +34,18 @@ const FavoritesCheckboxStyle = styled(Checkbox)`
   }
 `
 
-export const FavoritesCheckbox = ({ onlyFavorites, setOnlyFavorites }) => (
-  <FavoritesCheckboxStyle
-    toggle
-    label="Show only favorites"
-    checked={onlyFavorites}
-    onChange={(e, result) => setOnlyFavorites(result.checked)}
-  />
-)
+export const FavoritesCheckbox = ({ onlyFavorites, setOnlyFavorites }) => {
+  const { t } = useTranslation()
+
+  return (
+    <FavoritesCheckboxStyle
+      toggle
+      label={t('album_filter.only_favorites', 'Show only favorites')}
+      checked={onlyFavorites}
+      onChange={(e, result) => setOnlyFavorites(result.checked)}
+    />
+  )
+}
 
 FavoritesCheckbox.propTypes = {
   onlyFavorites: PropTypes.bool.isRequired,
@@ -75,16 +57,45 @@ const OrderDirectionButton = styled(Button)`
   margin-left: 10px !important;
 `
 
+const SortByLabel = styled.strong`
+  margin-left: 4px;
+  margin-right: 6px;
+`
+
 const AlbumFilter = ({
   onlyFavorites,
   setOnlyFavorites,
   setOrdering,
   ordering,
 }) => {
+  const { t } = useTranslation()
   const onChangeOrderDirection = (e, data) => {
     const direction = data.children.props.name === 'arrow up' ? 'DESC' : 'ASC'
     setOrdering({ orderDirection: direction })
   }
+
+  const sortingOptions = [
+    {
+      key: 'date_shot',
+      value: 'date_shot',
+      text: t('album_filter.sorting_options.date_shot', 'Date shot'),
+    },
+    {
+      key: 'updated_at',
+      value: 'updated_at',
+      text: t('album_filter.sorting_options.date_imported', 'Date imported'),
+    },
+    {
+      key: 'title',
+      value: 'title',
+      text: t('album_filter.sorting_options.title', 'Title'),
+    },
+    {
+      key: 'type',
+      value: 'type',
+      text: t('album_filter.sorting_options.type', 'Kind'),
+    },
+  ]
 
   return (
     <>
@@ -94,7 +105,7 @@ const AlbumFilter = ({
           setOnlyFavorites={setOnlyFavorites}
         />
       )}
-      <strong> Sort by </strong>
+      <SortByLabel>{t('album_filter.sort_by', 'Sort by')}</SortByLabel>
       <Dropdown
         selection
         options={sortingOptions}

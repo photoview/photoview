@@ -18,6 +18,8 @@ import SharePage, {
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownload'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
 
+require('../../localization').default()
+
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'
 
@@ -80,7 +82,7 @@ describe('load correct share page, based on graphql query', () => {
             media: {
               id: '1',
               title: 'shared_image.jpg',
-              type: 'photo',
+              type: 'Photo',
               highRes: {
                 url: 'https://example.com/shared_image.jpg',
               },

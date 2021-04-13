@@ -1,0 +1,249 @@
+{
+  "album_filter": {
+    "only_favorites": "Vis kun favoritter",
+    "sort_by": "Sorter efter",
+    "sorting_options": {
+      "date_imported": "Dato for importering",
+      "date_shot": "Dato",
+      "title": "Titel",
+      "type": "Type"
+    }
+  },
+  "albums_page": {
+    "title": "Album"
+  },
+  "general": {
+    "action": {
+      "add": "Tilføj",
+      "cancel": "Annuller",
+      "delete": "Slet",
+      "remove": "Fjern",
+      "save": "Gem"
+    },
+    "loading": {
+      "album": "Loader album",
+      "default": "Loader...",
+      "media": "Loader medier",
+      "page": "Loader side",
+      "paginate": {
+        "faces": "Loader flere personer",
+        "media": "Loader flere medier"
+      },
+      "shares": "Loader delinger...",
+      "timeline": "Loader tidslinje"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Loader resultater...",
+      "no_results": "Fandt ingen resultater",
+      "placeholder": "Søg",
+      "result_type": {
+        "albums": "Albums",
+        "photos": "Billeder"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Adgangskode",
+      "submit": "Log ind",
+      "username": "Brugernavn"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Billedesti",
+          "placeholder": "/sti/til/billeder"
+        },
+        "submit": "Opsæt Photoview"
+      },
+      "title": "Førstegangsopsætning"
+    },
+    "welcome": "Velkommen til Photoview"
+  },
+  "meta": {
+    "description": "Simpelt og Brugervenligt Photo-galleri for Personlige Servere"
+  },
+  "people_page": {
+    "face_group": {
+      "label_placeholder": "Navn",
+      "unlabeled": "Ikke navngivet"
+    },
+    "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter"
+  },
+  "photos_page": {
+    "title": "Billeder"
+  },
+  "routes": {
+    "page_not_found": "Side ikke fundet"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Det maksimale antal medier som må skannes samtidig",
+      "title": "Samtidige scanner-arbejdere"
+    },
+    "logout": "Log ud",
+    "periodic_scanner": {
+      "checkbox_label": "Aktiver periodiske scanner",
+      "field": {
+        "description": "Hvor ofte scanneren bør udføre automatiske scanninger af alle brugere",
+        "label": "Periodiske scanningsintervaller"
+      },
+      "interval_unit": {
+        "days": "Dage",
+        "hour": "Timer",
+        "minutes": "Minutter",
+        "months": "Måneder",
+        "seconds": "Sekunder"
+      },
+      "title": "Periodisk scanner"
+    },
+    "scanner": {
+      "description": "Vil scanne alle brugere for nye eller opdaterede medier",
+      "scan_all_users": "Scan alle brugere",
+      "title": "Scanner"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Set sidens sprog specifikt for denne bruger",
+        "label": "Sprog"
+      },
+      "language_selector": {
+        "placeholder": "Vælg sprog"
+      },
+      "title": "Brugerindstillinger"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Tilføj bruger"
+      },
+      "confirm_delete_user": {
+        "action": "Slet {user}",
+        "description": "<0>Er du sikker på at du vil slette <1></1>?</0><p>Denne handling kan ikke fortrydes</p>",
+        "title": "Slet bruger"
+      },
+      "password_reset": {
+        "description": "Ændre adgangskode for <1></1>",
+        "form": {
+          "label": "Ny adgangskode",
+          "placeholder": "adgangskode",
+          "submit": "Ændre adgangskode"
+        },
+        "title": "Ændre adgangskode"
+      },
+      "table": {
+        "column_names": {
+          "action": "Handling",
+          "admin": "Admin",
+          "photo_path": "Billedesti",
+          "username": "Brugernavn"
+        },
+        "new_user": "Ny bruger",
+        "row": {
+          "action": {
+            "change_password": "Ændre adgangskode",
+            "delete": "Slet",
+            "edit": "Rediger",
+            "scan": "Scan"
+          }
+        }
+      },
+      "title": "Brugere"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Delt medie"
+    },
+    "protected_share": {
+      "description": "Denne deling er låst med en adgangskode.",
+      "title": "Beskyttet deling"
+    },
+    "share_not_found": "Deling blev ikke fundet",
+    "share_not_found_description": "Måske er delingen udløbet eller blevet slettet.",
+    "wrong_password": "Forkert adgangskode, prøv venligst igen."
+  },
+  "sidebar": {
+    "album": {
+      "title": "Album indstillinger"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimension",
+        "file_size": "Størrelse",
+        "file_type": "Type",
+        "name": "Navn"
+      },
+      "title": "Download"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Actionprogram",
+          "aperture_priority": "Blændeprioritet",
+          "bulb": "Bulb",
+          "creative_program": "Kreativ program",
+          "landscape_mode": "Landskabsmode",
+          "manual": "Manuel",
+          "normal_program": "Normal program",
+          "not_defined": "Ikke defineret",
+          "portrait_mode": "Portræt mode",
+          "shutter_priority": "Lukkerprioritet"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Blitz affyrede ikke",
+          "fired": "Affyrede",
+          "no_flash": "Ingen blitz",
+          "no_flash_function": "Ingen blitz-funktion",
+          "off": "Slukket",
+          "on": "Tændt",
+          "red_eye_reduction": "Røde øjne reduktion",
+          "return_detected": "Retur registreret",
+          "return_not_detected": "Retur ikke registreret"
+        },
+        "name": {
+          "aperture": "Blænde",
+          "camera": "Kamera",
+          "date_shot": "Dato",
+          "exposure": "Lukketid",
+          "exposure_program": "Lukketid program",
+          "flash": "Blitz",
+          "focal_length": "Brændvidde",
+          "iso": "ISO",
+          "lens": "Lense",
+          "maker": "Mærke"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Tilføj deling",
+      "copy_link": "Kopier link",
+      "no_shares_found": "Ingen delinger fundet",
+      "public_link": "Offentligt link",
+      "table_header": "Offentlige delinger",
+      "title": "Indstillinger for deling"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albums",
+    "people": "Personer",
+    "photos": "Billeder",
+    "places": "Kort",
+    "settings": "Indstillinger"
+  },
+  "title": {
+    "loading_album": "Loader album",
+    "people": "Personer",
+    "settings": "Indstillinger"
+  }
+}

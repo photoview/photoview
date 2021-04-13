@@ -9,6 +9,7 @@ import { Button, Icon, Input } from 'semantic-ui-react'
 import FaceCircleImage from './FaceCircleImage'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
+import { useTranslation } from 'react-i18next'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -38,7 +39,7 @@ export const MY_FACES_QUERY = gql`
 `
 
 export const SET_GROUP_LABEL_MUTATION = gql`
-  mutation($groupID: ID!, $label: String) {
+  mutation setGroupLabel($groupID: ID!, $label: String) {
     setFaceGroupLabel(faceGroupID: $groupID, label: $label) {
       id
       label
@@ -73,6 +74,7 @@ const FaceDetailsButton = styled.button`
 const FaceLabel = styled.span``
 
 const FaceDetails = ({ group }) => {
+  const { t } = useTranslation()
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
   const inputRef = createRef()
@@ -124,7 +126,9 @@ const FaceDetails = ({ group }) => {
         onClick={() => setEditLabel(true)}
       >
         <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
-        <FaceLabel>{group.label ?? 'Unlabeled'}</FaceLabel>
+        <FaceLabel>
+          {group.label ?? t('people_page.face_group.unlabeled', 'Unlabeled')}
+        </FaceLabel>
         <EditIcon name="pencil" />
       </FaceDetailsButton>
     )
@@ -135,7 +139,7 @@ const FaceDetails = ({ group }) => {
           loading={loading}
           ref={inputRef}
           size="mini"
-          placeholder="Label"
+          placeholder={t('people_page.face_group.label_placeholder', 'Label')}
           icon="arrow right"
           value={inputValue}
           onKeyUp={onKeyUp}
@@ -199,6 +203,7 @@ const FaceGroupsWrapper = styled.div`
 `
 
 const PeopleGallery = () => {
+  const { t } = useTranslation()
   const { data, error, loading, fetchMore } = useQuery(MY_FACES_QUERY, {
     variables: {
       limit: 50,
@@ -230,7 +235,7 @@ const PeopleGallery = () => {
   }
 
   return (
-    <Layout title={'People'}>
+    <Layout title={t('title.people', 'People')}>
       <Button
         loading={recognizeUnlabeledLoading}
         disabled={recognizeUnlabeledLoading}
@@ -239,12 +244,15 @@ const PeopleGallery = () => {
         }}
       >
         <Icon name="sync" />
-        Recognize unlabeled faces
+        {t(
+          'people_page.recognize_unlabeled_faces_button',
+          'Recognize unlabeled faces'
+        )}
       </Button>
       <FaceGroupsWrapper ref={containerElem}>{faces}</FaceGroupsWrapper>
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
-        text="Loading more people"
+        text={t('general.loading.paginate.faces', 'Loading more people')}
       />
     </Layout>
   )

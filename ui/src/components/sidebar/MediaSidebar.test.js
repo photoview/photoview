@@ -4,6 +4,8 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { MetadataInfo } from './MediaSidebar'
 
+require('../../localization').default()
+
 describe('MetadataInfo', () => {
   test('without EXIF information', async () => {
     const media = {
@@ -33,11 +35,11 @@ describe('MetadataInfo', () => {
     expect(screen.queryByText('Maker')).not.toBeInTheDocument()
     expect(screen.queryByText('Lens')).not.toBeInTheDocument()
     expect(screen.queryByText('Program')).not.toBeInTheDocument()
-    expect(screen.queryByText('Date Shot')).not.toBeInTheDocument()
+    expect(screen.queryByText('Date shot')).not.toBeInTheDocument()
     expect(screen.queryByText('Exposure')).not.toBeInTheDocument()
     expect(screen.queryByText('Aperture')).not.toBeInTheDocument()
     expect(screen.queryByText('ISO')).not.toBeInTheDocument()
-    expect(screen.queryByText('Focal Length')).not.toBeInTheDocument()
+    expect(screen.queryByText('Focal length')).not.toBeInTheDocument()
     expect(screen.queryByText('Flash')).not.toBeInTheDocument()
   })
 
@@ -77,7 +79,7 @@ describe('MetadataInfo', () => {
     expect(screen.getByText('Program')).toBeInTheDocument()
     expect(screen.getByText('Canon EOS R')).toBeInTheDocument()
 
-    expect(screen.getByText('Date Shot')).toBeInTheDocument()
+    expect(screen.getByText('Date shot')).toBeInTheDocument()
 
     expect(screen.getByText('Exposure')).toBeInTheDocument()
     expect(screen.getByText('1/60')).toBeInTheDocument()
@@ -91,7 +93,7 @@ describe('MetadataInfo', () => {
     expect(screen.getByText('ISO')).toBeInTheDocument()
     expect(screen.getByText('100')).toBeInTheDocument()
 
-    expect(screen.getByText('Focal Length')).toBeInTheDocument()
+    expect(screen.getByText('Focal length')).toBeInTheDocument()
     expect(screen.getByText('24mm')).toBeInTheDocument()
 
     expect(screen.getByText('Flash')).toBeInTheDocument()
