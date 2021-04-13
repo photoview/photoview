@@ -28,6 +28,7 @@ const StyledVideo = styled(ProtectedVideo)`
 export interface PresentMediaProps_Media extends ProtectedVideoProps_Media {
   type: MediaType
   highRes: null | {
+    __typename: 'MediaURL'
     url: string
   }
 }

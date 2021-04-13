@@ -7,6 +7,7 @@ import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
+import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
 
 const Gallery = styled.div`
   display: flex;
@@ -32,11 +33,7 @@ const ClearWrap = styled.div`
 `
 
 interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
-  thumbnail: null | {
-    url: string
-    width: number
-    height: number
-  }
+  thumbnail: sidebarPhoto_media_thumbnail | null
 }
 
 type PhotoGalleryProps = {
@@ -69,15 +66,15 @@ const PhotoGallery = ({
 
   let photoElements = []
   if (media) {
-    photoElements = media.map((photo, index) => {
+    photoElements = media.map((media, index) => {
       const active = activeIndex == index
 
       return (
         <MediaThumbnail
-          key={photo.id}
-          media={photo}
+          key={media.id}
+          media={media}
           onSelectImage={index => {
-            updateSidebar(<MediaSidebar media={photo} />)
+            updateSidebar(<MediaSidebar media={media} />)
             onSelectImage(index)
           }}
           onFavorite={onFavorite}

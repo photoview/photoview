@@ -44,8 +44,11 @@ export const SHARE_TOKEN_QUERY = gql`
         }
         videoWeb {
           url
+          width
+          height
         }
         exif {
+          id
           camera
           maker
           lens

@@ -1,17 +1,30 @@
-import PropTypes from 'prop-types'
 import React, { useEffect } from 'react'
 import { useLazyQuery, gql } from '@apollo/client'
 import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
-import { ProtectedImage, ProtectedVideo } from '../photoGallery/ProtectedMedia'
+import {
+  ProtectedImage,
+  ProtectedVideo,
+  ProtectedVideoProps_Media,
+} from '../photoGallery/ProtectedMedia'
 import SidebarShare from './Sharing'
 import SidebarDownload from './SidebarDownload'
 import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 import { isNil } from '../../helpers/utils'
 import { useTranslation } from 'react-i18next'
+import { MediaType } from '../../../__generated__/globalTypes'
+import { TranslationFn } from '../../localization'
+import {
+  sidebarPhoto,
+  sidebarPhotoVariables,
+  sidebarPhoto_media_exif,
+  sidebarPhoto_media_faces,
+  sidebarPhoto_media_thumbnail,
+  sidebarPhoto_media_videoMetadata,
+} from './__generated__/sidebarPhoto'
 
-const mediaQuery = gql`
+const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarPhoto($id: ID!) {
     media(id: $id) {
       id
@@ -72,7 +85,7 @@ const mediaQuery = gql`
   }
 `
 
-const PreviewImageWrapper = styled.div`
+const PreviewImageWrapper = styled.div<{ imageAspect: number }>`
   width: 100%;
   height: 0;
   padding-top: ${({ imageAspect }) => Math.min(imageAspect, 0.75) * 100}%;
@@ -96,21 +109,27 @@ const PreviewVideo = styled(ProtectedVideo)`
   left: 0;
 `
 
-const PreviewMedia = ({ media, previewImage }) => {
-  if (media.type == null || media.type == 'photo') {
+interface PreviewMediaPropsMedia extends ProtectedVideoProps_Media {
+  type: MediaType
+}
+
+type PreviewMediaProps = {
+  media: PreviewMediaPropsMedia
+  previewImage?: {
+    url: string
+  }
+}
+
+const PreviewMedia = ({ media, previewImage }: PreviewMediaProps) => {
+  if (media.type === MediaType.Photo) {
     return <PreviewImage src={previewImage?.url} />
   }
 
-  if (media.type == 'video') {
+  if (media.type === MediaType.Video) {
     return <PreviewVideo media={media} />
   }
 
   throw new Error('Unknown media type')
-}
-
-PreviewMedia.propTypes = {
-  media: PropTypes.object.isRequired,
-  previewImage: PropTypes.object,
 }
 
 const Name = styled.div`
@@ -123,37 +142,45 @@ const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
 `
 
-export const MetadataInfo = ({ media }) => {
+type MediaInfoProps = {
+  media?: MediaSidebarMedia
+}
+
+export const MetadataInfo = ({ media }: MediaInfoProps) => {
   const { t } = useTranslation()
-  let exifItems = []
+  let exifItems: JSX.Element[] = []
 
   const exifName = exifNameLookup(t)
 
   if (media?.exif) {
-    let exifKeys = Object.keys(exifName).filter(
-      x => media.exif[x] !== null && x != '__typename'
+    const mediaExif = (media?.exif as unknown) as {
+      [key: string]: string | number | null
+    }
+
+    const exifKeys = Object.keys(exifName).filter(
+      x => mediaExif[x] !== null && x != '__typename'
     )
 
-    let exif = exifKeys.reduce(
+    const exif = exifKeys.reduce(
       (prev, curr) => ({
         ...prev,
-        [curr]: media.exif[curr],
+        [curr]: mediaExif[curr],
       }),
-      {}
+      {} as { [key: string]: string | number | null }
     )
 
     if (!isNil(exif.dateShot)) {
       exif.dateShot = new Date(exif.dateShot).toLocaleString()
     }
 
-    if (!isNil(exif.exposure) && exif.exposure !== 0) {
+    if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${1 / exif.exposure}`
     }
 
     const exposurePrograms = exposureProgramsLookup(t)
 
     if (
-      !isNil(exif.exposureProgram) &&
+      typeof exif.exposureProgram === 'number' &&
       exposurePrograms[exif.exposureProgram]
     ) {
       exif.exposureProgram = exposurePrograms[exif.exposureProgram]
@@ -170,7 +197,7 @@ export const MetadataInfo = ({ media }) => {
     }
 
     const flash = flashLookup(t)
-    if (!isNil(exif.flash) && flash[exif.flash]) {
+    if (typeof exif.flash === 'number' && flash[exif.flash]) {
       exif.flash = flash[exif.flash]
     }
 
@@ -179,16 +206,20 @@ export const MetadataInfo = ({ media }) => {
     ))
   }
 
-  let videoMetadataItems = []
+  let videoMetadataItems: JSX.Element[] = []
   if (media?.videoMetadata) {
-    let metadata = Object.keys(media.videoMetadata)
+    const videoMetadata = (media.videoMetadata as unknown) as {
+      [key: string]: string | number | null
+    }
+
+    let metadata = Object.keys(videoMetadata)
       .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
       .reduce(
         (prev, curr) => ({
           ...prev,
-          [curr]: media.videoMetadata[curr],
+          [curr]: videoMetadata[curr as string],
         }),
-        {}
+        {} as { [key: string]: string | number | null }
       )
 
     metadata = {
@@ -209,11 +240,7 @@ export const MetadataInfo = ({ media }) => {
   )
 }
 
-MetadataInfo.propTypes = {
-  media: PropTypes.object,
-}
-
-const exifNameLookup = t => ({
+const exifNameLookup = (t: TranslationFn): { [key: string]: string } => ({
   camera: t('sidebar.media.exif.name.camera', 'Camera'),
   maker: t('sidebar.media.exif.name.maker', 'Maker'),
   lens: t('sidebar.media.exif.name.lens', 'Lens'),
@@ -227,7 +254,9 @@ const exifNameLookup = t => ({
 })
 
 // From https://exiftool.org/TagNames/EXIF.html
-const exposureProgramsLookup = t => ({
+const exposureProgramsLookup = (
+  t: TranslationFn
+): { [key: number]: string } => ({
   0: t('sidebar.media.exif.exposure_program.not_defined', 'Not defined'),
   1: t('sidebar.media.exif.exposure_program.manual', 'Manual'),
   2: t('sidebar.media.exif.exposure_program.normal_program', 'Normal program'),
@@ -250,7 +279,7 @@ const exposureProgramsLookup = t => ({
 })
 
 // From https://exiftool.org/TagNames/EXIF.html#Flash
-const flashLookup = t => {
+const flashLookup = (t: TranslationFn): { [key: number]: string } => {
   const values = {
     no_flash: t('sidebar.media.exif.flash.no_flash', 'No Flash'),
     fired: t('sidebar.media.exif.flash.fired', 'Fired'),
@@ -303,7 +332,7 @@ const flashLookup = t => {
     0x58: `${values['auto']}, ${values['did_not_fire']}, ${values['red_eye_reduction']}`,
     0x59: `${values['auto']}, ${values['fired']}, ${values['red_eye_reduction']}`,
     0x5d: `${values['auto']}, ${values['red_eye_reduction']}, ${values['return_not_detected']}`,
-    0x5f: `${values['auto']}, ${values['red_eye_redcution']}, ${values['return_detected']}`,
+    0x5f: `${values['auto']}, ${values['red_eye_reduction']}, ${values['return_detected']}`,
   }
 }
 
@@ -319,26 +348,33 @@ const flashLookup = t => {
 //   8: 'Rotate 270 CW',
 // }
 
-const SidebarContent = ({ media, hidePreview }) => {
-  let previewImage = null
-  if (media) {
-    if (media.highRes) previewImage = media.highRes
-    else if (media.thumbnail) previewImage = media.thumbnail
-  }
+type SidebarContentProps = {
+  media: MediaSidebarMedia
+  hidePreview?: boolean
+}
 
-  const imageAspect = previewImage
-    ? previewImage.height / previewImage.width
-    : 3 / 2
+const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
+  let previewImage = null
+  if (media.highRes) previewImage = media.highRes
+  else if (media.thumbnail) previewImage = media.thumbnail
+
+  const imageAspect =
+    previewImage?.width && previewImage?.height
+      ? previewImage.height / previewImage.width
+      : 3 / 2
 
   return (
     <div>
       {!hidePreview && (
         <PreviewImageWrapper imageAspect={imageAspect}>
-          <PreviewMedia previewImage={previewImage} media={media} />
+          <PreviewMedia
+            previewImage={previewImage || undefined}
+            media={media}
+          />
           <SidebarFacesOverlay media={media} />
         </PreviewImageWrapper>
       )}
-      <Name>{media && media.title}</Name>
+      <Name>{media.title}</Name>
       <MetadataInfo media={media} />
       <SidebarDownload photo={media} />
       <SidebarShare photo={media} />
@@ -346,13 +382,39 @@ const SidebarContent = ({ media, hidePreview }) => {
   )
 }
 
-SidebarContent.propTypes = {
-  media: PropTypes.object,
-  hidePreview: PropTypes.bool,
+interface MediaSidebarMedia {
+  __typename: 'Media'
+  id: string
+  title?: string
+  type: MediaType
+  highRes?: null | {
+    __typename: 'MediaURL'
+    url: string
+    width?: number
+    height?: number
+  }
+  thumbnail?: sidebarPhoto_media_thumbnail | null
+  videoWeb?: null | {
+    __typename: 'MediaURL'
+    url: string
+    width?: number
+    height?: number
+  }
+  videoMetadata?: sidebarPhoto_media_videoMetadata | null
+  exif?: sidebarPhoto_media_exif | null
+  faces?: sidebarPhoto_media_faces[]
 }
 
-const MediaSidebar = ({ media, hidePreview }) => {
-  const [loadMedia, { loading, error, data }] = useLazyQuery(mediaQuery)
+type MediaSidebarType = {
+  media: MediaSidebarMedia
+  hidePreview?: boolean
+}
+
+const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
+  const [loadMedia, { loading, error, data }] = useLazyQuery<
+    sidebarPhoto,
+    sidebarPhotoVariables
+  >(SIDEBAR_MEDIA_QUERY)
 
   useEffect(() => {
     if (media != null && authToken()) {
@@ -377,11 +439,6 @@ const MediaSidebar = ({ media, hidePreview }) => {
   }
 
   return <SidebarContent media={data.media} hidePreview={hidePreview} />
-}
-
-MediaSidebar.propTypes = {
-  media: PropTypes.object.isRequired,
-  hidePreview: PropTypes.bool,
 }
 
 export default MediaSidebar

@@ -1,4 +1,5 @@
 import React, { DetailedHTMLProps, ImgHTMLAttributes } from 'react'
+import { isNil } from '../../helpers/utils'
 
 const isNativeLazyLoadSupported = 'loading' in HTMLImageElement.prototype
 const placeholder =
@@ -73,11 +74,14 @@ export const ProtectedImage = ({
 }
 
 export interface ProtectedVideoProps_Media {
+  __typename: 'Media'
   id: string
-  thumbnail: null | {
+  thumbnail?: null | {
+    __typename: 'MediaURL'
     url: string
   }
-  videoWeb: null | {
+  videoWeb?: null | {
+    __typename: 'MediaURL'
     url: string
   }
 }
@@ -87,7 +91,7 @@ export interface ProtectedVideoProps {
 }
 
 export const ProtectedVideo = ({ media, ...props }: ProtectedVideoProps) => {
-  if (media.videoWeb === null) {
+  if (isNil(media.videoWeb)) {
     console.error('ProetctedVideo called with media.videoWeb = null')
     return null
   }
