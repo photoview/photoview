@@ -1,11 +1,11 @@
 {
   "album_filter": {
-    "only_favorites": "Show only favorites",
-    "sort_by": "Sort by",
+    "only_favorites": "Afficher seulement les favoris",
+    "sort_by": "Trier par",
     "sorting_options": {
       "date_imported": "Date imported",
       "date_shot": "Date shot",
-      "title": "Title",
+      "title": "Titre",
       "type": "Kind"
     }
   },
@@ -14,11 +14,11 @@
   },
   "general": {
     "action": {
-      "add": "Add",
-      "cancel": "Cancel",
-      "delete": "Delete",
-      "remove": "Remove",
-      "save": "Save"
+      "add": "Ajouter",
+      "cancel": "Annuler",
+      "delete": "Effacer",
+      "remove": "Supprimer",
+      "save": "Sauvegarder"
     },
     "loading": {
       "album": "Loading album",
