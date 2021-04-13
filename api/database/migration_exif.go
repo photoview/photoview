@@ -64,6 +64,10 @@ func migrate_exif_fields_exposure(db *gorm.DB) error {
 
 	err := db.Transaction(func(tx *gorm.DB) error {
 
+		if err := tx.Exec("UPDATE media_exif SET exposure = NULL WHERE exposure = ''").Error; err != nil {
+			return errors.Wrapf(err, "convert flash attribute empty values to NULL")
+		}
+
 		type exifModel struct {
 			ID       int `gorm:"primarykey"`
 			Exposure *string
@@ -74,11 +78,6 @@ func migrate_exif_fields_exposure(db *gorm.DB) error {
 			for _, result := range results {
 
 				if result.Exposure == nil {
-					continue
-				}
-
-				if *result.Exposure == "" {
-					result.Exposure = nil
 					continue
 				}
 
@@ -118,6 +117,10 @@ func migrate_exif_fields_flash(db *gorm.DB) error {
 	log.Println("Migrating `media_exif.flash` from string to int")
 
 	err := db.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Exec("UPDATE media_exif SET flash = NULL WHERE flash = ''").Error; err != nil {
+			return errors.Wrapf(err, "convert flash attribute empty values to NULL")
+		}
 
 		type exifModel struct {
 			ID    int `gorm:"primarykey"`
@@ -159,11 +162,6 @@ func migrate_exif_fields_flash(db *gorm.DB) error {
 			for _, result := range results {
 
 				if result.Flash == nil {
-					continue
-				}
-
-				if *result.Flash == "" {
-					result.Flash = nil
 					continue
 				}
 

@@ -57,7 +57,7 @@
     "lint": "npm run lint:types & npm run lint:eslint",
     "lint:eslint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
     "lint:types": "tsc --noemit",
-    "jest": "jest",
+    "jest": "jest --verbose",
     "genSchemaTypes": "npx apollo client:codegen --target=typescript",
     "prepare": "(cd .. && npx husky install)"
   },

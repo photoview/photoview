@@ -152,7 +152,7 @@ func SetupDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-	db.AutoMigrate(
+	err := db.AutoMigrate(
 		&models.User{},
 		&models.AccessToken{},
 		&models.SiteInfo{},
@@ -170,6 +170,10 @@ func MigrateDatabase(db *gorm.DB) error {
 		&models.ImageFace{},
 	)
 
+	if err != nil {
+		log.Printf("Auto migration failed: %v\n", err)
+	}
+
 	// v2.1.0 - Replaced by Media.CreatedAt
 	if db.Migrator().HasColumn(&models.Media{}, "date_imported") {
 		db.Migrator().DropColumn(&models.Media{}, "date_imported")
@@ -177,9 +181,9 @@ func MigrateDatabase(db *gorm.DB) error {
 
 	// v2.3.0 - Changed type of MediaEXIF.Exposure and MediaEXIF.Flash
 	// from string values to decimal and int respectively
-	err := migrate_exif_fields(db)
+	err = migrate_exif_fields(db)
 	if err != nil {
-		return err
+		log.Printf("Failed to run exif fields migration: %v\n", err)
 	}
 
 	return nil
