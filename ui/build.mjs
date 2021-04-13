@@ -69,7 +69,9 @@ if (watchMode) {
   bs.watch('src/**/*.@(js|tsx|ts)').on('change', async args => {
     console.log('reloading', args)
     builderPromise = (await builderPromise).rebuild()
-    bs.reload(args)
+    setTimeout(() => {
+      bs.reload(args)
+    }, 1000)
   })
 } else {
   const build = async () => {

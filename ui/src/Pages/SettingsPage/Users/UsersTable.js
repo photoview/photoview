@@ -29,7 +29,7 @@ const UsersTable = () => {
   const { loading, error, data, refetch } = useQuery(USERS_QUERY)
 
   if (error) {
-    return `Users table error: ${error.message}`
+    return <div>{`Users table error: ${error.message}`}</div>
   }
 
   let userRows = []

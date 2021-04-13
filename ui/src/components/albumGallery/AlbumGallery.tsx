@@ -6,7 +6,7 @@ import AlbumFilter from '../AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
 
 type AlbumGalleryProps = {
-  album: albumQuery_album
+  album?: albumQuery_album
   loading?: boolean
   customAlbumLink?(albumID: string): string
   showFilter?: boolean
@@ -64,10 +64,13 @@ const AlbumGallery = React.forwardRef(
     }
 
     const nextImage = () => {
+      if (album === undefined) return
       setActiveImage((imageState.activeImage + 1) % album.media.length)
     }
 
     const previousImage = () => {
+      if (album === undefined) return
+
       if (imageState.activeImage <= 0) {
         setActiveImage(album.media.length - 1)
       } else {
@@ -131,7 +134,7 @@ const AlbumGallery = React.forwardRef(
         }
         <PhotoGallery
           loading={loading}
-          media={album && album.media}
+          media={album?.media || []}
           activeIndex={imageState.activeImage}
           presenting={imageState.presenting}
           onSelectImage={index => {

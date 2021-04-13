@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { SidebarContext, UpdateSidebarFn } from '../sidebar/Sidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
 import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
@@ -65,44 +65,32 @@ const PhotoGallery = ({
   const { t } = useTranslation()
   const { updateSidebar } = useContext(SidebarContext)
 
-  if (
-    media === undefined ||
-    activeIndex === -1 ||
-    media[activeIndex] === undefined
-  ) {
-    return null
-  }
+  const activeImage: PhotoGalleryProps_Media | undefined = media[activeIndex]
 
-  const activeImage = media[activeIndex]
+  let photoElements = []
+  if (media) {
+    photoElements = media.map((photo, index) => {
+      const active = activeIndex == index
 
-  const getPhotoElements = (updateSidebar: UpdateSidebarFn) => {
-    let photoElements = []
-    if (media) {
-      photoElements = media.map((photo, index) => {
-        const active = activeIndex == index
-
-        return (
-          <MediaThumbnail
-            key={photo.id}
-            media={photo}
-            onSelectImage={index => {
-              updateSidebar(<MediaSidebar media={photo} />)
-              onSelectImage(index)
-            }}
-            onFavorite={onFavorite}
-            setPresenting={setPresenting}
-            index={index}
-            active={active}
-          />
-        )
-      })
-    } else {
-      for (let i = 0; i < 6; i++) {
-        photoElements.push(<PhotoThumbnail key={i} />)
-      }
+      return (
+        <MediaThumbnail
+          key={photo.id}
+          media={photo}
+          onSelectImage={index => {
+            updateSidebar(<MediaSidebar media={photo} />)
+            onSelectImage(index)
+          }}
+          onFavorite={onFavorite}
+          setPresenting={setPresenting}
+          index={index}
+          active={active}
+        />
+      )
+    })
+  } else {
+    for (let i = 0; i < 6; i++) {
+      photoElements.push(<PhotoThumbnail key={i} />)
     }
-
-    return photoElements
   }
 
   return (
@@ -111,7 +99,7 @@ const PhotoGallery = ({
         <Loader active={loading}>
           {t('general.loading.media', 'Loading media')}
         </Loader>
-        {getPhotoElements(updateSidebar)}
+        {photoElements}
         <PhotoFiller />
       </Gallery>
       {presenting && (

@@ -16,7 +16,6 @@ module.exports = function (api) {
         'i18next-extract',
         {
           locales: ['en', 'da'],
-          discardOldKeys: true,
           defaultValue: null,
         },
       ])

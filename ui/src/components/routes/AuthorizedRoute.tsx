@@ -6,10 +6,10 @@ import { authToken } from '../../helpers/authentication'
 import { ADMIN_QUERY } from '../../Layout'
 
 export const useIsAdmin = (enabled = true) => {
-  const [fetchAdminQuery, { data }] = useLazyQuery(ADMIN_QUERY)
+  const [fetchAdminQuery, { data, called }] = useLazyQuery(ADMIN_QUERY)
 
   useEffect(() => {
-    if (authToken() && !data && enabled) {
+    if (authToken() && !called && enabled) {
       fetchAdminQuery()
     }
   }, [authToken(), enabled])

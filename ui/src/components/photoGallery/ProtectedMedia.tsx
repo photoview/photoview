@@ -26,6 +26,7 @@ export interface ProtectedImageProps
   src?: string
   key?: string
   lazyLoading?: boolean
+  loaded?: boolean
 }
 
 /**
@@ -38,6 +39,7 @@ export const ProtectedImage = ({
   src,
   key,
   lazyLoading,
+  loaded,
   ...props
 }: ProtectedImageProps) => {
   const lazyLoadProps: { 'data-src'?: string; loading?: 'lazy' | 'eager' } = {}
@@ -55,11 +57,15 @@ export const ProtectedImage = ({
       ? placeholder
       : getProtectedUrl(src) || placeholder
 
+  const loadedProp =
+    loaded !== undefined ? { loaded: loaded.toString() } : undefined
+
   return (
     <img
       key={key}
       {...props}
       {...lazyLoadProps}
+      {...loadedProp}
       src={imgSrc}
       crossOrigin="use-credentials"
     />

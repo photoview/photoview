@@ -4,12 +4,17 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dropdown } from 'semantic-ui-react'
 import styled from 'styled-components'
-
+import { LanguageTranslation } from '../../../__generated__/globalTypes'
 import { SectionTitle } from './SettingsPage'
+import {
+  changeUserPreferences,
+  changeUserPreferencesVariables,
+} from './__generated__/changeUserPreferences'
+import { myUserPreferences } from './__generated__/myUserPreferences'
 
 const languagePreferences = [
-  { key: 1, text: 'English', value: 'en' },
-  { key: 2, text: 'Dansk', value: 'da' },
+  { key: 1, text: 'English', value: LanguageTranslation.English },
+  { key: 2, text: 'Dansk', value: LanguageTranslation.Danish },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
@@ -37,14 +42,15 @@ const UserPreferencesWrapper = styled.div`
 const UserPreferences = () => {
   const { t } = useTranslation()
 
-  const { data } = useQuery(MY_USER_PREFERENCES)
+  const { data } = useQuery<myUserPreferences>(MY_USER_PREFERENCES)
 
-  const [changePrefs, { loading: loadingPrefs, error }] = useMutation(
-    CHANGE_USER_PREFERENCES
-  )
+  const [changePrefs, { loading: loadingPrefs, error }] = useMutation<
+    changeUserPreferences,
+    changeUserPreferencesVariables
+  >(CHANGE_USER_PREFERENCES)
 
   if (error) {
-    return error.message
+    return <div>{error.message}</div>
   }
 
   return (
@@ -62,12 +68,12 @@ const UserPreferences = () => {
         onChange={(event, { value: language }) => {
           changePrefs({
             variables: {
-              language,
+              language: language as LanguageTranslation,
             },
           })
         }}
         selection
-        value={data?.myUserPreferences.language}
+        value={data?.myUserPreferences.language || undefined}
         loading={loadingPrefs}
         disabled={loadingPrefs}
       />

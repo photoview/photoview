@@ -50,7 +50,7 @@ const ALBUM_PATH_QUERY = gql`
 `
 
 type AlbumTitleProps = {
-  album: {
+  album?: {
     id: string
     title: string
   }

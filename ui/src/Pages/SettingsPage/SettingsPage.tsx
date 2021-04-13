@@ -10,7 +10,7 @@ import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
 
-export const SectionTitle = styled.h2`
+export const SectionTitle = styled.h2<{ nospace: boolean }>`
   margin-top: ${({ nospace }) => (nospace ? '0' : '1.4em')} !important;
   padding-bottom: 0.3em;
   border-bottom: 1px solid #ddd;

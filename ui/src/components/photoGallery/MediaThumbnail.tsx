@@ -4,6 +4,10 @@ import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../../__generated__/globalTypes'
+import {
+  markMediaFavorite,
+  markMediaFavoriteVariables,
+} from './__generated__/markMediaFavorite'
 
 const markFavoriteMutation = gql`
   mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
@@ -130,7 +134,10 @@ export const MediaThumbnail = ({
   setPresenting,
   onFavorite,
 }: MediaThumbnailProps) => {
-  const [markFavorite] = useMutation(markFavoriteMutation)
+  const [markFavorite] = useMutation<
+    markMediaFavorite,
+    markMediaFavoriteVariables
+  >(markFavoriteMutation)
 
   let heartIcon = null
   if (media.favorite !== undefined) {

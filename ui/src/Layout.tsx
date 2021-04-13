@@ -1,4 +1,4 @@
-import React, { ReactChild, ReactChildren } from 'react'
+import React, { ReactChild } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
@@ -143,7 +143,7 @@ export const SideMenu = () => {
 }
 
 type LayoutProps = {
-  children: ReactChild | ReactChildren
+  children: React.ReactNode
   title: string
 }
 

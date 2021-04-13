@@ -44,6 +44,7 @@ const SITE_TRANSLATION = gql`
 `
 
 const loadTranslations = () => {
+  console.log('load translation')
   const [loadLang, { data }] = useLazyQuery<siteTranslation>(SITE_TRANSLATION)
 
   useEffect(() => {
@@ -53,11 +54,20 @@ const loadTranslations = () => {
   }, [authToken()])
 
   useEffect(() => {
+    console.log('loading translations', data)
     switch (data?.myUserPreferences.language) {
       case LanguageTranslation.Danish:
         import('../extractedTranslations/da/translation.json').then(danish => {
+          console.log('loading danish')
           i18n.addResourceBundle('da', 'translation', danish)
           i18n.changeLanguage('da')
+        })
+        break
+      case LanguageTranslation.English:
+        import('../extractedTranslations/en/translation.json').then(english => {
+          console.log('loading english')
+          i18n.addResourceBundle('en', 'translation', english)
+          i18n.changeLanguage('en')
         })
         break
       default:
