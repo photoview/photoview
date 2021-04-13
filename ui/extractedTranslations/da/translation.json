@@ -63,7 +63,7 @@
     "welcome": "Velkommen til Photoview"
   },
   "meta": {
-    "description": null
+    "description": "Simpelt og Brugervenligt Photo-galleri for Personlige Servere"
   },
   "people_page": {
     "face_group": {
@@ -80,7 +80,7 @@
       "description": "Det maksimale antal medier som må skannes samtidig",
       "title": "Samtidige scanner-arbejdere"
     },
-    "logout": null,
+    "logout": "Log ud",
     "periodic_scanner": {
       "checkbox_label": "Aktiver periodiske scanner",
       "field": {
@@ -147,7 +147,7 @@
   },
   "share_page": {
     "media": {
-      "title": null
+      "title": "Delt medie"
     },
     "protected_share": {
       "description": "Denne deling er låst med en adgangskode.",
