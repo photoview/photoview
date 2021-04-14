@@ -37,3 +37,7 @@ export function debounce<T extends (...args: any[]) => any>(
 export function isNil(value: any): value is undefined | null {
   return value === undefined || value === null
 }
+
+export function exhaustiveCheck(value: never) {
+  throw new Error(`Exhaustive check failed with value: ${value}`)
+}

@@ -5,6 +5,7 @@ import i18n from 'i18next'
 import { initReactI18next, TFunction } from 'react-i18next'
 import { LanguageTranslation } from '../__generated__/globalTypes'
 import { authToken } from './helpers/authentication'
+import { exhaustiveCheck } from './helpers/utils'
 
 export type TranslationFn = TFunction<'translation'>
 
@@ -56,25 +57,27 @@ export const loadTranslations = () => {
       return
     }
 
-    switch (data?.myUserPreferences.language) {
+    switch (language) {
       case LanguageTranslation.Danish:
         import('../extractedTranslations/da/translation.json').then(danish => {
           i18n.addResourceBundle('da', 'translation', danish)
           i18n.changeLanguage('da')
         })
-        break
+        return
       case LanguageTranslation.English:
         import('../extractedTranslations/en/translation.json').then(english => {
           i18n.addResourceBundle('en', 'translation', english)
           i18n.changeLanguage('en')
         })
-        break
+        return
       case LanguageTranslation.French:
         import('../extractedTranslations/fr/translation.json').then(english => {
           i18n.addResourceBundle('fr', 'translation', english)
           i18n.changeLanguage('fr')
         })
-        break
+        return
     }
+
+    exhaustiveCheck(language)
   }, [data?.myUserPreferences.language])
 }

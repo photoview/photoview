@@ -10,6 +10,7 @@ import MediaSidebar from '../../components/sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { SharePageToken_shareToken_media } from './__generated__/SharePageToken'
 import { MediaType } from '../../../__generated__/globalTypes'
+import { exhaustiveCheck } from '../../helpers/utils'
 
 const DisplayPhoto = styled(ProtectedImage)`
   width: 100%;
@@ -39,6 +40,8 @@ const MediaView = ({ media }: MediaViewProps) => {
     case MediaType.Video:
       return <DisplayVideo media={media} />
   }
+
+  exhaustiveCheck(media.type)
 }
 
 type MediaSharePageType = {
