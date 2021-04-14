@@ -72,17 +72,19 @@ type LanguageTranslation string
 
 const (
 	LanguageTranslationEnglish LanguageTranslation = "English"
+	LanguageTranslationFrench  LanguageTranslation = "French"
 	LanguageTranslationDanish  LanguageTranslation = "Danish"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
 	LanguageTranslationEnglish,
+	LanguageTranslationFrench,
 	LanguageTranslationDanish,
 }
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEnglish, LanguageTranslationDanish:
+	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationDanish:
 		return true
 	}
 	return false

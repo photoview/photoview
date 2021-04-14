@@ -8,24 +8,25 @@
 //==============================================================
 
 export enum LanguageTranslation {
-  Danish = "Danish",
-  English = "English",
+  Danish = 'Danish',
+  English = 'English',
+  French = 'French',
 }
 
 export enum MediaType {
-  Photo = "Photo",
-  Video = "Video",
+  Photo = 'Photo',
+  Video = 'Video',
 }
 
 export enum NotificationType {
-  Close = "Close",
-  Message = "Message",
-  Progress = "Progress",
+  Close = 'Close',
+  Message = 'Message',
+  Progress = 'Progress',
 }
 
 export enum OrderDirection {
-  ASC = "ASC",
-  DESC = "DESC",
+  ASC = 'ASC',
+  DESC = 'DESC',
 }
 
 //==============================================================

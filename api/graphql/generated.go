@@ -1843,6 +1843,7 @@ type User {
 
 enum LanguageTranslation {
   English,
+  French,
   Danish
 }
 

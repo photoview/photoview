@@ -18,7 +18,8 @@ import { myUserPreferences } from './__generated__/myUserPreferences'
 
 const languagePreferences = [
   { key: 1, text: 'English', flag: 'uk', value: LanguageTranslation.English },
-  { key: 2, text: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
+  { key: 2, text: 'Français', flag: 'fr', value: LanguageTranslation.French },
+  { key: 3, text: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`

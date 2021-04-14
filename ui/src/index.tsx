@@ -7,7 +7,7 @@ import registerServiceWorker from './registerServiceWorker'
 import client from './apolloClient'
 import { ApolloProvider } from '@apollo/client'
 import { BrowserRouter as Router } from 'react-router-dom'
-import setupLocalization from './localization'
+import { setupLocalization } from './localization'
 
 setupLocalization()
 
