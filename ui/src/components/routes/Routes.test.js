@@ -10,7 +10,7 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-require('../../localization').default()
+require('../../localization').setupLocalization()
 
 describe('routes', () => {
   test('unauthorized root path should navigate to login page', async () => {

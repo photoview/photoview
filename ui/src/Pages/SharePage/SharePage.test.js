@@ -18,7 +18,7 @@ import SharePage, {
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownload'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
 
-require('../../localization').default()
+require('../../localization').setupLocalization()
 
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'

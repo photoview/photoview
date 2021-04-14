@@ -4,7 +4,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { MetadataInfo } from './MediaSidebar'
 
-require('../../localization').default()
+require('../../localization').setupLocalization()
 
 describe('MetadataInfo', () => {
   test('without EXIF information', async () => {

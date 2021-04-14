@@ -9,7 +9,7 @@ import { MemoryRouter } from 'react-router-dom'
 
 import * as authentication from './helpers/authentication'
 
-require('./localization').default()
+require('./localization').setupLocalization()
 
 jest.mock('./helpers/authentication.ts')
 
