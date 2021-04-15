@@ -35,7 +35,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 
 	query = models.FormatSQL(query, order, paginate)
 
-	if err := query.Scan(&media).Error; err != nil {
+	if err := query.Find(&media).Error; err != nil {
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 		Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
 		Where("media.id IN ?", ids).
 		Where("user_albums.user_id = ?", user.ID).
-		Scan(&media).Error
+		Find(&media).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")

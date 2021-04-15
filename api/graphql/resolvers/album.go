@@ -53,7 +53,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 	query = models.FormatSQL(query, order, paginate)
 
 	var albums []*models.Album
-	if err := query.Scan(&albums).Error; err != nil {
+	if err := query.Find(&albums).Error; err != nil {
 		return nil, err
 	}
 
@@ -160,7 +160,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 		) AND media.id IN (
 			SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
 		) LIMIT 1
-	`, obj.ID).Scan(&media).Error
+	`, obj.ID).Find(&media).Error
 
 	if err != nil {
 		return nil, err

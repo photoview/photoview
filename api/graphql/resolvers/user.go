@@ -31,7 +31,7 @@ func (r *queryResolver) User(ctx context.Context, order *models.Ordering, pagina
 
 	var users []*models.User
 
-	if err := models.FormatSQL(r.Database.Model(models.User{}), order, paginate).Scan(&users).Error; err != nil {
+	if err := models.FormatSQL(r.Database.Model(models.User{}), order, paginate).Find(&users).Error; err != nil {
 		return nil, err
 	}
 

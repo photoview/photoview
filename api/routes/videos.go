@@ -20,7 +20,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		mediaName := mux.Vars(r)["name"]
 
 		var mediaURL models.MediaURL
-		result := db.Model(&models.MediaURL{}).Select("media_urls.*").Joins("Media").Where("media_urls.media_name = ?", mediaName).Scan(&mediaURL)
+		result := db.Model(&models.MediaURL{}).Select("media_urls.*").Joins("Media").Where("media_urls.media_name = ?", mediaName).Find(&mediaURL)
 		if err := result.Error; err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
