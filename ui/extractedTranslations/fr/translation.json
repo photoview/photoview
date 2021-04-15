@@ -1,10 +1,10 @@
 {
   "album_filter": {
-    "only_favorites": "Afficher seulement favoris",
+    "only_favorites": "Afficher seulement les favoris",
     "sort_by": "Trier par",
     "sorting_options": {
-      "date_imported": "Date importé",
-      "date_shot": "Date de prise",
+      "date_imported": "Date d'importation",
+      "date_shot": "Date de prise de vue",
       "title": "Titre",
       "type": "Type"
     }
@@ -18,25 +18,25 @@
       "cancel": "Annuler",
       "delete": "Effacer",
       "remove": "Supprimer",
-      "save": "Sauver"
+      "save": "Sauvegarder"
     },
     "loading": {
-      "album": "Chargement l'album",
+      "album": "Chargement de l'album",
       "default": "Chargement...",
-      "media": "Chargement média",
-      "page": "Chargement page",
+      "media": "Chargement du média",
+      "page": "Chargement de la page",
       "paginate": {
-        "faces": "Chargement plus les gens",
-        "media": "Chargement plus média"
+        "faces": "Chargement davantage de personnes",
+        "media": "Chargement davantage de médias"
       },
-      "shares": "Chargement les partages...",
+      "shares": "Chargement des partages...",
       "timeline": "Chargement timeline"
     }
   },
   "header": {
     "search": {
-      "loading": "Chargement resultats...",
-      "no_results": "Acune résultat trouvé",
+      "loading": "Chargement des resultats...",
+      "no_results": "Aucun résultat trouvé",
       "placeholder": "Rechercher",
       "result_type": {
         "albums": "Albums",
@@ -58,7 +58,7 @@
         },
         "submit": "Configurer Photoview"
       },
-      "title": "La configuration initiale"
+      "title": "Configuration initiale"
     },
     "welcome": "Bienvenue à Photoview"
   },
@@ -70,7 +70,7 @@
       "label_placeholder": "Étiquette",
       "unlabeled": "Sans étiquette"
     },
-    "recognize_unlabeled_faces_button": "Reconnaître visages sans étiquettes"
+    "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquettes"
   },
   "photos_page": {
     "title": "Photos"
@@ -104,16 +104,16 @@
     },
     "scanner": {
       "description": null,
-      "scan_all_users": "Scanner tout utilisateurs",
+      "scan_all_users": "Scanner tous les utilisateurs",
       "title": "Scanner"
     },
     "user_preferences": {
       "change_language": {
-        "description": "Changer site langue pour ce utilisateur",
-        "label": "Site langue"
+        "description": "Changer la langue du site pour cet utilisateur",
+        "label": "Langue du site"
       },
       "language_selector": {
-        "placeholder": "Choissir la langue"
+        "placeholder": "Choisir la langue"
       },
       "title": "Paramètres d'utilisateur"
     },
@@ -123,17 +123,17 @@
       },
       "confirm_delete_user": {
         "action": "Supprimer {{user}}",
-        "description": "<0>Etes-vous sûre vous voulez supprimer <1></1>?</0><p>Cette action est irreversible</p>",
+        "description": "<0>Etes-vous sûr de vouloir supprimer <1></1>?</0><p>Cette action est irreversible</p>",
         "title": "Supprimer l'utilisateur"
       },
       "password_reset": {
-        "description": "Changer mot de passe pour <1></1>",
+        "description": "Changer le mot de passe pour <1></1>",
         "form": {
           "label": "Nouveau mot de passe",
           "placeholder": "mot de passe",
-          "submit": "Changer mot de passe"
+          "submit": "Changer le mot de passe"
         },
-        "title": "Changer mot de passe"
+        "title": "Changer de mot de passe"
       },
       "table": {
         "column_names": {
@@ -160,12 +160,12 @@
       "title": "Média Partagé"
     },
     "protected_share": {
-      "description": "Ce partage est protégé avec un mot de passe.",
+      "description": "Ce partage est protégé par un mot de passe.",
       "title": "Partage protégé"
     },
     "share_not_found": "Partage non trouvé",
-    "share_not_found_description": "Peut-être le partage été expiré ou supprimé.",
-    "wrong_password": "Mauvaise mot de passe, veuillez reessayer."
+    "share_not_found_description": "Le partage´est peut-être expiré ou supprimé.",
+    "wrong_password": "Mauvais mot de passe, veuillez réessayer."
   },
   "sidebar": {
     "album": {
@@ -186,7 +186,7 @@
         "file_type": "Type",
         "name": "Nom"
       },
-      "title": "Telecharger"
+      "title": "Télécharger"
     },
     "media": {
       "exif": {
@@ -230,8 +230,8 @@
     },
     "sharing": {
       "add_share": "Ajouter les partages",
-      "copy_link": "Copier Lien",
-      "no_shares_found": "Acune partages trouvé",
+      "copy_link": "Copier le lien",
+      "no_shares_found": "Acune partage trouvé",
       "public_link": "Lien Publique",
       "table_header": "Partages publique",
       "title": "Paramètres de partage"
@@ -239,14 +239,14 @@
   },
   "sidemenu": {
     "albums": "Albums",
-    "people": "Gens",
+    "people": "Personnes",
     "photos": "Photos",
     "places": "Lieux",
     "settings": "Paramètres"
   },
   "title": {
-    "loading_album": "Chargement l'album",
-    "people": "Gens",
+    "loading_album": "Chargement de l'album",
+    "people": "Personnes",
     "settings": "Paramètres"
   }
 }
