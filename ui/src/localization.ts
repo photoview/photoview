@@ -76,6 +76,12 @@ export const loadTranslations = () => {
           i18n.changeLanguage('fr')
         })
         return
+      case LanguageTranslation.Swedish:
+        import('../extractedTranslations/sv/translation.json').then(swedish => {
+          i18n.addResourceBundle('sv', 'translation', swedish)
+          i18n.changeLanguage('sv')
+        })
+        return
     }
 
     exhaustiveCheck(language)
