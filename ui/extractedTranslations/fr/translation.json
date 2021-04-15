@@ -75,6 +75,9 @@
   "photos_page": {
     "title": "Photos"
   },
+  "places_page": {
+    "title": null
+  },
   "routes": {
     "page_not_found": "Page non trouvée"
   },
@@ -218,7 +221,7 @@
           "exposure": "Exposure",
           "exposure_program": "Programme",
           "flash": "Flash",
-          "de prise": "Distance focale",
+          "focal_length": "Distance focale",
           "iso": "ISO",
           "lens": "Objectif",
           "maker": "Marque"

@@ -75,6 +75,9 @@
   "photos_page": {
     "title": "Billeder"
   },
+  "places_page": {
+    "title": null
+  },
   "routes": {
     "page_not_found": "Side ikke fundet"
   },

@@ -75,6 +75,9 @@
   "photos_page": {
     "title": "Photos"
   },
+  "places_page": {
+    "title": "Places"
+  },
   "routes": {
     "page_not_found": "Page not found"
   },

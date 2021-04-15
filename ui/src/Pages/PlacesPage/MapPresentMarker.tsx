@@ -1,8 +1,9 @@
 import { gql } from '@apollo/client'
-import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
 import { useLazyQuery } from '@apollo/client'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
+import type mapboxgl from 'mapbox-gl'
+import { PresentMarker } from './PlacesPage'
 
 const QUERY_MEDIA = gql`
   query placePageQueryMedia($mediaIDs: [ID!]!) {
@@ -29,31 +30,57 @@ const QUERY_MEDIA = gql`
   }
 `
 
-const getMediaFromMarker = (map, presentMarker) =>
-  new Promise((resolve, reject) => {
+const getMediaFromMarker = (map: mapboxgl.Map, presentMarker: PresentMarker) =>
+  new Promise<MediaMarker[]>((resolve, reject) => {
     const { cluster, id } = presentMarker
 
     if (cluster) {
-      map
-        .getSource('media')
-        .getClusterLeaves(id, 1000, 0, (error, features) => {
-          if (error) {
-            reject(error)
-            return
-          }
+      const mediaSource = map.getSource('media') as mapboxgl.GeoJSONSource
 
-          const media = features.map(feat => feat.properties)
-          resolve(media)
-        })
+      mediaSource.getClusterLeaves(id, 1000, 0, (error, features) => {
+        if (error) {
+          reject(error)
+          return
+        }
+
+        const media = features.map(feat => feat.properties) as MediaMarker[]
+        resolve(media)
+      })
     } else {
       const features = map.querySourceFeatures('media')
-      const media = features.find(f => f.properties.media_id == id).properties
+      const media = features.find(f => f.properties?.media_id == id)
+        ?.properties as MediaMarker | undefined
+
+      if (media === undefined) {
+        reject('ERROR: media is undefined')
+        return
+      }
+
       resolve([media])
     }
   })
 
-const MapPresentMarker = ({ map, presentMarker, setPresentMarker }) => {
-  const [mediaMarkers, setMediaMarkers] = useState(null)
+export interface MediaMarker {
+  id: number
+  thumbnail: string
+  cluster: boolean
+  point_count_abbreviated: number
+  cluster_id: number
+  media_id: number
+}
+
+type MapPresetMarkerProps = {
+  map: mapboxgl.Map | null
+  presentMarker: PresentMarker | null
+  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+}
+
+const MapPresentMarker = ({
+  map,
+  presentMarker,
+  setPresentMarker,
+}: MapPresetMarkerProps) => {
+  const [mediaMarkers, setMediaMarkers] = useState<MediaMarker[] | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const [loadMedia, { data: loadedMedia }] = useLazyQuery(QUERY_MEDIA)
@@ -78,11 +105,12 @@ const MapPresentMarker = ({ map, presentMarker, setPresentMarker }) => {
     })
   }, [mediaMarkers])
 
-  if (presentMarker == null || map == null) {
-    return null
-  }
-
-  if (loadedMedia == null) {
+  if (
+    presentMarker == null ||
+    map == null ||
+    mediaMarkers == null ||
+    loadedMedia == null
+  ) {
     return null
   }
 
@@ -103,12 +131,6 @@ const MapPresentMarker = ({ map, presentMarker, setPresentMarker }) => {
       }}
     />
   )
-}
-
-MapPresentMarker.propTypes = {
-  map: PropTypes.object,
-  presentMarker: PropTypes.object,
-  setPresentMarker: PropTypes.func.isRequired,
 }
 
 export default MapPresentMarker

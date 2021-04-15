@@ -75,6 +75,9 @@
   "photos_page": {
     "title": "Bilder"
   },
+  "places_page": {
+    "title": null
+  },
   "routes": {
     "page_not_found": "Sidan hittades inte"
   },

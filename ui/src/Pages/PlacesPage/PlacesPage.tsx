@@ -1,14 +1,15 @@
+import { gql, useQuery } from '@apollo/client'
+import type mapboxgl from 'mapbox-gl'
 import React, { useEffect, useRef, useState } from 'react'
-import { useQuery, gql } from '@apollo/client'
+import { Helmet } from 'react-helmet'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-
-// Will be bundled to dist/src/Pages/PlacesPage/PlacesPage.css
-import 'mapbox-gl/dist/mapbox-gl.css'
-
 import Layout from '../../Layout'
 import { makeUpdateMarkers } from './mapboxHelperFunctions'
 import MapPresentMarker from './MapPresentMarker'
-import { Helmet } from 'react-helmet'
+
+// Will be bundled to dist/src/Pages/PlacesPage/PlacesPage.css
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -27,17 +28,25 @@ const MAPBOX_DATA_QUERY = gql`
   }
 `
 
+export type PresentMarker = {
+  id: number
+  cluster: boolean
+}
+
 const MapPage = () => {
-  const [mapboxLibrary, setMapboxLibrary] = useState(null)
-  const [presentMarker, setPresentMarker] = useState(null)
-  const mapContainer = useRef()
-  const map = useRef()
+  const { t } = useTranslation()
+
+  const [mapboxLibrary, setMapboxLibrary] = useState<typeof mapboxgl | null>()
+  const [presentMarker, setPresentMarker] = useState<PresentMarker | null>(null)
+  const mapContainer = useRef<HTMLDivElement | null>(null)
+  const map = useRef<mapboxgl.Map | null>(null)
 
   const { data: mapboxData } = useQuery(MAPBOX_DATA_QUERY)
 
   useEffect(() => {
     async function loadMapboxLibrary() {
       const mapbox = (await import('mapbox-gl')).default
+
       setMapboxLibrary(mapbox)
     }
     loadMapboxLibrary()
@@ -65,6 +74,11 @@ const MapPage = () => {
     map.current.addControl(new mapboxLibrary.NavigationControl())
 
     map.current.on('load', () => {
+      if (map.current == null) {
+        console.error('ERROR: map is null')
+        return
+      }
+
       map.current.addSource('media', {
         type: 'geojson',
         data: mapboxData.myMediaGeoJson,
@@ -98,7 +112,7 @@ const MapPage = () => {
 
   if (mapboxData && mapboxData.mapboxToken == null) {
     return (
-      <Layout>
+      <Layout title={t('places_page.title', 'Places')}>
         <h1>Mapbox token is not set</h1>
         <p>
           To use map related features a mapbox token is needed.

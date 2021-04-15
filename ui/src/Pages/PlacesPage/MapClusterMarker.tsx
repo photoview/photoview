@@ -1,8 +1,9 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
 import imagePopupSrc from './image-popup.svg'
+import { MediaMarker } from './MapPresentMarker'
+import { PresentMarker } from './PlacesPage'
 
 const Wrapper = styled.div`
   width: 56px;
@@ -40,20 +41,21 @@ const PointCountCircle = styled.div`
   padding-top: 2px;
 `
 
+type MapClusterMarkerProps = {
+  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+  marker: MediaMarker
+}
+
 const MapClusterMarker = ({
-  thumbnail: thumbJson,
-  point_count_abbreviated,
-  cluster,
-  cluster_id,
-  media_id,
+  marker,
   setPresentMarker,
-}) => {
-  const thumbnail = JSON.parse(thumbJson)
+}: MapClusterMarkerProps) => {
+  const thumbnail = JSON.parse(marker.thumbnail)
 
   const presentMedia = () => {
     setPresentMarker({
-      cluster: !!cluster,
-      id: cluster ? cluster_id : media_id,
+      cluster: !!marker.cluster,
+      id: marker.cluster ? marker.cluster_id : marker.media_id,
     })
   }
 
@@ -61,20 +63,11 @@ const MapClusterMarker = ({
     <Wrapper onClick={presentMedia}>
       <PopupImage src={imagePopupSrc} />
       <ThumbnailImage src={thumbnail.url} />
-      {cluster && (
-        <PointCountCircle>{point_count_abbreviated}</PointCountCircle>
+      {marker.cluster && (
+        <PointCountCircle>{marker.point_count_abbreviated}</PointCountCircle>
       )}
     </Wrapper>
   )
-}
-
-MapClusterMarker.propTypes = {
-  thumbnail: PropTypes.string,
-  cluster: PropTypes.bool,
-  point_count_abbreviated: PropTypes.number,
-  cluster_id: PropTypes.number,
-  media_id: PropTypes.number,
-  setPresentMarker: PropTypes.func,
 }
 
 export default MapClusterMarker
