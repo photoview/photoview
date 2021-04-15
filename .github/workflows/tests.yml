@@ -67,10 +67,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Install dependencies
-      run: npm install
-
-    - name: Build
-      run: npm run build --if-present
+      run: npm clean-install
 
     - name: Test
       run: npm test
