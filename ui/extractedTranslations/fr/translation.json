@@ -189,6 +189,7 @@
       "title": "Télécharger"
     },
     "media": {
+    "exif": {      
       "exposure_program": {
           "action_program": "Action program",
           "aperture_priority": "Priorité d'ouverture",
