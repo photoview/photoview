@@ -26,11 +26,11 @@
       "media": "Chargement du média",
       "page": "Chargement de la page",
       "paginate": {
-        "faces": "Chargement davantage de personnes",
-        "media": "Chargement davantage de médias"
+        "faces": "Afficher plus de personnes",
+        "media": "Charger plus de médias"
       },
       "shares": "Chargement des partages...",
-      "timeline": "Chargement timeline"
+      "timeline": "Chargement de la timeline"
     }
   },
   "header": {
@@ -53,45 +53,45 @@
     "initial_setup": {
       "field": {
         "photo_path": {
-          "label": "Photo chemin",
-          "placeholder": "/path/to/photos"
+          "label": "Chemin des photos",
+          "placeholder": "/chemin/des/photos"
         },
         "submit": "Configurer Photoview"
       },
       "title": "Configuration initiale"
     },
-    "welcome": "Bienvenue à Photoview"
+    "welcome": "Bienvenue sur Photoview"
   },
   "meta": {
-    "description": null
+    "description": "Galerie Photo simple et convivial pour les Serveurs Personnels"
   },
   "people_page": {
     "face_group": {
       "label_placeholder": "Étiquette",
       "unlabeled": "Sans étiquette"
     },
-    "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquettes"
+    "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquette"
   },
   "photos_page": {
     "title": "Photos"
   },
   "places_page": {
-    "title": null
+    "title": "Lieux"
   },
   "routes": {
     "page_not_found": "Page non trouvée"
   },
   "settings": {
     "concurrent_workers": {
-      "description": null,
-      "title": null
+      "description": "Nombre maximal de tâches d'analyse simultanées autorisées à la fois.",
+      "title": "Tâches d'analyse simultannées"
     },
     "logout": "Se déconnecter",
     "periodic_scanner": {
-      "checkbox_label": null,
+      "checkbox_label": "Activer l'analyse périodique",
       "field": {
-        "description": null,
-        "label": null
+        "description": "Fréquence à laquelle l'analyse se déclenche pour tous les utilisateurs",
+        "label": "Periodic scan interval"
       },
       "interval_unit": {
         "days": "Jours",
@@ -100,12 +100,12 @@
         "months": "Mois",
         "seconds": "Secondes"
       },
-      "title": "scanner periodique"
+      "title": "Analyse périodique"
     },
     "scanner": {
-      "description": null,
-      "scan_all_users": "Scanner tous les utilisateurs",
-      "title": "Scanner"
+      "description": "Cela va analyser tous les utilisateurs à la recherche de nouveaux médias ou de médias mis à jour",
+      "scan_all_users": "Analyser tous les utilisateurs",
+      "title": "Analyse"
     },
     "user_preferences": {
       "change_language": {
@@ -139,16 +139,16 @@
         "column_names": {
           "action": "Action",
           "admin": "Admin",
-          "photo_path": "Photo chemin",
+          "photo_path": "Chemin des Photos",
           "username": "Nom d'utilisateur"
         },
-        "new_user": "Nouveau utilisateur",
+        "new_user": "Nouvel utilisateur",
         "row": {
           "action": {
-            "change_password": "Changer mot de passe",
+            "change_password": "Changer le mot de passe",
             "delete": "Effacer",
             "edit": "Éditer",
-            "scan": "Scanner"
+            "scan": "Analyser"
           }
         }
       },
@@ -164,8 +164,8 @@
       "title": "Partage protégé"
     },
     "share_not_found": "Partage non trouvé",
-    "share_not_found_description": "Le partage´est peut-être expiré ou supprimé.",
-    "wrong_password": "Mauvais mot de passe, veuillez réessayer."
+    "share_not_found_description": "Le partage est peut-être expiré ou supprimé.",
+    "wrong_password": "Mot de passe invalide, veuillez réessayer."
   },
   "sidebar": {
     "album": {
@@ -173,12 +173,12 @@
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "kilo_byte": "{{count}} KB",
-        "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "byte": "{{count}} Octets",
+        "byte_plural": "{{count}} Octets",
+        "giga_byte": "{{count}} Go",
+        "kilo_byte": "{{count}} Ko",
+        "mega_byte": "{{count}} Mo",
+        "tera_byte": "{{count}} To"
       },
       "table_columns": {
         "dimensions": "Dimensions",
@@ -189,52 +189,51 @@
       "title": "Télécharger"
     },
     "media": {
-      "exif": {
-        "exposure_program": {
-          "action_program": "Programme action",
-          "aperture_priority": null,
-          "bulb": "Ampoule",
-          "creative_program": "Programme créatif",
-          "landscape_mode": null,
-          "manual": "Manuelle",
-          "normal_program": "Programme Normale",
-          "not_defined": "Pas definé",
-          "portrait_mode": null,
+      "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Priorité d'ouverture",
+          "bulb": "Bulb",
+          "creative_program": "Creative program",
+          "landscape_mode": "Mode Paysage",
+          "manual": "Manuel",
+          "normal_program": "Normal program",
+          "not_defined": "Non défini",
+          "portrait_mode": "Mode Portrait",
           "shutter_priority": "Priorité d'obturation"
         },
         "flash": {
           "auto": "Auto",
-          "did_not_fire": "N'a pas déclenché",
+          "did_not_fire": "Ne s'est pas déclenché",
           "fired": "Déclenché",
-          "no_flash": "Pas Flash",
-          "no_flash_function": "Acune function flash",
+          "no_flash": "Pas de flash",
+          "no_flash_function": "Pas de fonction flash",
           "off": "Désactivé",
           "on": "Activé",
-          "red_eye_reduction": null,
-          "return_detected": null,
-          "return_not_detected": null
+          "red_eye_reduction": "Réduction yeux rouges",
+          "return_detected": "Retour détecté",
+          "return_not_detected": "Retour non détecté"
         },
         "name": {
-          "aperture": "Ouverture",
-          "camera": "Appareil",
-          "date_shot": "Date de prise",
-          "exposure": "Exposure",
+          "aperture": "Focale",
+          "camera": "Modèle",
+          "date_shot": "Prise de vue",
+          "exposure": "Temps d'exposition",
           "exposure_program": "Programme",
           "flash": "Flash",
           "focal_length": "Distance focale",
           "iso": "ISO",
           "lens": "Objectif",
-          "maker": "Marque"
+          "maker": "Fabriquant"
         }
       }
     },
     "sharing": {
-      "add_share": "Ajouter les partages",
+      "add_share": "Ajouter un partage",
       "copy_link": "Copier le lien",
-      "no_shares_found": "Acune partage trouvé",
-      "public_link": "Lien Publique",
-      "table_header": "Partages publique",
-      "title": "Paramètres de partage"
+      "no_shares_found": "Aucun partage trouvé",
+      "public_link": "Lien public",
+      "table_header": "Partages publics",
+      "title": "Options de partage"
     }
   },
   "sidemenu": {
