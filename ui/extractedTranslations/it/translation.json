@@ -1,175 +1,175 @@
 {
   "album_filter": {
-    "only_favorites": "Show only favorites",
-    "sort_by": "Sort by",
+    "only_favorites": "Mostra solo i preferiti",
+    "sort_by": "Ordina per",
     "sorting_options": {
-      "date_imported": "Date imported",
-      "date_shot": "Date shot",
-      "title": "Title",
-      "type": "Kind"
+      "date_imported": "Data importazione",
+      "date_shot": "Data scatto",
+      "title": "Titolo",
+      "type": "Tipo"
     }
   },
   "albums_page": {
-    "title": "Albums"
+    "title": "Album"
   },
   "general": {
     "action": {
-      "add": "Add",
-      "cancel": "Cancel",
-      "delete": "Delete",
-      "remove": "Remove",
-      "save": "Save"
+      "add": "Aggiungi",
+      "cancel": "Cancella",
+      "delete": "Elimina",
+      "remove": "Rimuovi",
+      "save": "Salva"
     },
     "loading": {
-      "album": "Loading album",
-      "default": "Loading...",
-      "media": "Loading media",
-      "page": "Loading page",
+      "album": "Caricamento album",
+      "default": "Caricamento...",
+      "media": "Caricamento media",
+      "page": "Caricamento pagina",
       "paginate": {
-        "faces": "Loading more people",
-        "media": "Loading more media"
+        "faces": "Carica più persone",
+        "media": "Carica più media"
       },
-      "shares": "Loading shares...",
-      "timeline": "Loading timeline"
+      "shares": "Caricamento condivisi...",
+      "timeline": "Caricamento timeline"
     }
   },
   "header": {
     "search": {
-      "loading": "Loading results...",
-      "no_results": "No results found",
-      "placeholder": "Search",
+      "loading": "Caricamento risultati...",
+      "no_results": "Nessun risultato trovato",
+      "placeholder": "Cerca",
       "result_type": {
-        "albums": "Albums",
-        "photos": "Photos"
+        "albums": "Album",
+        "photos": "Foto"
       }
     }
   },
   "login_page": {
     "field": {
       "password": "Password",
-      "submit": "Sign in",
+      "submit": "Accedi",
       "username": "Username"
     },
     "initial_setup": {
       "field": {
         "photo_path": {
-          "label": "Photo path",
+          "label": "Percorso foto",
           "placeholder": "/path/to/photos"
         },
         "submit": "Setup Photoview"
       },
-      "title": "Initial Setup"
+      "title": "Setup iniziale"
     },
-    "welcome": "Welcome to Photoview"
+    "welcome": "Benvenuti su Photoview"
   },
   "meta": {
-    "description": "Simple and User-friendly Photo Gallery for Personal Servers"
+    "description": "Galleria fotografica semplice e user-friendly per il tuo server"
   },
   "people_page": {
     "face_group": {
-      "label_placeholder": "Label",
-      "unlabeled": "Unlabeled"
+      "label_placeholder": "Etichetta",
+      "unlabeled": "Senza etichetta"
     },
-    "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
+    "recognize_unlabeled_faces_button": "Identifica facce senza etichetta"
   },
   "photos_page": {
-    "title": "Photos"
+    "title": "Foto"
   },
   "places_page": {
-    "title": "Places"
+    "title": "Luoghi"
   },
   "routes": {
-    "page_not_found": "Page not found"
+    "page_not_found": "Pagina non trovata"
   },
   "settings": {
     "concurrent_workers": {
-      "description": "The maximum amount of scanner jobs that is allowed to run at once",
-      "title": "Scanner concurrent workers"
+      "description": "Massimo numero di scansioni contemporanee",
+      "title": "Scansioni contemporanee"
     },
     "logout": "Log out",
     "periodic_scanner": {
-      "checkbox_label": "Enable periodic scanner",
+      "checkbox_label": "Abilita scansioni periodiche",
       "field": {
-        "description": "How often the scanner should perform automatic scans of all users",
-        "label": "Periodic scan interval"
+        "description": "Quanto spesso devono essere eseguite scansioni automatiche per tutti gli utenti",
+        "label": "Intervallo delle scansioni"
       },
       "interval_unit": {
-        "days": "Days",
-        "hour": "Hour",
-        "minutes": "Minutes",
-        "months": "Months",
-        "seconds": "Seconds"
+        "days": "Giorni",
+        "hour": "Ore",
+        "minutes": "Minuti",
+        "months": "Mesi",
+        "seconds": "Secondi"
       },
-      "title": "Periodic scanner"
+      "title": "Scansioni periodiche"
     },
     "scanner": {
-      "description": "Will scan all users for new or updated media",
-      "scan_all_users": "Scan all users",
-      "title": "Scanner"
+      "description": "Verranno effettuate delle scansioni per tutti gli utenti alla ricerca di nuovi o aggiornati media",
+      "scan_all_users": "Scansiona per tutti",
+      "title": "Scansioni"
     },
     "user_preferences": {
       "change_language": {
-        "description": "Change website language specific for this user",
-        "label": "Website language"
+        "description": "Cambia la lingua di Photoview per questo utente",
+        "label": "Lingua Photoview"
       },
       "language_selector": {
-        "placeholder": "Select language"
+        "placeholder": "Seleziona lingua"
       },
-      "title": "User preferences"
+      "title": "Preferenze utente"
     },
     "users": {
       "add_user": {
-        "submit": "Add user"
+        "submit": "Aggiungi utente"
       },
       "confirm_delete_user": {
-        "action": "Delete {{user}}",
-        "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
-        "title": "Delete user"
+        "action": "Elimina {{user}}",
+        "description": "<0>Sei sicuro di voler eliminare <1></1>?</0><p>Non potrai tornare indietro</p>",
+        "title": "Cancella utente"
       },
       "password_reset": {
-        "description": "Change password for <1></1>",
+        "description": "Cambia password per <1></1>",
         "form": {
-          "label": "New password",
+          "label": "Nuova password",
           "placeholder": "password",
-          "submit": "Change password"
+          "submit": "Cambia password"
         },
-        "title": "Change password"
+        "title": "Cambia password"
       },
       "table": {
         "column_names": {
-          "action": "Action",
+          "action": "Azioni",
           "admin": "Admin",
-          "photo_path": "Photo path",
+          "photo_path": "Percorso foto",
           "username": "Username"
         },
-        "new_user": "New user",
+        "new_user": "Nuovo utente",
         "row": {
           "action": {
-            "change_password": "Change password",
-            "delete": "Delete",
-            "edit": "Edit",
-            "scan": "Scan"
+            "change_password": "Cambia password",
+            "delete": "Elimina",
+            "edit": "Modifica",
+            "scan": "Scansiona"
           }
         }
       },
-      "title": "Users"
+      "title": "Utenti"
     }
   },
   "share_page": {
     "media": {
-      "title": "Shared media"
+      "title": "Media condivisi"
     },
     "protected_share": {
-      "description": "This share is protected with a password.",
-      "title": "Protected share"
+      "description": "Questa condivisione è protetta da una password.",
+      "title": "Condivisione protetta"
     },
-    "share_not_found": "Share not found",
-    "share_not_found_description": "Maybe the share has expired or has been deleted.",
-    "wrong_password": "Wrong password, please try again."
+    "share_not_found": "Condivisone non trovata",
+    "share_not_found_description": "Forse la condivisione è scaduta o è stata eliminata.",
+    "wrong_password": "Password sbagliata, prova di nuovo."
   },
   "sidebar": {
     "album": {
-      "title": "Album options"
+      "title": "Opzioni Album"
     },
     "download": {
       "filesize": {
@@ -181,72 +181,72 @@
         "tera_byte": "{{count}} TB"
       },
       "table_columns": {
-        "dimensions": "Dimensions",
-        "file_size": "Size",
-        "file_type": "Type",
-        "name": "Name"
+        "dimensions": "Dimensioni",
+        "file_size": "Peso",
+        "file_type": "Formato",
+        "name": "Nome"
       },
       "title": "Download"
     },
     "media": {
       "exif": {
         "exposure_program": {
-          "action_program": "Action program",
-          "aperture_priority": "Aperture priority",
+          "action_program": "Programma azione",
+          "aperture_priority": "Priorità apertura",
           "bulb": "Bulb",
-          "creative_program": "Creative program",
-          "landscape_mode": "Landscape mode",
-          "manual": "Manual",
-          "normal_program": "Normal program",
-          "not_defined": "Not defined",
-          "portrait_mode": "Portrait mode",
-          "shutter_priority": "Shutter priority"
+          "creative_program": "Programma creativo",
+          "landscape_mode": "Modalità orizzonatale",
+          "manual": "Manuale",
+          "normal_program": "Programma normale",
+          "not_defined": "Non definito",
+          "portrait_mode": "Modalità verticale",
+          "shutter_priority": "Priorità otturatore"
         },
         "flash": {
           "auto": "Auto",
-          "did_not_fire": "Did not fire",
-          "fired": "Fired",
+          "did_not_fire": "Non attivato",
+          "fired": "Attivato",
           "no_flash": "No Flash",
-          "no_flash_function": "No flash function",
+          "no_flash_function": "Nessuna funzione di flash",
           "off": "Off",
           "on": "On",
-          "red_eye_reduction": "Red-eye reduction",
+          "red_eye_reduction": "Riduzione occhi rossi",
           "return_detected": "Return detected",
           "return_not_detected": "Return not detected"
         },
         "name": {
-          "aperture": "Aperture",
-          "camera": "Camera",
-          "date_shot": "Date shot",
-          "exposure": "Exposure",
-          "exposure_program": "Program",
+          "aperture": "Apertura",
+          "camera": "Fotocamera",
+          "date_shot": "Data di scatto",
+          "exposure": "Esposizione",
+          "exposure_program": "Programma",
           "flash": "Flash",
-          "focal_length": "Focal length",
+          "focal_length": "Lunghezza focale",
           "iso": "ISO",
-          "lens": "Lens",
-          "maker": "Maker"
+          "lens": "Lente",
+          "maker": "Produttore"
         }
       }
     },
     "sharing": {
-      "add_share": "Add shares",
-      "copy_link": "Copy Link",
-      "no_shares_found": "No shares found",
-      "public_link": "Public Link",
-      "table_header": "Public shares",
-      "title": "Sharing options"
+      "add_share": "Aggiungi condivisione",
+      "copy_link": "Copia il link",
+      "no_shares_found": "Nessuna condivisione trovata",
+      "public_link": "Link pubblico",
+      "table_header": "Condivisioni pubbliche",
+      "title": "Opzioni di condivisione"
     }
   },
   "sidemenu": {
-    "albums": "Albums",
-    "people": "People",
-    "photos": "Photos",
-    "places": "Places",
-    "settings": "Settings"
+    "albums": "Album",
+    "people": "Persone",
+    "photos": "Foto",
+    "places": "Luoghi",
+    "settings": "Impostazioni"
   },
   "title": {
-    "loading_album": "Loading album",
-    "people": "People",
-    "settings": "Settings"
+    "loading_album": "Caricamento album",
+    "people": "Persone",
+    "settings": "Impostazioni"
   }
 }
