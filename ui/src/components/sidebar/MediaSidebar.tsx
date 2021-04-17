@@ -174,7 +174,7 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
     }
 
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
-      exif.exposure = `1/${1 / exif.exposure}`
+      exif.exposure = `1/${Math.round(1 / exif.exposure)}`
     }
 
     const exposurePrograms = exposureProgramsLookup(t)
