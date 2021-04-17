@@ -371,7 +371,7 @@ type FaceGroup {
 type ImageFace {
   id: ID!
   media: Media!
-  rectangle: FaceRectangle
+  rectangle: FaceRectangle!
   faceGroup: FaceGroup!
 }
 

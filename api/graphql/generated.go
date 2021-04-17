@@ -1991,7 +1991,7 @@ type FaceGroup {
 type ImageFace {
   id: ID!
   media: Media!
-  rectangle: FaceRectangle
+  rectangle: FaceRectangle!
   faceGroup: FaceGroup!
 }
 
@@ -3723,11 +3723,14 @@ func (ec *executionContext) _ImageFace_rectangle(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(models.FaceRectangle)
 	fc.Result = res
-	return ec.marshalOFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx, field.Selections, res)
+	return ec.marshalNFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImageFace_faceGroup(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
@@ -10219,6 +10222,9 @@ func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet
 			}
 		case "rectangle":
 			out.Values[i] = ec._ImageFace_rectangle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "faceGroup":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -11744,6 +11750,10 @@ func (ec *executionContext) marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphot
 	return ec._FaceGroup(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx context.Context, sel ast.SelectionSet, v models.FaceRectangle) graphql.Marshaler {
+	return ec._FaceRectangle(ctx, sel, &v)
+}
+
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	res, err := graphql.UnmarshalFloat(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12528,10 +12538,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
-}
-
-func (ec *executionContext) marshalOFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx context.Context, sel ast.SelectionSet, v models.FaceRectangle) graphql.Marshaler {
-	return ec._FaceRectangle(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {

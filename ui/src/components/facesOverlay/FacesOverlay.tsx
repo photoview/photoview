@@ -1,19 +1,32 @@
-import PropTypes from 'prop-types'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaSidebarMedia } from '../sidebar/MediaSidebar'
+import { sidebarPhoto_media_faces } from '../sidebar/__generated__/sidebarPhoto'
+
+interface FaceBoxStyleProps {
+  $minY: number
+  $maxY: number
+  $minX: number
+  $maxX: number
+}
 
 const FaceBoxStyle = styled(Link)`
   box-shadow: inset 0 0 2px 1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgb(255, 255, 255);
   border-radius: 50%;
   position: absolute;
-  top: ${({ $minY }) => $minY * 100}%;
-  bottom: ${({ $maxY }) => (1 - $maxY) * 100}%;
-  left: ${({ $minX }) => $minX * 100}%;
-  right: ${({ $maxX }) => (1 - $maxX) * 100}%;
+  top: ${({ $minY }: FaceBoxStyleProps) => $minY * 100}%;
+  bottom: ${({ $maxY }: FaceBoxStyleProps) => (1 - $maxY) * 100}%;
+  left: ${({ $minX }: FaceBoxStyleProps) => $minX * 100}%;
+  right: ${({ $maxX }: FaceBoxStyleProps) => (1 - $maxX) * 100}%;
 `
 
-const FaceBox = ({ face /*media*/ }) => {
+type FaceBoxProps = {
+  face: sidebarPhoto_media_faces
+}
+
+const FaceBox = ({ face /*media*/ }: FaceBoxProps) => {
   return (
     <FaceBoxStyle
       to={`/people/${face.faceGroup.id}`}
@@ -25,12 +38,7 @@ const FaceBox = ({ face /*media*/ }) => {
   )
 }
 
-FaceBox.propTypes = {
-  face: PropTypes.object.isRequired,
-  media: PropTypes.object.isRequired,
-}
-
-const SidebarFacesOverlayWrapper = styled.div`
+const SidebarFacesOverlayWrapper = styled.div<{ width: number }>`
   position: absolute;
   width: ${({ width }) => width * 100}%;
   left: ${({ width }) => (100 - width * 100) / 2}%;
@@ -46,11 +54,17 @@ const SidebarFacesOverlayWrapper = styled.div`
   }
 `
 
-export const SidebarFacesOverlay = ({ media }) => {
-  if (media.type != 'photo') return null
+type SidebarFaceOverlayProps = {
+  media: MediaSidebarMedia
+}
+
+export const SidebarFacesOverlay = ({ media }: SidebarFaceOverlayProps) => {
+  console.log('Faces overlay', media)
+  if (media.type != MediaType.Photo) return null
+  if (media.thumbnail == null) return null
 
   const faceBoxes = media.faces?.map(face => (
-    <FaceBox key={face.id} face={face} media={media} />
+    <FaceBox key={face.id} face={face} />
   ))
 
   let wrapperWidth = 1
@@ -63,8 +77,4 @@ export const SidebarFacesOverlay = ({ media }) => {
       {faceBoxes}
     </SidebarFacesOverlayWrapper>
   )
-}
-
-SidebarFacesOverlay.propTypes = {
-  media: PropTypes.object.isRequired,
 }

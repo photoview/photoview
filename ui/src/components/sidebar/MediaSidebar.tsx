@@ -382,7 +382,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
   )
 }
 
-interface MediaSidebarMedia {
+export interface MediaSidebarMedia {
   __typename: 'Media'
   id: string
   title?: string

@@ -11,7 +11,7 @@ describe('MetadataInfo', () => {
     const media = {
       id: '1730',
       title: 'media_name.jpg',
-      type: 'photo',
+      type: 'Photo',
       exif: {
         id: '0',
         camera: null,
@@ -47,7 +47,7 @@ describe('MetadataInfo', () => {
     const media = {
       id: '1730',
       title: 'media_name.jpg',
-      type: 'photo',
+      type: 'Photo',
       exif: {
         id: '1666',
         camera: 'Canon EOS R',
