@@ -211,8 +211,8 @@
           "off": "Off",
           "on": "On",
           "red_eye_reduction": "Riduzione occhi rossi",
-          "return_detected": "Return detected",
-          "return_not_detected": "Return not detected"
+          "return_detected": "Rilevato",
+          "return_not_detected": "Non rilevato"
         },
         "name": {
           "aperture": "Apertura",
