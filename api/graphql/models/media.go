@@ -54,7 +54,7 @@ func (m *Media) AfterFind(tx *gorm.DB) error {
 	lowercasedType := strings.ToLower(string(m.Type))
 	foundType := false
 	for _, t := range AllMediaType {
-		if strings.ToLower(string(m.Type)) == lowercasedType {
+		if strings.ToLower(string(t)) == lowercasedType {
 			m.Type = t
 			foundType = true
 			break
