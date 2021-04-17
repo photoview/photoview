@@ -53,8 +53,8 @@ const Messages = () => {
 
     const RefDiv = props => <div {...props} ref={x => x && ref(x)} />
 
-    switch (message.type) {
-      case 'Message':
+    switch (message.type.toLowerCase()) {
+      case 'message':
         return props => (
           <Message
             as={RefDiv}
@@ -66,7 +66,7 @@ const Messages = () => {
             {...props}
           />
         )
-      case 'Progress':
+      case 'progress':
         return props => (
           <MessageProgress
             as={RefDiv}
