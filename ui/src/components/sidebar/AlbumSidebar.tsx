@@ -1,7 +1,6 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
-import SidebarShare from './Sharing'
+import { SidebarAlbumShare } from './Sharing'
 import { useTranslation } from 'react-i18next'
 
 const albumQuery = gql`
@@ -13,7 +12,11 @@ const albumQuery = gql`
   }
 `
 
-const AlbumSidebar = ({ albumId }) => {
+type AlbumSidebarProps = {
+  albumId: string
+}
+
+const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
   const { t } = useTranslation()
   const { loading, error, data } = useQuery(albumQuery, {
     variables: { id: albumId },
@@ -27,14 +30,10 @@ const AlbumSidebar = ({ albumId }) => {
       <p>{t('sidebar.album.title', 'Album options')}</p>
       <div>
         <h1>{data.album.title}</h1>
-        <SidebarShare album={data.album} />
+        <SidebarAlbumShare id={data.album.id} />
       </div>
     </div>
   )
-}
-
-AlbumSidebar.propTypes = {
-  albumId: PropTypes.string.isRequired,
 }
 
 export default AlbumSidebar

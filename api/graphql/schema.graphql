@@ -262,7 +262,7 @@ type Album {
   thumbnail: Media
   path: [Album!]!
 
-  shares: [ShareToken]
+  shares: [ShareToken!]!
 }
 
 type MediaURL {
