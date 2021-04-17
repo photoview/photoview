@@ -1,10 +1,10 @@
 {
   "album_filter": {
-    "only_favorites": "Afficher seulement favoris",
+    "only_favorites": "Afficher seulement les favoris",
     "sort_by": "Trier par",
     "sorting_options": {
-      "date_imported": "Date importé",
-      "date_shot": "Date de prise",
+      "date_imported": "Date d'importation",
+      "date_shot": "Date de prise de vue",
       "title": "Titre",
       "type": "Type"
     }
@@ -18,25 +18,25 @@
       "cancel": "Annuler",
       "delete": "Effacer",
       "remove": "Supprimer",
-      "save": "Sauver"
+      "save": "Sauvegarder"
     },
     "loading": {
-      "album": "Chargement l'album",
+      "album": "Chargement de l'album",
       "default": "Chargement...",
-      "media": "Chargement média",
-      "page": "Chargement page",
+      "media": "Chargement du média",
+      "page": "Chargement de la page",
       "paginate": {
-        "faces": "Chargement plus les gens",
-        "media": "Chargement plus média"
+        "faces": "Afficher plus de personnes",
+        "media": "Charger plus de médias"
       },
-      "shares": "Chargement les partages...",
-      "timeline": "Chargement timeline"
+      "shares": "Chargement des partages...",
+      "timeline": "Chargement de la timeline"
     }
   },
   "header": {
     "search": {
-      "loading": "Chargement resultats...",
-      "no_results": "Acune résultat trouvé",
+      "loading": "Chargement des resultats...",
+      "no_results": "Aucun résultat trouvé",
       "placeholder": "Rechercher",
       "result_type": {
         "albums": "Albums",
@@ -53,45 +53,45 @@
     "initial_setup": {
       "field": {
         "photo_path": {
-          "label": "Photo chemin",
-          "placeholder": "/path/to/photos"
+          "label": "Chemin des photos",
+          "placeholder": "/chemin/des/photos"
         },
         "submit": "Configurer Photoview"
       },
-      "title": "La configuration initiale"
+      "title": "Configuration initiale"
     },
-    "welcome": "Bienvenue à Photoview"
+    "welcome": "Bienvenue sur Photoview"
   },
   "meta": {
-    "description": null
+    "description": "Galerie Photo simple et convivial pour les Serveurs Personnels"
   },
   "people_page": {
     "face_group": {
       "label_placeholder": "Étiquette",
       "unlabeled": "Sans étiquette"
     },
-    "recognize_unlabeled_faces_button": "Reconnaître visages sans étiquettes"
+    "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquette"
   },
   "photos_page": {
     "title": "Photos"
   },
   "places_page": {
-    "title": null
+    "title": "Lieux"
   },
   "routes": {
     "page_not_found": "Page non trouvée"
   },
   "settings": {
     "concurrent_workers": {
-      "description": null,
-      "title": null
+      "description": "Nombre maximal de tâches d'analyse simultanées autorisées à la fois.",
+      "title": "Tâches d'analyse simultannées"
     },
     "logout": "Se déconnecter",
     "periodic_scanner": {
-      "checkbox_label": null,
+      "checkbox_label": "Activer l'analyse périodique",
       "field": {
-        "description": null,
-        "label": null
+        "description": "Fréquence à laquelle l'analyse se déclenche pour tous les utilisateurs",
+        "label": "Periodic scan interval"
       },
       "interval_unit": {
         "days": "Jours",
@@ -100,20 +100,20 @@
         "months": "Mois",
         "seconds": "Secondes"
       },
-      "title": "scanner periodique"
+      "title": "Analyse périodique"
     },
     "scanner": {
-      "description": null,
-      "scan_all_users": "Scanner tout utilisateurs",
-      "title": "Scanner"
+      "description": "Cela va analyser tous les utilisateurs à la recherche de nouveaux médias ou de médias mis à jour",
+      "scan_all_users": "Analyser tous les utilisateurs",
+      "title": "Analyse"
     },
     "user_preferences": {
       "change_language": {
-        "description": "Changer site langue pour ce utilisateur",
-        "label": "Site langue"
+        "description": "Changer la langue du site pour cet utilisateur",
+        "label": "Langue du site"
       },
       "language_selector": {
-        "placeholder": "Choissir la langue"
+        "placeholder": "Choisir la langue"
       },
       "title": "Paramètres d'utilisateur"
     },
@@ -123,32 +123,32 @@
       },
       "confirm_delete_user": {
         "action": "Supprimer {{user}}",
-        "description": "<0>Etes-vous sûre vous voulez supprimer <1></1>?</0><p>Cette action est irreversible</p>",
+        "description": "<0>Etes-vous sûr de vouloir supprimer <1></1>?</0><p>Cette action est irreversible</p>",
         "title": "Supprimer l'utilisateur"
       },
       "password_reset": {
-        "description": "Changer mot de passe pour <1></1>",
+        "description": "Changer le mot de passe pour <1></1>",
         "form": {
           "label": "Nouveau mot de passe",
           "placeholder": "mot de passe",
-          "submit": "Changer mot de passe"
+          "submit": "Changer le mot de passe"
         },
-        "title": "Changer mot de passe"
+        "title": "Changer de mot de passe"
       },
       "table": {
         "column_names": {
           "action": "Action",
           "admin": "Admin",
-          "photo_path": "Photo chemin",
+          "photo_path": "Chemin des Photos",
           "username": "Nom d'utilisateur"
         },
-        "new_user": "Nouveau utilisateur",
+        "new_user": "Nouvel utilisateur",
         "row": {
           "action": {
-            "change_password": "Changer mot de passe",
+            "change_password": "Changer le mot de passe",
             "delete": "Effacer",
             "edit": "Éditer",
-            "scan": "Scanner"
+            "scan": "Analyser"
           }
         }
       },
@@ -160,12 +160,12 @@
       "title": "Média Partagé"
     },
     "protected_share": {
-      "description": "Ce partage est protégé avec un mot de passe.",
+      "description": "Ce partage est protégé par un mot de passe.",
       "title": "Partage protégé"
     },
     "share_not_found": "Partage non trouvé",
-    "share_not_found_description": "Peut-être le partage été expiré ou supprimé.",
-    "wrong_password": "Mauvaise mot de passe, veuillez reessayer."
+    "share_not_found_description": "Le partage est peut-être expiré ou supprimé.",
+    "wrong_password": "Mot de passe invalide, veuillez réessayer."
   },
   "sidebar": {
     "album": {
@@ -173,12 +173,12 @@
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "kilo_byte": "{{count}} KB",
-        "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "byte": "{{count}} Octets",
+        "byte_plural": "{{count}} Octets",
+        "giga_byte": "{{count}} Go",
+        "kilo_byte": "{{count}} Ko",
+        "mega_byte": "{{count}} Mo",
+        "tera_byte": "{{count}} To"
       },
       "table_columns": {
         "dimensions": "Dimensions",
@@ -186,67 +186,67 @@
         "file_type": "Type",
         "name": "Nom"
       },
-      "title": "Telecharger"
+      "title": "Télécharger"
     },
     "media": {
-      "exif": {
-        "exposure_program": {
-          "action_program": "Programme action",
-          "aperture_priority": null,
-          "bulb": "Ampoule",
-          "creative_program": "Programme créatif",
-          "landscape_mode": null,
-          "manual": "Manuelle",
-          "normal_program": "Programme Normale",
-          "not_defined": "Pas definé",
-          "portrait_mode": null,
+    "exif": {      
+      "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Priorité d'ouverture",
+          "bulb": "Bulb",
+          "creative_program": "Creative program",
+          "landscape_mode": "Mode Paysage",
+          "manual": "Manuel",
+          "normal_program": "Normal program",
+          "not_defined": "Non défini",
+          "portrait_mode": "Mode Portrait",
           "shutter_priority": "Priorité d'obturation"
         },
         "flash": {
           "auto": "Auto",
-          "did_not_fire": "N'a pas déclenché",
+          "did_not_fire": "Ne s'est pas déclenché",
           "fired": "Déclenché",
-          "no_flash": "Pas Flash",
-          "no_flash_function": "Acune function flash",
+          "no_flash": "Pas de flash",
+          "no_flash_function": "Pas de fonction flash",
           "off": "Désactivé",
           "on": "Activé",
-          "red_eye_reduction": null,
-          "return_detected": null,
-          "return_not_detected": null
+          "red_eye_reduction": "Réduction yeux rouges",
+          "return_detected": "Retour détecté",
+          "return_not_detected": "Retour non détecté"
         },
         "name": {
-          "aperture": "Ouverture",
-          "camera": "Appareil",
-          "date_shot": "Date de prise",
-          "exposure": "Exposure",
+          "aperture": "Focale",
+          "camera": "Modèle",
+          "date_shot": "Prise de vue",
+          "exposure": "Temps d'exposition",
           "exposure_program": "Programme",
           "flash": "Flash",
           "focal_length": "Distance focale",
           "iso": "ISO",
           "lens": "Objectif",
-          "maker": "Marque"
+          "maker": "Fabriquant"
         }
       }
     },
     "sharing": {
-      "add_share": "Ajouter les partages",
-      "copy_link": "Copier Lien",
-      "no_shares_found": "Acune partages trouvé",
-      "public_link": "Lien Publique",
-      "table_header": "Partages publique",
-      "title": "Paramètres de partage"
+      "add_share": "Ajouter un partage",
+      "copy_link": "Copier le lien",
+      "no_shares_found": "Aucun partage trouvé",
+      "public_link": "Lien public",
+      "table_header": "Partages publics",
+      "title": "Options de partage"
     }
   },
   "sidemenu": {
     "albums": "Albums",
-    "people": "Gens",
+    "people": "Personnes",
     "photos": "Photos",
     "places": "Lieux",
     "settings": "Paramètres"
   },
   "title": {
-    "loading_album": "Chargement l'album",
-    "people": "Gens",
+    "loading_album": "Chargement de l'album",
+    "people": "Personnes",
     "settings": "Paramètres"
   }
 }
