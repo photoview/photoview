@@ -1844,6 +1844,7 @@ type User {
 enum LanguageTranslation {
   English,
   French,
+  Italian,
   Swedish,
   Danish,
 }

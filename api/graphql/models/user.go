@@ -43,6 +43,30 @@ type UserPreferences struct {
 	Language *LanguageTranslation
 }
 
+func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
+
+	if u.Language != nil && *u.Language == "" {
+		u.Language = nil
+	}
+
+	if u.Language != nil {
+		lang_str := string(*u.Language)
+		found_match := false
+		for _, lang := range AllLanguageTranslation {
+			if string(lang) == lang_str {
+				found_match = true
+				break
+			}
+		}
+
+		if !found_match {
+			return errors.New("invalid language value")
+		}
+	}
+
+	return nil
+}
+
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 
 func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error) {

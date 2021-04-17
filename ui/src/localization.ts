@@ -5,7 +5,7 @@ import i18n from 'i18next'
 import { initReactI18next, TFunction } from 'react-i18next'
 import { LanguageTranslation } from '../__generated__/globalTypes'
 import { authToken } from './helpers/authentication'
-import { exhaustiveCheck } from './helpers/utils'
+import { exhaustiveCheck, isNil } from './helpers/utils'
 
 export type TranslationFn = TFunction<'translation'>
 
@@ -52,7 +52,7 @@ export const loadTranslations = () => {
 
   useEffect(() => {
     const language = data?.myUserPreferences.language
-    if (language == null) {
+    if (isNil(language)) {
       i18n.changeLanguage('en')
       return
     }
@@ -80,6 +80,12 @@ export const loadTranslations = () => {
         import('../extractedTranslations/sv/translation.json').then(swedish => {
           i18n.addResourceBundle('sv', 'translation', swedish)
           i18n.changeLanguage('sv')
+        })
+        return
+      case LanguageTranslation.Italian:
+        import('../extractedTranslations/it/translation.json').then(swedish => {
+          i18n.addResourceBundle('it', 'translation', swedish)
+          i18n.changeLanguage('it')
         })
         return
     }

@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client'
 import gql from 'graphql-tag'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dropdown } from 'semantic-ui-react'
 import styled from 'styled-components'
@@ -21,6 +21,7 @@ const languagePreferences = [
   { key: 2, text: 'Français', flag: 'fr', value: LanguageTranslation.French },
   { key: 3, text: 'Svenska', flag: 'se', value: LanguageTranslation.Swedish },
   { key: 4, text: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
+  { key: 5, text: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
@@ -55,6 +56,11 @@ const UserPreferences = () => {
     changeUserPreferencesVariables
   >(CHANGE_USER_PREFERENCES)
 
+  const sortedLanguagePrefs = useMemo(
+    () => languagePreferences.sort((a, b) => a.text.localeCompare(b.text)),
+    []
+  )
+
   if (error) {
     return <div>{error.message}</div>
   }
@@ -85,7 +91,7 @@ const UserPreferences = () => {
           'Select language'
         )}
         clearable
-        options={languagePreferences}
+        options={sortedLanguagePrefs}
         onChange={(event, { value: language }) => {
           changePrefs({
             variables: {
