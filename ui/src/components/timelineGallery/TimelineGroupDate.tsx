@@ -1,14 +1,15 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import TimelineGroupAlbum from './TimelineGroupAlbum'
 import styled from 'styled-components'
+import { myTimeline_myTimeline } from './__generated__/myTimeline'
+import { TimelineActiveIndex } from './TimelineGallery'
+import { useTranslation } from 'react-i18next'
 
-const dateFormatter = new Intl.DateTimeFormat(navigator.language, {
+const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
-})
-
+}
 const GroupDateWrapper = styled.div`
   margin: 12px 12px;
 `
@@ -24,6 +25,15 @@ const GroupAlbumWrapper = styled.div`
   margin: 0 -8px;
 `
 
+type TimelineGroupDateProps = {
+  date: string
+  groups: myTimeline_myTimeline[]
+  onSelectDateGroup(args: { media: number; albumGroup: number }): void
+  activeIndex: TimelineActiveIndex
+  setPresenting: React.Dispatch<React.SetStateAction<boolean>>
+  onFavorite(): void
+}
+
 const TimelineGroupDate = ({
   date,
   groups,
@@ -31,7 +41,9 @@ const TimelineGroupDate = ({
   activeIndex,
   setPresenting,
   onFavorite,
-}) => {
+}: TimelineGroupDateProps) => {
+  const { i18n } = useTranslation()
+
   const albumGroupElms = groups.map((group, i) => (
     <TimelineGroupAlbum
       key={`${group.date}_${group.album.id}`}
@@ -48,6 +60,11 @@ const TimelineGroupDate = ({
     />
   ))
 
+  const dateFormatter = new Intl.DateTimeFormat(
+    i18n.language,
+    dateFormatterOptions
+  )
+
   const formattedDate = dateFormatter.format(new Date(date))
 
   return (
@@ -56,15 +73,6 @@ const TimelineGroupDate = ({
       <GroupAlbumWrapper>{albumGroupElms}</GroupAlbumWrapper>
     </GroupDateWrapper>
   )
-}
-
-TimelineGroupDate.propTypes = {
-  date: PropTypes.string.isRequired,
-  groups: PropTypes.array.isRequired,
-  onSelectDateGroup: PropTypes.func.isRequired,
-  activeIndex: PropTypes.object.isRequired,
-  setPresenting: PropTypes.func.isRequired,
-  onFavorite: PropTypes.func,
 }
 
 export default TimelineGroupDate

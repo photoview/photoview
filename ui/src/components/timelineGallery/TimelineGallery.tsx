@@ -11,6 +11,11 @@ import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'
+import {
+  myTimeline,
+  myTimelineVariables,
+  myTimeline_myTimeline,
+} from './__generated__/myTimeline'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
@@ -54,6 +59,11 @@ const GalleryWrapper = styled.div`
   overflow-x: hidden;
 `
 
+export type TimelineActiveIndex = {
+  albumGroup: number
+  media: number
+}
+
 const TimelineGallery = () => {
   const { t } = useTranslation()
   const [activeIndex, setActiveIndex] = useState({
@@ -66,7 +76,9 @@ const TimelineGallery = () => {
   const { getParam, setParam } = useURLParameters()
 
   const onlyFavorites = getParam('favorites') == '1' ? true : false
-  const setOnlyFavorites = favorites => setParam('favorites', favorites ? 1 : 0)
+  const setOnlyFavorites = (favorites: boolean) =>
+    setParam('favorites', favorites ? '1' : '0')
+
   const favoritesNeedsRefresh = useRef(false)
 
   const nextMedia = useCallback(() => {
@@ -132,18 +144,21 @@ const TimelineGallery = () => {
     })
   }, [activeIndex])
 
-  const { data, error, loading, refetch, fetchMore } = useQuery(
-    MY_TIMELINE_QUERY,
-    {
-      variables: {
-        onlyFavorites,
-        offset: 0,
-        limit: 50,
-      },
-    }
-  )
+  const { data, error, loading, refetch, fetchMore } = useQuery<
+    myTimeline,
+    myTimelineVariables
+  >(MY_TIMELINE_QUERY, {
+    variables: {
+      onlyFavorites,
+      offset: 0,
+      limit: 50,
+    },
+  })
 
-  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
+  const {
+    containerElem,
+    finished: finishedLoadingMore,
+  } = useScrollPagination<myTimeline>({
     loading,
     fetchMore,
     data,
@@ -171,8 +186,13 @@ const TimelineGallery = () => {
     return <div>{error.message}</div>
   }
 
+  type TimelineGroup = {
+    date: string
+    groups: myTimeline_myTimeline[]
+  }
+
   let timelineGroups = null
-  let dateGroupedAlbums = []
+  let dateGroupedAlbums: TimelineGroup[] = []
   if (data?.myTimeline) {
     dateGroupedAlbums = data.myTimeline.reduce((acc, val) => {
       if (acc.length == 0 || acc[acc.length - 1].date != val.date) {
@@ -185,7 +205,7 @@ const TimelineGallery = () => {
       }
 
       return acc
-    }, [])
+    }, [] as TimelineGroup[])
 
     timelineGroups = dateGroupedAlbums.map(({ date, groups }, i) => (
       <TimelineGroupDate

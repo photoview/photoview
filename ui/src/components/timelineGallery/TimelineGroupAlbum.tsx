@@ -1,10 +1,13 @@
 import React, { useContext } from 'react'
-import PropTypes from 'prop-types'
-import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
-import styled from 'styled-components'
-import { SidebarContext } from '../sidebar/Sidebar'
-import MediaSidebar from '../sidebar/MediaSidebar'
 import { Link } from 'react-router-dom'
+import styled from 'styled-components'
+import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
+import MediaSidebar from '../sidebar/MediaSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
+import {
+  myTimeline_myTimeline_album,
+  myTimeline_myTimeline_media,
+} from './__generated__/myTimeline'
 
 const MediaWrapper = styled.div`
   display: flex;
@@ -51,13 +54,25 @@ const TotalItemsBubble = styled(Link)`
   text-align: center;
 `
 
+type TimelineGroupAlbumProps = {
+  group: {
+    album: myTimeline_myTimeline_album
+    media: myTimeline_myTimeline_media[]
+    mediaTotal: number
+  }
+  onSelectMedia(index: number): void
+  setPresenting: React.Dispatch<React.SetStateAction<boolean>>
+  activeIndex: number
+  onFavorite(): void
+}
+
 const TimelineGroupAlbum = ({
   group: { album, media, mediaTotal },
   onSelectMedia,
   setPresenting,
   activeIndex,
   onFavorite,
-}) => {
+}: TimelineGroupAlbumProps) => {
   const { updateSidebar } = useContext(SidebarContext)
 
   const mediaElms = media.map((media, i) => (
@@ -96,14 +111,6 @@ const TimelineGroupAlbum = ({
       </MediaWrapper>
     </GroupAlbumWrapper>
   )
-}
-
-TimelineGroupAlbum.propTypes = {
-  group: PropTypes.object.isRequired,
-  onSelectMedia: PropTypes.func.isRequired,
-  setPresenting: PropTypes.func.isRequired,
-  activeIndex: PropTypes.number.isRequired,
-  onFavorite: PropTypes.func,
 }
 
 export default TimelineGroupAlbum
