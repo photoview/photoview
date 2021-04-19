@@ -13,7 +13,7 @@ module.exports = function (api) {
       plugins.push([
         'i18next-extract',
         {
-          locales: ['en', 'da', 'fr', 'sv'],
+          locales: ['en', 'da', 'fr', 'sv', 'es', 'it', 'pl'],
           defaultValue: null,
         },
       ])

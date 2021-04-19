@@ -17,6 +17,7 @@
       "add": "Añadir",
       "cancel": "Cancelar",
       "delete": "Eliminar",
+      "more": null,
       "remove": "Borrar",
       "save": "Guardar"
     },
@@ -246,6 +247,7 @@
   },
   "title": {
     "loading_album": "Cargando álbum",
+    "login": null,
     "people": "Personas",
     "settings": "Opciones"
   }

@@ -247,6 +247,7 @@
   },
   "title": {
     "loading_album": "Chargement de l'album",
+    "login": null,
     "people": "Personnes",
     "settings": "Paramètres"
   }

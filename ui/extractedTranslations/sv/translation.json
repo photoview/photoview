@@ -247,6 +247,7 @@
   },
   "title": {
     "loading_album": "Laddar album",
+    "login": null,
     "people": "Personer",
     "settings": "Inställningar"
   }

@@ -1848,6 +1848,7 @@ enum LanguageTranslation {
   Swedish,
   Danish,
   Spanish,
+  Polish,
 }
 
 type UserPreferences {

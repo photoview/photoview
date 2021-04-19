@@ -8,6 +8,7 @@ import { authToken } from '../../helpers/authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
 import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -96,6 +97,9 @@ const LoginPage = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>{t('title.login', 'Login')} - Photoview</title>
+      </Helmet>
       <Container>
         <LogoHeaderStyled />
         {initialSetupData?.siteInfo?.initialSetup && (

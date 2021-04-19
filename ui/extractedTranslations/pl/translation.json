@@ -175,6 +175,9 @@
     "download": {
       "filesize": {
         "byte": "{{count}} Bajt",
+        "byte_0": null,
+        "byte_1": null,
+        "byte_2": null,
         "byte_plural": "{{count}} Bajtów",
         "giga_byte": "{{count}} GB",
         "kilo_byte": "{{count}} KB",
@@ -247,6 +250,7 @@
   },
   "title": {
     "loading_album": "Ładowanie albumu",
+    "login": null,
     "people": "Ludzie",
     "settings": "Ustawienia"
   }

@@ -83,15 +83,21 @@ export const loadTranslations = () => {
         })
         return
       case LanguageTranslation.Italian:
-        import('../extractedTranslations/it/translation.json').then(swedish => {
-          i18n.addResourceBundle('it', 'translation', swedish)
+        import('../extractedTranslations/it/translation.json').then(italian => {
+          i18n.addResourceBundle('it', 'translation', italian)
           i18n.changeLanguage('it')
         })
         return
       case LanguageTranslation.Spanish:
-        import('../extractedTranslations/es/translation.json').then(swedish => {
-          i18n.addResourceBundle('es', 'translation', swedish)
+        import('../extractedTranslations/es/translation.json').then(spanish => {
+          i18n.addResourceBundle('es', 'translation', spanish)
           i18n.changeLanguage('es')
+        })
+        return
+      case LanguageTranslation.Polish:
+        import('../extractedTranslations/pl/translation.json').then(polish => {
+          i18n.addResourceBundle('pl', 'translation', polish)
+          i18n.changeLanguage('pl')
         })
         return
     }
