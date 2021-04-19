@@ -1,0 +1,254 @@
+{
+  "album_filter": {
+    "only_favorites": null,
+    "sort_by": null,
+    "sorting_options": {
+      "date_imported": null,
+      "date_shot": null,
+      "title": null,
+      "type": null
+    }
+  },
+  "albums_page": {
+    "title": null
+  },
+  "general": {
+    "action": {
+      "add": null,
+      "cancel": null,
+      "delete": null,
+      "more": null,
+      "remove": null,
+      "save": null
+    },
+    "loading": {
+      "album": null,
+      "default": null,
+      "media": null,
+      "page": null,
+      "paginate": {
+        "faces": null,
+        "media": null
+      },
+      "shares": null,
+      "timeline": null
+    }
+  },
+  "header": {
+    "search": {
+      "loading": null,
+      "no_results": null,
+      "placeholder": null,
+      "result_type": {
+        "albums": null,
+        "photos": null
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": null,
+      "submit": null,
+      "username": null
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": null,
+          "placeholder": null
+        },
+        "submit": null
+      },
+      "title": null
+    },
+    "welcome": null
+  },
+  "meta": {
+    "description": null
+  },
+  "people_page": {
+    "face_group": {
+      "label_placeholder": null,
+      "unlabeled": null
+    },
+    "recognize_unlabeled_faces_button": null
+  },
+  "photos_page": {
+    "title": null
+  },
+  "places_page": {
+    "title": null
+  },
+  "routes": {
+    "page_not_found": null
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": null,
+      "title": null
+    },
+    "logout": null,
+    "periodic_scanner": {
+      "checkbox_label": null,
+      "field": {
+        "description": null,
+        "label": null
+      },
+      "interval_unit": {
+        "days": null,
+        "hour": null,
+        "minutes": null,
+        "months": null,
+        "seconds": null
+      },
+      "title": null
+    },
+    "scanner": {
+      "description": null,
+      "scan_all_users": null,
+      "title": null
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": null,
+        "label": null
+      },
+      "language_selector": {
+        "placeholder": null
+      },
+      "title": null
+    },
+    "users": {
+      "add_user": {
+        "submit": null
+      },
+      "confirm_delete_user": {
+        "action": null,
+        "description": null,
+        "title": null
+      },
+      "password_reset": {
+        "description": null,
+        "form": {
+          "label": null,
+          "placeholder": null,
+          "submit": null
+        },
+        "title": null
+      },
+      "table": {
+        "column_names": {
+          "action": null,
+          "admin": null,
+          "photo_path": null,
+          "username": null
+        },
+        "new_user": null,
+        "row": {
+          "action": {
+            "change_password": null,
+            "delete": null,
+            "edit": null,
+            "scan": null
+          }
+        }
+      },
+      "title": null
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": null
+    },
+    "protected_share": {
+      "description": null,
+      "title": null
+    },
+    "share_not_found": null,
+    "share_not_found_description": null,
+    "wrong_password": null
+  },
+  "sidebar": {
+    "album": {
+      "title": null
+    },
+    "download": {
+      "filesize": {
+        "byte": null,
+        "byte_plural": null,
+        "giga_byte": null,
+        "kilo_byte": null,
+        "mega_byte": null,
+        "tera_byte": null
+      },
+      "table_columns": {
+        "dimensions": null,
+        "file_size": null,
+        "file_type": null,
+        "name": null
+      },
+      "title": null
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": null,
+          "aperture_priority": null,
+          "bulb": null,
+          "creative_program": null,
+          "landscape_mode": null,
+          "manual": null,
+          "normal_program": null,
+          "not_defined": null,
+          "portrait_mode": null,
+          "shutter_priority": null
+        },
+        "flash": {
+          "auto": null,
+          "did_not_fire": null,
+          "fired": null,
+          "no_flash": null,
+          "no_flash_function": null,
+          "off": null,
+          "on": null,
+          "red_eye_reduction": null,
+          "return_detected": null,
+          "return_not_detected": null
+        },
+        "name": {
+          "aperture": null,
+          "camera": null,
+          "date_shot": null,
+          "exposure": null,
+          "exposure_program": null,
+          "flash": null,
+          "focal_length": null,
+          "iso": null,
+          "lens": null,
+          "maker": null
+        }
+      }
+    },
+    "sharing": {
+      "add_share": null,
+      "copy_link": null,
+      "no_shares_found": null,
+      "public_link": null,
+      "table_header": null,
+      "title": null
+    }
+  },
+  "sidemenu": {
+    "albums": null,
+    "people": null,
+    "photos": null,
+    "places": null,
+    "settings": null
+  },
+  "title": {
+    "loading_album": null,
+    "login": null,
+    "people": null,
+    "settings": null
+  }
+}
