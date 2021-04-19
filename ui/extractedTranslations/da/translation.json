@@ -17,6 +17,7 @@
       "add": "Tilføj",
       "cancel": "Annuller",
       "delete": "Slet",
+      "more": "Mere",
       "remove": "Fjern",
       "save": "Gem"
     },
@@ -76,7 +77,7 @@
     "title": "Billeder"
   },
   "places_page": {
-    "title": null
+    "title": "Kort"
   },
   "routes": {
     "page_not_found": "Side ikke fundet"
@@ -169,7 +170,7 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album indstillinger"
+      "title": "Indstillinger for album"
     },
     "download": {
       "filesize": {
@@ -223,7 +224,7 @@
           "flash": "Blitz",
           "focal_length": "Brændvidde",
           "iso": "ISO",
-          "lens": "Lense",
+          "lens": "Objektiv",
           "maker": "Mærke"
         }
       }

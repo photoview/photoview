@@ -24,6 +24,8 @@ import {
   sidebarPhoto_media_videoMetadata,
 } from './__generated__/sidebarPhoto'
 
+import { sidebarDownloadQuery_media_downloads } from './__generated__/sidebarDownloadQuery'
+
 const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarPhoto($id: ID!) {
     media(id: $id) {
@@ -161,13 +163,15 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
       x => mediaExif[x] !== null && x != '__typename'
     )
 
-    const exif = exifKeys.reduce(
-      (prev, curr) => ({
+    const exif = exifKeys.reduce((prev, curr) => {
+      const value = mediaExif[curr]
+      if (isNil(value)) return prev
+
+      return {
         ...prev,
-        [curr]: mediaExif[curr],
-      }),
-      {} as { [key: string]: string | number | null }
-    )
+        [curr]: value,
+      }
+    }, {} as { [key: string]: string | number })
 
     if (!isNil(exif.dateShot)) {
       exif.dateShot = new Date(exif.dateShot).toLocaleString()
@@ -202,7 +206,7 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
     }
 
     exifItems = exifKeys.map(key => (
-      <SidebarItem key={key} name={exifName[key]} value={exif[key]} />
+      <SidebarItem key={key} name={exifName[key]} value={exif[key] as string} />
     ))
   }
 
@@ -214,13 +218,15 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
 
     let metadata = Object.keys(videoMetadata)
       .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
-      .reduce(
-        (prev, curr) => ({
+      .reduce((prev, curr) => {
+        const value = videoMetadata[curr as string]
+        if (isNil(value)) return prev
+
+        return {
           ...prev,
-          [curr]: videoMetadata[curr as string],
-        }),
-        {} as { [key: string]: string | number | null }
-      )
+          [curr]: value,
+        }
+      }, {} as { [key: string]: string | number })
 
     metadata = {
       dimensions: `${media.videoMetadata.width}x${media.videoMetadata.height}`,
@@ -228,7 +234,7 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
     }
 
     videoMetadataItems = Object.keys(metadata).map(key => (
-      <SidebarItem key={key} name={key} value={metadata[key]} />
+      <SidebarItem key={key} name={key} value={metadata[key] as string} />
     ))
   }
 
@@ -376,7 +382,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       )}
       <Name>{media.title}</Name>
       <MetadataInfo media={media} />
-      <SidebarDownload photo={media} />
+      <SidebarDownload media={media} />
       <SidebarPhotoShare id={media.id} />
     </div>
   )
@@ -403,6 +409,7 @@ export interface MediaSidebarMedia {
   videoMetadata?: sidebarPhoto_media_videoMetadata | null
   exif?: sidebarPhoto_media_exif | null
   faces?: sidebarPhoto_media_faces[]
+  downloads?: sidebarDownloadQuery_media_downloads[]
 }
 
 type MediaSidebarType = {

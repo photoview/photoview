@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 
 const ItemName = styled.div`
@@ -17,16 +16,16 @@ const ItemValue = styled.div`
   font-size: 1rem;
 `
 
-const SidebarItem = ({ name, value }) => (
+type SidebarItemProps = {
+  name: string
+  value: string
+}
+
+const SidebarItem = ({ name, value }: SidebarItemProps) => (
   <div>
     <ItemName>{name}</ItemName>
     <ItemValue>{value}</ItemValue>
   </div>
 )
-
-SidebarItem.propTypes = {
-  name: PropTypes.string.isRequired,
-  value: PropTypes.any.isRequired,
-}
 
 export default SidebarItem

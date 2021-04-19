@@ -211,7 +211,7 @@ const ShareItemMoreDropdown = ({
       // onClose={() => setDropdownOpen(false)}
       // open={dropdownOpen}
       button
-      text="More"
+      text={t('general.action.more', 'More')}
       closeOnChange={false}
       closeOnBlur={false}
     >

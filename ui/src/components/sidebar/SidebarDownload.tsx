@@ -6,6 +6,13 @@ import { MessageState } from '../messages/Messages'
 import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
+import { TranslationFn } from '../../localization'
+import { MediaSidebarMedia } from './MediaSidebar'
+import {
+  sidebarDownloadQuery,
+  sidebarDownloadQueryVariables,
+  sidebarDownloadQuery_media_downloads,
+} from './__generated__/sidebarDownloadQuery'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -24,10 +31,12 @@ export const SIDEBAR_DOWNLOAD_QUERY = gql`
   }
 `
 
-const formatBytes = t => bytes => {
-  if (bytes == 0) return '0 Byte'
-  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
-  const count = Math.round(bytes / Math.pow(1024, i), 2)
+const formatBytes = (t: TranslationFn) => (bytes: number) => {
+  if (bytes == 0)
+    return t('sidebar.download.filesize.byte', '{{count}} Byte', { count: 0 })
+
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  const count = Math.round(bytes / Math.pow(1024, i))
 
   switch (i) {
     case 0:
@@ -46,7 +55,7 @@ const formatBytes = t => bytes => {
   }
 }
 
-const downloadMedia = t => async url => {
+const downloadMedia = (t: TranslationFn) => async (url: string) => {
   const imgUrl = new URL(url, location.origin)
 
   if (authToken() == null) {
@@ -68,15 +77,32 @@ const downloadMedia = t => async url => {
     blob = await response.blob()
   }
 
-  const filename = url.match(/[^/]*$/)[0]
+  if (blob == null) {
+    console.log('Blob is null canceling')
+    return
+  }
 
+  const filenameMatch = url.match(/[^/]*$/)
+
+  if (filenameMatch == null) {
+    console.error('Could not extract filename', url)
+    return
+  }
+
+  const filename = filenameMatch[0]
   downloadBlob(blob, filename)
 }
 
-const downloadMediaShowProgress = t => async response => {
+const downloadMediaShowProgress = (t: TranslationFn) => async (
+  response: Response
+) => {
   const totalBytes = Number(response.headers.get('content-length'))
-  const reader = response.body.getReader()
-  let data = new Uint8Array(totalBytes)
+  const reader = response.body?.getReader()
+  const data = new Uint8Array(totalBytes)
+
+  if (reader == null) {
+    throw new Error('Download reader is null')
+  }
 
   let canceled = false
   const onDismiss = () => {
@@ -84,9 +110,9 @@ const downloadMediaShowProgress = t => async response => {
     reader.cancel('Download canceled by user')
   }
 
-  const notifKey = Math.random().toString(26)
+  const notifyKey = Math.random().toString(26)
   MessageState.add({
-    key: notifKey,
+    key: notifyKey,
     type: 'progress',
     onDismiss,
     props: {
@@ -108,7 +134,7 @@ const downloadMediaShowProgress = t => async response => {
     receivedBytes += result.value ? result.value.length : 0
 
     MessageState.add({
-      key: notifKey,
+      key: notifyKey,
       type: 'progress',
       onDismiss,
       props: {
@@ -126,7 +152,7 @@ const downloadMediaShowProgress = t => async response => {
   }
 
   MessageState.add({
-    key: notifKey,
+    key: notifyKey,
     type: 'progress',
     props: {
       header: 'Downloading photo completed',
@@ -137,20 +163,20 @@ const downloadMediaShowProgress = t => async response => {
   })
 
   setTimeout(() => {
-    MessageState.removeKey(notifKey)
+    MessageState.removeKey(notifyKey)
   }, 2000)
 
   const content = new Blob([data.buffer], {
-    type: response.headers.get('content-type'),
+    type: response.headers.get('content-type') || undefined,
   })
 
   return content
 }
 
-const downloadBlob = async (blob, filename) => {
-  let objectUrl = window.URL.createObjectURL(blob)
+const downloadBlob = async (blob: Blob, filename: string) => {
+  const objectUrl = window.URL.createObjectURL(blob)
 
-  let anchor = document.createElement('a')
+  const anchor = document.createElement('a')
   document.body.appendChild(anchor)
 
   anchor.href = objectUrl
@@ -166,36 +192,43 @@ const DownloadTableRow = styled(Table.Row)`
   cursor: pointer;
 `
 
-const SidebarDownload = ({ photo }) => {
+type SidebarDownladProps = {
+  media: MediaSidebarMedia
+}
+
+const SidebarDownload = ({ media }: SidebarDownladProps) => {
   const { t } = useTranslation()
-  if (!photo || !photo.id) return null
+  if (!media || !media.id) return null
 
-  const [
-    loadPhotoDownloads,
-    { called, loading, data },
-  ] = useLazyQuery(SIDEBAR_DOWNLOAD_QUERY, { variables: { mediaId: photo.id } })
+  const [loadPhotoDownloads, { called, loading, data }] = useLazyQuery<
+    sidebarDownloadQuery,
+    sidebarDownloadQueryVariables
+  >(SIDEBAR_DOWNLOAD_QUERY, { variables: { mediaId: media.id } })
 
-  let downloads = []
+  let downloads: sidebarDownloadQuery_media_downloads[] = []
 
   if (called) {
     if (!loading) {
-      downloads = data && data.media.downloads
+      downloads = (data && data.media.downloads) || []
     }
   } else {
-    if (!photo.downloads) {
+    if (!media.downloads) {
       loadPhotoDownloads()
     } else {
-      downloads = photo.downloads
+      downloads = media.downloads
     }
   }
 
-  const extractExtension = url => {
-    return url.split(/[#?]/)[0].split('.').pop().trim().toLowerCase()
+  const extractExtension = (url: string) => {
+    const urlMatch = url.split(/[#?]/)
+    if (urlMatch == null) return
+
+    return urlMatch[0].split('.').pop()?.trim().toLowerCase()
   }
 
   const download = downloadMedia(t)
   const bytes = formatBytes(t)
-  let downloadRows = downloads.map(x => (
+  const downloadRows = downloads.map(x => (
     <DownloadTableRow
       key={x.mediaUrl.url}
       onClick={() => download(x.mediaUrl.url)}
