@@ -12,6 +12,7 @@ export enum LanguageTranslation {
   English = 'English',
   French = 'French',
   Italian = 'Italian',
+  Spanish = 'Spanish',
   Swedish = 'Swedish',
 }
 
