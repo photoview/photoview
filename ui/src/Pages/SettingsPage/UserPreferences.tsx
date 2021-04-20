@@ -24,6 +24,7 @@ const languagePreferences = [
   { key: 5, text: 'Español', flag: 'es', value: LanguageTranslation.Spanish },
   { key: 6, text: 'polski', flag: 'pl', value: LanguageTranslation.Polish },
   { key: 7, text: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
+  { key: 8, text: 'Deutsch', flag: 'de', value: LanguageTranslation.German },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
