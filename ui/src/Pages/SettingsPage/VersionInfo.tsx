@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 import {
   InputLabelDescription,
   InputLabelTitle,
@@ -14,12 +15,20 @@ const VersionInfoWrapper = styled.div`
 `
 
 const VersionInfo = () => {
+  const { t } = useTranslation()
+
   return (
     <VersionInfoWrapper>
-      <SectionTitle>Photoview Version</SectionTitle>
-      <InputLabelTitle>Release Version</InputLabelTitle>
+      <SectionTitle>
+        {t('settings.version_info.title', 'Photoview Version')}
+      </SectionTitle>
+      <InputLabelTitle>
+        {t('settings.version_info.version_title', 'Release Version')}
+      </InputLabelTitle>
       <InputLabelDescription>{VERSION}</InputLabelDescription>
-      <InputLabelTitle>Build date</InputLabelTitle>
+      <InputLabelTitle>
+        {t('settings.version_info.build_date_title', 'Build date')}
+      </InputLabelTitle>
       <InputLabelDescription>{BUILD_DATE}</InputLabelDescription>
     </VersionInfoWrapper>
   )

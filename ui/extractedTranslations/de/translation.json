@@ -116,7 +116,7 @@
       "language_selector": {
         "placeholder": "Sprache auswählen"
       },
-      "title": "Persönliche Einstelungen"
+      "title": "Persönliche Einstellungen"
     },
     "users": {
       "add_user": {
@@ -154,6 +154,11 @@
         }
       },
       "title": "Benutzer"
+    },
+    "version_info": {
+      "build_date_title": "Build-Datum",
+      "title": "Photoview Version",
+      "version_title": "Version"
     }
   },
   "share_page": {

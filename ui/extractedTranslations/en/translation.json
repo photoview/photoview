@@ -154,6 +154,11 @@
         }
       },
       "title": "Users"
+    },
+    "version_info": {
+      "build_date_title": "Build date",
+      "title": "Photoview Version",
+      "version_title": "Release Version"
     }
   },
   "share_page": {
