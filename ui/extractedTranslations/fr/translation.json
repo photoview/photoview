@@ -17,7 +17,7 @@
       "add": "Ajouter",
       "cancel": "Annuler",
       "delete": "Effacer",
-      "more": null,
+      "more": "Plus",
       "remove": "Supprimer",
       "save": "Sauvegarder"
     },
@@ -84,7 +84,7 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "Nombre maximal de tâches d'analyse simultanées autorisées à la fois.",
+      "description": "Nombre maximal de tâches d'analyse simultanées à la fois.",
       "title": "Tâches d'analyse simultannées"
     },
     "logout": "Se déconnecter",
@@ -104,7 +104,7 @@
       "title": "Analyse périodique"
     },
     "scanner": {
-      "description": "Cela va analyser tous les utilisateurs à la recherche de nouveaux médias ou de médias mis à jour",
+      "description": "Analyser tous les utilisateurs à la recherche de nouveaux médias ou de médias mis à jour",
       "scan_all_users": "Analyser tous les utilisateurs",
       "title": "Analyse"
     },
@@ -140,7 +140,7 @@
         "column_names": {
           "action": "Action",
           "admin": "Admin",
-          "photo_path": "Chemin des Photos",
+          "photo_path": "Chemin des photos",
           "username": "Nom d'utilisateur"
         },
         "new_user": "Nouvel utilisateur",
@@ -243,7 +243,7 @@
     "people": "Personnes",
     "photos": "Photos",
     "places": "Lieux",
-    "settings": "Paramètres"
+    "settings": "Régalges"
   },
   "title": {
     "loading_album": "Chargement de l'album",
