@@ -9,6 +9,7 @@ import Layout from '../../Layout'
 import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
+import VersionInfo from './VersionInfo'
 
 export const SectionTitle = styled.h2<{ nospace?: boolean }>`
   margin-top: ${({ nospace }) => (nospace ? '0' : '1.4em')} !important;
@@ -48,6 +49,7 @@ const SettingsPage = () => {
       >
         {t('settings.logout', 'Log out')}
       </Button>
+      <VersionInfo />
     </Layout>
   )
 }

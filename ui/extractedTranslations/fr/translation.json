@@ -154,6 +154,11 @@
         }
       },
       "title": "Utilisateurs"
+    },
+    "version_info": {
+      "build_date_title": null,
+      "title": null,
+      "version_title": null
     }
   },
   "share_page": {
