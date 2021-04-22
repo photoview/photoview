@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
@@ -33,7 +34,8 @@ func (p *internalExifParser) ParseExif(media_path string) (returnExif *models.Me
 
 	exifTags, err := exif.Decode(photoFile)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not decode EXIF")
+		return nil, nil
+		// return nil, errors.Wrap(err, "Could not decode EXIF")
 	}
 
 	newExif := models.MediaEXIF{}
@@ -55,7 +57,9 @@ func (p *internalExifParser) ParseExif(media_path string) (returnExif *models.Me
 
 	date, err := exifTags.DateTime()
 	if err == nil {
-		newExif.DateShot = &date
+		_, tz := date.Zone()
+		date_utc := date.Add(time.Duration(tz) * time.Second).UTC()
+		newExif.DateShot = &date_utc
 	}
 
 	exposure, err := exifTags.Get(exif.ExposureTime)
