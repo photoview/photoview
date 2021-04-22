@@ -11,7 +11,7 @@ import (
 )
 
 type exifParser interface {
-	ParseExif(media *models.Media) (*models.MediaEXIF, error)
+	ParseExif(media_path string) (*models.MediaEXIF, error)
 }
 
 var use_exiftool bool = false
@@ -55,7 +55,7 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		parser = &internalExifParser{}
 	}
 
-	exif, err := parser.ParseExif(media)
+	exif, err := parser.ParseExif(media.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse exif data")
 	}

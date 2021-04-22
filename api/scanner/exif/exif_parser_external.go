@@ -10,7 +10,7 @@ import (
 
 type externalExifParser struct{}
 
-func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
+func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
 	// ExifTool - No print conversion mode
 	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
 	if err != nil {
@@ -19,7 +19,7 @@ func (p *externalExifParser) ParseExif(media *models.Media) (returnExif *models.
 	}
 	defer et.Close()
 
-	fileInfos := et.ExtractMetadata(media.Path)
+	fileInfos := et.ExtractMetadata(media_path)
 	newExif := models.MediaEXIF{}
 
 	for _, fileInfo := range fileInfos {

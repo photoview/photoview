@@ -15,8 +15,8 @@ import (
 // internalExifParser is an exif parser that parses the media without the use of external tools
 type internalExifParser struct{}
 
-func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.MediaEXIF, returnErr error) {
-	photoFile, err := os.Open(media.Path)
+func (p *internalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
+	photoFile, err := os.Open(media_path)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,17 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 
 	newExif := models.MediaEXIF{}
 
-	model, err := p.readStringTag(exifTags, exif.Model, media)
+	model, err := p.readStringTag(exifTags, exif.Model, media_path)
 	if err == nil {
 		newExif.Camera = model
 	}
 
-	maker, err := p.readStringTag(exifTags, exif.Make, media)
+	maker, err := p.readStringTag(exifTags, exif.Make, media_path)
 	if err == nil {
 		newExif.Maker = maker
 	}
 
-	lens, err := p.readStringTag(exifTags, exif.LensModel, media)
+	lens, err := p.readStringTag(exifTags, exif.LensModel, media_path)
 	if err == nil {
 		newExif.Lens = lens
 	}
@@ -66,7 +66,7 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 	}
 
-	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, media)
+	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, media_path)
 	if err == nil {
 		aperture, _ := apertureRat.Float64()
 		newExif.Aperture = &aperture
@@ -74,11 +74,11 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 
 	isoTag, err := exifTags.Get(exif.ISOSpeedRatings)
 	if err != nil {
-		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %s\n", media.Title)
+		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %v\n", media_path)
 	} else {
 		iso, err := isoTag.Int(0)
 		if err != nil {
-			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %s\n", media.Title)
+			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %v\n", media_path)
 		} else {
 			iso64 := int64(iso)
 			newExif.Iso = &iso64
@@ -99,7 +99,7 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 			if err == nil {
 				focalLength, err := focalLengthTag.Int(1)
 				if err != nil {
-					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %s\n%s\n", media.Title, err)
+					log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %v\n%s\n", media_path, err)
 				} else {
 					focalLenFloat := float64(focalLength)
 					newExif.FocalLength = &focalLenFloat
@@ -108,19 +108,19 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 		}
 	}
 
-	flash, err := p.readIntegerTag(exifTags, exif.Flash, media)
+	flash, err := p.readIntegerTag(exifTags, exif.Flash, media_path)
 	if err == nil {
 		flash64 := int64(*flash)
 		newExif.Flash = &flash64
 	}
 
-	orientation, err := p.readIntegerTag(exifTags, exif.Orientation, media)
+	orientation, err := p.readIntegerTag(exifTags, exif.Orientation, media_path)
 	if err == nil {
 		orientation64 := int64(*orientation)
 		newExif.Orientation = &orientation64
 	}
 
-	exposureProgram, err := p.readIntegerTag(exifTags, exif.ExposureProgram, media)
+	exposureProgram, err := p.readIntegerTag(exifTags, exif.ExposureProgram, media_path)
 	if err == nil {
 		exposureProgram64 := int64(*exposureProgram)
 		newExif.ExposureProgram = &exposureProgram64
@@ -136,59 +136,59 @@ func (p *internalExifParser) ParseExif(media *models.Media) (returnExif *models.
 	return
 }
 
-func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*string, error) {
+func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName, media_path string) (*string, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media_path)
 	}
 
 	if tag != nil {
 		value, err := tag.StringVal()
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse %s from EXIF as string: %s", name, media.Title)
+			return nil, errors.Wrapf(err, "could not parse %s from EXIF as string: %s", name, media_path)
 		}
 
 		return &value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media_path)
 	return nil, errors.New("exif tag returned null")
 }
 
-func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*big.Rat, error) {
+func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, media_path string) (*big.Rat, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media_path)
 	}
 
 	if tag != nil {
 		value, err := tag.Rat(0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse %s from EXIF as rational: %s", name, media.Title)
+			return nil, errors.Wrapf(err, "could not parse %s from EXIF as rational: %s", name, media_path)
 		}
 
 		return value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media_path)
 	return nil, errors.New("exif tag returned null")
 }
 
-func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName, media *models.Media) (*int, error) {
+func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName, media_path string) (*int, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media.Title)
+		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media_path)
 	}
 
 	if tag != nil {
 		value, err := tag.Int(0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Could not parse %s from EXIF as integer: %s", name, media.Title)
+			return nil, errors.Wrapf(err, "Could not parse %s from EXIF as integer: %s", name, media_path)
 		}
 
 		return &value, nil
 	}
 
-	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media.Title)
+	log.Printf("WARN: EXIF tag %s returned null: %s\n", name, media_path)
 	return nil, errors.New("exif tag returned null")
 }
