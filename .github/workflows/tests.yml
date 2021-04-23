@@ -11,15 +11,44 @@ jobs:
     name: Test API
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        database: ['mysql', 'postgres', 'sqlite']
+
+    services:
+      mariadb:
+        image: mariadb:10.5
+        env:
+          MYSQL_DATABASE: photoview_test
+          MYSQL_USER: photoview
+          MYSQL_PASSWORD: photosecret
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        images: postgres:13.2
+        env:
+          POSTGRES_USER: photoview
+          POSTGRES_PASSWORD: photosecret
+          POSTGRES_DB: photoview_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: api
 
     steps:
-      - name: Set up Go 1.x
+      - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.13
+          go-version: ^1.16
         id: go
 
       - name: Check out code into the Go module directory
@@ -43,8 +72,24 @@ jobs:
       - name: Build
         run: go build -v .
 
+      - name: Configure MySQL
+        if: ${{ matrix.database == 'mysql' }}
+        run: |
+          cp ../.github/mysql.testing.env testing.env
+
+      - name: Configure Postgres
+        if: ${{ matrix.database == 'postgres' }}
+        run: |
+          cp ../.github/postgres.testing.env testing.env
+
+      - name: Configure Sqlite
+        if: ${{ matrix.database == 'sqlite' }}
+        run: |
+          touch photoview_test.db
+          cp ../.github/sqlite.testing.env testing.env
+
       - name: Test
-        run: go test -v ./...
+        run: go test ./... -v -database -filesystem -p 1
 
   test-ui:
     name: Test UI
