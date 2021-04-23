@@ -22,6 +22,7 @@ jobs:
           MYSQL_DATABASE: photoview_test
           MYSQL_USER: photoview
           MYSQL_PASSWORD: photosecret
+          MYSQL_RANDOM_ROOT_PASSWORD: yes
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
