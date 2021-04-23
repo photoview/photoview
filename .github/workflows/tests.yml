@@ -29,7 +29,7 @@ jobs:
           --health-retries=5
 
       postgres:
-        images: postgres:13.2
+        image: postgres:13.2
         env:
           POSTGRES_USER: photoview
           POSTGRES_PASSWORD: photosecret
