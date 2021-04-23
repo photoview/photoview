@@ -2,19 +2,23 @@ package exif
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"testing"
 	"time"
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(test_utils.IntegrationTestRun(m))
+}
+
 func TestExifParsers(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
+	test_utils.FilesystemTest(t)
 
 	parsers := []struct {
 		name   string

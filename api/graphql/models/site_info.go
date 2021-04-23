@@ -16,32 +16,37 @@ func (SiteInfo) TableName() string {
 	return "site_info"
 }
 
+func DefaultSiteInfo() SiteInfo {
+	defaultConcurrentWorkers := 3
+	if db_drivers.DatabaseDriver() == db_drivers.DatabaseDriverSqlite {
+		defaultConcurrentWorkers = 1
+	}
+
+	return SiteInfo{
+		InitialSetup:         true,
+		PeriodicScanInterval: 0,
+		ConcurrentWorkers:    defaultConcurrentWorkers,
+	}
+}
+
 // GetSiteInfo gets the site info row from the database, and creates it if it does not exist
 func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 
-	var siteInfo SiteInfo
+	var siteInfo []*SiteInfo
 
-	if err := db.First(&siteInfo).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-
-			defaultConcurrentWorkers := 3
-			if db_drivers.DatabaseDriver() == db_drivers.DatabaseDriverSqlite {
-				defaultConcurrentWorkers = 1
-			}
-
-			siteInfo = SiteInfo{
-				InitialSetup:         true,
-				PeriodicScanInterval: 0,
-				ConcurrentWorkers:    defaultConcurrentWorkers,
-			}
-
-			if err := db.Create(&siteInfo).Error; err != nil {
-				return nil, errors.Wrap(err, "initialize site_info")
-			}
-		} else {
-			return nil, errors.Wrap(err, "get site info from database")
-		}
+	if err := db.Limit(1).Find(&siteInfo).Error; err != nil {
+		return nil, errors.Wrap(err, "get site info from database")
 	}
 
-	return &siteInfo, nil
+	if len(siteInfo) == 0 {
+		newSiteInfo := DefaultSiteInfo()
+
+		if err := db.Create(&newSiteInfo).Error; err != nil {
+			return nil, errors.Wrap(err, "initialize site_info")
+		}
+
+		return &newSiteInfo, nil
+	} else {
+		return siteInfo[0], nil
+	}
 }

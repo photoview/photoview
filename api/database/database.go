@@ -20,8 +20,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func getMysqlAddress() (string, error) {
-	addressString := utils.EnvMysqlURL.GetValue()
+func GetMysqlAddress(addressString string) (string, error) {
 	if addressString == "" {
 		return "", errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
 	}
@@ -37,8 +36,7 @@ func getMysqlAddress() (string, error) {
 	return config.FormatDSN(), nil
 }
 
-func getPostgresAddress() (*url.URL, error) {
-	addressString := utils.EnvPostgresURL.GetValue()
+func GetPostgresAddress(addressString string) (*url.URL, error) {
 	if addressString == "" {
 		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName()))
 	}
@@ -51,8 +49,7 @@ func getPostgresAddress() (*url.URL, error) {
 	return address, nil
 }
 
-func getSqliteAddress() (*url.URL, error) {
-	path := utils.EnvSqlitePath.GetValue()
+func GetSqliteAddress(path string) (*url.URL, error) {
 	if path == "" {
 		path = "photoview.db"
 	}
@@ -73,11 +70,11 @@ func getSqliteAddress() (*url.URL, error) {
 	return address, nil
 }
 
-func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
+func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 	var databaseDialect gorm.Dialector
 	switch drivers.DatabaseDriver() {
 	case drivers.DatabaseDriverMysql:
-		mysqlAddress, err := getMysqlAddress()
+		mysqlAddress, err := GetMysqlAddress(utils.EnvMysqlURL.GetValue())
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +82,7 @@ func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		databaseDialect = gorm_mysql.Open(mysqlAddress)
 
 	case drivers.DatabaseDriverSqlite:
-		sqliteAddress, err := getSqliteAddress()
+		sqliteAddress, err := GetSqliteAddress(utils.EnvSqlitePath.GetValue())
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +90,7 @@ func configureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		databaseDialect = sqlite.Open(sqliteAddress.String())
 
 	case drivers.DatabaseDriverPostgres:
-		postgresAddress, err := getPostgresAddress()
+		postgresAddress, err := GetPostgresAddress(utils.EnvPostgresURL.GetValue())
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +123,7 @@ func SetupDatabase() (*gorm.DB, error) {
 	for retryCount := 1; retryCount <= 5; retryCount++ {
 
 		var err error
-		db, err = configureDatabase(&config)
+		db, err = ConfigureDatabase(&config)
 		if err == nil {
 			sqlDB, dbErr := db.DB()
 			if dbErr != nil {
@@ -151,24 +148,26 @@ func SetupDatabase() (*gorm.DB, error) {
 	return db, nil
 }
 
-func MigrateDatabase(db *gorm.DB) error {
-	err := db.AutoMigrate(
-		&models.User{},
-		&models.AccessToken{},
-		&models.SiteInfo{},
-		&models.Media{},
-		&models.MediaURL{},
-		&models.Album{},
-		&models.MediaEXIF{},
-		&models.VideoMetadata{},
-		&models.ShareToken{},
-		&models.UserMediaData{},
-		&models.UserPreferences{},
+var database_models []interface{} = []interface{}{
+	&models.User{},
+	&models.AccessToken{},
+	&models.SiteInfo{},
+	&models.Media{},
+	&models.MediaURL{},
+	&models.Album{},
+	&models.MediaEXIF{},
+	&models.VideoMetadata{},
+	&models.ShareToken{},
+	&models.UserMediaData{},
+	&models.UserPreferences{},
 
-		// Face detection
-		&models.FaceGroup{},
-		&models.ImageFace{},
-	)
+	// Face detection
+	&models.FaceGroup{},
+	&models.ImageFace{},
+}
+
+func MigrateDatabase(db *gorm.DB) error {
+	err := db.AutoMigrate(database_models...)
 
 	if err != nil {
 		log.Printf("Auto migration failed: %v\n", err)
@@ -184,6 +183,25 @@ func MigrateDatabase(db *gorm.DB) error {
 	err = migrate_exif_fields(db)
 	if err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
+	}
+
+	return nil
+}
+
+func ClearDatabase(db *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
+		sess := tx.Session(&gorm.Session{AllowGlobalUpdate: true})
+		for _, model := range database_models {
+			if err := sess.Delete(model).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
