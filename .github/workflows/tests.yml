@@ -105,7 +105,9 @@ jobs:
         run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload coverage
-        run: bash <(curl -s https://codecov.io/bash)
+        uses: codecov/codecov-action@v1
+        with:
+          flags: api
 
   test-ui:
     name: Test UI
@@ -120,23 +122,28 @@ jobs:
         node-version: [15.x]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Cache NPM dependencies
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+      - name: Cache NPM dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm clean-install
+      - name: Install dependencies
+        run: npm clean-install
 
-    - name: Test
-      run: npm run test:ci
+      - name: Test
+        run: npm run test:ci
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          flags: ui
