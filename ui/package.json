@@ -54,10 +54,12 @@
     "start": "node --experimental-modules build.mjs watch",
     "build": "NODE_ENV=production node --experimental-modules build.mjs",
     "test": "npm run lint && npm run jest",
+    "test:ci": "npm run lint && npm run jest:ci",
     "lint": "npm run lint:types & npm run lint:eslint",
     "lint:eslint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
     "lint:types": "tsc --noemit",
     "jest": "jest --verbose",
+    "jest:ci": "jest --verbose --ci --coverage",
     "genSchemaTypes": "npx apollo client:codegen --target=typescript",
     "prepare": "(cd .. && npx husky install)"
   },

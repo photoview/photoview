@@ -108,14 +108,9 @@ func ValidRootPath(rootPath string) bool {
 }
 
 func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*User, error) {
-	// if !ValidRootPath(rootPath) {
-	// 	return nil, ErrorInvalidRootPath
-	// }
-
 	user := User{
 		Username: username,
-		// RootPath: rootPath,
-		Admin: admin,
+		Admin:    admin,
 	}
 
 	if password != nil {
@@ -148,11 +143,6 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 
 	token_value := string(bytes)
 	expire := time.Now().Add(14 * 24 * time.Hour)
-	// expireString := expire.UTC().Format("2006-01-02 15:04:05")
-
-	// if _, err := database.Exec("INSERT INTO access_token (value, expire, user_id) VALUES (?, ?, ?)", token_value, expireString, user.UserID); err != nil {
-	// 	return nil, err
-	// }
 
 	token := AccessToken{
 		UserID: user.ID,
@@ -183,14 +173,11 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 }
 
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
-
-	// user.QueryUserAlbums(db, db.Where("id = ?", album.ID))
-
 	// TODO: Implement this
-	return true, nil
+	panic("not implemented")
 }
 
 func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
 	// TODO: implement this
-	return true, nil
+	panic("not implemented")
 }
