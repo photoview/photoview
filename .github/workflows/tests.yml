@@ -102,7 +102,10 @@ jobs:
           cp ../.github/sqlite.testing.env testing.env
 
       - name: Test
-        run: go test ./... -v -database -filesystem -p 1
+        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+
+      - name: Upload coverage
+        run: bash <(curl -s https://codecov.io/bash)
 
   test-ui:
     name: Test UI
@@ -128,4 +131,4 @@ jobs:
       run: npm clean-install
 
     - name: Test
-      run: npm test
+      run: npm test:ci
