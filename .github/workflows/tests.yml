@@ -55,6 +55,14 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
+      - name: Cache Go dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Get C dependencies
         run: |
           sudo add-apt-repository ppa:strukturag/libheif
