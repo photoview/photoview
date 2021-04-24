@@ -33,6 +33,8 @@ type ScannerQueue struct {
 	up_next     []ScannerJob
 	db          *gorm.DB
 	settings    ScannerQueueSettings
+	close_chan  *chan bool
+	running     bool
 }
 
 var global_scanner_queue ScannerQueue
@@ -56,11 +58,17 @@ func InitializeScannerQueue(db *gorm.DB) error {
 		up_next:     make([]ScannerJob, 0),
 		db:          db,
 		settings:    ScannerQueueSettings{max_concurrent_tasks: concurrentWorkers},
+		close_chan:  nil,
+		running:     true,
 	}
 
 	go global_scanner_queue.startBackgroundWorker()
 
 	return nil
+}
+
+func CloseScannerQueue() {
+	global_scanner_queue.CloseBackgroundWorker()
 }
 
 func ChangeScannerConcurrentWorkers(newMaxWorkers int) {
@@ -78,60 +86,88 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 	for {
 		log.Println("Queue waiting")
 		<-queue.idle_chan
-		log.Println("Queue waiting for lock")
+
 		queue.mutex.Lock()
-		log.Printf("Queue running: in_progress: %d, max_tasks: %d, queue_len: %d\n", len(queue.in_progress), queue.settings.max_concurrent_tasks, len(queue.up_next))
-
-		for len(queue.in_progress) < queue.settings.max_concurrent_tasks && len(queue.up_next) > 0 {
-			log.Println("Queue starting job")
-			nextJob := queue.up_next[0]
-			queue.up_next = queue.up_next[1:]
-			queue.in_progress = append(queue.in_progress, nextJob)
-
-			go func() {
-				log.Println("Starting job")
-				nextJob.Run(queue.db)
-				log.Println("Job finished")
-
-				// Delete finished job from queue
-				queue.mutex.Lock()
-				for i, x := range queue.in_progress {
-					if x == nextJob {
-						queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
-						queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
-						break
-					}
-				}
-				queue.mutex.Unlock()
-
-				queue.notify()
-			}()
-		}
-
-		in_progress_length := len(global_scanner_queue.in_progress)
-		up_next_length := len(global_scanner_queue.up_next)
-
+		should_stop := queue.close_chan != nil && len(queue.in_progress) == 0 && len(queue.up_next) == 0
+		queue.running = false
 		queue.mutex.Unlock()
 
-		if in_progress_length+up_next_length == 0 {
-			notification.BroadcastNotification(&models.Notification{
-				Key:      "global-scanner-progress",
-				Type:     models.NotificationTypeMessage,
-				Header:   fmt.Sprintf("Scanner complete"),
-				Content:  fmt.Sprintf("All jobs have been scanned"),
-				Positive: true,
-			})
-		} else {
-			notifyThrottle.Trigger(func() {
-				notification.BroadcastNotification(&models.Notification{
-					Key:     "global-scanner-progress",
-					Type:    models.NotificationTypeMessage,
-					Header:  fmt.Sprintf("Scanning media"),
-					Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
-				})
-			})
+		if should_stop {
+			*queue.close_chan <- true
+			break
 		}
 
+		queue.processQueue(&notifyThrottle)
+	}
+
+	log.Println("Scanner background worker stopped")
+}
+
+func (queue *ScannerQueue) CloseBackgroundWorker() {
+	queue.mutex.Lock()
+	close_chan := make(chan bool)
+	queue.close_chan = &close_chan
+	queue.mutex.Unlock()
+
+	queue.notify()
+
+	log.Println("Waiting for scanner background worker to finish all jobs...")
+	<-close_chan
+}
+
+func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
+	log.Println("Queue waiting for lock")
+	queue.mutex.Lock()
+	log.Printf("Queue running: in_progress: %d, max_tasks: %d, queue_len: %d\n", len(queue.in_progress), queue.settings.max_concurrent_tasks, len(queue.up_next))
+
+	for len(queue.in_progress) < queue.settings.max_concurrent_tasks && len(queue.up_next) > 0 {
+		log.Println("Queue starting job")
+		nextJob := queue.up_next[0]
+		queue.up_next = queue.up_next[1:]
+		queue.in_progress = append(queue.in_progress, nextJob)
+
+		go func() {
+			log.Println("Starting job")
+			nextJob.Run(queue.db)
+			log.Println("Job finished")
+
+			// Delete finished job from queue
+			queue.mutex.Lock()
+			for i, x := range queue.in_progress {
+				if x == nextJob {
+					queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
+					queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
+					break
+				}
+			}
+			queue.mutex.Unlock()
+
+			queue.notify()
+		}()
+	}
+
+	in_progress_length := len(global_scanner_queue.in_progress)
+	up_next_length := len(global_scanner_queue.up_next)
+
+	queue.mutex.Unlock()
+
+	if in_progress_length+up_next_length == 0 {
+		notification.BroadcastNotification(&models.Notification{
+			Key:      "global-scanner-progress",
+			Type:     models.NotificationTypeMessage,
+			Header:   fmt.Sprintf("Scanner complete"),
+			Content:  fmt.Sprintf("All jobs have been scanned"),
+			Positive: true,
+		})
+	} else {
+		notifyThrottle.Trigger(func() {
+			notification.BroadcastNotification(&models.Notification{
+				Key:     "global-scanner-progress",
+				Type:    models.NotificationTypeMessage,
+				Header:  fmt.Sprintf("Scanning media"),
+				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
+			})
+		})
 	}
 }
 

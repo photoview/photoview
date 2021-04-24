@@ -47,6 +47,8 @@ func (dbm *TestDBManager) setup() error {
 
 	dbm.DB = db
 
+	dbm.reset()
+
 	return nil
 }
 
