@@ -196,9 +196,23 @@ func ClearDatabase(db *gorm.DB) error {
 			// get table name of model structure
 			table := dry_run.Find(model).Statement.Table
 
-			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
-				return err
+			switch drivers.DatabaseDriver() {
+			case drivers.DatabaseDriverPostgres:
+				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
+					return err
+				}
+				break
+			case drivers.DatabaseDriverMysql:
+				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
+					return err
+				}
+				break
+			case drivers.DatabaseDriverSqlite:
+				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
+					return err
+				}
 			}
+
 		}
 
 		return nil
