@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
 
@@ -55,6 +56,7 @@ func FilesystemTest(t *testing.T) {
 	if !*integration_flags.Filesystem {
 		t.Skip("Filesystem integration tests disabled")
 	}
+	utils.ConfigureTestCache(t.TempDir())
 }
 
 func DatabaseTest(t *testing.T) *gorm.DB {

@@ -190,9 +190,39 @@ func MigrateDatabase(db *gorm.DB) error {
 
 func ClearDatabase(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
-		sess := tx.Session(&gorm.Session{AllowGlobalUpdate: true})
+
+		db_driver := drivers.DatabaseDriver()
+
+		if db_driver == drivers.DatabaseDriverMysql {
+			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
+				return err
+			}
+		}
+
+		dry_run := tx.Session(&gorm.Session{DryRun: true})
 		for _, model := range database_models {
-			if err := sess.Delete(model).Error; err != nil {
+			// get table name of model structure
+			table := dry_run.Find(model).Statement.Table
+
+			switch db_driver {
+			case drivers.DatabaseDriverPostgres:
+				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
+					return err
+				}
+			case drivers.DatabaseDriverMysql:
+				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
+					return err
+				}
+			case drivers.DatabaseDriverSqlite:
+				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
+					return err
+				}
+			}
+
+		}
+
+		if db_driver == drivers.DatabaseDriverMysql {
+			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
 				return err
 			}
 		}
