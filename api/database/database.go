@@ -159,6 +159,7 @@ var database_models []interface{} = []interface{}{
 	&models.VideoMetadata{},
 	&models.ShareToken{},
 	&models.UserMediaData{},
+	&models.UserAlbums{},
 	&models.UserPreferences{},
 
 	// Face detection
@@ -167,9 +168,12 @@ var database_models []interface{} = []interface{}{
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-	err := db.AutoMigrate(database_models...)
 
-	if err != nil {
+	if err := db.SetupJoinTable(&models.User{}, "Albums", &models.UserAlbums{}); err != nil {
+		log.Printf("Setup UserAlbums join table failed: %v\n", err)
+	}
+
+	if err := db.AutoMigrate(database_models...); err != nil {
 		log.Printf("Auto migration failed: %v\n", err)
 	}
 
@@ -180,8 +184,7 @@ func MigrateDatabase(db *gorm.DB) error {
 
 	// v2.3.0 - Changed type of MediaEXIF.Exposure and MediaEXIF.Flash
 	// from string values to decimal and int respectively
-	err = migrate_exif_fields(db)
-	if err != nil {
+	if err := migrate_exif_fields(db); err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
 	}
 

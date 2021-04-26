@@ -38,7 +38,7 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				}
 
 				// put it in context
-				ctx := context.WithValue(r.Context(), userCtxKey, user)
+				ctx := AddUserToContext(r.Context(), user)
 
 				// and call the next with our new context
 				r = r.WithContext(ctx)
@@ -51,8 +51,12 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	}
 }
 
+func AddUserToContext(ctx context.Context, user *models.User) context.Context {
+	return context.WithValue(ctx, userCtxKey, user)
+}
+
 func TokenFromBearer(bearer *string) (*string, error) {
-	regex, _ := regexp.Compile("^Bearer ([a-zA-Z0-9]{24})$")
+	regex, _ := regexp.Compile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 	matches := regex.FindStringSubmatch(*bearer)
 	if len(matches) != 2 {
 		return nil, errors.New("invalid bearer format")
