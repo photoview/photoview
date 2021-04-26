@@ -11,6 +11,7 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -145,47 +146,7 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 		return nil, auth.ErrUnauthorized
 	}
 
-	var media models.Media
-
-	var query string
-	if r.Database.Dialector.Name() == "postgres" {
-		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = \"Album\".id AND user_albums.user_id = ?)"
-	} else {
-		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)"
-	}
-
-	err := r.Database.Joins("Album").
-		Where(query, user.ID).
-		First(&media, mediaID).
-		Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, auth.ErrUnauthorized
-		} else {
-			return nil, errors.Wrap(err, "failed to validate media owner with database")
-		}
-	}
-
-	hashedPassword, err := hashSharePassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	shareToken := models.ShareToken{
-		Value:    utils.GenerateToken(),
-		OwnerID:  user.ID,
-		Expire:   expire,
-		Password: hashedPassword,
-		AlbumID:  nil,
-		MediaID:  &mediaID,
-	}
-
-	if err := r.Database.Create(&shareToken).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to insert new share token into database")
-	}
-
-	return &shareToken, nil
+	return actions.AddMediaShare(r.Database, user.ID, mediaID, expire, password)
 }
 
 func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue string) (*models.ShareToken, error) {
@@ -194,16 +155,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 		return nil, auth.ErrUnauthorized
 	}
 
-	token, err := getUserToken(r.Database, user, tokenValue)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := r.Database.Delete(&token).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed to delete share token (%s) from database", tokenValue)
-	}
-
-	return token, nil
+	return actions.DeleteShareToken(r.Database, user.ID, tokenValue)
 }
 
 func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
@@ -212,47 +164,5 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue str
 		return nil, auth.ErrUnauthorized
 	}
 
-	token, err := getUserToken(r.Database, user, tokenValue)
-	if err != nil {
-		return nil, err
-	}
-
-	hashedPassword, err := hashSharePassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	token.Password = hashedPassword
-
-	if err := r.Database.Save(&token).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to update password for share token")
-	}
-
-	return token, nil
-}
-
-func hashSharePassword(password *string) (*string, error) {
-	var hashedPassword *string = nil
-	if password != nil {
-		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate hash for share password")
-		}
-		hashedStr := string(hashedPassBytes)
-		hashedPassword = &hashedStr
-	}
-
-	return hashedPassword, nil
-}
-
-func getUserToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
-
-	var token models.ShareToken
-	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where("Owner.id = ? OR Owner.admin = TRUE", user.ID).First(&token).Error
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user share token from database")
-	}
-
-	return &token, nil
+	return actions.ProtectShareToken(r.Database, user.ID, tokenValue, password)
 }
