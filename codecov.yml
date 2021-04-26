@@ -1,0 +1,3 @@
+ignore:
+  - "api/**/generated.go"
+  - "ui/src/**/__generated__"
