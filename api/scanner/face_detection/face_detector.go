@@ -107,8 +107,6 @@ func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
-	log.Printf("Face thumb path: %v %v\n", thumbnailPath, fd)
-
 	fd.mutex.Lock()
 	faces, err := fd.rec.RecognizeFile(thumbnailPath)
 	fd.mutex.Unlock()

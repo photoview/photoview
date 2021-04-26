@@ -30,6 +30,15 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 	if len(matchedAlbums) > 0 {
 		album := matchedAlbums[0]
 
+		var matchedUserAlbumCount int64
+		if err := db.Table("user_albums").Where("user_id = ?", owner.ID).Where("album_id = ?", album.ID).Count(&matchedUserAlbumCount).Error; err != nil {
+			return nil, err
+		}
+
+		if matchedUserAlbumCount > 0 {
+			return nil, errors.New(fmt.Sprintf("user already owns path (%s)", rootPath))
+		}
+
 		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
 			return nil, errors.Wrap(err, "failed to add owner to already existing album")
 		}
