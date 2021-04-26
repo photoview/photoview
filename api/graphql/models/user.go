@@ -3,8 +3,6 @@ package models
 import (
 	"crypto/rand"
 	"fmt"
-	"log"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -17,7 +15,7 @@ type User struct {
 	Username string  `gorm:"unique;size:128"`
 	Password *string `gorm:"size:256"`
 	// RootPath string  `gorm:"size:512`
-	Albums []Album `gorm:"many2many:user_albums"`
+	Albums []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
 	Admin  bool    `gorm:"default:false"`
 }
 
@@ -26,6 +24,11 @@ type UserMediaData struct {
 	UserID   int  `gorm:"primaryKey;autoIncrement:false"`
 	MediaID  int  `gorm:"primaryKey;autoIncrement:false"`
 	Favorite bool `gorm:"not null;default:false"`
+}
+
+type UserAlbums struct {
+	UserID  int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	AlbumID int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
 }
 
 type AccessToken struct {
@@ -93,18 +96,6 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 	}
 
 	return &user, nil
-}
-
-var ErrorInvalidRootPath = errors.New("invalid root path")
-
-func ValidRootPath(rootPath string) bool {
-	_, err := os.Stat(rootPath)
-	if err != nil {
-		log.Printf("Warn: invalid root path: '%s'\n%s\n", rootPath, err)
-		return false
-	}
-
-	return true
 }
 
 func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*User, error) {

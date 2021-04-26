@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"time"
 
@@ -17,6 +18,19 @@ import (
 )
 
 func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+
+	if !ValidRootPath(rootPath) {
+		return nil, ErrorInvalidRootPath
+	}
+
+	if !path.IsAbs(rootPath) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		rootPath = path.Join(wd, rootPath)
+	}
 
 	owners := []models.User{
 		*owner,
@@ -36,7 +50,7 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		}
 
 		if matchedUserAlbumCount > 0 {
-			return nil, errors.New(fmt.Sprintf("user already owns path (%s)", rootPath))
+			return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", rootPath))
 		}
 
 		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
@@ -57,6 +71,18 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 
 		return &album, nil
 	}
+}
+
+var ErrorInvalidRootPath = errors.New("invalid root path")
+
+func ValidRootPath(rootPath string) bool {
+	_, err := os.Stat(rootPath)
+	if err != nil {
+		log.Printf("Warn: invalid root path: '%s'\n%s\n", rootPath, err)
+		return false
+	}
+
+	return true
 }
 
 func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {

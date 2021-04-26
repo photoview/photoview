@@ -2,11 +2,9 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path"
 	"strconv"
-	"strings"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -312,39 +310,6 @@ func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath
 	var user models.User
 	if err := r.Database.First(&user, id).Error; err != nil {
 		return nil, err
-	}
-
-	if !models.ValidRootPath(rootPath) {
-		return nil, errors.New("invalid root path")
-	}
-
-	upperPaths := make([]string, 1)
-	upperPath := rootPath
-	upperPaths[0] = upperPath
-	for {
-
-		substrIndex := strings.LastIndex(upperPath, "/")
-		if substrIndex == -1 {
-			break
-		}
-
-		if substrIndex == 0 {
-			upperPaths = append(upperPaths, "/")
-			break
-		}
-
-		upperPath = upperPath[0:substrIndex]
-		upperPaths = append(upperPaths, upperPath)
-	}
-
-	var upperAlbums []models.Album
-	if err := r.Database.Model(&user).Association("Albums").Find(&upperAlbums, "albums.path IN (?)", upperPaths); err != nil {
-		// if err := r.Database.Model(models.Album{}).Where("path IN (?)", upperPaths).Find(&upperAlbums).Error; err != nil {
-		return nil, err
-	}
-
-	if len(upperAlbums) > 0 {
-		return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", upperAlbums[0].Path))
 	}
 
 	newAlbum, err := scanner.NewRootAlbum(r.Database, rootPath, &user)

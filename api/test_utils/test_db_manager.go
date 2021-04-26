@@ -23,6 +23,10 @@ func (dbm *TestDBManager) Close() error {
 		return nil
 	}
 
+	if err := dbm.reset(); err != nil {
+		return err
+	}
+
 	sqlDB, err := dbm.DB.DB()
 	if err != nil {
 		return errors.Wrap(err, "get db instance when closing test database")
@@ -47,7 +51,9 @@ func (dbm *TestDBManager) setup() error {
 
 	dbm.DB = db
 
-	dbm.reset()
+	if err := dbm.reset(); err != nil {
+		return err
+	}
 
 	return nil
 }
