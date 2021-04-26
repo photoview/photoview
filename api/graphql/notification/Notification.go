@@ -73,8 +73,6 @@ func BroadcastNotification(notification *models.Notification) {
 		return
 	}
 
-	log.Printf("Broadcasting notification: %s\n", notification.Header)
-
 	notificationLock.Lock()
 	defer notificationLock.Unlock()
 

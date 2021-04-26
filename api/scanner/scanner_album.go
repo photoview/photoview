@@ -78,7 +78,6 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 		processing_was_needed := false
 
 		transactionError := db.Transaction(func(tx *gorm.DB) error {
-			log.Printf("Process media transaction enter (%s)", media.Path)
 			processing_was_needed, err = ProcessMedia(tx, media)
 			if err != nil {
 				return errors.Wrapf(err, "failed to process photo (%s)", media.Path)
@@ -96,7 +95,6 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 				})
 			}
 
-			log.Printf("Process media transaction exit (%s)", media.Path)
 			return nil
 		})
 

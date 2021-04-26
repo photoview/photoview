@@ -33,8 +33,6 @@ func InitializeEXIFParser() {
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
 func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 
-	log.Printf("Scanning for EXIF: %s", media.Path)
-
 	{
 		// Check if EXIF data already exists
 		if media.ExifID != nil {
