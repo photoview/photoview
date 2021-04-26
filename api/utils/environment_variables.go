@@ -7,10 +7,11 @@ type EnvironmentVariable string
 
 // General options
 const (
-	EnvDevelopmentMode EnvironmentVariable = "PHOTOVIEW_DEVELOPMENT_MODE"
-	EnvServeUI         EnvironmentVariable = "PHOTOVIEW_SERVE_UI"
-	EnvUIPath          EnvironmentVariable = "PHOTOVIEW_UI_PATH"
-	EnvMediaCachePath  EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
+	EnvDevelopmentMode           EnvironmentVariable = "PHOTOVIEW_DEVELOPMENT_MODE"
+	EnvServeUI                   EnvironmentVariable = "PHOTOVIEW_SERVE_UI"
+	EnvUIPath                    EnvironmentVariable = "PHOTOVIEW_UI_PATH"
+	EnvMediaCachePath            EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
+	EnvFaceRecognitionModelsPath EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH"
 )
 
 // Network related

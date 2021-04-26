@@ -32,7 +32,10 @@ func (a *Album) BeforeSave(tx *gorm.DB) (err error) {
 // GetChildren performs a recursive query to get all the children of the album.
 // An optional filter can be provided that can be used to modify the query on the children.
 func (a *Album) GetChildren(db *gorm.DB, filter func(*gorm.DB) *gorm.DB) (children []*Album, err error) {
-	// SELECT * FROM sub_albums
+	return GetChildrenFromAlbums(db, filter, []int{a.ID})
+}
+
+func GetChildrenFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumIDs []int) (children []*Album, err error) {
 	query := db.Model(&Album{}).Table("sub_albums")
 
 	if filter != nil {
@@ -41,13 +44,13 @@ func (a *Album) GetChildren(db *gorm.DB, filter func(*gorm.DB) *gorm.DB) (childr
 
 	err = db.Raw(`
 	WITH recursive sub_albums AS (
-		SELECT * FROM albums AS root WHERE id = ?
+		SELECT * FROM albums AS root WHERE id IN (?)
 		UNION ALL
 		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
 	)
 
 	?
-	`, a.ID, query).Find(&children).Error
+	`, albumIDs, query).Find(&children).Error
 
 	return children, err
 }

@@ -121,47 +121,6 @@ func (e LanguageTranslation) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type MediaType string
-
-const (
-	MediaTypePhoto MediaType = "Photo"
-	MediaTypeVideo MediaType = "Video"
-)
-
-var AllMediaType = []MediaType{
-	MediaTypePhoto,
-	MediaTypeVideo,
-}
-
-func (e MediaType) IsValid() bool {
-	switch e {
-	case MediaTypePhoto, MediaTypeVideo:
-		return true
-	}
-	return false
-}
-
-func (e MediaType) String() string {
-	return string(e)
-}
-
-func (e *MediaType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = MediaType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MediaType", str)
-	}
-	return nil
-}
-
-func (e MediaType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
 type NotificationType string
 
 const (

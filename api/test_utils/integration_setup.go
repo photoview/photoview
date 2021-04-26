@@ -32,11 +32,12 @@ func UnitTestRun(m *testing.M) int {
 func IntegrationTestRun(m *testing.M) int {
 	flag.Parse()
 
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		log.Fatal("could not get runtime file path")
+	}
+
 	if *integration_flags.Database {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			log.Fatal("could not get runtime file path")
-		}
 
 		envPath := path.Join(path.Dir(file), "..", "testing.env")
 
@@ -44,6 +45,9 @@ func IntegrationTestRun(m *testing.M) int {
 			log.Println("No testing.env file found")
 		}
 	}
+
+	faceModelsPath := path.Join(path.Dir(file), "..", "data", "models")
+	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
 
 	result := m.Run()
 

@@ -69,15 +69,6 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 		return nil, err
 	}
 
-	r.Database.Transaction(func(tx *gorm.DB) error {
-		for i := range imageFaces {
-			if err := imageFaces[i].Media.AfterFind(tx); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
 	return imageFaces, nil
 }
 

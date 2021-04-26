@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"path"
 )
 
 func GenerateToken() string {
@@ -60,4 +61,22 @@ func MediaCachePath() string {
 	}
 
 	return photoCache
+}
+
+var test_face_recognition_models_path string = ""
+
+func ConfigureTestFaceRecognitionModelsPath(path string) {
+	test_face_recognition_models_path = path
+}
+
+func FaceRecognitionModelsPath() string {
+	if test_face_recognition_models_path != "" {
+		return test_face_recognition_models_path
+	}
+
+	if EnvFaceRecognitionModelsPath.GetValue() == "" {
+		return path.Join("data", "models")
+	}
+
+	return EnvFaceRecognitionModelsPath.GetValue()
 }

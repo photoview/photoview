@@ -36,6 +36,8 @@ models:
         resolver: true
       faces:
         resolver: true
+      mediaType:
+        resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:
@@ -60,3 +62,5 @@ models:
     model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
   SiteInfo:
     model: github.com/photoview/photoview/api/graphql/models.SiteInfo
+  MediaType:
+    model: github.com/photoview/photoview/api/graphql/models.MediaType

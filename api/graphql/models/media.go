@@ -42,30 +42,19 @@ func (m *Media) BeforeSave(tx *gorm.DB) error {
 	// Update path hash
 	m.PathHash = MD5Hash(m.Path)
 
-	// Save media type as lowercase for better compatibility
-	m.Type = MediaType(strings.ToLower(string(m.Type)))
-
 	return nil
 }
 
-func (m *Media) AfterFind(tx *gorm.DB) error {
+type MediaType string
 
-	// Convert lowercased media type back
-	lowercasedType := strings.ToLower(string(m.Type))
-	foundType := false
-	for _, t := range AllMediaType {
-		if strings.ToLower(string(t)) == lowercasedType {
-			m.Type = t
-			foundType = true
-			break
-		}
-	}
+const (
+	MediaTypePhoto MediaType = "photo"
+	MediaTypeVideo MediaType = "video"
+)
 
-	if foundType == false {
-		return errors.New(fmt.Sprintf("Failed to parse media from DB: Invalid media type: %s", m.Type))
-	}
-
-	return nil
+var AllMediaType = []MediaType{
+	MediaTypePhoto,
+	MediaTypeVideo,
 }
 
 type MediaPurpose string

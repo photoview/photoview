@@ -2,11 +2,11 @@ package face_detection
 
 import (
 	"log"
-	"path/filepath"
 	"sync"
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -25,7 +25,7 @@ func InitializeFaceDetector(db *gorm.DB) error {
 
 	log.Println("Initializing face detector")
 
-	rec, err := face.NewRecognizer(filepath.Join("data", "models"))
+	rec, err := face.NewRecognizer(utils.FaceRecognitionModelsPath())
 	if err != nil {
 		return errors.Wrap(err, "initialize facedetect recognizer")
 	}
@@ -106,6 +106,8 @@ func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("Face thumb path: %v %v\n", thumbnailPath, fd)
 
 	fd.mutex.Lock()
 	faces, err := fd.rec.RecognizeFile(thumbnailPath)

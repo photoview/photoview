@@ -173,11 +173,29 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 }
 
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
-	// TODO: Implement this
-	panic("not implemented")
+
+	if err := user.FillAlbums(db); err != nil {
+		return false, err
+	}
+
+	albumIDs := make([]int, 0)
+	for _, a := range user.Albums {
+		albumIDs = append(albumIDs, a.ID)
+	}
+
+	filter := func(query *gorm.DB) *gorm.DB {
+		return query.Where("id = ?", album.ID)
+	}
+
+	ownedAlbum, err := GetChildrenFromAlbums(db, filter, albumIDs)
+	if err != nil {
+		return false, err
+	}
+
+	return len(ownedAlbum) > 0, nil
 }
 
-func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
-	// TODO: implement this
-	panic("not implemented")
-}
+// func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
+// 	// TODO: implement this
+// 	panic("not implemented")
+// }
