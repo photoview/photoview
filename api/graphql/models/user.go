@@ -185,8 +185,3 @@ func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 
 	return len(ownedAlbum) > 0, nil
 }
-
-// func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
-// 	// TODO: implement this
-// 	panic("not implemented")
-// }
