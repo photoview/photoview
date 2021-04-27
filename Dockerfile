@@ -29,20 +29,26 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bullseye-slim AS api
-ARG TARGETPLATFORM
+FROM alpine:edge AS api
+# ARG TARGETPLATFORM
 
-COPY docker/install_build_dependencies.sh /tmp/
-RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
+# COPY docker/install_build_dependencies.sh /tmp/
+# RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
 
-COPY docker/go_wrapper.sh /go/bin/go
-RUN chmod +x /go/bin/go
-ENV GOPATH="/go"
-ENV PATH="${GOPATH}/bin:${PATH}"
+# COPY docker/go_wrapper.sh /go/bin/go
+# RUN chmod +x /go/bin/go
+# ENV GOPATH="/go"
+# ENV PATH="${GOPATH}/bin:${PATH}"
+
+RUN apk add --no-cache \
+  go openblas-dev lapack-dev jpeg-dev libheif-dev g++
+
+RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+  dlib
 
 ENV CGO_ENABLED 1
 
-RUN go env
+# RUN go env
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -52,7 +58,8 @@ COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
 # Patch go-face
-RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
+# RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
+RUN sed -i 's/-lblas/-lopenblas/g' /root/go/pkg/mod/github.com/!kagami/go-face*/face.go
 
 # Build dependencies that use CGO
 RUN go install \
@@ -64,25 +71,31 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bullseye-slim
+FROM alpine:edge
 ARG TARGETPLATFORM
 WORKDIR /app
 
 COPY api/data /app/data
 
-RUN apt-get update \
-  # Required dependencies
-  && apt-get install -y curl gpg libdlib19 ffmpeg exiftool libheif1
+# RUN apt-get update \
+#   # Required dependencies
+#   && apt-get install -y curl gpg libdlib19 ffmpeg exiftool libheif1
+
+RUN apk add --no-cache \
+  ffmpeg exiftool libheif
+
+RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+  dlib
 
 # Install Darktable if building for a supported architecture
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt-get install -y darktable; fi
+# RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+#   apt-get install -y darktable; fi
 
 # Remove build dependencies and cleanup
-RUN apt-get purge -y curl gpg \
-  && apt-get autoremove -y \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+# RUN apt-get purge -y curl gpg \
+#   && apt-get autoremove -y \
+#   && apt-get clean \
+#   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ui /app/dist /ui
 COPY --from=api /app/photoview /app/photoview
