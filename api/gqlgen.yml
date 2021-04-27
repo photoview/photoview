@@ -36,7 +36,7 @@ models:
         resolver: true
       faces:
         resolver: true
-      mediaType:
+      type:
         resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL

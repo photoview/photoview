@@ -109,9 +109,9 @@ func (r *Resolver) Media() api.MediaResolver {
 	return &mediaResolver{r}
 }
 
-func (r *mediaResolver) MediaType(ctx context.Context, media *models.Media) (*models.MediaType, error) {
+func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.MediaType, error) {
 	formattedType := models.MediaType(strings.Title(string(media.Type)))
-	return &formattedType, nil
+	return formattedType, nil
 }
 
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {

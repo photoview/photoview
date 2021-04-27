@@ -287,7 +287,7 @@ type MediaResolver interface {
 	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
 
 	Favorite(ctx context.Context, obj *models.Media) (bool, error)
-
+	Type(ctx context.Context, obj *models.Media) (models.MediaType, error)
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
 	Faces(ctx context.Context, obj *models.Media) ([]*models.ImageFace, error)
@@ -4117,14 +4117,14 @@ func (ec *executionContext) _Media_type(ctx context.Context, field graphql.Colle
 		Object:     "Media",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
+		return ec.resolvers.Media().Type(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10345,10 +10345,19 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 				return res
 			})
 		case "type":
-			out.Values[i] = ec._Media_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_type(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "shares":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
