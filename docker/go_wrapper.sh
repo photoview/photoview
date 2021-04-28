@@ -67,15 +67,15 @@ if [ "$CGO_ENABLED" = "1" ]; then
   case "$GOARCH" in
   "amd64")
     export DEBIAN_COMPILER_ARCH="x86_64-linux-gnu"
-    export ALPINE_COMPILER_ARCH="x86_64-linux-gnu"
+    export ALPINE_COMPILER_ARCH="x86_64-linux-musl"
     ;;
   "ppc64le")
     export DEBIAN_COMPILER_ARCH="powerpc64le-linux-gnu"
-    export ALPINE_COMPILER_ARCH="powerpc64le-linux-gnu"
+    export ALPINE_COMPILER_ARCH="powerpc64le-linux-musl"
     ;;
   "s390x")
     export DEBIAN_COMPILER_ARCH="s390x-linux-gnu"
-    export ALPINE_COMPILER_ARCH="s390x-linux-gnu"
+    export ALPINE_COMPILER_ARCH="s390x-linux-musl"
     ;;
   "arm64")
     export DEBIAN_COMPILER_ARCH="aarch64-linux-gnu"
@@ -96,10 +96,14 @@ if [ "$CGO_ENABLED" = "1" ]; then
   esac
 fi
 
-export CC="${ALPINE_COMPILER_ARCH}-gcc"
-export CXX="${ALPINE_COMPILER_ARCH}-g++"
-# export LD="${ALPINE_COMPILER_ARCH}-ld"
-export CGO_CPPFLAGS="-I/aarch64-linux-musl-cross/include -L/aarch64-linux-musl-cross/lib"
+export CC="/${ALPINE_COMPILER_ARCH}-cross/bin/${ALPINE_COMPILER_ARCH}-gcc"
+export CXX="/${ALPINE_COMPILER_ARCH}-cross/bin/${ALPINE_COMPILER_ARCH}-g++"
+
+export CGO_CPPFLAGS="-I/${ALPINE_COMPILER_ARCH}-cross/include -Wno-error=parentheses"
+export LD_LIBRARY_PATH="/${ALPINE_COMPILER_ARCH}-cross/lib"
+export LIBRARY_PATH="/${ALPINE_COMPILER_ARCH}-cross/lib"
+export CGO_LDFLAGS="-g -O2 -L/${ALPINE_COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${ALPINE_COMPILER_ARCH}-cross/lib"
+export LDFLAGS="-g -O2 -L/${ALPINE_COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${ALPINE_COMPILER_ARCH}-cross/lib"
 
 export PATH="/${ALPINE_COMPILER_ARCH}-cross/bin:${PATH}"
 export PKG_CONFIG_PATH="/${ALPINE_COMPILER_ARCH}-cross/usr/lib/pkgconfig/"
