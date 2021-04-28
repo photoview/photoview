@@ -29,22 +29,23 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 ### Build API ###
-FROM alpine:edge AS api
-# ARG TARGETPLATFORM
+FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:edge AS api
+ARG TARGETPLATFORM
 
-# COPY docker/install_build_dependencies.sh /tmp/
-# RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
+COPY docker/install_build_dependencies.sh /tmp/install_build_dependencies.sh
+RUN chmod +x /tmp/install_build_dependencies.sh
+RUN sh /tmp/install_build_dependencies.sh
 
-# COPY docker/go_wrapper.sh /go/bin/go
-# RUN chmod +x /go/bin/go
-# ENV GOPATH="/go"
-# ENV PATH="${GOPATH}/bin:${PATH}"
+COPY docker/go_wrapper.sh /go/bin/go
+RUN chmod +x /go/bin/go
+ENV GOPATH="/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
 
-RUN apk add --no-cache \
-  go openblas-dev lapack-dev jpeg-dev libheif-dev g++
+# RUN apk add --no-cache \
+#   go openblas-dev lapack-dev jpeg-dev libheif-dev g++
 
-RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-  dlib
+# RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+#   dlib
 
 ENV CGO_ENABLED 1
 
@@ -58,8 +59,8 @@ COPY api/go.mod api/go.sum /app/
 RUN go mod download
 
 # Patch go-face
-# RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-RUN sed -i 's/-lblas/-lopenblas/g' /root/go/pkg/mod/github.com/!kagami/go-face*/face.go
+RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
+RUN sed -i 's/-lblas/-lopenblas/g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
 
 # Build dependencies that use CGO
 RUN go install \

@@ -66,33 +66,45 @@ fi
 if [ "$CGO_ENABLED" = "1" ]; then
   case "$GOARCH" in
   "amd64")
-    export COMPILER_ARCH="x86_64-linux-gnu"
+    export DEBIAN_COMPILER_ARCH="x86_64-linux-gnu"
+    export ALPINE_COMPILER_ARCH="x86_64-linux-gnu"
     ;;
   "ppc64le")
-    export COMPILER_ARCH="powerpc64le-linux-gnu"
+    export DEBIAN_COMPILER_ARCH="powerpc64le-linux-gnu"
+    export ALPINE_COMPILER_ARCH="powerpc64le-linux-gnu"
     ;;
   "s390x")
-    export COMPILER_ARCH="s390x-linux-gnu"
+    export DEBIAN_COMPILER_ARCH="s390x-linux-gnu"
+    export ALPINE_COMPILER_ARCH="s390x-linux-gnu"
     ;;
   "arm64")
-    export COMPILER_ARCH="aarch64-linux-gnu"
+    export DEBIAN_COMPILER_ARCH="aarch64-linux-gnu"
+    export ALPINE_COMPILER_ARCH="aarch64-linux-musl"
     ;;
   "arm")
     case "$GOARM" in
     "5")
-      export COMPILER_ARCH="arm-linux-gnueabi"
+      export DEBIAN_COMPILER_ARCH="arm-linux-gnueabi"
+      export ALPINE_COMPILER_ARCH="arm-linux-gnueabi"
       ;;
     *)
-      export COMPILER_ARCH="arm-linux-gnueabihf"
+      export DEBIAN_COMPILER_ARCH="arm-linux-gnueabihf"
+      export ALPINE_COMPILER_ARCH="arm-linux-gnueabihf"
       ;;
     esac
     ;;
   esac
 fi
 
-export CC="${COMPILER_ARCH}-gcc"
-export CXX="${COMPILER_ARCH}-g++"
-export PKG_CONFIG_PATH="/usr/lib/${COMPILER_ARCH}/pkgconfig/"
+export CC="${ALPINE_COMPILER_ARCH}-gcc"
+export CXX="${ALPINE_COMPILER_ARCH}-g++"
+# export LD="${ALPINE_COMPILER_ARCH}-ld"
+export CGO_CPPFLAGS="-I/aarch64-linux-musl-cross/include -L/aarch64-linux-musl-cross/lib"
+
+export PATH="/${ALPINE_COMPILER_ARCH}-cross/bin:${PATH}"
+export PKG_CONFIG_PATH="/${ALPINE_COMPILER_ARCH}-cross/usr/lib/pkgconfig/"
+
+# /usr/bin/go env; exit 1
 
 if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; then
   export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
