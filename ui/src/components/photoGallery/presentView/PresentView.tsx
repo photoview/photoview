@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
-import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
+import PresentMedia from './PresentMedia'
+import { PhotoGalleryAction, PhotoGalleryState } from '../photoGalleryReducer'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -21,37 +22,33 @@ const PreventScroll = createGlobalStyle`
 `
 
 type PresentViewProps = {
-  media: PresentMediaProps_Media
   className?: string
   imageLoaded?(): void
-  nextImage(): void
-  previousImage(): void
-  setPresenting(presenting: boolean): void
+  mediaState: PhotoGalleryState
+  dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
 const PresentView = ({
   className,
-  media,
   imageLoaded,
-  nextImage,
-  previousImage,
-  setPresenting,
+  mediaState,
+  dispatchMedia,
 }: PresentViewProps) => {
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
       if (e.key == 'ArrowRight') {
-        nextImage()
         e.stopPropagation()
+        dispatchMedia({ type: 'nextImage' })
       }
 
       if (e.key == 'ArrowLeft') {
-        previousImage()
         e.stopPropagation()
+        dispatchMedia({ type: 'previousImage' })
       }
 
       if (e.key == 'Escape') {
-        setPresenting(false)
         e.stopPropagation()
+        dispatchMedia({ type: 'setPresenting', presenting: false })
       }
     }
 
@@ -65,10 +62,11 @@ const PresentView = ({
   return (
     <StyledContainer {...className}>
       <PreventScroll />
-      <PresentNavigationOverlay
-        {...{ nextImage, previousImage, setPresenting }}
-      >
-        <PresentMedia media={media} imageLoaded={imageLoaded} />
+      <PresentNavigationOverlay dispatchMedia={dispatchMedia}>
+        <PresentMedia
+          media={mediaState.media[mediaState.activeIndex]}
+          imageLoaded={imageLoaded}
+        />
       </PresentNavigationOverlay>
     </StyledContainer>
   )

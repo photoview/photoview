@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
+import { PhotoGalleryAction } from '../photoGalleryReducer'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -65,16 +66,12 @@ const NavigationButton = styled(OverlayButton)<{ float: 'left' | 'right' }>`
 
 type PresentNavigationOverlayProps = {
   children?: React.ReactChild
-  nextImage(): void
-  previousImage(): void
-  setPresenting(presenting: boolean): void
+  dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
 const PresentNavigationOverlay = ({
   children,
-  nextImage,
-  previousImage,
-  setPresenting,
+  dispatchMedia,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
@@ -103,20 +100,22 @@ const PresentNavigationOverlay = ({
       <NavigationButton
         className={hide ? 'hide' : undefined}
         float="left"
-        onClick={() => previousImage()}
+        onClick={() => dispatchMedia({ type: 'previousImage' })}
       >
         <PrevIcon />
       </NavigationButton>
       <NavigationButton
         className={hide ? 'hide' : undefined}
         float="right"
-        onClick={() => nextImage()}
+        onClick={() => dispatchMedia({ type: 'nextImage' })}
       >
         <NextIcon />
       </NavigationButton>
       <ExitButton
         className={hide ? 'hide' : undefined}
-        onClick={() => setPresenting(false)}
+        onClick={() =>
+          dispatchMedia({ type: 'setPresenting', presenting: false })
+        }
       >
         <ExitIcon />
       </ExitButton>

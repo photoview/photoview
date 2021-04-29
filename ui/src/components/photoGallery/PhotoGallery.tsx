@@ -4,10 +4,28 @@ import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
 import { SidebarContext } from '../sidebar/Sidebar'
-import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
+import {
+  PhotoGalleryAction,
+  PhotoGalleryState,
+  selectImageAction,
+} from './photoGalleryReducer'
+import { gql, useMutation } from '@apollo/client'
+import {
+  markMediaFavorite,
+  markMediaFavoriteVariables,
+} from './__generated__/markMediaFavorite'
+
+const markFavoriteMutation = gql`
+  mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
+    favoriteMedia(mediaId: $mediaId, favorite: $favorite) {
+      id
+      favorite
+    }
+  }
+`
 
 const Gallery = styled.div`
   display: flex;
@@ -32,37 +50,32 @@ const ClearWrap = styled.div`
   clear: both;
 `
 
-interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
+export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
   thumbnail: sidebarPhoto_media_thumbnail | null
+  favorite?: boolean
 }
 
 type PhotoGalleryProps = {
   loading: boolean
-  media: PhotoGalleryProps_Media[]
-  activeIndex: number
-  presenting: boolean
-  onSelectImage(index: number): void
-  setPresenting(presenting: boolean): void
-  nextImage(): void
-  previousImage(): void
-  onFavorite?(): void
+  mediaState: PhotoGalleryState
+  dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
 const PhotoGallery = ({
-  activeIndex = -1,
-  media,
+  mediaState,
   loading,
-  onSelectImage,
-  presenting,
-  setPresenting,
-  nextImage,
-  previousImage,
-  onFavorite,
+  dispatchMedia,
 }: PhotoGalleryProps) => {
   const { t } = useTranslation()
+
   const { updateSidebar } = useContext(SidebarContext)
 
-  const activeImage: PhotoGalleryProps_Media | undefined = media[activeIndex]
+  const [markFavorite] = useMutation<
+    markMediaFavorite,
+    markMediaFavoriteVariables
+  >(markFavoriteMutation)
+
+  const { media, activeIndex, presenting } = mediaState
 
   let photoElements = []
   if (media) {
@@ -73,14 +86,36 @@ const PhotoGallery = ({
         <MediaThumbnail
           key={media.id}
           media={media}
-          onSelectImage={index => {
-            updateSidebar(<MediaSidebar media={media} />)
-            onSelectImage(index)
-          }}
-          onFavorite={onFavorite}
-          setPresenting={setPresenting}
-          index={index}
           active={active}
+          selectImage={() => {
+            selectImageAction({
+              index,
+              mediaState,
+              dispatchMedia,
+              updateSidebar,
+            })
+          }}
+          clickFavorite={() => {
+            markFavorite({
+              variables: {
+                mediaId: media.id,
+                favorite: !media.favorite,
+              },
+              optimisticResponse: {
+                favoriteMedia: {
+                  id: media.id,
+                  favorite: !media.favorite,
+                  __typename: 'Media',
+                },
+              },
+            })
+          }}
+          clickPresent={() => {
+            dispatchMedia({
+              type: 'setPresenting',
+              presenting: true,
+            })
+          }}
         />
       )
     })
@@ -100,10 +135,7 @@ const PhotoGallery = ({
         <PhotoFiller />
       </Gallery>
       {presenting && (
-        <PresentView
-          media={activeImage}
-          {...{ nextImage, previousImage, setPresenting }}
-        />
+        <PresentView mediaState={mediaState} dispatchMedia={dispatchMedia} />
       )}
     </ClearWrap>
   )

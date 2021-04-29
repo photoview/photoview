@@ -43,7 +43,7 @@ module.exports = {
   // parser: 'babel-eslint',
   overrides: [
     Object.assign(require('eslint-plugin-jest').configs.recommended, {
-      files: ['**/*.test.js'],
+      files: ['**/*.test.js', '**/*.test.ts', '**/*.test.tsx'],
       env: { jest: true },
       plugins: ['jest', 'jest-dom'],
       rules: Object.assign(

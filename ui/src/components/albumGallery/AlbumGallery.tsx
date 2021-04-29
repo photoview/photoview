@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useReducer } from 'react'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import { OrderDirection } from '../../../__generated__/globalTypes'
+import { photoGalleryReducer } from '../photoGallery/photoGalleryReducer'
 
 type AlbumGalleryProps = {
   album?: albumQuery_album
@@ -29,71 +30,49 @@ const AlbumGallery = React.forwardRef(
       setOrdering,
       ordering,
       onlyFavorites = false,
-      onFavorite,
     }: AlbumGalleryProps,
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
-    type ImageStateType = {
-      activeImage: number
-      presenting: boolean
-    }
+    // const [imageState, setImageState] = useState<ImageStateType>({
+    //   activeImage: -1,
+    //   presenting: false,
+    // })
 
-    const [imageState, setImageState] = useState<ImageStateType>({
-      activeImage: -1,
+    const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
       presenting: false,
+      activeIndex: -1,
+      media: album?.media || [],
     })
 
-    const setPresenting = (presenting: boolean) =>
-      setImageState(state => ({ ...state, presenting }))
+    // const setPresentingWithHistory = (presenting: boolean) => {
+    //   setPresenting(presenting)
+    //   if (presenting) {
+    //     history.pushState({ imageState }, '')
+    //   } else {
+    //     history.back()
+    //   }
+    // }
 
-    const setPresentingWithHistory = (presenting: boolean) => {
-      setPresenting(presenting)
-      if (presenting) {
-        history.pushState({ imageState }, '')
-      } else {
-        history.back()
-      }
-    }
+    // const updateHistory = (imageState: ImageStateType) => {
+    //   history.replaceState({ imageState }, '')
+    //   return imageState
+    // }
 
-    const updateHistory = (imageState: ImageStateType) => {
-      history.replaceState({ imageState }, '')
-      return imageState
-    }
+    // useEffect(() => {
+    //   const updateImageState = (event: PopStateEvent) => {
+    //     setImageState(event.state.imageState)
+    //   }
 
-    const setActiveImage = (activeImage: number) => {
-      setImageState(state => updateHistory({ ...state, activeImage }))
-    }
+    //   window.addEventListener('popstate', updateImageState)
 
-    const nextImage = () => {
-      if (album === undefined) return
-      setActiveImage((imageState.activeImage + 1) % album.media.length)
-    }
+    //   return () => {
+    //     window.removeEventListener('popstate', updateImageState)
+    //   }
+    // }, [imageState])
 
-    const previousImage = () => {
-      if (album === undefined) return
-
-      if (imageState.activeImage <= 0) {
-        setActiveImage(album.media.length - 1)
-      } else {
-        setActiveImage(imageState.activeImage - 1)
-      }
-    }
-
-    useEffect(() => {
-      const updateImageState = (event: PopStateEvent) => {
-        setImageState(event.state.imageState)
-      }
-
-      window.addEventListener('popstate', updateImageState)
-
-      return () => {
-        window.removeEventListener('popstate', updateImageState)
-      }
-    }, [imageState])
-
-    useEffect(() => {
-      setActiveImage(-1)
-    }, [album])
+    // useEffect(() => {
+    //   setActiveImage(-1)
+    // }, [album])
 
     let subAlbumElement = null
 
@@ -135,16 +114,8 @@ const AlbumGallery = React.forwardRef(
         }
         <PhotoGallery
           loading={loading}
-          media={album?.media || []}
-          activeIndex={imageState.activeImage}
-          presenting={imageState.presenting}
-          onSelectImage={index => {
-            setActiveImage(index)
-          }}
-          onFavorite={onFavorite}
-          setPresenting={setPresentingWithHistory}
-          nextImage={nextImage}
-          previousImage={previousImage}
+          mediaState={mediaState}
+          dispatchMedia={dispatchMedia}
         />
       </div>
     )
