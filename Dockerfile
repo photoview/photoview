@@ -48,6 +48,7 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 #   dlib
 
 ENV CGO_ENABLED 1
+# ENV CGO_LDFLAGS="-static"
 
 # RUN go env
 
@@ -83,14 +84,14 @@ COPY api/data /app/data
 #   && apt-get install -y curl gpg libdlib19 ffmpeg exiftool libheif1
 
 RUN apk add --no-cache \
-  ffmpeg exiftool libheif
+  ffmpeg libheif lapack
 
 RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
   dlib
 
 # Install Darktable if building for a supported architecture
-# RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-#   apt-get install -y darktable; fi
+RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+  apk add --no-cache exiftool darktable; fi
 
 # Remove build dependencies and cleanup
 # RUN apt-get purge -y curl gpg \

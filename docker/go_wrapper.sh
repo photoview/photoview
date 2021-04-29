@@ -66,47 +66,28 @@ fi
 if [ "$CGO_ENABLED" = "1" ]; then
   case "$GOARCH" in
   "amd64")
-    export DEBIAN_COMPILER_ARCH="x86_64-linux-gnu"
-    export ALPINE_COMPILER_ARCH="x86_64-linux-musl"
-    ;;
-  "ppc64le")
-    export DEBIAN_COMPILER_ARCH="powerpc64le-linux-gnu"
-    export ALPINE_COMPILER_ARCH="powerpc64le-linux-musl"
-    ;;
-  "s390x")
-    export DEBIAN_COMPILER_ARCH="s390x-linux-gnu"
-    export ALPINE_COMPILER_ARCH="s390x-linux-musl"
+    export COMPILER_ARCH="x86_64-linux-musl"
     ;;
   "arm64")
-    export DEBIAN_COMPILER_ARCH="aarch64-linux-gnu"
-    export ALPINE_COMPILER_ARCH="aarch64-linux-musl"
+    export COMPILER_ARCH="aarch64-linux-musl"
     ;;
   "arm")
-    case "$GOARM" in
-    "5")
-      export DEBIAN_COMPILER_ARCH="arm-linux-gnueabi"
-      export ALPINE_COMPILER_ARCH="arm-linux-gnueabi"
-      ;;
-    *)
-      export DEBIAN_COMPILER_ARCH="arm-linux-gnueabihf"
-      export ALPINE_COMPILER_ARCH="arm-linux-gnueabihf"
-      ;;
-    esac
+    export COMPILER_ARCH="arm-linux-musleabihf"
     ;;
   esac
 fi
 
-export CC="/${ALPINE_COMPILER_ARCH}-cross/bin/${ALPINE_COMPILER_ARCH}-gcc"
-export CXX="/${ALPINE_COMPILER_ARCH}-cross/bin/${ALPINE_COMPILER_ARCH}-g++"
+export CC="/${COMPILER_ARCH}-cross/bin/${COMPILER_ARCH}-gcc"
+export CXX="/${COMPILER_ARCH}-cross/bin/${COMPILER_ARCH}-g++"
 
-export CGO_CPPFLAGS="-I/${ALPINE_COMPILER_ARCH}-cross/include -Wno-error=parentheses"
-export LD_LIBRARY_PATH="/${ALPINE_COMPILER_ARCH}-cross/lib"
-export LIBRARY_PATH="/${ALPINE_COMPILER_ARCH}-cross/lib"
-export CGO_LDFLAGS="-g -O2 -L/${ALPINE_COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${ALPINE_COMPILER_ARCH}-cross/lib"
-export LDFLAGS="-g -O2 -L/${ALPINE_COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${ALPINE_COMPILER_ARCH}-cross/lib"
+export CGO_CPPFLAGS="-I/${COMPILER_ARCH}-cross/include -Wno-error=parentheses"
+export LD_LIBRARY_PATH="/${COMPILER_ARCH}-cross/lib"
+export LIBRARY_PATH="/${COMPILER_ARCH}-cross/lib"
+export CGO_LDFLAGS="-g -O2 -L/${COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${COMPILER_ARCH}-cross/lib"
+export LDFLAGS="-g -O2 -L/${COMPILER_ARCH}-cross/lib -Wl,-rpath-link=/${COMPILER_ARCH}-cross/lib"
 
-export PATH="/${ALPINE_COMPILER_ARCH}-cross/bin:${PATH}"
-export PKG_CONFIG_PATH="/${ALPINE_COMPILER_ARCH}-cross/usr/lib/pkgconfig/"
+export PATH="/${COMPILER_ARCH}-cross/bin:${PATH}"
+export PKG_CONFIG_PATH="/${COMPILER_ARCH}-cross/usr/lib/pkgconfig/"
 
 # /usr/bin/go env; exit 1
 
