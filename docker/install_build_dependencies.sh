@@ -7,7 +7,7 @@ if [ "$TARGETPLATFORM" == "linux/amd64" ]; then
 elif [ "$TARGETPLATFORM" == "linux/arm64" ]; then
   ALPINE_ARCH='aarch64'
   COMPILER='aarch64-linux-musl-cross'
-elif [ "$TARGETPLATFORM" == "linux/arm/v6" ]; [ "$TARGETPLATFORM" == "linux/arm/v7" ]; then
+elif [ "$TARGETPLATFORM" == "linux/arm/v6" ] || [ "$TARGETPLATFORM" == "linux/arm/v7" ]; then
   ALPINE_ARCH='armhf'
   COMPILER='arm-linux-musleabihf-cross'
 else
