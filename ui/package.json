@@ -71,7 +71,7 @@
     "@types/geojson": "^7946.0.7",
     "@types/jest": "^26.0.22",
     "@types/mapbox-gl": "^2.1.1",
-    "@types/react": "^17.0.3",
+    "@types/react": "^17.0.4",
     "@types/react-dom": "^17.0.3",
     "@types/react-helmet": "^6.1.1",
     "@types/react-router-dom": "^5.1.7",
