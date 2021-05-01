@@ -26,7 +26,7 @@
     "esbuild": "^0.8.52",
     "esbuild-plugin-babel": "^0.2.3",
     "eslint": "^7.24.0",
-    "eslint-plugin-jest": "^24.3.5",
+    "eslint-plugin-jest": "^24.3.6",
     "eslint-plugin-jest-dom": "^3.8.0",
     "eslint-plugin-react": "^7.23.2",
     "eslint-plugin-react-hooks": "^4.2.0",
