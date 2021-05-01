@@ -40,7 +40,7 @@
     "react-i18next": "^11.8.12",
     "react-router-dom": "^5.2.0",
     "react-router-prop-types": "^1.0.5",
-    "react-spring": "^8.0.27",
+    "react-spring": "^9.1.2",
     "react-test-renderer": "^17.0.2",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
