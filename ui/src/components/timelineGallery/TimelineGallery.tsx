@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useReducer, useContext } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
@@ -16,6 +16,13 @@ import {
   myTimelineVariables,
   myTimeline_myTimeline,
 } from './__generated__/myTimeline'
+import {
+  getActiveTimelineImage as getActiveTimelineMedia,
+  timelineGalleryReducer,
+} from './timelineGalleryReducer'
+import MediaSidebar from '../sidebar/MediaSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
+import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
 
 const MY_TIMELINE_QUERY = gql`
   query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
@@ -64,14 +71,14 @@ export type TimelineActiveIndex = {
   media: number
 }
 
+export type TimelineGroup = {
+  date: string
+  groups: myTimeline_myTimeline[]
+}
+
 const TimelineGallery = () => {
   const { t } = useTranslation()
-  const [activeIndex, setActiveIndex] = useState({
-    dateGroup: -1,
-    albumGroup: -1,
-    media: -1,
-  })
-  const [presenting, setPresenting] = useState(false)
+  const { updateSidebar } = useContext(SidebarContext)
 
   const { getParam, setParam } = useURLParameters()
 
@@ -81,68 +88,15 @@ const TimelineGallery = () => {
 
   const favoritesNeedsRefresh = useRef(false)
 
-  const nextMedia = useCallback(() => {
-    setActiveIndex(activeIndex => {
-      const albumGroups = dateGroupedAlbums[activeIndex.dateGroup].groups
-      const albumMedia = albumGroups[activeIndex.albumGroup].media
-
-      if (activeIndex.media < albumMedia.length - 1) {
-        return {
-          ...activeIndex,
-          media: activeIndex.media + 1,
-        }
-      }
-
-      if (activeIndex.albumGroup < albumGroups.length - 1) {
-        return {
-          ...activeIndex,
-          albumGroup: activeIndex.albumGroup + 1,
-          media: 0,
-        }
-      }
-
-      if (activeIndex.dateGroup < dateGroupedAlbums.length - 1) {
-        return {
-          dateGroup: activeIndex.dateGroup + 1,
-          albumGroup: 0,
-          media: 0,
-        }
-      }
-
-      // reached the end
-      return activeIndex
-    })
-  }, [activeIndex])
-
-  const previousMedia = useCallback(() => {
-    setActiveIndex(activeIndex => {
-      if (activeIndex.media > 0) {
-        return {
-          ...activeIndex,
-          media: activeIndex.media - 1,
-        }
-      }
-
-      if (activeIndex.albumGroup > 0) {
-        return {
-          ...activeIndex,
-          albumGroup: activeIndex.albumGroup - 1,
-          media: 0,
-        }
-      }
-
-      if (activeIndex.dateGroup > 0) {
-        return {
-          dateGroup: activeIndex.dateGroup - 1,
-          albumGroup: 0,
-          media: 0,
-        }
-      }
-
-      // reached the start
-      return activeIndex
-    })
-  }, [activeIndex])
+  const [mediaState, dispatchMedia] = useReducer(timelineGalleryReducer, {
+    presenting: false,
+    timelineGroups: [],
+    activeIndex: {
+      media: -1,
+      album: -1,
+      date: -1,
+    },
+  })
 
   const { data, error, loading, refetch, fetchMore } = useQuery<
     myTimeline,
@@ -166,12 +120,36 @@ const TimelineGallery = () => {
   })
 
   useEffect(() => {
-    if (favoritesNeedsRefresh) {
-      favoritesNeedsRefresh.current = false
-      refetch({
-        onlyFavorites: onlyFavorites,
-      })
+    dispatchMedia({
+      type: 'replaceTimelineGroups',
+      timeline: data?.myTimeline || [],
+    })
+  }, [data])
+
+  useEffect(() => {
+    const activeMedia = getActiveTimelineMedia({ mediaState })
+    if (activeMedia) {
+      updateSidebar(<MediaSidebar media={activeMedia} />)
+    } else {
+      updateSidebar(null)
     }
+  }, [mediaState.activeIndex])
+
+  urlPresentModeSetupHook({
+    dispatchMedia,
+    openPresentMode: event => {
+      dispatchMedia({
+        type: 'openPresentMode',
+        activeIndex: event.state.activeIndex,
+      })
+    },
+  })
+
+  useEffect(() => {
+    favoritesNeedsRefresh.current = false
+    refetch({
+      onlyFavorites: onlyFavorites,
+    })
   }, [onlyFavorites])
 
   useEffect(() => {
@@ -186,51 +164,14 @@ const TimelineGallery = () => {
     return <div>{error.message}</div>
   }
 
-  type TimelineGroup = {
-    date: string
-    groups: myTimeline_myTimeline[]
-  }
-
-  let timelineGroups = null
-  let dateGroupedAlbums: TimelineGroup[] = []
-  if (data?.myTimeline) {
-    dateGroupedAlbums = data.myTimeline.reduce((acc, val) => {
-      if (acc.length == 0 || acc[acc.length - 1].date != val.date) {
-        acc.push({
-          date: val.date,
-          groups: [val],
-        })
-      } else {
-        acc[acc.length - 1].groups.push(val)
-      }
-
-      return acc
-    }, [] as TimelineGroup[])
-
-    timelineGroups = dateGroupedAlbums.map(({ date, groups }, i) => (
-      <TimelineGroupDate
-        key={date}
-        date={date}
-        groups={groups}
-        activeIndex={
-          activeIndex.dateGroup == i
-            ? activeIndex
-            : { albumGroup: -1, media: -1 }
-        }
-        setPresenting={setPresenting}
-        onSelectDateGroup={({ media, albumGroup }) => {
-          setActiveIndex({
-            media,
-            albumGroup,
-            dateGroup: i,
-          })
-        }}
-        onFavorite={() => {
-          favoritesNeedsRefresh.current = true
-        }}
-      />
-    ))
-  }
+  const timelineGroups = mediaState.timelineGroups.map((_, i) => (
+    <TimelineGroupDate
+      key={i}
+      groupIndex={i}
+      mediaState={mediaState}
+      dispatchMedia={dispatchMedia}
+    />
+  ))
 
   return (
     <>
@@ -246,17 +187,10 @@ const TimelineGallery = () => {
         active={!finishedLoadingMore && !loading}
         text={t('general.loading.paginate.media', 'Loading more media')}
       />
-      {presenting && (
+      {mediaState.presenting && (
         <PresentView
-          media={
-            dateGroupedAlbums &&
-            dateGroupedAlbums[activeIndex.dateGroup].groups[
-              activeIndex.albumGroup
-            ].media[activeIndex.media]
-          }
-          nextImage={nextMedia}
-          previousImage={previousMedia}
-          setPresenting={setPresenting}
+          activeMedia={getActiveTimelineMedia({ mediaState })!}
+          dispatchMedia={dispatchMedia}
         />
       )}
     </>

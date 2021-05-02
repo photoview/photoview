@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
-import { PhotoGalleryAction } from '../photoGalleryReducer'
+import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -66,7 +66,7 @@ const NavigationButton = styled(OverlayButton)<{ float: 'left' | 'right' }>`
 
 type PresentNavigationOverlayProps = {
   children?: React.ReactChild
-  dispatchMedia: React.Dispatch<PhotoGalleryAction>
+  dispatchMedia: React.Dispatch<GalleryAction>
 }
 
 const PresentNavigationOverlay = ({
@@ -113,9 +113,7 @@ const PresentNavigationOverlay = ({
       </NavigationButton>
       <ExitButton
         className={hide ? 'hide' : undefined}
-        onClick={() =>
-          dispatchMedia({ type: 'setPresenting', presenting: false })
-        }
+        onClick={() => closePresentModeAction({ dispatchMedia })}
       >
         <ExitIcon />
       </ExitButton>

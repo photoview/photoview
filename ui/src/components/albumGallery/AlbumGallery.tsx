@@ -1,11 +1,16 @@
-import React, { useReducer } from 'react'
+import React, { useContext, useEffect, useReducer } from 'react'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import { OrderDirection } from '../../../__generated__/globalTypes'
-import { photoGalleryReducer } from '../photoGallery/photoGalleryReducer'
+import {
+  photoGalleryReducer,
+  urlPresentModeSetupHook,
+} from '../photoGallery/photoGalleryReducer'
+import { SidebarContext } from '../sidebar/Sidebar'
+import MediaSidebar from '../sidebar/MediaSidebar'
 
 type AlbumGalleryProps = {
   album?: albumQuery_album
@@ -33,10 +38,7 @@ const AlbumGallery = React.forwardRef(
     }: AlbumGalleryProps,
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
-    // const [imageState, setImageState] = useState<ImageStateType>({
-    //   activeImage: -1,
-    //   presenting: false,
-    // })
+    const { updateSidebar } = useContext(SidebarContext)
 
     const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
       presenting: false,
@@ -44,38 +46,31 @@ const AlbumGallery = React.forwardRef(
       media: album?.media || [],
     })
 
-    // const setPresentingWithHistory = (presenting: boolean) => {
-    //   setPresenting(presenting)
-    //   if (presenting) {
-    //     history.pushState({ imageState }, '')
-    //   } else {
-    //     history.back()
-    //   }
-    // }
+    useEffect(() => {
+      dispatchMedia({ type: 'replaceMedia', media: album?.media || [] })
+    }, [album?.media])
 
-    // const updateHistory = (imageState: ImageStateType) => {
-    //   history.replaceState({ imageState }, '')
-    //   return imageState
-    // }
+    useEffect(() => {
+      if (mediaState.activeIndex != -1) {
+        updateSidebar(
+          <MediaSidebar media={mediaState.media[mediaState.activeIndex]} />
+        )
+      } else {
+        updateSidebar(null)
+      }
+    }, [mediaState.activeIndex])
 
-    // useEffect(() => {
-    //   const updateImageState = (event: PopStateEvent) => {
-    //     setImageState(event.state.imageState)
-    //   }
-
-    //   window.addEventListener('popstate', updateImageState)
-
-    //   return () => {
-    //     window.removeEventListener('popstate', updateImageState)
-    //   }
-    // }, [imageState])
-
-    // useEffect(() => {
-    //   setActiveImage(-1)
-    // }, [album])
+    urlPresentModeSetupHook({
+      dispatchMedia,
+      openPresentMode: event => {
+        dispatchMedia({
+          type: 'openPresentMode',
+          activeIndex: event.state.activeIndex,
+        })
+      },
+    })
 
     let subAlbumElement = null
-
     if (album) {
       if (album.subAlbums.length > 0) {
         subAlbumElement = (

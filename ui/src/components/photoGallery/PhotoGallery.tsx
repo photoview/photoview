@@ -1,31 +1,20 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { SidebarContext } from '../sidebar/Sidebar'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
 import {
+  openPresentModeAction,
   PhotoGalleryAction,
   PhotoGalleryState,
-  selectImageAction,
 } from './photoGalleryReducer'
-import { gql, useMutation } from '@apollo/client'
 import {
-  markMediaFavorite,
-  markMediaFavoriteVariables,
-} from './__generated__/markMediaFavorite'
-
-const markFavoriteMutation = gql`
-  mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
-    favoriteMedia(mediaId: $mediaId, favorite: $favorite) {
-      id
-      favorite
-    }
-  }
-`
+  toggleFavoriteAction,
+  useMarkFavoriteMutation,
+} from './photoGalleryMutations'
 
 const Gallery = styled.div`
   display: flex;
@@ -68,12 +57,7 @@ const PhotoGallery = ({
 }: PhotoGalleryProps) => {
   const { t } = useTranslation()
 
-  const { updateSidebar } = useContext(SidebarContext)
-
-  const [markFavorite] = useMutation<
-    markMediaFavorite,
-    markMediaFavoriteVariables
-  >(markFavoriteMutation)
+  const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState
 
@@ -88,33 +72,19 @@ const PhotoGallery = ({
           media={media}
           active={active}
           selectImage={() => {
-            selectImageAction({
+            dispatchMedia({
+              type: 'selectImage',
               index,
-              mediaState,
-              dispatchMedia,
-              updateSidebar,
             })
           }}
           clickFavorite={() => {
-            markFavorite({
-              variables: {
-                mediaId: media.id,
-                favorite: !media.favorite,
-              },
-              optimisticResponse: {
-                favoriteMedia: {
-                  id: media.id,
-                  favorite: !media.favorite,
-                  __typename: 'Media',
-                },
-              },
+            toggleFavoriteAction({
+              media,
+              markFavorite,
             })
           }}
           clickPresent={() => {
-            dispatchMedia({
-              type: 'setPresenting',
-              presenting: true,
-            })
+            openPresentModeAction({ dispatchMedia, activeIndex: index })
           }}
         />
       )
@@ -135,7 +105,10 @@ const PhotoGallery = ({
         <PhotoFiller />
       </Gallery>
       {presenting && (
-        <PresentView mediaState={mediaState} dispatchMedia={dispatchMedia} />
+        <PresentView
+          activeMedia={mediaState.media[mediaState.activeIndex]}
+          dispatchMedia={dispatchMedia}
+        />
       )}
     </ClearWrap>
   )

@@ -1,24 +1,28 @@
-import React from 'react'
-import { UpdateSidebarFn } from '../sidebar/Sidebar'
+import React, { useEffect } from 'react'
 import { PhotoGalleryProps_Media } from './PhotoGallery'
-import MediaSidebar from '../sidebar/MediaSidebar'
 
-export type PhotoGalleryState = {
+export interface PhotoGalleryState {
   presenting: boolean
   activeIndex: number
   media: PhotoGalleryProps_Media[]
 }
 
-export type PhotoGalleryAction =
+export type GalleryAction =
   | { type: 'nextImage' }
   | { type: 'previousImage' }
-  | { type: 'setPresenting'; presenting: boolean }
+  | { type: 'closePresentMode' }
+
+export type PhotoGalleryAction =
+  | GalleryAction
+  | { type: 'openPresentMode'; activeIndex: number }
   | { type: 'selectImage'; index: number }
+  | { type: 'replaceMedia'; media: PhotoGalleryProps_Media[] }
 
 export function photoGalleryReducer(
   state: PhotoGalleryState,
   action: PhotoGalleryAction
 ): PhotoGalleryState {
+  console.log('photo gallery reducer:', state, action)
   switch (action.type) {
     case 'nextImage':
       return {
@@ -37,10 +41,16 @@ export function photoGalleryReducer(
           activeIndex: state.activeIndex - 1,
         }
       }
-    case 'setPresenting':
+    case 'openPresentMode':
       return {
         ...state,
-        presenting: action.presenting,
+        presenting: true,
+        activeIndex: action.activeIndex,
+      }
+    case 'closePresentMode':
+      return {
+        ...state,
+        presenting: false,
       }
     case 'selectImage':
       return {
@@ -50,25 +60,64 @@ export function photoGalleryReducer(
           Math.min(state.media.length - 1, action.index)
         ),
       }
+    case 'replaceMedia':
+      return {
+        ...state,
+        media: action.media,
+        activeIndex: -1,
+      }
   }
 }
 
-export const selectImageAction = ({
-  index,
-  mediaState,
+export const urlPresentModeSetupHook = ({
   dispatchMedia,
-  updateSidebar,
+  openPresentMode,
 }: {
-  index: number
-  mediaState: PhotoGalleryState
-  dispatchMedia: React.Dispatch<PhotoGalleryAction>
-  updateSidebar: UpdateSidebarFn
+  dispatchMedia: React.Dispatch<GalleryAction>
+  openPresentMode: (event: PopStateEvent) => void
 }) => {
-  updateSidebar(
-    <MediaSidebar media={mediaState.media[mediaState.activeIndex]} />
-  )
+  useEffect(() => {
+    const urlChangeListener = (event: PopStateEvent) => {
+      if (event.state.presenting === true) {
+        openPresentMode(event)
+      } else {
+        dispatchMedia({ type: 'closePresentMode' })
+      }
+    }
+
+    window.addEventListener('popstate', urlChangeListener)
+
+    history.replaceState({ presenting: false }, '')
+
+    return () => {
+      window.removeEventListener('popstate', urlChangeListener)
+    }
+  }, [])
+}
+
+export const openPresentModeAction = ({
+  dispatchMedia,
+  activeIndex,
+}: {
+  dispatchMedia: React.Dispatch<PhotoGalleryAction>
+  activeIndex: number
+}) => {
   dispatchMedia({
-    type: 'selectImage',
-    index,
+    type: 'openPresentMode',
+    activeIndex: activeIndex,
   })
+
+  history.pushState({ presenting: true, activeIndex }, '')
+}
+
+export const closePresentModeAction = ({
+  dispatchMedia,
+}: {
+  dispatchMedia: React.Dispatch<GalleryAction>
+}) => {
+  dispatchMedia({
+    type: 'closePresentMode',
+  })
+
+  history.back()
 }
