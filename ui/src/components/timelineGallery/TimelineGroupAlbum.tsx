@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
@@ -6,7 +6,6 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from '../photoGallery/photoGalleryMutations'
-import { SidebarContext } from '../sidebar/Sidebar'
 import {
   getActiveTimelineImage,
   openTimelinePresentMode,

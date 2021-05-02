@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client'
 import type mapboxgl from 'mapbox-gl'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useReducer, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -10,6 +10,8 @@ import MapPresentMarker from './MapPresentMarker'
 
 // Will be bundled to dist/src/Pages/PlacesPage/PlacesPage.css
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
+import { placesReducer } from './placesReducer'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -29,7 +31,7 @@ const MAPBOX_DATA_QUERY = gql`
 `
 
 export type PresentMarker = {
-  id: number
+  id: number | string
   cluster: boolean
 }
 
@@ -37,9 +39,15 @@ const MapPage = () => {
   const { t } = useTranslation()
 
   const [mapboxLibrary, setMapboxLibrary] = useState<typeof mapboxgl | null>()
-  const [presentMarker, setPresentMarker] = useState<PresentMarker | null>(null)
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const map = useRef<mapboxgl.Map | null>(null)
+  // const [presentMarker, setPresentMarker] = useState<PresentMarker | null>(null)
+
+  const [markerMediaState, dispatchMarkerMedia] = useReducer(placesReducer, {
+    presenting: false,
+    activeIndex: -1,
+    media: [],
+  })
 
   const { data: mapboxData } = useQuery(MAPBOX_DATA_QUERY)
 
@@ -100,7 +108,7 @@ const MapPage = () => {
       const updateMarkers = makeUpdateMarkers({
         map: map.current,
         mapboxLibrary,
-        setPresentMarker,
+        dispatchMarkerMedia,
       })
 
       map.current.on('move', updateMarkers)
@@ -127,6 +135,17 @@ const MapPage = () => {
     )
   }
 
+  urlPresentModeSetupHook({
+    dispatchMedia: dispatchMarkerMedia,
+    openPresentMode: event => {
+      console.log('OPEN PRESENT MODE MAPS')
+      dispatchMarkerMedia({
+        type: 'openPresentMode',
+        activeIndex: event.state.activeIndex,
+      })
+    },
+  })
+
   return (
     <Layout title="Places">
       <Helmet>
@@ -137,8 +156,10 @@ const MapPage = () => {
       </MapWrapper>
       <MapPresentMarker
         map={map.current}
-        presentMarker={presentMarker}
-        setPresentMarker={setPresentMarker}
+        markerMediaState={markerMediaState}
+        dispatchMarkerMedia={dispatchMarkerMedia}
+        // presentMarker={presentMarker}
+        // setPresentMarker={setPresentMarker}
       />
     </Layout>
   )

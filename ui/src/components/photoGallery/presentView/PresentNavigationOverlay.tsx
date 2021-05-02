@@ -67,11 +67,13 @@ const NavigationButton = styled(OverlayButton)<{ float: 'left' | 'right' }>`
 type PresentNavigationOverlayProps = {
   children?: React.ReactChild
   dispatchMedia: React.Dispatch<GalleryAction>
+  disableSaveCloseInHistory?: boolean
 }
 
 const PresentNavigationOverlay = ({
   children,
   dispatchMedia,
+  disableSaveCloseInHistory,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
@@ -113,7 +115,13 @@ const PresentNavigationOverlay = ({
       </NavigationButton>
       <ExitButton
         className={hide ? 'hide' : undefined}
-        onClick={() => closePresentModeAction({ dispatchMedia })}
+        onClick={() => {
+          if (disableSaveCloseInHistory === true) {
+            dispatchMedia({ type: 'closePresentMode' })
+          } else {
+            closePresentModeAction({ dispatchMedia })
+          }
+        }}
       >
         <ExitIcon />
       </ExitButton>

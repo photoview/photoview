@@ -4,8 +4,6 @@ import {
   myTimeline_myTimeline_media,
 } from './__generated__/myTimeline'
 import { TimelineGroup } from './TimelineGallery'
-import { UpdateSidebarFn } from '../sidebar/Sidebar'
-import MediaSidebar from '../sidebar/MediaSidebar'
 import { GalleryAction } from '../photoGallery/photoGalleryReducer'
 
 export interface TimelineMediaIndex {
@@ -30,7 +28,6 @@ export function timelineGalleryReducer(
   state: TimelineGalleryState,
   action: TimelineGalleryAction
 ): TimelineGalleryState {
-  console.log('timeline gallery reducer', state, action)
   switch (action.type) {
     case 'replaceTimelineGroups': {
       const dateGroupedAlbums = action.timeline.reduce((acc, val) => {

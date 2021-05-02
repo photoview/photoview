@@ -1,8 +1,6 @@
 import React from 'react'
 import TimelineGroupAlbum from './TimelineGroupAlbum'
 import styled from 'styled-components'
-import { myTimeline_myTimeline } from './__generated__/myTimeline'
-import { TimelineActiveIndex } from './TimelineGallery'
 import { useTranslation } from 'react-i18next'
 import {
   TimelineGalleryAction,

@@ -1,9 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
-
 import imagePopupSrc from './image-popup.svg'
 import { MediaMarker } from './MapPresentMarker'
-import { PresentMarker } from './PlacesPage'
+import { PlacesAction } from './placesReducer'
 
 const Wrapper = styled.div`
   width: 56px;
@@ -42,21 +41,36 @@ const PointCountCircle = styled.div`
 `
 
 type MapClusterMarkerProps = {
-  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+  dispatchMarkerMedia: React.Dispatch<PlacesAction>
   marker: MediaMarker
 }
 
 const MapClusterMarker = ({
   marker,
-  setPresentMarker,
+  dispatchMarkerMedia,
 }: MapClusterMarkerProps) => {
   const thumbnail = JSON.parse(marker.thumbnail)
 
   const presentMedia = () => {
-    setPresentMarker({
-      cluster: !!marker.cluster,
-      id: marker.cluster ? marker.cluster_id : marker.media_id,
+    // presentMarkerClicked({
+    //   dispatchMedia: dispatchMarkerMedia,
+    //   mediaState: markerMediaState,
+    //   marker: {
+    //     cluster: !!marker.cluster,
+    //     id: marker.cluster ? marker.cluster_id : marker.media_id,
+    //   },
+    // })
+    dispatchMarkerMedia({
+      type: 'replacePresentMarker',
+      marker: {
+        cluster: !!marker.cluster,
+        id: marker.cluster ? marker.cluster_id : marker.media_id,
+      },
     })
+    // setPresentMarker({
+    //   cluster: !!marker.cluster,
+    //   id: marker.cluster ? marker.cluster_id : marker.media_id,
+    // })
   }
 
   return (

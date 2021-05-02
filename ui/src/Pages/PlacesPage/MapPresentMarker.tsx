@@ -1,9 +1,14 @@
 import { gql } from '@apollo/client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useLazyQuery } from '@apollo/client'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
 import type mapboxgl from 'mapbox-gl'
 import { PresentMarker } from './PlacesPage'
+import {
+  placePageQueryMedia,
+  placePageQueryMediaVariables,
+} from './__generated__/placePageQueryMedia'
+import { PlacesAction, PlacesState } from './placesReducer'
 
 const QUERY_MEDIA = gql`
   query placePageQueryMedia($mediaIDs: [ID!]!) {
@@ -37,7 +42,7 @@ const getMediaFromMarker = (map: mapboxgl.Map, presentMarker: PresentMarker) =>
     if (cluster) {
       const mediaSource = map.getSource('media') as mapboxgl.GeoJSONSource
 
-      mediaSource.getClusterLeaves(id, 1000, 0, (error, features) => {
+      mediaSource.getClusterLeaves(id as number, 1000, 0, (error, features) => {
         if (error) {
           reject(error)
           return
@@ -65,72 +70,69 @@ export interface MediaMarker {
   thumbnail: string
   cluster: boolean
   point_count_abbreviated: number
-  cluster_id: number
-  media_id: number
+  cluster_id: string
+  media_id: string
 }
 
 type MapPresetMarkerProps = {
   map: mapboxgl.Map | null
-  presentMarker: PresentMarker | null
-  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+  markerMediaState: PlacesState
+  dispatchMarkerMedia: React.Dispatch<PlacesAction>
 }
 
 const MapPresentMarker = ({
   map,
-  presentMarker,
-  setPresentMarker,
+  markerMediaState,
+  dispatchMarkerMedia,
 }: MapPresetMarkerProps) => {
-  const [mediaMarkers, setMediaMarkers] = useState<MediaMarker[] | null>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  const [loadMedia, { data: loadedMedia }] = useLazyQuery(QUERY_MEDIA)
+  const [loadMedia, { data: loadedMedia }] = useLazyQuery<
+    placePageQueryMedia,
+    placePageQueryMediaVariables
+  >(QUERY_MEDIA)
 
   useEffect(() => {
+    const presentMarker = markerMediaState.presentMarker
     if (presentMarker == null || map == null) {
-      setMediaMarkers(null)
+      dispatchMarkerMedia({
+        type: 'closePresentMode',
+      })
       return
     }
 
-    getMediaFromMarker(map, presentMarker).then(setMediaMarkers)
-  }, [presentMarker])
+    getMediaFromMarker(map, presentMarker).then(mediaMarkers => {
+      loadMedia({
+        variables: {
+          mediaIDs: mediaMarkers.map(x => x.media_id),
+        },
+      })
+    })
+  }, [markerMediaState.presentMarker])
 
   useEffect(() => {
-    if (!mediaMarkers) return
-
-    setCurrentIndex(0)
-    loadMedia({
-      variables: {
-        mediaIDs: mediaMarkers.map(x => x.media_id),
-      },
+    const mediaList = loadedMedia?.mediaList || []
+    dispatchMarkerMedia({
+      type: 'replaceMedia',
+      media: mediaList,
     })
-  }, [mediaMarkers])
+    if (mediaList.length > 0) {
+      dispatchMarkerMedia({
+        type: 'openPresentMode',
+        activeIndex: 0,
+      })
+    }
+  }, [loadedMedia])
 
-  if (
-    presentMarker == null ||
-    map == null ||
-    mediaMarkers == null ||
-    loadedMedia == null
-  ) {
+  if (markerMediaState.presenting) {
+    return (
+      <PresentView
+        activeMedia={markerMediaState.media[markerMediaState.activeIndex]}
+        dispatchMedia={dispatchMarkerMedia}
+        disableSaveCloseInHistory={true}
+      />
+    )
+  } else {
     return null
   }
-
-  return (
-    <PresentView
-      media={loadedMedia.mediaList[currentIndex]}
-      nextImage={() => {
-        setCurrentIndex(i => Math.min(mediaMarkers.length - 1, i + 1))
-      }}
-      previousImage={() => {
-        setCurrentIndex(i => Math.max(0, i - 1))
-      }}
-      setPresenting={presenting => {
-        if (!presenting) {
-          setCurrentIndex(0)
-          setPresentMarker(null)
-        }
-      }}
-    />
-  )
 }
 
 export default MapPresentMarker

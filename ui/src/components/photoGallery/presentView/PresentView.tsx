@@ -26,6 +26,7 @@ type PresentViewProps = {
   imageLoaded?(): void
   activeMedia: PresentMediaProps_Media
   dispatchMedia: React.Dispatch<GalleryAction>
+  disableSaveCloseInHistory?: boolean
 }
 
 const PresentView = ({
@@ -33,6 +34,7 @@ const PresentView = ({
   imageLoaded,
   activeMedia,
   dispatchMedia,
+  disableSaveCloseInHistory,
 }: PresentViewProps) => {
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
@@ -48,8 +50,12 @@ const PresentView = ({
 
       if (e.key == 'Escape') {
         e.stopPropagation()
-        // dispatchMedia({ type: 'setPresenting', presenting: false })
-        closePresentModeAction({ dispatchMedia })
+
+        if (disableSaveCloseInHistory === true) {
+          dispatchMedia({ type: 'closePresentMode' })
+        } else {
+          closePresentModeAction({ dispatchMedia })
+        }
       }
     }
 
@@ -63,7 +69,10 @@ const PresentView = ({
   return (
     <StyledContainer {...className}>
       <PreventScroll />
-      <PresentNavigationOverlay dispatchMedia={dispatchMedia}>
+      <PresentNavigationOverlay
+        dispatchMedia={dispatchMedia}
+        disableSaveCloseInHistory
+      >
         <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
       </PresentNavigationOverlay>
     </StyledContainer>

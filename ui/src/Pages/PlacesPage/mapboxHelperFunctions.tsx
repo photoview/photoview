@@ -4,7 +4,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import MapClusterMarker from './MapClusterMarker'
 import { MediaMarker } from './MapPresentMarker'
-import { PresentMarker } from './PlacesPage'
+import { PlacesAction } from './placesReducer'
 
 const markers: { [key: string]: mapboxgl.Marker } = {}
 let markersOnScreen: typeof markers = {}
@@ -12,13 +12,14 @@ let markersOnScreen: typeof markers = {}
 type makeUpdateMarkersArgs = {
   map: mapboxgl.Map
   mapboxLibrary: typeof mapboxgl
-  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+  dispatchMarkerMedia: React.Dispatch<PlacesAction>
+  // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
 }
 
 export const makeUpdateMarkers = ({
   map,
   mapboxLibrary,
-  setPresentMarker,
+  dispatchMarkerMedia,
 }: makeUpdateMarkersArgs) => () => {
   const newMarkers: typeof markers = {}
   const features = map.querySourceFeatures('media')
@@ -40,7 +41,9 @@ export const makeUpdateMarkers = ({
 
     let marker = markers[id]
     if (!marker) {
-      const el = createClusterPopupElement(props, setPresentMarker)
+      const el = createClusterPopupElement(props, {
+        dispatchMarkerMedia,
+      })
       marker = markers[id] = new mapboxLibrary.Marker({
         element: el,
       }).setLngLat(coords)
@@ -58,13 +61,18 @@ export const makeUpdateMarkers = ({
 
 function createClusterPopupElement(
   geojsonProps: MediaMarker,
-  setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
+  {
+    dispatchMarkerMedia,
+  }: {
+    dispatchMarkerMedia: React.Dispatch<PlacesAction>
+  }
 ) {
+  // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
   const el = document.createElement('div')
   ReactDOM.render(
     <MapClusterMarker
       marker={geojsonProps}
-      setPresentMarker={setPresentMarker}
+      dispatchMarkerMedia={dispatchMarkerMedia}
     />,
     el
   )

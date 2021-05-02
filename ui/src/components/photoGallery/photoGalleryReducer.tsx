@@ -65,6 +65,7 @@ export function photoGalleryReducer(
         ...state,
         media: action.media,
         activeIndex: -1,
+        presenting: false,
       }
   }
 }
