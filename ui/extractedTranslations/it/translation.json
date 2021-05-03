@@ -17,7 +17,7 @@
       "add": "Aggiungi",
       "cancel": "Cancella",
       "delete": "Elimina",
-      "more": null,
+      "more": "Altro",
       "remove": "Rimuovi",
       "save": "Salva"
     },
@@ -156,9 +156,9 @@
       "title": "Utenti"
     },
     "version_info": {
-      "build_date_title": null,
-      "title": null,
-      "version_title": null
+      "build_date_title": "Data build",
+      "title": "Versione Photoview",
+      "version_title": "Versione Release"
     }
   },
   "share_page": {
@@ -252,7 +252,7 @@
   },
   "title": {
     "loading_album": "Caricamento album",
-    "login": null,
+    "login": "Login",
     "people": "Persone",
     "settings": "Impostazioni"
   }
