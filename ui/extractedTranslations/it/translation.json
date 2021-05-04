@@ -15,7 +15,7 @@
   "general": {
     "action": {
       "add": "Aggiungi",
-      "cancel": "Cancella",
+      "cancel": "Annulla",
       "delete": "Elimina",
       "more": "Altro",
       "remove": "Rimuovi",
@@ -84,14 +84,14 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "Massimo numero di scansioni contemporanee",
+      "description": "Numero massimo di scansioni contemporanee",
       "title": "Scansioni contemporanee"
     },
     "logout": "Log out",
     "periodic_scanner": {
       "checkbox_label": "Abilita scansioni periodiche",
       "field": {
-        "description": "Quanto spesso devono essere eseguite scansioni automatiche per tutti gli utenti",
+        "description": "Frequenza delle scansioni automatiche per tutti gli utenti",
         "label": "Intervallo delle scansioni"
       },
       "interval_unit": {
@@ -104,7 +104,7 @@
       "title": "Scansioni periodiche"
     },
     "scanner": {
-      "description": "Verranno effettuate delle scansioni per tutti gli utenti alla ricerca di nuovi o aggiornati media",
+      "description": "Verranno effettuate delle scansioni per tutti gli utenti alla ricerca di media nuovi o aggiornati",
       "scan_all_users": "Scansiona per tutti",
       "title": "Scansioni"
     },
