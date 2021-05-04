@@ -30,10 +30,11 @@ module.exports = {
   plugins: ['react', 'react-hooks', '@typescript-eslint'],
   rules: {
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': 'warn',
     'react/display-name': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
   settings: {
     react: {
@@ -43,7 +44,7 @@ module.exports = {
   // parser: 'babel-eslint',
   overrides: [
     Object.assign(require('eslint-plugin-jest').configs.recommended, {
-      files: ['**/*.test.js'],
+      files: ['**/*.test.js', '**/*.test.ts', '**/*.test.tsx'],
       env: { jest: true },
       plugins: ['jest', 'jest-dom'],
       rules: Object.assign(
@@ -51,6 +52,7 @@ module.exports = {
         {
           'no-import-assign': 'off',
           'react/prop-types': 'off',
+          'jest/valid-title': 'off',
         }
       ),
     }),

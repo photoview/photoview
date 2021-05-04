@@ -48,10 +48,14 @@ const PresentMedia = ({
     case MediaType.Photo:
       return (
         <div {...otherProps}>
-          <StyledPhoto src={media.thumbnail?.url} />
+          <StyledPhoto
+            src={media.thumbnail?.url}
+            data-testid="present-img-thumbnail"
+          />
           <StyledPhoto
             style={{ display: 'none' }}
             src={media.highRes?.url}
+            data-testid="present-img-highres"
             onLoad={e => {
               const elem = e.target as HTMLImageElement
               elem.style.display = 'initial'
@@ -61,7 +65,7 @@ const PresentMedia = ({
         </div>
       )
     case MediaType.Video:
-      return <StyledVideo media={media} />
+      return <StyledVideo media={media} data-testid="present-video" />
   }
 
   exhaustiveCheck(media.type)

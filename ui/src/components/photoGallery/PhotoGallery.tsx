@@ -1,13 +1,20 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { SidebarContext } from '../sidebar/Sidebar'
-import MediaSidebar from '../sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
+import {
+  openPresentModeAction,
+  PhotoGalleryAction,
+  PhotoGalleryState,
+} from './photoGalleryReducer'
+import {
+  toggleFavoriteAction,
+  useMarkFavoriteMutation,
+} from './photoGalleryMutations'
 
 const Gallery = styled.div`
   display: flex;
@@ -32,37 +39,27 @@ const ClearWrap = styled.div`
   clear: both;
 `
 
-interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
+export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
   thumbnail: sidebarPhoto_media_thumbnail | null
+  favorite?: boolean
 }
 
 type PhotoGalleryProps = {
   loading: boolean
-  media: PhotoGalleryProps_Media[]
-  activeIndex: number
-  presenting: boolean
-  onSelectImage(index: number): void
-  setPresenting(presenting: boolean): void
-  nextImage(): void
-  previousImage(): void
-  onFavorite?(): void
+  mediaState: PhotoGalleryState
+  dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
 const PhotoGallery = ({
-  activeIndex = -1,
-  media,
+  mediaState,
   loading,
-  onSelectImage,
-  presenting,
-  setPresenting,
-  nextImage,
-  previousImage,
-  onFavorite,
+  dispatchMedia,
 }: PhotoGalleryProps) => {
   const { t } = useTranslation()
-  const { updateSidebar } = useContext(SidebarContext)
 
-  const activeImage: PhotoGalleryProps_Media | undefined = media[activeIndex]
+  const [markFavorite] = useMarkFavoriteMutation()
+
+  const { media, activeIndex, presenting } = mediaState
 
   let photoElements = []
   if (media) {
@@ -73,14 +70,22 @@ const PhotoGallery = ({
         <MediaThumbnail
           key={media.id}
           media={media}
-          onSelectImage={index => {
-            updateSidebar(<MediaSidebar media={media} />)
-            onSelectImage(index)
-          }}
-          onFavorite={onFavorite}
-          setPresenting={setPresenting}
-          index={index}
           active={active}
+          selectImage={() => {
+            dispatchMedia({
+              type: 'selectImage',
+              index,
+            })
+          }}
+          clickFavorite={() => {
+            toggleFavoriteAction({
+              media,
+              markFavorite,
+            })
+          }}
+          clickPresent={() => {
+            openPresentModeAction({ dispatchMedia, activeIndex: index })
+          }}
         />
       )
     })
@@ -92,7 +97,7 @@ const PhotoGallery = ({
 
   return (
     <ClearWrap>
-      <Gallery>
+      <Gallery data-testid="photo-gallery-wrapper">
         <Loader active={loading}>
           {t('general.loading.media', 'Loading media')}
         </Loader>
@@ -101,8 +106,8 @@ const PhotoGallery = ({
       </Gallery>
       {presenting && (
         <PresentView
-          media={activeImage}
-          {...{ nextImage, previousImage, setPresenting }}
+          activeMedia={mediaState.media[mediaState.activeIndex]}
+          dispatchMedia={dispatchMedia}
         />
       )}
     </ClearWrap>

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
+import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -21,37 +22,40 @@ const PreventScroll = createGlobalStyle`
 `
 
 type PresentViewProps = {
-  media: PresentMediaProps_Media
   className?: string
   imageLoaded?(): void
-  nextImage(): void
-  previousImage(): void
-  setPresenting(presenting: boolean): void
+  activeMedia: PresentMediaProps_Media
+  dispatchMedia: React.Dispatch<GalleryAction>
+  disableSaveCloseInHistory?: boolean
 }
 
 const PresentView = ({
   className,
-  media,
   imageLoaded,
-  nextImage,
-  previousImage,
-  setPresenting,
+  activeMedia,
+  dispatchMedia,
+  disableSaveCloseInHistory,
 }: PresentViewProps) => {
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
       if (e.key == 'ArrowRight') {
-        nextImage()
         e.stopPropagation()
+        dispatchMedia({ type: 'nextImage' })
       }
 
       if (e.key == 'ArrowLeft') {
-        previousImage()
         e.stopPropagation()
+        dispatchMedia({ type: 'previousImage' })
       }
 
       if (e.key == 'Escape') {
-        setPresenting(false)
         e.stopPropagation()
+
+        if (disableSaveCloseInHistory === true) {
+          dispatchMedia({ type: 'closePresentMode' })
+        } else {
+          closePresentModeAction({ dispatchMedia })
+        }
       }
     }
 
@@ -66,9 +70,10 @@ const PresentView = ({
     <StyledContainer {...className}>
       <PreventScroll />
       <PresentNavigationOverlay
-        {...{ nextImage, previousImage, setPresenting }}
+        dispatchMedia={dispatchMedia}
+        disableSaveCloseInHistory
       >
-        <PresentMedia media={media} imageLoaded={imageLoaded} />
+        <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
       </PresentNavigationOverlay>
     </StyledContainer>
   )

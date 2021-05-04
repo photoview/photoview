@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
+import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -65,16 +66,14 @@ const NavigationButton = styled(OverlayButton)<{ float: 'left' | 'right' }>`
 
 type PresentNavigationOverlayProps = {
   children?: React.ReactChild
-  nextImage(): void
-  previousImage(): void
-  setPresenting(presenting: boolean): void
+  dispatchMedia: React.Dispatch<GalleryAction>
+  disableSaveCloseInHistory?: boolean
 }
 
 const PresentNavigationOverlay = ({
   children,
-  nextImage,
-  previousImage,
-  setPresenting,
+  dispatchMedia,
+  disableSaveCloseInHistory,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
@@ -95,28 +94,38 @@ const PresentNavigationOverlay = ({
 
   return (
     <StyledOverlayContainer
+      data-testid="present-overlay"
       onMouseMove={() => {
         onMouseMove.current && onMouseMove.current()
       }}
     >
       {children}
       <NavigationButton
+        aria-label="Previous image"
         className={hide ? 'hide' : undefined}
         float="left"
-        onClick={() => previousImage()}
+        onClick={() => dispatchMedia({ type: 'previousImage' })}
       >
         <PrevIcon />
       </NavigationButton>
       <NavigationButton
+        aria-label="Next image"
         className={hide ? 'hide' : undefined}
         float="right"
-        onClick={() => nextImage()}
+        onClick={() => dispatchMedia({ type: 'nextImage' })}
       >
         <NextIcon />
       </NavigationButton>
       <ExitButton
+        aria-label="Exit presentation mode"
         className={hide ? 'hide' : undefined}
-        onClick={() => setPresenting(false)}
+        onClick={() => {
+          if (disableSaveCloseInHistory === true) {
+            dispatchMedia({ type: 'closePresentMode' })
+          } else {
+            closePresentModeAction({ dispatchMedia })
+          }
+        }}
       >
         <ExitIcon />
       </ExitButton>

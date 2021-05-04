@@ -1,9 +1,11 @@
 import React from 'react'
 import TimelineGroupAlbum from './TimelineGroupAlbum'
 import styled from 'styled-components'
-import { myTimeline_myTimeline } from './__generated__/myTimeline'
-import { TimelineActiveIndex } from './TimelineGallery'
 import { useTranslation } from 'react-i18next'
+import {
+  TimelineGalleryAction,
+  TimelineGalleryState,
+} from './timelineGalleryReducer'
 
 const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   year: 'numeric',
@@ -26,37 +28,27 @@ const GroupAlbumWrapper = styled.div`
 `
 
 type TimelineGroupDateProps = {
-  date: string
-  groups: myTimeline_myTimeline[]
-  onSelectDateGroup(args: { media: number; albumGroup: number }): void
-  activeIndex: TimelineActiveIndex
-  setPresenting: React.Dispatch<React.SetStateAction<boolean>>
-  onFavorite(): void
+  groupIndex: number
+  mediaState: TimelineGalleryState
+  dispatchMedia: React.Dispatch<TimelineGalleryAction>
 }
 
 const TimelineGroupDate = ({
-  date,
-  groups,
-  onSelectDateGroup,
-  activeIndex,
-  setPresenting,
-  onFavorite,
+  groupIndex,
+  mediaState,
+  dispatchMedia,
 }: TimelineGroupDateProps) => {
   const { i18n } = useTranslation()
 
-  const albumGroupElms = groups.map((group, i) => (
+  const group = mediaState.timelineGroups[groupIndex]
+
+  const albumGroupElms = group.groups.map((group, i) => (
     <TimelineGroupAlbum
       key={`${group.date}_${group.album.id}`}
-      group={group}
-      onSelectMedia={mediaIndex => {
-        onSelectDateGroup({
-          media: mediaIndex,
-          albumGroup: i,
-        })
-      }}
-      activeIndex={activeIndex.albumGroup == i ? activeIndex.media : -1}
-      setPresenting={setPresenting}
-      onFavorite={onFavorite}
+      dateIndex={groupIndex}
+      albumIndex={i}
+      mediaState={mediaState}
+      dispatchMedia={dispatchMedia}
     />
   ))
 
@@ -65,7 +57,7 @@ const TimelineGroupDate = ({
     dateFormatterOptions
   )
 
-  const formattedDate = dateFormatter.format(new Date(date))
+  const formattedDate = dateFormatter.format(new Date(group.date))
 
   return (
     <GroupDateWrapper>

@@ -16,7 +16,7 @@ docker-compose.yml
 node_modules/
 
 # testing
-/coverage
+/ui/coverage
 
 # building
 .cache/

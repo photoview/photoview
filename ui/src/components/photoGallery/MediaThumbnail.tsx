@@ -1,22 +1,8 @@
 import React, { useCallback, useState } from 'react'
-import { useMutation, gql } from '@apollo/client'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../../__generated__/globalTypes'
-import {
-  markMediaFavorite,
-  markMediaFavoriteVariables,
-} from './__generated__/markMediaFavorite'
-
-const markFavoriteMutation = gql`
-  mutation markMediaFavorite($mediaId: ID!, $favorite: Boolean!) {
-    favoriteMedia(mediaId: $mediaId, favorite: $favorite) {
-      id
-      favorite
-    }
-  }
-`
 
 const MediaContainer = styled.div`
   flex-grow: 1;
@@ -119,26 +105,19 @@ type MediaThumbnailProps = {
       height: number
     }
   }
-  onSelectImage(index: number): void
-  index: number
   active: boolean
-  setPresenting(presenting: boolean): void
-  onFavorite?(): void
+  selectImage(): void
+  clickPresent(): void
+  clickFavorite(): void
 }
 
 export const MediaThumbnail = ({
   media,
-  onSelectImage,
-  index,
   active,
-  setPresenting,
-  onFavorite,
+  selectImage,
+  clickPresent,
+  clickFavorite,
 }: MediaThumbnailProps) => {
-  const [markFavorite] = useMutation<
-    markMediaFavorite,
-    markMediaFavoriteVariables
-  >(markFavoriteMutation)
-
   let heartIcon = null
   if (media.favorite !== undefined) {
     heartIcon = (
@@ -147,21 +126,7 @@ export const MediaThumbnail = ({
         name={media.favorite ? 'heart' : 'heart outline'}
         onClick={(event: MouseEvent) => {
           event.stopPropagation()
-          const favorite = !media.favorite
-          markFavorite({
-            variables: {
-              mediaId: media.id,
-              favorite: favorite,
-            },
-            optimisticResponse: {
-              favoriteMedia: {
-                id: media.id,
-                favorite: favorite,
-                __typename: 'Media',
-              },
-            },
-          })
-          onFavorite && onFavorite()
+          clickFavorite()
         }}
       />
     )
@@ -187,7 +152,7 @@ export const MediaThumbnail = ({
         minWidth: `clamp(124px, ${minWidth}px, 100% - 8px)`,
       }}
       onClick={() => {
-        onSelectImage(index)
+        selectImage()
       }}
     >
       <div
@@ -203,7 +168,7 @@ export const MediaThumbnail = ({
         <HoverIcon
           name="expand"
           onClick={() => {
-            setPresenting(true)
+            clickPresent()
           }}
         />
         {heartIcon}

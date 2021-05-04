@@ -1,13 +1,17 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
-import MediaSidebar from '../sidebar/MediaSidebar'
-import { SidebarContext } from '../sidebar/Sidebar'
 import {
-  myTimeline_myTimeline_album,
-  myTimeline_myTimeline_media,
-} from './__generated__/myTimeline'
+  toggleFavoriteAction,
+  useMarkFavoriteMutation,
+} from '../photoGallery/photoGalleryMutations'
+import {
+  getActiveTimelineImage,
+  openTimelinePresentMode,
+  TimelineGalleryAction,
+  TimelineGalleryState,
+} from './timelineGalleryReducer'
 
 const MediaWrapper = styled.div`
   display: flex;
@@ -55,38 +59,55 @@ const TotalItemsBubble = styled(Link)`
 `
 
 type TimelineGroupAlbumProps = {
-  group: {
-    album: myTimeline_myTimeline_album
-    media: myTimeline_myTimeline_media[]
-    mediaTotal: number
-  }
-  onSelectMedia(index: number): void
-  setPresenting: React.Dispatch<React.SetStateAction<boolean>>
-  activeIndex: number
-  onFavorite(): void
+  dateIndex: number
+  albumIndex: number
+  mediaState: TimelineGalleryState
+  dispatchMedia: React.Dispatch<TimelineGalleryAction>
 }
 
 const TimelineGroupAlbum = ({
-  group: { album, media, mediaTotal },
-  onSelectMedia,
-  setPresenting,
-  activeIndex,
-  onFavorite,
+  dateIndex,
+  albumIndex,
+  mediaState,
+  dispatchMedia,
 }: TimelineGroupAlbumProps) => {
-  const { updateSidebar } = useContext(SidebarContext)
+  const { media, mediaTotal, album } = mediaState.timelineGroups[
+    dateIndex
+  ].groups[albumIndex]
 
-  const mediaElms = media.map((media, i) => (
+  const [markFavorite] = useMarkFavoriteMutation()
+
+  const mediaElms = media.map((media, index) => (
     <MediaThumbnail
       key={media.id}
       media={media}
-      onSelectImage={index => {
-        onSelectMedia(index)
-        updateSidebar(<MediaSidebar media={media} />)
+      selectImage={() => {
+        dispatchMedia({
+          type: 'selectImage',
+          index: {
+            album: albumIndex,
+            date: dateIndex,
+            media: index,
+          },
+        })
       }}
-      setPresenting={setPresenting}
-      onFavorite={onFavorite}
-      index={i}
-      active={activeIndex == i}
+      clickPresent={() => {
+        openTimelinePresentMode({
+          dispatchMedia,
+          activeIndex: {
+            album: albumIndex,
+            date: dateIndex,
+            media: index,
+          },
+        })
+      }}
+      clickFavorite={() => {
+        toggleFavoriteAction({
+          media,
+          markFavorite,
+        })
+      }}
+      active={media.id === getActiveTimelineImage({ mediaState })?.id}
     />
   ))
 
