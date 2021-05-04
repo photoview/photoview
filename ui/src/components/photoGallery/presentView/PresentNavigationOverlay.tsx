@@ -100,6 +100,7 @@ const PresentNavigationOverlay = ({
     >
       {children}
       <NavigationButton
+        aria-label="Previous image"
         className={hide ? 'hide' : undefined}
         float="left"
         onClick={() => dispatchMedia({ type: 'previousImage' })}
@@ -107,6 +108,7 @@ const PresentNavigationOverlay = ({
         <PrevIcon />
       </NavigationButton>
       <NavigationButton
+        aria-label="Next image"
         className={hide ? 'hide' : undefined}
         float="right"
         onClick={() => dispatchMedia({ type: 'nextImage' })}
@@ -114,6 +116,7 @@ const PresentNavigationOverlay = ({
         <NextIcon />
       </NavigationButton>
       <ExitButton
+        aria-label="Exit presentation mode"
         className={hide ? 'hide' : undefined}
         onClick={() => {
           if (disableSaveCloseInHistory === true) {

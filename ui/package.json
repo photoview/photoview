@@ -68,6 +68,7 @@
     "@babel/preset-env": "^7.13.15",
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.2.6",
+    "@testing-library/user-event": "^13.1.8",
     "@types/geojson": "^7946.0.7",
     "@types/jest": "^26.0.23",
     "@types/mapbox-gl": "^2.1.1",
@@ -107,7 +108,12 @@
     "transform": {
       "^.+\\.(js|ts|tsx)$": "babel-jest",
       "^.+\\.svg$": "<rootDir>/testing/transform-svg.js"
-    }
+    },
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html"
+    ]
   },
   "lint-staged": {
     "*.{ts,tsx,js,json,css,md,graphql}": "prettier --write",
