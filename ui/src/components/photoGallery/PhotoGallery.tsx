@@ -97,7 +97,7 @@ const PhotoGallery = ({
 
   return (
     <ClearWrap>
-      <Gallery>
+      <Gallery data-testid="photo-gallery-wrapper">
         <Loader active={loading}>
           {t('general.loading.media', 'Loading media')}
         </Loader>

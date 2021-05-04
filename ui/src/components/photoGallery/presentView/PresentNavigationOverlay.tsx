@@ -94,6 +94,7 @@ const PresentNavigationOverlay = ({
 
   return (
     <StyledOverlayContainer
+      data-testid="present-overlay"
       onMouseMove={() => {
         onMouseMove.current && onMouseMove.current()
       }}
