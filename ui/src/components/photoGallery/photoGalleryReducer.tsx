@@ -22,7 +22,6 @@ export function photoGalleryReducer(
   state: PhotoGalleryState,
   action: PhotoGalleryAction
 ): PhotoGalleryState {
-  console.log('photo gallery reducer:', state, action)
   switch (action.type) {
     case 'nextImage':
       return {

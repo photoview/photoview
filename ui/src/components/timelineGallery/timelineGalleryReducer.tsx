@@ -56,6 +56,14 @@ export function timelineGalleryReducer(
     case 'nextImage': {
       const { activeIndex, timelineGroups } = state
 
+      if (
+        activeIndex.album == -1 &&
+        activeIndex.date == -1 &&
+        activeIndex.media == -1
+      ) {
+        return state
+      }
+
       const albumGroups = timelineGroups[activeIndex.date].groups
       const albumMedia = albumGroups[activeIndex.album].media
 
@@ -97,6 +105,14 @@ export function timelineGalleryReducer(
     case 'previousImage': {
       const { activeIndex } = state
 
+      if (
+        activeIndex.album == -1 &&
+        activeIndex.date == -1 &&
+        activeIndex.media == -1
+      ) {
+        return state
+      }
+
       if (activeIndex.media > 0) {
         return {
           ...state,
@@ -123,7 +139,7 @@ export function timelineGalleryReducer(
 
       if (activeIndex.date > 0) {
         const albumGroups = state.timelineGroups[activeIndex.date - 1].groups
-        const albumMedia = albumGroups[activeIndex.album - 1].media
+        const albumMedia = albumGroups[albumGroups.length - 1].media
 
         return {
           ...state,
@@ -186,26 +202,6 @@ export const getActiveTimelineImage = ({
 
   return getTimelineImage({ mediaState, index: mediaState.activeIndex })
 }
-
-// export const selectTimelineImageAction = ({
-//   index,
-//   mediaState,
-//   dispatchMedia,
-//   updateSidebar,
-// }: {
-//   index: TimelineMediaIndex
-//   mediaState: TimelineGalleryState
-//   dispatchMedia: React.Dispatch<TimelineGalleryAction>
-//   updateSidebar: UpdateSidebarFn
-// }) => {
-//   updateSidebar(
-//     <MediaSidebar media={getTimelineImage({ mediaState, index })} />
-//   )
-//   dispatchMedia({
-//     type: 'selectImage',
-//     index,
-//   })
-// }
 
 export const openTimelinePresentMode = ({
   dispatchMedia,

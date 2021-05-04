@@ -88,4 +88,23 @@ describe('photo gallery reducer', () => {
       activeIndex: 0,
     })
   })
+
+  test('present mode', () => {
+    const openState = photoGalleryReducer(defaultState, {
+      type: 'openPresentMode',
+      activeIndex: 10,
+    })
+    expect(openState).toEqual({
+      ...defaultState,
+      presenting: true,
+      activeIndex: 10,
+    })
+
+    expect(
+      photoGalleryReducer(openState, { type: 'closePresentMode' })
+    ).toEqual({
+      ...openState,
+      presenting: false,
+    })
+  })
 })

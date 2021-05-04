@@ -138,7 +138,6 @@ const MapPage = () => {
   urlPresentModeSetupHook({
     dispatchMedia: dispatchMarkerMedia,
     openPresentMode: event => {
-      console.log('OPEN PRESENT MODE MAPS')
       dispatchMarkerMedia({
         type: 'openPresentMode',
         activeIndex: event.state.activeIndex,

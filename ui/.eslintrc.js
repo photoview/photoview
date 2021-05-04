@@ -30,8 +30,8 @@ module.exports = {
   plugins: ['react', 'react-hooks', '@typescript-eslint'],
   rules: {
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': 'warn',
     'react/display-name': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
@@ -52,6 +52,7 @@ module.exports = {
         {
           'no-import-assign': 'off',
           'react/prop-types': 'off',
+          'jest/valid-title': 'off',
         }
       ),
     }),
