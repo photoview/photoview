@@ -12,27 +12,17 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/exif"
+	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
-func fileExists(testPath string) bool {
-	_, err := os.Stat(testPath)
-
-	if os.IsNotExist(err) {
-		return false
-	} else if err != nil {
-		// unexpected error logging
-		log.Printf("Error: checking for file existence (%s): %s", testPath, err)
-		return false
-	}
-	return true
-}
-
 func scanForSideCarFile(path string) *string {
 	testPath := path + ".xmp"
 
-	if fileExists(testPath) {
+	if scanner_utils.FileExists(testPath) {
 		return &testPath
 	}
 
@@ -41,23 +31,17 @@ func scanForSideCarFile(path string) *string {
 
 func scanForRawCounterpartFile(imagePath string) *string {
 	ext := filepath.Ext(imagePath)
-	fileExtType, found := fileExtensions[strings.ToLower(ext)]
+	fileExtType, found := media_type.GetExtensionMediaType(ext)
 
 	if found {
-		if !fileExtType.isBasicTypeSupported() {
+		if !fileExtType.IsBasicTypeSupported() {
 			return nil
 		}
 	}
 
-	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
-
-	for _, rawType := range RawMimeTypes {
-		for _, ext := range rawType.FileExtensions() {
-			testPath := pathWithoutExt + ext
-			if fileExists(testPath) {
-				return &testPath
-			}
-		}
+	rawPath := media_type.RawCounterpart(imagePath)
+	if rawPath != nil {
+		return rawPath
 	}
 
 	return nil
@@ -65,18 +49,18 @@ func scanForRawCounterpartFile(imagePath string) *string {
 
 func scanForCompressedCounterpartFile(imagePath string) *string {
 	ext := filepath.Ext(imagePath)
-	fileExtType, found := fileExtensions[strings.ToLower(ext)]
+	fileExtType, found := media_type.GetExtensionMediaType(ext)
 
 	if found {
-		if fileExtType.isBasicTypeSupported() {
+		if fileExtType.IsBasicTypeSupported() {
 			return nil
 		}
 	}
 
 	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
-	for _, ext := range TypeJpeg.FileExtensions() {
+	for _, ext := range media_type.TypeJpeg.FileExtensions() {
 		testPath := pathWithoutExt + ext
-		if fileExists(testPath) {
+		if scanner_utils.FileExists(testPath) {
 			return &testPath
 		}
 	}
@@ -103,7 +87,7 @@ func hashSideCarFile(path *string) *string {
 	return &hash
 }
 
-func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if media already exists
@@ -134,12 +118,12 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *AlbumScannerCa
 	var sideCarPath *string = nil
 	var sideCarHash *string = nil
 
-	if mediaType.isVideo() {
+	if mediaType.IsVideo() {
 		mediaTypeText = models.MediaTypeVideo
 	} else {
 		mediaTypeText = models.MediaTypePhoto
 		// search for sidecar files
-		if mediaType.isRaw() {
+		if mediaType.IsRaw() {
 			sideCarPath = scanForSideCarFile(mediaPath)
 			if sideCarPath != nil {
 				sideCarHash = hashSideCarFile(sideCarPath)

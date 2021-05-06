@@ -1,14 +1,15 @@
-package scanner
+package media_type
 
 import (
 	"io"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 )
 
@@ -197,7 +198,7 @@ var fileExtensions = map[string]MediaType{
 	".mts":  TypeMTS,
 }
 
-func (imgType *MediaType) isRaw() bool {
+func (imgType *MediaType) IsRaw() bool {
 	for _, raw_mime := range RawMimeTypes {
 		if raw_mime == *imgType {
 			return true
@@ -207,7 +208,7 @@ func (imgType *MediaType) isRaw() bool {
 	return false
 }
 
-func (imgType *MediaType) isWebCompatible() bool {
+func (imgType *MediaType) IsWebCompatible() bool {
 	for _, web_mime := range WebMimetypes {
 		if web_mime == *imgType {
 			return true
@@ -223,7 +224,7 @@ func (imgType *MediaType) isWebCompatible() bool {
 	return false
 }
 
-func (imgType *MediaType) isVideo() bool {
+func (imgType *MediaType) IsVideo() bool {
 	for _, video_mime := range VideoMimetypes {
 		if video_mime == *imgType {
 			return true
@@ -233,7 +234,7 @@ func (imgType *MediaType) isVideo() bool {
 	return false
 }
 
-func (imgType *MediaType) isBasicTypeSupported() bool {
+func (imgType *MediaType) IsBasicTypeSupported() bool {
 	for _, img_mime := range SupportedMimetypes {
 		if img_mime == *imgType {
 			return true
@@ -243,31 +244,36 @@ func (imgType *MediaType) isBasicTypeSupported() bool {
 	return false
 }
 
-// isSupported determines if the given type can be processed
-func (imgType *MediaType) isSupported() bool {
-	if imgType.isBasicTypeSupported() {
+// IsSupported determines if the given type can be processed
+func (imgType *MediaType) IsSupported() bool {
+	if imgType.IsBasicTypeSupported() {
 		return true
 	}
 
-	if DarktableCli.IsInstalled() && imgType.isRaw() {
+	if executable_worker.DarktableCli.IsInstalled() && imgType.IsRaw() {
 		return true
 	}
 
-	if FfmpegCli.IsInstalled() && imgType.isVideo() {
+	if executable_worker.FfmpegCli.IsInstalled() && imgType.IsVideo() {
 		return true
 	}
 
 	return false
 }
 
-func getMediaType(path string) (*MediaType, error) {
+func GetExtensionMediaType(ext string) (MediaType, bool) {
+	result, found := fileExtensions[strings.ToLower(ext)]
+	return result, found
+}
+
+func GetMediaType(path string) (*MediaType, error) {
 
 	ext := filepath.Ext(path)
 
-	fileExtType, found := fileExtensions[strings.ToLower(ext)]
+	fileExtType, found := GetExtensionMediaType(ext)
 
 	if found {
-		if fileExtType.isSupported() {
+		if fileExtType.IsSupported() {
 			return &fileExtType, nil
 		} else {
 			return nil, nil
@@ -296,37 +302,11 @@ func getMediaType(path string) (*MediaType, error) {
 	}
 
 	imgType := MediaType(_imgType.MIME.Value)
-	if imgType.isSupported() {
+	if imgType.IsSupported() {
 		return &imgType, nil
 	}
 
 	return nil, nil
-}
-
-func isPathMedia(mediaPath string, cache *AlbumScannerCache) bool {
-	mediaType, err := cache.GetMediaType(mediaPath)
-	if err != nil {
-		ScannerError("isPathMedia (%s): %s", mediaPath, err)
-		return false
-	}
-
-	// Ignore hidden files
-	if path.Base(mediaPath)[0:1] == "." {
-		return false
-	}
-
-	if mediaType != nil {
-		// Make sure file isn't empty
-		fileStats, err := os.Stat(mediaPath)
-		if err != nil || fileStats.Size() == 0 {
-			return false
-		}
-
-		return true
-	}
-
-	log.Printf("File is not a supported media %s\n", mediaPath)
-	return false
 }
 
 func (mediaType MediaType) FileExtensions() []string {
@@ -340,4 +320,19 @@ func (mediaType MediaType) FileExtensions() []string {
 	}
 
 	return extensions
+}
+
+func RawCounterpart(imagePath string) *string {
+	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
+
+	for _, rawType := range RawMimeTypes {
+		for _, ext := range rawType.FileExtensions() {
+			testPath := pathWithoutExt + ext
+			if scanner_utils.FileExists(testPath) {
+				return &testPath
+			}
+		}
+	}
+
+	return nil
 }

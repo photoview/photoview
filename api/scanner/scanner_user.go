@@ -3,15 +3,14 @@ package scanner
 import (
 	"bufio"
 	"container/list"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/graphql/notification"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
@@ -42,7 +41,7 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScannerCache) ([]*models.Album, []error) {
+func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
@@ -215,7 +214,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *AlbumScanner
 	return userAlbums, scanErrors
 }
 
-func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache, albumIgnore []string) bool {
+func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
 
 	if contains_image := cache.AlbumContainsPhotos(rootPath); contains_image != nil {
 		return *contains_image
@@ -244,7 +243,7 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache, albumIgn
 
 		dirContent, err := ioutil.ReadDir(dirPath)
 		if err != nil {
-			ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
+			scanner_utils.ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false
 		}
 
@@ -253,7 +252,7 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache, albumIgn
 			if fileInfo.IsDir() {
 				scanQueue.PushBack(filePath)
 			} else {
-				if isPathMedia(filePath, cache) {
+				if cache.IsPathMedia(filePath) {
 					if ignoreEntries.MatchesPath(fileInfo.Name()) {
 						log.Printf("Match found %s, continue search for media", fileInfo.Name())
 						continue
@@ -272,17 +271,4 @@ func directoryContainsPhotos(rootPath string, cache *AlbumScannerCache, albumIgn
 		cache.InsertAlbumPath(scanned_path, false)
 	}
 	return false
-}
-
-func ScannerError(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-
-	log.Printf("ERROR: %s", message)
-	notification.BroadcastNotification(&models.Notification{
-		Key:      utils.GenerateToken(),
-		Type:     models.NotificationTypeMessage,
-		Header:   "Scanner error",
-		Content:  message,
-		Negative: true,
-	})
 }

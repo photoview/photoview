@@ -12,12 +12,13 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/photoview/photoview/api/database"
+	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
@@ -54,7 +55,7 @@ func main() {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
 
-	scanner.InitializeExecutableWorkers()
+	executable_worker.InitializeExecutableWorkers()
 
 	exif.InitializeEXIFParser()
 

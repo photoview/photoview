@@ -10,15 +10,17 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/image_helpers"
+	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"gorm.io/gorm"
 )
 
-func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *string) (bool, error) {
-	video := mediaData.media
+func processVideo(tx *gorm.DB, mediaData *media_encoding.EncodeMediaData, videoCachePath *string) (bool, error) {
+	video := mediaData.Media
 	didProcess := false
 
 	log.Printf("Processing video: %s", video.Path)
@@ -45,7 +47,7 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 		return false, errors.Wrap(err, "error getting video content type")
 	}
 
-	if videoOriginalURL == nil && videoType.isWebCompatible() {
+	if videoOriginalURL == nil && videoType.IsWebCompatible() {
 		didProcess = true
 
 		origVideoPath := video.Path
@@ -77,7 +79,7 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 
 	}
 
-	if videoWebURL == nil && !videoType.isWebCompatible() {
+	if videoWebURL == nil && !videoType.IsWebCompatible() {
 		didProcess = true
 
 		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
@@ -87,7 +89,7 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 
 		webVideoPath := path.Join(*videoCachePath, web_video_name)
 
-		err = FfmpegCli.EncodeMp4(video.Path, webVideoPath)
+		err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
 		if err != nil {
 			return false, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
@@ -117,6 +119,11 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 		}
 	}
 
+	probeData, err := mediaData.VideoMetadata()
+	if err != nil {
+		return false, err
+	}
+
 	if videoThumbnailURL == nil {
 		didProcess = true
 
@@ -127,12 +134,12 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 
 		thumbImagePath := path.Join(*videoCachePath, video_thumb_name)
 
-		err = FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, mediaData)
+		err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
 
-		thumbDimensions, err := image_helpers.GetPhotoDimensions(thumbImagePath)
+		thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
 		if err != nil {
 			return false, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
@@ -163,12 +170,12 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 			fmt.Printf("Video thumbnail found in database but not in cache, re-encoding photo to cache: %s\n", videoThumbnailURL.MediaName)
 			didProcess = true
 
-			err = FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, mediaData)
+			err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
 
-			thumbDimensions, err := image_helpers.GetPhotoDimensions(thumbImagePath)
+			thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
 			if err != nil {
 				return false, errors.Wrap(err, "get dimensions of video thumbnail image")
 			}
@@ -189,23 +196,6 @@ func processVideo(tx *gorm.DB, mediaData *EncodeMediaData, videoCachePath *strin
 	}
 
 	return didProcess, nil
-}
-
-func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
-
-	if enc._videoMetadata != nil {
-		return enc._videoMetadata, nil
-	}
-
-	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFn()
-	data, err := ffprobe.ProbeURL(ctx, enc.media.Path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.media.Title)
-	}
-
-	enc._videoMetadata = data
-	return enc._videoMetadata, nil
 }
 
 func readVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {

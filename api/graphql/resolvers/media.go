@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
+	"github.com/photoview/photoview/api/dataloader"
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/graphql/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm/clause"

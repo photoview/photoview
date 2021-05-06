@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/scanner_cache"
 )
 
 func makeAlbumWithID(id int) *models.Album {
@@ -16,8 +17,8 @@ func makeAlbumWithID(id int) *models.Album {
 func TestScannerQueue_AddJob(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
-		{album: makeAlbumWithID(100), cache: MakeAlbumCache()},
-		{album: makeAlbumWithID(20), cache: MakeAlbumCache()},
+		{album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache()},
+		{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()},
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -28,7 +29,7 @@ func TestScannerQueue_AddJob(t *testing.T) {
 	}
 
 	t.Run("add new job to scanner queue", func(t *testing.T) {
-		newJob := ScannerJob{album: makeAlbumWithID(42), cache: MakeAlbumCache()}
+		newJob := ScannerJob{album: makeAlbumWithID(42), cache: scanner_cache.MakeAlbumCache()}
 
 		startingJobs := len(mockScannerQueue.up_next)
 
@@ -48,7 +49,7 @@ func TestScannerQueue_AddJob(t *testing.T) {
 	t.Run("add existing job to scanner queue", func(t *testing.T) {
 		startingJobs := len(mockScannerQueue.up_next)
 
-		err := mockScannerQueue.addJob(&ScannerJob{album: makeAlbumWithID(20), cache: MakeAlbumCache()})
+		err := mockScannerQueue.addJob(&ScannerJob{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()})
 		if err != nil {
 			t.Errorf(".AddJob() returned an unexpected error: %s", err)
 		}
@@ -64,8 +65,8 @@ func TestScannerQueue_AddJob(t *testing.T) {
 func TestScannerQueue_JobOnQueue(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
-		{album: makeAlbumWithID(100), cache: MakeAlbumCache()},
-		{album: makeAlbumWithID(20), cache: MakeAlbumCache()},
+		{album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache()},
+		{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()},
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -81,10 +82,10 @@ func TestScannerQueue_JobOnQueue(t *testing.T) {
 		ScannerJob
 	}{
 		{"album which owner is already on the queue", true, ScannerJob{
-			album: makeAlbumWithID(100), cache: MakeAlbumCache(),
+			album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache(),
 		}},
 		{"album that is not on the queue", false, ScannerJob{
-			album: makeAlbumWithID(321), cache: MakeAlbumCache(),
+			album: makeAlbumWithID(321), cache: scanner_cache.MakeAlbumCache(),
 		}},
 	}
 

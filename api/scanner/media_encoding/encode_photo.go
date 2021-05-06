@@ -1,13 +1,17 @@
-package scanner
+package media_encoding
 
 import (
+	"context"
 	"image"
 	"image/jpeg"
 	"os"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/image_helpers"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -15,14 +19,14 @@ import (
 	_ "github.com/strukturag/libheif/go/heif"
 )
 
-func EncodeThumbnail(inputPath string, outputPath string) (*image_helpers.PhotoDimensions, error) {
+func EncodeThumbnail(inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
 
 	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
 	if err != nil {
 		return nil, err
 	}
 
-	dimensions := image_helpers.PhotoDimensionsFromRect(inputImage.Bounds())
+	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
 	dimensions = dimensions.ThumbnailScale()
 
 	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
@@ -50,19 +54,19 @@ func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
 type EncodeMediaData struct {
-	media          *models.Media
+	Media          *models.Media
 	_photoImage    image.Image
-	_contentType   *MediaType
+	_contentType   *media_type.MediaType
 	_videoMetadata *ffprobe.ProbeData
 }
 
 // ContentType reads the image to determine its content type
-func (img *EncodeMediaData) ContentType() (*MediaType, error) {
+func (img *EncodeMediaData) ContentType() (*media_type.MediaType, error) {
 	if img._contentType != nil {
 		return img._contentType, nil
 	}
 
-	imgType, err := getMediaType(img.media.Path)
+	imgType, err := media_type.GetMediaType(img.Media.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +81,14 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 		return err
 	}
 
-	if !contentType.isSupported() {
+	if !contentType.IsSupported() {
 		return errors.New("could not convert photo as file format is not supported")
 	}
 
 	// Use darktable if there is no counterpart JPEG file to use instead
-	if contentType.isRaw() && img.media.CounterpartPath == nil {
-		if DarktableCli.IsInstalled() {
-			err := DarktableCli.EncodeJpeg(img.media.Path, outputPath, 70)
+	if contentType.IsRaw() && img.Media.CounterpartPath == nil {
+		if executable_worker.DarktableCli.IsInstalled() {
+			err := executable_worker.DarktableCli.EncodeJpeg(img.Media.Path, outputPath, 70)
 			if err != nil {
 				return err
 			}
@@ -110,10 +114,10 @@ func (img *EncodeMediaData) photoImage() (image.Image, error) {
 	}
 
 	var photoPath string
-	if img.media.CounterpartPath != nil {
-		photoPath = *img.media.CounterpartPath
+	if img.Media.CounterpartPath != nil {
+		photoPath = *img.Media.CounterpartPath
 	} else {
-		photoPath = img.media.Path
+		photoPath = img.Media.Path
 	}
 
 	photoImg, err := img.decodeImage(photoPath)
@@ -139,7 +143,7 @@ func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
 
 	var decodedImage image.Image
 
-	if *mediaType == TypeHeic {
+	if *mediaType == media_type.TypeHeic {
 		decodedImage, _, err = image.Decode(file)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to decode HEIF image (%s)", imagePath)
@@ -152,4 +156,21 @@ func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
 	}
 
 	return decodedImage, nil
+}
+
+func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
+
+	if enc._videoMetadata != nil {
+		return enc._videoMetadata, nil
+	}
+
+	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFn()
+	data, err := ffprobe.ProbeURL(ctx, enc.Media.Path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.Media.Title)
+	}
+
+	enc._videoMetadata = data
+	return enc._videoMetadata, nil
 }

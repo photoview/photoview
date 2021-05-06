@@ -11,6 +11,8 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
@@ -85,7 +87,7 @@ func ValidRootPath(rootPath string) bool {
 	return true
 }
 
-func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
+func scanAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache, db *gorm.DB) {
 
 	album_notify_key := utils.GenerateToken()
 	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
@@ -105,7 +107,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 		}
 	})
 	if err != nil {
-		ScannerError("Failed to find media for album (%s): %s", album.Path, err)
+		scanner_utils.ScannerError("Failed to find media for album (%s): %s", album.Path, err)
 	}
 
 	album_has_changes := false
@@ -134,13 +136,13 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 		})
 
 		if transactionError != nil {
-			ScannerError("Failed to begin database transaction: %s", transactionError)
+			scanner_utils.ScannerError("Failed to begin database transaction: %s", transactionError)
 		}
 
 		if processing_was_needed && media.Type == models.MediaTypePhoto {
 			go func(media *models.Media) {
 				if err := face_detection.GlobalFaceDetector.DetectFaces(db, media); err != nil {
-					ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
+					scanner_utils.ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
 				}
 			}(media)
 		}
@@ -148,7 +150,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 
 	cleanup_errors := CleanupMedia(db, album.ID, albumMedia)
 	for _, err := range cleanup_errors {
-		ScannerError("Failed to delete old media: %s", err)
+		scanner_utils.ScannerError("Failed to delete old media: %s", err)
 	}
 
 	if album_has_changes {
@@ -164,7 +166,7 @@ func scanAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB) {
 	}
 }
 
-func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
+func findMediaForAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache, db *gorm.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
 
 	albumPhotos := make([]*models.Media, 0)
 
@@ -179,7 +181,7 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
-		if !item.IsDir() && isPathMedia(photoPath, cache) {
+		if !item.IsDir() && cache.IsPathMedia(photoPath) {
 			// Match file against ignore data
 			if albumIgnore.MatchesPath(item.Name()) {
 				log.Printf("File %s ignored\n", item.Name())
@@ -206,7 +208,7 @@ func findMediaForAlbum(album *models.Album, cache *AlbumScannerCache, db *gorm.D
 			})
 
 			if err != nil {
-				ScannerError("Error scanning media for album (%d): %s\n", album.ID, err)
+				scanner_utils.ScannerError("Error scanning media for album (%d): %s\n", album.ID, err)
 				continue
 			}
 

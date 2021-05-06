@@ -1,15 +1,19 @@
-package scanner
+package scanner_cache
 
 import (
+	"log"
+	"os"
 	"path"
 	"sync"
 
+	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 )
 
 type AlbumScannerCache struct {
 	path_contains_photos map[string]bool
-	photo_types          map[string]MediaType
+	photo_types          map[string]media_type.MediaType
 	ignore_data          map[string][]string
 	mutex                sync.Mutex
 }
@@ -17,7 +21,7 @@ type AlbumScannerCache struct {
 func MakeAlbumCache() *AlbumScannerCache {
 	return &AlbumScannerCache{
 		path_contains_photos: make(map[string]bool),
-		photo_types:          make(map[string]MediaType),
+		photo_types:          make(map[string]media_type.MediaType),
 		ignore_data:          make(map[string][]string),
 	}
 }
@@ -65,7 +69,7 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 // 	(c.photo_types)[path] = content_type
 // }
 
-func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
+func (c *AlbumScannerCache) GetMediaType(path string) (*media_type.MediaType, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -75,7 +79,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) (*MediaType, error) {
 		return &result, nil
 	}
 
-	mediaType, err := getMediaType(path)
+	mediaType, err := media_type.GetMediaType(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get media type (%s)", path)
 	}
@@ -104,4 +108,30 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignore_data []string)
 	defer c.mutex.Unlock()
 
 	c.ignore_data[path] = ignore_data
+}
+
+func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
+	mediaType, err := c.GetMediaType(mediaPath)
+	if err != nil {
+		scanner_utils.ScannerError("IsPathMedia (%s): %s", mediaPath, err)
+		return false
+	}
+
+	// Ignore hidden files
+	if path.Base(mediaPath)[0:1] == "." {
+		return false
+	}
+
+	if mediaType != nil {
+		// Make sure file isn't empty
+		fileStats, err := os.Stat(mediaPath)
+		if err != nil || fileStats.Size() == 0 {
+			return false
+		}
+
+		return true
+	}
+
+	log.Printf("File is not a supported media %s\n", mediaPath)
+	return false
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
@@ -14,19 +13,18 @@ type exifParser interface {
 	ParseExif(media_path string) (*models.MediaEXIF, error)
 }
 
-var use_exiftool bool = false
+var globalExifParser exifParser
 
 func InitializeEXIFParser() {
 	// Decide between internal or external Exif parser
-	et, err := exiftool.NewExiftool()
+	exiftoolParser, err := newExiftoolParser()
 
 	if err != nil {
-		use_exiftool = false
 		log.Printf("Failed to get exiftool, using internal exif parser instead: %v\n", err)
+		globalExifParser = &internalExifParser{}
 	} else {
-		et.Close()
 		log.Println("Found exiftool")
-		use_exiftool = true
+		globalExifParser = exiftoolParser
 	}
 }
 
@@ -46,14 +44,11 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 		}
 	}
 
-	var parser exifParser
-	if use_exiftool {
-		parser = &externalExifParser{}
-	} else {
-		parser = &internalExifParser{}
+	if globalExifParser == nil {
+		return nil, errors.New("No exif parser initialized")
 	}
 
-	exif, err := parser.ParseExif(media.Path)
+	exif, err := globalExifParser.ParseExif(media.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse exif data")
 	}
