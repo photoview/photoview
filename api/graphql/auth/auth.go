@@ -8,7 +8,7 @@ import (
 	"regexp"
 
 	"github.com/99designs/gqlgen/handler"
-	"github.com/photoview/photoview/api/graphql/dataloader"
+	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )

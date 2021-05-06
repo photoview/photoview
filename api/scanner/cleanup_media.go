@@ -7,6 +7,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -118,7 +119,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	})
 
 	if err != nil {
-		ScannerError("Could not delete old albums from database:\n%s\n", err)
+		scanner_utils.ScannerError("Could not delete old albums from database:\n%s\n", err)
 		deleteErrors = append(deleteErrors, err)
 	}
 

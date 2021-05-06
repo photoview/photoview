@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Kagami/go-face"
-	"github.com/photoview/photoview/api/scanner/image_helpers"
+	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -69,7 +69,7 @@ type FaceRectangle struct {
 
 // ToDBFaceRectangle converts a pixel absolute rectangle to a relative FaceRectangle to be saved in the database
 func ToDBFaceRectangle(imgRec image.Rectangle, imagePath string) (*FaceRectangle, error) {
-	size, err := image_helpers.GetPhotoDimensions(imagePath)
+	size, err := media_utils.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return nil, err
 	}

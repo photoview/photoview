@@ -28,10 +28,16 @@ func TestExifParsers(t *testing.T) {
 			name:   "internal",
 			parser: &internalExifParser{},
 		},
-		{
+	}
+
+	if externalParser, err := newExiftoolParser(); err == nil {
+		parsers = append(parsers, struct {
+			name   string
+			parser exifParser
+		}{
 			name:   "external",
-			parser: &externalExifParser{},
-		},
+			parser: externalParser,
+		})
 	}
 
 	images := []struct {

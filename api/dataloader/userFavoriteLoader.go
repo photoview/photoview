@@ -19,6 +19,7 @@ func NewUserFavoriteLoader(db *gorm.DB) *UserFavoritesLoader {
 				userIDMap[key.UserID] = struct{}{}
 				mediaIDMap[key.MediaID] = struct{}{}
 			}
+			
 
 			uniqueUserIDs := make([]int, len(userIDMap))
 			uniqueMediaIDs := make([]int, len(mediaIDMap))

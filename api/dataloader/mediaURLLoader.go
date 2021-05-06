@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/pkg/errors"
 
 	"gorm.io/gorm"
@@ -56,7 +56,7 @@ func NewHighresMediaURLLoader(db *gorm.DB) *MediaURLLoader {
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
 		fetch: makeMediaURLLoader(db, func(query *gorm.DB) *gorm.DB {
-			return query.Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, scanner.WebMimetypes)
+			return query.Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, media_type.WebMimetypes)
 		}),
 	}
 }

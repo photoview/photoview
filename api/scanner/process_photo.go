@@ -8,7 +8,9 @@ import (
 	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/image_helpers"
+	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -61,8 +63,8 @@ func generateUniqueMediaName(mediaPath string) string {
 }
 
 func ProcessMedia(tx *gorm.DB, media *models.Media) (bool, error) {
-	imageData := EncodeMediaData{
-		media: media,
+	imageData := media_encoding.EncodeMediaData{
+		Media: media,
 	}
 
 	contentType, err := imageData.ContentType()
@@ -76,16 +78,16 @@ func ProcessMedia(tx *gorm.DB, media *models.Media) (bool, error) {
 		return false, errors.Wrap(err, "cache directory error")
 	}
 
-	if contentType.isVideo() {
+	if contentType.IsVideo() {
 		return processVideo(tx, &imageData, mediaCachePath)
 	} else {
 		return processPhoto(tx, &imageData, mediaCachePath)
 	}
 }
 
-func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *string) (bool, error) {
+func processPhoto(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, photoCachePath *string) (bool, error) {
 
-	photo := imageData.media
+	photo := imageData.Media
 
 	log.Printf("Processing photo: %s\n", photo.Path)
 
@@ -111,10 +113,10 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 		return false, errors.Wrap(err, "error processing photo highres")
 	}
 
-	var photoDimensions *image_helpers.PhotoDimensions
+	var photoDimensions *media_utils.PhotoDimensions
 	var baseImagePath string = photo.Path
 
-	mediaType, err := getMediaType(photo.Path)
+	mediaType, err := media_type.GetMediaType(photo.Path)
 	if err != nil {
 		return false, errors.Wrap(err, "could determine if media was photo or video")
 	}
@@ -127,7 +129,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 			return false, err
 		}
 
-		if !contentType.isWebCompatible() {
+		if !contentType.IsWebCompatible() {
 			didProcess = true
 
 			highresName := generateUniqueMediaNamePrefixed("highres", photo.Path, ".jpg")
@@ -162,7 +164,7 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 
 		// Make sure photo dimensions is set
 		if photoDimensions == nil {
-			photoDimensions, err = image_helpers.GetPhotoDimensions(baseImagePath)
+			photoDimensions, err = media_utils.GetPhotoDimensions(baseImagePath)
 			if err != nil {
 				return false, err
 			}
@@ -193,14 +195,14 @@ func processPhoto(tx *gorm.DB, imageData *EncodeMediaData, photoCachePath *strin
 			didProcess = true
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.MediaName)
 
-			_, err := EncodeThumbnail(baseImagePath, thumbPath)
+			_, err := media_encoding.EncodeThumbnail(baseImagePath, thumbPath)
 			if err != nil {
 				return false, errors.Wrap(err, "could not create thumbnail cached image")
 			}
 		}
 	}
 
-	if mediaType.isRaw() {
+	if mediaType.IsRaw() {
 		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
 		if err != nil {
 			return false, err
@@ -243,7 +245,7 @@ func makeMediaCacheDir(media *models.Media) (*string, error) {
 	return &photoCachePath, nil
 }
 
-func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMediaData, photoDimensions *image_helpers.PhotoDimensions) error {
+func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions *media_utils.PhotoDimensions) error {
 	originalImageName := generateUniqueMediaName(photo.Path)
 
 	contentType, err := imageData.ContentType()
@@ -273,14 +275,14 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *EncodeMe
 	return nil
 }
 
-func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_encoding.EncodeMediaData, highres_name string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
 	err := imageData.EncodeHighRes(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
-	photoDimensions, err := image_helpers.GetPhotoDimensions(imagePath)
+	photoDimensions, err := media_utils.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +323,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *Encode
 func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name string, photoCachePath *string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(*photoCachePath, thumbnail_name)
 
-	thumbSize, err := EncodeThumbnail(baseImagePath, thumbOutputPath)
+	thumbSize, err := media_encoding.EncodeThumbnail(baseImagePath, thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}
@@ -359,8 +361,8 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name 
 	return mediaURL, nil
 }
 
-func processRawSideCar(tx *gorm.DB, imageData *EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
-	photo := imageData.media
+func processRawSideCar(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, highResURL *models.MediaURL, thumbURL *models.MediaURL, photoCachePath *string) error {
+	photo := imageData.Media
 	sideCarFileHasChanged := false
 	var currentFileHash *string
 	currentSideCarPath := scanForSideCarFile(photo.Path)

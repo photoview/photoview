@@ -1,4 +1,4 @@
-package scanner
+package executable_worker
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func InitializeExecutableWorkers() {
@@ -126,14 +127,9 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 	return nil
 }
 
-func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath string, mediaData *EncodeMediaData) error {
+func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
 
-	metadata, err := mediaData.VideoMetadata()
-	if err != nil {
-		return errors.Wrapf(err, "get metadata to encode video thumbnail (%s)", inputPath)
-	}
-
-	thumbnailOffsetSeconds := fmt.Sprintf("%d", int(metadata.Format.DurationSeconds*0.25))
+	thumbnailOffsetSeconds := fmt.Sprintf("%d", int(probeData.Format.DurationSeconds*0.25))
 
 	args := []string{
 		"-i",

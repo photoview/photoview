@@ -1,4 +1,4 @@
-package image_helpers
+package media_utils
 
 import (
 	"image"

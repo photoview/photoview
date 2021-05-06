@@ -8,6 +8,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -15,7 +16,7 @@ import (
 
 type ScannerJob struct {
 	album *models.Album
-	cache *AlbumScannerCache
+	cache *scanner_cache.AlbumScannerCache
 }
 
 func (job *ScannerJob) Run(db *gorm.DB) {
@@ -197,7 +198,7 @@ func AddAllToQueue() error {
 }
 
 func AddUserToQueue(user *models.User) error {
-	album_cache := MakeAlbumCache()
+	album_cache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
 		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
