@@ -4,12 +4,16 @@ import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import styled from 'styled-components'
 import { gql, useQuery } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
+import useURLParameters from '../../hooks/useURLParameters'
+import useOrderingParams from '../../hooks/useOrderingParams'
 
 export const SHARE_ALBUM_QUERY = gql`
   query shareAlbumQuery(
     $id: ID!
     $token: String!
     $password: String
+    $mediaOrderBy: String
+    $mediaOrderDirection: OrderDirection
     $limit: Int
     $offset: Int
   ) {
@@ -25,7 +29,13 @@ export const SHARE_ALBUM_QUERY = gql`
           }
         }
       }
-      media(paginate: { limit: $limit, offset: $offset }) {
+      media(
+        paginate: { limit: $limit, offset: $offset }
+        order: {
+          order_by: $mediaOrderBy
+          order_direction: $mediaOrderDirection
+        }
+      ) {
         id
         title
         type
@@ -80,13 +90,19 @@ type AlbumSharePageProps = {
 
 const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
   const { t } = useTranslation()
-  const { data, loading, error } = useQuery(SHARE_ALBUM_QUERY, {
+
+  const urlParams = useURLParameters()
+  const orderParams = useOrderingParams(urlParams)
+
+  const { data, error } = useQuery(SHARE_ALBUM_QUERY, {
     variables: {
       id: albumID,
       token,
       password,
       limit: 200,
       offset: 0,
+      mediaOrderBy: orderParams.orderBy,
+      mediaOrderDirection: orderParams.orderDirection,
     },
   })
 
@@ -94,11 +110,7 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
     return <div>{error.message}</div>
   }
 
-  if (loading) {
-    return <div>{t('general.loading.default', 'Loading...')}</div>
-  }
-
-  const album = data.album
+  const album = data?.album
 
   return (
     <AlbumSharePageWrapper data-testid="AlbumSharePage">
@@ -110,6 +122,9 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
         <AlbumGallery
           album={album}
           customAlbumLink={albumId => `/share/${token}/${albumId}`}
+          showFilter
+          setOrdering={orderParams.setOrdering}
+          ordering={orderParams}
         />
       </Layout>
     </AlbumSharePageWrapper>

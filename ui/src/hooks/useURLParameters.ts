@@ -2,7 +2,13 @@ import { useState } from 'react'
 
 export type UrlKeyValuePair = { key: string; value: string }
 
-function useURLParameters() {
+export type UrlParams = {
+  getParam(key: string, defaultValue?: string | null): string | null
+  setParam(key: string, value: string): void
+  setParams(pairs: UrlKeyValuePair[]): void
+}
+
+function useURLParameters(): UrlParams {
   const [urlString, setUrlString] = useState(document.location.href)
 
   const url = new URL(urlString)
