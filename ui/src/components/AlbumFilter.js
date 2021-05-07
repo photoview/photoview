@@ -99,7 +99,7 @@ const AlbumFilter = ({
 
   return (
     <>
-      {authToken() && (
+      {authToken() && setOnlyFavorites && (
         <FavoritesCheckbox
           onlyFavorites={onlyFavorites}
           setOnlyFavorites={setOnlyFavorites}

@@ -2,13 +2,13 @@ import React, { useCallback, useEffect } from 'react'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import Layout from '../../Layout'
-import useURLParameters, { UrlKeyValuePair } from '../../hooks/useURLParameters'
+import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'
 import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
-import { OrderDirection } from '../../../__generated__/globalTypes'
+import useOrderingParams from '../../hooks/useOrderingParams'
 
 const ALBUM_QUERY = gql`
   query albumQuery(
@@ -75,36 +75,12 @@ function AlbumPage({ match }: AlbumPageProps) {
 
   const { t } = useTranslation()
 
-  const { getParam, setParam, setParams } = useURLParameters()
+  const urlParams = useURLParameters()
+  const orderParams = useOrderingParams(urlParams)
 
-  const onlyFavorites = getParam('favorites') == '1' ? true : false
+  const onlyFavorites = urlParams.getParam('favorites') == '1' ? true : false
   const setOnlyFavorites = (favorites: boolean) =>
-    setParam('favorites', favorites ? '1' : '0')
-
-  const orderBy = getParam('orderBy', 'date_shot')
-
-  const orderDirStr = getParam('orderDirection', 'ASC') || 'hello'
-  const orderDirection = orderDirStr as OrderDirection
-
-  type setOrderingFn = (args: {
-    orderBy?: string
-    orderDirection?: OrderDirection
-  }) => void
-
-  const setOrdering: setOrderingFn = useCallback(
-    ({ orderBy, orderDirection }) => {
-      const updatedParams: UrlKeyValuePair[] = []
-      if (orderBy !== undefined) {
-        updatedParams.push({ key: 'orderBy', value: orderBy })
-      }
-      if (orderDirection !== undefined) {
-        updatedParams.push({ key: 'orderDirection', value: orderDirection })
-      }
-
-      setParams(updatedParams)
-    },
-    [setParams]
-  )
+    urlParams.setParam('favorites', favorites ? '1' : '0')
 
   const { loading, error, data, refetch, fetchMore } = useQuery<
     albumQuery,
@@ -113,8 +89,8 @@ function AlbumPage({ match }: AlbumPageProps) {
     variables: {
       id: albumId,
       onlyFavorites,
-      mediaOrderBy: orderBy,
-      mediaOrderDirection: orderDirection,
+      mediaOrderBy: orderParams.orderBy,
+      mediaOrderDirection: orderParams.orderDirection,
       offset: 0,
       limit: 200,
     },
@@ -178,8 +154,8 @@ function AlbumPage({ match }: AlbumPageProps) {
         onlyFavorites={onlyFavorites}
         onFavorite={() => (refetchNeededAll = refetchNeededFavorites = true)}
         showFilter
-        setOrdering={setOrdering}
-        ordering={{ orderBy, orderDirection }}
+        setOrdering={orderParams.setOrdering}
+        ordering={orderParams}
       />
       <PaginateLoader
         active={!finishedLoadingMore && !loading}

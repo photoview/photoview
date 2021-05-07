@@ -147,6 +147,8 @@ describe('load correct share page, based on graphql query', () => {
             password: null,
             limit: 200,
             offset: 0,
+            mediaOrderBy: 'date_shot',
+            mediaOrderDirection: 'ASC',
           },
         },
         result: {
