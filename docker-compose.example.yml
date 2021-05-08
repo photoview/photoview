@@ -26,7 +26,12 @@ services:
       - PHOTOVIEW_LISTEN_IP=photoview
       - PHOTOVIEW_LISTEN_PORT=80
       - PHOTOVIEW_MEDIA_CACHE=/app/cache
-
+      
+      # Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
+      # Enable the following Godebug
+      # - GODEBUG=asyncpreemptoff=1
+      
+      
       # Optional: To enable map related features, you need to create a mapbox token.
       # A token can be generated for free here https://account.mapbox.com/access-tokens/
       # It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
