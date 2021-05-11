@@ -3,12 +3,16 @@
 [![License](https://img.shields.io/github/license/viktorstrate/photoview)](./LICENSE.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/viktorstrate/photoview)](https://github.com/viktorstrate/photoview/graphs/contributors)
 [![Docker Pulls](https://img.shields.io/docker/pulls/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview)
-[![Docker Build Status](https://img.shields.io/github/workflow/status/viktorstrate/photoview/Docker%20builds?label=docker%20build)](https://hub.docker.com/r/viktorstrate/photoview/)
+[![Docker builds](https://github.com/photoview/photoview/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/photoview/photoview/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/photoview/photoview/branch/master/graph/badge.svg?token=AATZKC93F7)](https://codecov.io/gh/photoview/photoview)
 
 ![screenshot](./screenshots/timeline.png)
 
-Photoview is a simple and user-friendly photo gallery that can easily be installed on personal servers.
-It's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high resolution photos.
+Photoview is a simple and user-friendly photo gallery that's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high-resolution photos.
+
+You configure Photoview to look for photos and videos within a directory on your file system. The scanner automatically picks up your media and start to generate thumbnail images to make browsing super fast.
+
+When your media has been scanned they show up on the website, organised in the same way as on the filesystem.
 
 > If you have questions regarding setup or development,
 feel free to join the Discord server https://discord.gg/jQ392948u9
@@ -115,11 +119,11 @@ They can be installed as shown below:
 
 ```sh
 # Ubuntu
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev
+sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
 # Debian
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev
+sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
 # macOS
-brew install dlib
+brew install dlib libheif
 
 ```
 
@@ -155,6 +159,12 @@ And the graphql playground at [localhost:4001](http://localhost:4001)
     <a href="https://github.com/robin-moser">
       <img src="https://avatars.githubusercontent.com/u/26254821?v=4" height="auto" width="100" style="border-radius:50%"><br/>
       <b>@robin-moser</b>
+    </a>
+  </td>
+  <td>
+    <a href="https://github.com/Revorge">
+      <img src="https://avatars.githubusercontent.com/u/32901816?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@Revorge</b>
     </a>
   </td>
 </table>
