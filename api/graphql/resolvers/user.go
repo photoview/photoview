@@ -9,6 +9,7 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
@@ -254,53 +255,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
-	var user models.User
-	deletedAlbumIDs := make([]int, 0)
-
-	err := r.Database.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&user, id).Error; err != nil {
-			return err
-		}
-
-		userAlbums := user.Albums
-		if err := tx.Model(&user).Association("Albums").Find(&userAlbums); err != nil {
-			return err
-		}
-
-		if err := tx.Model(&user).Association("Albums").Clear(); err != nil {
-			return err
-		}
-
-		for _, album := range userAlbums {
-			var associatedUsers = tx.Model(album).Association("Owners").Count()
-
-			if associatedUsers == 0 {
-				deletedAlbumIDs = append(deletedAlbumIDs, album.ID)
-				if err := tx.Delete(album).Error; err != nil {
-					return err
-				}
-			}
-		}
-
-		if err := tx.Delete(&user).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// If there is only one associated user, clean up the cache folder and delete the album row
-	for _, deletedAlbumID := range deletedAlbumIDs {
-		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
-		if err := os.RemoveAll(cachePath); err != nil {
-			return &user, err
-		}
-	}
-	return &user, nil
+	return actions.DeleteUser(r.Database, id)
 }
 
 func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
