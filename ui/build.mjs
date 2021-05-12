@@ -12,7 +12,13 @@ const bs = browserSync.create()
 const production = process.env.NODE_ENV == 'production'
 const watchMode = process.argv[2] == 'watch'
 
-const ENVIRONMENT_VARIABLES = ['NODE_ENV', 'PHOTOVIEW_API_ENDPOINT', 'VERSION', 'BUILD_DATE', 'COMMIT_SHA']
+const ENVIRONMENT_VARIABLES = [
+  'NODE_ENV',
+  'PHOTOVIEW_API_ENDPOINT',
+  'VERSION',
+  'BUILD_DATE',
+  'COMMIT_SHA',
+]
 
 const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
   acc[`process.env.${key}`] = process.env[key] ? `"${process.env[key]}"` : null
@@ -31,7 +37,6 @@ const esbuildOptions = {
   format: 'esm',
   bundle: true,
   platform: 'browser',
-  target: ['chrome58', 'firefox57', 'safari11', 'edge16'],
   splitting: true,
   minify: production,
   sourcemap: !production,
