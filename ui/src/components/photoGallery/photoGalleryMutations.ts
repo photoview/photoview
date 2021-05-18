@@ -27,7 +27,7 @@ export const toggleFavoriteAction = ({
   media: PhotoGalleryProps_Media
   markFavorite: MutationFunction<markMediaFavorite, markMediaFavoriteVariables>
 }) => {
-  markFavorite({
+  return markFavorite({
     variables: {
       mediaId: media.id,
       favorite: !media.favorite,

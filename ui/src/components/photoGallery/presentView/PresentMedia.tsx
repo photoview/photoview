@@ -49,10 +49,12 @@ const PresentMedia = ({
       return (
         <div {...otherProps}>
           <StyledPhoto
+            key={`${media.id}-thumb`}
             src={media.thumbnail?.url}
             data-testid="present-img-thumbnail"
           />
           <StyledPhoto
+            key={`${media.id}-highres`}
             style={{ display: 'none' }}
             src={media.highRes?.url}
             data-testid="present-img-highres"

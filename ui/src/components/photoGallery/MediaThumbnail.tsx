@@ -49,12 +49,8 @@ const PhotoOverlay = styled.div<{ active: boolean }>`
   ${({ active }) =>
     active &&
     `
-      border: 4px solid rgba(65, 131, 196, 0.6);
-
-      & ${HoverIcon} {
-        top: -4px !important;
-        left: -4px !important;
-      }
+      outline: 4px solid rgba(65, 131, 196, 0.6);
+      outline-offset: -4px;
     `}
 `
 
@@ -85,6 +81,13 @@ const HoverIcon = styled(Icon)`
 const FavoriteIcon = styled(HoverIcon)`
   float: right;
   opacity: ${({ favorite }) => (favorite ? '0.8' : '0.2')} !important;
+`
+
+const SidebarIcon = styled(HoverIcon)`
+  margin: 10px !important;
+  position: absolute;
+  top: 0;
+  right: 0;
 `
 
 const VideoThumbnailIcon = styled(Icon)`
@@ -152,7 +155,7 @@ export const MediaThumbnail = ({
         minWidth: `clamp(124px, ${minWidth}px, 100% - 8px)`,
       }}
       onClick={() => {
-        selectImage()
+        clickPresent()
       }}
     >
       <div
@@ -165,10 +168,11 @@ export const MediaThumbnail = ({
       </div>
       <PhotoOverlay active={active}>
         {videoIcon}
-        <HoverIcon
-          name="expand"
-          onClick={() => {
-            clickPresent()
+        <SidebarIcon
+          name="info"
+          onClick={(e: MouseEvent) => {
+            e.stopPropagation()
+            selectImage()
           }}
         />
         {heartIcon}
