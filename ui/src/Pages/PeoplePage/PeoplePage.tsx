@@ -1,5 +1,4 @@
 import React, { createRef, useEffect, useState } from 'react'
-import PropTypes from 'prop-types'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import Layout from '../../Layout'
 import styled from 'styled-components'
@@ -10,6 +9,16 @@ import FaceCircleImage from './FaceCircleImage'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 import { useTranslation } from 'react-i18next'
+import {
+  setGroupLabel,
+  setGroupLabelVariables,
+} from './__generated__/setGroupLabel'
+import {
+  myFaces,
+  myFacesVariables,
+  myFaces_myFaceGroups,
+} from './__generated__/myFaces'
+import { recognizeUnlabeledFaces } from './__generated__/recognizeUnlabeledFaces'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -55,7 +64,7 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
   }
 `
 
-const FaceDetailsButton = styled.button`
+const FaceDetailsButton = styled.button<{ labeled: boolean }>`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
   width: 150px;
   margin: 12px auto 24px;
@@ -73,13 +82,20 @@ const FaceDetailsButton = styled.button`
 
 const FaceLabel = styled.span``
 
-const FaceDetails = ({ group }) => {
+type FaceDetailsProps = {
+  group: myFaces_myFaceGroups
+}
+
+const FaceDetails = ({ group }: FaceDetailsProps) => {
   const { t } = useTranslation()
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
-  const inputRef = createRef()
+  const inputRef = createRef<Input>()
 
-  const [setGroupLabel, { loading }] = useMutation(SET_GROUP_LABEL_MUTATION, {
+  const [setGroupLabel, { loading }] = useMutation<
+    setGroupLabel,
+    setGroupLabelVariables
+  >(SET_GROUP_LABEL_MUTATION, {
     variables: {
       groupID: group.id,
     },
@@ -91,9 +107,7 @@ const FaceDetails = ({ group }) => {
   }
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    inputRef.current?.focus()
   }, [inputRef])
 
   useEffect(() => {
@@ -102,7 +116,7 @@ const FaceDetails = ({ group }) => {
     }
   }, [loading])
 
-  const onKeyUp = e => {
+  const onKeyUp = (e: React.ChangeEvent<HTMLInputElement> & KeyboardEvent) => {
     if (e.key == 'Escape') {
       resetLabel()
       return
@@ -111,6 +125,7 @@ const FaceDetails = ({ group }) => {
     if (e.key == 'Enter') {
       setGroupLabel({
         variables: {
+          groupID: group.id,
           label: e.target.value == '' ? null : e.target.value,
         },
       })
@@ -155,10 +170,6 @@ const FaceDetails = ({ group }) => {
   return label
 }
 
-FaceDetails.propTypes = {
-  group: PropTypes.object.isRequired,
-}
-
 const FaceImagesCount = styled.span`
   background-color: #eee;
   color: #222;
@@ -179,7 +190,11 @@ const EditIcon = styled(Icon)`
   }
 `
 
-const FaceGroup = ({ group }) => {
+type FaceGroupProps = {
+  group: myFaces_myFaceGroups
+}
+
+const FaceGroup = ({ group }: FaceGroupProps) => {
   const previewFace = group.imageFaces[0]
 
   return (
@@ -192,10 +207,6 @@ const FaceGroup = ({ group }) => {
   )
 }
 
-FaceGroup.propTypes = {
-  group: PropTypes.any,
-}
-
 const FaceGroupsWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -204,27 +215,29 @@ const FaceGroupsWrapper = styled.div`
 
 const PeopleGallery = () => {
   const { t } = useTranslation()
-  const { data, error, loading, fetchMore } = useQuery(MY_FACES_QUERY, {
+  const { data, error, loading, fetchMore } = useQuery<
+    myFaces,
+    myFacesVariables
+  >(MY_FACES_QUERY, {
     variables: {
       limit: 50,
       offset: 0,
     },
   })
 
-  const [
-    recognizeUnlabeled,
-    { loading: recognizeUnlabeledLoading },
-  ] = useMutation(RECOGNIZE_UNLABELED_FACES_MUTATION)
+  const [recognizeUnlabeled, { loading: recognizeUnlabeledLoading }] =
+    useMutation<recognizeUnlabeledFaces>(RECOGNIZE_UNLABELED_FACES_MUTATION)
 
-  const { containerElem, finished: finishedLoadingMore } = useScrollPagination({
-    loading,
-    fetchMore,
-    data,
-    getItems: data => data.myFaceGroups,
-  })
+  const { containerElem, finished: finishedLoadingMore } =
+    useScrollPagination<myFaces>({
+      loading,
+      fetchMore,
+      data,
+      getItems: data => data.myFaceGroups,
+    })
 
   if (error) {
-    return error.message
+    return <div>{error.message}</div>
   }
 
   let faces = null
@@ -258,21 +271,26 @@ const PeopleGallery = () => {
   )
 }
 
-const PeoplePage = ({ match }) => {
+type PeoplePageProps = {
+  match: {
+    params: {
+      person?: string
+    }
+  }
+}
+
+const PeoplePage = ({ match }: PeoplePageProps) => {
+  const { t } = useTranslation()
   const faceGroup = match.params.person
   if (faceGroup) {
     return (
-      <Layout>
+      <Layout title={t('title.people', 'People')}>
         <SingleFaceGroup faceGroupID={faceGroup} />
       </Layout>
     )
   } else {
     return <PeopleGallery />
   }
-}
-
-PeoplePage.propTypes = {
-  match: PropTypes.object.isRequired,
 }
 
 export default PeoplePage

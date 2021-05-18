@@ -110,7 +110,7 @@ describe('load correct share page, based on graphql query', () => {
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
 
-    await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
+    await waitForElementToBeRemoved(() => screen.queryByText('Loading...'))
 
     expect(screen.getByTestId('Layout')).toBeInTheDocument()
     expect(screen.getByTestId('MediaSharePage')).toBeInTheDocument()
