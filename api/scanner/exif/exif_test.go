@@ -51,6 +51,7 @@ func TestExifParsers(t *testing.T) {
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")
 				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
+				assert.InDelta(t, *exif.Exposure, 1.0/4000.0, 0.0001)
 				assert.EqualValues(t, *exif.Aperture, 6.3)
 				assert.EqualValues(t, *exif.Iso, 800)
 				assert.EqualValues(t, *exif.FocalLength, 300)
@@ -64,6 +65,12 @@ func TestExifParsers(t *testing.T) {
 			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF) {
 				assert.Nil(t, exif)
+			},
+		},
+		{
+			path: "./test_data/bad-exif.jpg",
+			assert: func(t *testing.T, exif *models.MediaEXIF) {
+				assert.Nil(t, exif.Exposure)
 			},
 		},
 	}

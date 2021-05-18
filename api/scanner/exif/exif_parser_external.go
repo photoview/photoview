@@ -2,6 +2,7 @@ package exif
 
 import (
 	"log"
+	"math"
 	"time"
 
 	"github.com/barasher/go-exiftool"
@@ -26,6 +27,38 @@ func newExiftoolParser() (*externalExifParser, error) {
 		et:         et,
 		dataLoader: dataloader.NewExiftoolLoader(et),
 	}, nil
+}
+
+// isFloatReal returns true when the float value represents a real number
+// (different than +Inf, -Inf or NaN)
+func isFloatReal(v float64) bool {
+	if math.IsInf(v, 1) {
+		return false
+	} else if math.IsInf(v, -1) {
+		return false
+	} else if math.IsNaN(v) {
+		return false
+	}
+	return true
+}
+
+// sanitizeEXIF removes any EXIF float64 field that is not a real number (+Inf,
+// -Inf or Nan)
+func sanitizeEXIF(exif *models.MediaEXIF) {
+	if exif.Exposure != nil && !isFloatReal(*exif.Exposure) {
+		exif.Exposure = nil
+	}
+	if exif.Aperture != nil && !isFloatReal(*exif.Aperture) {
+		exif.Aperture = nil
+	}
+	if exif.FocalLength != nil && !isFloatReal(*exif.FocalLength) {
+		exif.FocalLength = nil
+	}
+	if (exif.GPSLatitude != nil && !isFloatReal(*exif.GPSLatitude)) ||
+		(exif.GPSLongitude != nil && !isFloatReal(*exif.GPSLongitude)) {
+		exif.GPSLatitude = nil
+		exif.GPSLongitude = nil
+	}
 }
 
 func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
@@ -148,5 +181,6 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	}
 
 	returnExif = &newExif
+	sanitizeEXIF(returnExif)
 	return
 }

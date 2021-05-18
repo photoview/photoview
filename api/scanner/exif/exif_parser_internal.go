@@ -62,11 +62,12 @@ func (p *internalExifParser) ParseExif(media_path string) (returnExif *models.Me
 		newExif.DateShot = &date_utc
 	}
 
-	exposure, err := exifTags.Get(exif.ExposureTime)
+	exposureTag, err := exifTags.Get(exif.ExposureTime)
 	if err == nil {
-		exposureFloat, err := exposure.Float(0)
+		exposureRat, err := exposureTag.Rat(0)
 		if err == nil {
-			newExif.Exposure = &exposureFloat
+			exposure, _ := exposureRat.Float64()
+			newExif.Exposure = &exposure
 		}
 	}
 
