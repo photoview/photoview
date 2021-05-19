@@ -69,55 +69,55 @@
   "people_page": {
     "face_group": {
       "action": {
-        "add_label": null,
-        "change_label": null,
-        "detach_face": null,
-        "merge_face": null,
-        "move_faces": null
+        "add_label": "Tilføj navn",
+        "change_label": "Ændre navn",
+        "detach_face": "Løsriv ansigter",
+        "merge_face": "Sammenflet ansigter",
+        "move_faces": "Flyt ansigter"
       },
       "label_placeholder": "Navn",
       "unlabeled": "Ikke navngivet",
-      "unlabeled_person": null
+      "unlabeled_person": "Ikke navngivet person"
     },
     "modal": {
       "action": {
-        "merge": null
+        "merge": "Sammenflet"
       },
       "detach_image_faces": {
         "action": {
-          "detach": null,
-          "select_images": null
+          "detach": "Løsriv billeder",
+          "select_images": "Vælg billeder som skal løsrives"
         },
-        "description": null,
-        "title": null
+        "description": "Løsriv valgte billeder fra denne gruppe og flyt dem til sin egen gruppe",
+        "title": "Løsriv Billeder"
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
         "destination_table": {
-          "title": null
+          "title": "Vælg destinationsgruppe"
         },
-        "title": null
+        "title": "Vælg gruppe at flette med"
       },
       "move_image_faces": {
-        "description": null,
+        "description": "Flyt valgte billeder fra denne gruppe til en anden gruppe",
         "destination_face_group_table": {
-          "move_action": null,
-          "title": null
+          "move_action": "Flyt ansigter",
+          "title": "Vælg destinationsgruppe"
         },
         "image_select_table": {
-          "next_action": null,
-          "title": null
+          "next_action": "Næste",
+          "title": "Vælg billeder som skal flyttes"
         },
-        "title": null
+        "title": "Flyt Ansigter"
       }
     },
     "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter",
     "table": {
       "select_face_group": {
-        "search_faces_placeholder": null
+        "search_faces_placeholder": "Søg ansigter..."
       },
       "select_image_faces": {
-        "search_images_placeholder": null
+        "search_images_placeholder": "Søg billeder..."
       }
     }
   },
@@ -204,9 +204,9 @@
       "title": "Brugere"
     },
     "version_info": {
-      "build_date_title": null,
-      "title": null,
-      "version_title": null
+      "build_date_title": "Dato for udgivelse",
+      "title": "Photoview Version",
+      "version_title": "Udgivelsesversion"
     }
   },
   "share_page": {
@@ -300,7 +300,7 @@
   },
   "title": {
     "loading_album": "Loader album",
-    "login": null,
+    "login": "Logind",
     "people": "Personer",
     "settings": "Indstillinger"
   }
