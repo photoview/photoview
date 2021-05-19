@@ -1,16 +1,30 @@
-import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Checkbox, Input, Pagination, Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { ProtectedImage } from '../../../components/photoGallery/ProtectedMedia'
+import { myFaces_myFaceGroups_imageFaces } from '../__generated__/myFaces'
 import { RowLabel } from './SelectFaceGroupTable'
+import { singleFaceGroup_faceGroup_imageFaces } from './__generated__/singleFaceGroup'
 
 const SelectImagePreview = styled(ProtectedImage)`
   max-width: 120px;
   max-height: 80px;
 `
 
-const ImageFaceRow = ({ imageFace, faceSelected, setFaceSelected }) => {
+type ImageFaceRowProps = {
+  imageFace:
+    | myFaces_myFaceGroups_imageFaces
+    | singleFaceGroup_faceGroup_imageFaces
+  faceSelected: boolean
+  setFaceSelected(): void
+}
+
+const ImageFaceRow = ({
+  imageFace,
+  faceSelected,
+  setFaceSelected,
+}: ImageFaceRowProps) => {
   return (
     <Table.Row key={imageFace.id}>
       <Table.Cell>
@@ -18,7 +32,7 @@ const ImageFaceRow = ({ imageFace, faceSelected, setFaceSelected }) => {
       </Table.Cell>
       <Table.Cell>
         <SelectImagePreview
-          src={imageFace.media.thumbnail.url}
+          src={imageFace.media.thumbnail?.url}
           onClick={setFaceSelected}
         />
       </Table.Cell>
@@ -31,10 +45,21 @@ const ImageFaceRow = ({ imageFace, faceSelected, setFaceSelected }) => {
   )
 }
 
-ImageFaceRow.propTypes = {
-  imageFace: PropTypes.object.isRequired,
-  faceSelected: PropTypes.bool.isRequired,
-  setFaceSelected: PropTypes.func.isRequired,
+type SelectImageFacesTable = {
+  imageFaces: (
+    | myFaces_myFaceGroups_imageFaces
+    | singleFaceGroup_faceGroup_imageFaces
+  )[]
+  selectedImageFaces: (
+    | myFaces_myFaceGroups_imageFaces
+    | singleFaceGroup_faceGroup_imageFaces
+  )[]
+  setSelectedImageFaces: React.Dispatch<
+    React.SetStateAction<
+      (myFaces_myFaceGroups_imageFaces | singleFaceGroup_faceGroup_imageFaces)[]
+    >
+  >
+  title: string
 }
 
 const SelectImageFacesTable = ({
@@ -42,7 +67,9 @@ const SelectImageFacesTable = ({
   selectedImageFaces,
   setSelectedImageFaces,
   title,
-}) => {
+}: SelectImageFacesTable) => {
+  const { t } = useTranslation()
+
   const PAGE_SIZE = 6
 
   const [page, setPage] = useState(0)
@@ -91,7 +118,10 @@ const SelectImageFacesTable = ({
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               icon="search"
-              placeholder="Search images..."
+              placeholder={t(
+                'people_page.table.select_image_faces.search_images_placeholder',
+                'Search images...'
+              )}
               fluid
             />
           </Table.HeaderCell>
@@ -110,7 +140,11 @@ const SelectImageFacesTable = ({
               activePage={page + 1}
               totalPages={Math.ceil(rows.length / PAGE_SIZE)}
               onPageChange={(_, { activePage }) => {
-                setPage(Math.ceil(activePage) - 1)
+                if (activePage) {
+                  setPage(Math.ceil(activePage as number) - 1)
+                } else {
+                  setPage(0)
+                }
               }}
             />
           </Table.HeaderCell>
@@ -118,13 +152,6 @@ const SelectImageFacesTable = ({
       </Table.Footer>
     </Table>
   )
-}
-
-SelectImageFacesTable.propTypes = {
-  imageFaces: PropTypes.array,
-  selectedImageFaces: PropTypes.array,
-  setSelectedImageFaces: PropTypes.func.isRequired,
-  title: PropTypes.string,
 }
 
 export default SelectImageFacesTable

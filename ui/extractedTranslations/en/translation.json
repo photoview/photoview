@@ -68,10 +68,58 @@
   },
   "people_page": {
     "face_group": {
+      "action": {
+        "add_label": "Add Label",
+        "change_label": "Change Label",
+        "detach_face": "Detach Face",
+        "merge_face": "Merge Face",
+        "move_faces": "Move Faces"
+      },
       "label_placeholder": "Label",
-      "unlabeled": "Unlabeled"
+      "unlabeled": "Unlabeled",
+      "unlabeled_person": "Unlabeled person"
     },
-    "recognize_unlabeled_faces_button": "Recognize unlabeled faces"
+    "modal": {
+      "action": {
+        "merge": "Merge"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Detach image faces",
+          "select_images": "Select images to detach"
+        },
+        "description": "Detach selected images of this face group and move them to a new face groups",
+        "title": "Detach Image Faces"
+      },
+      "merge_face_groups": {
+        "description": "All images within this face group will be merged into the selected face group.",
+        "destination_table": {
+          "title": "Select the destination face"
+        },
+        "title": "Merge Face Groups"
+      },
+      "move_image_faces": {
+        "description": "Move selected images of this face group to another face group",
+        "destination_face_group_table": {
+          "move_action": "Move image faces",
+          "title": "Select destination face group"
+        },
+        "image_select_table": {
+          "next_action": "Next",
+          "title": "Select images to move"
+        },
+        "title": "Move Image Faces"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Recognize unlabeled faces",
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Search faces..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Search images..."
+      }
+    }
   },
   "photos_page": {
     "title": "Photos"
