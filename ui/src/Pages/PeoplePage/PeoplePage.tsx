@@ -86,7 +86,7 @@ type FaceDetailsProps = {
   group: myFaces_myFaceGroups
 }
 
-const FaceDetails = ({ group }: FaceDetailsProps) => {
+export const FaceDetails = ({ group }: FaceDetailsProps) => {
   const { t } = useTranslation()
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
