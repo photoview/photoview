@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input, Pagination, Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import FaceCircleImage from '../FaceCircleImage'
@@ -66,6 +67,8 @@ const SelectFaceGroupTable = ({
   setSelectedFaceGroup,
   title,
 }: SelectFaceGroupTableProps) => {
+  const { t } = useTranslation()
+
   const PAGE_SIZE = 6
 
   const [page, setPage] = useState(0)
@@ -106,7 +109,10 @@ const SelectFaceGroupTable = ({
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               icon="search"
-              placeholder="Search faces..."
+              placeholder={t(
+                'people_page.table.select_face_group.search_faces_placeholder',
+                'Search faces...'
+              )}
               fluid
             />
           </Table.HeaderCell>

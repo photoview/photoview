@@ -1,5 +1,6 @@
 import { gql, useQuery } from '@apollo/client'
 import React, { useEffect, useReducer } from 'react'
+import { useTranslation } from 'react-i18next'
 import PaginateLoader from '../../../components/PaginateLoader'
 import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
 import { photoGalleryReducer } from '../../../components/photoGallery/photoGalleryReducer'
@@ -47,6 +48,8 @@ type SingleFaceGroupProps = {
 }
 
 const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
+  const { t } = useTranslation()
+
   const { data, error, loading, fetchMore } = useQuery<
     singleFaceGroup,
     singleFaceGroupVariables
@@ -94,7 +97,7 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
         />
         <PaginateLoader
           active={!finishedLoadingMore && !loading}
-          text="Loading more photos"
+          text={t('general.loading.paginate.media', 'Loading more media')}
         />
       </div>
     </div>

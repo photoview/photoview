@@ -68,10 +68,58 @@
   },
   "people_page": {
     "face_group": {
+      "action": {
+        "add_label": null,
+        "change_label": null,
+        "detach_face": null,
+        "merge_face": null,
+        "move_faces": null
+      },
       "label_placeholder": "Etykieta",
-      "unlabeled": "Nieoznakowany"
+      "unlabeled": "Nieoznakowany",
+      "unlabeled_person": null
     },
-    "recognize_unlabeled_faces_button": "Rozpoznaj nieoznakowane twarze"
+    "modal": {
+      "action": {
+        "merge": null
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": null,
+          "select_images": null
+        },
+        "description": null,
+        "title": null
+      },
+      "merge_face_groups": {
+        "description": null,
+        "destination_table": {
+          "title": null
+        },
+        "title": null
+      },
+      "move_image_faces": {
+        "description": null,
+        "destination_face_group_table": {
+          "move_action": null,
+          "title": null
+        },
+        "image_select_table": {
+          "next_action": null,
+          "title": null
+        },
+        "title": null
+      }
+    },
+    "recognize_unlabeled_faces_button": "Rozpoznaj nieoznakowane twarze",
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": null
+      },
+      "select_image_faces": {
+        "search_images_placeholder": null
+      }
+    }
   },
   "photos_page": {
     "title": "Zdjęcia"

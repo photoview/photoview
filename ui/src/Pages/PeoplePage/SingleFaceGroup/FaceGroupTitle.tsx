@@ -1,5 +1,6 @@
 import { useMutation } from '@apollo/client'
 import React, { useState, useEffect, createRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dropdown, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { isNil } from '../../../helpers/utils'
@@ -38,6 +39,8 @@ type FaceGroupTitleProps = {
 }
 
 const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
+  const { t } = useTranslation()
+
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(faceGroup?.label ?? '')
   const inputRef = createRef<Input>()
@@ -91,7 +94,8 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
     title = (
       <TitleWrapper>
         <TitleLabel labeled={!!faceGroup?.label}>
-          {faceGroup?.label ?? 'Unlabeled person'}
+          {faceGroup?.label ??
+            t('people_page.face_group.unlabeled_person', 'Unlabeled person')}
         </TitleLabel>
         <TitleDropdown
           icon={{
@@ -102,22 +106,32 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
           <Dropdown.Menu>
             <Dropdown.Item
               icon="pencil"
-              text={faceGroup?.label ? 'Change Label' : 'Add Label'}
+              text={
+                faceGroup?.label
+                  ? t(
+                      'people_page.face_group.action.change_label',
+                      'Change Label'
+                    )
+                  : t('people_page.face_group.action.add_label', 'Add Label')
+              }
               onClick={() => setEditLabel(true)}
             />
             <Dropdown.Item
               icon="object group"
-              text="Merge Face"
+              text={t('people_page.face_group.action.merge_face', 'Merge Face')}
               onClick={() => setMergeModalOpen(true)}
             />
             <Dropdown.Item
               icon="object ungroup"
-              text="Detach Faces"
+              text={t(
+                'people_page.face_group.action.detach_face',
+                'Detach Face'
+              )}
               onClick={() => setDetachModalOpen(true)}
             />
             <Dropdown.Item
               icon="clone"
-              text="Move Faces"
+              text={t('people_page.face_group.action.move_faces', 'Move Faces')}
               onClick={() => setMoveModalOpen(true)}
             />
           </Dropdown.Menu>
@@ -130,7 +144,7 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
         <Input
           loading={setLabelLoading}
           ref={inputRef}
-          placeholder="Label"
+          placeholder={t('people_page.face_group.label_placeholder', 'Label')}
           icon="arrow right"
           value={inputValue}
           onKeyUp={onKeyUp}
@@ -143,24 +157,33 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
     )
   }
 
+  let modals = null
+  if (faceGroup) {
+    modals = (
+      <>
+        <MergeFaceGroupsModal
+          open={mergeModalOpen}
+          setOpen={setMergeModalOpen}
+          sourceFaceGroup={faceGroup}
+        />
+        <MoveImageFacesModal
+          open={moveModalOpen}
+          setOpen={setMoveModalOpen}
+          faceGroup={faceGroup}
+        />
+        <DetachImageFacesModal
+          open={detachModalOpen}
+          setOpen={setDetachModalOpen}
+          faceGroup={faceGroup}
+        />
+      </>
+    )
+  }
+
   return (
     <>
       {title}
-      <MergeFaceGroupsModal
-        open={mergeModalOpen}
-        setOpen={setMergeModalOpen}
-        sourceFaceGroup={faceGroup}
-      />
-      <MoveImageFacesModal
-        open={moveModalOpen}
-        setOpen={setMoveModalOpen}
-        faceGroup={faceGroup}
-      />
-      <DetachImageFacesModal
-        open={detachModalOpen}
-        setOpen={setDetachModalOpen}
-        faceGroup={faceGroup}
-      />
+      {modals}
     </>
   )
 }

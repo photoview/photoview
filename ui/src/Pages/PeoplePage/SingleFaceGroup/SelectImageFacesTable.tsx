@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Checkbox, Input, Pagination, Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { ProtectedImage } from '../../../components/photoGallery/ProtectedMedia'
@@ -67,6 +68,8 @@ const SelectImageFacesTable = ({
   setSelectedImageFaces,
   title,
 }: SelectImageFacesTable) => {
+  const { t } = useTranslation()
+
   const PAGE_SIZE = 6
 
   const [page, setPage] = useState(0)
@@ -115,7 +118,10 @@ const SelectImageFacesTable = ({
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               icon="search"
-              placeholder="Search images..."
+              placeholder={t(
+                'people_page.table.select_image_faces.search_images_placeholder',
+                'Search images...'
+              )}
               fluid
             />
           </Table.HeaderCell>

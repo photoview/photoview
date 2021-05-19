@@ -20,6 +20,7 @@ import {
   moveImageFaces,
   moveImageFacesVariables,
 } from './__generated__/moveImageFaces'
+import { useTranslation } from 'react-i18next'
 
 const MOVE_IMAGE_FACES_MUTATION = gql`
   mutation moveImageFaces($faceIDs: [ID!]!, $destFaceGroupID: ID!) {
@@ -38,7 +39,7 @@ const MOVE_IMAGE_FACES_MUTATION = gql`
 type MoveImageFacesModalProps = {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  faceGroup?: singleFaceGroup_faceGroup
+  faceGroup: singleFaceGroup_faceGroup
 }
 
 const MoveImageFacesModal = ({
@@ -46,6 +47,8 @@ const MoveImageFacesModal = ({
   setOpen,
   faceGroup,
 }: MoveImageFacesModalProps) => {
+  const { t } = useTranslation()
+
   const [selectedImageFaces, setSelectedImageFaces] = useState<
     (singleFaceGroup_faceGroup_imageFaces | myFaces_myFaceGroups_imageFaces)[]
   >([])
@@ -102,7 +105,7 @@ const MoveImageFacesModal = ({
     })
   }
 
-  const imageFaces = faceGroup?.imageFaces ?? []
+  const imageFaces = faceGroup.imageFaces
 
   let table = null
   if (!imagesSelected) {
@@ -111,7 +114,10 @@ const MoveImageFacesModal = ({
         imageFaces={imageFaces}
         selectedImageFaces={selectedImageFaces}
         setSelectedImageFaces={setSelectedImageFaces}
-        title="Select images to move"
+        title={t(
+          'people_page.modal.move_image_faces.image_select_table.title',
+          'Select images to move'
+        )}
       />
     )
   } else {
@@ -121,14 +127,17 @@ const MoveImageFacesModal = ({
       )
       table = (
         <SelectFaceGroupTable
-          title="Select destination face group"
+          title={t(
+            'people_page.modal.move_image_faces.destination_face_group_table.title',
+            'Select destination face group'
+          )}
           faceGroups={filteredFaceGroups}
           selectedFaceGroup={selectedFaceGroup}
           setSelectedFaceGroup={setSelectedFaceGroup}
         />
       )
     } else {
-      table = <div>Loading...</div>
+      table = <div>{t('general.loading.default', 'Loading...')}</div>
     }
   }
 
@@ -137,7 +146,10 @@ const MoveImageFacesModal = ({
     positiveButton = (
       <Button
         disabled={selectedImageFaces.length == 0}
-        content="Next"
+        content={t(
+          'people_page.modal.move_image_faces.image_select_table.next_action',
+          'Next'
+        )}
         labelPosition="right"
         icon="arrow right"
         onClick={() => setImagesSelected(true)}
@@ -148,7 +160,10 @@ const MoveImageFacesModal = ({
     positiveButton = (
       <Button
         disabled={!selectedFaceGroup}
-        content="Move image faces"
+        content={t(
+          'people_page.modal.move_image_faces.destination_face_group_table.move_action',
+          'Move image faces'
+        )}
         labelPosition="right"
         icon="checkmark"
         onClick={() => moveImageFaces()}
@@ -163,15 +178,24 @@ const MoveImageFacesModal = ({
       onOpen={() => setOpen(true)}
       open={open}
     >
-      <Modal.Header>Move Image Faces</Modal.Header>
+      <Modal.Header>
+        {t('people_page.modal.move_image_faces.title', 'Move Image Faces')}
+      </Modal.Header>
       <Modal.Content scrolling>
         <Modal.Description>
-          <p>Move selected images of this face group to another face group</p>
+          <p>
+            {t(
+              'people_page.modal.move_image_faces.description',
+              'Move selected images of this face group to another face group'
+            )}
+          </p>
           {table}
         </Modal.Description>
       </Modal.Content>
       <Modal.Actions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <Button onClick={() => setOpen(false)}>
+          {t('general.action.cancel', 'Cancel')}
+        </Button>
         {positiveButton}
       </Modal.Actions>
     </Modal>
