@@ -1,18 +1,23 @@
 import { useMutation } from '@apollo/client'
-import PropTypes from 'prop-types'
 import React, { useState, useEffect, createRef } from 'react'
 import { Dropdown, Input } from 'semantic-ui-react'
 import styled from 'styled-components'
+import { isNil } from '../../../helpers/utils'
 import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
+import {
+  setGroupLabel,
+  setGroupLabelVariables,
+} from '../__generated__/setGroupLabel'
 import DetachImageFacesModal from './DetachImageFacesModal'
 import MergeFaceGroupsModal from './MergeFaceGroupsModal'
 import MoveImageFacesModal from './MoveImageFacesModal'
+import { singleFaceGroup_faceGroup } from './__generated__/singleFaceGroup'
 
 const TitleWrapper = styled.div`
   min-height: 3.5em;
 `
 
-const TitleLabel = styled.h1`
+const TitleLabel = styled.h1<{ labeled: boolean }>`
   display: inline-block;
   color: ${({ labeled }) => (labeled ? 'black' : '#888')};
   margin-right: 12px;
@@ -28,22 +33,22 @@ const TitleDropdown = styled(Dropdown)`
   }
 `
 
-const FaceGroupTitle = ({ faceGroup }) => {
+type FaceGroupTitleProps = {
+  faceGroup?: singleFaceGroup_faceGroup
+}
+
+const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(faceGroup?.label ?? '')
-  const inputRef = createRef()
+  const inputRef = createRef<Input>()
   const [mergeModalOpen, setMergeModalOpen] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [detachModalOpen, setDetachModalOpen] = useState(false)
 
-  const [setGroupLabel, { loading: setLabelLoading }] = useMutation(
-    SET_GROUP_LABEL_MUTATION,
-    {
-      variables: {
-        groupID: faceGroup?.id,
-      },
-    }
-  )
+  const [setGroupLabel, { loading: setLabelLoading }] = useMutation<
+    setGroupLabel,
+    setGroupLabelVariables
+  >(SET_GROUP_LABEL_MUTATION)
 
   const resetLabel = () => {
     setInputValue(faceGroup?.label ?? '')
@@ -62,7 +67,9 @@ const FaceGroupTitle = ({ faceGroup }) => {
     }
   }, [setLabelLoading])
 
-  const onKeyUp = e => {
+  const onKeyUp = (e: KeyboardEvent & React.ChangeEvent<HTMLInputElement>) => {
+    if (isNil(faceGroup)) throw new Error('Expected faceGroup to be defined')
+
     if (e.key == 'Escape') {
       resetLabel()
       return
@@ -71,6 +78,7 @@ const FaceGroupTitle = ({ faceGroup }) => {
     if (e.key == 'Enter') {
       setGroupLabel({
         variables: {
+          groupID: faceGroup.id,
           label: e.target.value == '' ? null : e.target.value,
         },
       })
@@ -155,10 +163,6 @@ const FaceGroupTitle = ({ faceGroup }) => {
       />
     </>
   )
-}
-
-FaceGroupTitle.propTypes = {
-  faceGroup: PropTypes.object,
 }
 
 export default FaceGroupTitle

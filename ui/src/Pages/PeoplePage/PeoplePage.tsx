@@ -36,6 +36,7 @@ export const MY_FACES_QUERY = gql`
         }
         media {
           id
+          title
           thumbnail {
             url
             width

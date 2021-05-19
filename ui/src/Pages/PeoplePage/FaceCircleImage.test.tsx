@@ -14,6 +14,7 @@ test('face circle image', () => {
     media: {
       id: '1',
       __typename: 'Media',
+      title: 'my_image.jpg',
       thumbnail: {
         __typename: 'MediaURL',
         url: 'http://localhost:4001/photo/thumbnail_my_image_jpg_p9x8dLWr.jpg',

@@ -1,7 +1,10 @@
 import React from 'react'
 import styled from 'styled-components'
 import { ProtectedImage } from '../../components/photoGallery/ProtectedMedia'
-import { myFaces_myFaceGroups_imageFaces } from './__generated__/myFaces'
+import {
+  myFaces_myFaceGroups_imageFaces_media,
+  myFaces_myFaceGroups_imageFaces_rectangle,
+} from './__generated__/myFaces'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FaceImage = styled(({ origin, selectable, scale, ...rest }) => (
@@ -64,8 +67,15 @@ const CircleImageWrapper = styled.div<{ size: string }>`
   overflow: hidden;
 `
 
+type FaceCircleImageFace = {
+  __typename: 'ImageFace'
+  id: string
+  rectangle: myFaces_myFaceGroups_imageFaces_rectangle
+  media: myFaces_myFaceGroups_imageFaces_media
+}
+
 type FaceCircleImageProps = {
-  imageFace: myFaces_myFaceGroups_imageFaces
+  imageFace: FaceCircleImageFace
   selectable: boolean
   size?: string
 }

@@ -52,9 +52,10 @@ describe('PeoplePage component', () => {
                   media: {
                     __typename: 'Media',
                     id: '63',
+                    title: 'image.jpg',
                     thumbnail: {
                       __typename: 'MediaURL',
-                      url: 'http://localhost:4001/photo/thumbnail_L%C3%B8berute_jpg_p9x8dLWr.jpg',
+                      url: 'http://localhost:4001/photo/thumbnail_image_jpg_p9x8dLWr.jpg',
                       width: 1024,
                       height: 641,
                     },
@@ -129,6 +130,7 @@ describe('FaceDetails component', () => {
         },
         media: {
           id: '63',
+          title: 'image.jpg',
           thumbnail: {
             url: 'http://localhost:4001/photo/thumbnail_image_jpg_p9x8dLWr.jpg',
             width: 1024,

@@ -1,10 +1,11 @@
-import PropTypes from 'prop-types'
 import React, { useState, useEffect } from 'react'
 import { Input, Pagination, Table } from 'semantic-ui-react'
 import styled from 'styled-components'
 import FaceCircleImage from '../FaceCircleImage'
+import { myFaces_myFaceGroups } from '../__generated__/myFaces'
+import { singleFaceGroup_faceGroup } from './__generated__/singleFaceGroup'
 
-const FaceCircleWrapper = styled.div`
+const FaceCircleWrapper = styled.div<{ $selected: boolean }>`
   display: inline-block;
   border-radius: 50%;
   border: 2px solid
@@ -16,17 +17,31 @@ const FlexCell = styled(Table.Cell)`
   align-items: center;
 `
 
-export const RowLabel = styled.span`
+export const RowLabel = styled.span<{ $selected: boolean }>`
   ${({ $selected }) => $selected && `font-weight: bold;`}
   margin-left: 12px;
 `
 
-const FaceGroupRow = ({ faceGroup, faceSelected, setFaceSelected }) => {
+type FaceGroupRowProps = {
+  faceGroup: myFaces_myFaceGroups
+  faceSelected: boolean
+  setFaceSelected(): void
+}
+
+const FaceGroupRow = ({
+  faceGroup,
+  faceSelected,
+  setFaceSelected,
+}: FaceGroupRowProps) => {
   return (
     <Table.Row key={faceGroup.id} onClick={setFaceSelected}>
       <FlexCell>
         <FaceCircleWrapper $selected={faceSelected}>
-          <FaceCircleImage imageFace={faceGroup.imageFaces[0]} size="50px" />
+          <FaceCircleImage
+            imageFace={faceGroup.imageFaces[0]}
+            size="50px"
+            selectable={false}
+          />
         </FaceCircleWrapper>
         <RowLabel $selected={faceSelected}>{faceGroup.label}</RowLabel>
       </FlexCell>
@@ -34,10 +49,15 @@ const FaceGroupRow = ({ faceGroup, faceSelected, setFaceSelected }) => {
   )
 }
 
-FaceGroupRow.propTypes = {
-  faceGroup: PropTypes.object.isRequired,
-  faceSelected: PropTypes.bool.isRequired,
-  setFaceSelected: PropTypes.func.isRequired,
+type SelectFaceGroupTableProps = {
+  faceGroups: myFaces_myFaceGroups[]
+  selectedFaceGroup: singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
+  setSelectedFaceGroup: React.Dispatch<
+    React.SetStateAction<
+      singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
+    >
+  >
+  title: string
 }
 
 const SelectFaceGroupTable = ({
@@ -45,7 +65,7 @@ const SelectFaceGroupTable = ({
   selectedFaceGroup,
   setSelectedFaceGroup,
   title,
-}) => {
+}: SelectFaceGroupTableProps) => {
   const PAGE_SIZE = 6
 
   const [page, setPage] = useState(0)
@@ -65,7 +85,7 @@ const SelectFaceGroupTable = ({
       <FaceGroupRow
         key={face.id}
         faceGroup={face}
-        faceSelected={selectedFaceGroup == face}
+        faceSelected={selectedFaceGroup?.id == face.id}
         setFaceSelected={() => setSelectedFaceGroup(face)}
       />
     ))
@@ -105,7 +125,11 @@ const SelectFaceGroupTable = ({
               activePage={page + 1}
               totalPages={Math.ceil(rows.length / PAGE_SIZE)}
               onPageChange={(_, { activePage }) => {
-                setPage(Math.ceil(activePage) - 1)
+                if (activePage) {
+                  setPage(Math.ceil(activePage as number) - 1)
+                } else {
+                  setPage(0)
+                }
               }}
             />
           </Table.HeaderCell>
@@ -113,13 +137,6 @@ const SelectFaceGroupTable = ({
       </Table.Footer>
     </Table>
   )
-}
-
-SelectFaceGroupTable.propTypes = {
-  faceGroups: PropTypes.array,
-  selectedFaceGroup: PropTypes.object,
-  setSelectedFaceGroup: PropTypes.func.isRequired,
-  title: PropTypes.string,
 }
 
 export default SelectFaceGroupTable

@@ -34,6 +34,7 @@ export interface myFaces_myFaceGroups_imageFaces_media_thumbnail {
 export interface myFaces_myFaceGroups_imageFaces_media {
   __typename: 'Media'
   id: string
+  title: string
   /**
    * URL to display the media in a smaller resolution
    */

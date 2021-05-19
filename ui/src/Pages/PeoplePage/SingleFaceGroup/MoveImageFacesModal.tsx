@@ -1,11 +1,25 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client'
-import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Modal } from 'semantic-ui-react'
 import SelectFaceGroupTable from './SelectFaceGroupTable'
 import SelectImageFacesTable from './SelectImageFacesTable'
 import { MY_FACES_QUERY } from '../PeoplePage'
+import {
+  singleFaceGroup_faceGroup,
+  singleFaceGroup_faceGroup_imageFaces,
+} from './__generated__/singleFaceGroup'
+import {
+  myFaces,
+  myFacesVariables,
+  myFaces_myFaceGroups,
+  myFaces_myFaceGroups_imageFaces,
+} from '../__generated__/myFaces'
+import { isNil } from '../../../helpers/utils'
+import {
+  moveImageFaces,
+  moveImageFacesVariables,
+} from './__generated__/moveImageFaces'
 
 const MOVE_IMAGE_FACES_MUTATION = gql`
   mutation moveImageFaces($faceIDs: [ID!]!, $destFaceGroupID: ID!) {
@@ -21,14 +35,29 @@ const MOVE_IMAGE_FACES_MUTATION = gql`
   }
 `
 
-const MoveImageFacesModal = ({ open, setOpen, faceGroup }) => {
-  const [selectedImageFaces, setSelectedImageFaces] = useState([])
-  const [selectedFaceGroup, setSelectedFaceGroup] = useState(null)
-  const [imagesSelected, setImagesSelected] = useState(false)
-  let history = useHistory()
+type MoveImageFacesModalProps = {
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  faceGroup?: singleFaceGroup_faceGroup
+}
 
-  const [moveImageFacesMutation] = useMutation(MOVE_IMAGE_FACES_MUTATION, {
-    variables: {},
+const MoveImageFacesModal = ({
+  open,
+  setOpen,
+  faceGroup,
+}: MoveImageFacesModalProps) => {
+  const [selectedImageFaces, setSelectedImageFaces] = useState<
+    (singleFaceGroup_faceGroup_imageFaces | myFaces_myFaceGroups_imageFaces)[]
+  >([])
+  const [selectedFaceGroup, setSelectedFaceGroup] =
+    useState<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>(null)
+  const [imagesSelected, setImagesSelected] = useState(false)
+  const history = useHistory()
+
+  const [moveImageFacesMutation] = useMutation<
+    moveImageFaces,
+    moveImageFacesVariables
+  >(MOVE_IMAGE_FACES_MUTATION, {
     refetchQueries: [
       {
         query: MY_FACES_QUERY,
@@ -36,9 +65,8 @@ const MoveImageFacesModal = ({ open, setOpen, faceGroup }) => {
     ],
   })
 
-  const [loadFaceGroups, { data: faceGroupsData }] = useLazyQuery(
-    MY_FACES_QUERY
-  )
+  const [loadFaceGroups, { data: faceGroupsData }] =
+    useLazyQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
 
   useEffect(() => {
     if (imagesSelected) {
@@ -58,6 +86,10 @@ const MoveImageFacesModal = ({ open, setOpen, faceGroup }) => {
 
   const moveImageFaces = () => {
     const faceIDs = selectedImageFaces.map(face => face.id)
+
+    if (isNil(selectedFaceGroup)) {
+      throw new Error('Expected selectedFaceGroup not to be null')
+    }
 
     moveImageFacesMutation({
       variables: {
@@ -83,9 +115,9 @@ const MoveImageFacesModal = ({ open, setOpen, faceGroup }) => {
       />
     )
   } else {
-    if (faceGroupsData) {
+    if (faceGroupsData && faceGroup) {
       const filteredFaceGroups = faceGroupsData.myFaceGroups.filter(
-        x => x != faceGroup
+        x => x.id != faceGroup.id
       )
       table = (
         <SelectFaceGroupTable
@@ -144,12 +176,6 @@ const MoveImageFacesModal = ({ open, setOpen, faceGroup }) => {
       </Modal.Actions>
     </Modal>
   )
-}
-
-MoveImageFacesModal.propTypes = {
-  open: PropTypes.bool.isRequired,
-  setOpen: PropTypes.func.isRequired,
-  faceGroup: PropTypes.object,
 }
 
 export default MoveImageFacesModal
