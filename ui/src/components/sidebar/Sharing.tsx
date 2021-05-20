@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useMutation, useQuery, gql } from '@apollo/client'
+import React, { useEffect, useState } from 'react'
+import { useMutation, useQuery, gql, useLazyQuery } from '@apollo/client'
 import {
   Table,
   Button,
@@ -37,6 +37,7 @@ import {
   sidebarGetAlbumShares,
   sidebarGetAlbumSharesVariables,
 } from './__generated__/sidebarGetAlbumShares'
+import { authToken } from '../../helpers/authentication'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -304,16 +305,13 @@ type SidebarSharePhotoProps = {
 export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
   const { t } = useTranslation()
 
-  const {
-    loading: queryLoading,
-    error: sharesError,
-    data: sharesData,
-  } = useQuery<sidebarGetPhotoShares, sidebarGetPhotoSharesVariables>(
-    SHARE_PHOTO_QUERY,
-    {
-      variables: { id },
-    }
-  )
+  const [
+    loadShares,
+    { loading: queryLoading, error: sharesError, data: sharesData },
+  ] =
+    useLazyQuery<sidebarGetPhotoShares, sidebarGetPhotoSharesVariables>(
+      SHARE_PHOTO_QUERY
+    )
 
   const [sharePhoto, { loading: mutationLoading }] = useMutation<
     sidebarPhotoAddShare,
@@ -321,6 +319,16 @@ export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
   >(ADD_MEDIA_SHARE_MUTATION, {
     refetchQueries: [{ query: SHARE_PHOTO_QUERY, variables: { id } }],
   })
+
+  useEffect(() => {
+    if (authToken()) {
+      loadShares({
+        variables: {
+          id,
+        },
+      })
+    }
+  }, [])
 
   const loading = queryLoading || mutationLoading
 
