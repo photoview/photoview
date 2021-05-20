@@ -26,7 +26,8 @@ const defineEnv = ENVIRONMENT_VARIABLES.reduce((acc, key) => {
 }, {})
 
 const esbuildOptions = {
-  entryPoints: ['src/index.tsx'],
+  entryPoints: ['src/index.tsx', 'mapbox-gl/dist/mapbox-gl.css'],
+  entryNames: '[name]',
   plugins: [
     babel({
       filter: /photoview\/ui\/src\/.*\.(js|tsx?)$/,
@@ -51,6 +52,13 @@ const esbuildOptions = {
   },
   define: defineEnv,
   incremental: watchMode,
+  watch: {
+    onRebuild(err) {
+      if (err == null) {
+        bs.reload()
+      }
+    },
+  },
 }
 
 fs.emptyDirSync('dist/')
@@ -60,7 +68,7 @@ fs.copyFileSync('src/favicon.ico', 'dist/favicon.ico')
 fs.copySync('src/assets/', 'dist/assets/')
 
 if (watchMode) {
-  let builderPromise = esbuild.build(esbuildOptions)
+  esbuild.build(esbuildOptions)
 
   bs.init({
     server: {
@@ -69,12 +77,6 @@ if (watchMode) {
     },
     port: 1234,
     open: false,
-  })
-
-  bs.watch('src/**/*.@(js|tsx|ts)').on('change', async args => {
-    console.log('reloading', args)
-    builderPromise = (await builderPromise).rebuild()
-    // bs.reload(args)
   })
 } else {
   const build = async () => {

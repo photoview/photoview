@@ -7,9 +7,6 @@ import styled from 'styled-components'
 import Layout from '../../Layout'
 import { makeUpdateMarkers } from './mapboxHelperFunctions'
 import MapPresentMarker from './MapPresentMarker'
-
-// Will be bundled to dist/src/Pages/PlacesPage/PlacesPage.css
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
 import { placesReducer } from './placesReducer'
 
@@ -148,7 +145,7 @@ const MapPage = () => {
   return (
     <Layout title="Places">
       <Helmet>
-        <link rel="stylesheet" href="/src/Pages/PlacesPage/PlacesPage.css" />
+        <link rel="stylesheet" href="/mapbox-gl.css" />
       </Helmet>
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>
