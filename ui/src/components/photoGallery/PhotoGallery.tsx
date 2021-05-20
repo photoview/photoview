@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
 import { Loader } from 'semantic-ui-react'
 import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
@@ -15,6 +15,8 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from './photoGalleryMutations'
+import MediaSidebar from '../sidebar/MediaSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
 
 const Gallery = styled.div`
   display: flex;
@@ -60,6 +62,17 @@ const PhotoGallery = ({
   const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState
+
+  const { updateSidebar } = useContext(SidebarContext)
+  useEffect(() => {
+    if (mediaState.activeIndex != -1) {
+      updateSidebar(
+        <MediaSidebar media={mediaState.media[mediaState.activeIndex]} />
+      )
+    } else {
+      updateSidebar(null)
+    }
+  }, [activeIndex])
 
   let photoElements = []
   if (media) {

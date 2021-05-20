@@ -13,12 +13,7 @@ import { myFaces_myFaceGroups } from './__generated__/myFaces'
 
 require('../../localization').setupLocalization()
 
-jest.mock('../../hooks/useScrollPagination', () =>
-  jest.fn(() => ({
-    finished: true,
-    containerElem: jest.fn(),
-  }))
-)
+jest.mock('../../hooks/useScrollPagination')
 
 describe('PeoplePage component', () => {
   const graphqlMocks = [

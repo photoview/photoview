@@ -109,15 +109,13 @@ const TimelineGallery = () => {
     },
   })
 
-  const {
-    containerElem,
-    finished: finishedLoadingMore,
-  } = useScrollPagination<myTimeline>({
-    loading,
-    fetchMore,
-    data,
-    getItems: data => data.myTimeline,
-  })
+  const { containerElem, finished: finishedLoadingMore } =
+    useScrollPagination<myTimeline>({
+      loading,
+      fetchMore,
+      data,
+      getItems: data => data.myTimeline,
+    })
 
   useEffect(() => {
     dispatchMedia({

@@ -48,7 +48,7 @@ interface SidebarContextType {
 export const SidebarContext = createContext<SidebarContextType>({
   updateSidebar: content => {
     console.warn(
-      'SidebarContext: updateSidebar was called before initialezed',
+      'SidebarContext: updateSidebar was called before initialized',
       content
     )
   },

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useReducer } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import AlbumTitle from '../AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
@@ -9,8 +9,6 @@ import {
   photoGalleryReducer,
   urlPresentModeSetupHook,
 } from '../photoGallery/photoGalleryReducer'
-import { SidebarContext } from '../sidebar/Sidebar'
-import MediaSidebar from '../sidebar/MediaSidebar'
 
 type AlbumGalleryProps = {
   album?: albumQuery_album
@@ -38,8 +36,6 @@ const AlbumGallery = React.forwardRef(
     }: AlbumGalleryProps,
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
-    const { updateSidebar } = useContext(SidebarContext)
-
     const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
       presenting: false,
       activeIndex: -1,
@@ -49,16 +45,6 @@ const AlbumGallery = React.forwardRef(
     useEffect(() => {
       dispatchMedia({ type: 'replaceMedia', media: album?.media || [] })
     }, [album?.media])
-
-    useEffect(() => {
-      if (mediaState.activeIndex != -1) {
-        updateSidebar(
-          <MediaSidebar media={mediaState.media[mediaState.activeIndex]} />
-        )
-      } else {
-        updateSidebar(null)
-      }
-    }, [mediaState.activeIndex])
 
     urlPresentModeSetupHook({
       dispatchMedia,
