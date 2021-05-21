@@ -1,5 +1,5 @@
 import React from 'react'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import styled from 'styled-components'
 import { gql, useQuery } from '@apollo/client'

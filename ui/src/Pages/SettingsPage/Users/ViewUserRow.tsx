@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Button, Icon, Table, Modal } from 'semantic-ui-react'
 import styled from 'styled-components'
 import ChangePasswordModal from './UserChangePassword'
-import { UserRowChildProps, UserRowProps } from './UserRow'
+import { UserRowChildProps } from './UserRow'
 
 const PathList = styled.ul`
   margin: 0;
@@ -125,7 +125,5 @@ const ViewUserRow = ({
     </Table.Row>
   )
 }
-
-ViewUserRow.propTypes = UserRowProps
 
 export default ViewUserRow

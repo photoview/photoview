@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import {
   FetchResult,
@@ -40,21 +39,6 @@ const scanUserMutation = gql`
   }
 `
 
-export const UserRowProps = {
-  user: PropTypes.object.isRequired,
-  state: PropTypes.object.isRequired,
-  setState: PropTypes.func.isRequired,
-  scanUser: PropTypes.func.isRequired,
-  updateUser: PropTypes.func.isRequired,
-  updateUserLoading: PropTypes.bool.isRequired,
-  deleteUser: PropTypes.func.isRequired,
-  setChangePassword: PropTypes.func.isRequired,
-  setConfirmDelete: PropTypes.func.isRequired,
-  scanUserCalled: PropTypes.func.isRequired,
-  showChangePassword: PropTypes.func.isRequired,
-  showConfirmDelete: PropTypes.func.isRequired,
-}
-
 interface UserRowState extends settingsUsersQuery_user {
   editing: boolean
   newRootPath: string
@@ -81,7 +65,7 @@ export type UserRowChildProps = {
   showConfirmDelete: boolean
 }
 
-type UserRowProps = {
+export type UserRowProps = {
   user: settingsUsersQuery_user
   refetchUsers(): void
 }

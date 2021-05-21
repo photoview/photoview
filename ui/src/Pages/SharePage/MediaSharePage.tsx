@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import {
   ProtectedImage,
   ProtectedVideo,

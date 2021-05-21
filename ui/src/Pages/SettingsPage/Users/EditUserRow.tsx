@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 import { EditRootPaths } from './EditUserRowRootPaths'
-import { UserRowProps, UserRowChildProps } from './UserRow'
+import { UserRowChildProps } from './UserRow'
 
 const EditUserRow = ({
   user,
@@ -82,7 +82,5 @@ const EditUserRow = ({
     </Table.Row>
   )
 }
-
-EditUserRow.propTypes = UserRowProps
 
 export default EditUserRow
