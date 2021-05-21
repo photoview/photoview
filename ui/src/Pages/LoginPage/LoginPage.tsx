@@ -8,7 +8,7 @@ import logoPath from '../../assets/photoview-logo.svg'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
 import { Redirect } from 'react-router'
-import { Submit, TextField } from '../../primitives/form/Input'
+import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
@@ -27,7 +27,7 @@ const LogoHeader = () => {
   const { t } = useTranslation()
 
   return (
-    <div className="flex justify-center flex-col mb-20 mt-40">
+    <div className="flex justify-center flex-col pb-20 pt-12">
       <img className="h-24" src={logoPath} alt="photoview logo" />
       <h1 className="text-3xl text-center mt-4">
         {t('login_page.welcome', 'Welcome to Photoview')}
@@ -71,7 +71,7 @@ const LoginForm = () => {
 
   return (
     <form
-      className="mx-auto w-[450px]"
+      className="mx-auto max-w-[450px] px-4"
       onSubmit={handleSubmit(onSubmit)}
       // loading={loading || (data && data.authorizeUser.success)}
     >

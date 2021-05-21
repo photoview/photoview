@@ -1,6 +1,6 @@
 import React, { createRef, useEffect, useState } from 'react'
 import { gql, useMutation, useQuery } from '@apollo/client'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'

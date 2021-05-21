@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import { useQuery, gql } from '@apollo/client'
 import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'

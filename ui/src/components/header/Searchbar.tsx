@@ -123,14 +123,15 @@ const SearchBar = () => {
   }
 
   return (
-    <Container>
-      <SearchField
+    <div className="w-full">
+      <input
+        className="w-full py-2 px-3 rounded-md bg-gray-50"
         type="search"
         placeholder={t('header.search.placeholder', 'Search')}
         onChange={fetchEvent}
       />
       {results}
-    </Container>
+    </div>
   )
 }
 

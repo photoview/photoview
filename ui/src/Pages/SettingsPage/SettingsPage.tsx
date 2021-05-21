@@ -4,7 +4,7 @@ import { Button } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 
 import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'

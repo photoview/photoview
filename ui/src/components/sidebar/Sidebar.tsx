@@ -1,5 +1,4 @@
-import React, { createContext, useState } from 'react'
-import PropTypes from 'prop-types'
+import React, { createContext, useContext, useState } from 'react'
 import styled from 'styled-components'
 import { Icon } from 'semantic-ui-react'
 
@@ -56,11 +55,11 @@ export const SidebarContext = createContext<SidebarContextType>({
 })
 SidebarContext.displayName = 'SidebarContext'
 
-type SidebarProps = {
-  children: React.ReactElement
+type SidebarProviderProps = {
+  children: React.ReactChild | React.ReactChild[]
 }
 
-const Sidebar = ({ children }: SidebarProps) => {
+export const SidebarProvider = ({ children }: SidebarProviderProps) => {
   const [state, setState] = useState<{ content: React.ReactNode | null }>({
     content: null,
   })
@@ -74,26 +73,23 @@ const Sidebar = ({ children }: SidebarProps) => {
       value={{ updateSidebar: update, content: state.content }}
     >
       {children}
-      <SidebarContext.Consumer>
-        {value => (
-          <SidebarContainer highlighted={value.content != null}>
-            {value.content}
-            <SidebarDismissButton
-              name="angle double right"
-              size="big"
-              link
-              onClick={() => setState({ content: null })}
-            />
-            <div style={{ height: 100 }}></div>
-          </SidebarContainer>
-        )}
-      </SidebarContext.Consumer>
     </SidebarContext.Provider>
   )
 }
 
-Sidebar.propTypes = {
-  children: PropTypes.element,
-}
+export const Sidebar = () => {
+  const { updateSidebar, content } = useContext(SidebarContext)
 
-export default Sidebar
+  return (
+    <SidebarContainer highlighted={content != null}>
+      {content}
+      <SidebarDismissButton
+        name="angle double right"
+        size="big"
+        link
+        onClick={() => updateSidebar(null)}
+      />
+      <div style={{ height: 100 }}></div>
+    </SidebarContainer>
+  )
+}

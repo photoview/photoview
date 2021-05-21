@@ -2,7 +2,7 @@ import React from 'react'
 import { Route, Switch, Redirect } from 'react-router-dom'
 
 import { Loader } from 'semantic-ui-react'
-import Layout from '../../Layout'
+import Layout from '../layout/Layout'
 import { clearTokenCookie } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 
