@@ -19,10 +19,8 @@
     "babel-plugin-i18next-extract": "^0.8.3",
     "babel-plugin-styled-components": "^1.12.0",
     "babel-plugin-transform-semantic-ui-react-imports": "^1.4.1",
-    "browser-sync": "^2.26.14",
     "connect-history-api-fallback": "^1.6.0",
     "copy-to-clipboard": "^3.3.1",
-    "dotenv": "^9.0.2",
     "esbuild": "^0.11.20",
     "esbuild-plugin-babel": "^0.2.3",
     "eslint": "^7.26.0",
@@ -37,18 +35,17 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
+    "react-hook-form": "^7.6.3",
     "react-i18next": "^11.8.15",
     "react-router-dom": "^5.2.0",
     "react-router-prop-types": "^1.0.5",
     "react-spring": "^8.0.27",
     "react-test-renderer": "^17.0.2",
-    "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
     "styled-components": "^5.3.0",
     "subscriptions-transport-ws": "^0.9.18",
     "typescript": "^4.2.4",
-    "url-join": "^4.0.1",
-    "workbox-build": "^6.1.5"
+    "url-join": "^4.0.1"
   },
   "scripts": {
     "start": "vite",
@@ -82,16 +79,16 @@
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.23.0",
     "@vitejs/plugin-react-refresh": "^1.3.3",
+    "autoprefixer": "^10.2.5",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^6.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^11.0.0",
+    "postcss": "^8.3.0",
     "prettier": "^2.3.0",
+    "tailwindcss": "^2.1.2",
     "tsc-files": "^1.1.2",
     "vite": "^2.3.3"
-  },
-  "cache": {
-    "swDest": "service-worker.js"
   },
   "prettier": {
     "trailingComma": "es5",

@@ -1,4 +1,4 @@
-import 'regenerator-runtime/runtime'
+// import 'regenerator-runtime/runtime'
 
 import React from 'react'
 import ReactDOM from 'react-dom'
@@ -8,6 +8,8 @@ import client from './apolloClient'
 import { ApolloProvider } from '@apollo/client'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { setupLocalization } from './localization'
+
+import './index.css'
 
 setupLocalization()
 

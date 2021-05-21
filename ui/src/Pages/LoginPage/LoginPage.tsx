@@ -1,14 +1,17 @@
-import React, { useState, useCallback } from 'react'
+import React from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
-import { Redirect } from 'react-router-dom'
-import styled from 'styled-components'
-import { Button, Form, Message, Header, HeaderProps } from 'semantic-ui-react'
-import { checkInitialSetupQuery, login, Container } from './loginUtilities'
+import { useForm, SubmitHandler } from 'react-hook-form'
+import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
 import logoPath from '../../assets/photoview-logo.svg'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
+import { Redirect } from 'react-router'
+import { Submit, TextField } from '../../primitives/form/Input'
+import MessageBox from '../../primitives/form/MessageBox'
+import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
+import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -20,123 +23,117 @@ const authorizeMutation = gql`
   }
 `
 
-const StyledLogo = styled.img`
-  max-height: 128px;
-`
-
-const LogoHeader = (props: HeaderProps) => {
+const LogoHeader = () => {
   const { t } = useTranslation()
 
   return (
-    <Header {...props} as="h1" textAlign="center">
-      <StyledLogo src={logoPath} alt="photoview logo" />
-      <p style={{ fontWeight: 400 }}>
+    <div className="flex justify-center flex-col mb-20 mt-40">
+      <img className="h-24" src={logoPath} alt="photoview logo" />
+      <h1 className="text-3xl text-center mt-4">
         {t('login_page.welcome', 'Welcome to Photoview')}
-      </p>
-    </Header>
+      </h1>
+    </div>
   )
 }
 
-const LogoHeaderStyled = styled(LogoHeader)`
-  margin-bottom: 72px !important;
-`
-
-const LoginPage = () => {
+const LoginForm = () => {
   const { t } = useTranslation()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors },
+  } = useForm()
 
-  const [credentials, setCredentials] = useState({
-    username: '',
-    password: '',
-  })
-
-  const handleChange = useCallback(
-    (event, key) => {
-      const value = event.target.value
-      setCredentials(credentials => {
-        return {
-          ...credentials,
-          [key]: value,
-        }
-      })
-    },
-    [setCredentials]
-  )
-
-  const signIn = useCallback(
-    (event, authorize) => {
-      event.preventDefault()
-
-      authorize({
-        variables: {
-          username: credentials.username,
-          password: credentials.password,
-        },
-      })
-    },
-    [credentials]
-  )
-
-  const { data: initialSetupData } = useQuery(checkInitialSetupQuery)
-
-  const [authorize, { loading, data }] = useMutation(authorizeMutation, {
+  const [authorize, { loading, data }] = useMutation<
+    Authorize,
+    AuthorizeVariables
+  >(authorizeMutation, {
     onCompleted: data => {
       const { success, token } = data.authorizeUser
 
-      if (success) {
+      if (success && token) {
         login(token)
       }
     },
   })
 
+  const onSubmit: SubmitHandler<LoginInputs> = data => {
+    authorize({
+      variables: {
+        username: data.username,
+        password: data.password,
+      },
+    })
+  }
+
   const errorMessage =
     data && !data.authorizeUser.success ? data.authorizeUser.status : null
+
+  return (
+    <form
+      className="mx-auto w-[450px]"
+      onSubmit={handleSubmit(onSubmit)}
+      // loading={loading || (data && data.authorizeUser.success)}
+    >
+      <TextField
+        className="w-full"
+        label={t('login_page.field.username', 'Username')}
+        {...register('username')}
+        error={formErrors.username?.message}
+      />
+      <TextField
+        className="w-full"
+        type="password"
+        label={t('login_page.field.password', 'Password')}
+        {...register('password')}
+      />
+      <input
+        type="submit"
+        value={t('login_page.field.submit', 'Sign in') as string}
+        className="rounded-md px-8 py-2 focus:outline-none hover:cursor-pointer bg-gradient-to-bl from-[#FF8246] to-[#D6264D] text-white font-semibold focus:ring-2 focus:ring-red-200"
+      />
+      <MessageBox
+        message={errorMessage}
+        show={!!errorMessage}
+        type="negative"
+      />
+    </form>
+  )
+}
+
+// background-image: radial-gradient(0% 100%, #FF8246 0%, #D6264D 100%);
+// border: 2px solid rgba(255,51,0,0.29);
+// border-radius: 6px;
+
+type LoginInputs = {
+  username: string
+  password: string
+}
+
+const LoginPage = () => {
+  const { t } = useTranslation()
+
+  const { data: initialSetupData } = useQuery<CheckInitialSetup>(
+    checkInitialSetupQuery
+  )
 
   if (authToken()) {
     return <Redirect to="/" />
   }
 
   return (
-    <div>
+    <>
       <Helmet>
         <title>{t('title.login', 'Login')} - Photoview</title>
       </Helmet>
-      <Container>
-        <LogoHeaderStyled />
-        {initialSetupData?.siteInfo?.initialSetup && (
-          <Redirect to="/initialSetup" />
-        )}
-        <Form
-          style={{ width: 500, margin: 'auto' }}
-          error={!!errorMessage}
-          onSubmit={e => signIn(e, authorize)}
-          loading={loading || (data && data.authorizeUser.success)}
-        >
-          <Form.Field>
-            <label htmlFor="username_field">
-              {t('login_page.field.username', 'Username')}
-            </label>
-            <input
-              id="username_field"
-              onChange={e => handleChange(e, 'username')}
-            />
-          </Form.Field>
-          <Form.Field>
-            <label htmlFor="password_field">
-              {t('login_page.field.password', 'Password')}
-            </label>
-            <input
-              type="password"
-              id="password_field"
-              onChange={e => handleChange(e, 'password')}
-            />
-          </Form.Field>
-          <Message error content={errorMessage} />
-          <Button type="submit">
-            {t('login_page.field.submit', 'Sign in')}
-          </Button>
-        </Form>
-      </Container>
-    </div>
+      {initialSetupData?.siteInfo?.initialSetup && (
+        <Redirect to="/initialSetup" />
+      )}
+      <div>
+        <LogoHeader />
+        <LoginForm />
+      </div>
+    </>
   )
 }
 
