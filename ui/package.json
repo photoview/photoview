@@ -51,8 +51,9 @@
     "workbox-build": "^6.1.5"
   },
   "scripts": {
-    "start": "node --experimental-modules build.mjs watch",
-    "build": "NODE_ENV=production node --experimental-modules build.mjs",
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
     "test": "npm run lint && npm run jest",
     "test:ci": "npm run lint && npm run jest:ci",
     "lint": "npm run lint:types & npm run lint:eslint",
@@ -80,12 +81,14 @@
     "@types/url-join": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.23.0",
+    "@vitejs/plugin-react-refresh": "^1.3.3",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^6.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.0",
-    "tsc-files": "^1.1.2"
+    "tsc-files": "^1.1.2",
+    "vite": "^2.3.3"
   },
   "cache": {
     "swDest": "service-worker.js"

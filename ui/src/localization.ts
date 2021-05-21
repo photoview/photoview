@@ -27,7 +27,7 @@ export function setupLocalization(): void {
     },
 
     react: {
-      useSuspense: process.env.NODE_ENV === 'production',
+      useSuspense: import.meta.env.PROD,
     },
   })
 }

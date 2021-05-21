@@ -16,8 +16,8 @@ import { clearTokenCookie } from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
 import { Message } from './components/messages/SubscriptionsHook'
 
-export const GRAPHQL_ENDPOINT = process.env.PHOTOVIEW_API_ENDPOINT
-  ? urlJoin(process.env.PHOTOVIEW_API_ENDPOINT, '/graphql')
+export const GRAPHQL_ENDPOINT = import.meta.env.VITE_API_ENDPOINT
+  ? urlJoin(import.meta.env.VITE_API_ENDPOINT as string, '/graphql')
   : urlJoin(location.origin, '/api/graphql')
 
 const httpLink = new HttpLink({
