@@ -123,7 +123,7 @@ const SearchBar = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-xs">
       <input
         className="w-full py-2 px-3 rounded-md bg-gray-50"
         type="search"
