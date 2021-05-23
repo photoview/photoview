@@ -181,7 +181,7 @@ export const MediaThumbnail = ({
   )
 }
 
-export const PhotoThumbnail = styled.div`
+export const MediaPlaceholder = styled.div`
   flex-grow: 1;
   height: 200px;
   width: 300px;

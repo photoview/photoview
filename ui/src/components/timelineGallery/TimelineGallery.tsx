@@ -173,9 +173,6 @@ const TimelineGallery = () => {
 
   return (
     <>
-      <Loader active={loading}>
-        {t('general.loading.timeline', 'Loading timeline')}
-      </Loader>
       <FavoritesCheckbox
         onlyFavorites={onlyFavorites}
         setOnlyFavorites={setOnlyFavorites}

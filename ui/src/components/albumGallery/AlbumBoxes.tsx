@@ -1,15 +1,8 @@
 import React from 'react'
-import styled from 'styled-components'
 import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import { AlbumBox } from './AlbumBox'
 
-const Container = styled.div`
-  margin: 20px -10px;
-  position: relative;
-`
-
 type AlbumBoxesProps = {
-  loading: boolean
   error?: Error
   albums?: albumQuery_album_subAlbums[]
   getCustomLink?(albumID: string): string
@@ -20,7 +13,7 @@ const AlbumBoxes = ({ error, albums, getCustomLink }: AlbumBoxesProps) => {
 
   let albumElements = []
 
-  if (albums) {
+  if (albums !== undefined) {
     albumElements = albums.map(album => (
       <AlbumBox
         key={album.id}
@@ -34,7 +27,7 @@ const AlbumBoxes = ({ error, albums, getCustomLink }: AlbumBoxesProps) => {
     }
   }
 
-  return <Container>{albumElements}</Container>
+  return <div className="-mx-3 my-6">{albumElements}</div>
 }
 
 export default AlbumBoxes

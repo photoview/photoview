@@ -66,6 +66,8 @@ const LoginForm = () => {
     })
   }
 
+  console.log('errors', formErrors)
+
   const errorMessage =
     data && !data.authorizeUser.success ? data.authorizeUser.status : null
 
@@ -78,14 +80,23 @@ const LoginForm = () => {
       <TextField
         className="w-full"
         label={t('login_page.field.username', 'Username')}
-        {...register('username')}
-        error={formErrors.username?.message}
+        {...register('username', { required: true })}
+        error={
+          formErrors.username?.type == 'required'
+            ? 'Please enter a username'
+            : undefined
+        }
       />
       <TextField
         className="w-full"
         type="password"
         label={t('login_page.field.password', 'Password')}
-        {...register('password')}
+        {...register('password', { required: true })}
+        error={
+          formErrors.password?.type == 'required'
+            ? 'Please enter a password'
+            : undefined
+        }
       />
       <input
         type="submit"

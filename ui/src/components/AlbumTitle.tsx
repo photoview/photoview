@@ -1,41 +1,23 @@
 import React, { useEffect, useContext } from 'react'
-import PropTypes from 'prop-types'
-import { Breadcrumb, IconProps } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { Icon } from 'semantic-ui-react'
 import { SidebarContext } from './sidebar/Sidebar'
 import AlbumSidebar from './sidebar/AlbumSidebar'
 import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../helpers/authentication'
 import { albumPathQuery } from './__generated__/albumPathQuery'
 
-const Header = styled.h1`
-  margin: 24px 0 8px 0 !important;
-
-  & a {
-    color: black;
-
-    &:hover {
-      text-decoration: underline;
-    }
+const BreadcrumbList = styled.ol`
+  & li::after {
+    content: '';
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5px' height='6px' viewBox='0 0 5 6'%3E%3Cpolyline fill='none' stroke='%23979797' points='0.74 0.167710644 3.57228936 3 0.74 5.83228936' /%3E%3C/svg%3E");
+    width: 5px;
+    height: 6px;
+    display: inline-block;
+    margin: 6px;
+    vertical-align: middle;
   }
 `
-
-const StyledIcon = styled(Icon)`
-  margin-left: 8px !important;
-  display: inline-block;
-  color: #888;
-  cursor: pointer;
-
-  &:hover {
-    color: #1e70bf;
-  }
-`
-
-const SettingsIcon = (props: IconProps) => {
-  return <StyledIcon name="settings" size="small" {...props} />
-}
 
 const ALBUM_PATH_QUERY = gql`
   query albumPathQuery($id: ID!) {
@@ -58,9 +40,8 @@ type AlbumTitleProps = {
 }
 
 const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
-  const [fetchPath, { data: pathData }] = useLazyQuery<albumPathQuery>(
-    ALBUM_PATH_QUERY
-  )
+  const [fetchPath, { data: pathData }] =
+    useLazyQuery<albumPathQuery>(ALBUM_PATH_QUERY)
   const { updateSidebar } = useContext(SidebarContext)
 
   useEffect(() => {
@@ -85,12 +66,9 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
     .slice()
     .reverse()
     .map(x => (
-      <span key={x.id}>
-        <Breadcrumb.Section as={Link} to={`/album/${x.id}`}>
-          {x.title}
-        </Breadcrumb.Section>
-        <Breadcrumb.Divider icon="right angle" />
-      </span>
+      <li key={x.id} className="inline-block hover:underline">
+        <Link to={`/album/${x.id}`}>{x.title}</Link>
+      </li>
     ))
 
   if (!disableLink) {
@@ -98,25 +76,24 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   }
 
   return (
-    <>
-      <Header>
-        <Breadcrumb>{breadcrumbSections}</Breadcrumb>
-        {title}
-        {authToken() && (
-          <SettingsIcon
-            onClick={() => {
-              updateSidebar(<AlbumSidebar albumId={album.id} />)
-            }}
-          />
-        )}
-      </Header>
-    </>
+    <div className="flex">
+      <div>
+        <nav aria-label="Album breadcrumb">
+          <BreadcrumbList className="">{breadcrumbSections}</BreadcrumbList>
+        </nav>
+        <h1 className="text-2xl">{title}</h1>
+      </div>
+      {authToken() && (
+        <button
+          onClick={() => {
+            updateSidebar(<AlbumSidebar albumId={album.id} />)
+          }}
+        >
+          More
+        </button>
+      )}
+    </div>
   )
-}
-
-AlbumTitle.propTypes = {
-  album: PropTypes.object,
-  disableLink: PropTypes.bool,
 }
 
 export default AlbumTitle

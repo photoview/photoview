@@ -1,7 +1,6 @@
 import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import { Loader } from 'semantic-ui-react'
-import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
+import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
 import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
@@ -35,10 +34,6 @@ const Gallery = styled.div`
 const PhotoFiller = styled.div`
   height: 200px;
   flex-grow: 999999;
-`
-
-const ClearWrap = styled.div`
-  clear: both;
 `
 
 export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
@@ -109,16 +104,13 @@ const PhotoGallery = ({
     })
   } else {
     for (let i = 0; i < 6; i++) {
-      photoElements.push(<PhotoThumbnail key={i} />)
+      photoElements.push(<MediaPlaceholder key={i} />)
     }
   }
 
   return (
-    <ClearWrap>
+    <>
       <Gallery data-testid="photo-gallery-wrapper">
-        <Loader active={loading}>
-          {t('general.loading.media', 'Loading media')}
-        </Loader>
         {photoElements}
         <PhotoFiller />
       </Gallery>
@@ -128,7 +120,7 @@ const PhotoGallery = ({
           dispatchMedia={dispatchMedia}
         />
       )}
-    </ClearWrap>
+    </>
   )
 }
 
