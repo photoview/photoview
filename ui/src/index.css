@@ -15,3 +15,9 @@ html {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .flip-y {
+    transform: scale(1, -1);
+  }
+}

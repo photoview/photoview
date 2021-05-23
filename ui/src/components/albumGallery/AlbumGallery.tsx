@@ -1,8 +1,8 @@
 import React, { useEffect, useReducer } from 'react'
-import AlbumTitle from '../AlbumTitle'
+import AlbumTitle from '../album/AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
-import AlbumFilter from '../AlbumFilter'
+import AlbumFilter from '../album/AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import {
   photoGalleryReducer,
