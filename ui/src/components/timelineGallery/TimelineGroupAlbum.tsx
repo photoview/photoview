@@ -130,15 +130,15 @@ const TimelineGroupAlbum = ({
   }
 
   return (
-    <GroupAlbumWrapper>
-      <AlbumTitle>
-        <Link to={`/album/${album.id}`}>{album.title}</Link>
-      </AlbumTitle>
-      <MediaWrapper>
+    <div className="mx-2">
+      <Link to={`/album/${album.id}`} className="hover:underline">
+        {album.title}
+      </Link>
+      <div className="flex flex-wrap items-center h-[210px] relative -mx-1 pr-4 overflow-hidden">
         {mediaElms}
         {itemsBubble}
-      </MediaWrapper>
-    </GroupAlbumWrapper>
+      </div>
+    </div>
   )
 }
 

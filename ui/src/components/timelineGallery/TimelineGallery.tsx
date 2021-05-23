@@ -172,11 +172,18 @@ const TimelineGallery = () => {
 
   return (
     <>
-      <FavoritesCheckbox
-        onlyFavorites={onlyFavorites}
-        setOnlyFavorites={setOnlyFavorites}
-      />
-      <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
+      <div className="mb-2">
+        <FavoritesCheckbox
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
+        />
+      </div>
+      <div
+        className="-mx-3 flex flex-wrap overflow-x-hidden"
+        ref={containerElem}
+      >
+        {timelineGroups}
+      </div>
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
         text={t('general.loading.paginate.media', 'Loading more media')}

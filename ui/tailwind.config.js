@@ -4,7 +4,7 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
-      screen: {
+      screens: {
         xs: '480px',
       },
       boxShadow: {

@@ -30,7 +30,7 @@ const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
   }
 
   return (
-    <div className="w-[220px] h-[220px] relative rounded-lg">
+    <div className="xs:w-[220px] xs:h-[220px] relative rounded-lg">
       {image}
       {placeholder}
     </div>
@@ -43,7 +43,8 @@ type AlbumBoxProps = {
 }
 
 export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
-  const wrapperClasses = 'inline-block text-center text-gray-900 mx-3 my-2 h-60'
+  const wrapperClasses =
+    'inline-block text-center text-gray-900 mx-3 my-2 xs:h-60'
 
   if (album) {
     return (

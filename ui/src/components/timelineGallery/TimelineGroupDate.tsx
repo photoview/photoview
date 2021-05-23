@@ -60,10 +60,10 @@ const TimelineGroupDate = ({
   const formattedDate = dateFormatter.format(new Date(group.date))
 
   return (
-    <GroupDateWrapper>
-      <DateTitle>{formattedDate}</DateTitle>
-      <GroupAlbumWrapper>{albumGroupElms}</GroupAlbumWrapper>
-    </GroupDateWrapper>
+    <div className="mx-3 mb-2">
+      <div className="text-xl m-0 -mb-2">{formattedDate}</div>
+      <div className="flex wrap -mx-2 my-0">{albumGroupElms}</div>
+    </div>
   )
 }
 
