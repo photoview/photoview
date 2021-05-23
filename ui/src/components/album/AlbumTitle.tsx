@@ -1,11 +1,14 @@
 import React, { useEffect, useContext } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { SidebarContext } from './sidebar/Sidebar'
-import AlbumSidebar from './sidebar/AlbumSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
+import AlbumSidebar from '../sidebar/AlbumSidebar'
 import { useLazyQuery, gql } from '@apollo/client'
-import { authToken } from '../helpers/authentication'
+import { authToken } from '../../helpers/authentication'
 import { albumPathQuery } from './__generated__/albumPathQuery'
+import useDelay from '../../hooks/useDelay'
+
+import { ReactComponent as GearIcon } from './icons/gear.svg'
 
 const BreadcrumbList = styled.ol`
   & li::after {
@@ -56,7 +59,21 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
     }
   }, [album])
 
-  if (!album) return <div style={{ height: 36 }}></div>
+  const delay = useDelay(200, [album])
+  console.log('delay', delay)
+
+  if (!album) {
+    return (
+      <div
+        className={`flex mb-6 flex-col h-14 transition-opacity animate-pulse ${
+          delay ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="w-32 h-4 bg-gray-100 mb-2 mt-1"></div>
+        <div className="w-72 h-6 bg-gray-100"></div>
+      </div>
+    )
+  }
 
   let title = <span>{album.title}</span>
 
@@ -76,20 +93,21 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   }
 
   return (
-    <div className="flex">
-      <div>
+    <div className="flex mb-6 items-end h-14">
+      <div className="min-w-0">
         <nav aria-label="Album breadcrumb">
-          <BreadcrumbList className="">{breadcrumbSections}</BreadcrumbList>
+          <BreadcrumbList>{breadcrumbSections}</BreadcrumbList>
         </nav>
-        <h1 className="text-2xl">{title}</h1>
+        <h1 className="text-2xl truncate min-w-0">{title}</h1>
       </div>
       {authToken() && (
         <button
+          className="bg-gray-50 p-2 rounded ml-2 border border-gray-200 focus:outline-none focus:border-blue-300 text-[#8b8b8b] hover:bg-gray-100 hover:text-[#777]"
           onClick={() => {
             updateSidebar(<AlbumSidebar albumId={album.id} />)
           }}
         >
-          More
+          <GearIcon />
         </button>
       )}
     </div>
