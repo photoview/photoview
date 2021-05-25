@@ -37,7 +37,7 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <MainMenu />
           </Authorized>
           <div
-            className="px-3 py-3 w-full overflow-y-scroll h-screen flex-grow lg:pt-5 lg:pl-0 lg:pr-8"
+            className="px-3 py-3 w-full overflow-y-scroll h-screen flex-grow lg:pt-5 lg:pr-8"
             id="layout-content"
           >
             {children}
