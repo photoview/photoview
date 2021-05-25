@@ -34,7 +34,7 @@ const Container = styled.div`
 
 const SideMenuContainer = styled.div`
   height: 100%;
-  width: 80px;
+  width: 150px;
   left: 0;
   padding-top: 70px;
 
@@ -61,7 +61,7 @@ const Content = styled.div`
 const SideButtonLink = styled(NavLink)`
   text-align: center;
   padding-top: 8px;
-  padding-left: 2px;
+  padding-left: 10px;
   display: block;
   width: 60px;
   height: 60px;
@@ -104,7 +104,7 @@ const SideButton = ({
 }
 
 const SideButtonLabel = styled.div`
-  font-size: 16px;
+  font-size: 14px;
 `
 
 export const SideMenu = () => {
