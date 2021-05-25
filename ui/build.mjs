@@ -51,14 +51,17 @@ const esbuildOptions = {
     '.png': 'file',
   },
   define: defineEnv,
-  incremental: watchMode,
-  watch: {
+}
+
+if (watchMode) {
+  esbuildOptions.incremental = true
+  esbuildOptions.watch = {
     onRebuild(err) {
       if (err == null) {
         bs.reload()
       }
     },
-  },
+  }
 }
 
 fs.emptyDirSync('dist/')
