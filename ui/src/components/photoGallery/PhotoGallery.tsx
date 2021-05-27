@@ -2,7 +2,6 @@ import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
 import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
 import {
@@ -47,13 +46,7 @@ type PhotoGalleryProps = {
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
-const PhotoGallery = ({
-  mediaState,
-  loading,
-  dispatchMedia,
-}: PhotoGalleryProps) => {
-  const { t } = useTranslation()
-
+const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
   const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState

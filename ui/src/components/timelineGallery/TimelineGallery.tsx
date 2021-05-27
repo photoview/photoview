@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useReducer, useContext } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
-import styled from 'styled-components'
 import PresentView from '../photoGallery/presentView/PresentView'
 import useURLParameters from '../../hooks/useURLParameters'
 import { FavoritesCheckbox } from '../album/AlbumFilter'
@@ -56,13 +55,6 @@ const MY_TIMELINE_QUERY = gql`
       date
     }
   }
-`
-
-const GalleryWrapper = styled.div`
-  margin: -12px;
-  display: flex;
-  flex-wrap: wrap;
-  overflow-x: hidden;
 `
 
 export type TimelineActiveIndex = {
@@ -178,10 +170,7 @@ const TimelineGallery = () => {
           setOnlyFavorites={setOnlyFavorites}
         />
       </div>
-      <div
-        className="-mx-3 flex flex-wrap overflow-x-hidden"
-        ref={containerElem}
-      >
+      <div className="-mx-3 flex flex-wrap" ref={containerElem}>
         {timelineGroups}
       </div>
       <PaginateLoader

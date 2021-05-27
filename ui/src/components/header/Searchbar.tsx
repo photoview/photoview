@@ -11,14 +11,6 @@ import {
   searchQuery_search_media,
 } from './__generated__/searchQuery'
 
-const Container = styled.div`
-  height: 60px;
-  width: 350px;
-  margin: 0 12px;
-  padding: 12px 0;
-  position: relative;
-`
-
 const SearchField = styled.input`
   height: 100%;
   width: 100%;

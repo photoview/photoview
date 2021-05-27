@@ -160,7 +160,7 @@ export const MediaThumbnail = ({
     >
       <div
         style={{
-          minWidth: `${minWidth}px`,
+          minWidth: `min(${minWidth}px, 100%)`,
           height: `200px`,
         }}
       >

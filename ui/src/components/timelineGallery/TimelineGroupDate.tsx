@@ -1,6 +1,5 @@
 import React from 'react'
 import TimelineGroupAlbum from './TimelineGroupAlbum'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
 import {
   TimelineGalleryAction,
@@ -12,20 +11,6 @@ const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   month: 'long',
   day: 'numeric',
 }
-const GroupDateWrapper = styled.div`
-  margin: 12px 12px;
-`
-
-const DateTitle = styled.h1`
-  font-size: 1.5rem;
-  margin: 0 0 -12px;
-`
-
-const GroupAlbumWrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0 -8px;
-`
 
 type TimelineGroupDateProps = {
   groupIndex: number
@@ -62,7 +47,7 @@ const TimelineGroupDate = ({
   return (
     <div className="mx-3 mb-2">
       <div className="text-xl m-0 -mb-2">{formattedDate}</div>
-      <div className="flex wrap -mx-2 my-0">{albumGroupElms}</div>
+      <div className="flex flex-wrap -mx-2 my-0">{albumGroupElms}</div>
     </div>
   )
 }

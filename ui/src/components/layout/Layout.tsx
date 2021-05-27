@@ -26,18 +26,14 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
       <Helmet>
         <title>{title ? `${title} - Photoview` : `Photoview`}</title>
       </Helmet>
-      <div
-        className="h-full flex flex-col overflow-hidden relative"
-        {...otherProps}
-        data-testid="Layout"
-      >
+      <div className="relative" {...otherProps} data-testid="Layout">
         <Header />
-        <div className="lg:flex">
+        <div className="">
           <Authorized>
             <MainMenu />
           </Authorized>
           <div
-            className="px-3 py-3 w-full overflow-y-scroll h-screen flex-grow lg:pt-5 lg:pr-8"
+            className="px-3 py-3 lg:pt-5 lg:pr-8 lg:pl-[292px]"
             id="layout-content"
           >
             {children}

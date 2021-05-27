@@ -2,7 +2,7 @@ import { useLayoutEffect, useState, useRef } from 'react'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function useDelay(wait: number, deps: any[] = []) {
-  const [_, triggerUpdate] = useState(false)
+  const triggerUpdate = useState(false)[1]
   const done = useRef(false)
 
   useLayoutEffect(() => {

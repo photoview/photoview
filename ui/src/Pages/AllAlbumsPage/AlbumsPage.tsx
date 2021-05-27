@@ -3,7 +3,6 @@ import AlbumBoxes from '../../components/albumGallery/AlbumBoxes'
 import Layout from '../../components/layout/Layout'
 import { useQuery, gql } from '@apollo/client'
 import LazyLoad from '../../helpers/LazyLoad'
-import { useTranslation } from 'react-i18next'
 import { getMyAlbums } from './__generated__/getMyAlbums'
 
 const getAlbumsQuery = gql`
