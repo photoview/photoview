@@ -69,55 +69,55 @@
   "people_page": {
     "face_group": {
       "action": {
-        "add_label": null,
-        "change_label": null,
-        "detach_face": null,
-        "merge_face": null,
-        "move_faces": null
+        "add_label": "Aggiungi etichetta",
+        "change_label": "Cambia etichetta",
+        "detach_face": "Separa volto",
+        "merge_face": "Unisci volto",
+        "move_faces": "Sposta volti"
       },
       "label_placeholder": "Etichetta",
       "unlabeled": "Senza etichetta",
-      "unlabeled_person": null
+      "unlabeled_person": "Persona senza etichetta"
     },
     "modal": {
       "action": {
-        "merge": null
+        "merge": "Unisci"
       },
       "detach_image_faces": {
         "action": {
-          "detach": null,
-          "select_images": null
+          "detach": "Separa immagini",
+          "select_images": "Seleziona le immagini da separare"
         },
-        "description": null,
-        "title": null
+        "description": "Separa le immagini selezionate di questo volto e muovile in nuovo volto",
+        "title": "Separa immagini volto"
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
         "destination_table": {
-          "title": null
+          "title": "Seleziona il volto di destinazione"
         },
-        "title": null
+        "title": "Unisci immagini volto"
       },
       "move_image_faces": {
-        "description": null,
+        "description": "Sposta le immagini selezionate di questo volto in un altro volto",
         "destination_face_group_table": {
-          "move_action": null,
-          "title": null
+          "move_action": "Muovi immagini",
+          "title": "Seleziona il volto di destinazione"
         },
         "image_select_table": {
-          "next_action": null,
-          "title": null
+          "next_action": "Avanti",
+          "title": "Seleziona immagini"
         },
-        "title": null
+        "title": "Muovi immagini volto"
       }
     },
     "recognize_unlabeled_faces_button": "Identifica facce senza etichetta",
     "table": {
       "select_face_group": {
-        "search_faces_placeholder": null
+        "search_faces_placeholder": "Cerca volti..."
       },
       "select_image_faces": {
-        "search_images_placeholder": null
+        "search_images_placeholder": "Cerca immagini..."
       }
     }
   },
