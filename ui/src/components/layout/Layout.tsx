@@ -4,7 +4,7 @@ import React from 'react'
 import { Helmet } from 'react-helmet'
 import Header from '../header/Header'
 import { Authorized } from '../routes/AuthorizedRoute'
-import { SidebarProvider } from '../sidebar/Sidebar'
+import { Sidebar, SidebarProvider } from '../sidebar/Sidebar'
 import MainMenu from './MainMenu'
 
 export const ADMIN_QUERY = gql`
@@ -40,7 +40,7 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <div className="h-6"></div>
           </div>
         </div>
-        {/* <Sidebar /> */}
+        <Sidebar />
       </div>
     </SidebarProvider>
   )

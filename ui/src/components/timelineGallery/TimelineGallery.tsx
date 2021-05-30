@@ -163,7 +163,7 @@ const TimelineGallery = () => {
   ))
 
   return (
-    <>
+    <div className="overflow-x-hidden">
       <div className="mb-2">
         <FavoritesCheckbox
           onlyFavorites={onlyFavorites}
@@ -183,7 +183,7 @@ const TimelineGallery = () => {
           dispatchMedia={dispatchMedia}
         />
       )}
-    </>
+    </div>
   )
 }
 

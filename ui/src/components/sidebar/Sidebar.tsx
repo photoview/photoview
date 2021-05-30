@@ -1,41 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
-import styled from 'styled-components'
-import { Icon } from 'semantic-ui-react'
-
-const SidebarContainer = styled.div<{ highlighted: boolean }>`
-  width: 28vw;
-  max-width: 500px;
-  min-width: 300px;
-  flex-shrink: 0;
-  overflow-y: scroll;
-  right: 0;
-  margin-top: 60px;
-  background-color: white;
-  padding: 12px;
-  border-left: 1px solid #eee;
-
-  @media (max-width: 700px) {
-    position: absolute;
-    width: 100%;
-    /* full height - header - tabbar */
-    height: calc(100% - 60px - 80px);
-    max-width: min(calc(100vw - 85px), 400px);
-    ${({ highlighted }) => `right: ${highlighted ? 0 : -100}%;`}
-    padding-top: 45px;
-  }
-
-  transition: right 200ms ease-in-out;
-`
-
-const SidebarDismissButton = styled(Icon)`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  @media (min-width: 700px) {
-    display: none;
-  }
-`
+import React, { createContext, useContext, useEffect, useState } from 'react'
 
 export type UpdateSidebarFn = (content: React.ReactNode) => void
 
@@ -78,18 +41,33 @@ export const SidebarProvider = ({ children }: SidebarProviderProps) => {
 }
 
 export const Sidebar = () => {
-  const { updateSidebar, content } = useContext(SidebarContext)
+  const { content } = useContext(SidebarContext)
+
+  useEffect(() => {
+    const body = document.body
+
+    if (content == null) {
+      body.classList.remove('overflow-y-hidden')
+      body.classList.remove('lg:overflow-y-auto')
+    } else {
+      body.classList.add('overflow-y-hidden')
+      body.classList.add('lg:overflow-y-auto')
+    }
+
+    return () => {
+      body.classList.remove('overflow-y-hidden')
+      body.classList.remove('lg:overflow-y-auto')
+    }
+  })
 
   return (
-    <SidebarContainer highlighted={content != null}>
+    <div
+      className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-scroll transform transition-transform motion-reduce:transition-none ${
+        content == null ? 'translate-x-full' : 'translate-x-0'
+      } lg:w-[420px] lg:right-0 lg:shadow-separator lg:top-0 lg:z-40`}
+    >
       {content}
-      <SidebarDismissButton
-        name="angle double right"
-        size="big"
-        link
-        onClick={() => updateSidebar(null)}
-      />
-      <div style={{ height: 100 }}></div>
-    </SidebarContainer>
+      <div className="h-24"></div>
+    </div>
   )
 }
