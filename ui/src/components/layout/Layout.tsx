@@ -1,10 +1,10 @@
 import { gql } from '@apollo/client'
 import PropTypes from 'prop-types'
-import React from 'react'
+import React, { useContext } from 'react'
 import { Helmet } from 'react-helmet'
 import Header from '../header/Header'
 import { Authorized } from '../routes/AuthorizedRoute'
-import { Sidebar, SidebarProvider } from '../sidebar/Sidebar'
+import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
 import MainMenu from './MainMenu'
 
 export const ADMIN_QUERY = gql`
@@ -21,8 +21,10 @@ type LayoutProps = {
 }
 
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
+  const { pinned, content: sidebarContent } = useContext(SidebarContext)
+
   return (
-    <SidebarProvider>
+    <>
       <Helmet>
         <title>{title ? `${title} - Photoview` : `Photoview`}</title>
       </Helmet>
@@ -33,7 +35,9 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <MainMenu />
           </Authorized>
           <div
-            className="px-3 py-3 lg:pt-5 lg:pr-8 lg:pl-[292px]"
+            className={`px-3 py-3 lg:pt-5 lg:pr-8 lg:pl-[292px] ${
+              pinned && sidebarContent ? 'lg:pr-[420px]' : ''
+            }`}
             id="layout-content"
           >
             {children}
@@ -42,7 +46,7 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
         </div>
         <Sidebar />
       </div>
-    </SidebarProvider>
+    </>
   )
 }
 
