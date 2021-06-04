@@ -119,9 +119,9 @@ They can be installed as shown below:
 
 ```sh
 # Ubuntu
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
 # Debian
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
+sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
 # macOS
 brew install dlib libheif
 
