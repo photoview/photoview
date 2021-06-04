@@ -1,7 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Table } from 'semantic-ui-react'
-import styled from 'styled-components'
 import { MessageState } from '../messages/Messages'
 import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
@@ -13,6 +11,7 @@ import {
   sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
+import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -93,85 +92,84 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
   downloadBlob(blob, filename)
 }
 
-const downloadMediaShowProgress = (t: TranslationFn) => async (
-  response: Response
-) => {
-  const totalBytes = Number(response.headers.get('content-length'))
-  const reader = response.body?.getReader()
-  const data = new Uint8Array(totalBytes)
+const downloadMediaShowProgress =
+  (t: TranslationFn) => async (response: Response) => {
+    const totalBytes = Number(response.headers.get('content-length'))
+    const reader = response.body?.getReader()
+    const data = new Uint8Array(totalBytes)
 
-  if (reader == null) {
-    throw new Error('Download reader is null')
-  }
+    if (reader == null) {
+      throw new Error('Download reader is null')
+    }
 
-  let canceled = false
-  const onDismiss = () => {
-    canceled = true
-    reader.cancel('Download canceled by user')
-  }
+    let canceled = false
+    const onDismiss = () => {
+      canceled = true
+      reader.cancel('Download canceled by user')
+    }
 
-  const notifyKey = Math.random().toString(26)
-  MessageState.add({
-    key: notifyKey,
-    type: 'progress',
-    onDismiss,
-    props: {
-      header: 'Downloading photo',
-      content: `Starting download`,
-      progress: 0,
-    },
-  })
-
-  let receivedBytes = 0
-  let result
-  do {
-    result = await reader.read()
-
-    if (canceled) break
-
-    if (result.value) data.set(result.value, receivedBytes)
-
-    receivedBytes += result.value ? result.value.length : 0
-
+    const notifyKey = Math.random().toString(26)
     MessageState.add({
       key: notifyKey,
       type: 'progress',
       onDismiss,
       props: {
         header: 'Downloading photo',
-        percent: (receivedBytes / totalBytes) * 100,
-        content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
-          totalBytes
-        )} bytes downloaded`,
+        content: `Starting download`,
+        progress: 0,
       },
     })
-  } while (!result.done)
 
-  if (canceled) {
-    return
+    let receivedBytes = 0
+    let result
+    do {
+      result = await reader.read()
+
+      if (canceled) break
+
+      if (result.value) data.set(result.value, receivedBytes)
+
+      receivedBytes += result.value ? result.value.length : 0
+
+      MessageState.add({
+        key: notifyKey,
+        type: 'progress',
+        onDismiss,
+        props: {
+          header: 'Downloading photo',
+          percent: (receivedBytes / totalBytes) * 100,
+          content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
+            totalBytes
+          )} bytes downloaded`,
+        },
+      })
+    } while (!result.done)
+
+    if (canceled) {
+      return
+    }
+
+    MessageState.add({
+      key: notifyKey,
+      type: 'progress',
+      props: {
+        header: 'Downloading photo completed',
+        content: `The photo has been downloaded`,
+        percent: 100,
+        positive: true,
+      },
+    })
+
+    setTimeout(() => {
+      MessageState.removeKey(notifyKey)
+    }, 2000)
+
+    const content = new Blob([data.buffer], {
+      type: response.headers.get('content-type') || undefined,
+    })
+
+    return content
   }
-
-  MessageState.add({
-    key: notifyKey,
-    type: 'progress',
-    props: {
-      header: 'Downloading photo completed',
-      content: `The photo has been downloaded`,
-      percent: 100,
-      positive: true,
-    },
-  })
-
-  setTimeout(() => {
-    MessageState.removeKey(notifyKey)
-  }, 2000)
-
-  const content = new Blob([data.buffer], {
-    type: response.headers.get('content-type') || undefined,
-  })
-
-  return content
-}
 
 const downloadBlob = async (blob: Blob, filename: string) => {
   const objectUrl = window.URL.createObjectURL(blob)
@@ -187,10 +185,6 @@ const downloadBlob = async (blob: Blob, filename: string) => {
 
   window.URL.revokeObjectURL(objectUrl)
 }
-
-const DownloadTableRow = styled(Table.Row)`
-  cursor: pointer;
-`
 
 type SidebarDownladProps = {
   media: MediaSidebarMedia
@@ -229,41 +223,45 @@ const SidebarDownload = ({ media }: SidebarDownladProps) => {
   const download = downloadMedia(t)
   const bytes = formatBytes(t)
   const downloadRows = downloads.map(x => (
-    <DownloadTableRow
+    <tr
+      className="cursor-pointer border-gray-100 border-b hover:bg-gray-50 focus:bg-gray-50"
       key={x.mediaUrl.url}
       onClick={() => download(x.mediaUrl.url)}
+      tabIndex={0}
     >
-      <Table.Cell>{`${x.title}`}</Table.Cell>
-      <Table.Cell>{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</Table.Cell>
-      <Table.Cell>{`${bytes(x.mediaUrl.fileSize)}`}</Table.Cell>
-      <Table.Cell>{extractExtension(x.mediaUrl.url)}</Table.Cell>
-    </DownloadTableRow>
+      <td className="pl-4 py-2">{`${x.title}`}</td>
+      <td className="py-2">{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</td>
+      <td className="py-2">{`${bytes(x.mediaUrl.fileSize)}`}</td>
+      <td className="pr-4 py-2">{extractExtension(x.mediaUrl.url)}</td>
+    </tr>
   ))
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h2>{t('sidebar.download.title', 'Download')}</h2>
+    <SidebarSection>
+      <SidebarSectionTitle>
+        {t('sidebar.download.title', 'Download')}
+      </SidebarSectionTitle>
 
-      <Table selectable singleLine compact>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>
+      <table className="table-fixed w-full">
+        <thead className="bg-[#f9f9fb]">
+          <tr className="text-left uppercase text-xs border-gray-100 border-b border-t">
+            <th className="w-2/6 pl-4 py-2">
               {t('sidebar.download.table_columns.name', 'Name')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
+            </th>
+            <th className="w-2/6 py-2">
               {t('sidebar.download.table_columns.dimensions', 'Dimensions')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
+            </th>
+            <th className="w-1/6 py-2">
               {t('sidebar.download.table_columns.file_size', 'Size')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
+            </th>
+            <th className="w-1/6 pr-4 py-2">
               {t('sidebar.download.table_columns.file_type', 'Type')}
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>{downloadRows}</Table.Body>
-      </Table>
-    </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>{downloadRows}</tbody>
+      </table>
+    </SidebarSection>
   )
 }
 

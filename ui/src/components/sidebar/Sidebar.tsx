@@ -85,7 +85,7 @@ export const Sidebar = () => {
 
   return (
     <div
-      className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-scroll transform transition-transform motion-reduce:transition-none ${
+      className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-auto transform transition-transform motion-reduce:transition-none ${
         content == null && !pinned ? 'translate-x-full' : 'translate-x-0'
       } ${
         pinned ? 'mt-[62px]' : 'lg:shadow-separator'

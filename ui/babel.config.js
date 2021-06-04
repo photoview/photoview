@@ -10,13 +10,13 @@ module.exports = function (api) {
     plugins.push('@babel/plugin-transform-runtime')
   } else {
     if (!isProduction) {
-      plugins.push([
-        'i18next-extract',
-        {
-          locales: ['en', 'da', 'fr', 'sv', 'es', 'it', 'pl', 'de'],
-          defaultValue: null,
-        },
-      ])
+      // plugins.push([
+      //   'i18next-extract',
+      //   {
+      //     locales: ['en', 'da', 'fr', 'sv', 'es', 'it', 'pl', 'de'],
+      //     defaultValue: null,
+      //   },
+      // ])
     }
 
     plugins.push(['styled-components', { pure: true }])

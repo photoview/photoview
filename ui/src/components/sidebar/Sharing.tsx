@@ -38,6 +38,7 @@ import {
   sidebarGetAlbumSharesVariables,
 } from './__generated__/sidebarGetAlbumShares'
 import { authToken } from '../../helpers/authentication'
+import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -403,8 +404,10 @@ const SidebarShare = ({
   }
 
   return (
-    <div>
-      <h2>{t('sidebar.sharing.title', 'Sharing options')}</h2>
+    <SidebarSection>
+      <SidebarSectionTitle>
+        {t('sidebar.sharing.title', 'Sharing options')}
+      </SidebarSectionTitle>
       <div>
         <Table>
           <Table.Header>
@@ -438,6 +441,6 @@ const SidebarShare = ({
           </Table.Footer>
         </Table>
       </div>
-    </div>
+    </SidebarSection>
   )
 }

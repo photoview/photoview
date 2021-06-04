@@ -7,11 +7,11 @@ import svgr from 'vite-plugin-svgr'
 export default defineConfig({
   plugins: [
     reactRefresh(),
-    // babel({
-    //   babelHelpers: 'bundled',
-    //   exclude: 'node_modules/**',
-    //   extensions: ['.js', '.jsx', '.ts', '.tsx'],
-    // }),
+    babel({
+      babelHelpers: 'bundled',
+      exclude: 'node_modules/**',
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    }),
     svgr(),
   ],
   server: {
