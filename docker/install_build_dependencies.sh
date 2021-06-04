@@ -31,6 +31,7 @@ apt-get install -y ca-certificates golang
 apt-get install -y \
   libdlib-dev:${DEBIAN_ARCH} \
   libblas-dev:${DEBIAN_ARCH} \
+  libatlas-base-dev:${DEBIAN_ARCH} \
   liblapack-dev:${DEBIAN_ARCH} \
   libjpeg-dev:${DEBIAN_ARCH} \
   libheif-dev:${DEBIAN_ARCH}

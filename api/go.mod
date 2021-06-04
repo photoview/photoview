@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/Kagami/go-face v0.0.0-20200825065730-3dd2d74dccfb
+	github.com/Kagami/go-face v0.0.0-20210604182630-c482b0e1acfb
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/barasher/go-exiftool v1.4.0
 	github.com/disintegration/imaging v1.6.2
