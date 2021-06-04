@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { useMutation, useQuery, gql, useLazyQuery } from '@apollo/client'
 import copy from 'copy-to-clipboard'
 import { useTranslation } from 'react-i18next'
+import { Popover } from '@headlessui/react'
 import {
   sidebareDeleteShare,
   sidebareDeleteShareVariables,
@@ -31,6 +32,9 @@ import { ReactComponent as CopyIcon } from './icons/shareCopyIcon.svg'
 import { ReactComponent as DeleteIcon } from './icons/shareDeleteIcon.svg'
 import { ReactComponent as MoreIcon } from './icons/shareMoreIcon.svg'
 import { ReactComponent as AddIcon } from './icons/shareAddIcon.svg'
+import Checkbox from '../../primitives/form/Checkbox'
+import { TextField } from '../../primitives/form/Input'
+import styled from 'styled-components'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -236,6 +240,49 @@ const DELETE_SHARE_MUTATION = gql`
 //   )
 // }
 
+const ArrowPopoverPanel = styled.div.attrs({
+  className:
+    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200 w-[260px]',
+})`
+  &::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: -7px;
+    width: 8px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpolyline stroke-width='1' stroke='%23E2E2E2' fill='%23FFFFFF' points='1 0 7 7 1 14'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+`
+
+const MorePopover = () => {
+  const { t } = useTranslation()
+
+  return (
+    <Popover className="relative">
+      <Popover.Button
+        className="align-middle p-1 ml-2"
+        title={t('sidebar.sharing.more', 'More')}
+      >
+        <MoreIcon />
+      </Popover.Button>
+
+      <Popover.Panel>
+        <ArrowPopoverPanel>
+          <div className="px-4 py-2">
+            <Checkbox label="Password protected" />
+            <TextField sizeVariant="small" className="mt-2" />
+          </div>
+          <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
+            <Checkbox label="Expiration date" />
+            <TextField sizeVariant="small" className="mt-2" />
+          </div>
+        </ArrowPopoverPanel>
+      </Popover.Panel>
+    </Popover>
+  )
+}
+
 type SidebarShareAlbumProps = {
   id: string
 }
@@ -364,7 +411,7 @@ const SidebarShare = ({
 
   const optionsRows = shares.map(share => (
     <tr key={share.token} className="border-gray-100 border-b border-t">
-      <td className="pl-4 w-full py-2">
+      <td className="pl-4 py-2 w-full">
         <span className="text-[#585858] mr-2">
           <LinkIcon className="inline-block mr-2" />
           <span className="text-xs uppercase font-bold">
@@ -373,9 +420,9 @@ const SidebarShare = ({
         </span>
         <span className="text-sm">{share.token}</span>
       </td>
-      <td className="pr-4 py-2 whitespace-nowrap text-[#5C6A7F] flex">
+      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] flex">
         <button
-          className="align-middle p-1 ml-1"
+          className="align-middle p-1 ml-2"
           title={t('sidebar.sharing.copy_link', 'Copy Link')}
           onClick={() => {
             copy(`${location.origin}/share/${share.token}`)
@@ -387,17 +434,13 @@ const SidebarShare = ({
           onClick={() => {
             deleteShare({ variables: { token: share.token } })
           }}
-          className="align-middle p-1 ml-1"
+          className="align-middle p-1 ml-2 hover:text-red-600 focus:text-red-600"
           title={t('sidebar.sharing.delete', 'Delete')}
         >
           <DeleteIcon />
         </button>
-        <button
-          className="align-middle p-1 ml-1"
-          title={t('sidebar.sharing.more', 'More')}
-        >
-          <MoreIcon />
-        </button>
+        <MorePopover />
+
         {/* <ShareItemMoreDropdown share={share} id={id} isPhoto={isPhoto} /> */}
       </td>
     </tr>
@@ -405,8 +448,8 @@ const SidebarShare = ({
 
   if (optionsRows.length == 0) {
     optionsRows.push(
-      <tr key="no-shares">
-        <td colSpan={2}>
+      <tr key="no-shares" className="border-gray-100 border-b border-t">
+        <td colSpan={2} className="pl-4 py-2 italic text-gray-600">
           {t('sidebar.sharing.no_shares_found', 'No shares found')}
         </td>
       </tr>
@@ -419,26 +462,28 @@ const SidebarShare = ({
         {t('sidebar.sharing.title', 'Sharing options')}
       </SidebarSectionTitle>
       <div>
-        <table className="border-collapse">
-          {optionsRows}
-          <tr className="text-left border-gray-100 border-b border-t">
-            <td colSpan={2} className="pl-4 py-2">
-              <button
-                className="text-[#4ABF3C] font-bold uppercase text-xs"
-                disabled={loading}
-                onClick={() => {
-                  shareItem({
-                    variables: {
-                      id,
-                    },
-                  })
-                }}
-              >
-                <AddIcon className="inline-block mr-2" />
-                <span>{t('sidebar.sharing.add_share', 'Add shares')}</span>
-              </button>
-            </td>
-          </tr>
+        <table className="border-collapse w-full">
+          <tbody>{optionsRows}</tbody>
+          <tfoot>
+            <tr className="text-left border-gray-100 border-b border-t">
+              <td colSpan={2} className="pl-4 py-2">
+                <button
+                  className="text-[#4ABF3C] font-bold uppercase text-xs"
+                  disabled={loading}
+                  onClick={() => {
+                    shareItem({
+                      variables: {
+                        id,
+                      },
+                    })
+                  }}
+                >
+                  <AddIcon className="inline-block mr-2" />
+                  <span>{t('sidebar.sharing.add_share', 'Add shares')}</span>
+                </button>
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </SidebarSection>

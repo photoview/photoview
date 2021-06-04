@@ -1,15 +1,20 @@
 import React, { forwardRef } from 'react'
+import classNames, { Argument as ClassNamesArg } from 'classnames'
 
 type TextFieldProps = {
   label?: string
   error?: string
-} & React.InputHTMLAttributes<HTMLInputElement>
+  className?: ClassNamesArg
+  sizeVariant?: 'default' | 'small'
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'>
 
 export const TextField = forwardRef(
   (
-    { label, error, className, ...inputProps }: TextFieldProps,
+    { label, error, className, sizeVariant, ...inputProps }: TextFieldProps,
     ref: React.ForwardedRef<HTMLInputElement>
   ) => {
+    sizeVariant = sizeVariant ?? 'default'
+
     let variant = 'bg-white border-gray-200 focus:border-blue-400'
     if (error)
       variant =
@@ -17,7 +22,11 @@ export const TextField = forwardRef(
 
     const input = (
       <input
-        className={`block border rounded-md h-10 w-full  focus:ring-2 focus:outline-none px-2 ${variant}`}
+        className={classNames(
+          'block border rounded-md w-full focus:ring-2 focus:outline-none px-2',
+          variant,
+          sizeVariant == 'default' ? 'py-2' : 'py-1'
+        )}
         {...inputProps}
         ref={ref}
       />
@@ -28,7 +37,7 @@ export const TextField = forwardRef(
 
     if (label) {
       return (
-        <label className={`block my-4 ${className}`}>
+        <label className={classNames('block', className)}>
           <span className="block text-xs uppercase font-semibold mb-1">
             {label}
           </span>
@@ -39,7 +48,9 @@ export const TextField = forwardRef(
     }
 
     return (
-      <div className={className}>
+      <div
+        className={classNames(className, sizeVariant == 'small' && 'text-sm')}
+      >
         {input}
         {errorElm}
       </div>

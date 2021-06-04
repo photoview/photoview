@@ -38,11 +38,15 @@ export const SidebarProvider = ({ children }: SidebarProviderProps) => {
     pinned: boolean
   }>({
     content: null,
-    pinned: false,
+    pinned: true,
   })
 
   const updateSidebar = (content: React.ReactNode | null) => {
-    setState(state => ({ ...state, content }))
+    if (content) {
+      setState(state => ({ ...state, content }))
+    } else {
+      setState(state => ({ ...state, content: null, pinned: false }))
+    }
   }
 
   const setPinned = (pinned: boolean) => {
@@ -88,7 +92,7 @@ export const Sidebar = () => {
       className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-auto transform transition-transform motion-reduce:transition-none ${
         content == null && !pinned ? 'translate-x-full' : 'translate-x-0'
       } ${
-        pinned ? 'mt-[62px]' : 'lg:shadow-separator'
+        pinned ? 'lg:mt-[62px]' : 'lg:shadow-separator'
       } lg:w-[420px] lg:right-0 lg:top-0 lg:z-40`}
     >
       {content}

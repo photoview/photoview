@@ -16,13 +16,19 @@ const SidebarHeader = ({ title }: SidebarHeaderProps) => {
 
   return (
     <div className="m-2 flex items-center gap-2">
-      {!pinned && (
-        <button title="Close sidebar" onClick={() => updateSidebar(null)}>
-          <CloseIcon className="m-2" />
-        </button>
-      )}
+      <button
+        className={`${pinned ? 'lg:hidden' : ''}`}
+        title="Close sidebar"
+        onClick={() => updateSidebar(null)}
+      >
+        <CloseIcon className="m-2" />
+      </button>
       <span className="flex-grow -mt-1">{title}</span>
-      <button title="Pin sidebar" onClick={() => setPinned(!pinned)}>
+      <button
+        className="hidden lg:block"
+        title="Pin sidebar"
+        onClick={() => setPinned(!pinned)}
+      >
         <PinIcon className="m-2" />
       </button>
     </div>
