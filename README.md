@@ -30,7 +30,7 @@ Password: **demo**
 - [Main features](#main-features)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
-- [Setup development environment](#setup-development-environment)
+- [Set up development environment](#setup-development-environment)
 - [Sponsors](#sponsors)
 
 ## Main features
@@ -102,7 +102,7 @@ A new admin user will be created, with access to the photos located at the path 
 
 The photos will have to be scanned before they show up, you can start a scan manually, by navigating to `Settings` and clicking on `Scan All`
 
-## Setup development environment
+## Set up development environment
 
 ### Local setup
 
