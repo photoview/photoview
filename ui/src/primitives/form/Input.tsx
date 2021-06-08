@@ -1,18 +1,32 @@
 import React, { forwardRef } from 'react'
 import classNames, { Argument as ClassNamesArg } from 'classnames'
 
+import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
+import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
+
 type TextFieldProps = {
   label?: string
   error?: string
   className?: ClassNamesArg
   sizeVariant?: 'default' | 'small'
+  action?: () => void
+  loading?: boolean
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'>
 
 export const TextField = forwardRef(
   (
-    { label, error, className, sizeVariant, ...inputProps }: TextFieldProps,
+    {
+      label,
+      error,
+      className,
+      sizeVariant,
+      action,
+      loading,
+      ...inputProps
+    }: TextFieldProps,
     ref: React.ForwardedRef<HTMLInputElement>
   ) => {
+    const disabled = !!inputProps.disabled
     sizeVariant = sizeVariant ?? 'default'
 
     let variant = 'bg-white border-gray-200 focus:border-blue-400'
@@ -20,8 +34,23 @@ export const TextField = forwardRef(
       variant =
         'bg-red-50 border-red-200 focus:border-red-400 focus:ring-red-100'
 
-    const input = (
+    if (disabled) variant = 'bg-gray-100'
+
+    let keyUpEvent = undefined
+    if (action) {
+      keyUpEvent = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (inputProps.onKeyUp) inputProps.onKeyUp(event)
+
+        if (event.key == 'Enter') {
+          event.preventDefault()
+          action()
+        }
+      }
+    }
+
+    let input = (
       <input
+        onKeyUp={keyUpEvent}
         className={classNames(
           'block border rounded-md w-full focus:ring-2 focus:outline-none px-2',
           variant,
@@ -32,12 +61,46 @@ export const TextField = forwardRef(
       />
     )
 
+    if (loading) {
+      input = (
+        <div className="relative">
+          {input}
+          <LoadingSpinnerIcon
+            aria-label="Loading"
+            className="absolute right-[8px] top-[7px] animate-spin"
+          />
+        </div>
+      )
+    } else if (action) {
+      input = (
+        <div className="relative">
+          {input}
+          <button
+            disabled={disabled}
+            aria-label="Submit"
+            className={classNames(
+              'absolute top-[1px] right-0 p-2',
+              disabled ? 'text-gray-400 cursor-default' : 'text-gray-600'
+            )}
+            onClick={() => action()}
+          >
+            <ActionArrowIcon />
+          </button>
+        </div>
+      )
+    }
+
     let errorElm = null
     if (error) errorElm = <div className="text-red-800">{error}</div>
 
+    const wrapperClasses = classNames(
+      className,
+      sizeVariant == 'small' && 'text-sm'
+    )
+
     if (label) {
       return (
-        <label className={classNames('block', className)}>
+        <label className={wrapperClasses}>
           <span className="block text-xs uppercase font-semibold mb-1">
             {label}
           </span>
@@ -48,9 +111,7 @@ export const TextField = forwardRef(
     }
 
     return (
-      <div
-        className={classNames(className, sizeVariant == 'small' && 'text-sm')}
-      >
+      <div className={wrapperClasses}>
         {input}
         {errorElm}
       </div>

@@ -1,5 +1,11 @@
-import React, { useEffect } from 'react'
-import { useMutation, useQuery, gql, useLazyQuery } from '@apollo/client'
+import React, { useEffect, useState } from 'react'
+import {
+  useMutation,
+  useQuery,
+  gql,
+  useLazyQuery,
+  DocumentNode,
+} from '@apollo/client'
 import copy from 'copy-to-clipboard'
 import { useTranslation } from 'react-i18next'
 import { Popover } from '@headlessui/react'
@@ -23,6 +29,7 @@ import {
 import {
   sidebarGetAlbumShares,
   sidebarGetAlbumSharesVariables,
+  sidebarGetAlbumShares_album_shares,
 } from './__generated__/sidebarGetAlbumShares'
 import { authToken } from '../../helpers/authentication'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
@@ -35,6 +42,10 @@ import { ReactComponent as AddIcon } from './icons/shareAddIcon.svg'
 import Checkbox from '../../primitives/form/Checkbox'
 import { TextField } from '../../primitives/form/Input'
 import styled from 'styled-components'
+import {
+  sidebarProtectShare,
+  sidebarProtectShareVariables,
+} from './__generated__/sidebarProtectShare'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -78,14 +89,14 @@ const ADD_ALBUM_SHARE_MUTATION = gql`
   }
 `
 
-// const PROTECT_SHARE_MUTATION = gql`
-//   mutation sidebarProtectShare($token: String!, $password: String) {
-//     protectShareToken(token: $token, password: $password) {
-//       token
-//       hasPassword
-//     }
-//   }
-// `
+const PROTECT_SHARE_MUTATION = gql`
+  mutation sidebarProtectShare($token: String!, $password: String) {
+    protectShareToken(token: $token, password: $password) {
+      token
+      hasPassword
+    }
+  }
+`
 
 const DELETE_SHARE_MUTATION = gql`
   mutation sidebareDeleteShare($token: String!) {
@@ -94,12 +105,6 @@ const DELETE_SHARE_MUTATION = gql`
     }
   }
 `
-
-// type ShareItemMoreDropdownProps = {
-//   id: string
-//   query: DocumentNode
-//   share: sidbarGetAlbumShares_album_shares
-// }
 
 // const ShareItemMoreDropdown = ({
 //   id,
@@ -255,7 +260,121 @@ const ArrowPopoverPanel = styled.div.attrs({
   }
 `
 
-const MorePopover = () => {
+type MorePopoverSectionPasswordProps = {
+  share: sidebarGetAlbumShares_album_shares
+  query: DocumentNode
+  id: string
+}
+
+const MorePopoverSectionPassword = ({
+  share,
+  query,
+  id,
+}: MorePopoverSectionPasswordProps) => {
+  const [addingPassword, setAddingPassword] = useState(false)
+  const activated = addingPassword || share.hasPassword
+
+  const [passwordInputValue, setPasswordInputValue] = useState(
+    share.hasPassword ? '**********' : ''
+  )
+  const [passwordHidden, setPasswordHidden] = useState(share.hasPassword)
+
+  const [setPassword, { loading: setPasswordLoading }] = useMutation<
+    sidebarProtectShare,
+    sidebarProtectShareVariables
+  >(PROTECT_SHARE_MUTATION, {
+    refetchQueries: [{ query: query, variables: { id } }],
+    onCompleted: data => {
+      hidePassword(data.protectShareToken.hasPassword)
+    },
+    // refetchQueries: [{ query: query, variables: { id } }],
+    variables: {
+      token: share.token,
+    },
+  })
+
+  const hidePassword = (hide: boolean) => {
+    if (hide) {
+      setPasswordInputValue('**********')
+    }
+
+    if (passwordHidden && !hide) {
+      setPasswordInputValue('')
+    }
+
+    setPasswordHidden(hide)
+  }
+
+  const checkboxChange = () => {
+    const enable = !activated
+    setAddingPassword(enable)
+    if (!enable) {
+      setPassword({
+        variables: {
+          token: share.token,
+          password: null,
+        },
+      })
+      setPasswordInputValue('')
+    }
+  }
+
+  const updatePasswordAction = () => {
+    if (!passwordHidden && passwordInputValue != '') {
+      setPassword({
+        variables: {
+          token: share.token,
+          password: passwordInputValue,
+        },
+      })
+    }
+  }
+
+  return (
+    <div className="px-4 py-2">
+      <Checkbox
+        label="Password protected"
+        checked={activated}
+        onChange={checkboxChange}
+      />
+      <TextField
+        disabled={!activated}
+        type={passwordHidden ? 'password' : 'text'}
+        value={passwordInputValue}
+        sizeVariant="small"
+        className="mt-2"
+        onKeyDown={event => {
+          if (
+            event.shiftKey ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.key == 'Enter' ||
+            event.key == 'Tab' ||
+            event.key == 'Escape'
+          ) {
+            return
+          }
+
+          hidePassword(false)
+        }}
+        onChange={event => {
+          setPasswordInputValue(event.target.value)
+        }}
+        action={updatePasswordAction}
+        loading={setPasswordLoading}
+      />
+    </div>
+  )
+}
+
+type MorePopoverProps = {
+  id: string
+  query: DocumentNode
+  share: sidebarGetAlbumShares_album_shares
+}
+
+const MorePopover = ({ id, share, query }: MorePopoverProps) => {
   const { t } = useTranslation()
 
   return (
@@ -269,10 +388,7 @@ const MorePopover = () => {
 
       <Popover.Panel>
         <ArrowPopoverPanel>
-          <div className="px-4 py-2">
-            <Checkbox label="Password protected" />
-            <TextField sizeVariant="small" className="mt-2" />
-          </div>
+          <MorePopoverSectionPassword id={id} share={share} query={query} />
           <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
             <Checkbox label="Expiration date" />
             <TextField sizeVariant="small" className="mt-2" />
@@ -439,7 +555,7 @@ const SidebarShare = ({
         >
           <DeleteIcon />
         </button>
-        <MorePopover />
+        <MorePopover share={share} id={id} query={query} />
 
         {/* <ShareItemMoreDropdown share={share} id={id} isPhoto={isPhoto} /> */}
       </td>
