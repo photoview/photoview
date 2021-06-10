@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { FocusScope } from '@react-aria/focus'
 
 export type UpdateSidebarFn = (content: React.ReactNode) => void
 export type SidebarPinnedFn = (pin: boolean) => void
@@ -95,7 +96,11 @@ export const Sidebar = () => {
         pinned ? 'lg:mt-[62px]' : 'lg:shadow-separator'
       } lg:w-[420px] lg:right-0 lg:top-0 lg:z-40`}
     >
-      {content}
+      {content && (
+        <FocusScope contain={!pinned} restoreFocus={!pinned} autoFocus>
+          {content}
+        </FocusScope>
+      )}
       <div className="h-24"></div>
     </div>
   )
