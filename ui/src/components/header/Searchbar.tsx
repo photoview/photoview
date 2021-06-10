@@ -3,48 +3,14 @@ import styled from 'styled-components'
 import { useLazyQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useHistory, useRouteMatch } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   searchQuery,
   searchQuery_search_albums,
   searchQuery_search_media,
 } from './__generated__/searchQuery'
-
-// const SearchField = styled.input`
-//   height: 100%;
-//   width: 100%;
-//   border: 1px solid #eee;
-//   border-radius: 4px;
-//   padding: 0 8px;
-//   font-size: 1rem;
-//   font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
-
-//   &:focus {
-//     box-shadow: 0 0 4px #eee;
-//     border-color: #3d82c6;
-//   }
-// `
-
-// const Results = styled.div<{ show: boolean }>`
-//   display: ${({ show }) => (show ? 'block' : 'none')};
-//   position: absolute;
-//   width: 100%;
-//   min-height: 40px;
-//   max-height: calc(100vh - 100px);
-//   overflow-y: scroll;
-//   padding: 28px 4px 32px;
-//   background-color: white;
-//   box-shadow: 0 0 4px #eee;
-//   border: 1px solid #ccc;
-//   border-radius: 4px;
-//   top: 50%;
-//   z-index: -1;
-
-//   input:not(:focus) ~ & {
-//     display: none;
-//   }
-// `
+import classNames from 'classnames'
 
 const SEARCH_QUERY = gql`
   query searchQuery($query: String!) {
@@ -73,11 +39,15 @@ const SEARCH_QUERY = gql`
   }
 `
 
+const SearchWrapper = styled.div.attrs({ className: 'w-full max-w-xs' })``
+
 const SearchBar = () => {
   const { t } = useTranslation()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const inputEl = useRef<HTMLInputElement>(null)
 
   type QueryFn = (query: string) => void
 
@@ -86,6 +56,7 @@ const SearchBar = () => {
     debouncedFetch.current = debounce<QueryFn>(query => {
       fetchSearches({ variables: { query } })
       setFetched(true)
+      setExpanded(true)
     }, 250)
 
     return () => {
@@ -104,26 +75,112 @@ const SearchBar = () => {
     }
   }
 
+  const routerMatch = useRouteMatch()
+  useEffect(() => {
+    setExpanded(false)
+    setQuery('')
+  }, [routerMatch])
+
+  const [selectedItem, setSelectedItem] = useState<number | null>(null)
+
+  const searchData = fetchResult.data
+  let media = searchData?.search.media || []
+  let albums = searchData?.search.albums || []
+
+  albums = albums.slice(0, 5)
+  media = media.slice(0, 5)
+
+  const selectedItemId =
+    selectedItem !== null
+      ? [...albums.map(x => x.id), ...media.map(x => x.id)][selectedItem]
+      : null
+
+  useEffect(() => {
+    const elem = inputEl.current
+    if (!elem) return
+
+    const focusEvent = () => {
+      setExpanded(true)
+    }
+
+    const blurEvent = () => {
+      setExpanded(false)
+    }
+
+    elem.addEventListener('focus', focusEvent)
+    elem.addEventListener('blur', blurEvent)
+
+    return () => {
+      elem.removeEventListener('focus', focusEvent)
+      elem.removeEventListener('blur', blurEvent)
+    }
+  }, [inputEl])
+
+  useEffect(() => {
+    setSelectedItem(null)
+  }, [searchData])
+
+  useEffect(() => {
+    const totalItems = albums.length + media.length
+
+    const keydownEvent = (event: KeyboardEvent) => {
+      if (!expanded) return
+
+      console.log(event.key)
+      if (event.key == 'ArrowDown') {
+        event.preventDefault()
+        setSelectedItem(i => (i === null ? 0 : Math.min(totalItems - 1, i + 1)))
+      } else if (event.key == 'ArrowUp') {
+        event.preventDefault()
+        setSelectedItem(i => (i === null ? 0 : Math.max(0, i - 1)))
+      } else if (event.key == 'Escape') {
+        // setExpanded(false)
+        inputEl.current?.blur()
+      }
+    }
+
+    document.addEventListener('keydown', keydownEvent)
+
+    return () => {
+      document.removeEventListener('keydown', keydownEvent)
+    }
+  }, [searchData])
+
   let results = null
   if (query.trim().length > 0 && fetched) {
     results = (
       <SearchResults
-        searchData={fetchResult.data}
+        albums={albums}
+        media={media}
+        query={fetchResult.data?.search.query || ''}
+        selectedItem={selectedItem}
+        setSelectedItem={setSelectedItem}
         loading={fetchResult.loading}
+        expanded={expanded}
       />
     )
   }
 
   return (
-    <div className="w-full max-w-xs">
+    <SearchWrapper>
       <input
+        ref={inputEl}
+        autoComplete="off"
+        aria-controls="search-results"
+        aria-haspopup="listbox"
+        aria-autocomplete="list"
+        aria-activedescendant={
+          selectedItemId ? `search-item-${selectedItemId}` : ''
+        }
+        aria-expanded={expanded}
         className="w-full py-2 px-3 rounded-md bg-gray-50 focus:bg-white border border-gray-50 focus:border-blue-400 outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
         type="search"
         placeholder={t('header.search.placeholder', 'Search')}
         onChange={fetchEvent}
+        value={query}
       />
       {results}
-    </div>
+    </SearchWrapper>
   )
 }
 
@@ -132,93 +189,193 @@ const ResultTitle = styled.h1.attrs({
 })``
 
 type SearchResultsProps = {
-  searchData?: searchQuery
+  albums: searchQuery_search_albums[]
+  media: searchQuery_search_media[]
   loading: boolean
+  selectedItem: number | null
+  setSelectedItem: React.Dispatch<React.SetStateAction<number | null>>
+  query: string
+  expanded: boolean
 }
 
-const SearchResults = ({ searchData, loading }: SearchResultsProps) => {
+const SearchResults = ({
+  albums,
+  media,
+  loading,
+  selectedItem,
+  setSelectedItem,
+  query,
+  expanded,
+}: SearchResultsProps) => {
   const { t } = useTranslation()
-  const query = searchData?.search.query || ''
 
-  const media = searchData?.search.media || []
-  const albums = searchData?.search.albums || []
+  const albumElements = albums.map((album, i) => (
+    <AlbumRow
+      key={album.id}
+      query={query}
+      album={album}
+      selected={selectedItem == i}
+      setSelected={() => setSelectedItem(i)}
+    />
+  ))
+
+  const mediaElements = media.map((media, i) => (
+    <PhotoRow
+      key={media.id}
+      query={query}
+      media={media}
+      selected={selectedItem == i + albumElements.length}
+      setSelected={() => setSelectedItem(i + albumElements.length)}
+    />
+  ))
 
   let message = null
   if (loading) message = t('header.search.loading', 'Loading results...')
-  else if (searchData && media.length == 0 && albums.length == 0)
+  else if (media.length == 0 && albums.length == 0)
     message = t('header.search.no_results', 'No results found')
 
   if (message) message = <div className="mt-8 text-center">{message}</div>
 
-  const albumElements = albums
-    .slice(0, 5)
-    .map(album => <AlbumRow key={album.id} query={query} album={album} />)
-
-  const mediaElements = media
-    .slice(0, 5)
-    .map(media => <PhotoRow key={media.id} query={query} media={media} />)
-
   return (
     <div
-      className="absolute bg-white left-0 right-0 top-[72px] overflow-y-auto h-[calc(100vh-152px)] border px-4"
+      id="search-results"
+      role="listbox"
+      className={classNames(
+        'absolute bg-white left-0 right-0 top-[72px] overflow-y-auto h-[calc(100vh-152px)] border px-4',
+        { hidden: !expanded }
+      )}
+      tabIndex={-1}
       onMouseDown={e => {
         // Prevent input blur event
         e.preventDefault()
       }}
-      // show={!!searchData}
     >
       {message}
       {albumElements.length > 0 && (
-        <ResultTitle>
-          {t('header.search.result_type.albums', 'Albums')}
-        </ResultTitle>
+        <>
+          <ResultTitle>
+            {t('header.search.result_type.albums', 'Albums')}
+          </ResultTitle>
+          <ul aria-label="albums">{albumElements}</ul>
+        </>
       )}
-      {albumElements}
       {mediaElements.length > 0 && (
-        <ResultTitle>
-          {t('header.search.result_type.media', 'Media')}
-        </ResultTitle>
+        <>
+          <ResultTitle>
+            {t('header.search.result_type.media', 'Media')}
+          </ResultTitle>
+          <ul aria-label="media">{mediaElements}</ul>
+        </>
       )}
-      {mediaElements}
     </div>
   )
 }
 
-const RowLink = styled(NavLink).attrs({
-  className:
-    'focus:bg-gray-100 hover:bg-gray-100 focus:ring-1 outline-none rounded p-1 mt-1 flex items-center',
-})``
+type SearchRowProps = {
+  id: string
+  link: string
+  preview: React.ReactNode
+  label: React.ReactNode
+  selected: boolean
+  setSelected(): void
+}
 
-const RowTitle = styled.span.attrs({ className: 'flex-grow pl-2' })``
+const SearchRow = ({
+  id,
+  link,
+  preview,
+  label,
+  selected,
+  setSelected,
+}: SearchRowProps) => {
+  const rowEl = useRef<HTMLLIElement>(null)
+  const history = useHistory()
+
+  useEffect(() => {
+    const keydownEvent = (event: KeyboardEvent) => {
+      if (event.key == 'Enter') {
+        history.push(link)
+      }
+    }
+
+    document.addEventListener('keydown', keydownEvent)
+
+    return () => {
+      document.removeEventListener('keydown', keydownEvent)
+    }
+  })
+
+  if (selected) {
+    rowEl.current?.scrollIntoView({
+      block: 'nearest',
+    })
+  }
+
+  return (
+    <li
+      id={`search-item-${id}`}
+      ref={rowEl}
+      role="option"
+      aria-selected={selected}
+      onMouseOver={() => setSelected()}
+      className={classNames('rounded p-1 mt-1', {
+        'bg-gray-100': selected,
+      })}
+    >
+      <NavLink to={link} className="flex items-center" tabIndex={-1}>
+        {preview}
+        <span className="flex-grow pl-2">{label}</span>
+      </NavLink>
+    </li>
+  )
+}
 
 type PhotoRowArgs = {
   query: string
   media: searchQuery_search_media
+  selected: boolean
+  setSelected(): void
 }
 
-const PhotoRow = ({ query, media }: PhotoRowArgs) => (
-  <RowLink to={`/album/${media.album.id}`}>
-    <ProtectedImage
-      src={media?.thumbnail?.url}
-      className="w-16 h-16 object-cover"
-    />
-    <RowTitle>{searchHighlighted(query, media.title)}</RowTitle>
-  </RowLink>
+const PhotoRow = ({ query, media, selected, setSelected }: PhotoRowArgs) => (
+  <SearchRow
+    key={media.id}
+    id={media.id}
+    link={`/album/${media.album.id}`}
+    preview={
+      <ProtectedImage
+        src={media?.thumbnail?.url}
+        className="w-16 h-16 object-cover"
+      />
+    }
+    label={searchHighlighted(query, media.title)}
+    selected={selected}
+    setSelected={setSelected}
+  />
 )
 
 type AlbumRowArgs = {
   query: string
   album: searchQuery_search_albums
+  selected: boolean
+  setSelected(): void
 }
 
-const AlbumRow = ({ query, album }: AlbumRowArgs) => (
-  <RowLink to={`/album/${album.id}`}>
-    <ProtectedImage
-      src={album?.thumbnail?.thumbnail?.url}
-      className="w-16 h-16 rounded object-cover"
-    />
-    <RowTitle>{searchHighlighted(query, album.title)}</RowTitle>
-  </RowLink>
+const AlbumRow = ({ query, album, selected, setSelected }: AlbumRowArgs) => (
+  <SearchRow
+    key={album.id}
+    id={album.id}
+    link={`/album/${album.id}`}
+    preview={
+      <ProtectedImage
+        src={album?.thumbnail?.thumbnail?.url}
+        className="w-16 h-16 rounded object-cover"
+      />
+    }
+    label={searchHighlighted(query, album.title)}
+    selected={selected}
+    setSelected={setSelected}
+  />
 )
 
 const searchHighlighted = (query: string, text: string) => {
@@ -233,11 +390,11 @@ const searchHighlighted = (query: string, text: string) => {
   const end = text.substring(i + query.length)
 
   return (
-    <>
+    <span>
       {start}
-      <strong className="font-semibold">{middle}</strong>
+      <span className="font-semibold whitespace-pre">{middle}</span>
       {end}
-    </>
+    </span>
   )
 }
 

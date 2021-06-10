@@ -92,12 +92,19 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
           items={sortingOptions}
         />
         <button
+          title="Sort direction"
+          aria-label="Sort direction"
           className={`bg-gray-50 h-[30px] align-top px-2 py-1 rounded ml-2 border border-gray-200 focus:outline-none focus:border-blue-300 text-[#8b8b8b] hover:bg-gray-100 hover:text-[#777] ${
             ordering?.orderDirection == OrderDirection.ASC ? 'flip-y' : null
           }`}
           onClick={changeOrderDirection}
         >
           <DirectionIcon />
+          <span className="sr-only">
+            {ordering?.orderDirection == OrderDirection.ASC
+              ? 'ascending'
+              : 'descending'}
+          </span>
         </button>
       </div>
     </fieldset>
