@@ -35,13 +35,13 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <MainMenu />
           </Authorized>
           <div
-            className={`px-3 py-3 lg:pt-5 lg:pr-8 lg:pl-[292px] ${
+            className={`mx-3 my-3 lg:mt-5 lg:mr-8 lg:ml-[292px] ${
               pinned && sidebarContent ? 'lg:pr-[420px]' : ''
             }`}
             id="layout-content"
           >
             {children}
-            <div className="h-6"></div>
+            {/* <div className="h-6"></div> */}
           </div>
         </div>
         <Sidebar />

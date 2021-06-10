@@ -78,7 +78,7 @@ const LoginForm = () => {
       // loading={loading || (data && data.authorizeUser.success)}
     >
       <TextField
-        className="w-full"
+        className="w-full my-4"
         label={t('login_page.field.username', 'Username')}
         {...register('username', { required: true })}
         error={
@@ -88,7 +88,7 @@ const LoginForm = () => {
         }
       />
       <TextField
-        className="w-full"
+        className="w-full my-4"
         type="password"
         label={t('login_page.field.password', 'Password')}
         {...register('password', { required: true })}
@@ -102,7 +102,7 @@ const LoginForm = () => {
         type="submit"
         disabled={loading}
         value={t('login_page.field.submit', 'Sign in') as string}
-        className="rounded-md px-8 py-2 focus:outline-none hover:cursor-pointer bg-gradient-to-bl from-[#FF8246] to-[#D6264D] text-white font-semibold focus:ring-2 focus:ring-red-200"
+        className="rounded-md px-8 py-2 mt-1 focus:outline-none cursor-pointer bg-gradient-to-bl from-[#FF8246] to-[#D6264D] text-white font-semibold focus:ring-2 focus:ring-red-200 disabled:cursor-default disabled:opacity-80"
       />
       <MessageBox
         message={errorMessage}

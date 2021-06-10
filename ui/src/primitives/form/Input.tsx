@@ -100,7 +100,7 @@ export const TextField = forwardRef(
 
     if (label) {
       return (
-        <label className={wrapperClasses}>
+        <label className={classNames(wrapperClasses, 'block')}>
           <span className="block text-xs uppercase font-semibold mb-1">
             {label}
           </span>

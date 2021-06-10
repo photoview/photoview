@@ -11,40 +11,40 @@ import {
   searchQuery_search_media,
 } from './__generated__/searchQuery'
 
-const SearchField = styled.input`
-  height: 100%;
-  width: 100%;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 0 8px;
-  font-size: 1rem;
-  font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+// const SearchField = styled.input`
+//   height: 100%;
+//   width: 100%;
+//   border: 1px solid #eee;
+//   border-radius: 4px;
+//   padding: 0 8px;
+//   font-size: 1rem;
+//   font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
 
-  &:focus {
-    box-shadow: 0 0 4px #eee;
-    border-color: #3d82c6;
-  }
-`
+//   &:focus {
+//     box-shadow: 0 0 4px #eee;
+//     border-color: #3d82c6;
+//   }
+// `
 
-const Results = styled.div<{ show: boolean }>`
-  display: ${({ show }) => (show ? 'block' : 'none')};
-  position: absolute;
-  width: 100%;
-  min-height: 40px;
-  max-height: calc(100vh - 100px);
-  overflow-y: scroll;
-  padding: 28px 4px 32px;
-  background-color: white;
-  box-shadow: 0 0 4px #eee;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  top: 50%;
-  z-index: -1;
+// const Results = styled.div<{ show: boolean }>`
+//   display: ${({ show }) => (show ? 'block' : 'none')};
+//   position: absolute;
+//   width: 100%;
+//   min-height: 40px;
+//   max-height: calc(100vh - 100px);
+//   overflow-y: scroll;
+//   padding: 28px 4px 32px;
+//   background-color: white;
+//   box-shadow: 0 0 4px #eee;
+//   border: 1px solid #ccc;
+//   border-radius: 4px;
+//   top: 50%;
+//   z-index: -1;
 
-  ${SearchField}:not(:focus) ~ & {
-    display: none;
-  }
-`
+//   input:not(:focus) ~ & {
+//     display: none;
+//   }
+// `
 
 const SEARCH_QUERY = gql`
   query searchQuery($query: String!) {
@@ -117,7 +117,7 @@ const SearchBar = () => {
   return (
     <div className="w-full max-w-xs">
       <input
-        className="w-full py-2 px-3 rounded-md bg-gray-50"
+        className="w-full py-2 px-3 rounded-md bg-gray-50 focus:bg-white border border-gray-50 focus:border-blue-400 outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
         type="search"
         placeholder={t('header.search.placeholder', 'Search')}
         onChange={fetchEvent}
@@ -127,10 +127,9 @@ const SearchBar = () => {
   )
 }
 
-const ResultTitle = styled.h1`
-  font-size: 1.25rem;
-  margin: 12px 0 0.25rem;
-`
+const ResultTitle = styled.h1.attrs({
+  className: 'uppercase text-gray-700 font-semibold mt-4 mb-2 mx-1',
+})``
 
 type SearchResultsProps = {
   searchData?: searchQuery
@@ -149,21 +148,24 @@ const SearchResults = ({ searchData, loading }: SearchResultsProps) => {
   else if (searchData && media.length == 0 && albums.length == 0)
     message = t('header.search.no_results', 'No results found')
 
-  const albumElements = albums.map(album => (
-    <AlbumRow key={album.id} query={query} album={album} />
-  ))
+  if (message) message = <div className="mt-8 text-center">{message}</div>
 
-  const mediaElements = media.map(media => (
-    <PhotoRow key={media.id} query={query} media={media} />
-  ))
+  const albumElements = albums
+    .slice(0, 5)
+    .map(album => <AlbumRow key={album.id} query={query} album={album} />)
+
+  const mediaElements = media
+    .slice(0, 5)
+    .map(media => <PhotoRow key={media.id} query={query} media={media} />)
 
   return (
-    <Results
+    <div
+      className="absolute bg-white left-0 right-0 top-[72px] overflow-y-auto h-[calc(100vh-152px)] border px-4"
       onMouseDown={e => {
         // Prevent input blur event
         e.preventDefault()
       }}
-      show={!!searchData}
+      // show={!!searchData}
     >
       {message}
       {albumElements.length > 0 && (
@@ -174,40 +176,20 @@ const SearchResults = ({ searchData, loading }: SearchResultsProps) => {
       {albumElements}
       {mediaElements.length > 0 && (
         <ResultTitle>
-          {t('header.search.result_type.photos', 'Photos')}
+          {t('header.search.result_type.media', 'Media')}
         </ResultTitle>
       )}
       {mediaElements}
-    </Results>
+    </div>
   )
 }
 
-const RowLink = styled(NavLink)`
-  display: flex;
-  align-items: center;
-  color: black;
-`
+const RowLink = styled(NavLink).attrs({
+  className:
+    'focus:bg-gray-100 hover:bg-gray-100 focus:ring-1 outline-none rounded p-1 mt-1 flex items-center',
+})``
 
-const PhotoSearchThumbnail = styled(ProtectedImage)`
-  width: 50px;
-  height: 50px;
-  margin: 2px 0;
-  object-fit: contain;
-`
-
-const AlbumSearchThumbnail = styled(ProtectedImage)`
-  width: 50px;
-  height: 50px;
-  margin: 4px 0;
-  border-radius: 4px;
-  /* border: 1px solid #888; */
-  object-fit: cover;
-`
-
-const RowTitle = styled.span`
-  flex-grow: 1;
-  padding-left: 8px;
-`
+const RowTitle = styled.span.attrs({ className: 'flex-grow pl-2' })``
 
 type PhotoRowArgs = {
   query: string
@@ -216,7 +198,10 @@ type PhotoRowArgs = {
 
 const PhotoRow = ({ query, media }: PhotoRowArgs) => (
   <RowLink to={`/album/${media.album.id}`}>
-    <PhotoSearchThumbnail src={media?.thumbnail?.url} />
+    <ProtectedImage
+      src={media?.thumbnail?.url}
+      className="w-16 h-16 object-cover"
+    />
     <RowTitle>{searchHighlighted(query, media.title)}</RowTitle>
   </RowLink>
 )
@@ -228,7 +213,10 @@ type AlbumRowArgs = {
 
 const AlbumRow = ({ query, album }: AlbumRowArgs) => (
   <RowLink to={`/album/${album.id}`}>
-    <AlbumSearchThumbnail src={album?.thumbnail?.thumbnail?.url} />
+    <ProtectedImage
+      src={album?.thumbnail?.thumbnail?.url}
+      className="w-16 h-16 rounded object-cover"
+    />
     <RowTitle>{searchHighlighted(query, album.title)}</RowTitle>
   </RowLink>
 )
@@ -247,7 +235,7 @@ const searchHighlighted = (query: string, text: string) => {
   return (
     <>
       {start}
-      <b>{middle}</b>
+      <strong className="font-semibold">{middle}</strong>
       {end}
     </>
   )
