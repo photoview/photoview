@@ -78,7 +78,9 @@ const LoginForm = () => {
       // loading={loading || (data && data.authorizeUser.success)}
     >
       <TextField
-        className="w-full my-4"
+        sizeVariant="big"
+        wrapperClassName="my-4"
+        className="w-full"
         label={t('login_page.field.username', 'Username')}
         {...register('username', { required: true })}
         error={
@@ -88,7 +90,9 @@ const LoginForm = () => {
         }
       />
       <TextField
-        className="w-full my-4"
+        sizeVariant="big"
+        wrapperClassName="my-4"
+        className="w-full"
         type="password"
         label={t('login_page.field.password', 'Password')}
         {...register('password', { required: true })}

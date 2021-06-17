@@ -1,32 +1,39 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
-
 import Layout from '../../components/layout/Layout'
-
 import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
 import VersionInfo from './VersionInfo'
+import classNames from 'classnames'
 
-export const SectionTitle = styled.h2<{ nospace?: boolean }>`
-  margin-top: ${({ nospace }) => (nospace ? '0' : '1.4em')} !important;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid #ddd;
-`
+type SectionTitleProps = {
+  children: string
+  nospace?: boolean
+}
 
-export const InputLabelTitle = styled.p`
-  font-size: 1.1em;
-  font-weight: 600;
-  margin: 1em 0 0 !important;
-`
+export const SectionTitle = ({ children, nospace }: SectionTitleProps) => {
+  return (
+    <h2
+      className={classNames(
+        'pb-1 border-b border-gray-200 text-xl mb-5',
+        !nospace && 'mt-6'
+      )}
+    >
+      {children}
+    </h2>
+  )
+}
 
-export const InputLabelDescription = styled.p`
-  font-size: 0.9em;
-  margin: 0 0 0.5em !important;
-`
+export const InputLabelTitle = styled.h3.attrs({
+  className: 'font-semibold',
+})``
+
+export const InputLabelDescription = styled.p.attrs({
+  className: 'text-sm mb-2',
+})``
 
 const SettingsPage = () => {
   const { t } = useTranslation()
@@ -41,14 +48,6 @@ const SettingsPage = () => {
           <UsersTable />
         </>
       )}
-      <Button
-        style={{ marginTop: 24 }}
-        onClick={() => {
-          location.href = '/logout'
-        }}
-      >
-        {t('settings.logout', 'Log out')}
-      </Button>
       <VersionInfo />
     </Layout>
   )

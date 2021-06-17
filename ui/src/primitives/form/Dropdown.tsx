@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -9,7 +10,7 @@ const DropdownStyledSelect = styled.select`
   background-position: center right 10px;
 `
 
-type DropdownItem = {
+export type DropdownItem = {
   value: string
   label: string
 }
@@ -17,13 +18,14 @@ type DropdownItem = {
 type DropdownProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   items: DropdownItem[]
   selected?: string
-  setSelected(label: string): void
+  setSelected(value: string): void
 }
 
 const Dropdown = ({
   items,
   selected,
   setSelected,
+  className,
   ...otherProps
 }: DropdownProps) => {
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -39,7 +41,10 @@ const Dropdown = ({
 
   return (
     <DropdownStyledSelect
-      className="bg-gray-50 px-2 py-0.5 pr-6 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100"
+      className={classNames(
+        'bg-gray-50 px-2 py-0.5 pr-6 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100 disabled:hover:bg-gray-50 disabled:text-gray-500 disabled:cursor-default',
+        className
+      )}
       value={selected}
       onChange={onChange}
       {...otherProps}

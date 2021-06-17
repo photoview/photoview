@@ -8,7 +8,8 @@ type TextFieldProps = {
   label?: string
   error?: string
   className?: ClassNamesArg
-  sizeVariant?: 'default' | 'small'
+  wrapperClassName?: ClassNamesArg
+  sizeVariant?: 'default' | 'big'
   action?: () => void
   loading?: boolean
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'>
@@ -19,6 +20,7 @@ export const TextField = forwardRef(
       label,
       error,
       className,
+      wrapperClassName,
       sizeVariant,
       action,
       loading,
@@ -52,9 +54,10 @@ export const TextField = forwardRef(
       <input
         onKeyUp={keyUpEvent}
         className={classNames(
-          'block border rounded-md w-full focus:ring-2 focus:outline-none px-2',
+          'block border rounded-md focus:ring-2 focus:outline-none px-2',
           variant,
-          sizeVariant == 'default' ? 'py-2' : 'py-1'
+          sizeVariant == 'big' ? 'py-2' : 'py-1',
+          className
         )}
         {...inputProps}
         ref={ref}
@@ -79,8 +82,7 @@ export const TextField = forwardRef(
             disabled={disabled}
             aria-label="Submit"
             className={classNames(
-              'absolute top-[1px] right-0 p-2',
-              disabled ? 'text-gray-400 cursor-default' : 'text-gray-600'
+              'absolute top-[1px] right-0 p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default'
             )}
             onClick={() => action()}
           >
@@ -94,8 +96,8 @@ export const TextField = forwardRef(
     if (error) errorElm = <div className="text-red-800">{error}</div>
 
     const wrapperClasses = classNames(
-      className,
-      sizeVariant == 'small' && 'text-sm'
+      sizeVariant == 'default' && 'text-sm',
+      wrapperClassName
     )
 
     if (label) {
@@ -119,12 +121,26 @@ export const TextField = forwardRef(
   }
 )
 
-export const Submit = (props: React.InputHTMLAttributes<HTMLInputElement>) => {
-  return (
-    <input
-      className={`rounded-md px-8 py-2 focus:outline-none hover:cursor-pointer bg-[#eee] hover:bg-[#e6e6e6] focus:bg-[#e6e6e6] ${props.className}`}
-      type="submit"
-      {...props}
-    />
-  )
-}
+const buttonStyles =
+  'bg-gray-50 px-6 py-0.5 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100'
+
+export const Submit = ({
+  className,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) => (
+  <input
+    className={classNames(buttonStyles, className)}
+    type="submit"
+    {...props}
+  />
+)
+
+export const Button = ({
+  children,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button className={classNames(buttonStyles, className)} {...props}>
+    {children}
+  </button>
+)

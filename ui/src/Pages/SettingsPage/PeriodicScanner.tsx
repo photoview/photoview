@@ -1,14 +1,17 @@
 import { gql } from '@apollo/client'
 import React, { useRef, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
-import { Checkbox, Dropdown, Input, Loader } from 'semantic-ui-react'
-import { InputLabelDescription, InputLabelTitle } from './SettingsPage'
+import { Loader } from 'semantic-ui-react'
+import { InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { scanIntervalQuery } from './__generated__/scanIntervalQuery'
 import {
   changeScanIntervalMutation,
   changeScanIntervalMutationVariables,
 } from './__generated__/changeScanIntervalMutation'
+import Checkbox from '../../primitives/form/Checkbox'
+import { TextField } from '../../primitives/form/Input'
+import Dropdown, { DropdownItem } from '../../primitives/form/Dropdown'
 
 const SCAN_INTERVAL_QUERY = gql`
   query scanIntervalQuery {
@@ -125,13 +128,11 @@ const PeriodicScanner = () => {
     },
   })
 
-  const [
-    setScanIntervalMutation,
-    { loading: scanIntervalMutationLoading },
-  ] = useMutation<
-    changeScanIntervalMutation,
-    changeScanIntervalMutationVariables
-  >(SCAN_INTERVAL_MUTATION)
+  const [setScanIntervalMutation, { loading: scanIntervalMutationLoading }] =
+    useMutation<
+      changeScanIntervalMutation,
+      changeScanIntervalMutationVariables
+    >(SCAN_INTERVAL_MUTATION)
 
   const onScanIntervalCheckboxChange = (checked: boolean) => {
     setEnablePeriodicScanner(checked)
@@ -154,108 +155,83 @@ const PeriodicScanner = () => {
     }
   }
 
-  type scanIntervalUnitType = {
-    key: TimeUnit
-    text: string
-    value: TimeUnit
-  }
-
-  const scanIntervalUnits: scanIntervalUnitType[] = [
+  const scanIntervalUnits: DropdownItem[] = [
     {
-      key: TimeUnit.Second,
-      text: t('settings.periodic_scanner.interval_unit.seconds', 'Seconds'),
+      label: t('settings.periodic_scanner.interval_unit.seconds', 'Seconds'),
       value: TimeUnit.Second,
     },
     {
-      key: TimeUnit.Minute,
-      text: t('settings.periodic_scanner.interval_unit.minutes', 'Minutes'),
+      label: t('settings.periodic_scanner.interval_unit.minutes', 'Minutes'),
       value: TimeUnit.Minute,
     },
     {
-      key: TimeUnit.Hour,
-      text: t('settings.periodic_scanner.interval_unit.hour', 'Hour'),
+      label: t('settings.periodic_scanner.interval_unit.hour', 'Hour'),
       value: TimeUnit.Hour,
     },
     {
-      key: TimeUnit.Day,
-      text: t('settings.periodic_scanner.interval_unit.days', 'Days'),
+      label: t('settings.periodic_scanner.interval_unit.days', 'Days'),
       value: TimeUnit.Day,
     },
     {
-      key: TimeUnit.Month,
-      text: t('settings.periodic_scanner.interval_unit.months', 'Months'),
+      label: t('settings.periodic_scanner.interval_unit.months', 'Months'),
       value: TimeUnit.Month,
     },
   ]
 
   return (
     <>
-      <h3>{t('settings.periodic_scanner.title', 'Periodic scanner')}</h3>
+      <h3 className="font-semibold text-lg mt-4 mb-2">
+        {t('settings.periodic_scanner.title', 'Periodic scanner')}
+      </h3>
 
-      <div style={{ margin: '12px 0' }}>
-        <Checkbox
-          label={t(
-            'settings.periodic_scanner.checkbox_label',
-            'Enable periodic scanner'
-          )}
-          disabled={scanIntervalQuery.loading}
-          checked={enablePeriodicScanner}
-          onChange={(_, { checked }) =>
-            onScanIntervalCheckboxChange(checked || false)
-          }
-        />
-      </div>
+      <Checkbox
+        label={t(
+          'settings.periodic_scanner.checkbox_label',
+          'Enable periodic scanner'
+        )}
+        disabled={scanIntervalQuery.loading}
+        checked={enablePeriodicScanner}
+        onChange={event =>
+          onScanIntervalCheckboxChange(event.target.checked || false)
+        }
+      />
 
-      {enablePeriodicScanner && (
-        <>
-          <label htmlFor="periodic_scan_field">
-            <InputLabelTitle>
-              {t(
-                'settings.periodic_scanner.field.label',
-                'Periodic scan interval'
-              )}
-            </InputLabelTitle>
-            <InputLabelDescription>
-              {t(
-                'settings.periodic_scanner.field.description',
-                'How often the scanner should perform automatic scans of all users'
-              )}
-            </InputLabelDescription>
-          </label>
-          <Input
-            label={
-              <Dropdown
-                onChange={(_, { value }) => {
-                  const newScanInterval: TimeValue = {
-                    ...scanInterval,
-                    unit: value as TimeUnit,
-                  }
-
-                  setScanInterval(newScanInterval)
-                  onScanIntervalUpdate(newScanInterval)
-                }}
-                value={scanInterval.unit}
-                options={scanIntervalUnits}
-              />
-            }
-            onBlur={() => onScanIntervalUpdate(scanInterval)}
-            onKeyDown={({ key }: KeyboardEvent) =>
-              key == 'Enter' && onScanIntervalUpdate(scanInterval)
-            }
-            loading={scanIntervalQuery.loading}
-            labelPosition="right"
-            style={{ maxWidth: 300 }}
+      <div className="mt-4">
+        <label htmlFor="periodic_scan_field">
+          <h4 className="font-semibold">
+            {t(
+              'settings.periodic_scanner.field.label',
+              'Periodic scan interval'
+            )}
+          </h4>
+          <InputLabelDescription>
+            {t(
+              'settings.periodic_scanner.field.description',
+              'How often the scanner should perform automatic scans of all users'
+            )}
+          </InputLabelDescription>
+        </label>
+        <div className="flex gap-2">
+          <TextField
             id="periodic_scan_field"
-            value={scanInterval.value}
-            onChange={(_, { value }) => {
-              setScanInterval(x => ({
-                ...x,
-                value: parseInt(value),
-              }))
+            disabled={!enablePeriodicScanner}
+          />
+          <Dropdown
+            disabled={!enablePeriodicScanner}
+            items={scanIntervalUnits}
+            selected={scanInterval.unit}
+            setSelected={value => {
+              const newScanInterval: TimeValue = {
+                ...scanInterval,
+                unit: value as TimeUnit,
+              }
+
+              setScanInterval(newScanInterval)
+              onScanIntervalUpdate(newScanInterval)
             }}
           />
-        </>
-      )}
+        </div>
+      </div>
       <Loader
         active={scanIntervalQuery.loading || scanIntervalMutationLoading}
         inline

@@ -202,7 +202,6 @@ const MorePopoverSectionPassword = ({
         disabled={!activated}
         type={passwordHidden ? 'password' : 'text'}
         value={passwordInputValue}
-        sizeVariant="small"
         className="mt-2"
         onKeyDown={event => {
           if (
@@ -252,7 +251,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
           <MorePopoverSectionPassword id={id} share={share} query={query} />
           <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
             <Checkbox label="Expiration date" />
-            <TextField sizeVariant="small" className="mt-2" />
+            <TextField className="mt-2" />
           </div>
         </ArrowPopoverPanel>
       </Popover.Panel>

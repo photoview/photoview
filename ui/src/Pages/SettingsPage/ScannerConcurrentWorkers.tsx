@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client'
-import { Input, Loader } from 'semantic-ui-react'
+// import { Input, Loader } from 'semantic-ui-react'
 import { InputLabelTitle, InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { concurrentWorkersQuery } from './__generated__/concurrentWorkersQuery'
@@ -8,6 +8,7 @@ import {
   setConcurrentWorkers,
   setConcurrentWorkersVariables,
 } from './__generated__/setConcurrentWorkers'
+import { TextField } from '../../primitives/form/Input'
 
 const CONCURRENT_WORKERS_QUERY = gql`
   query concurrentWorkersQuery {
@@ -56,7 +57,7 @@ const ScannerConcurrentWorkers = () => {
   }
 
   return (
-    <div style={{ marginTop: 32 }}>
+    <div>
       <label htmlFor="scanner_concurrent_workers_field">
         <InputLabelTitle>
           {t('settings.concurrent_workers.title', 'Scanner concurrent workers')}
@@ -68,27 +69,27 @@ const ScannerConcurrentWorkers = () => {
           )}
         </InputLabelDescription>
       </label>
-      <Input
+      <TextField
         disabled={workerAmountQuery.loading || workersMutationData.loading}
         type="number"
         min="1"
         max="24"
         id="scanner_concurrent_workers_field"
         value={workerAmount}
-        onChange={(_, { value }) => {
-          setWorkerAmount(parseInt(value))
+        onChange={event => {
+          setWorkerAmount(parseInt(event.target.value))
         }}
         onBlur={() => updateWorkerAmount(workerAmount)}
-        onKeyDown={({ key }: KeyboardEvent) =>
-          key == 'Enter' && updateWorkerAmount(workerAmount)
+        onKeyDown={event =>
+          event.key == 'Enter' && updateWorkerAmount(workerAmount)
         }
       />
-      <Loader
+      {/* <Loader
         active={workerAmountQuery.loading || workersMutationData.loading}
         inline
         size="small"
         style={{ marginLeft: 16 }}
-      />
+      /> */}
     </div>
   )
 }
