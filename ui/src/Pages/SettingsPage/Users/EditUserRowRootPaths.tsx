@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { gql, useMutation } from '@apollo/client'
-import { Button, Icon, Input } from 'semantic-ui-react'
-import styled from 'styled-components'
 import { USERS_QUERY } from './UsersTable'
 import { useTranslation } from 'react-i18next'
 import { USER_ADD_ROOT_PATH_MUTATION } from './AddUserRow'
@@ -14,6 +12,7 @@ import {
   settingsUsersQuery_user_rootAlbums,
 } from './__generated__/settingsUsersQuery'
 import { userAddRootPath } from './__generated__/userAddRootPath'
+import { Button, TextField } from '../../../primitives/form/Input'
 
 const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
   mutation userRemoveAlbumPathMutation($userId: ID!, $albumId: ID!) {
@@ -21,12 +20,6 @@ const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
       id
     }
   }
-`
-
-const RootPathListItem = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 `
 
 type EditRootPathProps = {
@@ -48,10 +41,10 @@ const EditRootPath = ({ album, user }: EditRootPathProps) => {
   })
 
   return (
-    <RootPathListItem>
+    <li className="flex justify-between">
       <span>{album.filePath}</span>
       <Button
-        negative
+        variant="negative"
         disabled={loading}
         onClick={() =>
           removeAlbumPath({
@@ -62,17 +55,11 @@ const EditRootPath = ({ album, user }: EditRootPathProps) => {
           })
         }
       >
-        <Icon name="remove" />
         {t('general.action.remove', 'Remove')}
       </Button>
-    </RootPathListItem>
+    </li>
   )
 }
-
-const NewRootPathInput = styled(Input)`
-  width: 100%;
-  margin-top: 24px;
-`
 
 type EditNewRootPathProps = {
   userID: string
@@ -93,38 +80,32 @@ const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
   )
 
   return (
-    <li>
-      <NewRootPathInput
-        style={{ width: '100%' }}
+    <li className="flex gap-1 mt-2">
+      <TextField
         value={value}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
           setValue(e.target.value)
         }
         disabled={loading}
-        action={{
-          positive: true,
-          icon: 'add',
-          content: t('general.action.add', 'Add'),
-          onClick: () => {
-            setValue('')
-            addRootPath({
-              variables: {
-                id: userID,
-                rootPath: value,
-              },
-            })
-          },
-        }}
       />
+      <Button
+        variant="positive"
+        disabled={loading}
+        onClick={() => {
+          setValue('')
+          addRootPath({
+            variables: {
+              id: userID,
+              rootPath: value,
+            },
+          })
+        }}
+      >
+        {t('general.action.add', 'Add')}
+      </Button>
     </li>
   )
 }
-
-const RootPathList = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
-`
 
 type EditRootPathsProps = {
   user: settingsUsersQuery_user
@@ -136,9 +117,9 @@ export const EditRootPaths = ({ user }: EditRootPathsProps) => {
   ))
 
   return (
-    <RootPathList>
+    <ul>
       {editRows}
       <EditNewRootPath userID={user.id} />
-    </RootPathList>
+    </ul>
   )
 }

@@ -444,7 +444,7 @@ const SidebarShare = ({
             <tr className="text-left border-gray-100 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
-                  className="text-[#4ABF3C] font-bold uppercase text-xs"
+                  className="text-green-500 font-bold uppercase text-xs"
                   disabled={loading}
                   onClick={() => {
                     shareItem({

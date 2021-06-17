@@ -39,7 +39,7 @@ export const SidebarProvider = ({ children }: SidebarProviderProps) => {
     pinned: boolean
   }>({
     content: null,
-    pinned: true,
+    pinned: false,
   })
 
   const updateSidebar = (content: React.ReactNode | null) => {

@@ -1,15 +1,11 @@
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Button, Icon, Table, Modal } from 'semantic-ui-react'
-import styled from 'styled-components'
+import { Icon, Modal } from 'semantic-ui-react'
+import Checkbox from '../../../primitives/form/Checkbox'
+import { Button } from '../../../primitives/form/Input'
+import { TableCell, TableRow } from '../../../primitives/Table'
 import ChangePasswordModal from './UserChangePassword'
 import { UserRowChildProps } from './UserRow'
-
-const PathList = styled.ul`
-  margin: 0;
-  padding: 0 0 0 12px;
-  list-style: none;
-`
 
 const ViewUserRow = ({
   user,
@@ -25,22 +21,22 @@ const ViewUserRow = ({
 }: UserRowChildProps) => {
   const { t } = useTranslation()
   const paths = (
-    <PathList>
+    <ul>
       {user.rootAlbums.map(album => (
         <li key={album.id}>{album.filePath}</li>
       ))}
-    </PathList>
+    </ul>
   )
 
   return (
-    <Table.Row>
-      <Table.Cell>{user.username}</Table.Cell>
-      <Table.Cell>{paths}</Table.Cell>
-      <Table.Cell>
-        {user.admin ? <Icon name="checkmark" size="large" /> : null}
-      </Table.Cell>
-      <Table.Cell>
-        <Button.Group>
+    <TableRow>
+      <TableCell>{user.username}</TableCell>
+      <TableCell>{paths}</TableCell>
+      <TableCell>
+        <Checkbox label="Admin" disabled checked={user.admin} />
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1">
           <Button
             onClick={() => {
               setState(state => {
@@ -50,7 +46,6 @@ const ViewUserRow = ({
               })
             }}
           >
-            <Icon name="edit" />
             {t('settings.users.table.row.action.edit', 'Edit')}
           </Button>
           <Button
@@ -73,7 +68,7 @@ const ViewUserRow = ({
             onClose={() => setChangePassword(false)}
           />
           <Button
-            negative
+            variant="negative"
             onClick={() => {
               setConfirmDelete(true)
             }}
@@ -102,7 +97,7 @@ const ViewUserRow = ({
                 {t('general.action.cancel', 'Cancel')}
               </Button>
               <Button
-                negative
+                variant="negative"
                 onClick={() => {
                   setConfirmDelete(false)
                   deleteUser({
@@ -120,9 +115,9 @@ const ViewUserRow = ({
               </Button>
             </Modal.Actions>
           </Modal>
-        </Button.Group>
-      </Table.Cell>
-    </Table.Row>
+        </div>
+      </TableCell>
+    </TableRow>
   )
 }
 

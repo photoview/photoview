@@ -3,6 +3,7 @@ import classNames, { Argument as ClassNamesArg } from 'classnames'
 
 import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
 import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
+import styled from 'styled-components'
 
 type TextFieldProps = {
   label?: string
@@ -121,15 +122,26 @@ export const TextField = forwardRef(
   }
 )
 
-const buttonStyles =
-  'bg-gray-50 px-6 py-0.5 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100'
+type ButtonProps = {
+  variant?: 'negative' | 'positive' | 'default'
+}
+
+const buttonStyles = ({ variant }: ButtonProps) =>
+  classNames(
+    'bg-gray-50 px-6 py-0.5 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100 whitespace-nowrap',
+    variant == 'negative' &&
+      'text-red-600 hover:bg-red-600 hover:border-red-700 hover:text-white transition-colors focus:border-red-600 focus:hover:border-red-700',
+    variant == 'positive' &&
+      'text-green-600 hover:bg-green-600 hover:border-green-700 hover:text-white transition-colors focus:border-green-600 focus:hover:border-green-700'
+  )
 
 export const Submit = ({
   className,
+  variant,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement>) => (
+}: ButtonProps & React.ButtonHTMLAttributes<HTMLInputElement>) => (
   <input
-    className={classNames(buttonStyles, className)}
+    className={classNames(buttonStyles({ variant }), className)}
     type="submit"
     {...props}
   />
@@ -137,10 +149,16 @@ export const Submit = ({
 
 export const Button = ({
   children,
+  variant,
   className,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <button className={classNames(buttonStyles, className)} {...props}>
+}: ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button
+    className={classNames(buttonStyles({ variant }), className)}
+    {...props}
+  >
     {children}
   </button>
 )
+
+export const ButtonGroup = styled.div.attrs({ className: 'flex gap-1' })``

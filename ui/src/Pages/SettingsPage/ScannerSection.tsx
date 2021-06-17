@@ -32,7 +32,6 @@ const ScannerSection = () => {
         )}
       </InputLabelDescription>
       <Button
-        className="my-2"
         onClick={() => {
           startScanner()
         }}

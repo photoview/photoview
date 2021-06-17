@@ -1,12 +1,21 @@
 import React, { useState } from 'react'
 
-import { Table, Loader, Button, Icon } from 'semantic-ui-react'
+import { Loader, Icon } from 'semantic-ui-react'
+import {
+  Table,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableBody,
+  TableFooter,
+} from '../../../primitives/Table'
 import { useQuery, gql } from '@apollo/client'
 import UserRow from './UserRow'
 import AddUserRow from './AddUserRow'
 import { SectionTitle } from '../SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { settingsUsersQuery } from './__generated__/settingsUsersQuery'
+import { Button } from '../../../primitives/form/Input'
 
 export const USERS_QUERY = gql`
   query settingsUsersQuery {
@@ -26,9 +35,8 @@ const UsersTable = () => {
   const { t } = useTranslation()
   const [showAddUser, setShowAddUser] = useState(false)
 
-  const { loading, error, data, refetch } = useQuery<settingsUsersQuery>(
-    USERS_QUERY
-  )
+  const { loading, error, data, refetch } =
+    useQuery<settingsUsersQuery>(USERS_QUERY)
 
   if (error) {
     return <div>{`Users table error: ${error.message}`}</div>
@@ -45,25 +53,28 @@ const UsersTable = () => {
     <div>
       <SectionTitle>{t('settings.users.title', 'Users')}</SectionTitle>
       <Loader active={loading} />
-      <Table celled>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>
+      <Table className="w-full max-w-6xl">
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell>
               {t('settings.users.table.column_names.username', 'Username')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
+            </TableHeaderCell>
+            <TableHeaderCell>
               {t('settings.users.table.column_names.photo_path', 'Photo path')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
-              {t('settings.users.table.column_names.admin', 'Admin')}
-            </Table.HeaderCell>
-            <Table.HeaderCell>
+            </TableHeaderCell>
+            <TableHeaderCell>
+              {t(
+                'settings.users.table.column_names.capabilities',
+                'Capabilities'
+              )}
+            </TableHeaderCell>
+            <TableHeaderCell className="w-0 whitespace-nowrap">
               {t('settings.users.table.column_names.action', 'Action')}
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+            </TableHeaderCell>
+          </TableRow>
+        </TableHeader>
 
-        <Table.Body>
+        <TableBody>
           {userRows}
           <AddUserRow
             show={showAddUser}
@@ -73,23 +84,23 @@ const UsersTable = () => {
               refetch()
             }}
           />
-        </Table.Body>
+        </TableBody>
 
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell colSpan="4">
+        <TableFooter>
+          <TableRow>
+            <TableHeaderCell colSpan={4} className="text-right">
               <Button
-                positive
+                className="bg-white"
+                variant="positive"
                 disabled={showAddUser}
-                floated="right"
                 onClick={() => setShowAddUser(true)}
               >
                 <Icon name="add" />
                 {t('settings.users.table.new_user', 'New user')}
               </Button>
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Footer>
+            </TableHeaderCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   )

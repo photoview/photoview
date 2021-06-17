@@ -1,8 +1,11 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
 import { EditRootPaths } from './EditUserRowRootPaths'
 import { UserRowChildProps } from './UserRow'
+import { TableRow, TableCell } from '../../../primitives/Table'
+import { TextField } from '../../../primitives/form/Input'
+import { Button, ButtonGroup } from '../../../primitives/form/Input'
+import Checkbox from '../../../primitives/form/Checkbox'
 
 const EditUserRow = ({
   user,
@@ -24,34 +27,34 @@ const EditUserRow = ({
   }
 
   return (
-    <Table.Row>
-      <Table.Cell>
-        <Input
+    <TableRow>
+      <TableCell>
+        <TextField
           style={{ width: '100%' }}
           placeholder={user.username}
           value={state.username}
           onChange={e => updateInput(e, 'username')}
         />
-      </Table.Cell>
-      <Table.Cell>
+      </TableCell>
+      <TableCell>
         <EditRootPaths user={user} />
-      </Table.Cell>
-      <Table.Cell>
+      </TableCell>
+      <TableCell>
         <Checkbox
-          toggle
+          label="Admin"
           checked={state.admin}
-          onChange={(_, data) => {
+          onChange={e => {
             setState(state => ({
               ...state,
-              admin: data.checked || false,
+              admin: e.target.checked || false,
             }))
           }}
         />
-      </Table.Cell>
-      <Table.Cell>
-        <Button.Group>
+      </TableCell>
+      <TableCell>
+        <ButtonGroup>
           <Button
-            negative
+            variant="negative"
             onClick={() =>
               setState(state => ({
                 ...state,
@@ -62,9 +65,8 @@ const EditUserRow = ({
             {t('general.action.cancel', 'Cancel')}
           </Button>
           <Button
-            loading={updateUserLoading}
             disabled={updateUserLoading}
-            positive
+            variant="positive"
             onClick={() =>
               updateUser({
                 variables: {
@@ -77,9 +79,9 @@ const EditUserRow = ({
           >
             {t('general.action.save', 'Save')}
           </Button>
-        </Button.Group>
-      </Table.Cell>
-    </Table.Row>
+        </ButtonGroup>
+      </TableCell>
+    </TableRow>
   )
 }
 
