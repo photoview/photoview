@@ -77,7 +77,7 @@ export const TextField = forwardRef(
       )
     } else if (action) {
       input = (
-        <div className="relative">
+        <div className="relative inline-block">
           {input}
           <button
             disabled={disabled}

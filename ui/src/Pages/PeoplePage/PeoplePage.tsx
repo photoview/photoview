@@ -4,7 +4,7 @@ import Layout from '../../components/layout/Layout'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
-import { Button, Icon, Input } from 'semantic-ui-react'
+import { Button, TextField } from '../../primitives/form/Input'
 import FaceCircleImage from './FaceCircleImage'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
@@ -91,7 +91,7 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
   const { t } = useTranslation()
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
-  const inputRef = createRef<Input>()
+  const inputRef = createRef<HTMLInputElement>()
 
   const [setGroupLabel, { loading }] = useMutation<
     setGroupLabel,
@@ -117,19 +117,9 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
     }
   }, [loading])
 
-  const onKeyUp = (e: React.ChangeEvent<HTMLInputElement> & KeyboardEvent) => {
+  const onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key == 'Escape') {
       resetLabel()
-      return
-    }
-
-    if (e.key == 'Enter') {
-      setGroupLabel({
-        variables: {
-          groupID: group.id,
-          label: e.target.value == '' ? null : e.target.value,
-        },
-      })
       return
     }
   }
@@ -145,20 +135,29 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
         <FaceLabel>
           {group.label ?? t('people_page.face_group.unlabeled', 'Unlabeled')}
         </FaceLabel>
-        <EditIcon name="pencil" />
+        {/* <EditIcon name="pencil" /> */}
       </FaceDetailsButton>
     )
   } else {
     label = (
       <FaceDetailsButton labeled={!!group.label}>
-        <Input
+        <TextField
+          className="w-[160px]"
           loading={loading}
           ref={inputRef}
-          size="mini"
+          // size="mini"
           placeholder={t('people_page.face_group.label_placeholder', 'Label')}
-          icon="arrow right"
+          // icon="arrow right"
           value={inputValue}
-          onKeyUp={onKeyUp}
+          action={() =>
+            setGroupLabel({
+              variables: {
+                groupID: group.id,
+                label: inputValue == '' ? null : inputValue,
+              },
+            })
+          }
+          onKeyDown={onKeyUp}
           onChange={e => setInputValue(e.target.value)}
           onBlur={() => {
             resetLabel()
@@ -180,16 +179,16 @@ const FaceImagesCount = styled.span`
   border-radius: 4px;
 `
 
-const EditIcon = styled(Icon)`
-  margin-left: 6px !important;
-  opacity: 0 !important;
+// const EditIcon = styled(Icon)`
+//   margin-left: 6px !important;
+//   opacity: 0 !important;
 
-  transition: opacity 100ms;
+//   transition: opacity 100ms;
 
-  ${FaceDetailsButton}:hover &, ${FaceDetailsButton}:focus-visible & {
-    opacity: 1 !important;
-  }
-`
+//   ${FaceDetailsButton}:hover &, ${FaceDetailsButton}:focus-visible & {
+//     opacity: 1 !important;
+//   }
+// `
 
 type FaceGroupProps = {
   group: myFaces_myFaceGroups
@@ -251,13 +250,11 @@ const PeopleGallery = () => {
   return (
     <Layout title={t('title.people', 'People')}>
       <Button
-        loading={recognizeUnlabeledLoading}
         disabled={recognizeUnlabeledLoading}
         onClick={() => {
           recognizeUnlabeled()
         }}
       >
-        <Icon name="sync" />
         {t(
           'people_page.recognize_unlabeled_faces_button',
           'Recognize unlabeled faces'

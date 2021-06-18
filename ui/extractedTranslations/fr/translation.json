@@ -176,7 +176,7 @@
         "title": "Supprimer l'utilisateur"
       },
       "password_reset": {
-        "description": "Changer le mot de passe pour <1></1>",
+        "description": "Changer le mot de passe pour <1>{{username}}</1>",
         "form": {
           "label": "Nouveau mot de passe",
           "placeholder": "mot de passe",

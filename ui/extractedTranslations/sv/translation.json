@@ -176,7 +176,7 @@
         "title": "Radera användare"
       },
       "password_reset": {
-        "description": "Ändra lösenord för <1></1>",
+        "description": "Ändra lösenord för <1>{{username}}</1>",
         "form": {
           "label": "Nytt lösenord",
           "placeholder": "lösenord",

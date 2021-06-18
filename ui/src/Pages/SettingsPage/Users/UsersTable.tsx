@@ -8,6 +8,7 @@ import {
   TableRow,
   TableBody,
   TableFooter,
+  TableScrollWrapper,
 } from '../../../primitives/Table'
 import { useQuery, gql } from '@apollo/client'
 import UserRow from './UserRow'
@@ -53,55 +54,60 @@ const UsersTable = () => {
     <div>
       <SectionTitle>{t('settings.users.title', 'Users')}</SectionTitle>
       <Loader active={loading} />
-      <Table className="w-full max-w-6xl">
-        <TableHeader>
-          <TableRow>
-            <TableHeaderCell>
-              {t('settings.users.table.column_names.username', 'Username')}
-            </TableHeaderCell>
-            <TableHeaderCell>
-              {t('settings.users.table.column_names.photo_path', 'Photo path')}
-            </TableHeaderCell>
-            <TableHeaderCell>
-              {t(
-                'settings.users.table.column_names.capabilities',
-                'Capabilities'
-              )}
-            </TableHeaderCell>
-            <TableHeaderCell className="w-0 whitespace-nowrap">
-              {t('settings.users.table.column_names.action', 'Action')}
-            </TableHeaderCell>
-          </TableRow>
-        </TableHeader>
+      <TableScrollWrapper>
+        <Table className="w-full max-w-6xl">
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell>
+                {t('settings.users.table.column_names.username', 'Username')}
+              </TableHeaderCell>
+              <TableHeaderCell>
+                {t(
+                  'settings.users.table.column_names.photo_path',
+                  'Photo path'
+                )}
+              </TableHeaderCell>
+              <TableHeaderCell>
+                {t(
+                  'settings.users.table.column_names.capabilities',
+                  'Capabilities'
+                )}
+              </TableHeaderCell>
+              <TableHeaderCell className="w-0 whitespace-nowrap">
+                {t('settings.users.table.column_names.action', 'Action')}
+              </TableHeaderCell>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {userRows}
-          <AddUserRow
-            show={showAddUser}
-            setShow={setShowAddUser}
-            onUserAdded={() => {
-              setShowAddUser(false)
-              refetch()
-            }}
-          />
-        </TableBody>
+          <TableBody>
+            {userRows}
+            <AddUserRow
+              show={showAddUser}
+              setShow={setShowAddUser}
+              onUserAdded={() => {
+                setShowAddUser(false)
+                refetch()
+              }}
+            />
+          </TableBody>
 
-        <TableFooter>
-          <TableRow>
-            <TableHeaderCell colSpan={4} className="text-right">
-              <Button
-                className="bg-white"
-                variant="positive"
-                disabled={showAddUser}
-                onClick={() => setShowAddUser(true)}
-              >
-                <Icon name="add" />
-                {t('settings.users.table.new_user', 'New user')}
-              </Button>
-            </TableHeaderCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+          <TableFooter>
+            <TableRow>
+              <TableHeaderCell colSpan={4} className="text-right">
+                <Button
+                  className="bg-white"
+                  variant="positive"
+                  disabled={showAddUser}
+                  onClick={() => setShowAddUser(true)}
+                >
+                  <Icon name="add" />
+                  {t('settings.users.table.new_user', 'New user')}
+                </Button>
+              </TableHeaderCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableScrollWrapper>
     </div>
   )
 }

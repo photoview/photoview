@@ -39,3 +39,7 @@ export const TableCell = styled.td.attrs({
 export const TableHeaderCell = styled.th.attrs({
   className: 'bg-gray-50 py-2 px-2 align-top font-semibold' as string,
 })``
+
+export const TableScrollWrapper = styled.div.attrs({
+  className: 'block overflow-x-auto whitespace-nowrap',
+})``

@@ -176,7 +176,7 @@
         "title": "Benutzer löschen"
       },
       "password_reset": {
-        "description": "Passwort von Benutzer <1></1> aktualisieren",
+        "description": "Passwort von Benutzer <1>{{username}}</1> aktualisieren",
         "form": {
           "label": "Neues Passwort",
           "placeholder": "Passwort",

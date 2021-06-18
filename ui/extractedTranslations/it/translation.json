@@ -176,7 +176,7 @@
         "title": "Cancella utente"
       },
       "password_reset": {
-        "description": "Cambia password per <1></1>",
+        "description": "Cambia password per <1>{{username}}</1>",
         "form": {
           "label": "Nuova password",
           "placeholder": "password",

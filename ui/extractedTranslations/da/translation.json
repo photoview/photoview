@@ -176,7 +176,7 @@
         "title": "Slet bruger"
       },
       "password_reset": {
-        "description": "Ændre adgangskode for <1></1>",
+        "description": "Ændre adgangskode for <1>{{username}}</1>",
         "form": {
           "label": "Ny adgangskode",
           "placeholder": "adgangskode",
