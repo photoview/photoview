@@ -27,10 +27,10 @@
       "media": "Загрузка медиа",
       "page": "Загрузка страницы",
       "paginate": {
-        "faces": "Loading more people",
-        "media": "Loading more media"
+        "faces": "Загрузить еще людей",
+        "media": "Загрузить еще медиа"
       },
-      "shares": "Loading shares...",
+      "shares": "Загрузка доступа...",
       "timeline": "Загрузка хронологии"
     }
   },
@@ -71,13 +71,13 @@
       "action": {
         "add_label": "Добавить Метку",
         "change_label": "Поменять Метку",
-        "detach_face": "Detach Face",
-        "merge_face": "Merge Face",
-        "move_faces": "Move Faces"
+        "detach_face": "Отсоединить Лицо",
+        "merge_face": "Объединить Лицо",
+        "move_faces": "Переместить Лица"
       },
       "label_placeholder": "Метка",
       "unlabeled": "Без метки",
-      "unlabeled_person": "Unlabeled person"
+      "unlabeled_person": "Человек без метки"
     },
     "modal": {
       "action": {
@@ -114,21 +114,21 @@
     "recognize_unlabeled_faces_button": "Recognize unlabeled faces",
     "table": {
       "select_face_group": {
-        "search_faces_placeholder": "Search faces..."
+        "search_faces_placeholder": "Поиск лиц..."
       },
       "select_image_faces": {
-        "search_images_placeholder": "Search images..."
+        "search_images_placeholder": "Поиск фото..."
       }
     }
   },
   "photos_page": {
-    "title": "Photos"
+    "title": "Фотографии"
   },
   "places_page": {
-    "title": "Places"
+    "title": "Места"
   },
   "routes": {
-    "page_not_found": "Page not found"
+    "page_not_found": "Страница не найдена"
   },
   "settings": {
     "concurrent_workers": {
@@ -143,18 +143,18 @@
         "label": "Periodic scan interval"
       },
       "interval_unit": {
-        "days": "Days",
-        "hour": "Hour",
-        "minutes": "Minutes",
-        "months": "Months",
-        "seconds": "Seconds"
+        "days": "День",
+        "hour": "Час",
+        "minutes": "Минута",
+        "months": "Месяц",
+        "seconds": "Секунда"
       },
       "title": "Periodic scanner"
     },
     "scanner": {
       "description": "Will scan all users for new or updated media",
       "scan_all_users": "Scan all users",
-      "title": "Scanner"
+      "title": "Сканер"
     },
     "user_preferences": {
       "change_language": {
@@ -162,7 +162,7 @@
         "label": "Website language"
       },
       "language_selector": {
-        "placeholder": "Select language"
+        "placeholder": "Выбрать язык"
       },
       "title": "User preferences"
     },
@@ -283,12 +283,12 @@
       }
     },
     "sharing": {
-      "add_share": "Add shares",
+      "add_share": "Поделится",
       "copy_link": "Скопировать ссылку",
-      "no_shares_found": "No shares found",
-      "public_link": "Public Link",
-      "table_header": "Public shares",
-      "title": "Sharing options"
+      "no_shares_found": "Нет доступа",
+      "public_link": "Общедоступная ссылка",
+      "table_header": "Общий доступ",
+      "title": "Настройки доступа"
     }
   },
   "sidemenu": {
@@ -299,8 +299,8 @@
     "settings": "Настройки"
   },
   "title": {
-    "loading_album": "Loading album",
-    "login": "Login",
+    "loading_album": "Загрузка альбома",
+    "login": "Имя пользователя",
     "people": "Люди",
     "settings": "Настройки"
   }
