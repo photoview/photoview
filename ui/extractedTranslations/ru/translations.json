@@ -1,0 +1,307 @@
+{
+  "album_filter": {
+    "only_favorites": "Показать только избранные",
+    "sort_by": "Отсортировать по",
+    "sorting_options": {
+      "date_imported": "Дата импортирования",
+      "date_shot": "Дата снимка",
+      "title": "Заголовок",
+      "type": "Вид"
+    }
+  },
+  "albums_page": {
+    "title": "Альбомы"
+  },
+  "general": {
+    "action": {
+      "add": "Добавить",
+      "cancel": "Отменить",
+      "delete": "Удалить",
+      "more": "Более",
+      "remove": "Убрать",
+      "save": "Сохранить"
+    },
+    "loading": {
+      "album": "Загрузка альбома",
+      "default": "Загрузка...",
+      "media": "Загрузка медиа",
+      "page": "Загрузка страницы",
+      "paginate": {
+        "faces": "Loading more people",
+        "media": "Loading more media"
+      },
+      "shares": "Loading shares...",
+      "timeline": "Загрузка хронологии"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Загрузка результатов...",
+      "no_results": "Результатов не найдено",
+      "placeholder": "Поиск",
+      "result_type": {
+        "albums": "Альбомы",
+        "photos": "Фото"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Пароль",
+      "submit": "Войти",
+      "username": "Имя пользователя"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Путь к фото",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Настроить Photoview"
+      },
+      "title": "Первичная настройка"
+    },
+    "welcome": "Добро пожаловать в Photoview"
+  },
+  "meta": {
+    "description": "Простая и Удобная Фото Галерея для Личного Сервера"
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "Добавить Метку",
+        "change_label": "Поменять Метку",
+        "detach_face": "Detach Face",
+        "merge_face": "Merge Face",
+        "move_faces": "Move Faces"
+      },
+      "label_placeholder": "Метка",
+      "unlabeled": "Без метки",
+      "unlabeled_person": "Unlabeled person"
+    },
+    "modal": {
+      "action": {
+        "merge": "Объединить"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Detach image faces",
+          "select_images": "Select images to detach"
+        },
+        "description": "Detach selected images of this face group and move them to a new face groups",
+        "title": "Detach Image Faces"
+      },
+      "merge_face_groups": {
+        "description": "All images within this face group will be merged into the selected face group.",
+        "destination_table": {
+          "title": "Select the destination face"
+        },
+        "title": "Merge Face Groups"
+      },
+      "move_image_faces": {
+        "description": "Move selected images of this face group to another face group",
+        "destination_face_group_table": {
+          "move_action": "Move image faces",
+          "title": "Select destination face group"
+        },
+        "image_select_table": {
+          "next_action": "Next",
+          "title": "Select images to move"
+        },
+        "title": "Move Image Faces"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Recognize unlabeled faces",
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Search faces..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Search images..."
+      }
+    }
+  },
+  "photos_page": {
+    "title": "Photos"
+  },
+  "places_page": {
+    "title": "Places"
+  },
+  "routes": {
+    "page_not_found": "Page not found"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "The maximum amount of scanner jobs that is allowed to run at once",
+      "title": "Scanner concurrent workers"
+    },
+    "logout": "Log out",
+    "periodic_scanner": {
+      "checkbox_label": "Enable periodic scanner",
+      "field": {
+        "description": "How often the scanner should perform automatic scans of all users",
+        "label": "Periodic scan interval"
+      },
+      "interval_unit": {
+        "days": "Days",
+        "hour": "Hour",
+        "minutes": "Minutes",
+        "months": "Months",
+        "seconds": "Seconds"
+      },
+      "title": "Periodic scanner"
+    },
+    "scanner": {
+      "description": "Will scan all users for new or updated media",
+      "scan_all_users": "Scan all users",
+      "title": "Scanner"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Change website language specific for this user",
+        "label": "Website language"
+      },
+      "language_selector": {
+        "placeholder": "Select language"
+      },
+      "title": "User preferences"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Add user"
+      },
+      "confirm_delete_user": {
+        "action": "Delete {{user}}",
+        "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
+        "title": "Delete user"
+      },
+      "password_reset": {
+        "description": "Change password for <1></1>",
+        "form": {
+          "label": "New password",
+          "placeholder": "password",
+          "submit": "Change password"
+        },
+        "title": "Change password"
+      },
+      "table": {
+        "column_names": {
+          "action": "Action",
+          "admin": "Admin",
+          "photo_path": "Photo path",
+          "username": "Username"
+        },
+        "new_user": "New user",
+        "row": {
+          "action": {
+            "change_password": "Change password",
+            "delete": "Delete",
+            "edit": "Edit",
+            "scan": "Scan"
+          }
+        }
+      },
+      "title": "Users"
+    },
+    "version_info": {
+      "build_date_title": "Build date",
+      "title": "Photoview Version",
+      "version_title": "Release Version"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Shared media"
+    },
+    "protected_share": {
+      "description": "This share is protected with a password.",
+      "title": "Protected share"
+    },
+    "share_not_found": "Share not found",
+    "share_not_found_description": "Maybe the share has expired or has been deleted.",
+    "wrong_password": "Wrong password, please try again."
+  },
+  "sidebar": {
+    "album": {
+      "title": "Свойства альбома"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimensions",
+        "file_size": "Size",
+        "file_type": "Type",
+        "name": "Name"
+      },
+      "title": "Download"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Aperture priority",
+          "bulb": "Bulb",
+          "creative_program": "Creative program",
+          "landscape_mode": "Landscape mode",
+          "manual": "Manual",
+          "normal_program": "Normal program",
+          "not_defined": "Not defined",
+          "portrait_mode": "Portrait mode",
+          "shutter_priority": "Shutter priority"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Did not fire",
+          "fired": "Fired",
+          "no_flash": "No Flash",
+          "no_flash_function": "No flash function",
+          "off": "Off",
+          "on": "On",
+          "red_eye_reduction": "Red-eye reduction",
+          "return_detected": "Return detected",
+          "return_not_detected": "Return not detected"
+        },
+        "name": {
+          "aperture": "Диафрагма",
+          "camera": "Камера",
+          "date_shot": "Дата снимка",
+          "exposure": "Экспозиция",
+          "exposure_program": "Программа",
+          "flash": "Вспышка",
+          "focal_length": "Фокусное расстояние",
+          "iso": "ISO",
+          "lens": "Линза",
+          "maker": "Производитель"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Add shares",
+      "copy_link": "Скопировать ссылку",
+      "no_shares_found": "No shares found",
+      "public_link": "Public Link",
+      "table_header": "Public shares",
+      "title": "Sharing options"
+    }
+  },
+  "sidemenu": {
+    "albums": "Альбомы",
+    "people": "Люди",
+    "photos": "Фото",
+    "places": "Места",
+    "settings": "Настройки"
+  },
+  "title": {
+    "loading_album": "Loading album",
+    "login": "Login",
+    "people": "Люди",
+    "settings": "Настройки"
+  }
+}
