@@ -167,4 +167,16 @@ And the graphql playground at [localhost:4001](http://localhost:4001)
       <b>@Revorge</b>
     </a>
   </td>
+  <td>
+    <a href="https://github.com/deexno">
+      <img src="https://avatars.githubusercontent.com/u/50229919?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@deexno</b>
+    </a>
+  </td>
+  <td>
+    <a href="https://github.com/FKrauss">
+      <img src="https://avatars.githubusercontent.com/u/4820683?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@FKrauss</b>
+    </a>
+  </td>
 </table>
