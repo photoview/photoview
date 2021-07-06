@@ -93,7 +93,7 @@ export const Sidebar = () => {
       className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-auto transform transition-transform motion-reduce:transition-none ${
         content == null && !pinned ? 'translate-x-full' : 'translate-x-0'
       } ${
-        pinned ? 'lg:mt-[62px]' : 'lg:shadow-separator'
+        pinned ? 'lg:border-l' : 'lg:shadow-separator'
       } lg:w-[420px] lg:right-0 lg:top-0 lg:z-40`}
     >
       {content && (

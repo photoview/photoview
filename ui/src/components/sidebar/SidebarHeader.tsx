@@ -15,7 +15,7 @@ const SidebarHeader = ({ title }: SidebarHeaderProps) => {
   const PinIcon = pinned ? PinIconFilled : PinIconOutline
 
   return (
-    <div className="m-2 flex items-center gap-2">
+    <div className="m-2 flex items-center">
       <button
         className={`${pinned ? 'lg:hidden' : ''}`}
         title="Close sidebar"
@@ -23,7 +23,7 @@ const SidebarHeader = ({ title }: SidebarHeaderProps) => {
       >
         <CloseIcon className="m-2" />
       </button>
-      <span className="flex-grow -mt-1">{title}</span>
+      <span className="flex-grow -mt-1 ml-2">{title}</span>
       <button
         className="hidden lg:block"
         title="Pin sidebar"
