@@ -11,6 +11,7 @@ type TextFieldProps = {
   className?: ClassNamesArg
   wrapperClassName?: ClassNamesArg
   sizeVariant?: 'default' | 'big'
+  fullWidth?: boolean
   action?: () => void
   loading?: boolean
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'>
@@ -23,6 +24,7 @@ export const TextField = forwardRef(
       className,
       wrapperClassName,
       sizeVariant,
+      fullWidth,
       action,
       loading,
       ...inputProps
@@ -58,6 +60,7 @@ export const TextField = forwardRef(
           'block border rounded-md focus:ring-2 focus:outline-none px-2',
           variant,
           sizeVariant == 'big' ? 'py-2' : 'py-1',
+          { 'w-full': fullWidth },
           className
         )}
         {...inputProps}
@@ -77,7 +80,11 @@ export const TextField = forwardRef(
       )
     } else if (action) {
       input = (
-        <div className="relative inline-block">
+        <div
+          className={classNames('relative inline-block', {
+            'w-full': fullWidth,
+          })}
+        >
           {input}
           <button
             disabled={disabled}
@@ -87,7 +94,11 @@ export const TextField = forwardRef(
             )}
             onClick={() => action()}
           >
-            <ActionArrowIcon />
+            <ActionArrowIcon
+              className={classNames(
+                sizeVariant == 'big' && 'w-4 h-4 mt-1 mr-1'
+              )}
+            />
           </button>
         </div>
       )

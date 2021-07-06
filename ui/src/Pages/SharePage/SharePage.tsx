@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types'
-import React, { useState } from 'react'
+import React from 'react'
 import { useQuery, gql } from '@apollo/client'
 import { match as MatchType, Route, Switch } from 'react-router-dom'
-import { Form, Header, Icon, Input, Message } from 'semantic-ui-react'
 import styled from 'styled-components'
 import {
   getSharePassword,
@@ -11,6 +10,7 @@ import {
 import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
 import { useTranslation } from 'react-i18next'
+import PasswordProtectedShare from './PasswordProtectedShare'
 
 export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -133,72 +133,10 @@ AuthorizedTokenRoute.propTypes = {
   match: PropTypes.object.isRequired,
 }
 
-const MessageContainer = styled.div`
+export const MessageContainer = styled.div`
   max-width: 400px;
   margin: 100px auto 0;
 `
-
-type ProtectedTokenEnterPasswordProps = {
-  refetchWithPassword(password: string): void
-  loading: boolean
-}
-
-const ProtectedTokenEnterPassword = ({
-  refetchWithPassword,
-  loading = false,
-}: ProtectedTokenEnterPasswordProps) => {
-  const { t } = useTranslation()
-
-  const [passwordValue, setPasswordValue] = useState('')
-  const [invalidPassword, setInvalidPassword] = useState(false)
-
-  const onSubmit = () => {
-    refetchWithPassword(passwordValue)
-    setInvalidPassword(true)
-  }
-
-  let errorMessage = null
-  if (invalidPassword && !loading) {
-    errorMessage = (
-      <Message negative>
-        <Message.Content>
-          {t('share_page.wrong_password', 'Wrong password, please try again.')}
-        </Message.Content>
-      </Message>
-    )
-  }
-
-  return (
-    <MessageContainer>
-      <Header as="h1" style={{ fontWeight: 400 }}>
-        {t('share_page.protected_share.title', 'Protected share')}
-      </Header>
-      <p>
-        {t(
-          'share_page.protected_share.description',
-          'This share is protected with a password.'
-        )}
-      </p>
-      <Form>
-        <Form.Field>
-          <label>{t('login_page.field.password', 'Password')}</label>
-          <Input
-            loading={loading}
-            disabled={loading}
-            onKeyUp={(event: KeyboardEvent) =>
-              event.key == 'Enter' && onSubmit()
-            }
-            onChange={e => setPasswordValue(e.target.value)}
-            placeholder={t('login_page.field.password', 'Password')}
-            type="password"
-            icon={<Icon onClick={onSubmit} link name="arrow right" />}
-          />
-        </Form.Field>
-        {errorMessage}
-      </Form>
-    </MessageContainer>
-  )
-}
 
 interface TokenRouteMatch {
   token: string
@@ -248,7 +186,7 @@ const TokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
 
   if (data && data.shareTokenValidatePassword == false) {
     return (
-      <ProtectedTokenEnterPassword
+      <PasswordProtectedShare
         refetchWithPassword={password => {
           saveSharePassword(token, password)
           refetch({ token, password })
