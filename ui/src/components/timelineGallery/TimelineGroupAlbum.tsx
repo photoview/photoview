@@ -103,7 +103,7 @@ const TimelineGroupAlbum = ({
       <Link to={`/album/${album.id}`} className="hover:underline">
         {album.title}
       </Link>
-      <div className="flex flex-wrap items-center min-h-[210px] relative -mx-1 pr-4">
+      <div className="flex flex-wrap items-center h-[210px] relative -mx-1 pr-4 overflow-hidden">
         {mediaElms}
         {itemsBubble}
       </div>
