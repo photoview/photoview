@@ -67,6 +67,7 @@ const (
 	TypeMOV  MediaType = "video/quicktime"
 	TypeTS   MediaType = "video/mp2t"
 	TypeMTS  MediaType = "video/MP2T"
+	TypeMKV  MediaType = "video/x-matroska"
 )
 
 var SupportedMimetypes = [...]MediaType{
@@ -130,6 +131,7 @@ var VideoMimetypes = [...]MediaType{
 	TypeMOV,
 	TypeTS,
 	TypeMTS,
+	TypeMKV,
 }
 
 // WebVideoMimetypes are video types that can be played directly in the browser without transcoding
@@ -196,6 +198,7 @@ var fileExtensions = map[string]MediaType{
 	".ts":   TypeTS,
 	".m2ts": TypeMTS,
 	".mts":  TypeMTS,
+	".mkv":  TypeMKV,
 }
 
 func (imgType *MediaType) IsRaw() bool {
