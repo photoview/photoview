@@ -2,8 +2,8 @@ import { gql, useMutation } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useHistory } from 'react-router-dom'
-import { Button, Modal } from 'semantic-ui-react'
 import { isNil } from '../../../helpers/utils'
+import Modal from '../../../primitives/Modal'
 import { MY_FACES_QUERY } from '../PeoplePage'
 import {
   myFaces_myFaceGroups,
@@ -83,46 +83,42 @@ const DetachImageFacesModal = ({
 
   return (
     <Modal
-      onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
-      open={open}
-    >
-      <Modal.Header>
-        {t('people_page.modal.detach_image_faces.title', 'Detach Image Faces')}
-      </Modal.Header>
-      <Modal.Content scrolling>
-        <Modal.Description>
-          <p>
-            {t(
-              'people_page.modal.detach_image_faces.description',
-              'Detach selected images of this face group and move them to a new face groups'
-            )}
-          </p>
-          <SelectImageFacesTable
-            imageFaces={imageFaces}
-            selectedImageFaces={selectedImageFaces}
-            setSelectedImageFaces={setSelectedImageFaces}
-            title={t(
-              'people_page.modal.detach_image_faces.action.select_images',
-              'Select images to detach'
-            )}
-          />
-        </Modal.Description>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
-        <Button
-          disabled={selectedImageFaces.length == 0}
-          content={t(
+      title={t(
+        'people_page.modal.detach_image_faces.title',
+        'Detach Image Faces'
+      )}
+      description={t(
+        'people_page.modal.detach_image_faces.description',
+        'Detach selected images of this face group and move them to a new face groups'
+      )}
+      actions={[
+        {
+          key: 'cancel',
+          label: 'Cancel',
+          onClick: () => setOpen(false),
+        },
+        {
+          key: 'detach',
+          label: t(
             'people_page.modal.detach_image_faces.action.detach',
             'Detach image faces'
-          )}
-          labelPosition="right"
-          icon="checkmark"
-          onClick={() => detachImageFaces()}
-          positive
-        />
-      </Modal.Actions>
+          ),
+          variant: 'positive',
+          onClick: () => detachImageFaces(),
+        },
+      ]}
+      onClose={() => setOpen(false)}
+      open={open}
+    >
+      <SelectImageFacesTable
+        imageFaces={imageFaces}
+        selectedImageFaces={selectedImageFaces}
+        setSelectedImageFaces={setSelectedImageFaces}
+        title={t(
+          'people_page.modal.detach_image_faces.action.select_images',
+          'Select images to detach'
+        )}
+      />
     </Modal>
   )
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import { Dialog } from '@headlessui/react'
 import { Button } from './form/Input'
 
-type ModalAction = {
+export type ModalAction = {
   key: string
   label: string
   variant?: 'negative' | 'positive' | 'default'
@@ -31,7 +31,7 @@ const Modal = ({
       key={x.key}
       onClick={e => x.onClick(e)}
       variant={x.variant}
-      className="bg-white"
+      background="white"
     >
       {x.label}
     </Button>

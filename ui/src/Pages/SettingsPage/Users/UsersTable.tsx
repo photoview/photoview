@@ -95,8 +95,8 @@ const UsersTable = () => {
             <TableRow>
               <TableHeaderCell colSpan={4} className="text-right">
                 <Button
-                  className="bg-white"
                   variant="positive"
+                  background="white"
                   disabled={showAddUser}
                   onClick={() => setShowAddUser(true)}
                 >

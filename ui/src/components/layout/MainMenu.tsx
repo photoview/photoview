@@ -14,7 +14,7 @@ type MenuButtonProps = {
   to: string
   exact: boolean
   label: string
-  gradient: string
+  background: string
   activeClasses?: string
   className?: string
   icon?: React.ReactChild
@@ -24,7 +24,7 @@ const MenuButton = ({
   to,
   exact,
   label,
-  gradient,
+  background,
   icon,
   activeClasses,
   className,
@@ -38,7 +38,8 @@ const MenuButton = ({
     >
       <li className="flex items-center">
         <div
-          className={`w-12 h-12 p-1.5 lg:w-8 lg:h-8 lg:p-1 bg-gradient-to-br ${gradient} w-full h-full rounded-lg`}
+          className={`w-12 h-12 p-1.5 lg:w-8 lg:h-8 lg:p-1 w-full h-full rounded-lg`}
+          style={{ backgroundColor: background }}
         >
           {icon}
         </div>
@@ -66,7 +67,7 @@ export const MainMenu = () => {
           to="/photos"
           exact
           label={t('sidemenu.photos', 'Timeline')}
-          gradient="from-[#AAD4F8] to-[#80B2E8]"
+          background="#8ac5f4"
           activeClasses="ring-[#f1f8ff] bg-[#f1f8ff]"
           className="outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
           icon={
@@ -83,7 +84,7 @@ export const MainMenu = () => {
           to="/albums"
           exact
           label={t('sidemenu.albums', 'Albums')}
-          gradient="from-[#F8AAAA] to-[#E88380]"
+          background="#fd9293"
           activeClasses="ring-[#fff1f2] bg-[#fff1f2]"
           className="outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-2"
           icon={
@@ -101,7 +102,7 @@ export const MainMenu = () => {
             to="/places"
             exact
             label={t('sidemenu.places', 'Places')}
-            gradient="from-[#B8EF7F] to-[#8CD77B]"
+            background="#92e072"
             activeClasses="ring-[#e3fee5] bg-[#e3fee5]"
             className="outline-none focus:ring-2 focus:ring-green-100 focus:ring-offset-2"
             icon={
@@ -120,7 +121,7 @@ export const MainMenu = () => {
           to="/people"
           exact
           label={t('sidemenu.people', 'People')}
-          gradient="from-[#F6F16E] to-[#F3C688]"
+          background="#fbcd78"
           activeClasses="ring-[#fff7e4] bg-[#fff7e4]"
           className="outline-none focus:ring-2 focus:ring-yellow-100 focus:ring-offset-2"
           icon={
@@ -138,7 +139,7 @@ export const MainMenu = () => {
           to="/settings"
           exact
           label={t('sidemenu.settings', 'Settings')}
-          gradient="from-[#C7E2E2] to-[#96AFBA]"
+          background="#aacbd0"
           activeClasses="ring-[#e4f0f8] bg-[#e4f0f8]"
           className="outline-none focus:ring-2 focus:ring-gray-200 focus:ring-offset-2"
           icon={
