@@ -26,14 +26,14 @@ export const TableHeader = styled.thead.attrs({
   className: 'text-left',
 })``
 
-export const TableBody = styled.tbody.attrs({ className: '' })``
+export const TableBody = styled.tbody.attrs({ className: '' as string })``
 
-export const TableFooter = styled.tfoot.attrs({ className: '' })``
+export const TableFooter = styled.tfoot.attrs({ className: '' as string })``
 
-export const TableRow = styled.tr.attrs({ className: '' })``
+export const TableRow = styled.tr.attrs({ className: '' as string })``
 
 export const TableCell = styled.td.attrs({
-  className: 'py-2 px-2 align-top',
+  className: 'py-2 px-2 align-top' as string,
 })``
 
 export const TableHeaderCell = styled.th.attrs({
@@ -41,5 +41,5 @@ export const TableHeaderCell = styled.th.attrs({
 })``
 
 export const TableScrollWrapper = styled.div.attrs({
-  className: 'block overflow-x-auto whitespace-nowrap',
+  className: 'block overflow-x-auto whitespace-nowrap' as string,
 })``

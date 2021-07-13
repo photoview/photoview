@@ -46,8 +46,8 @@ const Modal = ({
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
 
-        <div className="fixed bg-white rounded max-w-[calc(100%-16px)] mx-auto rounded shadow-md border">
-          <div className="p-2">
+        <div className="fixed bg-white max-w-[calc(100%-16px)] mx-auto rounded shadow-md border">
+          <div className="p-4">
             <Dialog.Title className="text-xl mb-1">{title}</Dialog.Title>
             <Dialog.Description className="text-sm mb-4">
               {description}
