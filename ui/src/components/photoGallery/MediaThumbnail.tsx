@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react'
 import styled from 'styled-components'
-import { Icon } from 'semantic-ui-react'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../../__generated__/globalTypes'
+import { ReactComponent as VideoThumbnailIconSVG } from './icons/videoThumbnailIcon.svg'
 
 const MediaContainer = styled.div`
   flex-grow: 1;
@@ -135,11 +135,11 @@ const SidebarIconWrapper = styled(HoverIcon)`
   right: 0;
 `
 
-const VideoThumbnailIcon = styled(Icon)`
+const VideoThumbnailIcon = styled(VideoThumbnailIconSVG)`
   color: rgba(255, 255, 255, 0.8);
   position: absolute;
-  left: calc(50% - 16px);
-  top: calc(50% - 13px);
+  left: calc(50% - 17.5px);
+  top: calc(50% - 22px);
 `
 
 type MediaThumbnailProps = {
@@ -181,7 +181,7 @@ export const MediaThumbnail = ({
 
   let videoIcon = null
   if (media.type == MediaType.Video) {
-    videoIcon = <VideoThumbnailIcon name="play" size="big" />
+    videoIcon = <VideoThumbnailIcon />
   }
 
   let minWidth = 100
