@@ -11,6 +11,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
@@ -198,7 +199,13 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				continue
 			}
 
-			if item.IsDir() && directoryContainsPhotos(subalbumPath, album_cache, albumIgnore) {
+			isDirSymlink, err := utils.IsDirSymlink(subalbumPath)
+			if err != nil {
+				scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
+				continue
+			}
+
+			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, album_cache, albumIgnore) {
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
