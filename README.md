@@ -30,7 +30,7 @@ Password: **demo**
 - [Main features](#main-features)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
-- [Setup development environment](#setup-development-environment)
+- [Set up development environment](#setup-development-environment)
 - [Sponsors](#sponsors)
 
 ## Main features
@@ -102,7 +102,7 @@ A new admin user will be created, with access to the photos located at the path 
 
 The photos will have to be scanned before they show up, you can start a scan manually, by navigating to `Settings` and clicking on `Scan All`
 
-## Setup development environment
+## Set up development environment
 
 ### Local setup
 
@@ -119,9 +119,9 @@ They can be installed as shown below:
 
 ```sh
 # Ubuntu
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
 # Debian
-sudo apt-get install libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
+sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
 # macOS
 brew install dlib libheif
 
@@ -165,6 +165,18 @@ And the graphql playground at [localhost:4001](http://localhost:4001)
     <a href="https://github.com/Revorge">
       <img src="https://avatars.githubusercontent.com/u/32901816?v=4" height="auto" width="100" style="border-radius:50%"><br/>
       <b>@Revorge</b>
+    </a>
+  </td>
+  <td>
+    <a href="https://github.com/deexno">
+      <img src="https://avatars.githubusercontent.com/u/50229919?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@deexno</b>
+    </a>
+  </td>
+  <td>
+    <a href="https://github.com/FKrauss">
+      <img src="https://avatars.githubusercontent.com/u/4820683?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@FKrauss</b>
     </a>
   </td>
 </table>
