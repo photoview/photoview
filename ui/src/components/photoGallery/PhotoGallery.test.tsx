@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
 import React from 'react'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import PhotoGallery from './PhotoGallery'
 import { PhotoGalleryState } from './photoGalleryReducer'
 
@@ -22,8 +22,7 @@ test('photo gallery with media', () => {
         id: '165',
         type: MediaType.Photo,
         thumbnail: {
-          url:
-            'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+          url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
           width: 768,
           height: 1024,
           __typename: 'MediaURL',
@@ -97,8 +96,7 @@ describe('photo gallery presenting', () => {
           id: '165',
           type: MediaType.Photo,
           thumbnail: {
-            url:
-              'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',

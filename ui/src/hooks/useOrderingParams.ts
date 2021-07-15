@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { OrderDirection } from '../../__generated__/globalTypes'
+import { OrderDirection } from '../__generated__/globalTypes'
 import { UrlKeyValuePair, UrlParams } from './useURLParameters'
 
 export type MediaOrdering = {

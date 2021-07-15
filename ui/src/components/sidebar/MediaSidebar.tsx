@@ -13,7 +13,7 @@ import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 import { isNil } from '../../helpers/utils'
 import { useTranslation } from 'react-i18next'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import { TranslationFn } from '../../localization'
 import {
   sidebarPhoto,
@@ -411,8 +411,10 @@ type MediaSidebarType = {
 }
 
 const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
-  const [loadMedia, { loading, error, data }] =
-    useLazyQuery<sidebarPhoto, sidebarPhotoVariables>(SIDEBAR_MEDIA_QUERY)
+  const [loadMedia, { loading, error, data }] = useLazyQuery<
+    sidebarPhoto,
+    sidebarPhotoVariables
+  >(SIDEBAR_MEDIA_QUERY)
 
   useEffect(() => {
     if (media != null && authToken()) {

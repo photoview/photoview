@@ -1,5 +1,5 @@
 import { photoGalleryReducer, PhotoGalleryState } from './photoGalleryReducer'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 
 describe('photo gallery reducer', () => {
   const defaultState: PhotoGalleryState = {

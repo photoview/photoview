@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
 import React from 'react'
-import { MediaType } from '../../../../__generated__/globalTypes'
+import { MediaType } from '../../../__generated__/globalTypes'
 import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
 
 test('render present image', () => {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
-import { OrderDirection } from '../../../__generated__/globalTypes'
+import { OrderDirection } from '../../__generated__/globalTypes'
 import { MediaOrdering, SetOrderingFn } from '../../hooks/useOrderingParams'
 import Checkbox from '../../primitives/form/Checkbox'
 

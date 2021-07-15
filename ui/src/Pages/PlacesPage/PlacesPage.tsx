@@ -10,7 +10,7 @@ import MapPresentMarker from './MapPresentMarker'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
 import { placesReducer } from './placesReducer'
 
-import mapboxStyles from 'mapbox-gl/dist/mapbox-gl.css'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MapWrapper = styled.div`
   width: 100%;
@@ -148,7 +148,7 @@ const MapPage = () => {
     <Layout title="Places">
       <Helmet>
         {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
-        <style type="text/css">{mapboxStyles}</style>
+        {/* <style type="text/css">{mapboxStyles}</style> */}
       </Helmet>
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>

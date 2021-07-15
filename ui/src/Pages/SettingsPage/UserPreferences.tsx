@@ -3,7 +3,7 @@ import gql from 'graphql-tag'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-import { LanguageTranslation } from '../../../__generated__/globalTypes'
+import { LanguageTranslation } from '../../__generated__/globalTypes'
 import Dropdown from '../../primitives/form/Dropdown'
 import { Button } from '../../primitives/form/Input'
 import {

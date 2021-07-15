@@ -55,6 +55,11 @@ module.exports = {
           'jest/valid-title': 'off',
         }
       ),
+      settings: {
+        jest: {
+          version: 26,
+        },
+      },
     }),
     {
       files: ['**/*.js'],

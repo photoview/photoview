@@ -3,10 +3,7 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import {
-  OrderDirection,
-  MediaType,
-} from './../../../../__generated__/globalTypes'
+import { OrderDirection, MediaType } from './../../../__generated__/globalTypes'
 
 // ====================================================
 // GraphQL query operation: shareAlbumQuery

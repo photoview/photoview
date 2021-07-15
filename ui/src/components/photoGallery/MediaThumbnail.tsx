@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import styled from 'styled-components'
 import { ProtectedImage } from './ProtectedMedia'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import { ReactComponent as VideoThumbnailIconSVG } from './icons/videoThumbnailIcon.svg'
 
 const MediaContainer = styled.div`

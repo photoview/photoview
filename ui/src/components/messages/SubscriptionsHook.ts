@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
-import { NotificationType } from '../../../__generated__/globalTypes'
+import { NotificationType } from '../../__generated__/globalTypes'
 
 const NOTIFICATION_SUBSCRIPTION = gql`
   subscription notificationSubscription {
