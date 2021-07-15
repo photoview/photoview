@@ -65,7 +65,7 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
   }
 `
 
-const FaceDetailsButton = styled.button<{ labeled: boolean }>`
+const FaceDetailsWrapper = styled.div<{ labeled: boolean }>`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
   width: 150px;
   margin: 12px auto 24px;
@@ -80,8 +80,6 @@ const FaceDetailsButton = styled.button<{ labeled: boolean }>`
     color: #2683ca;
   }
 `
-
-const FaceLabel = styled.span``
 
 type FaceDetailsProps = {
   group: myFaces_myFaceGroups
@@ -127,20 +125,20 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
   let label
   if (!editLabel) {
     label = (
-      <FaceDetailsButton
+      <FaceDetailsWrapper
         labeled={!!group.label}
         onClick={() => setEditLabel(true)}
       >
         <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
-        <FaceLabel>
+        <button>
           {group.label ?? t('people_page.face_group.unlabeled', 'Unlabeled')}
-        </FaceLabel>
+        </button>
         {/* <EditIcon name="pencil" /> */}
-      </FaceDetailsButton>
+      </FaceDetailsWrapper>
     )
   } else {
     label = (
-      <FaceDetailsButton labeled={!!group.label}>
+      <FaceDetailsWrapper labeled={!!group.label}>
         <TextField
           className="w-[160px]"
           loading={loading}
@@ -163,7 +161,7 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
             resetLabel()
           }}
         />
-      </FaceDetailsButton>
+      </FaceDetailsWrapper>
     )
   }
 

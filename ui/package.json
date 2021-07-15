@@ -43,7 +43,7 @@
     "url-join": "^4.0.1"
   },
   "scripts": {
-    "start": "craco start",
+    "start": "BROWSER=none craco start",
     "build": "craco build",
     "test": "npm run lint && npm run jest -- --watchAll=false",
     "test:ci": "npm run lint && npm run jest:ci",
