@@ -181,7 +181,13 @@ func findMediaForAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCac
 	for _, item := range dirContent {
 		photoPath := path.Join(album.Path, item.Name())
 
-		if !item.IsDir() && cache.IsPathMedia(photoPath) {
+		isDirSymlink, err := utils.IsDirSymlink(photoPath)
+		if err != nil {
+			log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", photoPath)
+			isDirSymlink = false
+		}
+
+		if !item.IsDir() && !isDirSymlink && cache.IsPathMedia(photoPath) {
 			// Match file against ignore data
 			if albumIgnore.MatchesPath(item.Name()) {
 				log.Printf("File %s ignored\n", item.Name())
