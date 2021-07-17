@@ -37,7 +37,7 @@ export const TextField = forwardRef(
     let variant = 'bg-white border-gray-200 focus:border-blue-400'
     if (error)
       variant =
-        'bg-red-50 border-red-200 focus:border-red-400 focus:ring-red-100'
+        'bg-red-50 border-red-200 focus:border-red-400 focus:ring-red-100 placeholder-red-300'
 
     if (disabled) variant = 'bg-gray-100'
 
@@ -148,15 +148,21 @@ const buttonStyles = ({ variant, background }: ButtonProps) =>
     background == 'white' ? 'bg-white' : 'bg-gray-50'
   )
 
+type SubmitProps = ButtonProps & {
+  children: string
+}
+
 export const Submit = ({
   className,
   variant,
   background,
+  children,
   ...props
-}: ButtonProps & React.ButtonHTMLAttributes<HTMLInputElement>) => (
+}: SubmitProps & React.ButtonHTMLAttributes<HTMLInputElement>) => (
   <input
     className={classNames(buttonStyles({ variant, background }), className)}
     type="submit"
+    value={children}
     {...props}
   />
 )

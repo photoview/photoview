@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Redirect } from 'react-router-dom'
-import { Button, Form, Message, Header } from 'semantic-ui-react'
 import { Container } from './loginUtilities'
 
 import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
+import { useForm } from 'react-hook-form'
+import { Submit, TextField } from '../../primitives/form/Input'
+import MessageBox from '../../primitives/form/MessageBox'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -27,14 +29,26 @@ const initialSetupMutation = gql`
   }
 `
 
+type InitialSetupFormData = {
+  username: string
+  password: string
+  rootPath: string
+}
+
 const InitialSetupPage = () => {
   const { t } = useTranslation()
 
-  const [state, setState] = useState({
-    username: '',
-    password: '',
-    rootPath: '',
-  })
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors },
+  } = useForm<InitialSetupFormData>()
+
+  // const [state, setState] = useState({
+  //   username: '',
+  //   password: '',
+  //   rootPath: '',
+  // })
 
   if (authToken()) {
     return <Redirect to="/" />
@@ -48,41 +62,37 @@ const InitialSetupPage = () => {
     <Redirect to="/" />
   )
 
-  const [
-    authorize,
-    { loading: authorizeLoading, data: authorizationData },
-  ] = useMutation(initialSetupMutation, {
-    onCompleted: data => {
-      const { success, token } = data.initialSetupWizard
+  const [authorize, { loading: authorizeLoading, data: authorizationData }] =
+    useMutation(initialSetupMutation, {
+      onCompleted: data => {
+        const { success, token } = data.initialSetupWizard
 
-      if (success) {
-        login(token)
-      }
-    },
-  })
-
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    key: string
-  ) => {
-    const value = event.target.value
-    setState(prevState => ({
-      ...prevState,
-      [key]: value,
-    }))
-  }
-
-  const signIn = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    authorize({
-      variables: {
-        username: state.username,
-        password: state.password,
-        rootPath: state.rootPath,
+        if (success) {
+          login(token)
+        }
       },
     })
-  }
+
+  // const handleChange = (
+  //   event: React.ChangeEvent<HTMLInputElement>,
+  //   key: string
+  // ) => {
+  //   const value = event.target.value
+  //   setState(prevState => ({
+  //     ...prevState,
+  //     [key]: value,
+  //   }))
+  // }
+
+  const signIn = handleSubmit(data => {
+    authorize({
+      variables: {
+        username: data.username,
+        password: data.password,
+        rootPath: data.rootPath,
+      },
+    })
+  })
 
   let errorMessage = null
   if (authorizationData && !authorizationData.initialSetupWizard.success) {
@@ -93,49 +103,59 @@ const InitialSetupPage = () => {
     <div>
       {initialSetupRedirect}
       <Container>
-        <Header as="h1" textAlign="center">
+        <h1 className="text-center text-xl">
           {t('login_page.initial_setup.title', 'Initial Setup')}
-        </Header>
-        <Form
-          style={{ width: 500, margin: 'auto' }}
-          error={!!errorMessage}
-          onSubmit={signIn}
-          loading={
-            authorizeLoading || authorizationData?.initialSetupWizard?.success
-          }
-        >
-          <Form.Field>
-            <label>{t('login_page.field.username', 'Username')}</label>
-            <input onChange={e => handleChange(e, 'username')} />
-          </Form.Field>
-          <Form.Field>
-            <label>{t('login_page.field.password', 'Password')}</label>
-            <input
-              type="password"
-              onChange={e => handleChange(e, 'password')}
-            />
-          </Form.Field>
-          <Form.Field>
-            <label>
-              {t(
-                'login_page.initial_setup.field.photo_path.label',
-                'Photo path'
-              )}
-            </label>
-            <input
-              placeholder={t(
-                'login_page.initial_setup.field.photo_path.placeholder',
-                '/path/to/photos'
-              )}
-              type="text"
-              onChange={e => handleChange(e, 'rootPath')}
-            />
-          </Form.Field>
-          <Message error content={errorMessage} />
-          <Button type="submit">
+        </h1>
+        <form onSubmit={signIn} className="max-w-[500px] mx-auto">
+          <TextField
+            wrapperClassName="my-4"
+            fullWidth
+            {...register('username', { required: true })}
+            label={t('login_page.field.username', 'Username')}
+            error={
+              formErrors.username?.type == 'required'
+                ? 'Please enter a username'
+                : undefined
+            }
+          />
+          <TextField
+            wrapperClassName="my-4"
+            fullWidth
+            {...register('password', { required: true })}
+            label={t('login_page.field.password', 'Password')}
+            error={
+              formErrors.password?.type == 'required'
+                ? 'Please enter a password'
+                : undefined
+            }
+          />
+          <TextField
+            wrapperClassName="my-4"
+            fullWidth
+            {...register('rootPath', { required: true })}
+            label={t(
+              'login_page.initial_setup.field.photo_path.label',
+              'Photo path'
+            )}
+            placeholder={t(
+              'login_page.initial_setup.field.photo_path.placeholder',
+              '/path/to/photos'
+            )}
+            error={
+              formErrors.password?.type == 'required'
+                ? 'Please enter a photo path'
+                : undefined
+            }
+          />
+          <MessageBox
+            type="negative"
+            message={errorMessage}
+            show={errorMessage}
+          />
+          <Submit className="mt-2" disabled={authorizeLoading}>
             {t('login_page.initial_setup.field.submit', 'Setup Photoview')}
-          </Button>
-        </Form>
+          </Submit>
+        </form>
       </Container>
     </div>
   )

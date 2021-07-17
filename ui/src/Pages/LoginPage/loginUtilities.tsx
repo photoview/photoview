@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client'
 import { saveTokenCookie } from '../../helpers/authentication'
 import styled from 'styled-components'
-import { Container as SemanticContainer } from 'semantic-ui-react'
+// import { Container as SemanticContainer } from 'semantic-ui-react'
 
 export const checkInitialSetupQuery = gql`
   query CheckInitialSetup {
@@ -16,6 +16,4 @@ export function login(token: string) {
   window.location.href = '/'
 }
 
-export const Container = styled(SemanticContainer)`
-  margin-top: 80px;
-`
+export const Container = styled.div.attrs({ className: 'mt-20' })``
