@@ -1,6 +1,5 @@
 import React, { forwardRef } from 'react'
 import classNames, { Argument as ClassNamesArg } from 'classnames'
-
 import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
 import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
 import styled from 'styled-components'
@@ -92,7 +91,12 @@ export const TextField = forwardRef(
             className={classNames(
               'absolute top-[1px] right-0 p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default'
             )}
-            onClick={() => action()}
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              action()
+              return false
+            }}
           >
             <ActionArrowIcon
               className={classNames(

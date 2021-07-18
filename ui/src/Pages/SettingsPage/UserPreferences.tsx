@@ -118,10 +118,7 @@ const UserPreferences = () => {
             },
           })
         }}
-        // selection
-        // search
         selected={data?.myUserPreferences.language || undefined}
-        // loading={loadingPrefs}
         disabled={loadingPrefs}
       />
     </UserPreferencesWrapper>

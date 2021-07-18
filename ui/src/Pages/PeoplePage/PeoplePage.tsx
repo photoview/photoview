@@ -115,7 +115,7 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
     }
   }, [loading])
 
-  const onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key == 'Escape') {
       resetLabel()
       return
@@ -155,9 +155,10 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
               },
             })
           }
-          onKeyDown={onKeyUp}
+          onKeyDown={onKeyDown}
           onChange={e => setInputValue(e.target.value)}
-          onBlur={() => {
+          onBlur={e => {
+            console.log(e)
             resetLabel()
           }}
         />
@@ -176,17 +177,6 @@ const FaceImagesCount = styled.span`
   margin-right: 6px;
   border-radius: 4px;
 `
-
-// const EditIcon = styled(Icon)`
-//   margin-left: 6px !important;
-//   opacity: 0 !important;
-
-//   transition: opacity 100ms;
-
-//   ${FaceDetailsButton}:hover &, ${FaceDetailsButton}:focus-visible & {
-//     opacity: 1 !important;
-//   }
-// `
 
 type FaceGroupProps = {
   group: myFaces_myFaceGroups

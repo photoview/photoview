@@ -1,6 +1,4 @@
 import React, { useState } from 'react'
-
-import { Loader, Icon } from 'semantic-ui-react'
 import {
   Table,
   TableHeader,
@@ -17,6 +15,7 @@ import { SectionTitle } from '../SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { settingsUsersQuery } from './__generated__/settingsUsersQuery'
 import { Button } from '../../../primitives/form/Input'
+import Loader from '../../../primitives/Loader'
 
 export const USERS_QUERY = gql`
   query settingsUsersQuery {
@@ -100,7 +99,6 @@ const UsersTable = () => {
                   disabled={showAddUser}
                   onClick={() => setShowAddUser(true)}
                 >
-                  <Icon name="add" />
                   {t('settings.users.table.new_user', 'New user')}
                 </Button>
               </TableHeaderCell>

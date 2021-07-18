@@ -84,14 +84,7 @@ const SelectFaceGroupTable = ({
 }: SelectFaceGroupTableProps) => {
   const { t } = useTranslation()
 
-  // const PAGE_SIZE = 6
-
-  // const [page, setPage] = useState(0)
   const [searchValue, setSearchValue] = useState('')
-
-  // useEffect(() => {
-  //   setPage(0)
-  // }, [searchValue])
 
   const rows = faceGroups
     .filter(
@@ -107,10 +100,6 @@ const SelectFaceGroupTable = ({
         setFaceSelected={() => setSelectedFaceGroup(face)}
       />
     ))
-
-  // const pageRows = rows.filter(
-  //   (_, i) => i >= page * PAGE_SIZE && i < (page + 1) * PAGE_SIZE
-  // )
 
   return (
     <>

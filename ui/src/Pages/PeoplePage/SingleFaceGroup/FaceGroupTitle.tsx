@@ -1,9 +1,13 @@
 import { useMutation } from '@apollo/client'
-import React, { useState, useEffect, createRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  createRef,
+  KeyboardEventHandler,
+} from 'react'
 import { useTranslation } from 'react-i18next'
-import { Input } from 'semantic-ui-react'
 import { isNil } from '../../../helpers/utils'
-import { Button } from '../../../primitives/form/Input'
+import { Button, TextField } from '../../../primitives/form/Input'
 import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
 import {
   setGroupLabel,
@@ -23,7 +27,7 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
 
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(faceGroup?.label ?? '')
-  const inputRef = createRef<Input>()
+  const inputRef = createRef<HTMLInputElement>()
   const [mergeModalOpen, setMergeModalOpen] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [detachModalOpen, setDetachModalOpen] = useState(false)
@@ -50,21 +54,9 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
     }
   }, [setLabelLoading])
 
-  const onKeyUp = (e: KeyboardEvent & React.ChangeEvent<HTMLInputElement>) => {
-    if (isNil(faceGroup)) throw new Error('Expected faceGroup to be defined')
-
+  const onKeyDown: KeyboardEventHandler<HTMLInputElement> = e => {
     if (e.key == 'Escape') {
       resetLabel()
-      return
-    }
-
-    if (e.key == 'Enter') {
-      setGroupLabel({
-        variables: {
-          groupID: faceGroup.id,
-          label: e.target.value == '' ? null : e.target.value,
-        },
-      })
       return
     }
   }
@@ -86,13 +78,23 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
   } else {
     title = (
       <>
-        <Input
+        <TextField
           loading={setLabelLoading}
           ref={inputRef}
           placeholder={t('people_page.face_group.label_placeholder', 'Label')}
-          icon="arrow right"
+          action={() => {
+            if (isNil(faceGroup))
+              throw new Error('Expected faceGroup to be defined')
+
+            setGroupLabel({
+              variables: {
+                groupID: faceGroup.id,
+                label: inputValue ? inputValue : null,
+              },
+            })
+          }}
           value={inputValue}
-          onKeyUp={onKeyUp}
+          onKeyDown={onKeyDown}
           onChange={e => setInputValue(e.target.value)}
           onBlur={() => {
             resetLabel()
@@ -145,45 +147,6 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
             <Button onClick={() => setMoveModalOpen(true)}>Move faces</Button>
           </li>
         </ul>
-        {/* <TitleDropdown
-          icon={{
-            name: 'settings',
-            size: 'large',
-          }}
-        >
-          <Dropdown.Menu>
-            <Dropdown.Item
-              icon="pencil"
-              text={
-                faceGroup?.label
-                  ? t(
-                      'people_page.face_group.action.change_label',
-                      'Change Label'
-                    )
-                  : t('people_page.face_group.action.add_label', 'Add Label')
-              }
-              onClick={() => setEditLabel(true)}
-            />
-            <Dropdown.Item
-              icon="object group"
-              text={t('people_page.face_group.action.merge_face', 'Merge Face')}
-              onClick={() => setMergeModalOpen(true)}
-            />
-            <Dropdown.Item
-              icon="object ungroup"
-              text={t(
-                'people_page.face_group.action.detach_face',
-                'Detach Face'
-              )}
-              onClick={() => setDetachModalOpen(true)}
-            />
-            <Dropdown.Item
-              icon="clone"
-              text={t('people_page.face_group.action.move_faces', 'Move Faces')}
-              onClick={() => setMoveModalOpen(true)}
-            />
-          </Dropdown.Menu>
-        </TitleDropdown> */}
       </div>
       {modals}
     </>

@@ -1,8 +1,8 @@
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Icon, Modal } from 'semantic-ui-react'
 import Checkbox from '../../../primitives/form/Checkbox'
 import { Button } from '../../../primitives/form/Input'
+import Modal from '../../../primitives/Modal'
 import { TableCell, TableRow } from '../../../primitives/Table'
 import ChangePasswordModal from './UserChangePassword'
 import { UserRowChildProps } from './UserRow'
@@ -52,11 +52,9 @@ const ViewUserRow = ({
             disabled={scanUserCalled}
             onClick={() => scanUser({ variables: { userId: user.id } })}
           >
-            <Icon name="sync" />
             {t('settings.users.table.row.action.scan', 'Scan')}
           </Button>
           <Button onClick={() => setChangePassword(true)}>
-            <Icon name="key" />
             {t(
               'settings.users.table.row.action.change_password',
               'Change password'
@@ -73,14 +71,37 @@ const ViewUserRow = ({
               setConfirmDelete(true)
             }}
           >
-            <Icon name="delete" />
             {t('settings.users.table.row.action.delete', 'Delete')}
           </Button>
-          <Modal open={showConfirmDelete}>
-            <Modal.Header>
-              {t('settings.users.confirm_delete_user.title', 'Delete user')}
-            </Modal.Header>
-            <Modal.Content>
+          <Modal
+            open={showConfirmDelete}
+            onClose={() => setConfirmDelete(false)}
+            title={t('settings.users.confirm_delete_user.title', 'Delete user')}
+            actions={[
+              {
+                key: 'cancel',
+                label: t('general.action.cancel', 'Cancel'),
+                onClick: () => setConfirmDelete(false),
+              },
+              {
+                key: 'delete',
+                label: t(
+                  'settings.users.confirm_delete_user.action',
+                  'Delete {{user}}',
+                  { user: user.username }
+                ),
+                onClick: () => {
+                  setConfirmDelete(false)
+                  deleteUser({
+                    variables: {
+                      id: user.id,
+                    },
+                  })
+                },
+                variant: 'negative',
+              },
+            ]}
+            description={
               <Trans
                 t={t}
                 i18nKey="settings.users.confirm_delete_user.description"
@@ -91,30 +112,8 @@ const ViewUserRow = ({
                 </p>
                 <p>{`This action cannot be undone`}</p>
               </Trans>
-            </Modal.Content>
-            <Modal.Actions>
-              <Button onClick={() => setConfirmDelete(false)}>
-                {t('general.action.cancel', 'Cancel')}
-              </Button>
-              <Button
-                variant="negative"
-                onClick={() => {
-                  setConfirmDelete(false)
-                  deleteUser({
-                    variables: {
-                      id: user.id,
-                    },
-                  })
-                }}
-              >
-                {t(
-                  'settings.users.confirm_delete_user.action',
-                  'Delete {{user}}',
-                  { user: user.username }
-                )}
-              </Button>
-            </Modal.Actions>
-          </Modal>
+            }
+          />
         </div>
       </TableCell>
     </TableRow>

@@ -44,12 +44,6 @@ const InitialSetupPage = () => {
     formState: { errors: formErrors },
   } = useForm<InitialSetupFormData>()
 
-  // const [state, setState] = useState({
-  //   username: '',
-  //   password: '',
-  //   rootPath: '',
-  // })
-
   if (authToken()) {
     return <Redirect to="/" />
   }
@@ -72,17 +66,6 @@ const InitialSetupPage = () => {
         }
       },
     })
-
-  // const handleChange = (
-  //   event: React.ChangeEvent<HTMLInputElement>,
-  //   key: string
-  // ) => {
-  //   const value = event.target.value
-  //   setState(prevState => ({
-  //     ...prevState,
-  //     [key]: value,
-  //   }))
-  // }
 
   const signIn = handleSubmit(data => {
     authorize({

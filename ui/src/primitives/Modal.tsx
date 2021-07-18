@@ -12,7 +12,7 @@ export type ModalAction = {
 type ModalProps = {
   title: string
   description: React.ReactNode
-  children: React.ReactNode
+  children?: React.ReactNode
   actions: ModalAction[]
   open: boolean
   onClose(): void

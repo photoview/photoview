@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client'
-// import { Input, Loader } from 'semantic-ui-react'
 import { InputLabelTitle, InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { concurrentWorkersQuery } from './__generated__/concurrentWorkersQuery'
@@ -84,12 +83,6 @@ const ScannerConcurrentWorkers = () => {
           event.key == 'Enter' && updateWorkerAmount(workerAmount)
         }
       />
-      {/* <Loader
-        active={workerAmountQuery.loading || workersMutationData.loading}
-        inline
-        size="small"
-        style={{ marginLeft: 16 }}
-      /> */}
     </div>
   )
 }

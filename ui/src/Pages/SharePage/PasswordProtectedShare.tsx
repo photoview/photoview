@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { TextField } from '../../primitives/form/Input'
 import { MessageContainer } from './SharePage'
-// import { Message, Header, Form, Input, Icon } from 'semantic-ui-react'
 
 type ProtectedTokenEnterPasswordProps = {
   refetchWithPassword(password: string): void
@@ -23,7 +22,6 @@ const PasswordProtectedShare = ({
     handleSubmit,
   } = useForm()
 
-  // const [passwordValue, setPasswordValue] = useState('')
   const [invalidPassword, setInvalidPassword] = useState(false)
 
   const onSubmit = () => {
@@ -66,21 +64,6 @@ const PasswordProtectedShare = ({
         fullWidth={true}
         sizeVariant="big"
       />
-      {/* <Form.Field>
-          <label>{t('login_page.field.password', 'Password')}</label>
-          <Input
-            loading={loading}
-            disabled={loading}
-            onKeyUp={(event: KeyboardEvent) =>
-              event.key == 'Enter' && onSubmit()
-            }
-            onChange={e => setPasswordValue(e.target.value)}
-            placeholder={t('login_page.field.password', 'Password')}
-            type="password"
-            icon={<Icon onClick={onSubmit} link name="arrow right" />}
-          />
-        </Form.Field>
-        {errorMessage} */}
     </MessageContainer>
   )
 }

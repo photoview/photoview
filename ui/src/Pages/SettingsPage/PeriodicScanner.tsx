@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client'
 import React, { useRef, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
-import { Loader } from 'semantic-ui-react'
 import { InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { scanIntervalQuery } from './__generated__/scanIntervalQuery'
@@ -12,6 +11,7 @@ import {
 import Checkbox from '../../primitives/form/Checkbox'
 import { TextField } from '../../primitives/form/Input'
 import Dropdown, { DropdownItem } from '../../primitives/form/Dropdown'
+import Loader from '../../primitives/Loader'
 
 const SCAN_INTERVAL_QUERY = gql`
   query scanIntervalQuery {
@@ -234,7 +234,6 @@ const PeriodicScanner = () => {
       </div>
       <Loader
         active={scanIntervalQuery.loading || scanIntervalMutationLoading}
-        inline
         size="small"
         style={{ marginLeft: 16 }}
       />
