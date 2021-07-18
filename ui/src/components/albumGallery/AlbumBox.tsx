@@ -1,51 +1,7 @@
 import React, { useState } from 'react'
-import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
-
-const AlbumBoxLink = styled(Link)`
-  width: 240px;
-  height: 240px;
-  display: inline-block;
-  text-align: center;
-  color: #222;
-`
-
-const ImageWrapper = styled.div`
-  width: 240px;
-  height: 220px;
-  padding: 0 10px;
-  position: relative;
-`
-
-const Image = styled(ProtectedImage)`
-  width: 220px;
-  height: 220px;
-  margin: auto;
-  border-radius: 4%;
-  object-fit: cover;
-  object-position: center;
-`
-
-const Placeholder = styled.div<{ overlap?: boolean; loaded?: boolean }>`
-  width: 220px;
-  height: 220px;
-  border-radius: 4%;
-  margin: auto;
-  background: linear-gradient(#f7f7f7 0%, #eee 100%);
-
-  ${({ overlap, loaded }) =>
-    overlap &&
-    `
-    position: absolute;
-    top: 0;
-    left: 10px;
-    opacity: ${loaded ? 0 : 1};
-
-    transition: opacity 200ms;
-  `}
-`
 
 interface AlbumBoxImageProps {
   src?: string
@@ -54,16 +10,31 @@ interface AlbumBoxImageProps {
 const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
   const [loaded, setLoaded] = useState(false)
 
+  let image = null
   if (src) {
-    return (
-      <ImageWrapper>
-        <Image {...props} onLoad={() => setLoaded(true)} src={src} />
-        <Placeholder overlap loaded={loaded} />
-      </ImageWrapper>
+    image = (
+      <ProtectedImage
+        className="object-cover object-center w-full h-full rounded-lg"
+        {...props}
+        onLoad={() => setLoaded(true)}
+        src={src}
+      />
     )
   }
 
-  return <Placeholder />
+  let placeholder = null
+  if (!loaded) {
+    placeholder = (
+      <div className="bg-gray-100 animate-pulse w-full h-full rounded-lg absolute"></div>
+    )
+  }
+
+  return (
+    <div className="xs:w-[220px] xs:h-[220px] relative rounded-lg">
+      {image}
+      {placeholder}
+    </div>
+  )
 }
 
 type AlbumBoxProps = {
@@ -72,20 +43,25 @@ type AlbumBoxProps = {
 }
 
 export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
-  if (!album) {
+  const wrapperClasses =
+    'inline-block text-center text-gray-900 mx-3 my-2 xs:h-60'
+
+  if (album) {
     return (
-      <AlbumBoxLink {...props} to="#">
-        <AlbumBoxImage />
-      </AlbumBoxLink>
+      <Link
+        to={customLink || `/album/${album.id}`}
+        className={wrapperClasses}
+        {...props}
+      >
+        <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} />
+        <p>{album.title}</p>
+      </Link>
     )
   }
 
-  const thumbnail = album.thumbnail?.thumbnail?.url
-
   return (
-    <AlbumBoxLink {...props} to={customLink || `/album/${album.id}`}>
-      <AlbumBoxImage src={thumbnail} />
-      <p>{album.title}</p>
-    </AlbumBoxLink>
+    <div className={wrapperClasses} {...props}>
+      <AlbumBoxImage />
+    </div>
   )
 }

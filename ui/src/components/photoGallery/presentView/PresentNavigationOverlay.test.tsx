@@ -5,7 +5,7 @@ import React from 'react'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import { fireEvent, render, screen, act } from '@testing-library/react'
 
-jest.useFakeTimers()
+jest.useFakeTimers('modern')
 
 describe('PresentNavigationOverlay component', () => {
   test('simple render', () => {
@@ -44,6 +44,7 @@ describe('PresentNavigationOverlay component', () => {
     act(() => {
       jest.advanceTimersByTime(3000)
     })
+
     expect(screen.getByLabelText('Next image')).toHaveClass('hide')
   })
 })

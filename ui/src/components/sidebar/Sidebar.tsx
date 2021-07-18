@@ -1,48 +1,13 @@
-import React, { createContext, useState } from 'react'
-import PropTypes from 'prop-types'
-import styled from 'styled-components'
-import { Icon } from 'semantic-ui-react'
-
-const SidebarContainer = styled.div<{ highlighted: boolean }>`
-  width: 28vw;
-  max-width: 500px;
-  min-width: 300px;
-  flex-shrink: 0;
-  overflow-y: scroll;
-  right: 0;
-  margin-top: 60px;
-  background-color: white;
-  padding: 12px;
-  border-left: 1px solid #eee;
-
-  @media (max-width: 700px) {
-    position: absolute;
-    width: 100%;
-    /* full height - header - tabbar */
-    height: calc(100% - 60px - 80px);
-    max-width: min(calc(100vw - 85px), 400px);
-    ${({ highlighted }) => `right: ${highlighted ? 0 : -100}%;`}
-    padding-top: 45px;
-  }
-
-  transition: right 200ms ease-in-out;
-`
-
-const SidebarDismissButton = styled(Icon)`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-
-  @media (min-width: 700px) {
-    display: none;
-  }
-`
+import React, { createContext, useContext, useEffect, useState } from 'react'
 
 export type UpdateSidebarFn = (content: React.ReactNode) => void
+export type SidebarPinnedFn = (pin: boolean) => void
 
 interface SidebarContextType {
   updateSidebar: UpdateSidebarFn
+  setPinned: SidebarPinnedFn
   content: React.ReactNode
+  pinned: boolean
 }
 
 export const SidebarContext = createContext<SidebarContextType>({
@@ -52,48 +17,86 @@ export const SidebarContext = createContext<SidebarContextType>({
       content
     )
   },
+  setPinned: content => {
+    console.warn(
+      'SidebarContext: setPinned was called before initialized',
+      content
+    )
+  },
   content: null,
+  pinned: false,
 })
 SidebarContext.displayName = 'SidebarContext'
 
-type SidebarProps = {
-  children: React.ReactElement
+type SidebarProviderProps = {
+  children: React.ReactChild | React.ReactChild[]
 }
 
-const Sidebar = ({ children }: SidebarProps) => {
-  const [state, setState] = useState<{ content: React.ReactNode | null }>({
+export const SidebarProvider = ({ children }: SidebarProviderProps) => {
+  const [state, setState] = useState<{
+    content: React.ReactNode | null
+    pinned: boolean
+  }>({
     content: null,
+    pinned: false,
   })
 
-  const update = (content: React.ReactNode | null) => {
-    setState({ content })
+  const updateSidebar = (content: React.ReactNode | null) => {
+    if (content) {
+      setState(state => ({ ...state, content }))
+    } else {
+      setState(state => ({ ...state, content: null, pinned: false }))
+    }
+  }
+
+  const setPinned = (pinned: boolean) => {
+    setState(state => ({ ...state, pinned }))
   }
 
   return (
     <SidebarContext.Provider
-      value={{ updateSidebar: update, content: state.content }}
+      value={{
+        updateSidebar,
+        setPinned,
+        content: state.content,
+        pinned: state.pinned,
+      }}
     >
       {children}
-      <SidebarContext.Consumer>
-        {value => (
-          <SidebarContainer highlighted={value.content != null}>
-            {value.content}
-            <SidebarDismissButton
-              name="angle double right"
-              size="big"
-              link
-              onClick={() => setState({ content: null })}
-            />
-            <div style={{ height: 100 }}></div>
-          </SidebarContainer>
-        )}
-      </SidebarContext.Consumer>
     </SidebarContext.Provider>
   )
 }
 
-Sidebar.propTypes = {
-  children: PropTypes.element,
-}
+export const Sidebar = () => {
+  const { content, pinned } = useContext(SidebarContext)
 
-export default Sidebar
+  useEffect(() => {
+    const body = document.body
+
+    if (content == null) {
+      body.classList.remove('overflow-y-hidden')
+      body.classList.remove('lg:overflow-y-auto')
+    } else {
+      body.classList.add('overflow-y-hidden')
+      body.classList.add('lg:overflow-y-auto')
+    }
+
+    return () => {
+      body.classList.remove('overflow-y-hidden')
+      body.classList.remove('lg:overflow-y-auto')
+    }
+  })
+
+  return (
+    <div
+      className={`fixed top-[72px] bg-white bottom-0 w-full overflow-y-auto transform transition-transform motion-reduce:transition-none ${
+        content == null && !pinned ? 'translate-x-full' : 'translate-x-0'
+      } ${
+        pinned ? 'lg:border-l' : 'lg:shadow-separator'
+      } lg:w-[420px] lg:right-0 lg:top-0 lg:z-40`}
+    >
+      {content}
+      <div className="h-24"></div>
+    </div>
+  )
+}

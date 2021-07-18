@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { MediaType } from '../../../../__generated__/globalTypes'
+import { MediaType } from '../../../__generated__/globalTypes'
 import { exhaustiveCheck } from '../../../helpers/utils'
 import {
   ProtectedImage,

@@ -1,7 +1,6 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Modal } from 'semantic-ui-react'
 import SelectFaceGroupTable from './SelectFaceGroupTable'
 import SelectImageFacesTable from './SelectImageFacesTable'
 import { MY_FACES_QUERY } from '../PeoplePage'
@@ -21,6 +20,7 @@ import {
   moveImageFacesVariables,
 } from './__generated__/moveImageFaces'
 import { useTranslation } from 'react-i18next'
+import Modal, { ModalAction } from '../../../primitives/Modal'
 
 const MOVE_IMAGE_FACES_MUTATION = gql`
   mutation moveImageFaces($faceIDs: [ID!]!, $destFaceGroupID: ID!) {
@@ -141,63 +141,48 @@ const MoveImageFacesModal = ({
     }
   }
 
-  let positiveButton = null
+  let positiveButton: ModalAction
   if (!imagesSelected) {
-    positiveButton = (
-      <Button
-        disabled={selectedImageFaces.length == 0}
-        content={t(
-          'people_page.modal.move_image_faces.image_select_table.next_action',
-          'Next'
-        )}
-        labelPosition="right"
-        icon="arrow right"
-        onClick={() => setImagesSelected(true)}
-        positive
-      />
-    )
+    positiveButton = {
+      key: 'next',
+      label: t(
+        'people_page.modal.move_image_faces.image_select_table.next_action',
+        'Next'
+      ),
+      onClick: () => setImagesSelected(true),
+      variant: 'positive',
+    }
   } else {
-    positiveButton = (
-      <Button
-        disabled={!selectedFaceGroup}
-        content={t(
-          'people_page.modal.move_image_faces.destination_face_group_table.move_action',
-          'Move image faces'
-        )}
-        labelPosition="right"
-        icon="checkmark"
-        onClick={() => moveImageFaces()}
-        positive
-      />
-    )
+    positiveButton = {
+      key: 'move',
+      label: t(
+        'people_page.modal.move_image_faces.destination_face_group_table.move_action',
+        'Move image faces'
+      ),
+      onClick: () => moveImageFaces(),
+      variant: 'positive',
+    }
   }
 
   return (
     <Modal
+      title={t('people_page.modal.move_image_faces.title', 'Move Image Faces')}
+      description={t(
+        'people_page.modal.move_image_faces.description',
+        'Move selected images of this face group to another face group'
+      )}
       onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
       open={open}
+      actions={[
+        {
+          key: 'cancel',
+          label: t('general.action.cancel', 'Cancel'),
+          onClick: () => setOpen(false),
+        },
+        positiveButton,
+      ]}
     >
-      <Modal.Header>
-        {t('people_page.modal.move_image_faces.title', 'Move Image Faces')}
-      </Modal.Header>
-      <Modal.Content scrolling>
-        <Modal.Description>
-          <p>
-            {t(
-              'people_page.modal.move_image_faces.description',
-              'Move selected images of this face group to another face group'
-            )}
-          </p>
-          {table}
-        </Modal.Description>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button onClick={() => setOpen(false)}>
-          {t('general.action.cancel', 'Cancel')}
-        </Button>
-        {positiveButton}
-      </Modal.Actions>
+      {table}
     </Modal>
   )
 }

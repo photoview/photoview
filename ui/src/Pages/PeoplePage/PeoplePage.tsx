@@ -1,10 +1,10 @@
 import React, { createRef, useEffect, useState } from 'react'
 import { gql, useMutation, useQuery } from '@apollo/client'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
-import { Button, Icon, Input } from 'semantic-ui-react'
+import { Button, TextField } from '../../primitives/form/Input'
 import FaceCircleImage from './FaceCircleImage'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
@@ -65,7 +65,7 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
   }
 `
 
-const FaceDetailsButton = styled.button<{ labeled: boolean }>`
+const FaceDetailsWrapper = styled.div<{ labeled: boolean }>`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
   width: 150px;
   margin: 12px auto 24px;
@@ -81,8 +81,6 @@ const FaceDetailsButton = styled.button<{ labeled: boolean }>`
   }
 `
 
-const FaceLabel = styled.span``
-
 type FaceDetailsProps = {
   group: myFaces_myFaceGroups
 }
@@ -91,7 +89,7 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
   const { t } = useTranslation()
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
-  const inputRef = createRef<Input>()
+  const inputRef = createRef<HTMLInputElement>()
 
   const [setGroupLabel, { loading }] = useMutation<
     setGroupLabel,
@@ -117,19 +115,9 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
     }
   }, [loading])
 
-  const onKeyUp = (e: React.ChangeEvent<HTMLInputElement> & KeyboardEvent) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key == 'Escape') {
       resetLabel()
-      return
-    }
-
-    if (e.key == 'Enter') {
-      setGroupLabel({
-        variables: {
-          groupID: group.id,
-          label: e.target.value == '' ? null : e.target.value,
-        },
-      })
       return
     }
   }
@@ -137,34 +125,44 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
   let label
   if (!editLabel) {
     label = (
-      <FaceDetailsButton
+      <FaceDetailsWrapper
         labeled={!!group.label}
         onClick={() => setEditLabel(true)}
       >
         <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
-        <FaceLabel>
+        <button>
           {group.label ?? t('people_page.face_group.unlabeled', 'Unlabeled')}
-        </FaceLabel>
-        <EditIcon name="pencil" />
-      </FaceDetailsButton>
+        </button>
+        {/* <EditIcon name="pencil" /> */}
+      </FaceDetailsWrapper>
     )
   } else {
     label = (
-      <FaceDetailsButton labeled={!!group.label}>
-        <Input
+      <FaceDetailsWrapper labeled={!!group.label}>
+        <TextField
+          className="w-[160px]"
           loading={loading}
           ref={inputRef}
-          size="mini"
+          // size="mini"
           placeholder={t('people_page.face_group.label_placeholder', 'Label')}
-          icon="arrow right"
+          // icon="arrow right"
           value={inputValue}
-          onKeyUp={onKeyUp}
+          action={() =>
+            setGroupLabel({
+              variables: {
+                groupID: group.id,
+                label: inputValue == '' ? null : inputValue,
+              },
+            })
+          }
+          onKeyDown={onKeyDown}
           onChange={e => setInputValue(e.target.value)}
-          onBlur={() => {
+          onBlur={e => {
+            console.log(e)
             resetLabel()
           }}
         />
-      </FaceDetailsButton>
+      </FaceDetailsWrapper>
     )
   }
 
@@ -178,17 +176,6 @@ const FaceImagesCount = styled.span`
   padding: 0 4px;
   margin-right: 6px;
   border-radius: 4px;
-`
-
-const EditIcon = styled(Icon)`
-  margin-left: 6px !important;
-  opacity: 0 !important;
-
-  transition: opacity 100ms;
-
-  ${FaceDetailsButton}:hover &, ${FaceDetailsButton}:focus-visible & {
-    opacity: 1 !important;
-  }
 `
 
 type FaceGroupProps = {
@@ -251,13 +238,11 @@ const PeopleGallery = () => {
   return (
     <Layout title={t('title.people', 'People')}>
       <Button
-        loading={recognizeUnlabeledLoading}
         disabled={recognizeUnlabeledLoading}
         onClick={() => {
           recognizeUnlabeled()
         }}
       >
-        <Icon name="sync" />
         {t(
           'people_page.recognize_unlabeled_faces_button',
           'Recognize unlabeled faces'

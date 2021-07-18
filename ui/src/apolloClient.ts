@@ -15,9 +15,10 @@ import urlJoin from 'url-join'
 import { clearTokenCookie } from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
 import { Message } from './components/messages/SubscriptionsHook'
+import { NotificationType } from './__generated__/globalTypes'
 
-export const GRAPHQL_ENDPOINT = process.env.PHOTOVIEW_API_ENDPOINT
-  ? urlJoin(process.env.PHOTOVIEW_API_ENDPOINT, '/graphql')
+export const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_ENDPOINT
+  ? urlJoin(process.env.REACT_APP_API_ENDPOINT as string, '/graphql')
   : urlJoin(location.origin, '/api/graphql')
 
 const httpLink = new HttpLink({
@@ -85,7 +86,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
     clearTokenCookie()
 
-    const errors = (networkError as ServerError).result.errors
+    const errors = (networkError as ServerError)?.result.errors || []
 
     if (errors.length == 1) {
       errorMessages.push({
@@ -103,9 +104,9 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
   }
 
   if (errorMessages.length > 0) {
-    const newMessages = errorMessages.map(msg => ({
+    const newMessages: Message[] = errorMessages.map(msg => ({
       key: Math.random().toString(26),
-      type: 'message',
+      type: NotificationType.Message,
       props: {
         negative: true,
         ...msg,

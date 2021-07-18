@@ -1,9 +1,7 @@
 import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import { Loader } from 'semantic-ui-react'
-import { MediaThumbnail, PhotoThumbnail } from './MediaThumbnail'
+import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { useTranslation } from 'react-i18next'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
 import {
@@ -37,10 +35,6 @@ const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
-const ClearWrap = styled.div`
-  clear: both;
-`
-
 export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
   thumbnail: sidebarPhoto_media_thumbnail | null
   favorite?: boolean
@@ -52,13 +46,7 @@ type PhotoGalleryProps = {
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
-const PhotoGallery = ({
-  mediaState,
-  loading,
-  dispatchMedia,
-}: PhotoGalleryProps) => {
-  const { t } = useTranslation()
-
+const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
   const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState
@@ -94,11 +82,6 @@ const PhotoGallery = ({
             toggleFavoriteAction({
               media,
               markFavorite,
-            }).then(() => {
-              dispatchMedia({
-                type: 'selectImage',
-                index,
-              })
             })
           }}
           clickPresent={() => {
@@ -109,16 +92,13 @@ const PhotoGallery = ({
     })
   } else {
     for (let i = 0; i < 6; i++) {
-      photoElements.push(<PhotoThumbnail key={i} />)
+      photoElements.push(<MediaPlaceholder key={i} />)
     }
   }
 
   return (
-    <ClearWrap>
+    <>
       <Gallery data-testid="photo-gallery-wrapper">
-        <Loader active={loading}>
-          {t('general.loading.media', 'Loading media')}
-        </Loader>
         {photoElements}
         <PhotoFiller />
       </Gallery>
@@ -128,7 +108,7 @@ const PhotoGallery = ({
           dispatchMedia={dispatchMedia}
         />
       )}
-    </ClearWrap>
+    </>
   )
 }
 

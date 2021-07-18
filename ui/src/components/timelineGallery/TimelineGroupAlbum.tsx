@@ -13,37 +13,6 @@ import {
   TimelineGalleryState,
 } from './timelineGalleryReducer'
 
-const MediaWrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  height: 210px;
-  position: relative;
-  margin: -4px;
-  padding-right: 16px;
-
-  overflow: hidden;
-
-  @media (max-width: 1000px) {
-    /* Compensate for tab bar on mobile */
-    margin-bottom: 76px;
-  }
-`
-
-const AlbumTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 200;
-  margin: 0 0 4px;
-
-  & a:not(:hover) {
-    color: #212121;
-  }
-`
-
-const GroupAlbumWrapper = styled.div`
-  margin: 12px 8px 0;
-`
-
 const TotalItemsBubble = styled(Link)`
   position: absolute;
   top: 24px;
@@ -104,15 +73,6 @@ const TimelineGroupAlbum = ({
         toggleFavoriteAction({
           media,
           markFavorite,
-        }).then(() => {
-          dispatchMedia({
-            type: 'selectImage',
-            index: {
-              album: albumIndex,
-              date: dateIndex,
-              media: index,
-            },
-          })
         })
       }}
       active={media.id === getActiveTimelineImage({ mediaState })?.id}
@@ -130,15 +90,15 @@ const TimelineGroupAlbum = ({
   }
 
   return (
-    <GroupAlbumWrapper>
-      <AlbumTitle>
-        <Link to={`/album/${album.id}`}>{album.title}</Link>
-      </AlbumTitle>
-      <MediaWrapper>
+    <div className="mx-2">
+      <Link to={`/album/${album.id}`} className="hover:underline">
+        {album.title}
+      </Link>
+      <div className="flex flex-wrap items-center h-[210px] relative -mx-1 pr-4 overflow-hidden">
         {mediaElms}
         {itemsBubble}
-      </MediaWrapper>
-    </GroupAlbumWrapper>
+      </div>
+    </div>
   )
 }
 

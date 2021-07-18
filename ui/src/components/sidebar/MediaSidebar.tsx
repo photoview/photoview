@@ -13,7 +13,7 @@ import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 import { isNil } from '../../helpers/utils'
 import { useTranslation } from 'react-i18next'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import { TranslationFn } from '../../localization'
 import {
   sidebarPhoto,
@@ -25,6 +25,7 @@ import {
 } from './__generated__/sidebarPhoto'
 
 import { sidebarDownloadQuery_media_downloads } from './__generated__/sidebarDownloadQuery'
+import SidebarHeader from './SidebarHeader'
 
 const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarPhoto($id: ID!) {
@@ -87,13 +88,6 @@ const SIDEBAR_MEDIA_QUERY = gql`
   }
 `
 
-const PreviewImageWrapper = styled.div<{ imageAspect: number }>`
-  width: 100%;
-  height: 0;
-  padding-top: ${({ imageAspect }) => Math.min(imageAspect, 0.75) * 100}%;
-  position: relative;
-`
-
 const PreviewImage = styled(ProtectedImage)`
   position: absolute;
   width: 100%;
@@ -134,12 +128,6 @@ const PreviewMedia = ({ media, previewImage }: PreviewMediaProps) => {
   return <div>ERROR: Unknown media type: {media.type}</div>
 }
 
-const Name = styled.div`
-  text-align: center;
-  font-size: 1.2rem;
-  margin: 0.75rem 0 1rem;
-`
-
 const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
 `
@@ -155,7 +143,7 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
   const exifName = exifNameLookup(t)
 
   if (media?.exif) {
-    const mediaExif = (media?.exif as unknown) as {
+    const mediaExif = media?.exif as unknown as {
       [key: string]: string | number | null
     }
 
@@ -212,7 +200,7 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
 
   let videoMetadataItems: JSX.Element[] = []
   if (media?.videoMetadata) {
-    const videoMetadata = (media.videoMetadata as unknown) as {
+    const videoMetadata = media.videoMetadata as unknown as {
       [key: string]: string | number | null
     }
 
@@ -371,16 +359,21 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
 
   return (
     <div>
-      {!hidePreview && (
-        <PreviewImageWrapper imageAspect={imageAspect}>
-          <PreviewMedia
-            previewImage={previewImage || undefined}
-            media={media}
-          />
-          <SidebarFacesOverlay media={media} />
-        </PreviewImageWrapper>
-      )}
-      <Name>{media.title}</Name>
+      <SidebarHeader title={media.title ?? 'Loading...'} />
+      <div className="lg:mx-4">
+        {!hidePreview && (
+          <div
+            className="w-full h-0 relative"
+            style={{ paddingTop: `${Math.min(imageAspect, 0.75) * 100}%` }}
+          >
+            <PreviewMedia
+              previewImage={previewImage || undefined}
+              media={media}
+            />
+            <SidebarFacesOverlay media={media} />
+          </div>
+        )}
+      </div>
       <MetadataInfo media={media} />
       <SidebarDownload media={media} />
       <SidebarPhotoShare id={media.id} />

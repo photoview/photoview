@@ -2,9 +2,10 @@ import { useMutation, useQuery } from '@apollo/client'
 import gql from 'graphql-tag'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Dropdown } from 'semantic-ui-react'
 import styled from 'styled-components'
-import { LanguageTranslation } from '../../../__generated__/globalTypes'
+import { LanguageTranslation } from '../../__generated__/globalTypes'
+import Dropdown from '../../primitives/form/Dropdown'
+import { Button } from '../../primitives/form/Input'
 import {
   InputLabelDescription,
   InputLabelTitle,
@@ -17,14 +18,14 @@ import {
 import { myUserPreferences } from './__generated__/myUserPreferences'
 
 const languagePreferences = [
-  { key: 1, text: 'English', flag: 'uk', value: LanguageTranslation.English },
-  { key: 2, text: 'Français', flag: 'fr', value: LanguageTranslation.French },
-  { key: 3, text: 'Svenska', flag: 'se', value: LanguageTranslation.Swedish },
-  { key: 4, text: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
-  { key: 5, text: 'Español', flag: 'es', value: LanguageTranslation.Spanish },
-  { key: 6, text: 'polski', flag: 'pl', value: LanguageTranslation.Polish },
-  { key: 7, text: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
-  { key: 8, text: 'Deutsch', flag: 'de', value: LanguageTranslation.German },
+  { key: 1, label: 'English', flag: 'uk', value: LanguageTranslation.English },
+  { key: 2, label: 'Français', flag: 'fr', value: LanguageTranslation.French },
+  { key: 3, label: 'Svenska', flag: 'se', value: LanguageTranslation.Swedish },
+  { key: 4, label: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
+  { key: 5, label: 'Español', flag: 'es', value: LanguageTranslation.Spanish },
+  { key: 6, label: 'polski', flag: 'pl', value: LanguageTranslation.Polish },
+  { key: 7, label: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
+  { key: 8, label: 'Deutsch', flag: 'de', value: LanguageTranslation.German },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
@@ -45,6 +46,21 @@ const MY_USER_PREFERENCES = gql`
   }
 `
 
+const LogoutButton = () => {
+  const { t } = useTranslation()
+
+  return (
+    <Button
+      className="mb-4"
+      onClick={() => {
+        location.href = '/logout'
+      }}
+    >
+      {t('settings.logout', 'Log out')}
+    </Button>
+  )
+}
+
 const UserPreferencesWrapper = styled.div`
   margin-bottom: 24px;
 `
@@ -60,7 +76,7 @@ const UserPreferences = () => {
   >(CHANGE_USER_PREFERENCES)
 
   const sortedLanguagePrefs = useMemo(
-    () => languagePreferences.sort((a, b) => a.text.localeCompare(b.text)),
+    () => languagePreferences.sort((a, b) => a.label.localeCompare(b.label)),
     []
   )
 
@@ -73,6 +89,7 @@ const UserPreferences = () => {
       <SectionTitle nospace>
         {t('settings.user_preferences.title', 'User preferences')}
       </SectionTitle>
+      <LogoutButton />
       <label id="user_pref_change_language_field">
         <InputLabelTitle>
           {t(
@@ -93,19 +110,15 @@ const UserPreferences = () => {
           'settings.user_preferences.language_selector.placeholder',
           'Select language'
         )}
-        clearable
-        options={sortedLanguagePrefs}
-        onChange={(event, { value: language }) => {
+        items={sortedLanguagePrefs}
+        setSelected={language => {
           changePrefs({
             variables: {
               language: language as LanguageTranslation,
             },
           })
         }}
-        selection
-        search
-        value={data?.myUserPreferences.language || undefined}
-        loading={loadingPrefs}
+        selected={data?.myUserPreferences.language || undefined}
         disabled={loadingPrefs}
       />
     </UserPreferencesWrapper>

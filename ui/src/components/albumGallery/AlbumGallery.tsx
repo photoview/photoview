@@ -1,14 +1,14 @@
 import React, { useEffect, useReducer } from 'react'
-import AlbumTitle from '../AlbumTitle'
+import AlbumTitle from '../album/AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
-import AlbumFilter from '../AlbumFilter'
+import AlbumFilter from '../album/AlbumFilter'
 import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
-import { OrderDirection } from '../../../__generated__/globalTypes'
 import {
   photoGalleryReducer,
   urlPresentModeSetupHook,
 } from '../photoGallery/photoGalleryReducer'
+import { MediaOrdering, SetOrderingFn } from '../../hooks/useOrderingParams'
 
 type AlbumGalleryProps = {
   album?: albumQuery_album
@@ -16,8 +16,8 @@ type AlbumGalleryProps = {
   customAlbumLink?(albumID: string): string
   showFilter?: boolean
   setOnlyFavorites?(favorites: boolean): void
-  setOrdering?(ordering: { orderBy: string }): void
-  ordering?: { orderBy: string | null; orderDirection: OrderDirection | null }
+  setOrdering?: SetOrderingFn
+  ordering?: MediaOrdering
   onlyFavorites?: boolean
   onFavorite?(): void
 }
@@ -61,19 +61,17 @@ const AlbumGallery = React.forwardRef(
       if (album.subAlbums.length > 0) {
         subAlbumElement = (
           <AlbumBoxes
-            loading={loading}
             albums={album.subAlbums}
             getCustomLink={customAlbumLink}
           />
         )
       }
     } else {
-      subAlbumElement = <AlbumBoxes loading={loading} />
+      subAlbumElement = <AlbumBoxes />
     }
 
     return (
       <div ref={ref}>
-        <AlbumTitle album={album} disableLink />
         {showFilter && (
           <AlbumFilter
             onlyFavorites={onlyFavorites}
@@ -82,17 +80,8 @@ const AlbumGallery = React.forwardRef(
             ordering={ordering}
           />
         )}
+        <AlbumTitle album={album} disableLink />
         {subAlbumElement}
-        {
-          <h2
-            style={{
-              opacity: loading ? 0 : 1,
-              display: album && album.subAlbums.length > 0 ? 'block' : 'none',
-            }}
-          >
-            Images
-          </h2>
-        }
         <PhotoGallery
           loading={loading}
           mediaState={mediaState}

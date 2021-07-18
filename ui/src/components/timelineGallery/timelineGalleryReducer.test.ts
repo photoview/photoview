@@ -1,5 +1,5 @@
 import { myTimeline_myTimeline } from './__generated__/myTimeline'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import {
   timelineGalleryReducer,
   TimelineGalleryState,
@@ -30,8 +30,7 @@ describe('timeline gallery reducer', () => {
           title: '3666760020.jpg',
           type: MediaType.Photo,
           thumbnail: {
-            url:
-              'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',
@@ -51,8 +50,7 @@ describe('timeline gallery reducer', () => {
           title: '7414455077.jpg',
           type: MediaType.Photo,
           thumbnail: {
-            url:
-              'http://localhost:4001/photo/thumbnail_7414455077_jpg_9JYHHYh6.jpg',
+            url: 'http://localhost:4001/photo/thumbnail_7414455077_jpg_9JYHHYh6.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',
@@ -84,8 +82,7 @@ describe('timeline gallery reducer', () => {
           title: '3666760020.jpg',
           type: MediaType.Photo,
           thumbnail: {
-            url:
-              'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',
@@ -120,8 +117,7 @@ describe('timeline gallery reducer', () => {
           favorite: false,
           videoWeb: null,
           thumbnail: {
-            url:
-              'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',

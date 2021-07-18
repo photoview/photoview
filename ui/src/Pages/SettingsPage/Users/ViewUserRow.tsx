@@ -1,15 +1,11 @@
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Button, Icon, Table, Modal } from 'semantic-ui-react'
-import styled from 'styled-components'
+import Checkbox from '../../../primitives/form/Checkbox'
+import { Button } from '../../../primitives/form/Input'
+import Modal from '../../../primitives/Modal'
+import { TableCell, TableRow } from '../../../primitives/Table'
 import ChangePasswordModal from './UserChangePassword'
-import { UserRowChildProps, UserRowProps } from './UserRow'
-
-const PathList = styled.ul`
-  margin: 0;
-  padding: 0 0 0 12px;
-  list-style: none;
-`
+import { UserRowChildProps } from './UserRow'
 
 const ViewUserRow = ({
   user,
@@ -25,22 +21,22 @@ const ViewUserRow = ({
 }: UserRowChildProps) => {
   const { t } = useTranslation()
   const paths = (
-    <PathList>
+    <ul>
       {user.rootAlbums.map(album => (
         <li key={album.id}>{album.filePath}</li>
       ))}
-    </PathList>
+    </ul>
   )
 
   return (
-    <Table.Row>
-      <Table.Cell>{user.username}</Table.Cell>
-      <Table.Cell>{paths}</Table.Cell>
-      <Table.Cell>
-        {user.admin ? <Icon name="checkmark" size="large" /> : null}
-      </Table.Cell>
-      <Table.Cell>
-        <Button.Group>
+    <TableRow>
+      <TableCell>{user.username}</TableCell>
+      <TableCell>{paths}</TableCell>
+      <TableCell>
+        <Checkbox label="Admin" disabled checked={user.admin} />
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1">
           <Button
             onClick={() => {
               setState(state => {
@@ -50,18 +46,15 @@ const ViewUserRow = ({
               })
             }}
           >
-            <Icon name="edit" />
             {t('settings.users.table.row.action.edit', 'Edit')}
           </Button>
           <Button
             disabled={scanUserCalled}
             onClick={() => scanUser({ variables: { userId: user.id } })}
           >
-            <Icon name="sync" />
             {t('settings.users.table.row.action.scan', 'Scan')}
           </Button>
           <Button onClick={() => setChangePassword(true)}>
-            <Icon name="key" />
             {t(
               'settings.users.table.row.action.change_password',
               'Change password'
@@ -73,19 +66,42 @@ const ViewUserRow = ({
             onClose={() => setChangePassword(false)}
           />
           <Button
-            negative
+            variant="negative"
             onClick={() => {
               setConfirmDelete(true)
             }}
           >
-            <Icon name="delete" />
             {t('settings.users.table.row.action.delete', 'Delete')}
           </Button>
-          <Modal open={showConfirmDelete}>
-            <Modal.Header>
-              {t('settings.users.confirm_delete_user.title', 'Delete user')}
-            </Modal.Header>
-            <Modal.Content>
+          <Modal
+            open={showConfirmDelete}
+            onClose={() => setConfirmDelete(false)}
+            title={t('settings.users.confirm_delete_user.title', 'Delete user')}
+            actions={[
+              {
+                key: 'cancel',
+                label: t('general.action.cancel', 'Cancel'),
+                onClick: () => setConfirmDelete(false),
+              },
+              {
+                key: 'delete',
+                label: t(
+                  'settings.users.confirm_delete_user.action',
+                  'Delete {{user}}',
+                  { user: user.username }
+                ),
+                onClick: () => {
+                  setConfirmDelete(false)
+                  deleteUser({
+                    variables: {
+                      id: user.id,
+                    },
+                  })
+                },
+                variant: 'negative',
+              },
+            ]}
+            description={
               <Trans
                 t={t}
                 i18nKey="settings.users.confirm_delete_user.description"
@@ -96,36 +112,12 @@ const ViewUserRow = ({
                 </p>
                 <p>{`This action cannot be undone`}</p>
               </Trans>
-            </Modal.Content>
-            <Modal.Actions>
-              <Button onClick={() => setConfirmDelete(false)}>
-                {t('general.action.cancel', 'Cancel')}
-              </Button>
-              <Button
-                negative
-                onClick={() => {
-                  setConfirmDelete(false)
-                  deleteUser({
-                    variables: {
-                      id: user.id,
-                    },
-                  })
-                }}
-              >
-                {t(
-                  'settings.users.confirm_delete_user.action',
-                  'Delete {{user}}',
-                  { user: user.username }
-                )}
-              </Button>
-            </Modal.Actions>
-          </Modal>
-        </Button.Group>
-      </Table.Cell>
-    </Table.Row>
+            }
+          />
+        </div>
+      </TableCell>
+    </TableRow>
   )
 }
-
-ViewUserRow.propTypes = UserRowProps
 
 export default ViewUserRow

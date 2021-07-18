@@ -10,14 +10,14 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
+jest.mock('../../Pages/LoginPage/LoginPage.tsx', () => () => (
+  <div>mocked login page</div>
+))
+
 require('../../localization').setupLocalization()
 
 describe('routes', () => {
   test('unauthorized root path should navigate to login page', async () => {
-    jest.mock('../../Pages/LoginPage/LoginPage.tsx', () => () => (
-      <div>mocked login page</div>
-    ))
-
     render(
       <MemoryRouter initialEntries={['/']}>
         <Routes />

@@ -9,12 +9,17 @@ import { ApolloProvider } from '@apollo/client'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { setupLocalization } from './localization'
 
+import './index.css'
+import { SidebarProvider } from './components/sidebar/Sidebar'
+
 setupLocalization()
 
 const Main = () => (
   <ApolloProvider client={client}>
     <Router>
-      <App />
+      <SidebarProvider>
+        <App />
+      </SidebarProvider>
     </Router>
   </ApolloProvider>
 )

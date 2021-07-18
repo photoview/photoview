@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
@@ -96,15 +96,13 @@ function AlbumPage({ match }: AlbumPageProps) {
     },
   })
 
-  const {
-    containerElem,
-    finished: finishedLoadingMore,
-  } = useScrollPagination<albumQuery>({
-    loading,
-    fetchMore,
-    data,
-    getItems: data => data.album.media,
-  })
+  const { containerElem, finished: finishedLoadingMore } =
+    useScrollPagination<albumQuery>({
+      loading,
+      fetchMore,
+      data,
+      getItems: data => data.album.media,
+    })
 
   const toggleFavorites = useCallback(
     onlyFavorites => {

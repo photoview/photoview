@@ -2,11 +2,9 @@ import React, { useRef, useEffect, useReducer, useContext } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
-import styled from 'styled-components'
 import PresentView from '../photoGallery/presentView/PresentView'
-import { Loader } from 'semantic-ui-react'
 import useURLParameters from '../../hooks/useURLParameters'
-import { FavoritesCheckbox } from '../AlbumFilter'
+import { FavoritesCheckbox } from '../album/AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
 import LazyLoad from '../../helpers/LazyLoad'
@@ -57,13 +55,6 @@ const MY_TIMELINE_QUERY = gql`
       date
     }
   }
-`
-
-const GalleryWrapper = styled.div`
-  margin: -12px;
-  display: flex;
-  flex-wrap: wrap;
-  overflow-x: hidden;
 `
 
 export type TimelineActiveIndex = {
@@ -172,15 +163,16 @@ const TimelineGallery = () => {
   ))
 
   return (
-    <>
-      <Loader active={loading}>
-        {t('general.loading.timeline', 'Loading timeline')}
-      </Loader>
-      <FavoritesCheckbox
-        onlyFavorites={onlyFavorites}
-        setOnlyFavorites={setOnlyFavorites}
-      />
-      <GalleryWrapper ref={containerElem}>{timelineGroups}</GalleryWrapper>
+    <div className="overflow-x-hidden">
+      <div className="mb-2">
+        <FavoritesCheckbox
+          onlyFavorites={onlyFavorites}
+          setOnlyFavorites={setOnlyFavorites}
+        />
+      </div>
+      <div className="-mx-3 flex flex-wrap" ref={containerElem}>
+        {timelineGroups}
+      </div>
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
         text={t('general.loading.paginate.media', 'Loading more media')}
@@ -191,7 +183,7 @@ const TimelineGallery = () => {
           dispatchMedia={dispatchMedia}
         />
       )}
-    </>
+    </div>
   )
 }
 

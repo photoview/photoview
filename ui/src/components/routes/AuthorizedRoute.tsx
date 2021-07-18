@@ -3,7 +3,7 @@ import PropTypes, { ReactComponentLike } from 'prop-types'
 import { Route, Redirect, RouteProps } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
-import { ADMIN_QUERY } from '../../Layout'
+import { ADMIN_QUERY } from '../layout/Layout'
 
 export const useIsAdmin = (enabled = true) => {
   const [fetchAdminQuery, { data, called }] = useLazyQuery(ADMIN_QUERY)

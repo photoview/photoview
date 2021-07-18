@@ -93,9 +93,9 @@ test('single face group', async () => {
   )
 
   await waitFor(() => {
-    expect(screen.queryByText('Loading media')).not.toHaveClass('active')
+    // expect(screen.queryByText('Loading more media')).not.toHaveClass('active')
+    expect(screen.queryByText('Face Group Name')).toBeInTheDocument()
   })
 
-  expect(screen.getByText('Face Group Name')).toBeInTheDocument()
   expect(screen.getAllByRole('img')).toHaveLength(2)
 })

@@ -1,5 +1,5 @@
 import React from 'react'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import TimelineGallery from '../../components/timelineGallery/TimelineGallery'
 import { useTranslation } from 'react-i18next'
 

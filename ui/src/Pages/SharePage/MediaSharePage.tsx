@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import {
   ProtectedImage,
   ProtectedVideo,
@@ -9,17 +9,17 @@ import { SidebarContext } from '../../components/sidebar/Sidebar'
 import MediaSidebar from '../../components/sidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { SharePageToken_shareToken_media } from './__generated__/SharePageToken'
-import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaType } from '../../__generated__/globalTypes'
 import { exhaustiveCheck } from '../../helpers/utils'
 
 const DisplayPhoto = styled(ProtectedImage)`
-  width: 100%;
+  /* width: 100%; */
   max-height: calc(80vh);
   object-fit: contain;
 `
 
 const DisplayVideo = styled(ProtectedVideo)`
-  width: 100%;
+  /* width: 100%; */
   max-height: calc(80vh);
 `
 
@@ -54,7 +54,7 @@ const MediaSharePage = ({ media }: MediaSharePageType) => {
   return (
     <Layout title={t('share_page.media.title', 'Shared media')}>
       <div data-testid="MediaSharePage">
-        <h1>{media.title}</h1>
+        <h1 className="font-semibold text-xl mb-4">{media.title}</h1>
         <MediaView media={media} />
       </div>
     </Layout>

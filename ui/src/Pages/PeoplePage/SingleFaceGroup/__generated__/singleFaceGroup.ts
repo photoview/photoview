@@ -3,7 +3,7 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { MediaType } from './../../../../../__generated__/globalTypes'
+import { MediaType } from './../../../../__generated__/globalTypes'
 
 // ====================================================
 // GraphQL query operation: singleFaceGroup

@@ -1,7 +1,9 @@
 import { gql, useMutation } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Input, Table } from 'semantic-ui-react'
+import Checkbox from '../../../primitives/form/Checkbox'
+import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
+import { TableRow, TableCell } from '../../../primitives/Table'
 
 const CREATE_USER_MUTATION = gql`
   mutation createUser($username: String!, $admin: Boolean!) {
@@ -88,16 +90,16 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
   }
 
   return (
-    <Table.Row>
-      <Table.Cell>
-        <Input
+    <TableRow>
+      <TableCell>
+        <TextField
           placeholder={t('login_page.field.username', 'Username')}
           value={state.username}
           onChange={e => updateInput(e, 'username')}
         />
-      </Table.Cell>
-      <Table.Cell>
-        <Input
+      </TableCell>
+      <TableCell>
+        <TextField
           placeholder={t(
             'login_page.initial_setup.field.photo_path.placeholder',
             '/path/to/photos'
@@ -105,29 +107,28 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           value={state.rootPath}
           onChange={e => updateInput(e, 'rootPath')}
         />
-      </Table.Cell>
-      <Table.Cell>
+      </TableCell>
+      <TableCell>
         <Checkbox
-          toggle
+          label="Admin"
           checked={state.admin}
-          onChange={(e, data) => {
+          onChange={e => {
             setState({
               ...state,
-              admin: data.checked || false,
+              admin: e.target.checked || false,
             })
           }}
         />
-      </Table.Cell>
-      <Table.Cell>
-        <Button.Group>
-          <Button negative onClick={() => setShow(false)}>
+      </TableCell>
+      <TableCell>
+        <ButtonGroup>
+          <Button variant="negative" onClick={() => setShow(false)}>
             {t('general.action.cancel', 'Cancel')}
           </Button>
           <Button
             type="submit"
-            loading={loading}
             disabled={loading}
-            positive
+            variant="positive"
             onClick={() => {
               createUser({
                 variables: {
@@ -139,9 +140,9 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           >
             {t('settings.users.add_user.submit', 'Add user')}
           </Button>
-        </Button.Group>
-      </Table.Cell>
-    </Table.Row>
+        </ButtonGroup>
+      </TableCell>
+    </TableRow>
   )
 }
 

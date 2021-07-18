@@ -9,7 +9,7 @@ photos_path
 screenshots
 
 ui/node_modules/
-ui/dist/
+ui/build/
 ui/.cache/
 
 api/photo_cache

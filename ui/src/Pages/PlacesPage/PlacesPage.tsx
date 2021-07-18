@@ -4,15 +4,17 @@ import React, { useEffect, useReducer, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-import Layout from '../../Layout'
+import Layout from '../../components/layout/Layout'
 import { makeUpdateMarkers } from './mapboxHelperFunctions'
 import MapPresentMarker from './MapPresentMarker'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
 import { placesReducer } from './placesReducer'
 
+import 'mapbox-gl/dist/mapbox-gl.css'
+
 const MapWrapper = styled.div`
   width: 100%;
-  height: calc(100% - 24px);
+  height: calc(100vh - 120px);
 `
 
 const MapContainer = styled.div`
@@ -145,7 +147,8 @@ const MapPage = () => {
   return (
     <Layout title="Places">
       <Helmet>
-        <link rel="stylesheet" href="/mapbox-gl.css" />
+        {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
+        {/* <style type="text/css">{mapboxStyles}</style> */}
       </Helmet>
       <MapWrapper>
         <MapContainer ref={mapContainer}></MapContainer>

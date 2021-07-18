@@ -1,0 +1,307 @@
+{
+  "album_filter": {
+    "only_favorites": "Solo mostrar favoritos",
+    "sort_by": "Ordenar por",
+    "sorting_options": {
+      "date_imported": "Fecha de importado",
+      "date_shot": "Fecha de la foto",
+      "title": "Título",
+      "type": "Tipo"
+    }
+  },
+  "albums_page": {
+    "title": "Álbumes"
+  },
+  "general": {
+    "action": {
+      "add": "Añadir",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "more": null,
+      "remove": "Borrar",
+      "save": "Guardar"
+    },
+    "loading": {
+      "album": "Cargando álbum",
+      "default": "Cargando...",
+      "media": "Cargando archivos",
+      "page": "Cargando página",
+      "paginate": {
+        "faces": "Cargando más gente",
+        "media": "Cargando más archivos"
+      },
+      "shares": "Cargando compartidos...",
+      "timeline": "Cargando línea temporal"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Cargando resultados...",
+      "no_results": "No se han encontrado resultados",
+      "placeholder": "Buscar",
+      "result_type": {
+        "albums": "Álbumes",
+        "photos": "Fotos"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "username": "Usuario"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Ruta de las fotos",
+          "placeholder": "/carpeta/de/fotos"
+        },
+        "submit": "Configurar Photoview"
+      },
+      "title": "Configuración inicial"
+    },
+    "welcome": "Bienvenido a Photoview"
+  },
+  "meta": {
+    "description": "Una galería de fotos sencilla y fácil de usar para servidores personales"
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": null,
+        "change_label": null,
+        "detach_face": null,
+        "merge_face": null,
+        "move_faces": null
+      },
+      "label_placeholder": "Etiqueta",
+      "unlabeled": "Sin etiquetar",
+      "unlabeled_person": null
+    },
+    "modal": {
+      "action": {
+        "merge": null
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": null,
+          "select_images": null
+        },
+        "description": null,
+        "title": null
+      },
+      "merge_face_groups": {
+        "description": null,
+        "destination_table": {
+          "title": null
+        },
+        "title": null
+      },
+      "move_image_faces": {
+        "description": null,
+        "destination_face_group_table": {
+          "move_action": null,
+          "title": null
+        },
+        "image_select_table": {
+          "next_action": null,
+          "title": null
+        },
+        "title": null
+      }
+    },
+    "recognize_unlabeled_faces_button": "Reconocer caras sin etiquetar",
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": null
+      },
+      "select_image_faces": {
+        "search_images_placeholder": null
+      }
+    }
+  },
+  "photos_page": {
+    "title": "Fotos"
+  },
+  "places_page": {
+    "title": "Lugares"
+  },
+  "routes": {
+    "page_not_found": "Página no encontrada"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "La cantidad máxima de tareas de escaneo que pueden ejecutarse al mismo tiempo",
+      "title": "Tareas de escaneo concurrentes"
+    },
+    "logout": "Cerrar sesión",
+    "periodic_scanner": {
+      "checkbox_label": "Activar el escaneo periódico",
+      "field": {
+        "description": "Con qué frecuencia debe ejecutarse un escaneo automático de todos los usuarios",
+        "label": "Intervalo del escaneo periódico"
+      },
+      "interval_unit": {
+        "days": "Días",
+        "hour": "Horas",
+        "minutes": "Minutos",
+        "months": "Meses",
+        "seconds": "Segundos"
+      },
+      "title": "Escaneo periódico"
+    },
+    "scanner": {
+      "description": "Escaneará todos los usuarios para buscar archivos nuevos o actualizados",
+      "scan_all_users": "Escanear todos los usuarios",
+      "title": "Escáner"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Cambia el idioma de la página para este usuario",
+        "label": "Idioma de la página"
+      },
+      "language_selector": {
+        "placeholder": "Seleccionar idioma"
+      },
+      "title": "Preferencias de usuario"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Añadir usuario"
+      },
+      "confirm_delete_user": {
+        "action": "Eliminar {{user}}",
+        "description": "<0>¿Estás seguro de que quieres eliminar a <1></1>?</0><p>Esta acción no puede deshacerse</p>",
+        "title": "Eliminar usuario"
+      },
+      "password_reset": {
+        "description": "Cambiar contraseña a <1>{{username}}</1>",
+        "form": {
+          "label": "Nueva contraseña",
+          "placeholder": "contraseña",
+          "submit": "Cambiar contraseña"
+        },
+        "title": "Cambiar contraseña"
+      },
+      "table": {
+        "column_names": {
+          "action": "Acción",
+          "admin": "Administrador",
+          "photo_path": "Ruta de las fotos",
+          "username": "Usuario"
+        },
+        "new_user": "Nuevo usuario",
+        "row": {
+          "action": {
+            "change_password": "Cambiar contraseña",
+            "delete": "Eliminar",
+            "edit": "Editar",
+            "scan": "Escanear"
+          }
+        }
+      },
+      "title": "Usuarios"
+    },
+    "version_info": {
+      "build_date_title": null,
+      "title": null,
+      "version_title": null
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Archivos compartidos"
+    },
+    "protected_share": {
+      "description": "Esta compartición está protegida por contraseña.",
+      "title": "Compartición protegida"
+    },
+    "share_not_found": "Compartición no encontrada",
+    "share_not_found_description": "Quizá la compartición ha expirado o ha sido eliminada.",
+    "wrong_password": "Contraseña incorrecta, por favor inténtelo de nuevo."
+  },
+  "sidebar": {
+    "album": {
+      "title": "opciones de álbum"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "tera_byte": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Dimensiones",
+        "file_size": "Tamaño",
+        "file_type": "Tipo",
+        "name": "Nombre"
+      },
+      "title": "Descargar"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Programa de acción",
+          "aperture_priority": "Prioridad de abertura",
+          "bulb": "Flash",
+          "creative_program": "Programa creativo",
+          "landscape_mode": "Modo panorámico",
+          "manual": "Manual",
+          "normal_program": "Programa normal",
+          "not_defined": "No definido",
+          "portrait_mode": "Modo retrato",
+          "shutter_priority": "Prioridad de obturador"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "No se disparó",
+          "fired": "Disparado",
+          "no_flash": "Sin Flash",
+          "no_flash_function": "Sin función de flash",
+          "off": "Apagado",
+          "on": "Encendido",
+          "red_eye_reduction": "Reducción de ojos rojos",
+          "return_detected": "Retorno detectado",
+          "return_not_detected": "Retorno no detectado"
+        },
+        "name": {
+          "aperture": "Abertura",
+          "camera": "Cámara",
+          "date_shot": "Fecha de captura",
+          "exposure": "Exposición",
+          "exposure_program": "Programa",
+          "flash": "Flash",
+          "focal_length": "Distancia focal",
+          "iso": "ISO",
+          "lens": "Lente",
+          "maker": "Fabricante"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Añadir compartido",
+      "copy_link": "Copiar enlace",
+      "no_shares_found": "No se encontraron compartidos",
+      "public_link": "Enlace público",
+      "table_header": "Compartidos públicos",
+      "title": "Opciones de compartir"
+    }
+  },
+  "sidemenu": {
+    "albums": "Álbumes",
+    "people": "Personas",
+    "photos": "Fotos",
+    "places": "Lugares",
+    "settings": "Opciones"
+  },
+  "title": {
+    "loading_album": "Cargando álbum",
+    "login": null,
+    "people": "Personas",
+    "settings": "Opciones"
+  }
+}

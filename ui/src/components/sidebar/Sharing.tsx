@@ -1,25 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { useMutation, useQuery, gql, useLazyQuery } from '@apollo/client'
 import {
-  Table,
-  Button,
-  Dropdown,
-  Checkbox,
-  Input,
-  Icon,
-} from 'semantic-ui-react'
+  useMutation,
+  useQuery,
+  gql,
+  useLazyQuery,
+  DocumentNode,
+} from '@apollo/client'
 import copy from 'copy-to-clipboard'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
-import { sidbarGetAlbumShares_album_shares } from './__generated__/sidbarGetAlbumShares'
+import { Popover } from '@headlessui/react'
 import {
   sidebareDeleteShare,
   sidebareDeleteShareVariables,
 } from './__generated__/sidebareDeleteShare'
-import {
-  sidebarProtectShare,
-  sidebarProtectShareVariables,
-} from './__generated__/sidebarProtectShare'
 import { sidbarGetPhotoShares_media_shares } from './__generated__/sidbarGetPhotoShares'
 import {
   sidebarPhotoAddShare,
@@ -36,8 +29,23 @@ import {
 import {
   sidebarGetAlbumShares,
   sidebarGetAlbumSharesVariables,
+  sidebarGetAlbumShares_album_shares,
 } from './__generated__/sidebarGetAlbumShares'
 import { authToken } from '../../helpers/authentication'
+import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
+
+import { ReactComponent as LinkIcon } from './icons/shareLinkIcon.svg'
+import { ReactComponent as CopyIcon } from './icons/shareCopyIcon.svg'
+import { ReactComponent as DeleteIcon } from './icons/shareDeleteIcon.svg'
+import { ReactComponent as MoreIcon } from './icons/shareMoreIcon.svg'
+import { ReactComponent as AddIcon } from './icons/shareAddIcon.svg'
+import Checkbox from '../../primitives/form/Checkbox'
+import { TextField } from '../../primitives/form/Input'
+import styled from 'styled-components'
+import {
+  sidebarProtectShare,
+  sidebarProtectShareVariables,
+} from './__generated__/sidebarProtectShare'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -98,41 +106,39 @@ const DELETE_SHARE_MUTATION = gql`
   }
 `
 
-type ShareItemMoreDropdownProps = {
+const ArrowPopoverPanel = styled.div.attrs({
+  className:
+    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200 w-[260px]',
+})`
+  &::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: -7px;
+    width: 8px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpolyline stroke-width='1' stroke='%23E2E2E2' fill='%23FFFFFF' points='1 0 7 7 1 14'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+`
+
+type MorePopoverSectionPasswordProps = {
+  share: sidebarGetAlbumShares_album_shares
+  query: DocumentNode
   id: string
-  isPhoto: boolean
-  share: sidbarGetAlbumShares_album_shares
 }
 
-const ShareItemMoreDropdown = ({
-  id,
+const MorePopoverSectionPassword = ({
   share,
-  isPhoto,
-}: ShareItemMoreDropdownProps) => {
-  const { t } = useTranslation()
-  const query = isPhoto ? SHARE_PHOTO_QUERY : SHARE_ALBUM_QUERY
-
-  const [deleteShare, { loading: deleteShareLoading }] = useMutation<
-    sidebareDeleteShare,
-    sidebareDeleteShareVariables
-  >(DELETE_SHARE_MUTATION, {
-    refetchQueries: [{ query: query, variables: { id } }],
-  })
-
+  query,
+  id,
+}: MorePopoverSectionPasswordProps) => {
   const [addingPassword, setAddingPassword] = useState(false)
-  const showPasswordInput = addingPassword || share.hasPassword
+  const activated = addingPassword || share.hasPassword
 
   const [passwordInputValue, setPasswordInputValue] = useState(
     share.hasPassword ? '**********' : ''
   )
   const [passwordHidden, setPasswordHidden] = useState(share.hasPassword)
-
-  const hidePassword = (hide: boolean) => {
-    setPasswordHidden(hide)
-    if (hide) {
-      setPasswordInputValue('**********')
-    }
-  }
 
   const [setPassword, { loading: setPasswordLoading }] = useMutation<
     sidebarProtectShare,
@@ -148,47 +154,20 @@ const ShareItemMoreDropdown = ({
     },
   })
 
-  let addPasswordInput = null
-  if (showPasswordInput) {
-    const setPasswordEvent = (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (!passwordHidden && passwordInputValue != '' && event.key == 'Enter') {
-        event.preventDefault()
-        setPassword({
-          variables: {
-            token: share.token,
-            password: (event.target as HTMLInputElement).value,
-          },
-        })
-      }
+  const hidePassword = (hide: boolean) => {
+    if (hide) {
+      setPasswordInputValue('**********')
     }
 
-    addPasswordInput = (
-      <Input
-        disabled={setPasswordLoading}
-        loading={setPasswordLoading}
-        style={{ marginTop: 8, marginRight: 0, display: 'block' }}
-        onClick={(e: MouseEvent) => e.stopPropagation()}
-        value={passwordInputValue}
-        type={passwordHidden ? 'password' : 'text'}
-        onKeyUp={setPasswordEvent}
-        onChange={event => {
-          hidePassword(false)
-          setPasswordInputValue(event.target.value)
-        }}
-        placeholder="Password"
-        icon={
-          <Icon
-            name={passwordHidden ? 'lock' : 'arrow right'}
-            link={!passwordHidden}
-            onClick={setPasswordEvent}
-          />
-        }
-      />
-    )
+    if (passwordHidden && !hide) {
+      setPasswordInputValue('')
+    }
+
+    setPasswordHidden(hide)
   }
 
-  const checkboxClick = () => {
-    const enable = !showPasswordInput
+  const checkboxChange = () => {
+    const enable = !activated
     setAddingPassword(enable)
     if (!enable) {
       setPassword({
@@ -201,59 +180,84 @@ const ShareItemMoreDropdown = ({
     }
   }
 
-  // const [dropdownOpen, setDropdownOpen] = useState(false)
+  const updatePasswordAction = () => {
+    if (!passwordHidden && passwordInputValue != '') {
+      setPassword({
+        variables: {
+          token: share.token,
+          password: passwordInputValue,
+        },
+      })
+    }
+  }
 
   return (
-    <Dropdown
-      // onBlur={event => {
-      //   console.log('Blur')
-      // }}
-      // onClick={() => setDropdownOpen(state => !state)}
-      // onClose={() => setDropdownOpen(false)}
-      // open={dropdownOpen}
-      button
-      text={t('general.action.more', 'More')}
-      closeOnChange={false}
-      closeOnBlur={false}
-    >
-      <Dropdown.Menu>
-        <Dropdown.Item
-          onKeyDown={(e: KeyboardEvent) => e.stopPropagation()}
-          onClick={e => {
-            e.stopPropagation()
-            checkboxClick()
-          }}
-        >
-          <Checkbox
-            label={t('login_page.field.password', 'Password')}
-            onClick={e => e.stopPropagation()}
-            checked={showPasswordInput}
-            onChange={() => {
-              checkboxClick()
-            }}
-          />
-          {addPasswordInput}
-        </Dropdown.Item>
-        <Dropdown.Item
-          text={t('general.action.delete', 'Delete')}
-          icon="delete"
-          disabled={deleteShareLoading}
-          onClick={() => {
-            deleteShare({
-              variables: {
-                token: share.token,
-              },
-            })
-          }}
-        />
-      </Dropdown.Menu>
-    </Dropdown>
+    <div className="px-4 py-2">
+      <Checkbox
+        label="Password protected"
+        checked={activated}
+        onChange={checkboxChange}
+      />
+      <TextField
+        disabled={!activated}
+        type={passwordHidden ? 'password' : 'text'}
+        value={passwordInputValue}
+        className="mt-2 w-full"
+        onKeyDown={event => {
+          if (
+            event.shiftKey ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.key == 'Enter' ||
+            event.key == 'Tab' ||
+            event.key == 'Escape'
+          ) {
+            return
+          }
+
+          hidePassword(false)
+        }}
+        onChange={event => {
+          setPasswordInputValue(event.target.value)
+        }}
+        action={updatePasswordAction}
+        loading={setPasswordLoading}
+      />
+    </div>
   )
 }
 
-const ShareButtonGroup = styled(Button.Group)`
-  flex-wrap: wrap;
-`
+type MorePopoverProps = {
+  id: string
+  query: DocumentNode
+  share: sidebarGetAlbumShares_album_shares
+}
+
+const MorePopover = ({ id, share, query }: MorePopoverProps) => {
+  const { t } = useTranslation()
+
+  return (
+    <Popover className="relative">
+      <Popover.Button
+        className="align-middle p-1 ml-2"
+        title={t('sidebar.sharing.more', 'More')}
+      >
+        <MoreIcon />
+      </Popover.Button>
+
+      <Popover.Panel>
+        <ArrowPopoverPanel>
+          <MorePopoverSectionPassword id={id} share={share} query={query} />
+          <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
+            <Checkbox label="Expiration date" />
+            <TextField className="mt-2 w-full" />
+          </div>
+        </ArrowPopoverPanel>
+      </Popover.Panel>
+    </Popover>
+  )
+}
 
 type SidebarShareAlbumProps = {
   id: string
@@ -368,62 +372,79 @@ const SidebarShare = ({
 }: SidebarShareProps) => {
   const { t } = useTranslation()
 
+  const query = isPhoto ? SHARE_PHOTO_QUERY : SHARE_ALBUM_QUERY
+
+  const [deleteShare] = useMutation<
+    sidebareDeleteShare,
+    sidebareDeleteShareVariables
+  >(DELETE_SHARE_MUTATION, {
+    refetchQueries: [{ query: query, variables: { id } }],
+  })
+
   if (shares === undefined) {
     return null
   }
 
   const optionsRows = shares.map(share => (
-    <Table.Row key={share.token}>
-      <Table.Cell>
-        <b>{t('sidebar.sharing.public_link', 'Public Link')}</b> {share.token}
-      </Table.Cell>
-      <Table.Cell>
-        <ShareButtonGroup>
-          <Button
-            icon="chain"
-            content={t('sidebar.sharing.copy_link', 'Copy Link')}
-            onClick={() => {
-              copy(`${location.origin}/share/${share.token}`)
-            }}
-          />
-          <ShareItemMoreDropdown share={share} id={id} isPhoto={isPhoto} />
-        </ShareButtonGroup>
-      </Table.Cell>
-    </Table.Row>
+    <tr key={share.token} className="border-gray-100 border-b border-t">
+      <td className="pl-4 py-2 w-full">
+        <span className="text-[#585858] mr-2">
+          <LinkIcon className="inline-block mr-2" />
+          <span className="text-xs uppercase font-bold">
+            {t('sidebar.sharing.public_link', 'Public Link') + ' '}
+          </span>
+        </span>
+        <span className="text-sm">{share.token}</span>
+      </td>
+      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] flex">
+        <button
+          className="align-middle p-1 ml-2"
+          title={t('sidebar.sharing.copy_link', 'Copy Link')}
+          onClick={() => {
+            copy(`${location.origin}/share/${share.token}`)
+          }}
+        >
+          <CopyIcon />
+        </button>
+        <button
+          onClick={() => {
+            deleteShare({ variables: { token: share.token } })
+          }}
+          className="align-middle p-1 ml-2 hover:text-red-600 focus:text-red-600"
+          title={t('sidebar.sharing.delete', 'Delete')}
+        >
+          <DeleteIcon />
+        </button>
+        <MorePopover share={share} id={id} query={query} />
+
+        {/* <ShareItemMoreDropdown share={share} id={id} isPhoto={isPhoto} /> */}
+      </td>
+    </tr>
   ))
 
   if (optionsRows.length == 0) {
     optionsRows.push(
-      <Table.Row key="no-shares">
-        <Table.Cell colSpan="2">
+      <tr key="no-shares" className="border-gray-100 border-b border-t">
+        <td colSpan={2} className="pl-4 py-2 italic text-gray-600">
           {t('sidebar.sharing.no_shares_found', 'No shares found')}
-        </Table.Cell>
-      </Table.Row>
+        </td>
+      </tr>
     )
   }
 
   return (
-    <div>
-      <h2>{t('sidebar.sharing.title', 'Sharing options')}</h2>
+    <SidebarSection>
+      <SidebarSectionTitle>
+        {t('sidebar.sharing.title', 'Sharing options')}
+      </SidebarSectionTitle>
       <div>
-        <Table>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell colSpan="2">
-                {t('sidebar.sharing.table_header', 'Public shares')}
-              </Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>{optionsRows}</Table.Body>
-          <Table.Footer>
-            <Table.Row>
-              <Table.HeaderCell colSpan="2">
-                <Button
-                  content={t('sidebar.sharing.add_share', 'Add shares')}
-                  icon="add"
-                  floated="right"
-                  positive
-                  loading={loading}
+        <table className="border-collapse w-full">
+          <tbody>{optionsRows}</tbody>
+          <tfoot>
+            <tr className="text-left border-gray-100 border-b border-t">
+              <td colSpan={2} className="pl-4 py-2">
+                <button
+                  className="text-green-500 font-bold uppercase text-xs"
                   disabled={loading}
                   onClick={() => {
                     shareItem({
@@ -432,12 +453,15 @@ const SidebarShare = ({
                       },
                     })
                   }}
-                />
-              </Table.HeaderCell>
-            </Table.Row>
-          </Table.Footer>
-        </Table>
+                >
+                  <AddIcon className="inline-block mr-2" />
+                  <span>{t('sidebar.sharing.add_share', 'Add shares')}</span>
+                </button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-    </div>
+    </SidebarSection>
   )
 }

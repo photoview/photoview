@@ -1,8 +1,8 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:15 as ui
 
-ARG PHOTOVIEW_API_ENDPOINT
-ENV PHOTOVIEW_API_ENDPOINT=${PHOTOVIEW_API_ENDPOINT}
+ARG REACT_APP_API_ENDPOINT
+ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
 # Set environment variable UI_PUBLIC_URL from build args, uses "/" as default
 ARG UI_PUBLIC_URL
@@ -10,12 +10,15 @@ ENV UI_PUBLIC_URL=${UI_PUBLIC_URL:-/}
 
 ARG VERSION
 ENV VERSION=${VERSION:-undefined}
+ENV REACT_APP_VERSION=${VERSION:-undefined}
 
 ARG BUILD_DATE
 ENV BUILD_DATE=${BUILD_DATE:-undefined}
+ENV REACT_APP_BUILD_DATE=${BUILD_DATE:-undefined}
 
 ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA:-}
+ENV REACT_APP_COMMIT_SHA=${COMMIT_SHA:-}
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -84,7 +87,7 @@ RUN apt-get purge -y curl gpg \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ui /app/dist /ui
+COPY --from=ui /app/build /ui
 COPY --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1

@@ -2,8 +2,8 @@ import { gql, useMutation, useQuery } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useHistory } from 'react-router-dom'
-import { Button, Modal } from 'semantic-ui-react'
 import { isNil } from '../../../helpers/utils'
+import Modal from '../../../primitives/Modal'
 import { MY_FACES_QUERY } from '../PeoplePage'
 import {
   myFaces,
@@ -78,45 +78,39 @@ const MergeFaceGroupsModal = ({
 
   return (
     <Modal
+      title={t(
+        'people_page.modal.merge_face_groups.title',
+        'Merge Face Groups'
+      )}
+      description={t(
+        'people_page.modal.merge_face_groups.description',
+        'All images within this face group will be merged into the selected face group.'
+      )}
+      actions={[
+        {
+          key: 'cancel',
+          label: t('general.action.cancel', 'Cancel'),
+          onClick: () => setOpen(false),
+        },
+        {
+          key: 'merge',
+          label: t('people_page.modal.action.merge', 'Merge'),
+          onClick: () => mergeFaceGroups(),
+          variant: 'positive',
+        },
+      ]}
       onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
       open={open}
     >
-      <Modal.Header>
-        {t('people_page.modal.merge_face_groups.title', 'Merge Face Groups')}
-      </Modal.Header>
-      <Modal.Content scrolling>
-        <Modal.Description>
-          <p>
-            {t(
-              'people_page.modal.merge_face_groups.description',
-              'All images within this face group will be merged into the selected face group.'
-            )}
-          </p>
-          <SelectFaceGroupTable
-            title={t(
-              'people_page.modal.merge_face_groups.destination_table.title',
-              'Select the destination face'
-            )}
-            faceGroups={filteredFaceGroups}
-            selectedFaceGroup={selectedFaceGroup}
-            setSelectedFaceGroup={setSelectedFaceGroup}
-          />
-        </Modal.Description>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button onClick={() => setOpen(false)}>
-          {t('general.action.cancel', 'Cancel')}
-        </Button>
-        <Button
-          disabled={selectedFaceGroup == null}
-          content={t('people_page.modal.action.merge', 'Merge')}
-          labelPosition="right"
-          icon="checkmark"
-          onClick={() => mergeFaceGroups()}
-          positive
-        />
-      </Modal.Actions>
+      <SelectFaceGroupTable
+        title={t(
+          'people_page.modal.merge_face_groups.destination_table.title',
+          'Select the destination face'
+        )}
+        faceGroups={filteredFaceGroups}
+        selectedFaceGroup={selectedFaceGroup}
+        setSelectedFaceGroup={setSelectedFaceGroup}
+      />
     </Modal>
   )
 }

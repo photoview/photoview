@@ -1,57 +1,30 @@
-import React from 'react'
-import styled from 'styled-components'
+import React, { useContext } from 'react'
 import SearchBar from './Searchbar'
 
 import logoPath from '../../assets/photoview-logo.svg'
 import { authToken } from '../../helpers/authentication'
+import { SidebarContext } from '../sidebar/Sidebar'
+import classNames from 'classnames'
 
-const Container = styled.div`
-  height: 60px;
-  width: 100%;
-  display: inline-flex;
-  position: fixed;
-  background: white;
-  top: 0;
-  /* border-bottom: 1px solid rgba(0, 0, 0, 0.1); */
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-`
+const Header = () => {
+  const { pinned } = useContext(SidebarContext)
 
-const Title = styled.h1`
-  font-size: 36px;
-  font-weight: 400;
-  padding: 2px 12px;
-  flex-grow: 1;
-  min-width: 245px;
-
-  @media (max-width: 400px) {
-    min-width: auto;
-
-    & span {
-      display: none;
-    }
-  }
-`
-
-const Logo = styled.img`
-  width: 42px;
-  height: 42px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
-`
-
-const LogoText = styled.span`
-  vertical-align: middle;
-`
-
-const Header = () => (
-  <Container>
-    <Title>
-      <Logo src={logoPath} alt="logo" />
-      <LogoText>Photoview</LogoText>
-    </Title>
-    {authToken() ? <SearchBar /> : null}
-  </Container>
-)
+  return (
+    <div
+      className={classNames(
+        'sticky top-0 z-10 bg-white flex items-center justify-between py-3 px-4 lg:px-8 lg:pt-4 shadow-separator lg:shadow-none',
+        { 'mr-[404px]': pinned }
+      )}
+    >
+      <h1 className="mr-4 lg:mr-8 flex-shrink-0 flex items-center">
+        <img className="h-12 lg:h-10" src={logoPath} alt="logo" />
+        <span className="hidden lg:block ml-2 text-2xl font-light">
+          Photoview
+        </span>
+      </h1>
+      {authToken() ? <SearchBar /> : null}
+    </div>
+  )
+}
 
 export default Header

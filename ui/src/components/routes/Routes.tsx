@@ -1,10 +1,10 @@
 import React from 'react'
 import { Route, Switch, Redirect } from 'react-router-dom'
 
-import { Loader } from 'semantic-ui-react'
-import Layout from '../../Layout'
+import Layout from '../layout/Layout'
 import { clearTokenCookie } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
+import Loader from '../../primitives/Loader'
 
 const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
 
@@ -33,7 +33,7 @@ const Routes = () => {
     <React.Suspense
       fallback={
         <Layout title={t('general.loading.page', 'Loading page')}>
-          <Loader active>{t('general.loading.page', 'Loading page')}</Loader>
+          <Loader message={t('general.loading.page', 'Loading page')} active />
         </Layout>
       }
     >
