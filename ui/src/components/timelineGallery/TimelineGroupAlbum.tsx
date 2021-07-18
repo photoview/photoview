@@ -73,15 +73,6 @@ const TimelineGroupAlbum = ({
         toggleFavoriteAction({
           media,
           markFavorite,
-        }).then(() => {
-          dispatchMedia({
-            type: 'selectImage',
-            index: {
-              album: albumIndex,
-              date: dateIndex,
-              media: index,
-            },
-          })
         })
       }}
       active={media.id === getActiveTimelineImage({ mediaState })?.id}

@@ -82,11 +82,6 @@ const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
             toggleFavoriteAction({
               media,
               markFavorite,
-            }).then(() => {
-              dispatchMedia({
-                type: 'selectImage',
-                index,
-              })
             })
           }}
           clickPresent={() => {
