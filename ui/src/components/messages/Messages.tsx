@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { animated, useTransition } from 'react-spring'
-import { Message } from 'semantic-ui-react'
 import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
 import MessageProgress from './MessageProgress'
-import SubscriptionsHook from './SubscriptionsHook'
+import MessagePlain from './Message'
+import SubscriptionsHook, { Message } from './SubscriptionsHook'
+import { NotificationType } from '../../__generated__/globalTypes'
 
 const Container = styled.div`
   position: fixed;
@@ -17,7 +18,14 @@ const Container = styled.div`
   }
 `
 
-export const MessageState = {
+type MessageStateType = {
+  set: React.Dispatch<React.SetStateAction<Message[]>>
+  get: Message[]
+  add(message: Message): void
+  removeKey(key: string): void
+}
+
+export const MessageState: MessageStateType = {
   set: fn => {
     console.warn('set function is not defined yet, called with', fn)
   },
@@ -39,37 +47,30 @@ export const MessageState = {
 }
 
 const Messages = () => {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<Message[]>([])
   MessageState.set = setMessages
   MessageState.get = messages
 
-  const [refMap] = useState(() => new WeakMap())
-
-  const getMessageElement = (message, ref) => {
-    const dismissMessage = message => {
+  const getMessageElement = (message: Message): React.FunctionComponent => {
+    const dismissMessage = (message: Message) => {
       message.onDismiss && message.onDismiss()
       setMessages(messages => messages.filter(msg => msg.key != message.key))
     }
 
-    const RefDiv = props => <div {...props} ref={x => x && ref(x)} />
-
-    switch (message.type.toLowerCase()) {
-      case 'message':
+    switch (message.type) {
+      case NotificationType.Message:
         return props => (
-          <Message
-            as={RefDiv}
+          <MessagePlain
             onDismiss={() => {
               dismissMessage(message)
             }}
-            floating
             {...message.props}
             {...props}
           />
         )
-      case 'progress':
+      case NotificationType.Progress:
         return props => (
           <MessageProgress
-            as={RefDiv}
             onDismiss={() => {
               dismissMessage(message)
             }}
@@ -77,36 +78,19 @@ const Messages = () => {
             {...props}
           />
         )
+      default:
+        throw new Error(`Invalid message type: ${message.type}`)
     }
   }
-
-  let refHooks = new Map()
-  messages.forEach(message => {
-    let resolveFunc = null
-
-    const waitPromise = new Promise(resolve => {
-      resolveFunc = resolve
-    })
-
-    refHooks.set(message.key, {
-      done: resolveFunc,
-      promise: waitPromise,
-    })
-  })
 
   const transitions = useTransition(messages.slice().reverse(), x => x.key, {
     from: {
       opacity: 0,
       height: '0px',
     },
-    enter: item => async next => {
-      const refPromise = refHooks.get(item.key).promise
-      await refPromise
-
-      await next({
-        opacity: 1,
-        height: `${refMap.get(item).offsetHeight + 10}px`,
-      })
+    enter: {
+      opacity: 1,
+      height: `100px`,
     },
     leave: { opacity: 0, height: '0px' },
   })
@@ -114,15 +98,7 @@ const Messages = () => {
   return (
     <Container>
       {transitions.map(({ item, props: style, key }) => {
-        const getRef = ref => {
-          refMap.set(item, ref)
-          if (refHooks.has(item.key)) {
-            refHooks.get(item.key).done()
-          }
-        }
-        const MessageElement = getMessageElement(item, getRef)
-
-        style.padding = 0
+        const MessageElement = getMessageElement(item)
 
         return (
           <animated.div key={key} style={style}>

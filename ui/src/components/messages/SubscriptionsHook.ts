@@ -26,6 +26,7 @@ export interface Message {
   key: string
   type: NotificationType
   timeout?: number
+  onDismiss?: () => void
   props: {
     header: string
     content: string

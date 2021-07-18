@@ -12,6 +12,7 @@ import {
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
+import { NotificationType } from '../../__generated__/globalTypes'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -111,12 +112,12 @@ const downloadMediaShowProgress =
     const notifyKey = Math.random().toString(26)
     MessageState.add({
       key: notifyKey,
-      type: 'progress',
+      type: NotificationType.Progress,
       onDismiss,
       props: {
         header: 'Downloading photo',
         content: `Starting download`,
-        progress: 0,
+        percent: 0,
       },
     })
 
@@ -133,7 +134,7 @@ const downloadMediaShowProgress =
 
       MessageState.add({
         key: notifyKey,
-        type: 'progress',
+        type: NotificationType.Progress,
         onDismiss,
         props: {
           header: 'Downloading photo',
@@ -151,7 +152,7 @@ const downloadMediaShowProgress =
 
     MessageState.add({
       key: notifyKey,
-      type: 'progress',
+      type: NotificationType.Progress,
       props: {
         header: 'Downloading photo completed',
         content: `The photo has been downloaded`,

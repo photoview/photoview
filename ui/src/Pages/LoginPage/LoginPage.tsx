@@ -117,10 +117,6 @@ const LoginForm = () => {
   )
 }
 
-// background-image: radial-gradient(0% 100%, #FF8246 0%, #D6264D 100%);
-// border: 2px solid rgba(255,51,0,0.29);
-// border-radius: 6px;
-
 type LoginInputs = {
   username: string
   password: string
