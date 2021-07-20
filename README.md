@@ -37,7 +37,7 @@ Password: **demo**
 
 - **Closely tied to the file system**. The website presents the images found on the local filesystem of the server, directories are mapped to albums.
 - **User management**. Each user is created along with a path on the local filesystem, photos within that path can be accessed by that user.
-- **Sharing**. Albums, as well as individual media, can easily be shared with a public link, the link can optinally be password protected.
+- **Sharing**. Albums, as well as individual media, can easily be shared with a public link, the link can optionally be password protected.
 - **Made for photography**. Photoview is built with photographers in mind, and thus supports **RAW** file formats, and **EXIF** parsing.
 - **Video support**. Many common video formats are supported. Videos will automatically be optimized for web.
 - **Face recognition**. Faces will automatically be detected in photos, and photos of the same person will be grouped together.
