@@ -256,7 +256,14 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 
 		for _, fileInfo := range dirContent {
 			filePath := path.Join(dirPath, fileInfo.Name())
-			if fileInfo.IsDir() {
+
+			isDirSymlink, err := utils.IsDirSymlink(filePath)
+			if err != nil {
+				log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", filePath)
+				isDirSymlink = false
+			}
+
+			if fileInfo.IsDir() || isDirSymlink {
 				scanQueue.PushBack(filePath)
 			} else {
 				if cache.IsPathMedia(filePath) {
