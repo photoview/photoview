@@ -21,3 +21,9 @@ html {
     transform: scale(1, -1);
   }
 }
+
+@layer base {
+  img {
+    max-width: revert;
+  }
+}
