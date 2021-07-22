@@ -1,0 +1,68 @@
+{
+  "albums_page": {
+    "title": "Альбомы"
+  },
+  "general": {
+    "action": {
+      "delete": "Удалить",
+      "more": "Более"
+    },
+    "loading": {
+      "media": "Загрузка медиа",
+      "timeline": "Загрузка хронологии"
+    }
+  },
+  "header": {
+    "search": {
+      "result_type": {
+        "photos": "Фото"
+      }
+    }
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "Добавить Метку",
+        "change_label": "Поменять Метку",
+        "detach_face": "Отсоединить Лицо",
+        "merge_face": "Объединить Лицо",
+        "move_faces": "Переместить Лица"
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Поиск лиц..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Поиск фото..."
+      }
+    }
+  },
+  "settings": {
+    "users": {
+      "table": {
+        "column_names": {
+          "admin": "Администрирование"
+        }
+      }
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Свойства альбома"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Байт",
+        "byte_plural": "{{count}} Байт",
+        "giga_byte": "{{count}} ГБ",
+        "kilo_byte": "{{count}} КБ",
+        "mega_byte": "{{count}} МБ",
+        "tera_byte": "{{count}} ТБ"
+      }
+    },
+    "sharing": {
+      "table_header": "Общий доступ"
+    }
+  }
+}

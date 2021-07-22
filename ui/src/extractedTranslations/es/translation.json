@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Solo mostrar favoritos",
-    "sort_by": "Ordenar por",
+    "sort": null,
     "sorting_options": {
       "date_imported": "Fecha de importado",
       "date_shot": "Fecha de la foto",
       "title": "Título",
       "type": "Tipo"
-    }
-  },
-  "albums_page": {
-    "title": "Álbumes"
+    },
+    "sort_by": "Ordenar por"
   },
   "general": {
     "action": {
       "add": "Añadir",
       "cancel": "Cancelar",
-      "delete": "Eliminar",
-      "more": null,
       "remove": "Borrar",
       "save": "Guardar"
     },
     "loading": {
       "album": "Cargando álbum",
       "default": "Cargando...",
-      "media": "Cargando archivos",
       "page": "Cargando página",
       "paginate": {
         "faces": "Cargando más gente",
         "media": "Cargando más archivos"
       },
-      "shares": "Cargando compartidos...",
-      "timeline": "Cargando línea temporal"
+      "shares": "Cargando compartidos..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Buscar",
       "result_type": {
         "albums": "Álbumes",
-        "photos": "Fotos"
+        "media": null
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": null,
-        "change_label": null,
-        "detach_face": null,
-        "merge_face": null,
-        "move_faces": null
-      },
       "label_placeholder": "Etiqueta",
       "unlabeled": "Sin etiquetar",
       "unlabeled_person": null
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Reconocer caras sin etiquetar",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": null
-      },
-      "select_image_faces": {
-        "search_images_placeholder": null
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Acción",
-          "admin": "Administrador",
+          "capabilities": null,
           "photo_path": "Ruta de las fotos",
           "username": "Usuario"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "Esta compartición está protegida por contraseña.",
+      "password_required_error": null,
       "title": "Compartición protegida"
     },
     "share_not_found": "Compartición no encontrada",
@@ -223,16 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title": "opciones de álbum"
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
+        "giga_byte_plural": null,
         "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": null,
         "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "mega_byte_plural": null,
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": null
       },
       "table_columns": {
         "dimensions": "Dimensiones",
@@ -285,9 +275,10 @@
     "sharing": {
       "add_share": "Añadir compartido",
       "copy_link": "Copiar enlace",
+      "delete": null,
+      "more": null,
       "no_shares_found": "No se encontraron compartidos",
       "public_link": "Enlace público",
-      "table_header": "Compartidos públicos",
       "title": "Opciones de compartir"
     }
   },

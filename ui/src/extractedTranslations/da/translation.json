@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Vis kun favoritter",
-    "sort_by": "Sorter efter",
+    "sort": "Sorter",
     "sorting_options": {
       "date_imported": "Dato for importering",
       "date_shot": "Dato",
       "title": "Titel",
       "type": "Type"
-    }
-  },
-  "albums_page": {
-    "title": "Album"
+    },
+    "sort_by": "Sorter efter"
   },
   "general": {
     "action": {
       "add": "Tilføj",
       "cancel": "Annuller",
-      "delete": "Slet",
-      "more": "Mere",
       "remove": "Fjern",
       "save": "Gem"
     },
     "loading": {
       "album": "Loader album",
       "default": "Loader...",
-      "media": "Loader medier",
       "page": "Loader side",
       "paginate": {
         "faces": "Loader flere personer",
         "media": "Loader flere medier"
       },
-      "shares": "Loader delinger...",
-      "timeline": "Loader tidslinje"
+      "shares": "Loader delinger..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Søg",
       "result_type": {
         "albums": "Albums",
-        "photos": "Billeder"
+        "media": "Medie"
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": "Tilføj navn",
-        "change_label": "Ændre navn",
-        "detach_face": "Løsriv ansigter",
-        "merge_face": "Sammenflet ansigter",
-        "move_faces": "Flyt ansigter"
-      },
       "label_placeholder": "Navn",
       "unlabeled": "Ikke navngivet",
       "unlabeled_person": "Ikke navngivet person"
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Genkend ikke navngivede ansigter",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": "Søg ansigter..."
-      },
-      "select_image_faces": {
-        "search_images_placeholder": "Søg billeder..."
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Søg ansigter..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Søg billeder..."
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Handling",
-          "admin": "Admin",
+          "capabilities": "Rettigheder",
           "photo_path": "Billedesti",
           "username": "Brugernavn"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "Denne deling er låst med en adgangskode.",
+      "password_required_error": "Adgangskode er påkrævet",
       "title": "Beskyttet deling"
     },
     "share_not_found": "Deling blev ikke fundet",
@@ -223,16 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title": "Indstillinger for album"
+      "title_placeholder": "Albumtitel"
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
+        "giga_byte_plural": null,
         "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": null,
         "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "mega_byte_plural": null,
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": null
       },
       "table_columns": {
         "dimensions": "Dimension",
@@ -285,9 +275,10 @@
     "sharing": {
       "add_share": "Tilføj deling",
       "copy_link": "Kopier link",
+      "delete": "Slet",
+      "more": "Mere",
       "no_shares_found": "Ingen delinger fundet",
       "public_link": "Offentligt link",
-      "table_header": "Offentlige delinger",
       "title": "Indstillinger for deling"
     }
   },

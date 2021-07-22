@@ -1,0 +1,58 @@
+{
+  "albums_page": {
+    "title": "Album"
+  },
+  "general": {
+    "action": {
+      "delete": "Slet",
+      "more": "Mere"
+    },
+    "loading": {
+      "media": "Loader medier",
+      "timeline": "Loader tidslinje"
+    }
+  },
+  "header": {
+    "search": {
+      "result_type": {
+        "photos": "Billeder"
+      }
+    }
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "Tilføj navn",
+        "change_label": "Ændre navn",
+        "detach_face": "Løsriv ansigter",
+        "merge_face": "Sammenflet ansigter",
+        "move_faces": "Flyt ansigter"
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Søg ansigter..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Søg billeder..."
+      }
+    }
+  },
+  "settings": {
+    "users": {
+      "table": {
+        "column_names": {
+          "admin": "Admin"
+        }
+      }
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Indstillinger for album"
+    },
+    "sharing": {
+      "table_header": "Offentlige delinger"
+    }
+  }
+}

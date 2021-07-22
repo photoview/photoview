@@ -1,0 +1,102 @@
+{
+  "albums_page": {
+    "title": "Album"
+  },
+  "general": {
+    "action": {
+      "delete": "Radera",
+      "more": null
+    },
+    "loading": {
+      "media": "Laddar media",
+      "timeline": "Laddar tidsaxel"
+    }
+  },
+  "header": {
+    "search": {
+      "result_type": {
+        "photos": "Bilder"
+      }
+    }
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": null,
+        "change_label": null,
+        "detach_face": null,
+        "merge_face": null,
+        "move_faces": null
+      },
+      "unlabeled_person": null
+    },
+    "modal": {
+      "action": {
+        "merge": null
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": null,
+          "select_images": null
+        },
+        "description": null,
+        "title": null
+      },
+      "merge_face_groups": {
+        "description": null,
+        "destination_table": {
+          "title": null
+        },
+        "title": null
+      },
+      "move_image_faces": {
+        "description": null,
+        "destination_face_group_table": {
+          "move_action": null,
+          "title": null
+        },
+        "image_select_table": {
+          "next_action": null,
+          "title": null
+        },
+        "title": null
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": null
+      },
+      "select_image_faces": {
+        "search_images_placeholder": null
+      }
+    }
+  },
+  "places_page": {
+    "title": null
+  },
+  "settings": {
+    "users": {
+      "table": {
+        "column_names": {
+          "admin": "Admin"
+        }
+      }
+    },
+    "version_info": {
+      "build_date_title": null,
+      "title": null,
+      "version_title": null
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Albuminställningar"
+    },
+    "sharing": {
+      "table_header": "Publika delningar"
+    }
+  },
+  "title": {
+    "login": null
+  }
+}

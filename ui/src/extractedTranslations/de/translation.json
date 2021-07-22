@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Nur Favoriten anzeigen",
-    "sort_by": "Sortieren nach",
+    "sort": null,
     "sorting_options": {
       "date_imported": "Importdatum",
       "date_shot": "Aufnahmedatum",
       "title": "Titel",
       "type": "Typ"
-    }
-  },
-  "albums_page": {
-    "title": "Alben"
+    },
+    "sort_by": "Sortieren nach"
   },
   "general": {
     "action": {
       "add": "Hinzufügen",
       "cancel": "Abbrechen",
-      "delete": "Löschen",
-      "more": "Mehr",
       "remove": "Entfernen",
       "save": "Speichern"
     },
     "loading": {
       "album": "Lade Album",
       "default": "Lade...",
-      "media": "Lade Medien",
       "page": "Lade Seite",
       "paginate": {
         "faces": "Lade mehr Personen",
         "media": "Lade mehr Medien"
       },
-      "shares": "Lade Freigaben...",
-      "timeline": "Lade Timeline"
+      "shares": "Lade Freigaben..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Suche",
       "result_type": {
         "albums": "Alben",
-        "photos": "Fotos"
+        "media": null
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": null,
-        "change_label": null,
-        "detach_face": null,
-        "merge_face": null,
-        "move_faces": null
-      },
       "label_placeholder": "Zuordnung",
       "unlabeled": "Nicht zugeordnet",
       "unlabeled_person": null
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Nicht zugeordnete Gesichter erkennen",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": null
-      },
-      "select_image_faces": {
-        "search_images_placeholder": null
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Aktion",
-          "admin": "Administrator",
+          "capabilities": null,
           "photo_path": "Pfad der Medien",
           "username": "Benutzername"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "Diese Freigabe ist passwortgeschützt.",
+      "password_required_error": null,
       "title": "Passwortgeschützte Freigabe"
     },
     "share_not_found": "Freigabe nicht gefunden",
@@ -223,16 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album Optionen"
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
+        "giga_byte_plural": null,
         "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": null,
         "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "mega_byte_plural": null,
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": null
       },
       "table_columns": {
         "dimensions": "Dimension",
@@ -285,9 +275,10 @@
     "sharing": {
       "add_share": "Freigabe hinzufügen",
       "copy_link": "Link kopieren",
+      "delete": null,
+      "more": null,
       "no_shares_found": "Keine Freigaben gefunden",
       "public_link": "Öffentlicher Link",
-      "table_header": "Öffentliche Freigabe",
       "title": "Freigabeoptionen"
     }
   },

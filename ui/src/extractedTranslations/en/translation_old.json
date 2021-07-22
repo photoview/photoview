@@ -1,0 +1,58 @@
+{
+  "albums_page": {
+    "title": "Albums"
+  },
+  "general": {
+    "action": {
+      "delete": "Delete",
+      "more": "More"
+    },
+    "loading": {
+      "media": "Loading media",
+      "timeline": "Loading timeline"
+    }
+  },
+  "header": {
+    "search": {
+      "result_type": {
+        "photos": "Photos"
+      }
+    }
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "Add Label",
+        "change_label": "Change Label",
+        "detach_face": "Detach Face",
+        "merge_face": "Merge Face",
+        "move_faces": "Move Faces"
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Search faces..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Search images..."
+      }
+    }
+  },
+  "settings": {
+    "users": {
+      "table": {
+        "column_names": {
+          "admin": "Admin"
+        }
+      }
+    }
+  },
+  "sidebar": {
+    "album": {
+      "title": "Album options"
+    },
+    "sharing": {
+      "table_header": "Public shares"
+    }
+  }
+}

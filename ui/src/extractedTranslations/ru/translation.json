@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Показать только избранные",
-    "sort_by": "Отсортировать по",
+    "sort": null,
     "sorting_options": {
       "date_imported": "Дата импортирования",
       "date_shot": "Дата снимка",
       "title": "Заголовок",
       "type": "Вид"
-    }
-  },
-  "albums_page": {
-    "title": "Альбомы"
+    },
+    "sort_by": "Отсортировать по"
   },
   "general": {
     "action": {
       "add": "Добавить",
       "cancel": "Отменить",
-      "delete": "Удалить",
-      "more": "Более",
       "remove": "Убрать",
       "save": "Сохранить"
     },
     "loading": {
       "album": "Загрузка альбома",
       "default": "Загрузка...",
-      "media": "Загрузка медиа",
       "page": "Загрузка страницы",
       "paginate": {
         "faces": "Загрузить еще людей",
         "media": "Загрузить еще медиа"
       },
-      "shares": "Загрузка доступа...",
-      "timeline": "Загрузка хронологии"
+      "shares": "Загрузка доступа..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Поиск",
       "result_type": {
         "albums": "Альбомы",
-        "photos": "Фото"
+        "media": null
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": "Добавить Метку",
-        "change_label": "Поменять Метку",
-        "detach_face": "Отсоединить Лицо",
-        "merge_face": "Объединить Лицо",
-        "move_faces": "Переместить Лица"
-      },
       "label_placeholder": "Метка",
       "unlabeled": "Без метки",
       "unlabeled_person": "Человек без метки"
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Распознавать непомеченные лица",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": "Поиск лиц..."
-      },
-      "select_image_faces": {
-        "search_images_placeholder": "Поиск фото..."
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Действие",
-          "admin": "Администрирование",
+          "capabilities": null,
           "photo_path": "Путь к фото",
           "username": "Имя пользователя"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "Это общее медиа защищено паролем.",
+      "password_required_error": null,
       "title": "Защищённое медиа"
     },
     "share_not_found": "Общее медиа не найдено",
@@ -223,16 +209,25 @@
   },
   "sidebar": {
     "album": {
-      "title": "Свойства альбома"
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Байт",
-        "byte_plural": "{{count}} Байт",
-        "giga_byte": "{{count}} ГБ",
-        "kilo_byte": "{{count}} КБ",
-        "mega_byte": "{{count}} МБ",
-        "tera_byte": "{{count}} ТБ"
+        "byte_0": null,
+        "byte_1": null,
+        "byte_2": null,
+        "giga_byte_0": null,
+        "giga_byte_1": null,
+        "giga_byte_2": null,
+        "kilo_byte_0": null,
+        "kilo_byte_1": null,
+        "kilo_byte_2": null,
+        "mega_byte_0": null,
+        "mega_byte_1": null,
+        "mega_byte_2": null,
+        "tera_byte_0": null,
+        "tera_byte_1": null,
+        "tera_byte_2": null
       },
       "table_columns": {
         "dimensions": "Габариты",
@@ -285,9 +280,10 @@
     "sharing": {
       "add_share": "Поделится",
       "copy_link": "Скопировать ссылку",
+      "delete": null,
+      "more": null,
       "no_shares_found": "Нет доступа",
       "public_link": "Общедоступная ссылка",
-      "table_header": "Общий доступ",
       "title": "Настройки доступа"
     }
   },

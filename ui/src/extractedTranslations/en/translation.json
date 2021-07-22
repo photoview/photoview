@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Show only favorites",
-    "sort_by": "Sort by",
+    "sort": "Sort",
     "sorting_options": {
       "date_imported": "Date imported",
       "date_shot": "Date shot",
       "title": "Title",
       "type": "Kind"
-    }
-  },
-  "albums_page": {
-    "title": "Albums"
+    },
+    "sort_by": "Sort by"
   },
   "general": {
     "action": {
       "add": "Add",
       "cancel": "Cancel",
-      "delete": "Delete",
-      "more": "More",
       "remove": "Remove",
       "save": "Save"
     },
     "loading": {
       "album": "Loading album",
       "default": "Loading...",
-      "media": "Loading media",
       "page": "Loading page",
       "paginate": {
         "faces": "Loading more people",
         "media": "Loading more media"
       },
-      "shares": "Loading shares...",
-      "timeline": "Loading timeline"
+      "shares": "Loading shares..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Search",
       "result_type": {
         "albums": "Albums",
-        "photos": "Photos"
+        "media": "Media"
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": "Add Label",
-        "change_label": "Change Label",
-        "detach_face": "Detach Face",
-        "merge_face": "Merge Face",
-        "move_faces": "Move Faces"
-      },
       "label_placeholder": "Label",
       "unlabeled": "Unlabeled",
       "unlabeled_person": "Unlabeled person"
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Recognize unlabeled faces",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": "Search faces..."
-      },
-      "select_image_faces": {
-        "search_images_placeholder": "Search images..."
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Search faces..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Search images..."
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Action",
-          "admin": "Admin",
+          "capabilities": "Capabilities",
           "photo_path": "Photo path",
           "username": "Username"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "This share is protected with a password.",
+      "password_required_error": "Password is required",
       "title": "Protected share"
     },
     "share_not_found": "Share not found",
@@ -223,16 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album options"
+      "title_placeholder": "Album title"
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
+        "giga_byte_plural": "{{count}} GB",
         "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": "{{count}} KB",
         "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "mega_byte_plural": "{{count}} MB",
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": "{{count}} TB"
       },
       "table_columns": {
         "dimensions": "Dimensions",
@@ -285,9 +275,10 @@
     "sharing": {
       "add_share": "Add shares",
       "copy_link": "Copy Link",
+      "delete": "Delete",
+      "more": "More",
       "no_shares_found": "No shares found",
       "public_link": "Public Link",
-      "table_header": "Public shares",
       "title": "Sharing options"
     }
   },

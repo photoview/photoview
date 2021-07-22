@@ -64,6 +64,7 @@
     "jest": "craco test",
     "jest:ci": "CI=true craco test --verbose --ci --coverage",
     "genSchemaTypes": "npx apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts",
+    "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && npx husky install)"
   },
   "devDependencies": {
@@ -71,6 +72,7 @@
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.1.9",
     "husky": "^6.0.0",
+    "i18next-parser": "^4.2.0",
     "lint-staged": "^11.0.1",
     "tsc-files": "^1.1.2"
   },

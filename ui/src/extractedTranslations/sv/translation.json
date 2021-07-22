@@ -1,37 +1,31 @@
 {
   "album_filter": {
     "only_favorites": "Visa endast favoriter",
-    "sort_by": "Sortera efter",
+    "sort": null,
     "sorting_options": {
       "date_imported": "Datum för import",
       "date_shot": "Datum",
       "title": "Titel",
       "type": "Typ"
-    }
-  },
-  "albums_page": {
-    "title": "Album"
+    },
+    "sort_by": "Sortera efter"
   },
   "general": {
     "action": {
       "add": "Lägg till",
       "cancel": "Avbryt",
-      "delete": "Radera",
-      "more": null,
       "remove": "Ta bort",
       "save": "Spara"
     },
     "loading": {
       "album": "Laddar album",
       "default": "Laddar...",
-      "media": "Laddar media",
       "page": "Laddar sida",
       "paginate": {
         "faces": "Laddar fler personer",
         "media": "Laddar fler media"
       },
-      "shares": "Loading delningar...",
-      "timeline": "Laddar tidsaxel"
+      "shares": "Loading delningar..."
     }
   },
   "header": {
@@ -41,7 +35,7 @@
       "placeholder": "Sök",
       "result_type": {
         "albums": "Album",
-        "photos": "Bilder"
+        "media": null
       }
     }
   },
@@ -68,13 +62,6 @@
   },
   "people_page": {
     "face_group": {
-      "action": {
-        "add_label": null,
-        "change_label": null,
-        "detach_face": null,
-        "merge_face": null,
-        "move_faces": null
-      },
       "label_placeholder": "Märkning",
       "unlabeled": "Omärkt",
       "unlabeled_person": null
@@ -112,13 +99,11 @@
       }
     },
     "recognize_unlabeled_faces_button": "Känna igen omärkta ansikten",
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": null
-      },
-      "select_image_faces": {
-        "search_images_placeholder": null
-      }
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "photos_page": {
@@ -187,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Åtgärd",
-          "admin": "Admin",
+          "capabilities": null,
           "photo_path": "Sökväg till bild",
           "username": "Användarnamn"
         },
@@ -215,6 +200,7 @@
     },
     "protected_share": {
       "description": "Denna delning är skyddad med ett lösenord.",
+      "password_required_error": null,
       "title": "Skyddad delning"
     },
     "share_not_found": "Delning hittades inte",
@@ -223,16 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title": "Albuminställningar"
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
+        "giga_byte_plural": null,
         "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": null,
         "mega_byte": "{{count}} MB",
-        "tera_byte": "{{count}} TB"
+        "mega_byte_plural": null,
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": null
       },
       "table_columns": {
         "dimensions": "Mått",
@@ -285,9 +275,10 @@
     "sharing": {
       "add_share": "Dela",
       "copy_link": "Kopiera länk",
+      "delete": null,
+      "more": null,
       "no_shares_found": "Inga delningar hittades",
       "public_link": "Publika länkar",
-      "table_header": "Publika delningar",
       "title": "Delningsinställningar"
     }
   },
