@@ -9,6 +9,8 @@ services:
       - MYSQL_USER=photoview
       - MYSQL_PASSWORD=photosecret
       - MYSQL_RANDOM_ROOT_PASSWORD=1
+    networks:
+      - photoview
     volumes:
       - db_data:/var/lib/mysql
 
@@ -19,7 +21,6 @@ services:
       - "8000:80"
     depends_on:
       - db
-
     environment:
       - PHOTOVIEW_DATABASE_DRIVER=mysql
       - PHOTOVIEW_MYSQL_URL=photoview:photosecret@tcp(db)/photoview
@@ -30,13 +31,13 @@ services:
       # Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       # Enable the following Godebug
       # - GODEBUG=asyncpreemptoff=1
-      
-      
+         
       # Optional: To enable map related features, you need to create a mapbox token.
       # A token can be generated for free here https://account.mapbox.com/access-tokens/
       # It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
       # - MAPBOX_TOKEN=<YOUR TOKEN HERE>
-
+    networks:
+      - photoview
     volumes:
       - api_cache:/app/cache
 
@@ -49,3 +50,7 @@ services:
 volumes:
   db_data:
   api_cache:
+
+networks:
+  photoview:
+    name: ${NETWORK_NAME:-photoview-network}
