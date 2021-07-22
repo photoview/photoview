@@ -60,7 +60,6 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   }, [album])
 
   const delay = useDelay(200, [album])
-  console.log('delay', delay)
 
   if (!album) {
     return (

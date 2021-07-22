@@ -1,0 +1,23 @@
+{
+  "name": "Photoview",
+  "short_name": "Photoview",
+  "description": "Photo gallery for self-hosted personal servers",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "black",
+  "background_color": "white",
+  "icons": [
+    {
+      "src": "/assets/logo192.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/logo512.png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/assets/photoview-logo.svg",
+      "sizes": "150x150"
+    }
+  ]
+}

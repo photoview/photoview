@@ -157,8 +157,7 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
           }
           onKeyDown={onKeyDown}
           onChange={e => setInputValue(e.target.value)}
-          onBlur={e => {
-            console.log(e)
+          onBlur={() => {
             resetLabel()
           }}
         />

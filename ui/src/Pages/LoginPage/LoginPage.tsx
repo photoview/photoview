@@ -4,7 +4,6 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
-import logoPath from '../../assets/photoview-logo.svg'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
 import { Redirect } from 'react-router'
@@ -28,7 +27,11 @@ const LogoHeader = () => {
 
   return (
     <div className="flex justify-center flex-col mb-14 mt-20">
-      <img className="h-24" src={logoPath} alt="photoview logo" />
+      <img
+        className="h-24"
+        src={process.env.PUBLIC_URL + '/photoview-logo.svg'}
+        alt="photoview logo"
+      />
       <h1 className="text-3xl text-center mt-4">
         {t('login_page.welcome', 'Welcome to Photoview')}
       </h1>

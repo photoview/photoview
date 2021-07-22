@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import SearchBar from './Searchbar'
 
-import logoPath from '../../assets/photoview-logo.svg'
 import { authToken } from '../../helpers/authentication'
 import { SidebarContext } from '../sidebar/Sidebar'
 import classNames from 'classnames'
@@ -17,7 +16,11 @@ const Header = () => {
       )}
     >
       <h1 className="mr-4 lg:mr-8 flex-shrink-0 flex items-center">
-        <img className="h-12 lg:h-10" src={logoPath} alt="logo" />
+        <img
+          className="h-12 lg:h-10"
+          src={process.env.PUBLIC_URL + '/photoview-logo.svg'}
+          alt="logo"
+        />
         <span className="hidden lg:block ml-2 text-2xl font-light">
           Photoview
         </span>

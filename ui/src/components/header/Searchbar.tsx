@@ -128,7 +128,6 @@ const SearchBar = () => {
     const keydownEvent = (event: KeyboardEvent) => {
       if (!expanded) return
 
-      console.log(event.key)
       if (event.key == 'ArrowDown') {
         event.preventDefault()
         setSelectedItem(i => (i === null ? 0 : Math.min(totalItems - 1, i + 1)))
