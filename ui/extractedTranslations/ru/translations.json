@@ -1,0 +1,307 @@
+{
+  "album_filter": {
+    "only_favorites": "Показать только избранные",
+    "sort_by": "Отсортировать по",
+    "sorting_options": {
+      "date_imported": "Дата импортирования",
+      "date_shot": "Дата снимка",
+      "title": "Заголовок",
+      "type": "Вид"
+    }
+  },
+  "albums_page": {
+    "title": "Альбомы"
+  },
+  "general": {
+    "action": {
+      "add": "Добавить",
+      "cancel": "Отменить",
+      "delete": "Удалить",
+      "more": "Более",
+      "remove": "Убрать",
+      "save": "Сохранить"
+    },
+    "loading": {
+      "album": "Загрузка альбома",
+      "default": "Загрузка...",
+      "media": "Загрузка медиа",
+      "page": "Загрузка страницы",
+      "paginate": {
+        "faces": "Загрузить еще людей",
+        "media": "Загрузить еще медиа"
+      },
+      "shares": "Загрузка доступа...",
+      "timeline": "Загрузка хронологии"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Загрузка результатов...",
+      "no_results": "Результатов не найдено",
+      "placeholder": "Поиск",
+      "result_type": {
+        "albums": "Альбомы",
+        "photos": "Фото"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Пароль",
+      "submit": "Войти",
+      "username": "Имя пользователя"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Путь к фото",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Настроить Photoview"
+      },
+      "title": "Первичная настройка"
+    },
+    "welcome": "Добро пожаловать в Photoview"
+  },
+  "meta": {
+    "description": "Простая и Удобная Фото Галерея для Личного Сервера"
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "Добавить Метку",
+        "change_label": "Поменять Метку",
+        "detach_face": "Отсоединить Лицо",
+        "merge_face": "Объединить Лицо",
+        "move_faces": "Переместить Лица"
+      },
+      "label_placeholder": "Метка",
+      "unlabeled": "Без метки",
+      "unlabeled_person": "Человек без метки"
+    },
+    "modal": {
+      "action": {
+        "merge": "Объединить"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Отсоединить фото с лицами",
+          "select_images": "Выбрать фото для отсоединения"
+        },
+        "description": "Отсоединить выбранные фотографии с лицами из текущей группы и переместить их в новую группу.",
+        "title": "Отсоединить фото с лицами"
+      },
+      "merge_face_groups": {
+        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
+        "destination_table": {
+          "title": "Выберете конечное лицо"
+        },
+        "title": "Обьединить группы лиц"
+      },
+      "move_image_faces": {
+        "description": "Переместить выбранные фото из текущей группы в другую группу с лицами.",
+        "destination_face_group_table": {
+          "move_action": "Переместить фото с лицами",
+          "title": "Выберите конечную группу с лицами"
+        },
+        "image_select_table": {
+          "next_action": "Далее",
+          "title": "Выберите фото для перемещения"
+        },
+        "title": "Переместить фото с лицами"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Распознавать непомеченные лица",
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Поиск лиц..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Поиск фото..."
+      }
+    }
+  },
+  "photos_page": {
+    "title": "Фотографии"
+  },
+  "places_page": {
+    "title": "Места"
+  },
+  "routes": {
+    "page_not_found": "Страница не найдена"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Максимальное количество задач по сканированию разрешённых работать одновременно",
+      "title": "Количество одновременных задач"
+    },
+    "logout": "Выйти",
+    "periodic_scanner": {
+      "checkbox_label": "Включить переодическое сканирование",
+      "field": {
+        "description": "Как часто должно запускаться автоматическое сканирование для всех пользователей",
+        "label": "Интервал переодического сканирования"
+      },
+      "interval_unit": {
+        "days": "День",
+        "hour": "Час",
+        "minutes": "Минута",
+        "months": "Месяц",
+        "seconds": "Секунда"
+      },
+      "title": "Переодическое сканирование"
+    },
+    "scanner": {
+      "description": "Сканирование всех пользователей на наличие обновлённых или новых медиа",
+      "scan_all_users": "Сканировать всех пользователей",
+      "title": "Сканер"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Поменять язык сайта только для этого пользователя",
+        "label": "Язык сайта"
+      },
+      "language_selector": {
+        "placeholder": "Выбрать язык"
+      },
+      "title": "Пользовательские настройки"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Добавить пользователя"
+      },
+      "confirm_delete_user": {
+        "action": "Удалить {{user}}",
+        "description": "<0>Вы уверены что хотите удалить <1></1>?</0><p>Это действие необратимо</p>",
+        "title": "Удалить пользователя"
+      },
+      "password_reset": {
+        "description": "Поменять пароль для <1></1>",
+        "form": {
+          "label": "Новый пароль",
+          "placeholder": "пароль",
+          "submit": "Поменять пароль"
+        },
+        "title": "Поменять пароль"
+      },
+      "table": {
+        "column_names": {
+          "action": "Действие",
+          "admin": "Администрирование",
+          "photo_path": "Путь к фото",
+          "username": "Имя пользователя"
+        },
+        "new_user": "Новый пользователь",
+        "row": {
+          "action": {
+            "change_password": "Поменять пароль",
+            "delete": "Удалить",
+            "edit": "Редактировать",
+            "scan": "Сканировать"
+          }
+        }
+      },
+      "title": "Пользователи"
+    },
+    "version_info": {
+      "build_date_title": "Дата сборки",
+      "title": "Версия Photoview",
+      "version_title": "Версия релиза"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Общее медиа"
+    },
+    "protected_share": {
+      "description": "Это общее медиа защищено паролем.",
+      "title": "Защищённое медиа"
+    },
+    "share_not_found": "Общее медиа не найдено",
+    "share_not_found_description": "Возможно это общее медиа было удалено или время доступа истекло.",
+    "wrong_password": "Неправильный пароль, пожалуйста попробуйте снова."
+  },
+  "sidebar": {
+    "album": {
+      "title": "Свойства альбома"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Байт",
+        "byte_plural": "{{count}} Байт",
+        "giga_byte": "{{count}} ГБ",
+        "kilo_byte": "{{count}} КБ",
+        "mega_byte": "{{count}} МБ",
+        "tera_byte": "{{count}} ТБ"
+      },
+      "table_columns": {
+        "dimensions": "Габариты",
+        "file_size": "Размер",
+        "file_type": "Тип",
+        "name": "Имя"
+      },
+      "title": "Скачать"
+    },
+    "media": {
+      "exif": {
+        "exposure_program": {
+          "action_program": "Действие программа",
+          "aperture_priority": "Приоритет диафрагмы",
+          "bulb": "Лампа",
+          "creative_program": "Творческая программа",
+          "landscape_mode": "Ландшафтный режим",
+          "manual": "Ручной",
+          "normal_program": "Нормальная программа",
+          "not_defined": "Не определен",
+          "portrait_mode": "Портретный режим",
+          "shutter_priority": "Приоритет выдержки"
+        },
+        "flash": {
+          "auto": "Авто",
+          "did_not_fire": "Не сработала",
+          "fired": "Сработала",
+          "no_flash": "Без вспышки",
+          "no_flash_function": "Функция без вспышки",
+          "off": "Выкл.",
+          "on": "Вкл.",
+          "red_eye_reduction": "Уменьшение эф. красных глаз",
+          "return_detected": "Обнаружен возврат",
+          "return_not_detected": "Возврат не обнаружен"
+        },
+        "name": {
+          "aperture": "Диафрагма",
+          "camera": "Камера",
+          "date_shot": "Дата снимка",
+          "exposure": "Экспозиция",
+          "exposure_program": "Программа",
+          "flash": "Вспышка",
+          "focal_length": "Фокусное расстояние",
+          "iso": "ISO",
+          "lens": "Линза",
+          "maker": "Производитель"
+        }
+      }
+    },
+    "sharing": {
+      "add_share": "Поделится",
+      "copy_link": "Скопировать ссылку",
+      "no_shares_found": "Нет доступа",
+      "public_link": "Общедоступная ссылка",
+      "table_header": "Общий доступ",
+      "title": "Настройки доступа"
+    }
+  },
+  "sidemenu": {
+    "albums": "Альбомы",
+    "people": "Люди",
+    "photos": "Фото",
+    "places": "Места",
+    "settings": "Настройки"
+  },
+  "title": {
+    "loading_album": "Загрузка альбома",
+    "login": "Имя пользователя",
+    "people": "Люди",
+    "settings": "Настройки"
+  }
+}
