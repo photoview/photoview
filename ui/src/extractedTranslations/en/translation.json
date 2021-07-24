@@ -1,26 +1,26 @@
 {
   "album_filter": {
-    "only_favorites": "Show only favorites",
-    "sort": "Sort",
+    "only_favorites": "Toon alleen favorieten",
+    "sort": "Sorteer",
     "sorting_options": {
-      "date_imported": "Date imported",
-      "date_shot": "Date shot",
-      "title": "Title",
+      "date_imported": "Datum geimporteerd",
+      "date_shot": "Datum gemaakt",
+      "title": "Titel",
       "type": "Kind"
     },
-    "sort_by": "Sort by"
+    "sort_by": "Sorteer als"
   },
   "general": {
     "action": {
-      "add": "Add",
-      "cancel": "Cancel",
-      "remove": "Remove",
-      "save": "Save"
+      "add": "Toevoegen",
+      "cancel": "Annuleren",
+      "remove": "Verwijderen",
+      "save": "Opslaan"
     },
     "loading": {
-      "album": "Loading album",
-      "default": "Loading...",
-      "page": "Loading page",
+      "album": "Album laden",
+      "default": "Laden...",
+      "page": "Pagina laden",
       "paginate": {
         "faces": "Loading more people",
         "media": "Loading more media"
@@ -30,9 +30,9 @@
   },
   "header": {
     "search": {
-      "loading": "Loading results...",
-      "no_results": "No results found",
-      "placeholder": "Search",
+      "loading": "Resultaten laden...",
+      "no_results": "Geen resultaten gevonden",
+      "placeholder": "Zoeken",
       "result_type": {
         "albums": "Albums",
         "media": "Media"
@@ -41,24 +41,24 @@
   },
   "login_page": {
     "field": {
-      "password": "Password",
-      "submit": "Sign in",
-      "username": "Username"
+      "password": "Wachtwoord",
+      "submit": "Aanmelden",
+      "username": "Gebruikersnaam"
     },
     "initial_setup": {
       "field": {
         "photo_path": {
-          "label": "Photo path",
-          "placeholder": "/path/to/photos"
+          "label": "Foto pad",
+          "placeholder": "/pad/naar/photos"
         },
         "submit": "Setup Photoview"
       },
-      "title": "Initial Setup"
+      "title": "Initiele Installatie"
     },
-    "welcome": "Welcome to Photoview"
+    "welcome": "Welkom bij Photoview"
   },
   "meta": {
-    "description": "Simple and User-friendly Photo Gallery for Personal Servers"
+    "description": "Simpele en gebruiksviendelijke foto gallerij voor thuis servers"
   },
   "people_page": {
     "face_group": {
@@ -68,7 +68,7 @@
     },
     "modal": {
       "action": {
-        "merge": "Merge"
+        "merge": "Samenvoegen"
       },
       "detach_image_faces": {
         "action": {
@@ -92,8 +92,8 @@
           "title": "Select destination face group"
         },
         "image_select_table": {
-          "next_action": "Next",
-          "title": "Select images to move"
+          "next_action": "Volgende",
+          "title": "Selecteer afbeelding om te verplaatsen"
         },
         "title": "Move Image Faces"
       }
@@ -107,13 +107,13 @@
     }
   },
   "photos_page": {
-    "title": "Photos"
+    "title": "Fotos"
   },
   "places_page": {
-    "title": "Places"
+    "title": "Plaatsen"
   },
   "routes": {
-    "page_not_found": "Page not found"
+    "page_not_found": "Pagina niet gevonden"
   },
   "settings": {
     "concurrent_workers": {
@@ -128,17 +128,17 @@
         "label": "Periodic scan interval"
       },
       "interval_unit": {
-        "days": "Days",
-        "hour": "Hour",
-        "minutes": "Minutes",
-        "months": "Months",
-        "seconds": "Seconds"
+        "days": "Dagen",
+        "hour": "uur",
+        "minutes": "Minuten",
+        "months": "Maanden",
+        "seconds": "Seconden"
       },
-      "title": "Periodic scanner"
+      "title": "Periodieke scanner"
     },
     "scanner": {
       "description": "Will scan all users for new or updated media",
-      "scan_all_users": "Scan all users",
+      "scan_all_users": "Scan alle gebruikers",
       "title": "Scanner"
     },
     "user_preferences": {
@@ -147,50 +147,50 @@
         "label": "Website language"
       },
       "language_selector": {
-        "placeholder": "Select language"
+        "placeholder": "Selecteer taal"
       },
-      "title": "User preferences"
+      "title": "Gebruiker voorkeuren"
     },
     "users": {
       "add_user": {
-        "submit": "Add user"
+        "submit": "Voeg gebruiker toe"
       },
       "confirm_delete_user": {
-        "action": "Delete {{user}}",
+        "action": "Verwijder {{gebruiker}}",
         "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
-        "title": "Delete user"
+        "title": "Verwijder gebruiker"
       },
       "password_reset": {
-        "description": "Change password for <1>{{username}}</1>",
+        "description": "Verander wachtwoord voor <1>{{gebruikersnaam}}</1>",
         "form": {
-          "label": "New password",
-          "placeholder": "password",
-          "submit": "Change password"
+          "label": "Nieuw wachtwoord",
+          "placeholder": "wachtwoord",
+          "submit": "Verander wachtwoord"
         },
-        "title": "Change password"
+        "title": "Verander wachtwoord"
       },
       "table": {
         "column_names": {
-          "action": "Action",
+          "action": "Actie",
           "capabilities": "Capabilities",
-          "photo_path": "Photo path",
-          "username": "Username"
+          "photo_path": "Foto pad",
+          "username": "Gebruikersnaam"
         },
-        "new_user": "New user",
+        "new_user": "Nieuwe gebruiker",
         "row": {
           "action": {
-            "change_password": "Change password",
-            "delete": "Delete",
-            "edit": "Edit",
+            "change_password": "Verander Wachtwoord",
+            "delete": "Verwijderen",
+            "edit": "Bewerken",
             "scan": "Scan"
           }
         }
       },
-      "title": "Users"
+      "title": "Gebruikers"
     },
     "version_info": {
       "build_date_title": "Build date",
-      "title": "Photoview Version",
+      "title": "Photoview Versie",
       "version_title": "Release Version"
     }
   },
@@ -209,7 +209,7 @@
   },
   "sidebar": {
     "album": {
-      "title_placeholder": "Album title"
+      "title_placeholder": "Album titel"
     },
     "download": {
       "filesize": {
@@ -274,9 +274,9 @@
     },
     "sharing": {
       "add_share": "Add shares",
-      "copy_link": "Copy Link",
-      "delete": "Delete",
-      "more": "More",
+      "copy_link": "Kopier Link",
+      "delete": "Verwijderen",
+      "more": "Meer",
       "no_shares_found": "No shares found",
       "public_link": "Public Link",
       "title": "Sharing options"
@@ -284,15 +284,15 @@
   },
   "sidemenu": {
     "albums": "Albums",
-    "people": "People",
-    "photos": "Photos",
-    "places": "Places",
-    "settings": "Settings"
+    "people": "Personen",
+    "photos": "Fotos",
+    "places": "Plaatsen",
+    "settings": "Instellingen"
   },
   "title": {
-    "loading_album": "Loading album",
-    "login": "Login",
-    "people": "People",
-    "settings": "Settings"
+    "loading_album": "Album laden",
+    "login": "Inloggen",
+    "people": "Personen",
+    "settings": "Instellingen"
   }
 }
