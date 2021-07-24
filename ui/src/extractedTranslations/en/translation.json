@@ -172,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Actie",
-          "capabilities": "Capabilities",
+          "capabilities": "Mogelijkheden",
           "photo_path": "Foto pad",
           "username": "Gebruikersnaam"
         },
@@ -196,16 +196,16 @@
   },
   "share_page": {
     "media": {
-      "title": "Shared media"
+      "title": "Gedeelde media"
     },
     "protected_share": {
       "description": "This share is protected with a password.",
       "password_required_error": "Password is required",
       "title": "Protected share"
     },
-    "share_not_found": "Share not found",
+    "share_not_found": "Share niet gevonden",
     "share_not_found_description": "Maybe the share has expired or has been deleted.",
-    "wrong_password": "Wrong password, please try again."
+    "wrong_password": "Verkeerd wachtwoord, probeer later opnieuw."
   },
   "sidebar": {
     "album": {
@@ -240,10 +240,10 @@
           "bulb": "Bulb",
           "creative_program": "Creative program",
           "landscape_mode": "Landscape mode",
-          "manual": "Manual",
+          "manual": "Handmatig",
           "normal_program": "Normal program",
-          "not_defined": "Not defined",
-          "portrait_mode": "Portrait mode",
+          "not_defined": "Niet gedefineerd",
+          "portrait_mode": "Portret modus",
           "shutter_priority": "Shutter priority"
         },
         "flash": {
@@ -252,8 +252,8 @@
           "fired": "Fired",
           "no_flash": "No Flash",
           "no_flash_function": "No flash function",
-          "off": "Off",
-          "on": "On",
+          "off": "Aan",
+          "on": "Uit",
           "red_eye_reduction": "Red-eye reduction",
           "return_detected": "Return detected",
           "return_not_detected": "Return not detected"
