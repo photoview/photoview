@@ -71,15 +71,16 @@ type TimelineGroup struct {
 type LanguageTranslation string
 
 const (
-	LanguageTranslationEnglish LanguageTranslation = "English"
-	LanguageTranslationFrench  LanguageTranslation = "French"
-	LanguageTranslationItalian LanguageTranslation = "Italian"
-	LanguageTranslationSwedish LanguageTranslation = "Swedish"
-	LanguageTranslationDanish  LanguageTranslation = "Danish"
-	LanguageTranslationSpanish LanguageTranslation = "Spanish"
-	LanguageTranslationPolish  LanguageTranslation = "Polish"
-	LanguageTranslationGerman  LanguageTranslation = "German"
-	LanguageTranslationRussian LanguageTranslation = "Russian"
+	LanguageTranslationEnglish            LanguageTranslation = "English"
+	LanguageTranslationFrench             LanguageTranslation = "French"
+	LanguageTranslationItalian            LanguageTranslation = "Italian"
+	LanguageTranslationSwedish            LanguageTranslation = "Swedish"
+	LanguageTranslationDanish             LanguageTranslation = "Danish"
+	LanguageTranslationSpanish            LanguageTranslation = "Spanish"
+	LanguageTranslationPolish             LanguageTranslation = "Polish"
+	LanguageTranslationGerman             LanguageTranslation = "German"
+	LanguageTranslationRussian            LanguageTranslation = "Russian"
+	LanguageTranslationTraditionalChinese LanguageTranslation = "TraditionalChinese"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
@@ -92,11 +93,12 @@ var AllLanguageTranslation = []LanguageTranslation{
 	LanguageTranslationPolish,
 	LanguageTranslationGerman,
 	LanguageTranslationRussian,
+	LanguageTranslationTraditionalChinese,
 }
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationGerman, LanguageTranslationRussian:
+	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChinese:
 		return true
 	}
 	return false

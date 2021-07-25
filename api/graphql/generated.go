@@ -1851,6 +1851,7 @@ enum LanguageTranslation {
   Polish,
   German,
   Russian,
+  TraditionalChinese,
 }
 
 type UserPreferences {

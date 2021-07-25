@@ -112,6 +112,14 @@ export const loadTranslations = () => {
           i18n.changeLanguage('ru')
         })
         return
+      case LanguageTranslation.TraditionalChinese:
+        import('./extractedTranslations/zh-HK/translation.json').then(
+          traditionalChinese => {
+            i18n.addResourceBundle('zh-HK', 'translation', traditionalChinese)
+            i18n.changeLanguage('zh-HK')
+          }
+        )
+        return
     }
 
     exhaustiveCheck(language)
