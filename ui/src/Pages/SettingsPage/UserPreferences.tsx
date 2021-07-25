@@ -26,7 +26,13 @@ const languagePreferences = [
   { key: 6, label: 'polski', flag: 'pl', value: LanguageTranslation.Polish },
   { key: 7, label: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
   { key: 8, label: 'Deutsch', flag: 'de', value: LanguageTranslation.German },
-  { key: 8, label: 'Русский', flag: 'ru', value: LanguageTranslation.Russian },
+  { key: 9, label: 'Русский', flag: 'ru', value: LanguageTranslation.Russian },
+  {
+    key: 10,
+    label: '繁體中文',
+    flag: 'zh-HK',
+    value: LanguageTranslation.TraditionalChinese,
+  },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`

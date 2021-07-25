@@ -161,7 +161,7 @@
         "title": "刪除使用者"
       },
       "password_reset": {
-        "description": "更改密碼 for <1></1>",
+        "description": "更改 <1>{{username}}</1> 的密碼",
         "form": {
           "label": "新密碼",
           "placeholder": "密碼",
@@ -213,11 +213,11 @@
     },
     "download": {
       "filesize": {
-        "byte": "",
-        "giga_byte": "",
-        "kilo_byte": "",
-        "mega_byte": "",
-        "tera_byte": "",
+        "byte": null,
+        "giga_byte": null,
+        "kilo_byte": null,
+        "mega_byte": null,
+        "tera_byte": null,
         "byte_0": null,
         "byte_1": null,
         "byte_2": null,
@@ -258,15 +258,15 @@
         },
         "flash": {
           "auto": "自動",
-          "did_not_fire": "Did not fire",
-          "fired": "Fired",
-          "no_flash": "No Flash",
-          "no_flash_function": "No flash function",
+          "did_not_fire": null,
+          "fired": null,
+          "no_flash": null,
+          "no_flash_function": null,
           "off": "關閉",
           "on": "使用",
           "red_eye_reduction": "減輕紅眼",
-          "return_detected": "Return detected",
-          "return_not_detected": "Return not detected"
+          "return_detected": null,
+          "return_not_detected": null
         },
         "name": {
           "aperture": "光圈",
@@ -295,7 +295,7 @@
   "sidemenu": {
     "albums": "相簿",
     "people": "人物",
-    "photos": "相片",
+    "photos": "時間線",
     "places": "地點",
     "settings": "設定"
   },
