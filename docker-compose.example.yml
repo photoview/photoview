@@ -45,6 +45,16 @@ services:
       # to the following: `/home/user/photos:/photos:ro`.
       # You can mount multiple paths, if your photos are spread across multiple directories.
       - ./photos_path:/photos:ro
+      volumes:
+      - api_cache:/app/cache
+
+      # Change This: to the directory where your photos are located on your server.
+      # If the photos are located at `/home/user/photos`, then change this value
+      # to the following: `/home/user/photos:/photos:ro`.
+      - /home/$USER/Pictures:/photos/Pictures:ro
+      # You can mount multiple paths, if your photos are spread across multiple directories.
+      #- /home/$USER/Downloads:/photos/Downloads:ro
+      #- /media/$USER/Photos:/photos/Photos:ro
 
 volumes:
   db_data:
