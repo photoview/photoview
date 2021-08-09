@@ -18,6 +18,7 @@ export enum LanguageTranslation {
   Spanish = 'Spanish',
   Swedish = 'Swedish',
   TraditionalChinese = 'TraditionalChinese',
+  Portuguese = 'Portuguese',
 }
 
 export enum MediaType {
