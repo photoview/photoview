@@ -33,6 +33,12 @@ const languagePreferences = [
     flag: 'zh-HK',
     value: LanguageTranslation.TraditionalChinese,
   },
+  {
+    key: 11,
+    label: 'Português',
+    flag: 'pt',
+    value: LanguageTranslation.Portuguese,
+  },
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
