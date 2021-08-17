@@ -120,6 +120,14 @@ export const loadTranslations = () => {
           }
         )
         return
+      case LanguageTranslation.Portuguese:
+        import('./extractedTranslations/pt/translation.json').then(
+          traditionalChinese => {
+            i18n.addResourceBundle('pt', 'translation', traditionalChinese)
+            i18n.changeLanguage('pt')
+          }
+        )
+        return
     }
 
     exhaustiveCheck(language)
