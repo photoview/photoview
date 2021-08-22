@@ -148,12 +148,10 @@ func processPhoto(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, photoC
 
 			baseImagePath = path.Join(*photoCachePath, highresName)
 
-			newHighResURL, err := generateSaveHighResJPEG(tx, photo, imageData, highresName, baseImagePath, nil)
+			_, err := generateSaveHighResJPEG(tx, photo, imageData, highresName, baseImagePath, nil)
 			if err != nil {
 				return false, err
 			}
-
-			highResURL = newHighResURL
 		}
 	} else {
 		// Verify that highres photo still exists in cache
@@ -193,12 +191,11 @@ func processPhoto(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, photoC
 
 		thumbnailName := generateUniqueMediaNamePrefixed("thumbnail", photo.Path, ".jpg")
 
-		newThumbURL, err := generateSaveThumbnailJPEG(tx, photo, thumbnailName, photoCachePath, baseImagePath, nil)
+		_, err := generateSaveThumbnailJPEG(tx, photo, thumbnailName, photoCachePath, baseImagePath, nil)
 		if err != nil {
 			return false, err
 		}
 
-		thumbURL = newThumbURL
 	} else {
 		// Verify that thumbnail photo still exists in cache
 		thumbPath := path.Join(*photoCachePath, thumbURL.MediaName)
