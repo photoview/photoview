@@ -121,6 +121,18 @@ func processPhoto(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, photoC
 		return false, errors.Wrap(err, "could determine if media was photo or video")
 	}
 
+	if mediaType.IsRaw() {
+		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
+		if err != nil {
+			return false, err
+		}
+
+		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
+		if counterpartFile != nil {
+			imageData.Media.CounterpartPath = counterpartFile
+		}
+	}
+
 	// Generate high res jpeg
 	if highResURL == nil {
 
@@ -199,18 +211,6 @@ func processPhoto(tx *gorm.DB, imageData *media_encoding.EncodeMediaData, photoC
 			if err != nil {
 				return false, errors.Wrap(err, "could not create thumbnail cached image")
 			}
-		}
-	}
-
-	if mediaType.IsRaw() {
-		err = processRawSideCar(tx, imageData, highResURL, thumbURL, photoCachePath)
-		if err != nil {
-			return false, err
-		}
-
-		counterpartFile := scanForCompressedCounterpartFile(photo.Path)
-		if counterpartFile != nil {
-			photo.CounterpartPath = counterpartFile
 		}
 	}
 
