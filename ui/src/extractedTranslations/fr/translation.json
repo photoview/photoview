@@ -35,7 +35,7 @@
       "placeholder": "Rechercher",
       "result_type": {
         "albums": "Albums",
-        "media": null
+        "media": "Médias"
       }
     }
   },
@@ -64,16 +64,16 @@
     "face_group": {
       "label_placeholder": "Étiquette",
       "unlabeled": "Sans étiquette",
-      "unlabeled_person": null
+      "unlabeled_person": "Personne sans étiquette"
     },
     "modal": {
       "action": {
-        "merge": null
+        "merge": "Fusionner"
       },
       "detach_image_faces": {
         "action": {
-          "detach": null,
-          "select_images": null
+          "detach": "Détacher les images de visage",
+          "select_images": "Sélectionner les images de visage à détacher"
         },
         "description": null,
         "title": null
@@ -100,10 +100,10 @@
     },
     "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquette",
     "tableselect_face_group": {
-      "search_faces_placeholder": null
+      "search_faces_placeholder": "Rechercher des visages..."
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": null
+      "search_images_placeholder": "Rechercher des images"
     }
   },
   "photos_page": {
@@ -172,7 +172,7 @@
       "table": {
         "column_names": {
           "action": "Action",
-          "capabilities": null,
+          "capabilities": "Permissions",
           "photo_path": "Chemin des photos",
           "username": "Nom d'utilisateur"
         },
@@ -189,9 +189,9 @@
       "title": "Utilisateurs"
     },
     "version_info": {
-      "build_date_title": null,
-      "title": null,
-      "version_title": null
+      "build_date_title": "Date de compilation",
+      "title": "Photoview Version",
+      "version_title": "Version actuelle"
     }
   },
   "share_page": {
@@ -200,7 +200,7 @@
     },
     "protected_share": {
       "description": "Ce partage est protégé par un mot de passe.",
-      "password_required_error": null,
+      "password_required_error": "Le mot de passe est requis",
       "title": "Partage protégé"
     },
     "share_not_found": "Partage non trouvé",
@@ -209,20 +209,20 @@
   },
   "sidebar": {
     "album": {
-      "title_placeholder": null
+      "title_placeholder": "Titre de l'Album"
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Octets",
         "byte_plural": "{{count}} Octets",
         "giga_byte": "{{count}} Go",
-        "giga_byte_plural": null,
+        "giga_byte_plural": "{{count}} Go",
         "kilo_byte": "{{count}} Ko",
-        "kilo_byte_plural": null,
+        "kilo_byte_plural": "{{count}} Ko",
         "mega_byte": "{{count}} Mo",
-        "mega_byte_plural": null,
+        "mega_byte_plural": "{{count}} Mo",
         "tera_byte": "{{count}} To",
-        "tera_byte_plural": null
+        "tera_byte_plural": "{{count}} To"
       },
       "table_columns": {
         "dimensions": "Dimensions",
@@ -275,8 +275,8 @@
     "sharing": {
       "add_share": "Ajouter un partage",
       "copy_link": "Copier le lien",
-      "delete": null,
-      "more": null,
+      "delete": "Supprimer",
+      "more": "Plus",
       "no_shares_found": "Aucun partage trouvé",
       "public_link": "Lien public",
       "title": "Options de partage"
@@ -291,7 +291,7 @@
   },
   "title": {
     "loading_album": "Chargement de l'album",
-    "login": null,
+    "login": "Connexion",
     "people": "Personnes",
     "settings": "Paramètres"
   }
