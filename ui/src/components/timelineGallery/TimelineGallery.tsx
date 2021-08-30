@@ -7,7 +7,6 @@ import useURLParameters from '../../hooks/useURLParameters'
 import { FavoritesCheckbox } from '../album/AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
-import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'
 import {
   myTimeline,
@@ -140,14 +139,6 @@ const TimelineGallery = () => {
       onlyFavorites: onlyFavorites,
     })
   }, [onlyFavorites])
-
-  useEffect(() => {
-    !loading && LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
-  }, [finishedLoadingMore, onlyFavorites, loading])
-
-  useEffect(() => {
-    return () => LazyLoad.disconnect()
-  }, [])
 
   if (error) {
     return <div>{error.message}</div>

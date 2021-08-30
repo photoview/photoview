@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback } from 'react'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery from '../../components/albumGallery/AlbumGallery'
 import Layout from '../../components/layout/Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
-import LazyLoad from '../../helpers/LazyLoad'
 import { useTranslation } from 'react-i18next'
 import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
 import useOrderingParams from '../../hooks/useOrderingParams'
@@ -124,17 +123,6 @@ function AlbumPage({ match }: AlbumPageProps) {
     },
     [setOnlyFavorites, refetch]
   )
-
-  useEffect(() => {
-    LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
-    return () => LazyLoad.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (!loading) {
-      LazyLoad.loadImages(document.querySelectorAll('img[data-src]'))
-    }
-  }, [finishedLoadingMore, onlyFavorites, loading])
 
   if (error) return <div>Error</div>
 
