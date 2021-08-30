@@ -21,10 +21,10 @@ func FormatSQL(tx *gorm.DB, order *Ordering, paginate *Pagination) *gorm.DB {
 	}
 
 	if order != nil && order.OrderBy != nil {
-		desc := true
+		desc := false
 		if order.OrderDirection != nil && order.OrderDirection.IsValid() {
-			if *order.OrderDirection == OrderDirectionAsc {
-				desc = false
+			if *order.OrderDirection == OrderDirectionDesc {
+				desc = true
 			}
 		}
 
