@@ -35,6 +35,12 @@ const languagePreferences = [
   },
   {
     key: 11,
+    label: '简体中文',
+    flag: 'zh-CN',
+    value: LanguageTranslation.SimplifiedChinese,
+  },
+  {
+    key: 12,
     label: 'Português',
     flag: 'pt',
     value: LanguageTranslation.Portuguese,

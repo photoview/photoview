@@ -1852,6 +1852,7 @@ enum LanguageTranslation {
   German,
   Russian,
   TraditionalChinese,
+  SimplifiedChinese,
   Portuguese
 }
 

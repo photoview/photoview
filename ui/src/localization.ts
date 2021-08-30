@@ -120,6 +120,14 @@ export const loadTranslations = () => {
           }
         )
         return
+      case LanguageTranslation.SimplifiedChinese:
+        import('./extractedTranslations/zh-CN/translation.json').then(
+          traditionalChinese => {
+            i18n.addResourceBundle('zh-CN', 'translation', traditionalChinese)
+            i18n.changeLanguage('zh-CN')
+          }
+        )
+        return
       case LanguageTranslation.Portuguese:
         import('./extractedTranslations/pt/translation.json').then(
           traditionalChinese => {
