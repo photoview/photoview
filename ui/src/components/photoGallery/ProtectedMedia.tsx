@@ -81,6 +81,11 @@ const FallbackLazyloadedImage = ({
     const imgElm = imgRef.current
     if (isNil(imgElm) || inView) return
 
+    if (window.IntersectionObserver === undefined) {
+      setInView(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
