@@ -216,13 +216,13 @@
         "byte": "{{count}} Octets",
         "byte_plural": "{{count}} Octets",
         "giga_byte": "{{count}} Go",
-        "giga_byte_plural": "Go",
+        "giga_byte_plural": "{{count}} Go",
         "kilo_byte": "{{count}} Ko",
-        "kilo_byte_plural": "Ko",
+        "kilo_byte_plural": "{{count}} Ko",
         "mega_byte": "{{count}} Mo",
-        "mega_byte_plural": "Mo",
+        "mega_byte_plural": "{{count}} Mo",
         "tera_byte": "{{count}} To",
-        "tera_byte_plural": "To"
+        "tera_byte_plural": "{{count}} To"
       },
       "table_columns": {
         "dimensions": "Dimensions",
