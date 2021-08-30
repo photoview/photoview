@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../__generated__/globalTypes'
@@ -14,12 +14,11 @@ const MediaContainer = styled.div`
   overflow: hidden;
 `
 
-const StyledPhoto = styled(ProtectedImage)<{ loaded: boolean }>`
+const StyledPhoto = styled(ProtectedImage)`
   height: 200px;
   min-width: 100%;
   position: relative;
   object-fit: cover;
-  opacity: ${({ loaded }) => (loaded ? 1 : 0)};
 
   transition: opacity 300ms;
 `
@@ -29,14 +28,7 @@ type LazyPhotoProps = {
 }
 
 const LazyPhoto = (photoProps: LazyPhotoProps) => {
-  const [loaded, setLoaded] = useState(false)
-  const onLoad = useCallback(e => {
-    !e.target.dataset.src && setLoaded(true)
-  }, [])
-
-  return (
-    <StyledPhoto {...photoProps} lazyLoading loaded={loaded} onLoad={onLoad} />
-  )
+  return <StyledPhoto {...photoProps} lazyLoading />
 }
 
 const PhotoOverlay = styled.div<{ active: boolean }>`

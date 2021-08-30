@@ -1,7 +1,11 @@
+import classNames from 'classnames'
 import React, { DetailedHTMLProps, ImgHTMLAttributes } from 'react'
+import { useRef } from 'react'
+import { useState } from 'react'
+import { useEffect } from 'react'
 import { isNil } from '../../helpers/utils'
 
-const isNativeLazyLoadSupported = 'loading' in HTMLImageElement.prototype
+const isNativeLazyLoadSupported = 'loading' in document.createElement('img')
 const placeholder =
   'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
@@ -27,7 +31,6 @@ export interface ProtectedImageProps
   src?: string
   key?: string
   lazyLoading?: boolean
-  loaded?: boolean
 }
 
 /**
@@ -38,39 +41,81 @@ export interface ProtectedImageProps
  */
 export const ProtectedImage = ({
   src,
-  key,
   lazyLoading,
-  loaded,
   ...props
 }: ProtectedImageProps) => {
-  const lazyLoadProps: { 'data-src'?: string; loading?: 'lazy' | 'eager' } = {}
+  const url = getProtectedUrl(src) || placeholder
 
-  if (!isNativeLazyLoadSupported && lazyLoading) {
-    lazyLoadProps['data-src'] = getProtectedUrl(src)
+  if (!lazyLoading) {
+    return (
+      <img {...props} src={url} loading="eager" crossOrigin="use-credentials" />
+    )
   }
 
-  if (isNativeLazyLoadSupported && lazyLoading) {
-    lazyLoadProps.loading = 'lazy'
+  if (!isNativeLazyLoadSupported) {
+    return <FallbackLazyloadedImage src={url} {...props} />
   }
 
-  const imgSrc: string =
-    lazyLoading && !isNativeLazyLoadSupported
-      ? placeholder
-      : getProtectedUrl(src) || placeholder
-
-  const loadedProp =
-    loaded !== undefined ? { loaded: loaded.toString() } : undefined
-
+  // load with native lazy loading
   return (
-    <img
-      key={key}
-      {...props}
-      {...lazyLoadProps}
-      {...loadedProp}
-      src={imgSrc}
-      crossOrigin="use-credentials"
-    />
+    <img {...props} src={url} loading="lazy" crossOrigin="use-credentials" />
   )
+}
+
+interface FallbackLazyloadedImageProps
+  extends Omit<
+    DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>,
+    'src'
+  > {
+  src?: string
+}
+
+const FallbackLazyloadedImage = ({
+  src,
+  ...props
+}: FallbackLazyloadedImageProps) => {
+  const [inView, setInView] = useState(false)
+  const imgRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const imgElm = imgRef.current
+    if (isNil(imgElm) || inView) return
+
+    if (window.IntersectionObserver === undefined) {
+      setInView(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true)
+          observer.disconnect()
+        }
+      },
+      {
+        root: null,
+        threshold: 0,
+      }
+    )
+
+    observer.observe(imgElm)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [imgRef])
+
+  if (inView) {
+    return <img {...props} src={src} crossOrigin="use-credentials" />
+  } else {
+    return (
+      <div
+        ref={imgRef}
+        className={classNames(props.className, 'bg-[#eee]')}
+      ></div>
+    )
+  }
 }
 
 export interface ProtectedVideoProps_Media {
