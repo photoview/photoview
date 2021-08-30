@@ -61,8 +61,8 @@
     "lint": "npm run lint:types & npm run lint:eslint",
     "lint:eslint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
     "lint:types": "tsc --noemit",
-    "jest": "craco test",
-    "jest:ci": "CI=true craco test --verbose --ci --coverage",
+    "jest": "craco test --setupFilesAfterEnv ./testing/setupTests.ts",
+    "jest:ci": "CI=true craco test --setupFilesAfterEnv ./testing/setupTests.ts --verbose --ci --coverage",
     "genSchemaTypes": "npx apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && npx husky install)"

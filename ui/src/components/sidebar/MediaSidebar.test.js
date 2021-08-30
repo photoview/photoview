@@ -1,10 +1,6 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { MetadataInfo } from './MediaSidebar'
-
-require('../../localization').setupLocalization()
 
 describe('MetadataInfo', () => {
   test('without EXIF information', async () => {

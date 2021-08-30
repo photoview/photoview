@@ -1,11 +1,7 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import FaceCircleImage from './FaceCircleImage'
 import { myFaces_myFaceGroups_imageFaces } from './__generated__/myFaces'
-
-require('../../localization').setupLocalization()
 
 test('face circle image', () => {
   const imageFace: myFaces_myFaceGroups_imageFaces = {

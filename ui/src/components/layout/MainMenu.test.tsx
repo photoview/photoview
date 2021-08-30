@@ -1,5 +1,3 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { MockedProvider } from '@apollo/client/testing'
 import { render, screen } from '@testing-library/react'
@@ -8,8 +6,6 @@ import * as authentication from '../../helpers/authentication'
 import { ADMIN_QUERY } from './Layout'
 import { MemoryRouter } from 'react-router-dom'
 import MainMenu, { MAPBOX_QUERY } from './MainMenu'
-
-require('../../localization').setupLocalization()
 
 jest.mock('../../helpers/authentication.ts')
 

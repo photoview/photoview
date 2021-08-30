@@ -5,7 +5,7 @@ import Checkbox from '../../../primitives/form/Checkbox'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
 
-const CREATE_USER_MUTATION = gql`
+export const CREATE_USER_MUTATION = gql`
   mutation createUser($username: String!, $admin: Boolean!) {
     createUser(username: $username, admin: $admin) {
       id
@@ -41,16 +41,19 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
   const { t } = useTranslation()
   const [state, setState] = useState(initialState)
 
+  const finished = () => {
+    setState(initialState)
+    onUserAdded()
+  }
+
   const [addRootPath, { loading: addRootPathLoading }] = useMutation(
     USER_ADD_ROOT_PATH_MUTATION,
     {
       onCompleted: () => {
-        setState(initialState)
-        onUserAdded()
+        finished()
       },
       onError: () => {
-        setState(initialState)
-        onUserAdded()
+        finished()
       },
     }
   )
@@ -67,7 +70,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
             },
           })
         } else {
-          setState(initialState)
+          finished()
         }
       },
     }

@@ -1,5 +1,3 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import PeoplePage, {
@@ -10,8 +8,6 @@ import PeoplePage, {
 import { MockedProvider } from '@apollo/client/testing'
 import { MemoryRouter } from 'react-router'
 import { myFaces_myFaceGroups } from './__generated__/myFaces'
-
-require('../../localization').setupLocalization()
 
 jest.mock('../../hooks/useScrollPagination')
 
