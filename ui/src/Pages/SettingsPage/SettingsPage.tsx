@@ -28,7 +28,7 @@ export const SectionTitle = ({ children, nospace }: SectionTitleProps) => {
 }
 
 export const InputLabelTitle = styled.h3.attrs({
-  className: 'font-semibold',
+  className: 'font-semibold mt-4',
 })``
 
 export const InputLabelDescription = styled.p.attrs({
