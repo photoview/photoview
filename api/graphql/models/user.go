@@ -175,13 +175,13 @@ func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	}
 
 	filter := func(query *gorm.DB) *gorm.DB {
-		return query.Where("id = ?", album.ID)
+		return query.Where("id IN (?)", albumIDs)
 	}
 
-	ownedAlbum, err := GetChildrenFromAlbums(db, filter, albumIDs)
+	ownedParents, err := album.GetParents(db, filter)
 	if err != nil {
 		return false, err
 	}
 
-	return len(ownedAlbum) > 0, nil
+	return len(ownedParents) > 0, nil
 }
