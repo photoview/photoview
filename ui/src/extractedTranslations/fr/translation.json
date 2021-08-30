@@ -76,7 +76,7 @@
           "select_images": "Sélectionner les images de visage à détacher"
         },
         "description": null,
-        "title": null,
+        "title": null
       },
       "merge_face_groups": {
         "description": null,
