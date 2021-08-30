@@ -1,11 +1,7 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing'
 import SingleFaceGroup, { SINGLE_FACE_GROUP } from './SingleFaceGroup'
-
-require('../../../localization').setupLocalization()
 
 jest.mock('../../../hooks/useScrollPagination')
 

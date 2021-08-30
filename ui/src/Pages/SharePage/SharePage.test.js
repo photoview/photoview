@@ -1,5 +1,3 @@
-import '@testing-library/jest-dom'
-
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { MockedProvider } from '@apollo/client/testing'
@@ -17,8 +15,6 @@ import SharePage, {
 
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownload'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
-
-require('../../localization').setupLocalization()
 
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'
