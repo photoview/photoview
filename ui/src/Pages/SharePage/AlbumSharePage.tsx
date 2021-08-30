@@ -6,6 +6,9 @@ import { gql, useQuery } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 import useURLParameters from '../../hooks/useURLParameters'
 import useOrderingParams from '../../hooks/useOrderingParams'
+import { shareAlbumQuery } from './__generated__/shareAlbumQuery'
+import useScrollPagination from '../../hooks/useScrollPagination'
+import PaginateLoader from '../../components/PaginateLoader'
 
 export const SHARE_ALBUM_QUERY = gql`
   query shareAlbumQuery(
@@ -94,17 +97,28 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
   const urlParams = useURLParameters()
   const orderParams = useOrderingParams(urlParams)
 
-  const { data, error } = useQuery(SHARE_ALBUM_QUERY, {
-    variables: {
-      id: albumID,
-      token,
-      password,
-      limit: 200,
-      offset: 0,
-      mediaOrderBy: orderParams.orderBy,
-      mediaOrderDirection: orderParams.orderDirection,
-    },
-  })
+  const { data, error, loading, fetchMore } = useQuery<shareAlbumQuery>(
+    SHARE_ALBUM_QUERY,
+    {
+      variables: {
+        id: albumID,
+        token,
+        password,
+        limit: 200,
+        offset: 0,
+        mediaOrderBy: orderParams.orderBy,
+        mediaOrderDirection: orderParams.orderDirection,
+      },
+    }
+  )
+
+  const { containerElem, finished: finishedLoadingMore } =
+    useScrollPagination<shareAlbumQuery>({
+      loading,
+      fetchMore,
+      data,
+      getItems: data => data.album.media,
+    })
 
   if (error) {
     return <div>{error.message}</div>
@@ -120,11 +134,16 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
         }
       >
         <AlbumGallery
+          ref={containerElem}
           album={album}
           customAlbumLink={albumId => `/share/${token}/${albumId}`}
           showFilter
           setOrdering={orderParams.setOrdering}
           ordering={orderParams}
+        />
+        <PaginateLoader
+          active={!finishedLoadingMore && !loading}
+          text={t('general.loading.paginate.media', 'Loading more media')}
         />
       </Layout>
     </AlbumSharePageWrapper>

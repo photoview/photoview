@@ -3,15 +3,46 @@ import AlbumTitle from '../album/AlbumTitle'
 import PhotoGallery from '../photoGallery/PhotoGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../album/AlbumFilter'
-import { albumQuery_album } from '../../Pages/AlbumPage/__generated__/albumQuery'
+import {
+  albumQuery_album_media_highRes,
+  albumQuery_album_media_thumbnail,
+  albumQuery_album_media_videoWeb,
+  albumQuery_album_subAlbums,
+} from '../../Pages/AlbumPage/__generated__/albumQuery'
 import {
   photoGalleryReducer,
   urlPresentModeSetupHook,
 } from '../photoGallery/photoGalleryReducer'
 import { MediaOrdering, SetOrderingFn } from '../../hooks/useOrderingParams'
+import { MediaType } from '../../__generated__/globalTypes'
+
+type AlbumGalleryAlbum = {
+  __typename: 'Album'
+  id: string
+  title: string
+  subAlbums: albumQuery_album_subAlbums[]
+  media: {
+    __typename: 'Media'
+    id: string
+    type: MediaType
+    /**
+     * URL to display the media in a smaller resolution
+     */
+    thumbnail: albumQuery_album_media_thumbnail | null
+    /**
+     * URL to display the photo in full resolution, will be null for videos
+     */
+    highRes: albumQuery_album_media_highRes | null
+    /**
+     * URL to get the video in a web format that can be played in the browser, will be null for photos
+     */
+    videoWeb: albumQuery_album_media_videoWeb | null
+    favorite?: boolean
+  }[]
+}
 
 type AlbumGalleryProps = {
-  album?: albumQuery_album
+  album?: AlbumGalleryAlbum
   loading?: boolean
   customAlbumLink?(albumID: string): string
   showFilter?: boolean
