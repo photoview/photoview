@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client'
 import React, { useRef, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
-import { InputLabelDescription } from './SettingsPage'
+import { InputLabelDescription, InputLabelTitle } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { scanIntervalQuery } from './__generated__/scanIntervalQuery'
 import {
@@ -13,7 +13,7 @@ import { TextField } from '../../primitives/form/Input'
 import Dropdown, { DropdownItem } from '../../primitives/form/Dropdown'
 import Loader from '../../primitives/Loader'
 
-const SCAN_INTERVAL_QUERY = gql`
+export const SCAN_INTERVAL_QUERY = gql`
   query scanIntervalQuery {
     siteInfo {
       periodicScanInterval
@@ -21,7 +21,7 @@ const SCAN_INTERVAL_QUERY = gql`
   }
 `
 
-const SCAN_INTERVAL_MUTATION = gql`
+export const SCAN_INTERVAL_MUTATION = gql`
   mutation changeScanIntervalMutation($interval: Int!) {
     setPeriodicScanInterval(interval: $interval)
   }
@@ -100,8 +100,8 @@ const PeriodicScanner = () => {
 
   const [enablePeriodicScanner, setEnablePeriodicScanner] = useState(false)
   const [scanInterval, setScanInterval] = useState<TimeValue>({
-    value: 4,
-    unit: TimeUnit.Minute,
+    value: 0,
+    unit: TimeUnit.Second,
   })
 
   const scanIntervalServerValue = useRef<number | null>(null)
@@ -148,7 +148,7 @@ const PeriodicScanner = () => {
     if (scanIntervalServerValue.current != seconds) {
       setScanIntervalMutation({
         variables: {
-          interval: convertToSeconds(scanInterval),
+          interval: seconds,
         },
       })
       scanIntervalServerValue.current = seconds
@@ -198,12 +198,12 @@ const PeriodicScanner = () => {
 
       <div className="mt-4">
         <label htmlFor="periodic_scan_field">
-          <h4 className="font-semibold">
+          <InputLabelTitle>
             {t(
               'settings.periodic_scanner.field.label',
               'Periodic scan interval'
             )}
-          </h4>
+          </InputLabelTitle>
           <InputLabelDescription>
             {t(
               'settings.periodic_scanner.field.description',
@@ -214,9 +214,21 @@ const PeriodicScanner = () => {
         <div className="flex gap-2">
           <TextField
             id="periodic_scan_field"
+            aria-label="Interval value"
             disabled={!enablePeriodicScanner}
+            value={scanInterval.value}
+            onChange={e => {
+              setScanInterval(x => ({
+                value: Number(e.target.value),
+                unit: x.unit,
+              }))
+            }}
+            action={() => {
+              onScanIntervalUpdate(scanInterval)
+            }}
           />
           <Dropdown
+            aria-label="Interval unit"
             disabled={!enablePeriodicScanner}
             items={scanIntervalUnits}
             selected={scanInterval.unit}
