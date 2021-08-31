@@ -53,8 +53,10 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 		}
 
 		// Reload faces after deleting media
-		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrap(err, "reload faces from database"))
+		if face_detection.GlobalFaceDetector != nil {
+			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
+				deleteErrors = append(deleteErrors, errors.Wrap(err, "reload faces from database"))
+			}
 		}
 	}
 
@@ -124,8 +126,10 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	}
 
 	// Reload faces after deleting albums
-	if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-		deleteErrors = append(deleteErrors, err)
+	if face_detection.GlobalFaceDetector == nil {
+		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
+			deleteErrors = append(deleteErrors, err)
+		}
 	}
 
 	return deleteErrors

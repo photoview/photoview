@@ -141,6 +141,9 @@ func scanAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache, db *
 
 		if processing_was_needed && media.Type == models.MediaTypePhoto {
 			go func(media *models.Media) {
+				if face_detection.GlobalFaceDetector == nil {
+					return
+				}
 				if err := face_detection.GlobalFaceDetector.DetectFaces(db, media); err != nil {
 					scanner_utils.ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
 				}

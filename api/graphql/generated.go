@@ -45,6 +45,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	ShareToken() ShareTokenResolver
+	SiteInfo() SiteInfoResolver
 	Subscription() SubscriptionResolver
 	User() UserResolver
 }
@@ -220,6 +221,7 @@ type ComplexityRoot struct {
 
 	SiteInfo struct {
 		ConcurrentWorkers    func(childComplexity int) int
+		FaceDetectionEnabled func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
 	}
@@ -337,6 +339,9 @@ type QueryResolver interface {
 }
 type ShareTokenResolver interface {
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
+}
+type SiteInfoResolver interface {
+	FaceDetectionEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error)
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
@@ -1369,6 +1374,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiteInfo.ConcurrentWorkers(childComplexity), true
 
+	case "SiteInfo.faceDetectionEnabled":
+		if e.complexity.SiteInfo.FaceDetectionEnabled == nil {
+			break
+		}
+
+		return e.complexity.SiteInfo.FaceDetectionEnabled(childComplexity), true
+
 	case "SiteInfo.initialSetup":
 		if e.complexity.SiteInfo.InitialSetup == nil {
 			break
@@ -1821,7 +1833,10 @@ type ShareToken {
 
 "General information about the site"
 type SiteInfo {
+  "Whether or not the initial setup wizard should be shown"
   initialSetup: Boolean!
+  "Whether or not face detection is enabled and working"
+  faceDetectionEnabled: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
@@ -7862,6 +7877,41 @@ func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field gr
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _SiteInfo_faceDetectionEnabled(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SiteInfo().FaceDetectionEnabled(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -11133,17 +11183,31 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 		case "initialSetup":
 			out.Values[i] = ec._SiteInfo_initialSetup(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "faceDetectionEnabled":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiteInfo_faceDetectionEnabled(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "periodicScanInterval":
 			out.Values[i] = ec._SiteInfo_periodicScanInterval(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "concurrentWorkers":
 			out.Values[i] = ec._SiteInfo_concurrentWorkers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
