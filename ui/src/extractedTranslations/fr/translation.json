@@ -117,7 +117,7 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "Nombre maximal de tâches d'analyse simultanées à la fois.",
+      "description": "Nombre maximal de tâches d'analyse simultanées.",
       "title": "Tâches d'analyse simultannées"
     },
     "logout": "Se déconnecter",
