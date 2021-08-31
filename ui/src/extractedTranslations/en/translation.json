@@ -107,7 +107,7 @@
     }
   },
   "photos_page": {
-    "title": "Photos"
+    "title": "Timeline"
   },
   "places_page": {
     "title": "Places"
@@ -285,7 +285,7 @@
   "sidemenu": {
     "albums": "Albums",
     "people": "People",
-    "photos": "Photos",
+    "photos": "Timeline",
     "places": "Places",
     "settings": "Settings"
   },

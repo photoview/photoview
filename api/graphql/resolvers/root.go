@@ -1,10 +1,7 @@
 package resolvers
 
 import (
-	"context"
-
 	api "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 
@@ -34,8 +31,4 @@ type queryResolver struct{ *Resolver }
 
 type subscriptionResolver struct {
 	Resolver *Resolver
-}
-
-func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {
-	return models.GetSiteInfo(r.Database)
 }

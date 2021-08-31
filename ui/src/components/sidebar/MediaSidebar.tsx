@@ -330,18 +330,6 @@ const flashLookup = (t: TranslationFn): { [key: number]: string } => {
   }
 }
 
-// From https://exiftool.org/TagNames/EXIF.html
-// const orientation = {
-//   1: 'Horizontal (normal)',
-//   2: 'Mirror horizontal',
-//   3: 'Rotate 180',
-//   4: 'Mirror vertical',
-//   5: 'Mirror horizontal and rotate 270 CW',
-//   6: 'Rotate 90 CW',
-//   7: 'Mirror horizontal and rotate 90 CW',
-//   8: 'Rotate 270 CW',
-// }
-
 type SidebarContentProps = {
   media: MediaSidebarMedia
   hidePreview?: boolean

@@ -107,7 +107,7 @@
     }
   },
   "photos_page": {
-    "title": "Billeder"
+    "title": "Tidslinje"
   },
   "places_page": {
     "title": "Kort"
@@ -285,13 +285,13 @@
   "sidemenu": {
     "albums": "Albums",
     "people": "Personer",
-    "photos": "Billeder",
+    "photos": "Tidslinje",
     "places": "Kort",
     "settings": "Indstillinger"
   },
   "title": {
     "loading_album": "Loader album",
-    "login": "Logind",
+    "login": "Log ind",
     "people": "Personer",
     "settings": "Indstillinger"
   }

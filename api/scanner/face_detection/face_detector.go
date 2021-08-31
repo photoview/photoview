@@ -22,8 +22,8 @@ type FaceDetector struct {
 var GlobalFaceDetector *FaceDetector = nil
 
 func InitializeFaceDetector(db *gorm.DB) error {
-	if utils.EnvDisableRawProcessing.GetBool() {
-		log.Printf("Face detection disabled (%s=1)\n", utils.EnvDisableRawProcessing.GetName())
+	if utils.EnvDisableFaceRecognition.GetBool() {
+		log.Printf("Face detection disabled (%s=1)\n", utils.EnvDisableFaceRecognition.GetName())
 		return nil
 	}
 

@@ -8,6 +8,10 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 )
 
+func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {
+	return models.GetSiteInfo(r.Database)
+}
+
 type SiteInfoResolver struct {
 	*Resolver
 }
