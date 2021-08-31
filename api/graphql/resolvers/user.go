@@ -343,8 +343,10 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		}
 
 		// Reload faces as media might have been deleted
-		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(r.Database); err != nil {
-			return nil, err
+		if face_detection.GlobalFaceDetector == nil {
+			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(r.Database); err != nil {
+				return nil, err
+			}
 		}
 	}
 

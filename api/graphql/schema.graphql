@@ -68,7 +68,7 @@ type Query {
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
   "Get the mapbox api token, returns null if mapbox is not enabled"
-  mapboxToken: String
+  mapboxToken: String @isAuthorized
 
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
@@ -201,7 +201,10 @@ type ShareToken {
 
 "General information about the site"
 type SiteInfo {
+  "Whether or not the initial setup wizard should be shown"
   initialSetup: Boolean!
+  "Whether or not face detection is enabled and working"
+  faceDetectionEnabled: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"

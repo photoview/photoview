@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
@@ -33,6 +34,11 @@ type FfmpegWorker struct {
 }
 
 func newDarktableWorker() *DarktableWorker {
+	if utils.EnvDisableRawProcessing.GetBool() {
+		log.Printf("Executable worker disabled (%s=1): darktable\n", utils.EnvDisableRawProcessing.GetName())
+		return nil
+	}
+
 	path, err := exec.LookPath("darktable-cli")
 	if err != nil {
 		log.Println("Executable worker not found: darktable")
@@ -54,6 +60,11 @@ func newDarktableWorker() *DarktableWorker {
 }
 
 func newFfmpegWorker() *FfmpegWorker {
+	if utils.EnvDisableVideoEncoding.GetBool() {
+		log.Printf("Executable worker disabled (%s=1): ffmpeg\n", utils.EnvDisableVideoEncoding.GetName())
+		return nil
+	}
+
 	path, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		log.Println("Executable worker not found: ffmpeg")

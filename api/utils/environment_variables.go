@@ -1,6 +1,9 @@
 package utils
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 // EnvironmentVariable represents the name of an environment variable used to configure Photoview
 type EnvironmentVariable string
@@ -30,6 +33,13 @@ const (
 	EnvSqlitePath     EnvironmentVariable = "PHOTOVIEW_SQLITE_PATH"
 )
 
+// Feature related
+const (
+	EnvDisableFaceRecognition EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
+	EnvDisableVideoEncoding   EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
+	EnvDisableRawProcessing   EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+)
+
 // GetName returns the name of the environment variable itself
 func (v EnvironmentVariable) GetName() string {
 	return string(v)
@@ -38,6 +48,20 @@ func (v EnvironmentVariable) GetName() string {
 // GetValue returns the value of the environment
 func (v EnvironmentVariable) GetValue() string {
 	return os.Getenv(string(v))
+}
+
+// GetBool returns the environment variable as a boolean (defaults to false if not defined)
+func (v EnvironmentVariable) GetBool() bool {
+	value := strings.ToLower(os.Getenv(string(v)))
+	trueValues := []string{"1", "true"}
+
+	for _, x := range trueValues {
+		if value == x {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ShouldServeUI whether or not the "serve ui" option is enabled

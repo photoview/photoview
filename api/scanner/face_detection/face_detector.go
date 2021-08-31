@@ -19,9 +19,13 @@ type FaceDetector struct {
 	imageFaceIDs    []int
 }
 
-var GlobalFaceDetector FaceDetector
+var GlobalFaceDetector *FaceDetector = nil
 
 func InitializeFaceDetector(db *gorm.DB) error {
+	if utils.EnvDisableFaceRecognition.GetBool() {
+		log.Printf("Face detection disabled (%s=1)\n", utils.EnvDisableFaceRecognition.GetName())
+		return nil
+	}
 
 	log.Println("Initializing face detector")
 
@@ -35,7 +39,7 @@ func InitializeFaceDetector(db *gorm.DB) error {
 		return errors.Wrap(err, "get face detection samples from database")
 	}
 
-	GlobalFaceDetector = FaceDetector{
+	GlobalFaceDetector = &FaceDetector{
 		rec:             rec,
 		faceDescriptors: faceDescriptors,
 		faceGroupIDs:    faceGroupIDs,

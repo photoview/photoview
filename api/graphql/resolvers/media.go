@@ -8,6 +8,7 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 	"gorm.io/gorm/clause"
 )
@@ -228,6 +229,10 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 }
 
 func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
+	if face_detection.GlobalFaceDetector == nil {
+		return []*models.ImageFace{}, nil
+	}
+
 	if media.Faces != nil {
 		return media.Faces, nil
 	}
