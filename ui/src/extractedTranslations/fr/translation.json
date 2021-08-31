@@ -95,7 +95,7 @@
           "next_action": "Suivant",
           "title": "Sélectionner les images à déplacer"
         },
-        "title": "Déplacer les visages des image"
+        "title": "Déplacer les visages des images"
       }
     },
     "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquette",
@@ -103,7 +103,7 @@
       "search_faces_placeholder": "Rechercher des visages..."
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": "Rechercher des images"
+      "search_images_placeholder": "Rechercher des images..."
     }
   },
   "photos_page": {
