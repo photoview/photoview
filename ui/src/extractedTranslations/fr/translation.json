@@ -1,7 +1,7 @@
 {
   "album_filter": {
     "only_favorites": "Afficher seulement les favoris",
-    "sort": null,
+    "sort": "Trier",
     "sorting_options": {
       "date_imported": "Date d'importation",
       "date_shot": "Date de prise de vue",
@@ -72,30 +72,30 @@
       },
       "detach_image_faces": {
         "action": {
-          "detach": "Détacher les images de visage",
+          "detach": "Détacher les visages des image",
           "select_images": "Sélectionner les images de visage à détacher"
         },
-        "description": null,
-        "title": null
+        "description": "Détachez les images sélectionnées de ce groupe de visages et déplacez-les vers un nouveau groupe de visages",
+        "title": "Détacher les visages des images"
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
         "destination_table": {
-          "title": null
+          "title": "Sélectionnez le visage de destination"
         },
-        "title": null
+        "title": "Fusionner des groupes de visages"
       },
       "move_image_faces": {
-        "description": null,
+        "description": "Déplacer les images sélectionnées de ce groupe de visages vers un autre groupe de visages",
         "destination_face_group_table": {
-          "move_action": null,
-          "title": null
+          "move_action": "Déplacer les visages de l'image",
+          "title": "Sélectionnez le groupe de visages de destination"
         },
         "image_select_table": {
-          "next_action": null,
-          "title": null
+          "next_action": "Suivant",
+          "title": "Sélectionner les images à déplacer"
         },
-        "title": null
+        "title": "Déplacer les visages des images"
       }
     },
     "recognize_unlabeled_faces_button": "Reconnaître les visages sans étiquette",
@@ -103,7 +103,7 @@
       "search_faces_placeholder": "Rechercher des visages..."
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": "Rechercher des images"
+      "search_images_placeholder": "Rechercher des images..."
     }
   },
   "photos_page": {
@@ -117,15 +117,15 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "Nombre maximal de tâches d'analyse simultanées à la fois.",
+      "description": "Nombre maximal de tâches d'analyse simultanées.",
       "title": "Tâches d'analyse simultannées"
     },
     "logout": "Se déconnecter",
     "periodic_scanner": {
       "checkbox_label": "Activer l'analyse périodique",
       "field": {
-        "description": "Fréquence à laquelle l'analyse se déclenche pour tous les utilisateurs",
-        "label": "Periodic scan interval"
+        "description": "Intervalle à laquelle l'analyse se déclenche pour tous les utilisateurs",
+        "label": "Intervalle d'analyse périodique"
       },
       "interval_unit": {
         "days": "Jours",
@@ -157,7 +157,7 @@
       },
       "confirm_delete_user": {
         "action": "Supprimer {{user}}",
-        "description": "<0>Etes-vous sûr de vouloir supprimer <1></1>?</0><p>Cette action est irreversible</p>",
+        "description": "<0>Êtes-vous sûr de vouloir supprimer <1></1>?</0><p>Cette action est irreversible</p>",
         "title": "Supprimer l'utilisateur"
       },
       "password_reset": {
@@ -167,7 +167,7 @@
           "placeholder": "mot de passe",
           "submit": "Changer le mot de passe"
         },
-        "title": "Changer de mot de passe"
+        "title": "Changer le mot de passe"
       },
       "table": {
         "column_names": {
@@ -235,16 +235,16 @@
     "media": {
       "exif": {
         "exposure_program": {
-          "action_program": "Action program",
+          "action_program": "Programme d'action",
           "aperture_priority": "Priorité d'ouverture",
           "bulb": "Bulb",
-          "creative_program": "Creative program",
-          "landscape_mode": "Mode Paysage",
+          "creative_program": "Programme créatif",
+          "landscape_mode": "Mode paysage",
           "manual": "Manuel",
-          "normal_program": "Normal program",
+          "normal_program": "Auto",
           "not_defined": "Non défini",
-          "portrait_mode": "Mode Portrait",
-          "shutter_priority": "Priorité d'obturation"
+          "portrait_mode": "Mode portrait",
+          "shutter_priority": "Priorité d'obturateur"
         },
         "flash": {
           "auto": "Auto",
@@ -259,13 +259,13 @@
           "return_not_detected": "Retour non détecté"
         },
         "name": {
-          "aperture": "Focale",
+          "aperture": "Ouverture",
           "camera": "Modèle",
           "date_shot": "Prise de vue",
-          "exposure": "Temps d'exposition",
+          "exposure": "Vitesse",
           "exposure_program": "Programme",
           "flash": "Flash",
-          "focal_length": "Distance focale",
+          "focal_length": "Focale",
           "iso": "ISO",
           "lens": "Objectif",
           "maker": "Fabriquant"
