@@ -66,6 +66,12 @@
       "unlabeled": "Unlabeled",
       "unlabeled_person": "Unlabeled person"
     },
+    "action_label": {
+      "change_label": "Change label",
+      "merge_face": "Merge face",
+      "detach_face": "Detach face",
+      "move_faces": "Move faces"
+    },
     "modal": {
       "action": {
         "merge": "Merge"

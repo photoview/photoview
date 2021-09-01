@@ -66,6 +66,12 @@
       "unlabeled": "Sans étiquette",
       "unlabeled_person": "Personne sans étiquette"
     },
+    "action_label": {
+      "change_label": "Changer le label",
+      "merge_face": "Fusionner le visage",
+      "detach_face": "Détacher le visage",
+      "move_faces": "Déplacer les visages"
+    },
     "modal": {
       "action": {
         "merge": "Fusionner"
