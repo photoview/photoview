@@ -71,7 +71,7 @@ type MediaURL struct {
 	Model
 	MediaID     int          `gorm:"not null;index"`
 	Media       *Media       `gorm:"constraint:OnDelete:CASCADE;"`
-	MediaName   string       `gorm:"not null"`
+	MediaName   string       `gorm:"not null;index"`
 	Width       int          `gorm:"not null"`
 	Height      int          `gorm:"not null"`
 	Purpose     MediaPurpose `gorm:"not null;index"`
