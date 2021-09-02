@@ -49,7 +49,7 @@ Password: **demo**
 There exists a lot of open-source self-hosted photo galleries already. Here are some, just to mention a few.
 
 - [Piwigo](https://github.com/Piwigo/Piwigo)
-- [Ownphoto](https://github.com/hooram/ownphotos)
+- [LibrePhotos](https://github.com/LibrePhotos/librephotos)
 - [Photoprism](https://github.com/photoprism/photoprism)
 - [Lychee](https://github.com/LycheeOrg/Lychee)
 
