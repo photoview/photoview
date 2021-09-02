@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"strings"
+
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -19,7 +21,7 @@ func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbum
 		limitAlbums = *_limitAlbums
 	}
 
-	wildQuery := "%" + query + "%"
+	wildQuery := "%" + strings.ToLower(query) + "%"
 
 	var media []*models.Media
 
@@ -32,10 +34,10 @@ func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbum
 
 	err := db.Joins("Album").
 		Where("EXISTS (?)", userSubquery).
-		Where("media.title LIKE ? OR media.path LIKE ?", wildQuery, wildQuery).
+		Where("LOWER(media.title) LIKE ? OR LOWER(media.path) LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
 			Expression: clause.Expr{
-				SQL:                "(CASE WHEN media.title LIKE ? THEN 2 WHEN media.path LIKE ? THEN 1 END) DESC",
+				SQL:                "(CASE WHEN LOWER(media.title) LIKE ? THEN 2 WHEN LOWER(media.path) LIKE ? THEN 1 END) DESC",
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
 		}).
