@@ -133,7 +133,9 @@ brew install dlib libheif
 Then run the following commands:
 
 ```bash
-cd ./api && go run server.go
+cd ./api
+go install
+go run server.go
 ```
 
 ### Start UI server
