@@ -144,7 +144,9 @@ Make sure [node](https://nodejs.org/en/) is installed.
 In a new terminal window run the following commands:
 
 ```bash
-cd ./ui && npm start
+cd ./ui
+npm install
+npm start
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
