@@ -1,0 +1,18 @@
+[Unit]
+Description=Photoview - Photo gallery for self-hosted personal servers
+Documentation=https://photoview.github.io/docs
+After=network.target
+
+[Service]
+ExecStart=/usr/lib/photoview/photoview
+WorkingDirectory=/usr/lib/photoview
+User=photoview
+Group=photoview
+
+ReadWritePaths=/var/lib/photoview
+
+EnvironmentFile=/etc/photoview.env
+CacheDirectory=photoview/media_cache
+
+[Install]
+WantedBy=multi-user.target
