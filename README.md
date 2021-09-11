@@ -28,6 +28,7 @@ Password: **demo**
 
 - [Demo site](#demo-site)
 - [Main features](#main-features)
+- [Supported Platforms](#supported-platforms)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
 - [Set up development environment](#setup-development-environment)
@@ -43,6 +44,14 @@ Password: **demo**
 - **Face recognition**. Faces will automatically be detected in photos, and photos of the same person will be grouped together.
 - **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high resolution image has been fully loaded.
 - **Secure**. All media resources are protected with a cookie-token, all passwords are properly hashed, and the API uses a strict [CORS policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
+
+## Supported platforms
+
+- [Docker](https://hub.docker.com/r/viktorstrate/photoview/)
+- [Arch Linux Aur](https://aur.archlinux.org/packages/photoview)
+- [Unraid](https://forums.unraid.net/topic/103028-support-photoview-corneliousjd-repo/)
+- EmbassyOS: [announcement](https://start9labs.medium.com/new-service-photoview-72ee681b2ff0), [repo](https://github.com/Start9Labs/embassyos-photoview-wrapper)
+- [YunoHost](https://github.com/YunoHost-Apps/photoview_ynh)
 
 ## Why yet another self-hosted photo gallery
 

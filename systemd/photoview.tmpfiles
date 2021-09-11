@@ -1,0 +1,2 @@
+e /var/cache/photoview 0750 photoview photoview
+e /var/lib/photoview 0750 photoview photoview
