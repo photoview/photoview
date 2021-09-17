@@ -3,6 +3,8 @@ package resolvers
 import (
 	"context"
 
+	"fmt"
+
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -148,23 +150,44 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 
 	var media models.Media
 
-	err := r.Database.Raw(`
-		WITH recursive sub_albums AS (
-			SELECT * FROM albums AS root WHERE id = ?
-			UNION ALL
-			SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-		)
+	fmt.Print(obj.CoverID)
 
-		SELECT * FROM media WHERE media.album_id IN (
-			SELECT id FROM sub_albums
-		) AND media.id IN (
-			SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-		) LIMIT 1
-	`, obj.ID).Find(&media).Error
+	if obj.CoverID == -1 {
+		if err := r.Database.Raw(`
+			WITH recursive sub_albums AS (
+				SELECT * FROM albums AS root WHERE id = ?
+				UNION ALL
+				SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
+			)
 
-	if err != nil {
-		return nil, err
+			SELECT * FROM media WHERE media.album_id IN (
+				SELECT id FROM sub_albums
+			) AND media.id IN (
+				SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
+			) LIMIT 1
+		`, obj.ID).Find(&media).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := r.Database.Where("id = ?", obj.CoverID).Find(&media).Error; err != nil {
+			return nil, err
+		}
 	}
+
+
+	// err := r.Database.Raw(`
+	// 	WITH recursive sub_albums AS (
+	// 		SELECT * FROM albums AS root WHERE id = ?
+	// 		UNION ALL
+	// 		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
+	// 	)
+	//
+	// 	SELECT * FROM media WHERE media.album_id IN (
+	// 		SELECT id FROM sub_albums
+	// 	) AND media.id IN (
+	// 		SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
+	// 	) LIMIT 1
+	// `, obj.ID).Find(&media).Error
 
 	return &media, nil
 }
@@ -241,4 +264,47 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 	}
 
 	return album_path, nil
+}
+
+func (r *mutationResolver) SetAlbumCoverID(ctx context.Context, albumID int, coverID *int) (*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	var album models.Album
+	if err := r.Database.Find(&album, albumID).Error; err != nil {
+		return nil, err
+	}
+
+	//
+	// var album models.Album
+	//
+	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ownsAlbum {
+		return nil, errors.New("forbidden")
+	}
+
+
+
+	if err := r.Database.Model(&album).Update("cover_id", coverID).Error; err != nil {
+		return nil, err
+	}
+
+	// var faceGroup models.FaceGroup
+	// if err := db.Where("id = ?", faceGroupID).Find(&faceGroup).Error; err != nil {
+	// 	return nil, err
+	// }
+	//
+	// return &faceGroup, nil
+	//
+	// if err := r.Database.Model(faceGroup).Update("label", label).Error; err != nil {
+	// 	return nil, err
+	// }
+
+	return &album, nil
 }

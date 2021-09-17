@@ -134,6 +134,9 @@ type Mutation {
 
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
+  "Assign a cover image to an album, set coverID to -1 to remove the current one"
+  setAlbumCoverID(albumID: ID!, coverID: Int): Album! 
+
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
@@ -273,6 +276,8 @@ type Album {
   path: [Album!]!
 
   shares: [ShareToken!]!
+
+  coverID: Int!
 }
 
 type MediaURL {

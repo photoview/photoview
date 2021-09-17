@@ -57,6 +57,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Album struct {
+		CoverID     func(childComplexity int) int
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Media       func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
@@ -155,6 +156,7 @@ type ComplexityRoot struct {
 		RecognizeUnlabeledFaces     func(childComplexity int) int
 		ScanAll                     func(childComplexity int) int
 		ScanUser                    func(childComplexity int, userID int) int
+		SetAlbumCoverID             func(childComplexity int, albumID int, coverID *int) int
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
@@ -312,6 +314,7 @@ type MutationResolver interface {
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
 	ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error)
+	SetAlbumCoverID(ctx context.Context, albumID int, coverID *int) (*models.Album, error)
 	SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error)
 	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error)
 	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
@@ -365,6 +368,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Album.coverID":
+		if e.complexity.Album.CoverID == nil {
+			break
+		}
+
+		return e.complexity.Album.CoverID(childComplexity), true
 
 	case "Album.filePath":
 		if e.complexity.Album.FilePath == nil {
@@ -937,6 +947,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
+
+	case "Mutation.setAlbumCoverID":
+		if e.complexity.Mutation.SetAlbumCoverID == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setAlbumCoverID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetAlbumCoverID(childComplexity, args["albumID"].(int), args["coverID"].(*int)), true
 
 	case "Mutation.setFaceGroupLabel":
 		if e.complexity.Mutation.SetFaceGroupLabel == nil {
@@ -1700,7 +1722,7 @@ type Query {
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
   "Get the mapbox api token, returns null if mapbox is not enabled"
-  mapboxToken: String
+  mapboxToken: String @isAuthorized
 
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
@@ -1765,6 +1787,9 @@ type Mutation {
   setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
 
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
+
+  "Assign a cover image to an album, set coverID to -1 to remove the current one"
+  setAlbumCoverID(albumID: ID!, coverID: Int): Album!
 
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
@@ -1905,6 +1930,8 @@ type Album {
   path: [Album!]!
 
   shares: [ShareToken!]!
+
+  coverID: Int!
 }
 
 type MediaURL {
@@ -2361,6 +2388,30 @@ func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, ra
 		}
 	}
 	args["userId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setAlbumCoverID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["albumID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("albumID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["albumID"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["coverID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("coverID"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["coverID"] = arg1
 	return args, nil
 }
 
@@ -3262,6 +3313,41 @@ func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.Col
 	res := resTmp.([]*models.ShareToken)
 	fc.Result = res
 	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Album_coverID(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Album",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CoverID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -5863,6 +5949,48 @@ func (ec *executionContext) _Mutation_changeUserPreferences(ctx context.Context,
 	return ec.marshalNUserPreferences2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserPreferences(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_setAlbumCoverID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setAlbumCoverID_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetAlbumCoverID(rctx, args["albumID"].(int), args["coverID"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Album)
+	fc.Result = res
+	return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_setFaceGroupLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7031,8 +7159,28 @@ func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphq
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MapboxToken(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().MapboxToken(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthorized == nil {
+				return nil, errors.New("directive isAuthorized is not implemented")
+			}
+			return ec.directives.IsAuthorized(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10112,6 +10260,11 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
+		case "coverID":
+			out.Values[i] = ec._Album_coverID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10679,6 +10832,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "changeUserPreferences":
 			out.Values[i] = ec._Mutation_changeUserPreferences(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "setAlbumCoverID":
+			out.Values[i] = ec._Mutation_setAlbumCoverID(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
