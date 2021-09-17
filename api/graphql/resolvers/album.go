@@ -174,7 +174,6 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 		}
 	}
 
-
 	// err := r.Database.Raw(`
 	// 	WITH recursive sub_albums AS (
 	// 		SELECT * FROM albums AS root WHERE id = ?
@@ -288,8 +287,6 @@ func (r *mutationResolver) SetAlbumCoverID(ctx context.Context, albumID int, cov
 	if !ownsAlbum {
 		return nil, errors.New("forbidden")
 	}
-
-
 
 	if err := r.Database.Model(&album).Update("cover_id", coverID).Error; err != nil {
 		return nil, err
