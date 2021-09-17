@@ -1,6 +1,7 @@
 import React from 'react'
 import { useQuery, gql } from '@apollo/client'
 import { SidebarAlbumShare } from './Sharing'
+import { SidebarAlbumCover } from './AlbumCovers'
 import { useTranslation } from 'react-i18next'
 import SidebarHeader from './SidebarHeader'
 import {
@@ -45,6 +46,10 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
       <div className="mt-8">
         {/* <h1 className="text-3xl font-semibold">{data.album.title}</h1> */}
         <SidebarAlbumShare id={albumId} />
+      </div>
+      <div className="mt-8">
+        {/* <h1 className="text-3xl font-semibold">{data.album.title}</h1> */}
+        <SidebarAlbumCover id={albumId} />
       </div>
     </div>
   )

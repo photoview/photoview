@@ -1789,7 +1789,7 @@ type Mutation {
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
   "Assign a cover image to an album, set coverID to -1 to remove the current one"
-  setAlbumCoverID(albumID: ID!, coverID: Int): Album!
+  setAlbumCoverID(albumID: ID!, coverID: Int): Album! @isAuthorized
 
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
@@ -5973,8 +5973,28 @@ func (ec *executionContext) _Mutation_setAlbumCoverID(ctx context.Context, field
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SetAlbumCoverID(rctx, args["albumID"].(int), args["coverID"].(*int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SetAlbumCoverID(rctx, args["albumID"].(int), args["coverID"].(*int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthorized == nil {
+				return nil, errors.New("directive isAuthorized is not implemented")
+			}
+			return ec.directives.IsAuthorized(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.Album); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
