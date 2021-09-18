@@ -267,7 +267,7 @@ type Album {
     paginate: Pagination
   ): [Album!]!
 
-  "The album witch contains this album"
+  "The album which contains this album"
   parentAlbum: Album
   "The user who owns this album"
   owner: User!
@@ -278,8 +278,6 @@ type Album {
   path: [Album!]!
 
   shares: [ShareToken!]!
-
-  coverID: Int!
 }
 
 type MediaURL {
