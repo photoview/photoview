@@ -383,6 +383,7 @@ type FaceGroup {
   label: String
   imageFaces(paginate: Pagination): [ImageFace!]!
   imageFaceCount: Int!
+  PreviewImageFace: ImageFace!
 }
 
 type ImageFace {

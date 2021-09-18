@@ -44,24 +44,6 @@ export const MY_FACES_QUERY = gql`
           }
         }
       }
-      previewImageFace {
-        id
-        rectangle {
-          minX
-          maxX
-          minY
-          maxY
-        }
-        media {
-          id
-          title
-          thumbnail {
-            url
-            width
-            height
-          }
-        }
-      }
     }
   }
 `
