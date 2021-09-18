@@ -174,20 +174,6 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 		}
 	}
 
-	// err := r.Database.Raw(`
-	// 	WITH recursive sub_albums AS (
-	// 		SELECT * FROM albums AS root WHERE id = ?
-	// 		UNION ALL
-	// 		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-	// 	)
-	//
-	// 	SELECT * FROM media WHERE media.album_id IN (
-	// 		SELECT id FROM sub_albums
-	// 	) AND media.id IN (
-	// 		SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-	// 	) LIMIT 1
-	// `, obj.ID).Find(&media).Error
-
 	return &media, nil
 }
 
