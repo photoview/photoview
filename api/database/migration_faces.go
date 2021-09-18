@@ -1,7 +1,6 @@
 package database
 
 import (
-
 	"fmt"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -23,21 +22,19 @@ func migrate_face_preview(db *gorm.DB) error {
 		return err
 	}
 
-  for rows.Next() {
-      db.ScanRows(rows, &facegroup)
+	for rows.Next() {
+		db.ScanRows(rows, &facegroup)
 
+		if err := db.Model(&facegroup).Update("preview_image_face", &facegroup.ImageFaces[0]).Error; err != nil {
+			return err
+		}
 
-			if err := db.Model(&facegroup).Update("preview_image_face", &facegroup.ImageFaces[0]).Error; err != nil {
-				return err
-			}
+		// fmt.Println(product)
+	}
 
-      // fmt.Println(product)
-  }
-
-
-		// if err := r.Database.Model(&album).Update("cover_id", coverID).Error; err != nil {
-		// 	return nil, err
-		// }
+	// if err := r.Database.Model(&album).Update("cover_id", coverID).Error; err != nil {
+	// 	return nil, err
+	// }
 	// faceGroupColumns, err := db.Migrator().ColumnTypes(&models.FaceGroup{})
 	// if err != nil {
 	// 	return err
