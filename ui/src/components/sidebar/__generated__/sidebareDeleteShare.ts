@@ -8,17 +8,17 @@
 // ====================================================
 
 export interface sidebareDeleteShare_deleteShareToken {
-  __typename: 'ShareToken'
-  token: string
+  __typename: "ShareToken";
+  token: string;
 }
 
 export interface sidebareDeleteShare {
   /**
    * Delete a share token by it's token value
    */
-  deleteShareToken: sidebareDeleteShare_deleteShareToken
+  deleteShareToken: sidebareDeleteShare_deleteShareToken;
 }
 
 export interface sidebareDeleteShareVariables {
-  token: string
+  token: string;
 }

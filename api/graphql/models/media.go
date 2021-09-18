@@ -45,6 +45,10 @@ func (m *Media) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
+func (m *Media) Date() time.Time {
+	return m.DateShot
+}
+
 type MediaType string
 
 const (

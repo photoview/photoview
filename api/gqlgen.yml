@@ -38,6 +38,8 @@ models:
         resolver: true
       type:
         resolver: true
+      album:
+        resolver: true
   MediaURL:
     model: github.com/photoview/photoview/api/graphql/models.MediaURL
   MediaEXIF:

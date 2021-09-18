@@ -19,120 +19,114 @@ describe('timeline gallery reducer', () => {
 
   const timelineData: myTimeline_myTimeline[] = [
     {
-      album: {
-        id: '5',
-        title: 'first album',
-        __typename: 'Album',
+      __typename: 'Media',
+      id: '1058',
+      title: '122A2876.jpg',
+      type: MediaType.Photo,
+      thumbnail: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/thumbnail_122A2876_jpg_Kp1U80vD.jpg',
+        width: 1024,
+        height: 682,
       },
-      media: [
-        {
-          id: '165',
-          title: '3666760020.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-        {
-          id: '184',
-          title: '7414455077.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_7414455077_jpg_9JYHHYh6.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/7414455077_0ejDBiKr.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-      ],
-      mediaTotal: 5,
-      date: '2019-09-21T00:00:00Z',
-      __typename: 'TimelineGroup',
+      highRes: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/122A2876_5cSPMiKL.jpg',
+        width: 6720,
+        height: 4480,
+      },
+      videoWeb: null,
+      favorite: false,
+      album: { __typename: 'Album', id: '522', title: 'random' },
+      date: '2020-12-13T18:03:40Z',
     },
     {
-      album: {
-        id: '5',
-        title: 'another album',
-        __typename: 'Album',
+      __typename: 'Media',
+      id: '1059',
+      title: '122A2630-Edit.jpg',
+      type: MediaType.Photo,
+      thumbnail: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/thumbnail_122A2630-Edit_jpg_pwjtMkpy.jpg',
+        width: 1024,
+        height: 682,
       },
-      media: [
-        {
-          id: '165',
-          title: '3666760020.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-      ],
-      mediaTotal: 7,
-      date: '2019-09-21T00:00:00Z',
-      __typename: 'TimelineGroup',
+      highRes: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/122A2630-Edit_ySQWFAgE.jpg',
+        width: 6177,
+        height: 4118,
+      },
+      videoWeb: null,
+      favorite: false,
+      album: { __typename: 'Album', id: '523', title: 'another_album' },
+      date: '2020-11-25T16:14:33Z',
     },
     {
-      __typename: 'TimelineGroup',
-      album: {
-        __typename: 'Album',
-        id: '5',
-        title: 'album on another day',
+      __typename: 'Media',
+      id: '1060',
+      title: '122A2785-2.jpg',
+      type: MediaType.Photo,
+      thumbnail: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/thumbnail_122A2785-2_jpg_CevmxEXf.jpg',
+        width: 1024,
+        height: 1024,
       },
-      date: '2019-09-13T00:00:00Z',
-      mediaTotal: 1,
-      media: [
-        {
-          __typename: 'Media',
-          favorite: false,
-          videoWeb: null,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          id: '321',
-          title: 'asdfimg.jpg',
-          type: MediaType.Photo,
-        },
-      ],
+      highRes: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/122A2785-2_mCnWjLdb.jpg',
+        width: 884,
+        height: 884,
+      },
+      videoWeb: null,
+      favorite: false,
+      album: { __typename: 'Album', id: '523', title: 'another_album' },
+      date: '2020-11-25T16:43:59Z',
+    },
+    {
+      __typename: 'Media',
+      id: '1056',
+      title: '122A2630-Edit.jpg',
+      type: MediaType.Photo,
+      thumbnail: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/thumbnail_122A2630-Edit_jpg_aJPCSDDl.jpg',
+        width: 1024,
+        height: 682,
+      },
+      highRes: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/122A2630-Edit_em9g89qg.jpg',
+        width: 6177,
+        height: 4118,
+      },
+      videoWeb: null,
+      favorite: false,
+      album: { __typename: 'Album', id: '522', title: 'random' },
+      date: '2020-11-25T16:14:33Z',
+    },
+    {
+      __typename: 'Media',
+      id: '1054',
+      title: '122A2559.jpg',
+      type: MediaType.Photo,
+      thumbnail: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/thumbnail_122A2559_jpg_MsOJtPi8.jpg',
+        width: 1024,
+        height: 712,
+      },
+      highRes: {
+        __typename: 'MediaURL',
+        url: 'http://localhost:4001/photo/122A2559_FDsQHuBN.jpg',
+        width: 6246,
+        height: 4346,
+      },
+      videoWeb: null,
+      favorite: false,
+      album: { __typename: 'Album', id: '522', title: 'random' },
+      date: '2020-11-09T15:38:09Z',
     },
   ]
 
@@ -150,72 +144,102 @@ describe('timeline gallery reducer', () => {
         media: -1,
       },
       timelineGroups: [
-        {
-          date: '2019-09-21T00:00:00Z',
-          groups: [
-            {
-              album: {
-                id: '5',
-                title: 'first album',
-              },
-              date: '2019-09-21T00:00:00Z',
-              media: [
-                {
-                  favorite: false,
-                  highRes: {},
-                  id: '165',
-                  thumbnail: {},
-                  title: '3666760020.jpg',
-                  type: 'Photo',
-                },
-                {
-                  highRes: {},
-                  id: '184',
-                  thumbnail: {},
-                  title: '7414455077.jpg',
-                  type: 'Photo',
-                },
-              ],
-              mediaTotal: 5,
-            },
-            {
-              album: {
-                id: '5',
-                title: 'another album',
-              },
-              date: '2019-09-21T00:00:00Z',
-              media: [
-                {
-                  id: '165',
-                },
-              ],
-              mediaTotal: 7,
-            },
-          ],
-        },
-        {
-          date: '2019-09-13T00:00:00Z',
-          groups: [
-            {
-              album: {
-                id: '5',
-                title: 'album on another day',
-              },
-              date: '2019-09-13T00:00:00Z',
-              media: [
-                {
-                  favorite: false,
-                  highRes: {},
-                  id: '321',
-                  thumbnail: {},
-                  title: 'asdfimg.jpg',
-                  type: 'Photo',
-                },
-              ],
-              mediaTotal: 1,
-            },
-          ],
-        },
+        // {
+        //   date: '2020-12-13T00:00:00Z',
+        //   albums: [
+        //     {
+        //       id: '522',
+        //       title: 'random',
+        //       media: [
+        //         {
+        //           __typename: 'Media',
+        //           id: '1058',
+        //           title: '122A2876.jpg',
+        //           type: MediaType.Photo,
+        //           thumbnail: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/thumbnail_122A2876_jpg_Kp1U80vD.jpg',
+        //             width: 1024,
+        //             height: 682,
+        //           },
+        //           highRes: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/122A2876_5cSPMiKL.jpg',
+        //             width: 6720,
+        //             height: 4480,
+        //           },
+        //           videoWeb: null,
+        //           favorite: false,
+        //           album: { __typename: 'Album', id: '522', title: 'random' },
+        //           date: '2020-12-13T18:03:40Z',
+        //         },
+        //       ],
+        //     },
+        //   ],
+        // },
+        // {
+        //   date: '2020-11-25T00:00:00Z',
+        //   albums: [
+        //     {
+        //       id: '523',
+        //       title: 'another_album',
+        //       media: [
+        //         {
+        //           __typename: 'Media',
+        //           id: '1059',
+        //           title: '122A2630-Edit.jpg',
+        //           type: MediaType.Photo,
+        //           thumbnail: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/thumbnail_122A2630-Edit_jpg_pwjtMkpy.jpg',
+        //             width: 1024,
+        //             height: 682,
+        //           },
+        //           highRes: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/122A2630-Edit_ySQWFAgE.jpg',
+        //             width: 6177,
+        //             height: 4118,
+        //           },
+        //           videoWeb: null,
+        //           favorite: false,
+        //           album: {
+        //             __typename: 'Album',
+        //             id: '523',
+        //             title: 'another_album',
+        //           },
+        //           date: '2020-11-25T16:14:33Z',
+        //         },
+        //         {
+        //           __typename: 'Media',
+        //           id: '1060',
+        //           title: '122A2785-2.jpg',
+        //           type: MediaType.Photo,
+        //           thumbnail: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/thumbnail_122A2785-2_jpg_CevmxEXf.jpg',
+        //             width: 1024,
+        //             height: 1024,
+        //           },
+        //           highRes: {
+        //             __typename: 'MediaURL',
+        //             url: 'http://localhost:4001/photo/122A2785-2_mCnWjLdb.jpg',
+        //             width: 884,
+        //             height: 884,
+        //           },
+        //           videoWeb: null,
+        //           favorite: false,
+        //           album: {
+        //             __typename: 'Album',
+        //             id: '523',
+        //             title: 'another_album',
+        //           },
+        //           date: '2020-11-25T16:43:59Z',
+        //         },
+        //       ],
+        //     },
+        //   ],
+        // },
       ],
     })
   })

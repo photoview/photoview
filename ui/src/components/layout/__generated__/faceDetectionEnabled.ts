@@ -4,17 +4,17 @@
 // This file was automatically generated and should not be edited.
 
 // ====================================================
-// GraphQL query operation: CheckInitialSetup
+// GraphQL query operation: faceDetectionEnabled
 // ====================================================
 
-export interface CheckInitialSetup_siteInfo {
+export interface faceDetectionEnabled_siteInfo {
   __typename: "SiteInfo";
   /**
-   * Whether or not the initial setup wizard should be shown
+   * Whether or not face detection is enabled and working
    */
-  initialSetup: boolean;
+  faceDetectionEnabled: boolean;
 }
 
-export interface CheckInitialSetup {
-  siteInfo: CheckInitialSetup_siteInfo;
+export interface faceDetectionEnabled {
+  siteInfo: faceDetectionEnabled_siteInfo;
 }

@@ -27,30 +27,27 @@ const MY_TIMELINE_QUERY = gql`
       onlyFavorites: $onlyFavorites
       paginate: { limit: $limit, offset: $offset }
     ) {
+      id
+      title
+      type
+      thumbnail {
+        url
+        width
+        height
+      }
+      highRes {
+        url
+        width
+        height
+      }
+      videoWeb {
+        url
+      }
+      favorite
       album {
         id
         title
       }
-      media {
-        id
-        title
-        type
-        thumbnail {
-          url
-          width
-          height
-        }
-        highRes {
-          url
-          width
-          height
-        }
-        videoWeb {
-          url
-        }
-        favorite
-      }
-      mediaTotal
       date
     }
   }
@@ -63,7 +60,13 @@ export type TimelineActiveIndex = {
 
 export type TimelineGroup = {
   date: string
-  groups: myTimeline_myTimeline[]
+  albums: TimelineGroupAlbum[]
+}
+
+export type TimelineGroupAlbum = {
+  id: string
+  title: string
+  media: myTimeline_myTimeline[]
 }
 
 const TimelineGallery = () => {
@@ -95,7 +98,7 @@ const TimelineGallery = () => {
     variables: {
       onlyFavorites,
       offset: 0,
-      limit: 50,
+      limit: 200,
     },
   })
 

@@ -115,6 +115,15 @@ func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.M
 	return formattedType, nil
 }
 
+func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
+	var album models.Album
+	err := r.Database.Find(&album, obj.AlbumID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &album, nil
+}
+
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken
 	if err := r.Database.Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {

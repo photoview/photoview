@@ -3,101 +3,101 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { OrderDirection, MediaType } from './../../../__generated__/globalTypes'
+import { OrderDirection, MediaType } from "./../../../__generated__/globalTypes";
 
 // ====================================================
 // GraphQL query operation: albumQuery
 // ====================================================
 
 export interface albumQuery_album_subAlbums_thumbnail_thumbnail {
-  __typename: 'MediaURL'
+  __typename: "MediaURL";
   /**
    * URL for previewing the image
    */
-  url: string
+  url: string;
 }
 
 export interface albumQuery_album_subAlbums_thumbnail {
-  __typename: 'Media'
+  __typename: "Media";
   /**
    * URL to display the media in a smaller resolution
    */
-  thumbnail: albumQuery_album_subAlbums_thumbnail_thumbnail | null
+  thumbnail: albumQuery_album_subAlbums_thumbnail_thumbnail | null;
 }
 
 export interface albumQuery_album_subAlbums {
-  __typename: 'Album'
-  id: string
-  title: string
+  __typename: "Album";
+  id: string;
+  title: string;
   /**
    * An image in this album used for previewing this album
    */
-  thumbnail: albumQuery_album_subAlbums_thumbnail | null
+  thumbnail: albumQuery_album_subAlbums_thumbnail | null;
 }
 
 export interface albumQuery_album_media_thumbnail {
-  __typename: 'MediaURL'
+  __typename: "MediaURL";
   /**
    * URL for previewing the image
    */
-  url: string
+  url: string;
   /**
    * Width of the image in pixels
    */
-  width: number
+  width: number;
   /**
    * Height of the image in pixels
    */
-  height: number
+  height: number;
 }
 
 export interface albumQuery_album_media_highRes {
-  __typename: 'MediaURL'
+  __typename: "MediaURL";
   /**
    * URL for previewing the image
    */
-  url: string
+  url: string;
 }
 
 export interface albumQuery_album_media_videoWeb {
-  __typename: 'MediaURL'
+  __typename: "MediaURL";
   /**
    * URL for previewing the image
    */
-  url: string
+  url: string;
 }
 
 export interface albumQuery_album_media {
-  __typename: 'Media'
-  id: string
-  type: MediaType
+  __typename: "Media";
+  id: string;
+  type: MediaType;
   /**
    * URL to display the media in a smaller resolution
    */
-  thumbnail: albumQuery_album_media_thumbnail | null
+  thumbnail: albumQuery_album_media_thumbnail | null;
   /**
    * URL to display the photo in full resolution, will be null for videos
    */
-  highRes: albumQuery_album_media_highRes | null
+  highRes: albumQuery_album_media_highRes | null;
   /**
    * URL to get the video in a web format that can be played in the browser, will be null for photos
    */
-  videoWeb: albumQuery_album_media_videoWeb | null
-  favorite: boolean
+  videoWeb: albumQuery_album_media_videoWeb | null;
+  favorite: boolean;
 }
 
 export interface albumQuery_album {
-  __typename: 'Album'
-  id: string
-  title: string
+  __typename: "Album";
+  id: string;
+  title: string;
   /**
    * The albums contained in this album
    */
-  subAlbums: albumQuery_album_subAlbums[]
+  subAlbums: albumQuery_album_subAlbums[];
   /**
    * The media inside this album
    */
-  media: albumQuery_album_media[]
+  media: albumQuery_album_media[];
 }
 
 export interface albumQuery {
@@ -105,14 +105,14 @@ export interface albumQuery {
    * Get album by id, user must own the album or be admin
    * If valid tokenCredentials are provided, the album may be retrived without further authentication
    */
-  album: albumQuery_album
+  album: albumQuery_album;
 }
 
 export interface albumQueryVariables {
-  id: string
-  onlyFavorites?: boolean | null
-  mediaOrderBy?: string | null
-  mediaOrderDirection?: OrderDirection | null
-  limit?: number | null
-  offset?: number | null
+  id: string;
+  onlyFavorites?: boolean | null;
+  mediaOrderBy?: string | null;
+  mediaOrderDirection?: OrderDirection | null;
+  limit?: number | null;
+  offset?: number | null;
 }
