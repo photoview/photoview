@@ -17,7 +17,7 @@ type Album struct {
 	Owners   []User `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
 	Path     string `gorm:"not null"`
 	PathHash string `gorm:"unique"`
-	CoverID  int    `gorm:"index;default:-1;"`
+	CoverID  int    `gorm:"index;"`
 }
 
 func (a *Album) FilePath() string {

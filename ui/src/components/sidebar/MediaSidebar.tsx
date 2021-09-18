@@ -26,7 +26,6 @@ import {
 
 import { sidebarDownloadQuery_media_downloads } from './__generated__/sidebarDownloadQuery'
 import SidebarHeader from './SidebarHeader'
-import { SidebarPhotoCover } from './AlbumCovers'
 
 const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarPhoto($id: ID!) {
@@ -366,9 +365,6 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       <MetadataInfo media={media} />
       <SidebarDownload media={media} />
       <SidebarPhotoShare id={media.id} />
-      <div className="mt-8">
-        <SidebarPhotoCover id={'3'} cover_id={media.id} />
-      </div>
     </div>
   )
 }

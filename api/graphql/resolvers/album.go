@@ -152,7 +152,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 
 	fmt.Print(obj.CoverID)
 
-	if obj.CoverID == -1 {
+	if obj.CoverID == 0 {
 		if err := r.Database.Raw(`
 			WITH recursive sub_albums AS (
 				SELECT * FROM albums AS root WHERE id = ?
@@ -265,7 +265,8 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 	return album_path, nil
 }
 
-func (r *mutationResolver) SetAlbumCoverID(ctx context.Context, albumID int, coverID *int) (*models.Album, error) {
+// Takes album_id, resets album.cover_id to 0 (null)
+func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -276,9 +277,41 @@ func (r *mutationResolver) SetAlbumCoverID(ctx context.Context, albumID int, cov
 		return nil, err
 	}
 
-	//
-	// var album models.Album
-	//
+	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ownsAlbum {
+		return nil, errors.New("forbidden")
+	}
+
+	if err := r.Database.Model(&album).Update("cover_id", 0).Error; err != nil {
+		return nil, err
+	}
+
+	return &album, nil
+}
+
+// Takes media.id, finds parent album, sets album.cover_id to media.id (must be a more efficient way of doing this, but it works)
+func (r *mutationResolver) SetAlbumCover(ctx context.Context, coverID int) (*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	var media models.Media
+
+	if err := r.Database.Find(&media, coverID).Error; err != nil {
+		return nil, err
+	}
+
+	var album models.Album
+
+	if err := r.Database.Find(&album, &media.AlbumID).Error; err != nil {
+		return nil, err
+	}
+
 	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
 	if err != nil {
 		return nil, err
@@ -291,17 +324,6 @@ func (r *mutationResolver) SetAlbumCoverID(ctx context.Context, albumID int, cov
 	if err := r.Database.Model(&album).Update("cover_id", coverID).Error; err != nil {
 		return nil, err
 	}
-
-	// var faceGroup models.FaceGroup
-	// if err := db.Where("id = ?", faceGroupID).Find(&faceGroup).Error; err != nil {
-	// 	return nil, err
-	// }
-	//
-	// return &faceGroup, nil
-	//
-	// if err := r.Database.Model(faceGroup).Update("label", label).Error; err != nil {
-	// 	return nil, err
-	// }
 
 	return &album, nil
 }

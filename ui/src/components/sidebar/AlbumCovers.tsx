@@ -5,33 +5,41 @@ import { useTranslation } from 'react-i18next'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 
 import {
-  setAlbumCoverID,
-  setAlbumCoverIDVariables,
-} from './__generated__/setAlbumCoverID'
+  setAlbumCover,
+  setAlbumCoverVariables,
+} from './__generated__/setAlbumCover'
+import {
+  resetAlbumCover,
+  resetAlbumCoverVariables,
+} from './__generated__/resetAlbumCover'
 
-const SET_ALBUM_COVER_ID_MUTATION = gql`
-  mutation setAlbumCoverID($albumID: ID!, $coverID: Int!) {
-    setAlbumCoverID(albumID: $albumID, coverID: $coverID) {
+const RESET_ALBUM_COVER_MUTATION = gql`
+  mutation resetAlbumCover($albumID: ID!) {
+    resetAlbumCover(albumID: $albumID) {
       id
+    }
+  }
+`
+const SET_ALBUM_COVER_MUTATION = gql`
+  mutation setAlbumCover($coverID: ID!) {
+    setAlbumCover(coverID: $coverID) {
       coverID
     }
   }
 `
 
 type SidebarPhotoCoverProps = {
-  id: string
   cover_id: string
 }
 
-export const SidebarPhotoCover = ({ id, cover_id }: SidebarPhotoCoverProps) => {
+export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
   const { t } = useTranslation()
 
-  const [setAlbumCoverID, { loading }] = useMutation<
-    setAlbumCoverID,
-    setAlbumCoverIDVariables
-  >(SET_ALBUM_COVER_ID_MUTATION, {
+  const [setAlbumCover, { loading }] = useMutation<
+    setAlbumCover,
+    setAlbumCoverVariables
+  >(SET_ALBUM_COVER_MUTATION, {
     variables: {
-      albumID: id,
       coverID: cover_id,
     },
   })
@@ -39,7 +47,7 @@ export const SidebarPhotoCover = ({ id, cover_id }: SidebarPhotoCoverProps) => {
   return (
     <SidebarSection>
       <SidebarSectionTitle>
-        {t('sidebar.album.cover_photo', 'Cover Photo')}
+        {t('sidebar.album.cover_photo', 'Album cover')}
       </SidebarSectionTitle>
       <div>
         <table className="border-collapse w-full">
@@ -50,9 +58,8 @@ export const SidebarPhotoCover = ({ id, cover_id }: SidebarPhotoCoverProps) => {
                   className="text-green-500 font-bold uppercase text-xs"
                   disabled={loading}
                   onClick={() => {
-                    setAlbumCoverID({
+                    setAlbumCover({
                       variables: {
-                        albumID: id,
                         coverID: cover_id,
                       },
                     })
@@ -78,13 +85,12 @@ type SidebarAlbumCoverProps = {
 export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
   const { t } = useTranslation()
 
-  const [setAlbumCoverID, { loading }] = useMutation<
-    setAlbumCoverID,
-    setAlbumCoverIDVariables
-  >(SET_ALBUM_COVER_ID_MUTATION, {
+  const [resetAlbumCover, { loading }] = useMutation<
+    resetAlbumCover,
+    resetAlbumCoverVariables
+  >(RESET_ALBUM_COVER_MUTATION, {
     variables: {
       albumID: id,
-      coverID: '-1',
     },
   })
 
@@ -102,10 +108,9 @@ export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
                   className="text-red-500 font-bold uppercase text-xs"
                   disabled={loading}
                   onClick={() => {
-                    setAlbumCoverID({
+                    resetAlbumCover({
                       variables: {
                         albumID: id,
-                        coverID: '-1',
                       },
                     })
                   }}

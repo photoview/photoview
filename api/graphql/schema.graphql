@@ -134,8 +134,10 @@ type Mutation {
 
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
-  "Assign a cover image to an album, set coverID to -1 to remove the current one"
-  setAlbumCoverID(albumID: ID!, coverID: Int): Album! @isAuthorized
+  "Reset the assigned cover photo for an album"
+  resetAlbumCover(albumID: ID!): Album! @isAuthorized
+  "Assign a cover photo to an album"
+  setAlbumCover(coverID: ID!): Album! @isAuthorized
 
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
