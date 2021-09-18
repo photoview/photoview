@@ -272,7 +272,7 @@ func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*m
 		return nil, errors.New("forbidden")
 	}
 
-	if err := r.Database.Model(&album).Update("cover_id", 0).Error; err != nil {
+	if err := r.Database.Model(&album).Update("cover_id", nil).Error; err != nil {
 		return nil, err
 	}
 

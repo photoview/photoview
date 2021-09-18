@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useMutation, gql } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 
@@ -35,14 +35,16 @@ type SidebarPhotoCoverProps = {
 export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
   const { t } = useTranslation()
 
-  const [setAlbumCover, { loading }] = useMutation<
-    setAlbumCover,
-    setAlbumCoverVariables
-  >(SET_ALBUM_COVER_MUTATION, {
-    variables: {
-      coverID: cover_id,
-    },
-  })
+  const [setAlbumCover] = useMutation<setAlbumCover, setAlbumCoverVariables>(
+    SET_ALBUM_COVER_MUTATION,
+    {
+      variables: {
+        coverID: cover_id,
+      },
+    }
+  )
+
+  const [buttonDisabled, setButtonDisabled] = useState(false)
 
   return (
     <SidebarSection>
@@ -55,14 +57,15 @@ export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
             <tr className="text-left border-gray-100 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
-                  className="text-green-500 font-bold uppercase text-xs"
-                  disabled={loading}
+                  className="disabled:opacity-50 text-green-500 font-bold uppercase text-xs"
+                  disabled={buttonDisabled}
                   onClick={() => {
-                    setAlbumCover({
-                      variables: {
-                        coverID: cover_id,
-                      },
-                    })
+                    setButtonDisabled(true),
+                      setAlbumCover({
+                        variables: {
+                          coverID: cover_id,
+                        },
+                      })
                   }}
                 >
                   <span>
@@ -85,7 +88,7 @@ type SidebarAlbumCoverProps = {
 export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
   const { t } = useTranslation()
 
-  const [resetAlbumCover, { loading }] = useMutation<
+  const [resetAlbumCover] = useMutation<
     resetAlbumCover,
     resetAlbumCoverVariables
   >(RESET_ALBUM_COVER_MUTATION, {
@@ -93,6 +96,8 @@ export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
       albumID: id,
     },
   })
+
+  const [buttonDisabled, setButtonDisabled] = useState(false)
 
   return (
     <SidebarSection>
@@ -105,14 +110,15 @@ export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
             <tr className="text-left border-gray-100 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
-                  className="text-red-500 font-bold uppercase text-xs"
-                  disabled={loading}
+                  className="disabled:opacity-50 text-red-500 font-bold uppercase text-xs"
+                  disabled={buttonDisabled}
                   onClick={() => {
-                    resetAlbumCover({
-                      variables: {
-                        albumID: id,
-                      },
-                    })
+                    setButtonDisabled(true),
+                      resetAlbumCover({
+                        variables: {
+                          albumID: id,
+                        },
+                      })
                   }}
                 >
                   <span>

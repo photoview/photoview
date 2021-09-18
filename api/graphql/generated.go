@@ -1935,7 +1935,7 @@ type Album {
     paginate: Pagination
   ): [Album!]!
 
-  "The album witch contains this album"
+  "The album which contains this album"
   parentAlbum: Album
   "The user who owns this album"
   owner: User!
@@ -3367,9 +3367,9 @@ func (ec *executionContext) _Album_coverID(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -12230,6 +12230,27 @@ func (ec *executionContext) unmarshalNInt2int64(ctx context.Context, v interface
 
 func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
 	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
