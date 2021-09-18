@@ -17,9 +17,8 @@ import (
 
 type FaceGroup struct {
 	Model
-	Label            *string
-	ImageFaces       []ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
-	PreviewImageFace ImageFace   `gorm:"constraint:OnDelete:CASCADE;"`
+	Label      *string
+	ImageFaces []ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type ImageFace struct {

@@ -77,11 +77,10 @@ type ComplexityRoot struct {
 	}
 
 	FaceGroup struct {
-		ID               func(childComplexity int) int
-		ImageFaceCount   func(childComplexity int) int
-		ImageFaces       func(childComplexity int, paginate *models.Pagination) int
-		Label            func(childComplexity int) int
-		PreviewImageFace func(childComplexity int) int
+		ID             func(childComplexity int) int
+		ImageFaceCount func(childComplexity int) int
+		ImageFaces     func(childComplexity int, paginate *models.Pagination) int
+		Label          func(childComplexity int) int
 	}
 
 	FaceRectangle struct {
@@ -512,13 +511,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FaceGroup.Label(childComplexity), true
-
-	case "FaceGroup.PreviewImageFace":
-		if e.complexity.FaceGroup.PreviewImageFace == nil {
-			break
-		}
-
-		return e.complexity.FaceGroup.PreviewImageFace(childComplexity), true
 
 	case "FaceRectangle.maxX":
 		if e.complexity.FaceRectangle.MaxX == nil {
@@ -2059,7 +2051,6 @@ type FaceGroup {
   label: String
   imageFaces(paginate: Pagination): [ImageFace!]!
   imageFaceCount: Int!
-  PreviewImageFace: ImageFace!
 }
 
 type ImageFace {
@@ -3625,41 +3616,6 @@ func (ec *executionContext) _FaceGroup_imageFaceCount(ctx context.Context, field
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _FaceGroup_PreviewImageFace(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "FaceGroup",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PreviewImageFace, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.ImageFace)
-	fc.Result = res
-	return ec.marshalNImageFace2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FaceRectangle_minX(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
@@ -10504,11 +10460,6 @@ func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet
 				}
 				return res
 			})
-		case "PreviewImageFace":
-			out.Values[i] = ec._FaceGroup_PreviewImageFace(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12208,10 +12159,6 @@ func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.Se
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNImageFace2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx context.Context, sel ast.SelectionSet, v models.ImageFace) graphql.Marshaler {
-	return ec._ImageFace(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {

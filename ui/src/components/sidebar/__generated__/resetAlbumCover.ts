@@ -14,7 +14,7 @@ export interface resetAlbumCover_resetAlbumCover {
 
 export interface resetAlbumCover {
   /**
-   * Reset the assigned cover photo for an album
+   * Reset the assigned cover image for an album
    */
   resetAlbumCover: resetAlbumCover_resetAlbumCover
 }

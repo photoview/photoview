@@ -188,14 +188,6 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
 	}
 
-	// // PJ-Watson: Attempt to add new column for FaceGroup.PreviewImageFace
-	if !(db.Migrator().HasColumn(&models.FaceGroup{}, "preview_image_face")) {
-		db.Migrator().AddColumn(&models.FaceGroup{}, "preview_image_face")
-	}
-	if err := migrate_face_preview(db); err != nil {
-		log.Printf("Failed to run face groups preview image migration: %v\n", err)
-	}
-
 	return nil
 }
 

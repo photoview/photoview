@@ -14,7 +14,7 @@ export interface setAlbumCover_setAlbumCover {
 
 export interface setAlbumCover {
   /**
-   * Assign a cover photo to an album
+   * Assign a cover image to an album
    */
   setAlbumCover: setAlbumCover_setAlbumCover
 }
