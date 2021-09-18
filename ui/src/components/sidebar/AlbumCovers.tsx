@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMutation, gql } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 
@@ -45,6 +45,10 @@ export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
   )
 
   const [buttonDisabled, setButtonDisabled] = useState(false)
+
+  useEffect(() => {
+    setButtonDisabled(false)
+  }, [cover_id])
 
   return (
     <SidebarSection>
@@ -98,6 +102,10 @@ export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
   })
 
   const [buttonDisabled, setButtonDisabled] = useState(false)
+
+  useEffect(() => {
+    setButtonDisabled(false)
+  }, [id])
 
   return (
     <SidebarSection>
