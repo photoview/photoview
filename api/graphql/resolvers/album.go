@@ -152,7 +152,7 @@ func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*mode
 
 	fmt.Print(obj.CoverID)
 
-	if obj.CoverID == 0 {
+	if obj.CoverID == nil {
 		if err := r.Database.Raw(`
 			WITH recursive sub_albums AS (
 				SELECT * FROM albums AS root WHERE id = ?
