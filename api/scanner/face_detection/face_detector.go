@@ -155,6 +155,7 @@ func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 
 		faceGroup = models.FaceGroup{
 			ImageFaces: []models.ImageFace{imageFace},
+			PreviewImageFace: []models.ImageFace{imageFace}[0],
 		}
 
 		if err := db.Create(&faceGroup).Error; err != nil {
