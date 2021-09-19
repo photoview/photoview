@@ -14,13 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestAlbumCover(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	rootAlbum := models.Album{
-		Title: 		"root",
-		Path:  		"/photos",
+		Title: "root",
+		Path:  "/photos",
 	}
 
 	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
@@ -36,10 +35,10 @@ func TestAlbumCover(t *testing.T) {
 			ParentAlbumID: &rootAlbum.ID,
 		},
 		{
-			Title:       	 "child2",
+			Title:         "child2",
 			Path:          "/photos/child2",
 			ParentAlbumID: &rootAlbum.ID,
-			CoverID:			 &TestCoverID,
+			CoverID:       &TestCoverID,
 		},
 	}
 
@@ -49,34 +48,34 @@ func TestAlbumCover(t *testing.T) {
 
 	photos := []models.Media{
 		{
-			Title:        "pic1",
-			Path:         "/photos/pic1",
-			AlbumID: 			1,
+			Title:   "pic1",
+			Path:    "/photos/pic1",
+			AlbumID: 1,
 		},
 		{
-			Title:        "pic2",
-			Path:         "/photos/pic2",
-			AlbumID: 			1,
+			Title:   "pic2",
+			Path:    "/photos/pic2",
+			AlbumID: 1,
 		},
 		{
-			Title:        "pic3",
-			Path:         "/photos/pic3",
-			AlbumID: 			2,
+			Title:   "pic3",
+			Path:    "/photos/pic3",
+			AlbumID: 2,
 		},
 		{
-			Title:        "pic4",
-			Path:         "/photos/pic4",
-			AlbumID: 			2,
+			Title:   "pic4",
+			Path:    "/photos/pic4",
+			AlbumID: 2,
 		},
 		{
-			Title:        "pic5",
-			Path:         "/photos/pic5",
-			AlbumID: 			3,
+			Title:   "pic5",
+			Path:    "/photos/pic5",
+			AlbumID: 3,
 		},
 		{
-			Title:        "pic6",
-			Path:         "/photos/pic6",
-			AlbumID: 			3,
+			Title:   "pic6",
+			Path:    "/photos/pic6",
+			AlbumID: 3,
 		},
 	}
 
@@ -154,6 +153,7 @@ func TestAlbumCover(t *testing.T) {
 	// })
 
 }
+
 //
 //
 // func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
