@@ -3,8 +3,6 @@ package resolvers
 import (
 	"context"
 
-	"fmt"
-
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -149,8 +147,6 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *m
 func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
 
 	var media models.Media
-
-	fmt.Print(obj.CoverID)
 
 	if obj.CoverID == nil {
 		if err := r.Database.Raw(`
