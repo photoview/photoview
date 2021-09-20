@@ -1,18 +1,32 @@
-package resolvers
+package resolvers_test
 
 import (
 	// "context"
 	"testing"
 
-	// api "github.com/photoview/photoview/api/graphql"
+	api "github.com/photoview/photoview/api/graphql"
 	// "github.com/photoview/photoview/api/graphql/auth"
+	// "./../generated"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/resolvers"
 	// "github.com/pkg/errors"
 	// "gorm.io/gorm"
 
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/client"
 )
+
+// func NewResolver() api.Config {
+// 	r := Resolver{}
+//
+// 	r.Database = test_utils.DatabaseTest(t)
+//
+// 	return api.Config{
+// 		Resolvers: &r,
+// 	}
+// }
 
 func TestAlbumCover(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
@@ -100,33 +114,38 @@ func TestAlbumCover(t *testing.T) {
 	// 	}
 	// }
 	// //
-	t.Run("Album get cover photos", func(t *testing.T) {
-		root_children, err := rootAlbum.GetChildren(db, nil)
-		if !assert.NoError(t, err) {
-			return
-		}
 
-		expected_children := []*models.Album{
-			{
-				Title: "root",
-				Path:  "/photos",
-			},
-			{
-				Title: "child1",
-				Path:  "/photos/child1",
-			},
-			{
-				Title: "child2",
-				Path:  "/photos/child2",
-			},
-			{
-				Title: "subchild",
-				Path:  "/photos/child1/subchild",
-			},
-		}
+	c := client.New(handler.NewDefaultServer(api.NewExecutableSchema(api.Config{Resolvers: &resolvers.Resolver{
+		Database: db,
+	}})))
 
-		verifyResult(t, expected_children, root_children)
-	})
+	// t.Run("Album get cover photos", func(t *testing.T) {
+	// 	root_children, err := rootAlbum.GetChildren(db, nil)
+	// 	if !assert.NoError(t, err) {
+	// 		return
+	// 	}
+	//
+	// 	expected_children := []*models.Album{
+	// 		{
+	// 			Title: "root",
+	// 			Path:  "/photos",
+	// 		},
+	// 		{
+	// 			Title: "child1",
+	// 			Path:  "/photos/child1",
+	// 		},
+	// 		{
+	// 			Title: "child2",
+	// 			Path:  "/photos/child2",
+	// 		},
+	// 		{
+	// 			Title: "subchild",
+	// 			Path:  "/photos/child1/subchild",
+	// 		},
+	// 	}
+	//
+	// 	verifyResult(t, expected_children, root_children)
+	// })
 
 	// t.Run("Album get parents", func(t *testing.T) {
 	// 	parents, err := sub_child.GetParents(db, nil)
