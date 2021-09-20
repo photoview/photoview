@@ -39,8 +39,6 @@ func InitializeFaceDetector(db *gorm.DB) error {
 		return errors.Wrap(err, "get face detection samples from database")
 	}
 
-	log.Println("This is the function where I need to implement the checks for facegroup cover ID")
-
 	GlobalFaceDetector = &FaceDetector{
 		rec:             rec,
 		faceDescriptors: faceDescriptors,

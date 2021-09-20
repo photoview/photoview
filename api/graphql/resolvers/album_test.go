@@ -1,32 +1,17 @@
 package resolvers_test
 
 import (
-	// "context"
 	"testing"
 
 	api "github.com/photoview/photoview/api/graphql"
-	// "github.com/photoview/photoview/api/graphql/auth"
-	// "./../generated"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/resolvers"
-	// "github.com/pkg/errors"
-	// "gorm.io/gorm"
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
-
-// func NewResolver() api.Config {
-// 	r := Resolver{}
-//
-// 	r.Database = test_utils.DatabaseTest(t)
-//
-// 	return api.Config{
-// 		Resolvers: &r,
-// 	}
-// }
 
 func TestAlbumCover(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
@@ -115,8 +100,6 @@ func TestAlbumCover(t *testing.T) {
 	}
 	//
 
-
-
 	c := client.New(handler.NewDefaultServer(api.NewExecutableSchema(api.Config{Resolvers: &resolvers.Resolver{
 		Database: db,
 	}})))
@@ -135,7 +118,40 @@ func TestAlbumCover(t *testing.T) {
 			Title, Path, AlbumID
 		}}`, &resp[2])
 
+		expected_thumbnails := []*models.Media{
+			{
+				Title:   "pic1",
+				Path:    "/photos/pic1",
+				AlbumID: 1,
+			},
+			{
+				Title:   "pic3",
+				Path:    "/photos/child1/pic3",
+				AlbumID: 2,
+			},
+			{
+				Title:   "pic6",
+				Path:    "/photos/child2/pic6",
+				AlbumID: 3,
+			},
+		}
 
+		verifyResult(t, expected_thumbnails, resp)
+	})
+
+	t.Run("Album change cover photos", func(t *testing.T) {
+
+		var resp []*models.Media
+
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[0])
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[1])
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[2])
 
 		expected_thumbnails := []*models.Media{
 			{
