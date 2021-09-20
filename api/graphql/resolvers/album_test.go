@@ -12,10 +12,10 @@ import (
 	// "github.com/pkg/errors"
 	// "gorm.io/gorm"
 
+	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/client"
 )
 
 // func NewResolver() api.Config {
@@ -73,22 +73,22 @@ func TestAlbumCover(t *testing.T) {
 		},
 		{
 			Title:   "pic3",
-			Path:    "/photos/pic3",
+			Path:    "/photos/child1/pic3",
 			AlbumID: 2,
 		},
 		{
 			Title:   "pic4",
-			Path:    "/photos/pic4",
+			Path:    "/photos/child1/pic4",
 			AlbumID: 2,
 		},
 		{
 			Title:   "pic5",
-			Path:    "/photos/pic5",
+			Path:    "/photos/child2/pic5",
 			AlbumID: 3,
 		},
 		{
 			Title:   "pic6",
-			Path:    "/photos/pic6",
+			Path:    "/photos/child2/pic6",
 			AlbumID: 3,
 		},
 	}
@@ -97,79 +97,66 @@ func TestAlbumCover(t *testing.T) {
 		return
 	}
 
-	// verifyResult := func(t *testing.T, expected_albums []*models.Album, result []*models.Album) {
-	// 	assert.Equal(t, len(expected_albums), len(result))
+	verifyResult := func(t *testing.T, expected_media []*models.Media, result []*models.Media) {
+		assert.Equal(t, len(expected_media), len(result))
+
+		for _, expected := range expected_media {
+			found_expected := false
+			for _, item := range result {
+				if item.Title == expected.Title && item.Path == expected.Path && item.AlbumID == expected.AlbumID {
+					found_expected = true
+					break
+				}
+			}
+			if !found_expected {
+				assert.Failf(t, "media did not match", "expected to find item: %v", expected)
+			}
+		}
+	}
 	//
-	// 	for _, expected := range expected_albums {
-	// 		found_expected := false
-	// 		for _, item := range result {
-	// 			if item.Title == expected.Title && item.Path == expected.Path {
-	// 				found_expected = true
-	// 				break
-	// 			}
-	// 		}
-	// 		if !found_expected {
-	// 			assert.Failf(t, "albums did not match", "expected to find item: %v", expected)
-	// 		}
-	// 	}
-	// }
-	// //
+
+
 
 	c := client.New(handler.NewDefaultServer(api.NewExecutableSchema(api.Config{Resolvers: &resolvers.Resolver{
 		Database: db,
 	}})))
 
-	// t.Run("Album get cover photos", func(t *testing.T) {
-	// 	root_children, err := rootAlbum.GetChildren(db, nil)
-	// 	if !assert.NoError(t, err) {
-	// 		return
-	// 	}
-	//
-	// 	expected_children := []*models.Album{
-	// 		{
-	// 			Title: "root",
-	// 			Path:  "/photos",
-	// 		},
-	// 		{
-	// 			Title: "child1",
-	// 			Path:  "/photos/child1",
-	// 		},
-	// 		{
-	// 			Title: "child2",
-	// 			Path:  "/photos/child2",
-	// 		},
-	// 		{
-	// 			Title: "subchild",
-	// 			Path:  "/photos/child1/subchild",
-	// 		},
-	// 	}
-	//
-	// 	verifyResult(t, expected_children, root_children)
-	// })
+	t.Run("Album get cover photos", func(t *testing.T) {
 
-	// t.Run("Album get parents", func(t *testing.T) {
-	// 	parents, err := sub_child.GetParents(db, nil)
-	// 	if !assert.NoError(t, err) {
-	// 		return
-	// 	}
-	//
-	// 	expected_parents := []*models.Album{
-	// 		{
-	// 			Title: "root",
-	// 			Path:  "/photos",
-	// 		},
-	// 		{
-	// 			Title: "child1",
-	// 			Path:  "/photos/child1",
-	// 		},
-	// 		{
-	// 			Title: "subchild",
-	// 			Path:  "/photos/child1/subchild",
-	// 		},
-	// 	}
-	//
-	// 	verifyResult(t, expected_parents, parents)
-	// })
+		var resp []*models.Media
+
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[0])
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[1])
+		c.MustPost(`query { Thumbnail( album(id:1)) {
+			Title, Path, AlbumID
+		}}`, &resp[2])
+
+
+
+		expected_thumbnails := []*models.Media{
+			{
+				Title:   "pic1",
+				Path:    "/photos/pic1",
+				AlbumID: 1,
+			},
+			{
+				Title:   "pic3",
+				Path:    "/photos/child1/pic3",
+				AlbumID: 2,
+			},
+			{
+				Title:   "pic6",
+				Path:    "/photos/child2/pic6",
+				AlbumID: 3,
+			},
+		}
+
+		verifyResult(t, expected_thumbnails, resp)
+	})
 
 }
 
