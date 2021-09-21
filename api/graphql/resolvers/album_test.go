@@ -49,32 +49,32 @@ func TestAlbumCover(t *testing.T) {
 		{
 			Title:   "pic1",
 			Path:    "/photos/pic1",
-			AlbumID: 1,
+			AlbumID: &rootAlbum.ID,
 		},
 		{
 			Title:   "pic2",
 			Path:    "/photos/pic2",
-			AlbumID: 1,
+			AlbumID: &rootAlbum.ID,
 		},
 		{
 			Title:   "pic3",
 			Path:    "/photos/child1/pic3",
-			AlbumID: 2,
+			AlbumID: &children[0].ID,
 		},
 		{
 			Title:   "pic4",
 			Path:    "/photos/child1/pic4",
-			AlbumID: 2,
+			AlbumID: &children[0].ID,
 		},
 		{
 			Title:   "pic5",
 			Path:    "/photos/child2/pic5",
-			AlbumID: 3,
+			AlbumID: &children[1].ID,
 		},
 		{
 			Title:   "pic6",
 			Path:    "/photos/child2/pic6",
-			AlbumID: 3,
+			AlbumID: &children[1].ID,
 		},
 	}
 
