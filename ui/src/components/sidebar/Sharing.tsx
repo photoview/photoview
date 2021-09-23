@@ -34,8 +34,6 @@ import {
 import { authToken } from '../../helpers/authentication'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 
-import { SidebarPhotoCover, SidebarAlbumCover } from './AlbumCovers'
-
 import { ReactComponent as LinkIcon } from './icons/shareLinkIcon.svg'
 import { ReactComponent as CopyIcon } from './icons/shareCopyIcon.svg'
 import { ReactComponent as DeleteIcon } from './icons/shareDeleteIcon.svg'
@@ -433,54 +431,36 @@ const SidebarShare = ({
     )
   }
 
-  let coverPhotoSection
-  if (isPhoto) {
-    coverPhotoSection = (
-      <div className="mt-8">
-        <SidebarPhotoCover cover_id={id} />
-      </div>
-    )
-  } else {
-    coverPhotoSection = (
-      <div className="mt-8">
-        <SidebarAlbumCover id={id} />
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <SidebarSection>
-        <SidebarSectionTitle>
-          {t('sidebar.sharing.title', 'Sharing options')}
-        </SidebarSectionTitle>
-        <div>
-          <table className="border-collapse w-full">
-            <tbody>{optionsRows}</tbody>
-            <tfoot>
-              <tr className="text-left border-gray-100 border-b border-t">
-                <td colSpan={2} className="pl-4 py-2">
-                  <button
-                    className="text-green-500 font-bold uppercase text-xs"
-                    disabled={loading}
-                    onClick={() => {
-                      shareItem({
-                        variables: {
-                          id,
-                        },
-                      })
-                    }}
-                  >
-                    <AddIcon className="inline-block mr-2" />
-                    <span>{t('sidebar.sharing.add_share', 'Add shares')}</span>
-                  </button>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </SidebarSection>
-      {coverPhotoSection}
-    </div>
+    <SidebarSection>
+      <SidebarSectionTitle>
+        {t('sidebar.sharing.title', 'Sharing options')}
+      </SidebarSectionTitle>
+      <div>
+        <table className="border-collapse w-full">
+          <tbody>{optionsRows}</tbody>
+          <tfoot>
+            <tr className="text-left border-gray-100 border-b border-t">
+              <td colSpan={2} className="pl-4 py-2">
+                <button
+                  className="text-green-500 font-bold uppercase text-xs"
+                  disabled={loading}
+                  onClick={() => {
+                    shareItem({
+                      variables: {
+                        id,
+                      },
+                    })
+                  }}
+                >
+                  <AddIcon className="inline-block mr-2" />
+                  <span>{t('sidebar.sharing.add_share', 'Add shares')}</span>
+                </button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </SidebarSection>
   )
 }

@@ -95,7 +95,7 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 				SELECT id FROM sub_albums
 			) AND media.id IN (
 				SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-			) LIMIT 1
+			) ORDER BY id LIMIT 1
 		`, a.ID).Find(&media).Error; err != nil {
 			return nil, err
 		}

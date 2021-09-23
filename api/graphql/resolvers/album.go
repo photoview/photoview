@@ -175,7 +175,6 @@ func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*m
 	return actions.ResetAlbumCover(r.Database, user, albumID)
 }
 
-// Takes media.id, finds parent album, sets album.cover_id to media.id (must be a more efficient way of doing this, but it works)
 func (r *mutationResolver) SetAlbumCover(ctx context.Context, mediaID int) (*models.Album, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
