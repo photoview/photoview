@@ -24,8 +24,6 @@ func addContext(ctx context.Context) client.Option {
 func TestAlbumCover(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	TestCoverID := 6
-
 	rootAlbum := models.Album{
 		Title: "root",
 		Path:  "/photos",
@@ -45,7 +43,6 @@ func TestAlbumCover(t *testing.T) {
 			Title:         "child2",
 			Path:          "/photos/child2",
 			ParentAlbumID: &rootAlbum.ID,
-			CoverID:       &TestCoverID,
 		},
 	}
 
@@ -87,6 +84,10 @@ func TestAlbumCover(t *testing.T) {
 	}
 
 	if !assert.NoError(t, db.Save(&photos).Error) {
+		return
+	}
+
+	if !assert.NoError(t, db.Model(&children[1]).Update("cover_id", &photos[5].ID).Error) {
 		return
 	}
 
@@ -167,7 +168,7 @@ func TestAlbumCover(t *testing.T) {
 		postErr := c.Post(
 			q,
 			&resp,
-			client.Var("albumID", &children[1].ID),
+			client.Var("albumID", &children[0].ID),
 			addContext(ctx),
 		)
 		if !assert.NoError(t, postErr) {
