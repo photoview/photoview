@@ -93,6 +93,7 @@ function AlbumPage({ match }: AlbumPageProps) {
       offset: 0,
       limit: 200,
     },
+    fetchPolicy: 'network-only',
   })
 
   const { containerElem, finished: finishedLoadingMore } =

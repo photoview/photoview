@@ -19,7 +19,9 @@ const getAlbumsQuery = gql`
 `
 
 const AlbumsPage = () => {
-  const { error, data } = useQuery<getMyAlbums>(getAlbumsQuery)
+  const { error, data } = useQuery<getMyAlbums>(getAlbumsQuery, {
+    fetchPolicy: 'network-only',
+  })
 
   return (
     <Layout title="Albums">
