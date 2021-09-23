@@ -98,27 +98,27 @@ func TestAlbumCover(t *testing.T) {
 	photoUrls := []models.MediaURL{
 		{
 			MediaID: photos[0].ID,
-			Media: &photos[0],
+			Media:   &photos[0],
 		},
 		{
 			MediaID: photos[1].ID,
-			Media: &photos[1],
+			Media:   &photos[1],
 		},
 		{
 			MediaID: photos[2].ID,
-			Media: &photos[2],
+			Media:   &photos[2],
 		},
 		{
 			MediaID: photos[3].ID,
-			Media: &photos[3],
+			Media:   &photos[3],
 		},
 		{
 			MediaID: photos[4].ID,
-			Media: &photos[4],
+			Media:   &photos[4],
 		},
 		{
 			MediaID: photos[5].ID,
-			Media: &photos[5],
+			Media:   &photos[5],
 		},
 	}
 
@@ -224,7 +224,7 @@ func TestAlbumCover(t *testing.T) {
 
 		assert.EqualValues(t, 0, resetResp.ResetAlbumCover.CoverID)
 	})
-	
+
 	t.Run("Album change cover photos", func(t *testing.T) {
 
 		var resp struct {
