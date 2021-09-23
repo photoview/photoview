@@ -279,7 +279,7 @@ type Album {
 
   shares: [ShareToken!]!
 
-  coverID: Int!
+  coverID: Int
 }
 
 type MediaURL {
