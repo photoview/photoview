@@ -91,6 +91,41 @@ func TestAlbumCover(t *testing.T) {
 		return
 	}
 
+	if !assert.NoError(t, db.Model(&children[0]).Update("cover_id", &photos[3].ID).Error) {
+		return
+	}
+
+	photoUrls := []models.MediaURL{
+		{
+			MediaID: photos[0].ID,
+			Media: &photos[0],
+		},
+		{
+			MediaID: photos[1].ID,
+			Media: &photos[1],
+		},
+		{
+			MediaID: photos[2].ID,
+			Media: &photos[2],
+		},
+		{
+			MediaID: photos[3].ID,
+			Media: &photos[3],
+		},
+		{
+			MediaID: photos[4].ID,
+			Media: &photos[4],
+		},
+		{
+			MediaID: photos[5].ID,
+			Media: &photos[5],
+		},
+	}
+
+	if !assert.NoError(t, db.Save(&photoUrls).Error) {
+		return
+	}
+
 	pass := "<hashed_password>"
 	regularUser := models.User{
 		Username: "user1",
@@ -121,7 +156,8 @@ func TestAlbumCover(t *testing.T) {
 		},
 	})))
 
-	t.Run("Album get cover photos", func(t *testing.T) {
+	// Single test since we cannot rely on the tests being performed sequentially
+	t.Run("Album get and reset cover photos", func(t *testing.T) {
 
 		var resp struct {
 			Album struct {
@@ -141,43 +177,54 @@ func TestAlbumCover(t *testing.T) {
 		postErr := c.Post(
 			q,
 			&resp,
-			client.Var("albumID", &children[1].ID),
+			client.Var("albumID", &rootAlbum.ID),
 			addContext(ctx),
 		)
 		if !assert.NoError(t, postErr) {
 			return
 		}
 
-		assert.EqualValues(t, "pic6", resp.Album.Thumbnail.Title)
-	})
+		// Should return pic1 since no coverID has been set
+		assert.EqualValues(t, "pic1", resp.Album.Thumbnail.Title)
 
-	t.Run("Album reset cover photos", func(t *testing.T) {
-
-		var resp struct {
-			ResetAlbumCover struct {
-				CoverID int
-			}
-		}
-
-		q := `mutation resetCover($albumID: ID!) {
-	    resetAlbumCover(albumID: $albumID) {
-				coverID
-			}
-	  }
-		`
-		postErr := c.Post(
+		qErr := c.Post(
 			q,
 			&resp,
 			client.Var("albumID", &children[0].ID),
 			addContext(ctx),
 		)
-		if !assert.NoError(t, postErr) {
+		if !assert.NoError(t, qErr) {
 			return
 		}
 
-		assert.EqualValues(t, 0, resp.ResetAlbumCover.CoverID)
-	})
+		// coverID has already been set
+		assert.EqualValues(t, "pic4", resp.Album.Thumbnail.Title)
 
+		var resetResp struct {
+			ResetAlbumCover struct {
+				CoverID int
+			}
+		}
+
+		m := `mutation resetCover($albumID: ID!) {
+	    resetAlbumCover(albumID: $albumID) {
+				coverID
+			}
+	  }
+		`
+		mErr := c.Post(
+			m,
+			&resetResp,
+			client.Var("albumID", &children[0].ID),
+			addContext(ctx),
+		)
+		if !assert.NoError(t, mErr) {
+			return
+		}
+
+		assert.EqualValues(t, 0, resetResp.ResetAlbumCover.CoverID)
+	})
+	
 	t.Run("Album change cover photos", func(t *testing.T) {
 
 		var resp struct {
@@ -196,14 +243,14 @@ func TestAlbumCover(t *testing.T) {
 		postErr := c.Post(
 			q,
 			&resp,
-			client.Var("coverID", &photos[1].ID),
+			client.Var("coverID", &photos[4].ID),
 			addContext(ctx),
 		)
 		if !assert.NoError(t, postErr) {
 			return
 		}
 
-		assert.EqualValues(t, &photos[1].ID, &resp.SetAlbumCover.CoverID)
+		assert.EqualValues(t, &photos[4].ID, &resp.SetAlbumCover.CoverID)
 
 	})
 
