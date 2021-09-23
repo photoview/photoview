@@ -57,7 +57,6 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Album struct {
-		CoverID     func(childComplexity int) int
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Media       func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
@@ -370,13 +369,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Album.coverID":
-		if e.complexity.Album.CoverID == nil {
-			break
-		}
-
-		return e.complexity.Album.CoverID(childComplexity), true
 
 	case "Album.filePath":
 		if e.complexity.Album.FilePath == nil {
@@ -1947,7 +1939,7 @@ type Album {
 
   shares: [ShareToken!]!
 
-  coverID: Int
+  #coverID: Int
 }
 
 type MediaURL {
@@ -3335,38 +3327,6 @@ func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.Col
 	res := resTmp.([]*models.ShareToken)
 	fc.Result = res
 	return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Album_coverID(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Album",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CoverID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -10361,8 +10321,6 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
-		case "coverID":
-			out.Values[i] = ec._Album_coverID(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

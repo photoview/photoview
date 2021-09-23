@@ -17,13 +17,25 @@ const RESET_ALBUM_COVER_MUTATION = gql`
   mutation resetAlbumCover($albumID: ID!) {
     resetAlbumCover(albumID: $albumID) {
       id
+      thumbnail {
+        id
+        thumbnail {
+          url
+        }
+      }
     }
   }
 `
 const SET_ALBUM_COVER_MUTATION = gql`
   mutation setAlbumCover($coverID: ID!) {
     setAlbumCover(coverID: $coverID) {
-      coverID
+      id
+      thumbnail {
+        id
+        thumbnail {
+          url
+        }
+      }
     }
   }
 `

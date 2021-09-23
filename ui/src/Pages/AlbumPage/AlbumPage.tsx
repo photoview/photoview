@@ -25,6 +25,7 @@ const ALBUM_QUERY = gql`
         id
         title
         thumbnail {
+          id
           thumbnail {
             url
           }
@@ -93,7 +94,6 @@ function AlbumPage({ match }: AlbumPageProps) {
       offset: 0,
       limit: 200,
     },
-    fetchPolicy: 'network-only',
   })
 
   const { containerElem, finished: finishedLoadingMore } =

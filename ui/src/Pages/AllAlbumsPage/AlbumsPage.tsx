@@ -10,6 +10,7 @@ const getAlbumsQuery = gql`
       id
       title
       thumbnail {
+        id
         thumbnail {
           url
         }
@@ -19,9 +20,7 @@ const getAlbumsQuery = gql`
 `
 
 const AlbumsPage = () => {
-  const { error, data } = useQuery<getMyAlbums>(getAlbumsQuery, {
-    fetchPolicy: 'network-only',
-  })
+  const { error, data } = useQuery<getMyAlbums>(getAlbumsQuery)
 
   return (
     <Layout title="Albums">
