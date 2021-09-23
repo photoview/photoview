@@ -10,6 +10,7 @@ const getAlbumsQuery = gql`
       id
       title
       thumbnail {
+        id
         thumbnail {
           url
         }

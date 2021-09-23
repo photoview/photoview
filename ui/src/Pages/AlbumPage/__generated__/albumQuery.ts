@@ -19,6 +19,7 @@ export interface albumQuery_album_subAlbums_thumbnail_thumbnail {
 
 export interface albumQuery_album_subAlbums_thumbnail {
   __typename: 'Media'
+  id: string
   /**
    * URL to display the media in a smaller resolution
    */

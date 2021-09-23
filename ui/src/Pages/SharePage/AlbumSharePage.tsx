@@ -27,6 +27,7 @@ export const SHARE_ALBUM_QUERY = gql`
         id
         title
         thumbnail {
+          id
           thumbnail {
             url
           }

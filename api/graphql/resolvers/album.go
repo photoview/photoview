@@ -6,6 +6,7 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -16,48 +17,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 		return nil, auth.ErrUnauthorized
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
-		return nil, err
-	}
-
-	if len(user.Albums) == 0 {
-		return nil, nil
-	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
-	}
-
-	query := r.Database.Model(models.Album{}).Where("id IN (?)", userAlbumIDs)
-
-	if onlyRoot != nil && *onlyRoot == true {
-		query = query.Where("parent_album_id IS NULL")
-	}
-
-	if showEmpty == nil || *showEmpty == false {
-		subQuery := r.Database.Model(&models.Media{}).Where("album_id = albums.id")
-
-		if onlyWithFavorites != nil && *onlyWithFavorites == true {
-			favoritesSubquery := r.Database.
-				Model(&models.UserMediaData{UserID: user.ID}).
-				Where("user_media_data.media_id = media.id").
-				Where("user_media_data.favorite = true")
-
-			subQuery = subQuery.Where("EXISTS (?)", favoritesSubquery)
-		}
-
-		query = query.Where("EXISTS (?)", subQuery)
-	}
-
-	query = models.FormatSQL(query, order, paginate)
-
-	var albums []*models.Album
-	if err := query.Find(&albums).Error; err != nil {
-		return nil, err
-	}
-
-	return albums, nil
+	return actions.MyAlbums(r.Database, user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites)
 }
 
 func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error) {
@@ -89,24 +49,7 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 		return nil, auth.ErrUnauthorized
 	}
 
-	var album models.Album
-	if err := r.Database.First(&album, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("album not found")
-		}
-		return nil, err
-	}
-
-	ownsAlbum, err := user.OwnsAlbum(r.Database, &album)
-	if err != nil {
-		return nil, err
-	}
-
-	if !ownsAlbum {
-		return nil, errors.New("forbidden")
-	}
-
-	return &album, nil
+	return actions.Album(r.Database, user, id)
 }
 
 func (r *Resolver) Album() api.AlbumResolver {
@@ -144,29 +87,8 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *m
 	return media, nil
 }
 
-func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
-
-	var media models.Media
-
-	err := r.Database.Raw(`
-		WITH recursive sub_albums AS (
-			SELECT * FROM albums AS root WHERE id = ?
-			UNION ALL
-			SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
-		)
-
-		SELECT * FROM media WHERE media.album_id IN (
-			SELECT id FROM sub_albums
-		) AND media.id IN (
-			SELECT media_id FROM media_urls WHERE media_urls.media_id = media.id
-		) LIMIT 1
-	`, obj.ID).Find(&media).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &media, nil
+func (r *albumResolver) Thumbnail(ctx context.Context, album *models.Album) (*models.Media, error) {
+	return album.Thumbnail(r.Database)
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error) {
@@ -241,4 +163,23 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 	}
 
 	return album_path, nil
+}
+
+// Takes album_id, resets album.cover_id to 0 (null)
+func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	return actions.ResetAlbumCover(r.Database, user, albumID)
+}
+
+func (r *mutationResolver) SetAlbumCover(ctx context.Context, mediaID int) (*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	return actions.SetAlbumCover(r.Database, user, mediaID)
 }

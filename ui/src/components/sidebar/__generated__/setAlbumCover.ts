@@ -4,10 +4,10 @@
 // This file was automatically generated and should not be edited.
 
 // ====================================================
-// GraphQL query operation: getMyAlbums
+// GraphQL mutation operation: setAlbumCover
 // ====================================================
 
-export interface getMyAlbums_myAlbums_thumbnail_thumbnail {
+export interface setAlbumCover_setAlbumCover_thumbnail_thumbnail {
   __typename: 'MediaURL'
   /**
    * URL for previewing the image
@@ -15,28 +15,31 @@ export interface getMyAlbums_myAlbums_thumbnail_thumbnail {
   url: string
 }
 
-export interface getMyAlbums_myAlbums_thumbnail {
+export interface setAlbumCover_setAlbumCover_thumbnail {
   __typename: 'Media'
   id: string
   /**
    * URL to display the media in a smaller resolution
    */
-  thumbnail: getMyAlbums_myAlbums_thumbnail_thumbnail | null
+  thumbnail: setAlbumCover_setAlbumCover_thumbnail_thumbnail | null
 }
 
-export interface getMyAlbums_myAlbums {
+export interface setAlbumCover_setAlbumCover {
   __typename: 'Album'
   id: string
-  title: string
   /**
    * An image in this album used for previewing this album
    */
-  thumbnail: getMyAlbums_myAlbums_thumbnail | null
+  thumbnail: setAlbumCover_setAlbumCover_thumbnail | null
 }
 
-export interface getMyAlbums {
+export interface setAlbumCover {
   /**
-   * List of albums owned by the logged in user.
+   * Assign a cover photo to an album
    */
-  myAlbums: getMyAlbums_myAlbums[]
+  setAlbumCover: setAlbumCover_setAlbumCover
+}
+
+export interface setAlbumCoverVariables {
+  coverID: string
 }

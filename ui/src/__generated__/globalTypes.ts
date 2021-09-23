@@ -14,12 +14,12 @@ export enum LanguageTranslation {
   German = 'German',
   Italian = 'Italian',
   Polish = 'Polish',
+  Portuguese = 'Portuguese',
   Russian = 'Russian',
+  SimplifiedChinese = 'SimplifiedChinese',
   Spanish = 'Spanish',
   Swedish = 'Swedish',
   TraditionalChinese = 'TraditionalChinese',
-  SimplifiedChinese = 'SimplifiedChinese',
-  Portuguese = 'Portuguese',
 }
 
 export enum MediaType {
