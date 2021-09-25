@@ -22,7 +22,7 @@ import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
 import TimelineFilters from './TimelineFilters'
 import client from '../../apolloClient'
 
-const MY_TIMELINE_QUERY = gql`
+export const MY_TIMELINE_QUERY = gql`
   query myTimeline(
     $onlyFavorites: Boolean
     $limit: Int
@@ -182,6 +182,8 @@ const TimelineGallery = () => {
       dispatchMedia={dispatchMedia}
     />
   ))
+
+  console.log('MEDIA STATE', mediaState)
 
   return (
     <div className="overflow-x-hidden">
