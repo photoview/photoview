@@ -30,7 +30,7 @@ const Gallery = styled.div`
   }
 `
 
-const PhotoFiller = styled.div`
+export const PhotoFiller = styled.div`
   height: 200px;
   flex-grow: 999999;
 `

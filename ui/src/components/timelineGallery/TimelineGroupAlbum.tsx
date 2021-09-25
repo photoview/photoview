@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
+import { PhotoFiller } from '../photoGallery/PhotoGallery'
 import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
@@ -72,9 +73,9 @@ const TimelineGroupAlbum = ({
       <Link to={`/album/${albumID}`} className="hover:underline">
         {albumTitle}
       </Link>
-      <div className="flex flex-wrap items-center h-[210px] relative -mx-1 pr-4 overflow-hidden">
+      <div className="flex flex-wrap items-center relative -mx-1 pr-4 overflow-hidden">
         {mediaElms}
-        {/* {itemsBubble} */}
+        <PhotoFiller />
       </div>
     </div>
   )

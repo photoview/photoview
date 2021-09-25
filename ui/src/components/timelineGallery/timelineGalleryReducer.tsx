@@ -2,6 +2,7 @@ import React from 'react'
 import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import { TimelineGroup, TimelineGroupAlbum } from './TimelineGallery'
 import { GalleryAction } from '../photoGallery/photoGalleryReducer'
+import { isNil } from '../../helpers/utils'
 
 export interface TimelineMediaIndex {
   date: number
@@ -243,6 +244,15 @@ function convertMediaToTimelineGroups(
 
     // same album and date
     nextAlbum.media.push(media)
+  }
+
+  if (!isNil(nextAlbum)) {
+    albums.push(nextAlbum)
+
+    timelineGroups.push({
+      date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+      albums: albums,
+    })
   }
 
   return timelineGroups
