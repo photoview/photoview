@@ -142,6 +142,11 @@ type Mutation {
 
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
+  "Reset the assigned cover photo for an album"
+  resetAlbumCover(albumID: ID!): Album! @isAuthorized
+  "Assign a cover photo to an album"
+  setAlbumCover(coverID: ID!): Album! @isAuthorized
+
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
@@ -270,7 +275,7 @@ type Album {
     paginate: Pagination
   ): [Album!]!
 
-  "The album witch contains this album"
+  "The album which contains this album"
   parentAlbum: Album
   "The user who owns this album"
   owner: User!

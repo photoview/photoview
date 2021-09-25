@@ -312,10 +312,9 @@ export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
   const [
     loadShares,
     { loading: queryLoading, error: sharesError, data: sharesData },
-  ] =
-    useLazyQuery<sidebarGetPhotoShares, sidebarGetPhotoSharesVariables>(
-      SHARE_PHOTO_QUERY
-    )
+  ] = useLazyQuery<sidebarGetPhotoShares, sidebarGetPhotoSharesVariables>(
+    SHARE_PHOTO_QUERY
+  )
 
   const [sharePhoto, { loading: mutationLoading }] = useMutation<
     sidebarPhotoAddShare,

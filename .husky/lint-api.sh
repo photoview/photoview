@@ -1,6 +1,6 @@
 #!/bin/sh
 
-gofiles=$(git diff --cached --name-only --diff-filter=ACM | grep '.go$')
+gofiles=$(git diff --cached --name-only --diff-filter=ACM | grep --silent '.go$')
 [ -z "$gofiles" ] && exit 0
 
 # Automatically format go code, exit on error
