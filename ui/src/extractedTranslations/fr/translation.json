@@ -61,16 +61,16 @@
     "description": "Galerie Photo simple et convivial pour les Serveurs Personnels"
   },
   "people_page": {
+    "action_label": {
+      "change_label": "Changer le label",
+      "detach_face": "Détacher le visage",
+      "merge_face": "Fusionner le visage",
+      "move_faces": "Déplacer les visages"
+    },
     "face_group": {
       "label_placeholder": "Étiquette",
       "unlabeled": "Sans étiquette",
       "unlabeled_person": "Personne sans étiquette"
-    },
-    "action_label": {
-      "change_label": "Changer le label",
-      "merge_face": "Fusionner le visage",
-      "detach_face": "Détacher le visage",
-      "move_faces": "Déplacer les visages"
     },
     "modal": {
       "action": {
@@ -215,6 +215,10 @@
   },
   "sidebar": {
     "album": {
+      "album_cover": null,
+      "cover_photo": null,
+      "reset_cover": null,
+      "set_cover": null,
       "title_placeholder": "Titre de l'Album"
     },
     "download": {
@@ -294,6 +298,12 @@
     "photos": "Photos",
     "places": "Lieux",
     "settings": "Réglages"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": null,
+      "label": null
+    }
   },
   "title": {
     "loading_album": "Chargement de l'album",

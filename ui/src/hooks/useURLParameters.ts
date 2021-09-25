@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
-export type UrlKeyValuePair = { key: string; value: string }
+export type UrlKeyValuePair = { key: string; value: string | null }
 
 export type UrlParams = {
   getParam(key: string, defaultValue?: string | null): string | null
-  setParam(key: string, value: string): void
+  setParam(key: string, value: string | null): void
   setParams(pairs: UrlKeyValuePair[]): void
 }
 
@@ -19,18 +19,30 @@ function useURLParameters(): UrlParams {
   }
 
   const updateParams = () => {
-    history.replaceState({}, '', url.pathname + '?' + params.toString())
+    if (params.toString()) {
+      history.replaceState({}, '', url.pathname + '?' + params.toString())
+    } else {
+      history.replaceState({}, '', url.pathname)
+    }
     setUrlString(document.location.href)
   }
 
-  const setParam = (key: string, value: string) => {
-    params.set(key, value)
+  const setParam = (key: string, value: string | null) => {
+    if (value) {
+      params.set(key, value)
+    } else {
+      params.delete(key)
+    }
     updateParams()
   }
 
   const setParams = (pairs: UrlKeyValuePair[]) => {
     for (const pair of pairs) {
-      params.set(pair.key, pair.value)
+      if (pair.value) {
+        params.set(pair.key, pair.value)
+      } else {
+        params.delete(pair.key)
+      }
     }
     updateParams()
   }

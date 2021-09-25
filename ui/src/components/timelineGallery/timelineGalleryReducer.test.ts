@@ -1,10 +1,10 @@
-import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import { MediaType } from '../../__generated__/globalTypes'
 import {
   timelineGalleryReducer,
   TimelineGalleryState,
   TimelineMediaIndex,
 } from './timelineGalleryReducer'
+import { timelineData } from './timelineTestData'
 
 describe('timeline gallery reducer', () => {
   const defaultEmptyState: TimelineGalleryState = {
@@ -16,125 +16,6 @@ describe('timeline gallery reducer', () => {
     },
     timelineGroups: [],
   }
-
-  const timelineData: myTimeline_myTimeline[] = [
-    {
-      album: {
-        id: '5',
-        title: 'first album',
-        __typename: 'Album',
-      },
-      media: [
-        {
-          id: '165',
-          title: '3666760020.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-        {
-          id: '184',
-          title: '7414455077.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_7414455077_jpg_9JYHHYh6.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/7414455077_0ejDBiKr.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-      ],
-      mediaTotal: 5,
-      date: '2019-09-21T00:00:00Z',
-      __typename: 'TimelineGroup',
-    },
-    {
-      album: {
-        id: '5',
-        title: 'another album',
-        __typename: 'Album',
-      },
-      media: [
-        {
-          id: '165',
-          title: '3666760020.jpg',
-          type: MediaType.Photo,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          videoWeb: null,
-          favorite: false,
-          __typename: 'Media',
-        },
-      ],
-      mediaTotal: 7,
-      date: '2019-09-21T00:00:00Z',
-      __typename: 'TimelineGroup',
-    },
-    {
-      __typename: 'TimelineGroup',
-      album: {
-        __typename: 'Album',
-        id: '5',
-        title: 'album on another day',
-      },
-      date: '2019-09-13T00:00:00Z',
-      mediaTotal: 1,
-      media: [
-        {
-          __typename: 'Media',
-          favorite: false,
-          videoWeb: null,
-          thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
-            width: 768,
-            height: 1024,
-            __typename: 'MediaURL',
-          },
-          highRes: {
-            url: 'http://localhost:4001/photo/3666760020_wijGDNZ2.jpg',
-            width: 3024,
-            height: 4032,
-            __typename: 'MediaURL',
-          },
-          id: '321',
-          title: 'asdfimg.jpg',
-          type: MediaType.Photo,
-        },
-      ],
-    },
-  ]
 
   const defaultState = timelineGalleryReducer(defaultEmptyState, {
     type: 'replaceTimelineGroups',
@@ -151,68 +32,167 @@ describe('timeline gallery reducer', () => {
       },
       timelineGroups: [
         {
-          date: '2019-09-21T00:00:00Z',
-          groups: [
+          date: '2020-12-13T00:00:00Z',
+          albums: [
             {
-              album: {
-                id: '5',
-                title: 'first album',
-              },
-              date: '2019-09-21T00:00:00Z',
+              id: '522',
               media: [
                 {
+                  __typename: 'Media',
+                  album: {
+                    __typename: 'Album',
+                    id: '522',
+                    title: 'random',
+                  },
+                  date: '2020-12-13T18:03:40Z',
                   favorite: false,
-                  highRes: {},
-                  id: '165',
-                  thumbnail: {},
-                  title: '3666760020.jpg',
+                  highRes: {
+                    __typename: 'MediaURL',
+                    height: 4480,
+                    url: 'http://localhost:4001/photo/122A2876_5cSPMiKL.jpg',
+                    width: 6720,
+                  },
+                  id: '1058',
+                  thumbnail: {
+                    __typename: 'MediaURL',
+                    height: 682,
+                    url: 'http://localhost:4001/photo/thumbnail_122A2876_jpg_Kp1U80vD.jpg',
+                    width: 1024,
+                  },
+                  title: '122A2876.jpg',
                   type: 'Photo',
-                },
-                {
-                  highRes: {},
-                  id: '184',
-                  thumbnail: {},
-                  title: '7414455077.jpg',
-                  type: 'Photo',
+                  videoWeb: null,
                 },
               ],
-              mediaTotal: 5,
-            },
-            {
-              album: {
-                id: '5',
-                title: 'another album',
-              },
-              date: '2019-09-21T00:00:00Z',
-              media: [
-                {
-                  id: '165',
-                },
-              ],
-              mediaTotal: 7,
+              title: 'random',
             },
           ],
         },
         {
-          date: '2019-09-13T00:00:00Z',
-          groups: [
+          date: '2020-11-25T00:00:00Z',
+          albums: [
             {
-              album: {
-                id: '5',
-                title: 'album on another day',
-              },
-              date: '2019-09-13T00:00:00Z',
+              id: '523',
+              title: 'another_album',
               media: [
                 {
+                  __typename: 'Media',
+                  album: {
+                    __typename: 'Album',
+                    id: '523',
+                    title: 'another_album',
+                  },
+                  date: '2020-11-25T16:14:33Z',
                   favorite: false,
-                  highRes: {},
-                  id: '321',
-                  thumbnail: {},
-                  title: 'asdfimg.jpg',
+                  highRes: {
+                    __typename: 'MediaURL',
+                    height: 4118,
+                    url: 'http://localhost:4001/photo/122A2630-Edit_ySQWFAgE.jpg',
+                    width: 6177,
+                  },
+                  id: '1059',
+                  thumbnail: {
+                    __typename: 'MediaURL',
+                    height: 682,
+                    url: 'http://localhost:4001/photo/thumbnail_122A2630-Edit_jpg_pwjtMkpy.jpg',
+                    width: 1024,
+                  },
+                  title: '122A2630-Edit.jpg',
                   type: 'Photo',
+                  videoWeb: null,
+                },
+                {
+                  __typename: 'Media',
+                  album: {
+                    __typename: 'Album',
+                    id: '523',
+                    title: 'another_album',
+                  },
+                  date: '2020-11-25T16:43:59Z',
+                  favorite: false,
+                  highRes: {
+                    __typename: 'MediaURL',
+                    height: 884,
+                    url: 'http://localhost:4001/photo/122A2785-2_mCnWjLdb.jpg',
+                    width: 884,
+                  },
+                  id: '1060',
+                  thumbnail: {
+                    __typename: 'MediaURL',
+                    height: 1024,
+                    url: 'http://localhost:4001/photo/thumbnail_122A2785-2_jpg_CevmxEXf.jpg',
+                    width: 1024,
+                  },
+                  title: '122A2785-2.jpg',
+                  type: 'Photo',
+                  videoWeb: null,
                 },
               ],
-              mediaTotal: 1,
+            },
+            {
+              id: '522',
+              title: 'random',
+              media: [
+                {
+                  __typename: 'Media',
+                  album: {
+                    __typename: 'Album',
+                    id: '522',
+                    title: 'random',
+                  },
+                  date: '2020-11-25T16:14:33Z',
+                  favorite: false,
+                  highRes: {
+                    __typename: 'MediaURL',
+                    height: 4118,
+                    url: 'http://localhost:4001/photo/122A2630-Edit_em9g89qg.jpg',
+                    width: 6177,
+                  },
+                  id: '1056',
+                  thumbnail: {
+                    __typename: 'MediaURL',
+                    height: 682,
+                    url: 'http://localhost:4001/photo/thumbnail_122A2630-Edit_jpg_aJPCSDDl.jpg',
+                    width: 1024,
+                  },
+                  title: '122A2630-Edit.jpg',
+                  type: 'Photo',
+                  videoWeb: null,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          date: '2020-11-09T00:00:00Z',
+          albums: [
+            {
+              id: '522',
+              title: 'random',
+              media: [
+                {
+                  __typename: 'Media',
+                  id: '1054',
+                  title: '122A2559.jpg',
+                  type: MediaType.Photo,
+                  thumbnail: {
+                    __typename: 'MediaURL',
+                    url: 'http://localhost:4001/photo/thumbnail_122A2559_jpg_MsOJtPi8.jpg',
+                    width: 1024,
+                    height: 712,
+                  },
+                  highRes: {
+                    __typename: 'MediaURL',
+                    url: 'http://localhost:4001/photo/122A2559_FDsQHuBN.jpg',
+                    width: 6246,
+                    height: 4346,
+                  },
+                  videoWeb: null,
+                  favorite: false,
+                  album: { __typename: 'Album', id: '522', title: 'random' },
+                  date: '2020-11-09T15:38:09Z',
+                },
+              ],
             },
           ],
         },
@@ -267,20 +247,20 @@ describe('timeline gallery reducer', () => {
           media: 0,
         },
         out: {
-          date: 0,
+          date: 1,
           album: 0,
-          media: 1,
+          media: 0,
         },
       },
       {
         name: 'next album',
         in: {
-          date: 0,
+          date: 1,
           album: 0,
           media: 1,
         },
         out: {
-          date: 0,
+          date: 1,
           album: 1,
           media: 0,
         },
@@ -288,12 +268,12 @@ describe('timeline gallery reducer', () => {
       {
         name: 'next date',
         in: {
-          date: 0,
+          date: 1,
           album: 1,
-          media: 1,
+          media: 0,
         },
         out: {
-          date: 1,
+          date: 2,
           album: 0,
           media: 0,
         },
@@ -301,12 +281,12 @@ describe('timeline gallery reducer', () => {
       {
         name: 'reached end',
         in: {
-          date: 1,
+          date: 2,
           album: 0,
           media: 0,
         },
         out: {
-          date: 1,
+          date: 2,
           album: 0,
           media: 0,
         },
@@ -366,12 +346,12 @@ describe('timeline gallery reducer', () => {
       {
         name: 'previous album',
         in: {
-          date: 0,
+          date: 1,
           album: 1,
           media: 0,
         },
         out: {
-          date: 0,
+          date: 1,
           album: 0,
           media: 1,
         },
@@ -379,12 +359,12 @@ describe('timeline gallery reducer', () => {
       {
         name: 'previous date',
         in: {
-          date: 1,
+          date: 2,
           album: 0,
           media: 0,
         },
         out: {
-          date: 0,
+          date: 1,
           album: 1,
           media: 0,
         },

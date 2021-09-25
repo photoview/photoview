@@ -63,7 +63,15 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]! @isAuthorized
+  """
+  Get a list of media, ordered first by day, then by album if multiple media was found for the same day.
+  """
+  myTimeline(
+    paginate: Pagination,
+    onlyFavorites: Boolean,
+    "Only fetch media that is older than this date"
+    fromDate: Time
+  ): [Media!]! @isAuthorized
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
@@ -318,6 +326,8 @@ type Media {
   videoMetadata: VideoMetadata
   favorite: Boolean!
   type: MediaType!
+  "The date the image was shot or the date it was imported as a fallback"
+  date: Time!
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!

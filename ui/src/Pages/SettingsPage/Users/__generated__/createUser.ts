@@ -8,17 +8,17 @@
 // ====================================================
 
 export interface createUser_createUser {
-  __typename: 'User'
-  id: string
-  username: string
-  admin: boolean
+  __typename: "User";
+  id: string;
+  username: string;
+  admin: boolean;
 }
 
 export interface createUser {
-  createUser: createUser_createUser
+  createUser: createUser_createUser;
 }
 
 export interface createUserVariables {
-  username: string
-  admin: boolean
+  username: string;
+  admin: boolean;
 }

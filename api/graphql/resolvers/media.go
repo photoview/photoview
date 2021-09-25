@@ -8,6 +8,7 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 	"gorm.io/gorm/clause"
@@ -19,29 +20,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 		return nil, errors.New("unauthorized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
-		return nil, err
-	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
-	}
-
-	var media []*models.Media
-
-	query := r.Database.
-		Joins("Album").
-		Where("albums.id IN (?)", userAlbumIDs).
-		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("id").Where("media_url.media_id = media.id"))
-
-	query = models.FormatSQL(query, order, paginate)
-
-	if err := query.Find(&media).Error; err != nil {
-		return nil, err
-	}
-
-	return media, nil
+	return actions.MyMedia(r.Database, user, order, paginate)
 }
 
 func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
@@ -113,6 +92,15 @@ func (r *Resolver) Media() api.MediaResolver {
 func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.MediaType, error) {
 	formattedType := models.MediaType(strings.Title(string(media.Type)))
 	return formattedType, nil
+}
+
+func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
+	var album models.Album
+	err := r.Database.Find(&album, obj.AlbumID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &album, nil
 }
 
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {

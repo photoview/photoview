@@ -1,10 +1,8 @@
 import React from 'react'
-import {
-  myTimeline_myTimeline,
-  myTimeline_myTimeline_media,
-} from './__generated__/myTimeline'
-import { TimelineGroup } from './TimelineGallery'
+import { myTimeline_myTimeline } from './__generated__/myTimeline'
+import { TimelineGroup, TimelineGroupAlbum } from './TimelineGallery'
 import { GalleryAction } from '../photoGallery/photoGalleryReducer'
+import { isNil } from '../../helpers/utils'
 
 export interface TimelineMediaIndex {
   date: number
@@ -30,18 +28,7 @@ export function timelineGalleryReducer(
 ): TimelineGalleryState {
   switch (action.type) {
     case 'replaceTimelineGroups': {
-      const dateGroupedAlbums = action.timeline.reduce((acc, val) => {
-        if (acc.length == 0 || acc[acc.length - 1].date != val.date) {
-          acc.push({
-            date: val.date,
-            groups: [val],
-          })
-        } else {
-          acc[acc.length - 1].groups.push(val)
-        }
-
-        return acc
-      }, [] as TimelineGroup[])
+      const timelineGroups = convertMediaToTimelineGroups(action.timeline)
 
       return {
         ...state,
@@ -50,7 +37,7 @@ export function timelineGalleryReducer(
           date: -1,
           media: -1,
         },
-        timelineGroups: dateGroupedAlbums,
+        timelineGroups,
       }
     }
     case 'nextImage': {
@@ -64,7 +51,7 @@ export function timelineGalleryReducer(
         return state
       }
 
-      const albumGroups = timelineGroups[activeIndex.date].groups
+      const albumGroups = timelineGroups[activeIndex.date].albums
       const albumMedia = albumGroups[activeIndex.album].media
 
       if (activeIndex.media < albumMedia.length - 1) {
@@ -124,7 +111,7 @@ export function timelineGalleryReducer(
       }
 
       if (activeIndex.album > 0) {
-        const albumGroups = state.timelineGroups[activeIndex.date].groups
+        const albumGroups = state.timelineGroups[activeIndex.date].albums
         const albumMedia = albumGroups[activeIndex.album - 1].media
 
         return {
@@ -138,7 +125,7 @@ export function timelineGalleryReducer(
       }
 
       if (activeIndex.date > 0) {
-        const albumGroups = state.timelineGroups[activeIndex.date - 1].groups
+        const albumGroups = state.timelineGroups[activeIndex.date - 1].albums
         const albumMedia = albumGroups[albumGroups.length - 1].media
 
         return {
@@ -181,9 +168,9 @@ export const getTimelineImage = ({
 }: {
   mediaState: TimelineGalleryState
   index: TimelineMediaIndex
-}): myTimeline_myTimeline_media => {
+}): myTimeline_myTimeline => {
   const { date, album, media } = index
-  return mediaState.timelineGroups[date].groups[album].media[media]
+  return mediaState.timelineGroups[date].albums[album].media[media]
 }
 
 export const getActiveTimelineImage = ({
@@ -201,6 +188,74 @@ export const getActiveTimelineImage = ({
   }
 
   return getTimelineImage({ mediaState, index: mediaState.activeIndex })
+}
+
+function convertMediaToTimelineGroups(
+  timelineMedia: myTimeline_myTimeline[]
+): TimelineGroup[] {
+  const timelineGroups: TimelineGroup[] = []
+  let albums: TimelineGroupAlbum[] = []
+  let nextAlbum: TimelineGroupAlbum | null = null
+
+  const sameDay = (a: string, b: string) => {
+    return (
+      a.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00') ==
+      b.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00')
+    )
+  }
+
+  for (const media of timelineMedia) {
+    if (nextAlbum == null) {
+      nextAlbum = {
+        id: media.album.id,
+        title: media.album.title,
+        media: [media],
+      }
+      continue
+    }
+
+    // if date changes
+    if (!sameDay(nextAlbum.media[0].date, media.date)) {
+      albums.push(nextAlbum)
+
+      timelineGroups.push({
+        date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+        albums: albums,
+      })
+      albums = []
+      nextAlbum = {
+        id: media.album.id,
+        title: media.album.title,
+        media: [media],
+      }
+      continue
+    }
+
+    // if album changes
+    if (nextAlbum.id != media.album.id) {
+      albums.push(nextAlbum)
+      nextAlbum = {
+        id: media.album.id,
+        title: media.album.title,
+        media: [media],
+      }
+      continue
+    }
+
+    // same album and date
+    nextAlbum.media.push(media)
+  }
+
+  if (!isNil(nextAlbum)) {
+    albums.push(nextAlbum)
+
+    timelineGroups.push({
+      date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+      albums: albums,
+    })
+  }
+
+  return timelineGroups
 }
 
 export const openTimelinePresentMode = ({

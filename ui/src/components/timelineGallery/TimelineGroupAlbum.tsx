@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import styled from 'styled-components'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
+import { PhotoFiller } from '../photoGallery/PhotoGallery'
 import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
@@ -12,20 +12,6 @@ import {
   TimelineGalleryAction,
   TimelineGalleryState,
 } from './timelineGalleryReducer'
-
-const TotalItemsBubble = styled(Link)`
-  position: absolute;
-  top: 24px;
-  right: 6px;
-  background-color: white;
-  border-radius: 50%;
-  padding: 8px 0;
-  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
-  color: black;
-  width: 36px;
-  height: 36px;
-  text-align: center;
-`
 
 type TimelineGroupAlbumProps = {
   dateIndex: number
@@ -40,8 +26,11 @@ const TimelineGroupAlbum = ({
   mediaState,
   dispatchMedia,
 }: TimelineGroupAlbumProps) => {
-  const { media, mediaTotal, album } =
-    mediaState.timelineGroups[dateIndex].groups[albumIndex]
+  const {
+    media,
+    title: albumTitle,
+    id: albumID,
+  } = mediaState.timelineGroups[dateIndex].albums[albumIndex]
 
   const [markFavorite] = useMarkFavoriteMutation()
 
@@ -79,24 +68,14 @@ const TimelineGroupAlbum = ({
     />
   ))
 
-  let itemsBubble = null
-  const mediaVisibleCount = media.length
-  if (mediaTotal > mediaVisibleCount) {
-    itemsBubble = (
-      <TotalItemsBubble to={`/album/${album.id}`}>
-        {`+${Math.min(mediaTotal - mediaVisibleCount, 99)}`}
-      </TotalItemsBubble>
-    )
-  }
-
   return (
     <div className="mx-2">
-      <Link to={`/album/${album.id}`} className="hover:underline">
-        {album.title}
+      <Link to={`/album/${albumID}`} className="hover:underline">
+        {albumTitle}
       </Link>
-      <div className="flex flex-wrap items-center h-[210px] relative -mx-1 pr-4 overflow-hidden">
+      <div className="flex flex-wrap items-center relative -mx-1 overflow-hidden">
         {mediaElms}
-        {itemsBubble}
+        <PhotoFiller />
       </div>
     </div>
   )

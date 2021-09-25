@@ -8,19 +8,19 @@
 // ====================================================
 
 export interface sidebarGetAlbumShares_album_shares {
-  __typename: 'ShareToken'
-  id: string
-  token: string
+  __typename: "ShareToken";
+  id: string;
+  token: string;
   /**
    * Whether or not a password is needed to access the share
    */
-  hasPassword: boolean
+  hasPassword: boolean;
 }
 
 export interface sidebarGetAlbumShares_album {
-  __typename: 'Album'
-  id: string
-  shares: sidebarGetAlbumShares_album_shares[]
+  __typename: "Album";
+  id: string;
+  shares: sidebarGetAlbumShares_album_shares[];
 }
 
 export interface sidebarGetAlbumShares {
@@ -28,9 +28,9 @@ export interface sidebarGetAlbumShares {
    * Get album by id, user must own the album or be admin
    * If valid tokenCredentials are provided, the album may be retrived without further authentication
    */
-  album: sidebarGetAlbumShares_album
+  album: sidebarGetAlbumShares_album;
 }
 
 export interface sidebarGetAlbumSharesVariables {
-  id: string
+  id: string;
 }

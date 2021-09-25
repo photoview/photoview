@@ -15,7 +15,8 @@
   "header": {
     "search": {
       "result_type": {
-        "photos": "Fotos"
+        "photos": "Fotos",
+        "media": null
       }
     }
   },
@@ -69,13 +70,26 @@
       "select_image_faces": {
         "search_images_placeholder": null
       }
+    },
+    "action_label": {
+      "change_label": null,
+      "merge_face": null,
+      "detach_face": null,
+      "move_faces": null
+    },
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "settings": {
     "users": {
       "table": {
         "column_names": {
-          "admin": "Administrador"
+          "admin": "Administrador",
+          "capabilities": null
         }
       }
     },
@@ -87,13 +101,32 @@
   },
   "sidebar": {
     "album": {
-      "title": "opciones de álbum"
+      "title": "opciones de álbum",
+      "title_placeholder": null
     },
     "sharing": {
-      "table_header": "Compartidos públicos"
+      "table_header": "Compartidos públicos",
+      "delete": null,
+      "more": null
+    },
+    "download": {
+      "filesize": {
+        "giga_byte_plural": null,
+        "kilo_byte_plural": null,
+        "mega_byte_plural": null,
+        "tera_byte_plural": null
+      }
     }
   },
   "title": {
     "login": null
+  },
+  "album_filter": {
+    "sort": null
+  },
+  "share_page": {
+    "protected_share": {
+      "password_required_error": null
+    }
   }
 }

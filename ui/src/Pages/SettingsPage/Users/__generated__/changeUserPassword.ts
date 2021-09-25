@@ -8,15 +8,15 @@
 // ====================================================
 
 export interface changeUserPassword_updateUser {
-  __typename: 'User'
-  id: string
+  __typename: "User";
+  id: string;
 }
 
 export interface changeUserPassword {
-  updateUser: changeUserPassword_updateUser
+  updateUser: changeUserPassword_updateUser;
 }
 
 export interface changeUserPasswordVariables {
-  userId: string
-  password: string
+  userId: string;
+  password: string;
 }

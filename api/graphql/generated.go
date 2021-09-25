@@ -98,6 +98,7 @@ type ComplexityRoot struct {
 
 	Media struct {
 		Album         func(childComplexity int) int
+		Date          func(childComplexity int) int
 		Downloads     func(childComplexity int) int
 		Exif          func(childComplexity int) int
 		Faces         func(childComplexity int) int
@@ -188,7 +189,7 @@ type ComplexityRoot struct {
 		MyFaceGroups               func(childComplexity int, paginate *models.Pagination) int
 		MyMedia                    func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
 		MyMediaGeoJSON             func(childComplexity int) int
-		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool) int
+		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) int
 		MyUser                     func(childComplexity int) int
 		MyUserPreferences          func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
@@ -287,11 +288,12 @@ type MediaResolver interface {
 	Thumbnail(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	HighRes(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
 	VideoWeb(ctx context.Context, obj *models.Media) (*models.MediaURL, error)
-
+	Album(ctx context.Context, obj *models.Media) (*models.Album, error)
 	Exif(ctx context.Context, obj *models.Media) (*models.MediaEXIF, error)
 
 	Favorite(ctx context.Context, obj *models.Media) (bool, error)
 	Type(ctx context.Context, obj *models.Media) (models.MediaType, error)
+
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
 	Faces(ctx context.Context, obj *models.Media) ([]*models.ImageFace, error)
@@ -332,7 +334,7 @@ type QueryResolver interface {
 	MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error)
 	Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
-	MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool) ([]*models.TimelineGroup, error)
+	MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	MapboxToken(ctx context.Context) (*string, error)
 	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
@@ -566,6 +568,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Media.Album(childComplexity), true
+
+	case "Media.date":
+		if e.complexity.Media.Date == nil {
+			break
+		}
+
+		return e.complexity.Media.Date(childComplexity), true
 
 	case "Media.downloads":
 		if e.complexity.Media.Downloads == nil {
@@ -1226,7 +1235,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
+		return e.complexity.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time)), true
 
 	case "Query.myUser":
 		if e.complexity.Query.MyUser == nil {
@@ -1723,7 +1732,15 @@ type Query {
   "Get a list of media by their ids, user must own the media or be admin"
   mediaList(ids: [ID!]!): [Media!]!
 
-  myTimeline(paginate: Pagination, onlyFavorites: Boolean): [TimelineGroup!]! @isAuthorized
+  """
+  Get a list of media, ordered first by day, then by album if multiple media was found for the same day.
+  """
+  myTimeline(
+    paginate: Pagination,
+    onlyFavorites: Boolean,
+    "Only fetch media that is older than this date"
+    fromDate: Time
+  ): [Media!]! @isAuthorized
 
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
@@ -1980,6 +1997,8 @@ type Media {
   videoMetadata: VideoMetadata
   favorite: Boolean!
   type: MediaType!
+  "The date the image was shot or the date it was imported as a fallback"
+  date: Time!
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!
@@ -2843,6 +2862,15 @@ func (ec *executionContext) field_Query_myTimeline_args(ctx context.Context, raw
 		}
 	}
 	args["onlyFavorites"] = arg1
+	var arg2 *time.Time
+	if tmp, ok := rawArgs["fromDate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromDate"))
+		arg2, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fromDate"] = arg2
 	return args, nil
 }
 
@@ -4067,14 +4095,14 @@ func (ec *executionContext) _Media_album(ctx context.Context, field graphql.Coll
 		Object:     "Media",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Album, nil
+		return ec.resolvers.Media().Album(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4086,9 +4114,9 @@ func (ec *executionContext) _Media_album(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(models.Album)
+	res := resTmp.(*models.Album)
 	fc.Result = res
-	return ec.marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -4223,6 +4251,41 @@ func (ec *executionContext) _Media_type(ctx context.Context, field graphql.Colle
 	res := resTmp.(models.MediaType)
 	fc.Result = res
 	return ec.marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Media_date(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Media",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Date(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -7112,7 +7175,7 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MyTimeline(rctx, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool))
+			return ec.resolvers.Query().MyTimeline(rctx, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthorized == nil {
@@ -7128,10 +7191,10 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.([]*models.TimelineGroup); ok {
+		if data, ok := tmp.([]*models.Media); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.TimelineGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Media`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7143,9 +7206,9 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.TimelineGroup)
+	res := resTmp.([]*models.Media)
 	fc.Result = res
-	return ec.marshalNTimelineGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐTimelineGroupᚄ(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -10576,10 +10639,19 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 				return res
 			})
 		case "album":
-			out.Values[i] = ec._Media_album(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_album(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "exif":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -10621,6 +10693,11 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
+		case "date":
+			out.Values[i] = ec._Media_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "shares":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -12464,53 +12541,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNTimelineGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐTimelineGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.TimelineGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTimelineGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐTimelineGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNTimelineGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐTimelineGroup(ctx context.Context, sel ast.SelectionSet, v *models.TimelineGroup) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._TimelineGroup(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
