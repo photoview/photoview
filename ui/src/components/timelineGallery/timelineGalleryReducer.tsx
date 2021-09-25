@@ -214,7 +214,7 @@ function convertMediaToTimelineGroups(
     }
 
     // if date changes
-    if (sameDay(nextAlbum.media[0].date, media.date)) {
+    if (!sameDay(nextAlbum.media[0].date, media.date)) {
       albums.push(nextAlbum)
 
       timelineGroups.push({

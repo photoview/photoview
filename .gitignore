@@ -37,6 +37,7 @@ yarn-debug.log*
 yarn-error.log*
 .eslintcache
 
-# vscode
+# IDEs
+.vscode
 __debug_bin
 .idea

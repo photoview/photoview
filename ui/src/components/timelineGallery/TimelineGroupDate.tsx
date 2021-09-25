@@ -27,9 +27,9 @@ const TimelineGroupDate = ({
 
   const group = mediaState.timelineGroups[groupIndex]
 
-  const albumGroupElms = group.groups.map((group, i) => (
+  const albumGroupElms = group.albums.map((album, i) => (
     <TimelineGroupAlbum
-      key={`${group.date}_${group.album.id}`}
+      key={`${group.date}_${album.id}`}
       dateIndex={groupIndex}
       albumIndex={i}
       mediaState={mediaState}
