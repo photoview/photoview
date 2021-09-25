@@ -183,8 +183,6 @@ const TimelineGallery = () => {
     />
   ))
 
-  console.log('MEDIA STATE', mediaState)
-
   return (
     <div className="overflow-x-hidden">
       <TimelineFilters
