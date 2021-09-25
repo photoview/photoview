@@ -15,7 +15,8 @@
   "header": {
     "search": {
       "result_type": {
-        "photos": "Фото"
+        "photos": "Фото",
+        "media": null
       }
     }
   },
@@ -36,20 +37,34 @@
       "select_image_faces": {
         "search_images_placeholder": "Поиск фото..."
       }
+    },
+    "action_label": {
+      "change_label": null,
+      "merge_face": null,
+      "detach_face": null,
+      "move_faces": null
+    },
+    "tableselect_face_group": {
+      "search_faces_placeholder": null
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": null
     }
   },
   "settings": {
     "users": {
       "table": {
         "column_names": {
-          "admin": "Администрирование"
+          "admin": "Администрирование",
+          "capabilities": null
         }
       }
     }
   },
   "sidebar": {
     "album": {
-      "title": "Свойства альбома"
+      "title": "Свойства альбома",
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
@@ -58,11 +73,36 @@
         "giga_byte": "{{count}} ГБ",
         "kilo_byte": "{{count}} КБ",
         "mega_byte": "{{count}} МБ",
-        "tera_byte": "{{count}} ТБ"
+        "tera_byte": "{{count}} ТБ",
+        "byte_0": null,
+        "byte_1": null,
+        "byte_2": null,
+        "giga_byte_0": null,
+        "giga_byte_1": null,
+        "giga_byte_2": null,
+        "kilo_byte_0": null,
+        "kilo_byte_1": null,
+        "kilo_byte_2": null,
+        "mega_byte_0": null,
+        "mega_byte_1": null,
+        "mega_byte_2": null,
+        "tera_byte_0": null,
+        "tera_byte_1": null,
+        "tera_byte_2": null
       }
     },
     "sharing": {
-      "table_header": "Общий доступ"
+      "table_header": "Общий доступ",
+      "delete": null,
+      "more": null
+    }
+  },
+  "album_filter": {
+    "sort": null
+  },
+  "share_page": {
+    "protected_share": {
+      "password_required_error": null
     }
   }
 }

@@ -61,16 +61,16 @@
     "description": "Galleria fotografica semplice e user-friendly per il tuo server"
   },
   "people_page": {
+    "action_label": {
+      "change_label": null,
+      "detach_face": null,
+      "merge_face": null,
+      "move_faces": null
+    },
     "face_group": {
       "label_placeholder": "Etichetta",
       "unlabeled": "Senza etichetta",
       "unlabeled_person": "Persona senza etichetta"
-    },
-    "action_label": {
-      "change_label": null,
-      "merge_face": null,
-      "detach_face": null,
-      "move_faces": null
     },
     "modal": {
       "action": {
@@ -215,6 +215,10 @@
   },
   "sidebar": {
     "album": {
+      "album_cover": null,
+      "cover_photo": null,
+      "reset_cover": null,
+      "set_cover": null,
       "title_placeholder": null
     },
     "download": {
@@ -294,6 +298,12 @@
     "photos": "Foto",
     "places": "Luoghi",
     "settings": "Impostazioni"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": null,
+      "label": null
+    }
   },
   "title": {
     "loading_album": "Caricamento album",

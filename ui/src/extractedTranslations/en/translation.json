@@ -61,16 +61,16 @@
     "description": "Simple and User-friendly Photo Gallery for Personal Servers"
   },
   "people_page": {
+    "action_label": {
+      "change_label": "Change label",
+      "detach_face": "Detach face",
+      "merge_face": "Merge face",
+      "move_faces": "Move faces"
+    },
     "face_group": {
       "label_placeholder": "Label",
       "unlabeled": "Unlabeled",
       "unlabeled_person": "Unlabeled person"
-    },
-    "action_label": {
-      "change_label": "Change label",
-      "merge_face": "Merge face",
-      "detach_face": "Detach face",
-      "move_faces": "Move faces"
     },
     "modal": {
       "action": {
@@ -215,6 +215,10 @@
   },
   "sidebar": {
     "album": {
+      "album_cover": "Album cover",
+      "cover_photo": "Album cover",
+      "reset_cover": "Reset cover photo",
+      "set_cover": "Set as album cover photo",
       "title_placeholder": "Album title"
     },
     "download": {
@@ -294,6 +298,12 @@
     "photos": "Timeline",
     "places": "Places",
     "settings": "Settings"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "From today",
+      "label": "Date"
+    }
   },
   "title": {
     "loading_album": "Loading album",
