@@ -90,6 +90,10 @@ function useScrollPagination<D>({
     reconfigureIntersectionObserver()
   }, [fetchMore, data, finished])
 
+  useEffect(() => {
+    setFinished(false)
+  }, [data])
+
   return {
     containerElem,
     finished,

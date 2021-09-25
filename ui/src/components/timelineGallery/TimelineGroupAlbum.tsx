@@ -73,7 +73,7 @@ const TimelineGroupAlbum = ({
       <Link to={`/album/${albumID}`} className="hover:underline">
         {albumTitle}
       </Link>
-      <div className="flex flex-wrap items-center relative -mx-1 pr-4 overflow-hidden">
+      <div className="flex flex-wrap items-center relative -mx-1 overflow-hidden">
         {mediaElms}
         <PhotoFiller />
       </div>

@@ -4,7 +4,6 @@ import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
 import PresentView from '../photoGallery/presentView/PresentView'
 import useURLParameters from '../../hooks/useURLParameters'
-import { FavoritesCheckbox } from '../album/AlbumFilter'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../PaginateLoader'
 import { useTranslation } from 'react-i18next'
@@ -20,11 +19,19 @@ import {
 import MediaSidebar from '../sidebar/MediaSidebar'
 import { SidebarContext } from '../sidebar/Sidebar'
 import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
+import TimelineFilters from './TimelineFilters'
+import client from '../../apolloClient'
 
 const MY_TIMELINE_QUERY = gql`
-  query myTimeline($onlyFavorites: Boolean, $limit: Int, $offset: Int) {
+  query myTimeline(
+    $onlyFavorites: Boolean
+    $limit: Int
+    $offset: Int
+    $fromDate: Time
+  ) {
     myTimeline(
       onlyFavorites: $onlyFavorites
+      fromDate: $fromDate
       paginate: { limit: $limit, offset: $offset }
     ) {
       id
@@ -77,7 +84,10 @@ const TimelineGallery = () => {
 
   const onlyFavorites = getParam('favorites') == '1' ? true : false
   const setOnlyFavorites = (favorites: boolean) =>
-    setParam('favorites', favorites ? '1' : '0')
+    setParam('favorites', favorites ? '1' : null)
+
+  const filterDate = getParam('date')
+  const setFilterDate = (x: string) => setParam('date', x)
 
   const favoritesNeedsRefresh = useRef(false)
 
@@ -97,6 +107,9 @@ const TimelineGallery = () => {
   >(MY_TIMELINE_QUERY, {
     variables: {
       onlyFavorites,
+      fromDate: filterDate
+        ? `${parseInt(filterDate) + 1}-01-01T00:00:00Z`
+        : undefined,
       offset: 0,
       limit: 200,
     },
@@ -125,6 +138,20 @@ const TimelineGallery = () => {
       updateSidebar(null)
     }
   }, [mediaState.activeIndex])
+
+  useEffect(() => {
+    ;(async () => {
+      await client.resetStore()
+      await refetch({
+        onlyFavorites,
+        fromDate: filterDate
+          ? `${parseInt(filterDate) + 1}-01-01T00:00:00Z`
+          : undefined,
+        offset: 0,
+        limit: 200,
+      })
+    })()
+  }, [filterDate])
 
   urlPresentModeSetupHook({
     dispatchMedia,
@@ -158,12 +185,12 @@ const TimelineGallery = () => {
 
   return (
     <div className="overflow-x-hidden">
-      <div className="mb-2">
-        <FavoritesCheckbox
-          onlyFavorites={onlyFavorites}
-          setOnlyFavorites={setOnlyFavorites}
-        />
-      </div>
+      <TimelineFilters
+        onlyFavorites={onlyFavorites}
+        setOnlyFavorites={setOnlyFavorites}
+        filterDate={filterDate}
+        setFilterDate={setFilterDate}
+      />
       <div className="-mx-3 flex flex-wrap" ref={containerElem}>
         {timelineGroups}
       </div>

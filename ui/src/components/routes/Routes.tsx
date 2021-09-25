@@ -12,7 +12,9 @@ const AlbumsPage = React.lazy(
   () => import('../../Pages/AllAlbumsPage/AlbumsPage')
 )
 const AlbumPage = React.lazy(() => import('../../Pages/AlbumPage/AlbumPage'))
-const PhotosPage = React.lazy(() => import('../../Pages/PhotosPage/PhotosPage'))
+const TimelinePage = React.lazy(
+  () => import('../../Pages/TimelinePage/TimelinePage')
+)
 const PlacesPage = React.lazy(() => import('../../Pages/PlacesPage/PlacesPage'))
 const SharePage = React.lazy(() => import('../../Pages/SharePage/SharePage'))
 const PeoplePage = React.lazy(() => import('../../Pages/PeoplePage/PeoplePage'))
@@ -49,11 +51,17 @@ const Routes = () => {
         <Route path="/share" component={SharePage} />
         <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
         <AuthorizedRoute path="/album/:id" component={AlbumPage} />
-        <AuthorizedRoute path="/photos" component={PhotosPage} />
+        <AuthorizedRoute path="/timeline" component={TimelinePage} />
         <AuthorizedRoute path="/places" component={PlacesPage} />
         <AuthorizedRoute path="/people/:person?" component={PeoplePage} />
         <AuthorizedRoute path="/settings" component={SettingsPage} />
-        <Route path="/" exact render={() => <Redirect to="/photos" />} />
+        <Route path="/" exact render={() => <Redirect to="/timeline" />} />
+        {/* For backwards compatibility */}
+        <Route
+          path="/photos"
+          exact
+          render={() => <Redirect to="/timeline" />}
+        />
         <Route
           render={() => (
             <div>{t('routes.page_not_found', 'Page not found')}</div>

@@ -10,7 +10,7 @@ import { ReactComponent as DirectionIcon } from './icons/direction-arrow.svg'
 
 import Dropdown from '../../primitives/form/Dropdown'
 
-type FavoriteCheckboxProps = {
+export type FavoriteCheckboxProps = {
   onlyFavorites: boolean
   setOnlyFavorites(favorites: boolean): void
 }
@@ -79,7 +79,7 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
     <fieldset>
       <legend id="filter_group_sort-label" className="inline-block mb-1">
         <SortingIcon
-          className="inline-block align-baseline mr-1"
+          className="inline-block align-baseline mr-1 mt-1"
           aria-hidden="true"
         />
         <span>{t('album_filter.sort', 'Sort')}</span>

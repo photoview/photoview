@@ -80,7 +80,7 @@ export const MainMenu = () => {
     <div className="fixed w-full bottom-0 lg:bottom-auto lg:top-[84px] z-30 bg-white shadow-separator lg:shadow-none lg:w-[240px] lg:ml-8 lg:mr-5 flex-shrink-0">
       <ul className="flex justify-around py-2 px-2 max-w-lg mx-auto lg:flex-col lg:p-0">
         <MenuButton
-          to="/photos"
+          to="/timeline"
           exact
           label={t('sidemenu.photos', 'Timeline')}
           background="#8ac5f4"
