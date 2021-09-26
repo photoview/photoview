@@ -13,7 +13,7 @@ import SharePage, {
   VALIDATE_TOKEN_PASSWORD_QUERY,
 } from './SharePage'
 
-import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownload'
+import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownloadMedia'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
 
 jest.mock('../../hooks/useScrollPagination')

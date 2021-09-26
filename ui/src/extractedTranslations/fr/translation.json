@@ -215,10 +215,27 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": null,
-      "cover_photo": null,
-      "reset_cover": null,
-      "set_cover": null,
+      "album_cover": "",
+      "download": {
+        "high-resolutions": {
+          "description": "",
+          "title": ""
+        },
+        "originals": {
+          "description": "",
+          "title": ""
+        },
+        "thumbnails": {
+          "description": "",
+          "title": ""
+        },
+        "web-videos": {
+          "description": "",
+          "title": ""
+        }
+      },
+      "reset_cover": "",
+      "set_cover": "",
       "title_placeholder": "Titre de l'Album"
     },
     "download": {
@@ -301,8 +318,8 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": null,
-      "label": null
+      "dropdown_all": "",
+      "label": ""
     }
   },
   "title": {

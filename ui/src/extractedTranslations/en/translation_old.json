@@ -49,7 +49,8 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album options"
+      "title": "Album options",
+      "cover_photo": "Album cover"
     },
     "sharing": {
       "table_header": "Public shares"

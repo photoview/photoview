@@ -55,7 +55,11 @@
   },
   "sidebar": {
     "album": {
-      "title": "Indstillinger for album"
+      "title": "Indstillinger for album",
+      "album_cover": null,
+      "cover_photo": "",
+      "reset_cover": null,
+      "set_cover": null
     },
     "sharing": {
       "table_header": "Offentlige delinger"
@@ -67,6 +71,12 @@
         "mega_byte_plural": null,
         "tera_byte_plural": null
       }
+    }
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": null,
+      "label": null
     }
   }
 }

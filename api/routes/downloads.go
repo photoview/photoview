@@ -55,7 +55,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 		zipWriter := zip.NewWriter(w)
 
 		for _, media := range mediaURLs {
-			zipFile, err := zipWriter.Create(media.MediaName)
+			zipFile, err := zipWriter.Create(fmt.Sprintf("%s/%s", album.Title, media.MediaName))
 			if err != nil {
 				log.Printf("ERROR: Failed to create a file in zip, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)

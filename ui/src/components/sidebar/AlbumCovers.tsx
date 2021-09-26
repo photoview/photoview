@@ -65,7 +65,7 @@ export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
   return (
     <SidebarSection>
       <SidebarSectionTitle>
-        {t('sidebar.album.cover_photo', 'Album cover')}
+        {t('sidebar.album.album_cover', 'Album cover')}
       </SidebarSectionTitle>
       <div>
         <table className="border-collapse w-full">
