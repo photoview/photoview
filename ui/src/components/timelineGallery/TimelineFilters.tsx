@@ -38,23 +38,25 @@ const DateSelector = ({ filterDate, setFilterDate }: DateSelectorProps) => {
   ]
 
   if (data) {
-    const dateStr = data.myMedia[0].date
-    const date = new Date(dateStr)
-    const now = new Date()
+    if (data.myMedia.length != 0) {
+      const dateStr = data.myMedia[0].date
+      const date = new Date(dateStr)
+      const now = new Date()
 
-    const currentYear = now.getFullYear()
-    const earliestYear = date.getFullYear()
+      const currentYear = now.getFullYear()
+      const earliestYear = date.getFullYear()
 
-    const years: number[] = []
-    for (let i = currentYear - 1; i >= earliestYear; i--) {
-      years.push(i)
+      const years: number[] = []
+      for (let i = currentYear - 1; i >= earliestYear; i--) {
+        years.push(i)
+      }
+
+      const yearItems = years.map<DropdownItem>(x => ({
+        value: `${x}`,
+        label: `${x} and earlier`,
+      }))
+      items = [...items, ...yearItems]
     }
-
-    const yearItems = years.map<DropdownItem>(x => ({
-      value: `${x}`,
-      label: `${x} and earlier`,
-    }))
-    items = [...items, ...yearItems]
   }
 
   return (
