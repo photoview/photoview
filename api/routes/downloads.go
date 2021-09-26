@@ -36,8 +36,15 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
+		var mediaWhereQuery string
+		if db.Dialector.Name() == "postgres" {
+			mediaWhereQuery = "\"Media\".album_id = ?"
+		} else {
+			mediaWhereQuery = "Media.album_id = ?"
+		}
+
 		var mediaURLs []*models.MediaURL
-		if err := db.Joins("Media").Where("media.album_id = ?", album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
+		if err := db.Joins("Media").Where(mediaWhereQuery, album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("internal server error"))
 			return
