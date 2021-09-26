@@ -20,7 +20,8 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 		Order("YEAR(media.date_shot) DESC").
 		Order("MONTH(media.date_shot) DESC").
 		Order("DAY(media.date_shot) DESC").
-		Order("albums.title ASC")
+		Order("albums.title ASC").
+		Order("TIME(media.date_shot) DESC")
 
 	if fromDate != nil {
 		query = query.Where("media.date_shot < ?", fromDate)
