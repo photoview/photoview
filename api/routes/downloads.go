@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -17,6 +18,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
 		albumID := mux.Vars(r)["album_id"]
 		mediaPurpose := mux.Vars(r)["media_purpose"]
+		mediaPurposeList := strings.SplitN(mediaPurpose, ",", 10)
 
 		var album models.Album
 		if err := db.Find(&album, albumID).Error; err != nil {
@@ -25,10 +27,25 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
+		if success, response, status, err := authenticateAlbum(&album, db, r); !success {
+			if err != nil {
+				log.Printf("WARN: error authenticating album for download: %v\n", err)
+			}
+			w.WriteHeader(status)
+			w.Write([]byte(response))
+			return
+		}
+
 		var mediaURLs []*models.MediaURL
-		if err := db.Joins("Media").Where("media.album_id = ?", album.ID).Where("media_urls.purpose = ?", mediaPurpose).Find(&mediaURLs).Error; err != nil {
+		if err := db.Joins("Media").Where("media.album_id = ?", album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("internal server error"))
+			return
+		}
+
+		if len(mediaURLs) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("no media found"))
 			return
 		}
 

@@ -55,6 +55,47 @@ func AddMediaShare(db *gorm.DB, userID int, mediaID int, expire *time.Time, pass
 	return &shareToken, nil
 }
 
+func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+	var count int64
+	err := db.
+		Model(&models.Album{}).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
+		Count(&count).Error
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate album owner with database")
+	}
+
+	if count == 0 {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var hashedPassword *string = nil
+	if password != nil {
+		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to hash token password")
+		}
+		hashedStr := string(hashedPassBytes)
+		hashedPassword = &hashedStr
+	}
+
+	shareToken := models.ShareToken{
+		Value:    utils.GenerateToken(),
+		OwnerID:  user.ID,
+		Expire:   expire,
+		Password: hashedPassword,
+		AlbumID:  &albumID,
+		MediaID:  nil,
+	}
+
+	if err := db.Create(&shareToken).Error; err != nil {
+		return nil, errors.Wrap(err, "failed to insert new share token into database")
+	}
+
+	return &shareToken, nil
+}
+
 func DeleteShareToken(db *gorm.DB, userID int, tokenValue string) (*models.ShareToken, error) {
 	token, err := getUserToken(db, userID, tokenValue)
 	if err != nil {

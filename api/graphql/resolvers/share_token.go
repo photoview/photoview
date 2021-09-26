@@ -12,7 +12,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
-	"github.com/photoview/photoview/api/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -100,44 +99,7 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 		return nil, auth.ErrUnauthorized
 	}
 
-	var count int64
-	err := r.Database.
-		Model(&models.Album{}).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
-		Count(&count).Error
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to validate album owner with database")
-	}
-
-	if count == 0 {
-		return nil, auth.ErrUnauthorized
-	}
-
-	var hashedPassword *string = nil
-	if password != nil {
-		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to hash token password")
-		}
-		hashedStr := string(hashedPassBytes)
-		hashedPassword = &hashedStr
-	}
-
-	shareToken := models.ShareToken{
-		Value:    utils.GenerateToken(),
-		OwnerID:  user.ID,
-		Expire:   expire,
-		Password: hashedPassword,
-		AlbumID:  &albumID,
-		MediaID:  nil,
-	}
-
-	if err := r.Database.Create(&shareToken).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to insert new share token into database")
-	}
-
-	return &shareToken, nil
+	return actions.AddAlbumShare(r.Database, user, albumID, expire, password)
 }
 
 func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
