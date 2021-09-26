@@ -8,6 +8,7 @@ import {
   getAlbumSidebarVariables,
 } from './__generated__/getAlbumSidebar'
 import { SidebarAlbumCover } from './AlbumCovers'
+import SidebarAlbumDownload from './SidebarDownloadAlbum'
 
 const albumQuery = gql`
   query getAlbumSidebar($id: ID!) {
@@ -49,6 +50,9 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
       </div>
       <div className="mt-8">
         <SidebarAlbumCover id={albumId} />
+      </div>
+      <div className="mt-8">
+        <SidebarAlbumDownload albumID={albumId} />
       </div>
     </div>
   )

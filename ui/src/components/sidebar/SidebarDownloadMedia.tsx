@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { MessageState } from '../messages/Messages'
 import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
@@ -187,11 +186,72 @@ const downloadBlob = async (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(objectUrl)
 }
 
-type SidebarDownladProps = {
+type SidebarDownloadTableRow = {
+  title: string
+  url: string
+  width: number
+  height: number
+  fileSize: number
+}
+
+type SidebarDownloadTableProps = {
+  rows: SidebarDownloadTableRow[]
+}
+
+const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
+  const { t } = useTranslation()
+
+  const extractExtension = (url: string) => {
+    const urlMatch = url.split(/[#?]/)
+    if (urlMatch == null) return
+
+    return urlMatch[0].split('.').pop()?.trim().toLowerCase()
+  }
+
+  const download = downloadMedia(t)
+  const bytes = formatBytes(t)
+  const downloadRows = rows.map(x => (
+    <tr
+      className="cursor-pointer border-gray-100 border-b hover:bg-gray-50 focus:bg-gray-50"
+      key={x.url}
+      onClick={() => download(x.url)}
+      tabIndex={0}
+    >
+      <td className="pl-4 py-2">{`${x.title}`}</td>
+      <td className="py-2">{`${x.width} x ${x.height}`}</td>
+      <td className="py-2">{`${bytes(x.fileSize)}`}</td>
+      <td className="pr-4 py-2">{extractExtension(x.url)}</td>
+    </tr>
+  ))
+
+  return (
+    <table className="table-fixed w-full">
+      <thead className="bg-[#f9f9fb]">
+        <tr className="text-left uppercase text-xs border-gray-100 border-b border-t">
+          <th className="w-2/6 pl-4 py-2">
+            {t('sidebar.download.table_columns.name', 'Name')}
+          </th>
+          <th className="w-2/6 py-2">
+            {t('sidebar.download.table_columns.dimensions', 'Dimensions')}
+          </th>
+          <th className="w-1/6 py-2">
+            {t('sidebar.download.table_columns.file_size', 'Size')}
+          </th>
+          <th className="w-1/6 pr-4 py-2">
+            {t('sidebar.download.table_columns.file_type', 'Type')}
+          </th>
+        </tr>
+      </thead>
+      <tbody>{downloadRows}</tbody>
+    </table>
+  )
+}
+
+type SidebarMediaDownladProps = {
   media: MediaSidebarMedia
 }
 
-const SidebarDownload = ({ media }: SidebarDownladProps) => {
+const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
   const { t } = useTranslation()
   if (!media || !media.id) return null
 
@@ -214,28 +274,13 @@ const SidebarDownload = ({ media }: SidebarDownladProps) => {
     }
   }
 
-  const extractExtension = (url: string) => {
-    const urlMatch = url.split(/[#?]/)
-    if (urlMatch == null) return
-
-    return urlMatch[0].split('.').pop()?.trim().toLowerCase()
-  }
-
-  const download = downloadMedia(t)
-  const bytes = formatBytes(t)
-  const downloadRows = downloads.map(x => (
-    <tr
-      className="cursor-pointer border-gray-100 border-b hover:bg-gray-50 focus:bg-gray-50"
-      key={x.mediaUrl.url}
-      onClick={() => download(x.mediaUrl.url)}
-      tabIndex={0}
-    >
-      <td className="pl-4 py-2">{`${x.title}`}</td>
-      <td className="py-2">{`${x.mediaUrl.width} x ${x.mediaUrl.height}`}</td>
-      <td className="py-2">{`${bytes(x.mediaUrl.fileSize)}`}</td>
-      <td className="pr-4 py-2">{extractExtension(x.mediaUrl.url)}</td>
-    </tr>
-  ))
+  const downloadRows = downloads.map<SidebarDownloadTableRow>(x => ({
+    title: x.title,
+    url: x.mediaUrl.url,
+    width: x.mediaUrl.width,
+    height: x.mediaUrl.height,
+    fileSize: x.mediaUrl.fileSize,
+  }))
 
   return (
     <SidebarSection>
@@ -243,31 +288,9 @@ const SidebarDownload = ({ media }: SidebarDownladProps) => {
         {t('sidebar.download.title', 'Download')}
       </SidebarSectionTitle>
 
-      <table className="table-fixed w-full">
-        <thead className="bg-[#f9f9fb]">
-          <tr className="text-left uppercase text-xs border-gray-100 border-b border-t">
-            <th className="w-2/6 pl-4 py-2">
-              {t('sidebar.download.table_columns.name', 'Name')}
-            </th>
-            <th className="w-2/6 py-2">
-              {t('sidebar.download.table_columns.dimensions', 'Dimensions')}
-            </th>
-            <th className="w-1/6 py-2">
-              {t('sidebar.download.table_columns.file_size', 'Size')}
-            </th>
-            <th className="w-1/6 pr-4 py-2">
-              {t('sidebar.download.table_columns.file_type', 'Type')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>{downloadRows}</tbody>
-      </table>
+      <SidebarDownloadTable rows={downloadRows} />
     </SidebarSection>
   )
 }
 
-SidebarDownload.propTypes = {
-  photo: PropTypes.object,
-}
-
-export default SidebarDownload
+export default SidebarMediaDownload

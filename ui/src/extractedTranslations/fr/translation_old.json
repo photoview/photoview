@@ -87,7 +87,11 @@
   },
   "sidebar": {
     "album": {
-      "title": "Paramètres de l'album"
+      "title": "Paramètres de l'album",
+      "album_cover": null,
+      "cover_photo": "",
+      "reset_cover": null,
+      "set_cover": null
     },
     "sharing": {
       "table_header": "Partages publics"
@@ -95,5 +99,11 @@
   },
   "title": {
     "login": null
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": null,
+      "label": null
+    }
   }
 }

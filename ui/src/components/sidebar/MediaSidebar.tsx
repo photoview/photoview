@@ -8,7 +8,7 @@ import {
   ProtectedVideoProps_Media,
 } from '../photoGallery/ProtectedMedia'
 import { SidebarPhotoShare } from './Sharing'
-import SidebarDownload from './SidebarDownload'
+import SidebarMediaDownload from './SidebarDownloadMedia'
 import SidebarItem from './SidebarItem'
 import { SidebarFacesOverlay } from '../facesOverlay/FacesOverlay'
 import { isNil } from '../../helpers/utils'
@@ -364,7 +364,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         )}
       </div>
       <MetadataInfo media={media} />
-      <SidebarDownload media={media} />
+      <SidebarMediaDownload media={media} />
       <SidebarPhotoShare id={media.id} />
       <div className="mt-8">
         <SidebarPhotoCover cover_id={media.id} />

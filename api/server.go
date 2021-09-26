@@ -107,6 +107,9 @@ func main() {
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
 	routes.RegisterVideoRoutes(db, videoRouter)
 
+	downloadsRouter := endpointRouter.PathPrefix("/download").Subrouter()
+	routes.RegisterDownloadRoutes(db, downloadsRouter)
+
 	shouldServeUI := utils.ShouldServeUI()
 
 	if shouldServeUI {

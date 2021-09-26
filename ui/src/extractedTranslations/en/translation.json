@@ -216,7 +216,24 @@
   "sidebar": {
     "album": {
       "album_cover": "Album cover",
-      "cover_photo": "Album cover",
+      "download": {
+        "high-resolutions": {
+          "description": "High resolution jpegs of RAW images",
+          "title": "High resolutions"
+        },
+        "originals": {
+          "description": "The original images and videos",
+          "title": "Originals"
+        },
+        "thumbnails": {
+          "description": "Low resolution images, no videos",
+          "title": "Thumbnails"
+        },
+        "web-videos": {
+          "description": "Videos that have been optimized for web",
+          "title": "Converted videos"
+        }
+      },
       "reset_cover": "Reset cover photo",
       "set_cover": "Set as album cover photo",
       "title_placeholder": "Album title"

@@ -1,7 +1,7 @@
 {
   "album_filter": {
     "only_favorites": "Visa endast favoriter",
-    "sort": null,
+    "sort": "",
     "sorting_options": {
       "date_imported": "Datum för import",
       "date_shot": "Datum",
@@ -35,7 +35,7 @@
       "placeholder": "Sök",
       "result_type": {
         "albums": "Album",
-        "media": null
+        "media": ""
       }
     }
   },
@@ -62,61 +62,61 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": null,
-      "detach_face": null,
-      "merge_face": null,
-      "move_faces": null
+      "change_label": "",
+      "detach_face": "",
+      "merge_face": "",
+      "move_faces": ""
     },
     "face_group": {
       "label_placeholder": "Märkning",
       "unlabeled": "Omärkt",
-      "unlabeled_person": null
+      "unlabeled_person": ""
     },
     "modal": {
       "action": {
-        "merge": null
+        "merge": ""
       },
       "detach_image_faces": {
         "action": {
-          "detach": null,
-          "select_images": null
+          "detach": "",
+          "select_images": ""
         },
-        "description": null,
-        "title": null
+        "description": "",
+        "title": ""
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "",
         "destination_table": {
-          "title": null
+          "title": ""
         },
-        "title": null
+        "title": ""
       },
       "move_image_faces": {
-        "description": null,
+        "description": "",
         "destination_face_group_table": {
-          "move_action": null,
-          "title": null
+          "move_action": "",
+          "title": ""
         },
         "image_select_table": {
-          "next_action": null,
-          "title": null
+          "next_action": "",
+          "title": ""
         },
-        "title": null
+        "title": ""
       }
     },
     "recognize_unlabeled_faces_button": "Känna igen omärkta ansikten",
     "tableselect_face_group": {
-      "search_faces_placeholder": null
+      "search_faces_placeholder": ""
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": null
+      "search_images_placeholder": ""
     }
   },
   "photos_page": {
     "title": "Bilder"
   },
   "places_page": {
-    "title": null
+    "title": ""
   },
   "routes": {
     "page_not_found": "Sidan hittades inte"
@@ -178,7 +178,7 @@
       "table": {
         "column_names": {
           "action": "Åtgärd",
-          "capabilities": null,
+          "capabilities": "",
           "photo_path": "Sökväg till bild",
           "username": "Användarnamn"
         },
@@ -195,9 +195,9 @@
       "title": "Användare"
     },
     "version_info": {
-      "build_date_title": null,
-      "title": null,
-      "version_title": null
+      "build_date_title": "",
+      "title": "",
+      "version_title": ""
     }
   },
   "share_page": {
@@ -206,7 +206,7 @@
     },
     "protected_share": {
       "description": "Denna delning är skyddad med ett lösenord.",
-      "password_required_error": null,
+      "password_required_error": "",
       "title": "Skyddad delning"
     },
     "share_not_found": "Delning hittades inte",
@@ -215,24 +215,41 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": null,
-      "cover_photo": null,
-      "reset_cover": null,
-      "set_cover": null,
-      "title_placeholder": null
+      "album_cover": "",
+      "download": {
+        "high-resolutions": {
+          "description": "",
+          "title": ""
+        },
+        "originals": {
+          "description": "",
+          "title": ""
+        },
+        "thumbnails": {
+          "description": "",
+          "title": ""
+        },
+        "web-videos": {
+          "description": "",
+          "title": ""
+        }
+      },
+      "reset_cover": "",
+      "set_cover": "",
+      "title_placeholder": ""
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Byte",
         "byte_plural": "{{count}} Bytes",
         "giga_byte": "{{count}} GB",
-        "giga_byte_plural": null,
+        "giga_byte_plural": "",
         "kilo_byte": "{{count}} KB",
-        "kilo_byte_plural": null,
+        "kilo_byte_plural": "",
         "mega_byte": "{{count}} MB",
-        "mega_byte_plural": null,
+        "mega_byte_plural": "",
         "tera_byte": "{{count}} TB",
-        "tera_byte_plural": null
+        "tera_byte_plural": ""
       },
       "table_columns": {
         "dimensions": "Mått",
@@ -285,8 +302,8 @@
     "sharing": {
       "add_share": "Dela",
       "copy_link": "Kopiera länk",
-      "delete": null,
-      "more": null,
+      "delete": "",
+      "more": "",
       "no_shares_found": "Inga delningar hittades",
       "public_link": "Publika länkar",
       "title": "Delningsinställningar"
@@ -301,13 +318,13 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": null,
-      "label": null
+      "dropdown_all": "",
+      "label": ""
     }
   },
   "title": {
     "loading_album": "Laddar album",
-    "login": null,
+    "login": "",
     "people": "Personer",
     "settings": "Inställningar"
   }

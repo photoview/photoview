@@ -21,6 +21,7 @@ export function setupLocalization(): void {
     lng: 'en',
     fallbackLng: 'en',
     returnNull: false,
+    returnEmptyString: false,
 
     interpolation: {
       escapeValue: false,

@@ -64,7 +64,11 @@
   "sidebar": {
     "album": {
       "title": "Свойства альбома",
-      "title_placeholder": null
+      "title_placeholder": null,
+      "album_cover": null,
+      "cover_photo": "",
+      "reset_cover": null,
+      "set_cover": null
     },
     "download": {
       "filesize": {
@@ -103,6 +107,12 @@
   "share_page": {
     "protected_share": {
       "password_required_error": null
+    }
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": null,
+      "label": null
     }
   }
 }

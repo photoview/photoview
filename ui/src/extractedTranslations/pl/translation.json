@@ -1,7 +1,7 @@
 {
   "album_filter": {
     "only_favorites": "Pokaż tylko ulubione",
-    "sort": null,
+    "sort": "",
     "sorting_options": {
       "date_imported": "Data zaimportowania",
       "date_shot": "Data wykonania",
@@ -35,7 +35,7 @@
       "placeholder": "Szukaj",
       "result_type": {
         "albums": "Albumy",
-        "media": null
+        "media": ""
       }
     }
   },
@@ -62,54 +62,54 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": null,
-      "detach_face": null,
-      "merge_face": null,
-      "move_faces": null
+      "change_label": "",
+      "detach_face": "",
+      "merge_face": "",
+      "move_faces": ""
     },
     "face_group": {
       "label_placeholder": "Etykieta",
       "unlabeled": "Nieoznakowany",
-      "unlabeled_person": null
+      "unlabeled_person": ""
     },
     "modal": {
       "action": {
-        "merge": null
+        "merge": ""
       },
       "detach_image_faces": {
         "action": {
-          "detach": null,
-          "select_images": null
+          "detach": "",
+          "select_images": ""
         },
-        "description": null,
-        "title": null
+        "description": "",
+        "title": ""
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "",
         "destination_table": {
-          "title": null
+          "title": ""
         },
-        "title": null
+        "title": ""
       },
       "move_image_faces": {
-        "description": null,
+        "description": "",
         "destination_face_group_table": {
-          "move_action": null,
-          "title": null
+          "move_action": "",
+          "title": ""
         },
         "image_select_table": {
-          "next_action": null,
-          "title": null
+          "next_action": "",
+          "title": ""
         },
-        "title": null
+        "title": ""
       }
     },
     "recognize_unlabeled_faces_button": "Rozpoznaj nieoznakowane twarze",
     "tableselect_face_group": {
-      "search_faces_placeholder": null
+      "search_faces_placeholder": ""
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": null
+      "search_images_placeholder": ""
     }
   },
   "photos_page": {
@@ -178,7 +178,7 @@
       "table": {
         "column_names": {
           "action": "Akcja",
-          "capabilities": null,
+          "capabilities": "",
           "photo_path": "Ścieżka zdjęć",
           "username": "Nazwa użytkownika"
         },
@@ -195,9 +195,9 @@
       "title": "Użytkownicy"
     },
     "version_info": {
-      "build_date_title": null,
-      "title": null,
-      "version_title": null
+      "build_date_title": "",
+      "title": "",
+      "version_title": ""
     }
   },
   "share_page": {
@@ -206,7 +206,7 @@
     },
     "protected_share": {
       "description": "Ten udział jest chroniony hasłem.",
-      "password_required_error": null,
+      "password_required_error": "",
       "title": "Udział chroniony"
     },
     "share_not_found": "Nie znaleziono udziału",
@@ -215,29 +215,46 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": null,
-      "cover_photo": null,
-      "reset_cover": null,
-      "set_cover": null,
-      "title_placeholder": null
+      "album_cover": "",
+      "download": {
+        "high-resolutions": {
+          "description": "",
+          "title": ""
+        },
+        "originals": {
+          "description": "",
+          "title": ""
+        },
+        "thumbnails": {
+          "description": "",
+          "title": ""
+        },
+        "web-videos": {
+          "description": "",
+          "title": ""
+        }
+      },
+      "reset_cover": "",
+      "set_cover": "",
+      "title_placeholder": ""
     },
     "download": {
       "filesize": {
-        "byte_0": null,
-        "byte_1": null,
-        "byte_2": null,
-        "giga_byte_0": null,
-        "giga_byte_1": null,
-        "giga_byte_2": null,
-        "kilo_byte_0": null,
-        "kilo_byte_1": null,
-        "kilo_byte_2": null,
-        "mega_byte_0": null,
-        "mega_byte_1": null,
-        "mega_byte_2": null,
-        "tera_byte_0": null,
-        "tera_byte_1": null,
-        "tera_byte_2": null
+        "byte_0": "",
+        "byte_1": "",
+        "byte_2": "",
+        "giga_byte_0": "",
+        "giga_byte_1": "",
+        "giga_byte_2": "",
+        "kilo_byte_0": "",
+        "kilo_byte_1": "",
+        "kilo_byte_2": "",
+        "mega_byte_0": "",
+        "mega_byte_1": "",
+        "mega_byte_2": "",
+        "tera_byte_0": "",
+        "tera_byte_1": "",
+        "tera_byte_2": ""
       },
       "table_columns": {
         "dimensions": "Wymiary",
@@ -290,8 +307,8 @@
     "sharing": {
       "add_share": "Dodaj udział",
       "copy_link": "Skopiuj link",
-      "delete": null,
-      "more": null,
+      "delete": "",
+      "more": "",
       "no_shares_found": "Nie znaleziono udostępnionych",
       "public_link": "Link publiczny",
       "title": "Opcje udostępniania"
@@ -306,13 +323,13 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": null,
-      "label": null
+      "dropdown_all": "",
+      "label": ""
     }
   },
   "title": {
     "loading_album": "Ładowanie albumu",
-    "login": null,
+    "login": "",
     "people": "Ludzie",
     "settings": "Ustawienia"
   }
