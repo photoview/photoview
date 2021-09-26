@@ -3,6 +3,7 @@ package face_detection
 import (
 	"log"
 	"sync"
+	"strconv"
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -29,9 +30,30 @@ func InitializeFaceDetector(db *gorm.DB) error {
 
 	log.Println("Initializing face detector")
 
-	rec, err := face.NewRecognizer(utils.FaceRecognitionModelsPath())
-	if err != nil {
-		return errors.Wrap(err, "initialize facedetect recognizer")
+	var rec *face.Recognizer
+	var error error
+
+	if utils.EnvAdvancedFaceRecognition.GetBool() {
+		minSize, err := strconv.Atoi(utils.EnvFaceMinSize.GetValueWithDefault("150"))
+		if err != nil {
+			return errors.Wrap(err, "invalid minimum face size")
+		}
+		padding, err := strconv.ParseFloat(utils.EnvFacePadding.GetValueWithDefault("0.25"), 32)
+		if err != nil {
+			return errors.Wrap(err, "invalid value for face padding")
+		}
+		jittering, err := strconv.Atoi(utils.EnvFaceJittering.GetValueWithDefault("0"))
+		if err != nil {
+			return errors.Wrap(err, "invalid value for jittering")
+		}
+		rec, error = face.NewRecognizerWithConfig(utils.FaceRecognitionModelsPath(), minSize, float32(padding), jittering)
+		log.Println("Using face detector with config")
+	} else {
+		rec, error = face.NewRecognizer(utils.FaceRecognitionModelsPath())
+	}
+
+	if error != nil {
+		return errors.Wrap(error, "initialize facedetect recognizer")
 	}
 
 	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(db)
@@ -94,11 +116,41 @@ func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	}
 
 	var thumbnailURL *models.MediaURL
-	for _, url := range media.MediaURL {
-		if url.Purpose == models.PhotoThumbnail {
-			thumbnailURL = &url
-			thumbnailURL.Media = media
-			break
+
+	if (utils.EnvAdvancedFaceRecognition.GetBool()) && (utils.EnvFaceRecUseLargest.GetBool()) {
+		log.Printf("this works")
+		for _, url := range media.MediaURL {
+			if (url.Purpose == models.MediaOriginal) && (url.ContentType=="image/jpeg") {
+				thumbnailURL = &url
+				thumbnailURL.Media = media
+				break
+			}
+		}
+		if thumbnailURL == nil {
+			for _, url := range media.MediaURL {
+				if url.Purpose == models.PhotoHighRes {
+					thumbnailURL = &url
+					thumbnailURL.Media = media
+					break
+				}
+			}
+			if thumbnailURL == nil {
+				for _, url := range media.MediaURL {
+					if url.Purpose == models.PhotoThumbnail {
+						thumbnailURL = &url
+						thumbnailURL.Media = media
+						break
+					}
+				}
+			}
+		}
+	} else {
+		for _, url := range media.MediaURL {
+			if url.Purpose == models.PhotoThumbnail {
+				thumbnailURL = &url
+				thumbnailURL.Media = media
+				break
+			}
 		}
 	}
 
