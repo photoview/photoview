@@ -61,7 +61,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
 
-			assert.NoError(t, err)
+			assert.Error(t, err)
 			assert.False(t, success)
 			assert.Equal(t, responseMessage, "unauthorized")
 			assert.Equal(t, responseStatus, http.StatusForbidden)
@@ -112,7 +112,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
 
-			assert.NoError(t, err)
+			assert.Error(t, err)
 			assert.False(t, success)
 			assert.Equal(t, responseMessage, "unauthorized")
 			assert.Equal(t, responseStatus, http.StatusForbidden)
