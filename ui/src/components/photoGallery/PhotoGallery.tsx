@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
@@ -52,15 +52,6 @@ const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
   const { media, activeIndex, presenting } = mediaState
 
   const { updateSidebar } = useContext(SidebarContext)
-  useEffect(() => {
-    if (mediaState.activeIndex != -1) {
-      updateSidebar(
-        <MediaSidebar media={mediaState.media[mediaState.activeIndex]} />
-      )
-    } else {
-      updateSidebar(null)
-    }
-  }, [activeIndex])
 
   let photoElements = []
   if (media) {
@@ -77,6 +68,7 @@ const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
               type: 'selectImage',
               index,
             })
+            updateSidebar(<MediaSidebar media={mediaState.media[index]} />)
           }}
           clickFavorite={() => {
             toggleFavoriteAction({

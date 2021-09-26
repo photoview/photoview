@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useReducer, useContext } from 'react'
+import React, { useRef, useEffect, useReducer } from 'react'
 import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
@@ -16,8 +16,6 @@ import {
   getActiveTimelineImage as getActiveTimelineMedia,
   timelineGalleryReducer,
 } from './timelineGalleryReducer'
-import MediaSidebar from '../sidebar/MediaSidebar'
-import { SidebarContext } from '../sidebar/Sidebar'
 import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
 import TimelineFilters from './TimelineFilters'
 import client from '../../apolloClient'
@@ -78,7 +76,6 @@ export type TimelineGroupAlbum = {
 
 const TimelineGallery = () => {
   const { t } = useTranslation()
-  const { updateSidebar } = useContext(SidebarContext)
 
   const { getParam, setParam } = useURLParameters()
 
@@ -129,15 +126,6 @@ const TimelineGallery = () => {
       timeline: data?.myTimeline || [],
     })
   }, [data])
-
-  useEffect(() => {
-    const activeMedia = getActiveTimelineMedia({ mediaState })
-    if (activeMedia) {
-      updateSidebar(<MediaSidebar media={activeMedia} />)
-    } else {
-      updateSidebar(null)
-    }
-  }, [mediaState.activeIndex])
 
   useEffect(() => {
     ;(async () => {

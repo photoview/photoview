@@ -22,9 +22,7 @@ clientsClaim()
 // Their URLs are injected into the manifest variable below.
 // This variable must be present somewhere in your service worker file,
 // even if you decide not to use precaching. See https://cra.link/PWA
-precacheAndRoute(self.__WB_MANIFEST, {
-  ignoreURLParametersMatching: [/^\/api\/.*/],
-})
+precacheAndRoute(self.__WB_MANIFEST)
 
 // Set up App Shell-style routing, so that all navigation requests
 // are fulfilled with your index.html shell. Learn more at
@@ -40,6 +38,11 @@ registerRoute(
 
     // If this is a URL that starts with /_, skip.
     if (url.pathname.startsWith('/_')) {
+      return false
+    }
+
+    // Skip API requests
+    if (url.pathname.startsWith('/api/')) {
       return false
     }
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
 import { PhotoFiller } from '../photoGallery/PhotoGallery'
@@ -6,6 +6,8 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from '../photoGallery/photoGalleryMutations'
+import MediaSidebar from '../sidebar/MediaSidebar'
+import { SidebarContext } from '../sidebar/Sidebar'
 import {
   getActiveTimelineImage,
   openTimelinePresentMode,
@@ -34,6 +36,8 @@ const TimelineGroupAlbum = ({
 
   const [markFavorite] = useMarkFavoriteMutation()
 
+  const { updateSidebar } = useContext(SidebarContext)
+
   const mediaElms = media.map((media, index) => (
     <MediaThumbnail
       key={media.id}
@@ -47,6 +51,7 @@ const TimelineGroupAlbum = ({
             media: index,
           },
         })
+        updateSidebar(<MediaSidebar media={media} />)
       }}
       clickPresent={() => {
         openTimelinePresentMode({
