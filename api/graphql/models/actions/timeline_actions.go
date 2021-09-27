@@ -13,14 +13,20 @@ func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onl
 		Joins("JOIN albums ON media.album_id = albums.id").
 		Where("albums.id IN (?)", db.Table("user_albums").Select("user_albums.album_id").Where("user_id = ?", user.ID))
 
-	if db.Dialector.Name() == "postgres" {
+	switch db.Dialector.Name() {
+	case "postgres":
 		query = query.
 			Order("DATE_TRUNC('year', date_shot) DESC").
 			Order("DATE_TRUNC('month', date_shot) DESC").
 			Order("DATE_TRUNC('day', date_shot) DESC").
 			Order("albums.title ASC").
 			Order("media.date_shot DESC")
-	} else {
+	case "sqlite":
+		query = query.
+			Order("strftime('%j', media.date_shot) DESC"). // convert to day of year 001-366
+			Order("albums.title ASC").
+			Order("TIME(media.date_shot) DESC")
+	default:
 		query = query.
 			Order("YEAR(media.date_shot) DESC").
 			Order("MONTH(media.date_shot) DESC").
