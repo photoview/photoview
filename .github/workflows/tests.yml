@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     strategy:
+      fail-fast: false
       matrix:
         database: ['mysql', 'postgres', 'sqlite']
 

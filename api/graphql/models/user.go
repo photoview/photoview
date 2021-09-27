@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type User struct {
@@ -184,4 +185,24 @@ func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	}
 
 	return len(ownedParents) > 0, nil
+}
+
+// FavoriteMedia sets/clears a media as favorite for the user
+func (user *User) FavoriteMedia(db *gorm.DB, mediaID int, favorite bool) (*Media, error) {
+	userMediaData := UserMediaData{
+		UserID:   user.ID,
+		MediaID:  mediaID,
+		Favorite: favorite,
+	}
+
+	if err := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
+		return nil, errors.Wrapf(err, "update user favorite media in database")
+	}
+
+	var media Media
+	if err := db.First(&media, mediaID).Error; err != nil {
+		return nil, errors.Wrap(err, "get media from database after favorite update")
+	}
+
+	return &media, nil
 }
