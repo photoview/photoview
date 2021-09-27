@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -182,4 +183,49 @@ func TestUserOwnsAlbum(t *testing.T) {
 	owns, err := user.OwnsAlbum(db, &separate_album)
 	assert.NoError(t, err)
 	assert.False(t, owns)
+}
+
+func TestUserFavoriteMedia(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "user1", nil, false)
+	assert.NoError(t, err)
+
+	rootAlbum := models.Album{
+		Title: "root",
+		Path:  "/photos",
+	}
+
+	assert.NoError(t, db.Save(&rootAlbum).Error)
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&rootAlbum))
+
+	media := models.Media{
+		Title:   "pic1",
+		Path:    "/photos/pic1",
+		AlbumID: rootAlbum.ID,
+	}
+
+	assert.NoError(t, db.Save(&media).Error)
+
+	// test that it starts out being false
+	favourite, err := dataloader.NewUserFavoriteLoader(db).Load(&models.UserMediaData{
+		UserID:  user.ID,
+		MediaID: media.ID,
+	})
+
+	assert.NoError(t, err)
+	assert.False(t, favourite)
+
+	favMedia, err := user.FavoriteMedia(db, media.ID, true)
+	assert.NoError(t, err)
+	assert.NotNil(t, favMedia)
+
+	// test that it is now true
+	favourite, err = dataloader.NewUserFavoriteLoader(db).Load(&models.UserMediaData{
+		UserID:  user.ID,
+		MediaID: media.ID,
+	})
+
+	assert.NoError(t, err)
+	assert.True(t, favourite)
 }
