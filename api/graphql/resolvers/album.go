@@ -131,38 +131,7 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 		return empty, nil
 	}
 
-	var album_path []*models.Album
-
-	err := r.Database.Raw(`
-		WITH recursive path_albums AS (
-			SELECT * FROM albums anchor WHERE anchor.id = ?
-			UNION
-			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
-		)
-		SELECT * FROM path_albums WHERE id != ?
-	`, obj.ID, obj.ID).Scan(&album_path).Error
-
-	// Make sure to only return albums this user owns
-	for i := len(album_path) - 1; i >= 0; i-- {
-		album := album_path[i]
-
-		owns, err := user.OwnsAlbum(r.Database, album)
-		if err != nil {
-			return nil, err
-		}
-
-		if !owns {
-			album_path = album_path[i+1:]
-			break
-		}
-
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return album_path, nil
+	return actions.AlbumPath(r.Database, user, obj)
 }
 
 // Takes album_id, resets album.cover_id to 0 (null)

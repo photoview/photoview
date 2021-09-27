@@ -9,6 +9,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestAlbumPath(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := models.Album{
+		Title: "Three",
+		Path:  "/one/two/three",
+		ParentAlbum: &models.Album{
+			Title: "Two",
+			Path:  "/one/two",
+			ParentAlbum: &models.Album{
+				Title: "One",
+				Path:  "/one",
+			},
+		},
+	}
+
+	assert.NoError(t, db.Save(&album).Error)
+
+	user, err := models.RegisterUser(db, "user", nil, false)
+	assert.NoError(t, err)
+
+	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum)
+
+	albumPath, err := actions.AlbumPath(db, user, &album)
+	assert.NoError(t, err)
+	assert.Len(t, albumPath, 2)
+	assert.Equal(t, "Two", albumPath[0].Title)
+	assert.Equal(t, "One", albumPath[1].Title)
+}
+
 func TestAlbumCover(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
