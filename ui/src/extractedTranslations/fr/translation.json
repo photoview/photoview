@@ -58,7 +58,7 @@
     "welcome": "Bienvenue sur Photoview"
   },
   "meta": {
-    "description": "Galerie Photo simple et convivial pour les Serveurs Personnels"
+    "description": "Galerie Photo simple et conviviale pour les Serveurs Personnels"
   },
   "people_page": {
     "action_label": {
@@ -87,7 +87,7 @@
       "merge_face_groups": {
         "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
         "destination_table": {
-          "title": "Sélectionnez le visage de destination"
+          "title": "Sélectionner le visage de destination"
         },
         "title": "Fusionner des groupes de visages"
       },
@@ -95,7 +95,7 @@
         "description": "Déplacer les images sélectionnées de ce groupe de visages vers un autre groupe de visages",
         "destination_face_group_table": {
           "move_action": "Déplacer les visages de l'image",
-          "title": "Sélectionnez le groupe de visages de destination"
+          "title": "Sélectionner le groupe de visages de destination"
         },
         "image_select_table": {
           "next_action": "Suivant",
@@ -215,27 +215,27 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": "",
+      "album_cover": "Couverture d'Album",
       "download": {
         "high-resolutions": {
-          "description": "",
-          "title": ""
+          "description": "JPEGs Haute définition des images RAW",
+          "title": "Hautes résolutions"
         },
         "originals": {
-          "description": "",
-          "title": ""
+          "description": "Photos et vidéos originaux",
+          "title": "Originaux"
         },
         "thumbnails": {
-          "description": "",
-          "title": ""
+          "description": "Images Basse définitation, pas de vidéos",
+          "title": "Miniatures"
         },
         "web-videos": {
-          "description": "",
-          "title": ""
+          "description": "Vidéos ooptimisées pour le Web",
+          "title": "Vidéos converties"
         }
       },
-      "reset_cover": "",
-      "set_cover": "",
+      "reset_cover": "Réinitialiser la photo de couverture",
+      "set_cover": "Définir une photo de couverture d'Album",
       "title_placeholder": "Titre de l'Album"
     },
     "download": {
@@ -318,8 +318,8 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "label": ""
+      "dropdown_all": "Depuis aujourd'hui",
+      "label": "Date"
     }
   },
   "title": {
