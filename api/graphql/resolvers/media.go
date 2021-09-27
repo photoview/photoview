@@ -11,7 +11,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
-	"gorm.io/gorm/clause"
 )
 
 func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
@@ -198,22 +197,7 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 		return nil, auth.ErrUnauthorized
 	}
 
-	userMediaData := models.UserMediaData{
-		UserID:   user.ID,
-		MediaID:  mediaID,
-		Favorite: favorite,
-	}
-
-	if err := r.Database.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
-		return nil, errors.Wrapf(err, "update user favorite media in database")
-	}
-
-	var media models.Media
-	if err := r.Database.First(&media, mediaID).Error; err != nil {
-		return nil, errors.Wrap(err, "get media from database after favorite update")
-	}
-
-	return &media, nil
+	return user.FavoriteMedia(r.Database, mediaID, favorite)
 }
 
 func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
