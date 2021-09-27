@@ -92,6 +92,11 @@ func TestMyTimeline(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Len(t, timelineMedia, 4)
+
+		for i, title := range []string{"pic1", "pic3", "pic2", "pic4"} {
+			assert.Equalf(t, timelineMedia[i].Title, title, "Element %d didn't match: got %s expected %s", i, timelineMedia[i].Title, title)
+		}
+
 	})
 
 	t.Run("MyTimeline with only favorites", func(t *testing.T) {
