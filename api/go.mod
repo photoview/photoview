@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/Kagami/go-face v0.0.0-20210604182630-c482b0e1acfb
+	github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5 // indirect
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/barasher/go-exiftool v1.4.0
 	github.com/disintegration/imaging v1.6.2
@@ -31,6 +32,7 @@ require (
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gonum.org/v1/gonum v0.9.3 // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/mysql v1.0.5
