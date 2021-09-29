@@ -272,8 +272,6 @@ func (fd *FaceDetector) MergeImageFaces(imageFaceIDs []int, destFaceGroupID int3
 
 func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) ([]*models.ImageFace, error) {
 
-	rand.Seed(time.Now().Unix())
-
 	var unrecognizedDescriptorsF64 [][]float64
 	unrecognizedDescriptors := make([]face.Descriptor, 0)
 	unrecognizedFaceGroupIDs := make([]int32, 0)
@@ -358,7 +356,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 	clusterSizes := c.Sizes()
 
-	log.Println(sizes)
+	log.Println(clusterSizes)
 
 	clusterAssignments := c.Guesses()
 
@@ -429,8 +427,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		}
 	}
 
-	if len(sizes) > 0 {
-		for i, size := range sizes {
+	if len(clusterSizes) > 0 {
+		for i, size := range clusterSizes {
 			log.Printf("%d", i)
 			log.Printf("%d", size)
 
@@ -438,9 +436,28 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 			log.Println(clusteredIdx)
 
+			sampleNum := 3
 
+			randSelectIdx := randomUniqueSlice(len(clusteredIdx), sampleNum)
 
-			if match < 0 {
+			log.Println("Random indices")
+			log.Println(randSelectIdx)
+
+			var faceMatches []int32
+			for _, r := range randSelectIdx {
+				faceMatches = append(faceMatches, fd.classifyDescriptor(unrecognizedDescriptors[r]))
+			}
+
+			faceMatchID := int32(-1)
+			for i := 0; i < sampleNum - 1; i++ {
+		    for j := i + 1; j < sampleNum; j++ {
+	        if faceMatches[i] == faceMatches[j] {
+			    	faceMatchID = faceMatches[i]
+	        }
+	    	}
+			}
+
+			if faceMatchID < 0 {
 
 				var newFaceGroup models.FaceGroup
 				newLabel := "New_cluster"
@@ -456,7 +473,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 				for _, idx := range clusteredIdx {
 
-					var retImgFace []models.ImageFace
+					var retImgFace models.ImageFace
 					if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
 						return updatedImageFaces, err
 					}
@@ -465,12 +482,37 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 						return updatedImageFaces, err
 					}
 
+					updatedImageFaces = append(updatedImageFaces, &retImgFace)
+
 					fd.faceGroupIDs = append(fd.faceGroupIDs, int32(newFaceGroup.ID))
 					fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
 					fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
 				}
 			} else {
 
+				var faceGroup models.FaceGroup
+
+				if err := tx.First(&faceGroup, int(faceMatchID)).Error; err != nil {
+					return updatedImageFaces, err
+				}
+
+				for _, idx := range clusteredIdx {
+
+					var retImgFace models.ImageFace
+					if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
+						return updatedImageFaces, err
+					}
+
+					if err := tx.Model(&faceGroup).Association("ImageFaces").Append(&retImgFace); err != nil {
+						return updatedImageFaces, err
+					}
+
+					updatedImageFaces = append(updatedImageFaces, &retImgFace)
+
+					fd.faceGroupIDs = append(fd.faceGroupIDs, int32(faceMatchID))
+					fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
+					fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
+				}
 			}
 
 
@@ -568,7 +610,15 @@ func sliceIndicesInt(inputSlice []int, value int) []int {
 	return indices
 }
 
-// func 
+func randomUniqueSlice(inputLength int, outputLength int) []int {
+	rand.Seed(time.Now().Unix())
+	var result []int
+  p := rand.Perm(inputLength)
+  for _, r := range p[:outputLength] {
+    result = append(result, r)
+  }
+	return result
+}
 
 // func (fd *FaceDetector) clusterFaces(db *gorm.DB, newFaces [], newMedia *models.Media, imagePaths string) error {
 // 	fd.mutex.Lock()
