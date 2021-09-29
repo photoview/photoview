@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddMediaShare(db *gorm.DB, userID int, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
 	var media models.Media
 
 	var query string
@@ -22,7 +22,7 @@ func AddMediaShare(db *gorm.DB, userID int, mediaID int, expire *time.Time, pass
 	}
 
 	err := db.Joins("Album").
-		Where(query, userID).
+		Where(query, user.ID).
 		First(&media, mediaID).
 		Error
 
@@ -41,7 +41,7 @@ func AddMediaShare(db *gorm.DB, userID int, mediaID int, expire *time.Time, pass
 
 	shareToken := models.ShareToken{
 		Value:    utils.GenerateToken(),
-		OwnerID:  userID,
+		OwnerID:  user.ID,
 		Expire:   expire,
 		Password: hashedPassword,
 		AlbumID:  nil,
