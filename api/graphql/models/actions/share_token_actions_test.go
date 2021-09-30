@@ -69,19 +69,19 @@ func TestShareToken(t *testing.T) {
 		assert.NotNil(t, share)
 
 		assert.NotEmpty(t, share.Value)
-		assert.NotNil(t, share.AlbumID)
+		assert.Equal(t, rootAlbum.ID, *share.AlbumID)
 		assert.Nil(t, share.MediaID)
 	})
 
 	t.Run("Add media share", func(t *testing.T) {
-		share, err := actions.AddMediaShare(db, user, rootAlbum.ID, &expireTime, &sharePassword)
+		share, err := actions.AddMediaShare(db, user, media[0].ID, &expireTime, &sharePassword)
 		mediaShare = share
 
 		assert.NoError(t, err)
 		assert.NotNil(t, share)
 
 		assert.NotEmpty(t, share.Value)
-		assert.NotNil(t, share.MediaID)
+		assert.Equal(t, media[0].ID, *share.MediaID)
 		assert.Nil(t, share.AlbumID)
 	})
 

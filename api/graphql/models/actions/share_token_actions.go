@@ -145,8 +145,15 @@ func hashSharePassword(password *string) (*string, error) {
 
 func getUserToken(db *gorm.DB, userID int, tokenValue string) (*models.ShareToken, error) {
 
+	var query string
+	if db.Dialector.Name() == "postgres" {
+		query = "\"Owner\".id = ? OR \"Owner\".admin = TRUE"
+	} else {
+		query = "Owner.id = ? OR Owner.admin = TRUE"
+	}
+
 	var token models.ShareToken
-	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where("Owner.id = ? OR Owner.admin = TRUE", userID).First(&token).Error
+	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where(query, userID).First(&token).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get user share token from database")
