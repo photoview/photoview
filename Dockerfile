@@ -98,4 +98,6 @@ ENV PHOTOVIEW_UI_PATH /ui
 
 EXPOSE 80
 
+HEALTHCHECK --interval=60s --timeout=10s CMD ["curl --fail 'http://localhost:80/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
+]
 ENTRYPOINT ["/app/photoview"]
