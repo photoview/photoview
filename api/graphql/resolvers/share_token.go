@@ -108,7 +108,7 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.AddMediaShare(r.Database, user.ID, mediaID, expire, password)
+	return actions.AddMediaShare(r.Database, user, mediaID, expire, password)
 }
 
 func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue string) (*models.ShareToken, error) {
