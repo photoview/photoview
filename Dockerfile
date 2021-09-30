@@ -82,7 +82,7 @@ RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux
   apt-get install -y darktable; fi
 
 # Remove build dependencies and cleanup
-RUN apt-get purge -y curl gpg \
+RUN apt-get purge -y gpg \
   && apt-get autoremove -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
