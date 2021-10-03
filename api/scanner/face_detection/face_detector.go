@@ -6,6 +6,10 @@ import (
 	"strconv"
 	"math/rand"
   "time"
+	// "os"
+	// "encoding/csv"
+	"fmt"
+	"encoding/json"
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -185,7 +189,7 @@ func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 }
 
 func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
-	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
+	return int32(fd.rec.ClassifyThreshold(descriptor, 0.3))
 }
 
 func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
@@ -221,6 +225,8 @@ func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 			return err
 		}
 
+		fd.imageFaceIDs = append(fd.imageFaceIDs, faceGroup.ImageFaces[0].ID)
+
 	} else {
 		log.Println("Found match")
 
@@ -231,11 +237,12 @@ func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 		if err := db.Model(&faceGroup).Association("ImageFaces").Append(&imageFace); err != nil {
 			return err
 		}
+
+		fd.imageFaceIDs = append(fd.imageFaceIDs, imageFace.ID)
 	}
 
 	fd.faceDescriptors = append(fd.faceDescriptors, face.Descriptor)
 	fd.faceGroupIDs = append(fd.faceGroupIDs, int32(faceGroup.ID))
-	fd.imageFaceIDs = append(fd.imageFaceIDs, imageFace.ID)
 
 	fd.rec.SetSamples(fd.faceDescriptors, fd.faceGroupIDs)
 	return nil
@@ -286,7 +293,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	err := tx.
 		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
 		Joins("JOIN media ON image_faces.media_id = media.id").
-		// Where("face_groups.label IS NULL").
+		Where("face_groups.label IS NULL").
 		Where("media.album_id IN (?)",
 			tx.Select("album_id").Table("user_albums").Where("user_id = ?", user.ID),
 		).
@@ -301,6 +308,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
+
+	log.Println(fd.imageFaceIDs)
 
 	for i := range fd.faceDescriptors {
 		descriptor := fd.faceDescriptors[i]
@@ -322,6 +331,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 				recastDescriptor = append(recastDescriptor, float64(descriptor[i]))
 			}
 
+			// log.Println(recastDescriptor)
+
 			unrecognizedDescriptorsF64 = append(unrecognizedDescriptorsF64, recastDescriptor)
 			unrecognizedFaceGroupIDs = append(unrecognizedFaceGroupIDs, faceGroupID)
 			unrecognizedDescriptors = append(unrecognizedDescriptors, descriptor)
@@ -340,11 +351,44 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	fd.faceDescriptors = newDescriptors
 	fd.imageFaceIDs = newImageFaceIDs
 
+	log.Println(newDescriptors)
+	log.Println("")
+	
 	updatedImageFaces := make([]*models.ImageFace, 0)
+
+	if len(unrecognizedDescriptorsF64)==0 {
+		return updatedImageFaces, nil
+	}
+
+	// var f64strSlice [][]string
+	// for _, a := range unrecognizedDescriptorsF64{
+	// 	var tmp []string
+	// 	for _, b := range a {
+	// 		tmp = append(tmp, fmt.Sprint(b))
+	// 	}
+	// 	f64strSlice = append(f64strSlice, tmp)
+	// }
+	//
+	// file, err := os.Create("/home/peter/Downloads/result.csv")
+	// if err != nil {
+	// 	return updatedImageFaces, err
+	// }
+	// defer file.Close()
+	//
+	// writer := csv.NewWriter(file)
+	// defer writer.Flush()
+	//
+	// for _, value := range f64strSlice {
+	// 	if err := writer.Write(value); err != nil {
+	// 		return updatedImageFaces, err
+	// 	}
+	// }
+	//
+	// log.Println("written to csv?")
 
 	var c clusters.HardClusterer
 
-	if c, err = clusters.DBSCAN(3, 0.45, 4, clusters.EuclideanDistance); err != nil {
+	if c, err = clusters.DBSCAN(3, 0.41, 4, clusters.EuclideanDistance); err != nil {
 		return updatedImageFaces, err
 	}
 
@@ -369,6 +413,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	if unclusteredIdx := sliceIndicesInt(clusterAssignments, -1); len(unclusteredIdx)>0 {
 
 		log.Println("Reassigning unclustered faces")
+		log.Println(unclusteredIdx)
+		log.Println(unrecognizedImageFaceIDs)
 
 		for _, idx := range unclusteredIdx {
 			// descriptor := unrecognizedDescriptors[i]
@@ -385,12 +431,14 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 			if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
 				return updatedImageFaces, err
 			}
+
+			log.Println("This part was successful")
 			// err := tx.Model(models.ImageFace).Where("id IN (?)", unrecognizedImageFaceIDs[idx])
 
-			newLabel := "New"
+			// newLabel := "New"
 
 			newFaceGroup = models.FaceGroup{
-				Label: &newLabel,
+				// Label: &newLabel,
 				ImageFaces: retImgFace,
 			}
 
@@ -401,6 +449,9 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 			fd.faceGroupIDs = append(fd.faceGroupIDs, int32(newFaceGroup.ID))
 			fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
 			fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
+
+
+			log.Println("Made it to here")
 
 			// newFaceGroup := models.FaceGroup{}
 			//
@@ -457,26 +508,47 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	    	}
 			}
 
+			log.Println("All good at this point")
+			log.Println(faceMatches)
+
 			if faceMatchID < 0 {
 
 				var newFaceGroup models.FaceGroup
-				newLabel := "New_cluster"
+				// newLabel := "New_cluster"
 
 				newFaceGroup = models.FaceGroup{
-					Label: &newLabel,
+					// Label: &newLabel,
 					// ImageFaces: retImgFace,
 				}
+
+
+				log.Println("new face")
 
 				if err := tx.Create(&newFaceGroup).Error; err != nil {
 					return updatedImageFaces,err
 				}
 
+				log.Println("new face 2")
+
+				s, _ := json.MarshalIndent(&newFaceGroup, "", "\t")
+				fmt.Print(string(s))
+
 				for _, idx := range clusteredIdx {
+
+					log.Println("important info")
+					log.Println(clusteredIdx)
+					log.Println(idx)
+					log.Println(unrecognizedImageFaceIDs)
 
 					var retImgFace models.ImageFace
 					if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
 						return updatedImageFaces, err
 					}
+
+					s, _ := json.MarshalIndent(&retImgFace, "", "\t")
+					fmt.Print(string(s))
+
+					log.Println("new face 3")
 
 					if err := tx.Model(&newFaceGroup).Association("ImageFaces").Append(&retImgFace); err != nil {
 						return updatedImageFaces, err
@@ -487,31 +559,40 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 					fd.faceGroupIDs = append(fd.faceGroupIDs, int32(newFaceGroup.ID))
 					fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
 					fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
+
+
+					log.Println("new face 4")
 				}
 			} else {
 
 				var faceGroup models.FaceGroup
 
+				log.Println("new face 5")
+
 				if err := tx.First(&faceGroup, int(faceMatchID)).Error; err != nil {
 					return updatedImageFaces, err
 				}
 
+				log.Println("new face 6")
 				for _, idx := range clusteredIdx {
 
 					var retImgFace models.ImageFace
 					if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
 						return updatedImageFaces, err
 					}
+					log.Println("new face 7")
 
 					if err := tx.Model(&faceGroup).Association("ImageFaces").Append(&retImgFace); err != nil {
 						return updatedImageFaces, err
 					}
+					log.Println("new face 8")
 
 					updatedImageFaces = append(updatedImageFaces, &retImgFace)
 
 					fd.faceGroupIDs = append(fd.faceGroupIDs, int32(faceMatchID))
 					fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
 					fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
+					log.Println("new face 9")
 				}
 			}
 
