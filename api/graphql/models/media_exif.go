@@ -28,3 +28,14 @@ func (MediaEXIF) TableName() string {
 func (exif *MediaEXIF) Media() *Media {
 	panic("not implemented")
 }
+
+func (exif *MediaEXIF) Coordinates() *Coordinates {
+	if exif.GPSLatitude == nil || exif.GPSLongitude == nil {
+		return nil
+	}
+
+	return &Coordinates{
+		Latitude:  *exif.GPSLatitude,
+		Longitude: *exif.GPSLongitude,
+	}
+}

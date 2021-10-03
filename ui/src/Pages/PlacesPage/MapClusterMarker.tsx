@@ -52,14 +52,6 @@ const MapClusterMarker = ({
   const thumbnail = JSON.parse(marker.thumbnail)
 
   const presentMedia = () => {
-    // presentMarkerClicked({
-    //   dispatchMedia: dispatchMarkerMedia,
-    //   mediaState: markerMediaState,
-    //   marker: {
-    //     cluster: !!marker.cluster,
-    //     id: marker.cluster ? marker.cluster_id : marker.media_id,
-    //   },
-    // })
     dispatchMarkerMedia({
       type: 'replacePresentMarker',
       marker: {
@@ -67,10 +59,6 @@ const MapClusterMarker = ({
         id: marker.cluster ? marker.cluster_id : marker.media_id,
       },
     })
-    // setPresentMarker({
-    //   cluster: !!marker.cluster,
-    //   id: marker.cluster ? marker.cluster_id : marker.media_id,
-    // })
   }
 
   return (
