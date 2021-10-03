@@ -325,13 +325,14 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		}
 
 		if isUnlabeled {
+
+			// Having to convert types is annoying - will see if clusters or go-face can be changed
+
 			var recastDescriptor []float64
 
 			for i := range descriptor {
 				recastDescriptor = append(recastDescriptor, float64(descriptor[i]))
 			}
-
-			// log.Println(recastDescriptor)
 
 			unrecognizedDescriptorsF64 = append(unrecognizedDescriptorsF64, recastDescriptor)
 			unrecognizedFaceGroupIDs = append(unrecognizedFaceGroupIDs, faceGroupID)
@@ -353,7 +354,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 	log.Println(newDescriptors)
 	log.Println("")
-	
+
 	updatedImageFaces := make([]*models.ImageFace, 0)
 
 	if len(unrecognizedDescriptorsF64)==0 {
@@ -489,7 +490,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 			sampleNum := 3
 
-			randSelectIdx := randomUniqueSlice(len(clusteredIdx), sampleNum)
+			randSelectIdx := randomUniqueSlice(clusteredIdx, sampleNum)
 
 			log.Println("Random indices")
 			log.Println(randSelectIdx)
@@ -691,12 +692,13 @@ func sliceIndicesInt(inputSlice []int, value int) []int {
 	return indices
 }
 
-func randomUniqueSlice(inputLength int, outputLength int) []int {
+func randomUniqueSlice(inputSlice []int, outputLength int) []int {
 	rand.Seed(time.Now().Unix())
 	var result []int
+	inputLength := len(inputSlice)
   p := rand.Perm(inputLength)
   for _, r := range p[:outputLength] {
-    result = append(result, r)
+    result = append(result, inputSlice[r])
   }
 	return result
 }
