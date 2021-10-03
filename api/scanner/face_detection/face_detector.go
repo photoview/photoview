@@ -8,8 +8,8 @@ import (
   "time"
 	// "os"
 	// "encoding/csv"
-	"fmt"
-	"encoding/json"
+	// "fmt"
+	// "encoding/json"
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -352,7 +352,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	fd.faceDescriptors = newDescriptors
 	fd.imageFaceIDs = newImageFaceIDs
 
-	log.Println(newDescriptors)
+	log.Println(fd.faceDescriptors)
 	log.Println("")
 
 	updatedImageFaces := make([]*models.ImageFace, 0)
@@ -418,34 +418,73 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		log.Println(unrecognizedImageFaceIDs)
 
 		for _, idx := range unclusteredIdx {
-			// descriptor := unrecognizedDescriptors[i]
-			// faceGroupID := unrecognizedFaceGroupIDs[i]
-			// imageFaceID := unrecognizedImageFaceIDs[i]
 
-			// fd.faceGroupIDs = append(fd.faceGroupIDs, unrecognizedFaceGroupIDs[idx])
-			// fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
-			// fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
 
-			// userOwnedImageFaceIDs := make([]int, 0)
-			var newFaceGroup models.FaceGroup
+			match := int(fd.classifyDescriptor(unrecognizedDescriptors[idx]))
+
 			var retImgFace []models.ImageFace
 			if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
 				return updatedImageFaces, err
 			}
 
-			log.Println("This part was successful")
-			// err := tx.Model(models.ImageFace).Where("id IN (?)", unrecognizedImageFaceIDs[idx])
+			var newFaceGroup models.FaceGroup
 
-			// newLabel := "New"
+			log.Println("imagefaceID")
+			log.Println(match)
 
-			newFaceGroup = models.FaceGroup{
-				// Label: &newLabel,
-				ImageFaces: retImgFace,
+			if match < 0 {
+				log.Println("No match, assigning new face")
+
+				newFaceGroup = models.FaceGroup{
+					ImageFaces: retImgFace,
+				}
+
+				if err := tx.Create(&newFaceGroup).Error; err != nil {
+					return updatedImageFaces,err
+				}
+
+				log.Println(newFaceGroup.ImageFaces[0].ID)
+
+			} else {
+				log.Println("Found match")
+
+				if err := tx.First(&newFaceGroup, match).Error; err != nil {
+					return updatedImageFaces,err
+				}
+
+				if err := tx.Model(&newFaceGroup).Association("ImageFaces").Append(&retImgFace); err != nil {
+					return updatedImageFaces,err
+				}
+
+				log.Println(retImgFace[0].ID)
 			}
 
-			if err := tx.Create(&newFaceGroup).Error; err != nil {
-				return updatedImageFaces,err
-			}
+
+			log.Println(unrecognizedImageFaceIDs[idx])
+
+			// // descriptor := unrecognizedDescriptors[i]
+			// // faceGroupID := unrecognizedFaceGroupIDs[i]
+			// // imageFaceID := unrecognizedImageFaceIDs[i]
+			//
+			// // fd.faceGroupIDs = append(fd.faceGroupIDs, unrecognizedFaceGroupIDs[idx])
+			// // fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
+			// // fd.imageFaceIDs = append(fd.imageFaceIDs, unrecognizedImageFaceIDs[idx])
+			//
+			// // userOwnedImageFaceIDs := make([]int, 0)
+			//
+			// log.Println("This part was successful")
+			// // err := tx.Model(models.ImageFace).Where("id IN (?)", unrecognizedImageFaceIDs[idx])
+			//
+			// // newLabel := "New"
+			//
+			// newFaceGroup = models.FaceGroup{
+			// 	// Label: &newLabel,
+			// 	ImageFaces: retImgFace,
+			// }
+			//
+			// if err := tx.Create(&newFaceGroup).Error; err != nil {
+			// 	return updatedImageFaces,err
+			// }
 
 			fd.faceGroupIDs = append(fd.faceGroupIDs, int32(newFaceGroup.ID))
 			fd.faceDescriptors = append(fd.faceDescriptors, unrecognizedDescriptors[idx])
@@ -531,8 +570,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 				log.Println("new face 2")
 
-				s, _ := json.MarshalIndent(&newFaceGroup, "", "\t")
-				fmt.Print(string(s))
+				// s, _ := json.MarshalIndent(&newFaceGroup, "", "\t")
+				// fmt.Print(string(s))
 
 				for _, idx := range clusteredIdx {
 
@@ -546,8 +585,8 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 						return updatedImageFaces, err
 					}
 
-					s, _ := json.MarshalIndent(&retImgFace, "", "\t")
-					fmt.Print(string(s))
+					// s, _ := json.MarshalIndent(&retImgFace, "", "\t")
+					// fmt.Print(string(s))
 
 					log.Println("new face 3")
 
