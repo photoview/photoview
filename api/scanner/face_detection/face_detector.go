@@ -8,16 +8,17 @@ import (
   "time"
 	// "os"
 	// "encoding/csv"
-	// "fmt"
-	// "encoding/json"
+	"fmt"
+	"encoding/json"
 
-	"github.com/Kagami/go-face"
+	// "github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/PJ-Watson/clusters"
+	"github.com/PJ-Watson/go-face"
 )
 
 type FaceDetector struct {
@@ -189,6 +190,7 @@ func (fd *FaceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 }
 
 func (fd *FaceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
+	log.Println(fd.faceDescriptors)
 	return int32(fd.rec.ClassifyThreshold(descriptor, 0.3))
 }
 
@@ -203,7 +205,7 @@ func (fd *FaceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 		return err
 	}
 
-	log.Println(face.Descriptor)
+	// log.Println(face.Descriptor)
 
 	imageFace := models.ImageFace{
 		MediaID:    media.ID,
@@ -352,6 +354,12 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	fd.faceDescriptors = newDescriptors
 	fd.imageFaceIDs = newImageFaceIDs
 
+	fd.rec.SetSamples(newDescriptors, newFaceGroupIDs)
+
+	// log.Println(retInt)
+
+	time.Sleep(2 * time.Second)
+
 	log.Println(fd.faceDescriptors)
 	log.Println("")
 
@@ -420,7 +428,7 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		for _, idx := range unclusteredIdx {
 
 
-			match := int(fd.classifyDescriptor(unrecognizedDescriptors[idx]))
+			// match := int(fd.classifyDescriptor(unrecognizedDescriptors[idx]))
 
 			var retImgFace []models.ImageFace
 			if err := tx.Find(&retImgFace, unrecognizedImageFaceIDs[idx]).Error; err != nil {
@@ -429,8 +437,15 @@ func (fd *FaceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 			var newFaceGroup models.FaceGroup
 
-			log.Println("imagefaceID")
+			// log.Println("imagefaceID")
+			// log.Println(match)
+
+			match := fd.rec.ClassifyThreshold(unrecognizedDescriptors[idx], 0.3)
+			log.Println("classify")
 			log.Println(match)
+
+			s, _ := json.MarshalIndent(fd, "", "\t")
+			fmt.Print(string(s))
 
 			if match < 0 {
 				log.Println("No match, assigning new face")

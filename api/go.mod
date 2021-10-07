@@ -4,8 +4,8 @@ go 1.16
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/Kagami/go-face v0.0.0-20210604182630-c482b0e1acfb
-	github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5 // indirect
+	github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5
+	github.com/PJ-Watson/go-face v0.1.4-0.20211007192406-65f06d596520
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/barasher/go-exiftool v1.4.0
 	github.com/disintegration/imaging v1.6.2
@@ -22,8 +22,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f
-	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/strukturag/libheif v1.11.0
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
@@ -31,7 +30,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.9.3 // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
