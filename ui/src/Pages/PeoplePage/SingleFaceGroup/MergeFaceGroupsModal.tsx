@@ -41,11 +41,17 @@ const MergeFaceGroupsModal = ({
 }: MergeFaceGroupsModalProps) => {
   const { t } = useTranslation()
 
-  const [selectedFaceGroup, setSelectedFaceGroup] =
-    useState<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>(null)
+  const [selectedFaceGroup, setSelectedFaceGroup] = useState<
+    myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
+  >(null)
 
   const history = useHistory()
-  const { data } = useQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
+  const { data } = useQuery<myFaces, myFacesVariables>(MY_FACES_QUERY, {
+    variables: {
+      limit: 50,
+      offset: 0,
+    },
+  })
   const [combineFacesMutation] = useMutation<
     combineFaces,
     combineFacesVariables
@@ -53,6 +59,10 @@ const MergeFaceGroupsModal = ({
     refetchQueries: [
       {
         query: MY_FACES_QUERY,
+        variables: {
+          limit: 50,
+          offset: 0,
+        },
       },
     ],
   })

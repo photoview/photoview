@@ -35,9 +35,18 @@ const (
 
 // Feature related
 const (
-	EnvDisableFaceRecognition EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
-	EnvDisableVideoEncoding   EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
-	EnvDisableRawProcessing   EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+	EnvDisableVideoEncoding   	EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
+	EnvDisableRawProcessing   	EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+	EnvDisableFaceRecognition 	EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
+)
+
+// Advanced face recognition related
+const (
+	EnvAdvancedFaceRecognition 	EnvironmentVariable = "PHOTOVIEW_ENABLE_ADVANCED_FACE_RECOGNITION"
+	EnvFaceMinSize 							EnvironmentVariable = "PHOTOVIEW_MINIMUM_FACE_SIZE"
+	EnvFacePadding 							EnvironmentVariable = "PHOTOVIEW_FACE_PADDING"
+	EnvFaceJittering 						EnvironmentVariable = "PHOTOVIEW_FACE_JITTERING"
+	EnvFaceRecUseLargest				EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_USE_LARGEST"
 )
 
 // GetName returns the name of the environment variable itself
@@ -48,6 +57,14 @@ func (v EnvironmentVariable) GetName() string {
 // GetValue returns the value of the environment
 func (v EnvironmentVariable) GetValue() string {
 	return os.Getenv(string(v))
+}
+
+// Go doesn't support default value for environment variables - this works around that
+func (v EnvironmentVariable) GetValueWithDefault(fallback string) string {
+    if value, ok := os.LookupEnv(string(v)); ok {
+        return value
+    }
+    return fallback
 }
 
 // GetBool returns the environment variable as a boolean (defaults to false if not defined)

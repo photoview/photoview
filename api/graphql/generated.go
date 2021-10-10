@@ -1955,8 +1955,6 @@ type Album {
   path: [Album!]!
 
   shares: [ShareToken!]!
-
-  #coverID: Int
 }
 
 type MediaURL {

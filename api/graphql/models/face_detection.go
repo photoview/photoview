@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Kagami/go-face"
+	"github.com/PJ-Watson/go-face"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"

@@ -29,7 +29,7 @@ const MOVE_IMAGE_FACES_MUTATION = gql`
       destinationFaceGroupID: $destFaceGroupID
     ) {
       id
-      imageFaces {
+      imageFaces(paginate: { limit: 1 }) {
         id
       }
     }
@@ -52,8 +52,9 @@ const MoveImageFacesModal = ({
   const [selectedImageFaces, setSelectedImageFaces] = useState<
     (singleFaceGroup_faceGroup_imageFaces | myFaces_myFaceGroups_imageFaces)[]
   >([])
-  const [selectedFaceGroup, setSelectedFaceGroup] =
-    useState<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>(null)
+  const [selectedFaceGroup, setSelectedFaceGroup] = useState<
+    myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
+  >(null)
   const [imagesSelected, setImagesSelected] = useState(false)
   const history = useHistory()
 
@@ -64,12 +65,23 @@ const MoveImageFacesModal = ({
     refetchQueries: [
       {
         query: MY_FACES_QUERY,
+        variables: {
+          limit: 50,
+          offset: 0,
+        },
       },
     ],
   })
 
-  const [loadFaceGroups, { data: faceGroupsData }] =
-    useLazyQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
+  const [loadFaceGroups, { data: faceGroupsData }] = useLazyQuery<
+    myFaces,
+    myFacesVariables
+  >(MY_FACES_QUERY, {
+    variables: {
+      limit: 50,
+      offset: 0,
+    },
+  })
 
   useEffect(() => {
     if (imagesSelected) {

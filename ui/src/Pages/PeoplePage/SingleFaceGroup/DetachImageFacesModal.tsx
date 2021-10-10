@@ -53,6 +53,10 @@ const DetachImageFacesModal = ({
     refetchQueries: [
       {
         query: MY_FACES_QUERY,
+        variables: {
+          limit: 50,
+          offset: 0,
+        },
       },
     ],
   })
