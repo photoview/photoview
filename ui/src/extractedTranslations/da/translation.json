@@ -259,6 +259,9 @@
       },
       "title": "Download"
     },
+    "location": {
+      "title": "Lokation"
+    },
     "media": {
       "exif": {
         "exposure_program": {

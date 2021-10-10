@@ -6,7 +6,7 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from '../photoGallery/photoGalleryMutations'
-import MediaSidebar from '../sidebar/MediaSidebar'
+import MediaSidebar from '../sidebar/MediaSidebar/MediaSidebar'
 import { SidebarContext } from '../sidebar/Sidebar'
 import {
   getActiveTimelineImage,

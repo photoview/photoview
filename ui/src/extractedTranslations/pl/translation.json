@@ -264,6 +264,9 @@
       },
       "title": "Pobierz"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
       "exif": {
         "exposure_program": {

@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { MediaType } from '../../__generated__/globalTypes'
-import { MediaSidebarMedia } from '../sidebar/MediaSidebar'
+import { MediaSidebarMedia } from '../sidebar/MediaSidebar/MediaSidebar'
 import { sidebarPhoto_media_faces } from '../sidebar/__generated__/sidebarPhoto'
 
 interface FaceBoxStyleProps {

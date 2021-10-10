@@ -20,10 +20,13 @@ const MapContainer = styled.div`
 
 type MapboxMapProps = {
   configureMapbox(map: mapboxgl.Map, mapboxLibrary: typeof mapboxgl): void
-  readonly initialZoom?: number
+  mapboxOptions?: Partial<mapboxgl.MapboxOptions>
 }
 
-const useMapboxMap = ({ configureMapbox, initialZoom = 1 }: MapboxMapProps) => {
+const useMapboxMap = ({
+  configureMapbox,
+  mapboxOptions = undefined,
+}: MapboxMapProps) => {
   const [mapboxLibrary, setMapboxLibrary] = useState<typeof mapboxgl>()
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const map = useRef<mapboxgl.Map | null>(null)
@@ -57,11 +60,14 @@ const useMapboxMap = ({ configureMapbox, initialZoom = 1 }: MapboxMapProps) => {
     map.current = new mapboxLibrary.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      zoom: initialZoom,
+      ...mapboxOptions,
     })
 
     configureMapbox(map.current, mapboxLibrary)
+    map.current?.resize()
   }, [mapContainer, mapboxLibrary, mapboxData])
+
+  map.current?.resize()
 
   return {
     mapContainer: <MapContainer ref={mapContainer}></MapContainer>,

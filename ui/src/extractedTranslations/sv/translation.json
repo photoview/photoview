@@ -259,6 +259,9 @@
       },
       "title": "Ladda ner"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
       "exif": {
         "exposure_program": {

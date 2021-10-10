@@ -13,7 +13,7 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from './photoGalleryMutations'
-import MediaSidebar from '../sidebar/MediaSidebar'
+import MediaSidebar from '../sidebar/MediaSidebar/MediaSidebar'
 import { SidebarContext } from '../sidebar/Sidebar'
 
 const Gallery = styled.div`

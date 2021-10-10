@@ -6,7 +6,7 @@ import {
   ProtectedVideo,
 } from '../../components/photoGallery/ProtectedMedia'
 import { SidebarContext } from '../../components/sidebar/Sidebar'
-import MediaSidebar from '../../components/sidebar/MediaSidebar'
+import MediaSidebar from '../../components/sidebar/MediaSidebar/MediaSidebar'
 import { useTranslation } from 'react-i18next'
 import { SharePageToken_shareToken_media } from './__generated__/SharePageToken'
 import { MediaType } from '../../__generated__/globalTypes'
