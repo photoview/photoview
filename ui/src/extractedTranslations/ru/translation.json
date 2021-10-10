@@ -293,6 +293,7 @@
         "name": {
           "aperture": "Диафрагма",
           "camera": "Камера",
+          "coordinates": "",
           "date_shot": "Дата снимка",
           "exposure": "Экспозиция",
           "exposure_program": "Программа",
@@ -324,6 +325,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

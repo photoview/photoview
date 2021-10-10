@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Ouverture",
           "camera": "Modèle",
+          "coordinates": "",
           "date_shot": "Prise de vue",
           "exposure": "Vitesse",
           "exposure_program": "Programme",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "Depuis aujourd'hui",
+      "dropdown_year": "",
       "label": "Date"
     }
   },

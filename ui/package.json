@@ -63,7 +63,7 @@
     "lint:types": "tsc --noemit",
     "jest": "craco test --setupFilesAfterEnv ./testing/setupTests.ts",
     "jest:ci": "CI=true craco test --setupFilesAfterEnv ./testing/setupTests.ts --verbose --ci --coverage",
-    "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts",
+    "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts && prettier --write */**/__generated__/*.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && npx husky install)"
   },

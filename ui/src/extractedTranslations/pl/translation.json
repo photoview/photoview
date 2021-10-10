@@ -293,6 +293,7 @@
         "name": {
           "aperture": "Przysłona",
           "camera": "Aparat ",
+          "coordinates": "",
           "date_shot": "Data wykonania",
           "exposure": "Ekspozycja",
           "exposure_program": "Program",
@@ -324,6 +325,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

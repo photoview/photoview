@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Apertura",
           "camera": "Fotocamera",
+          "coordinates": "",
           "date_shot": "Data di scatto",
           "exposure": "Esposizione",
           "exposure_program": "Programma",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

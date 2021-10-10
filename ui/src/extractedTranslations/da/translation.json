@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Blænde",
           "camera": "Kamera",
+          "coordinates": "Koordinater",
           "date_shot": "Dato",
           "exposure": "Lukketid",
           "exposure_program": "Lukketid program",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "Fra i dag",
+      "dropdown_year": "{{year}} og tidligere",
       "label": "Dato"
     }
   },

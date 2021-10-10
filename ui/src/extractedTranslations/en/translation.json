@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Aperture",
           "camera": "Camera",
+          "coordinates": "Coordinates",
           "date_shot": "Date shot",
           "exposure": "Exposure",
           "exposure_program": "Program",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "From today",
+      "dropdown_year": "{{year}} and earlier",
       "label": "Date"
     }
   },

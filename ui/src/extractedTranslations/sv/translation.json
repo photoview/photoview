@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Bländare",
           "camera": "Kamera",
+          "coordinates": "",
           "date_shot": "Datum tagen",
           "exposure": "Exponering",
           "exposure_program": "Program",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

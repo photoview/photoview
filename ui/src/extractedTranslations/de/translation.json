@@ -288,6 +288,7 @@
         "name": {
           "aperture": "Blende",
           "camera": "Kamera",
+          "coordinates": "",
           "date_shot": "Aufnahmedatum",
           "exposure": "Belichtung",
           "exposure_program": "Programm",
@@ -319,6 +320,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

@@ -53,7 +53,9 @@ const DateSelector = ({ filterDate, setFilterDate }: DateSelectorProps) => {
 
       const yearItems = years.map<DropdownItem>(x => ({
         value: `${x}`,
-        label: `${x} and earlier`,
+        label: t('timeline_filter.date.dropdown_year', '{{year}} and earlier', {
+          year: x,
+        }),
       }))
       items = [...items, ...yearItems]
     }

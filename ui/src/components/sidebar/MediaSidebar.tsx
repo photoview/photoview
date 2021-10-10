@@ -72,6 +72,10 @@ const SIDEBAR_MEDIA_QUERY = gql`
         focalLength
         flash
         exposureProgram
+        coordinates {
+          latitude
+          longitude
+        }
       }
       faces {
         id
@@ -170,6 +174,13 @@ export const MetadataInfo = ({ media }: MediaInfoProps) => {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
     }
 
+    const coordinates = media.exif.coordinates
+    if (!isNil(coordinates)) {
+      exif.coordinates = `${
+        Math.round(coordinates.latitude * 1000000) / 1000000
+      }, ${Math.round(coordinates.longitude * 1000000) / 1000000}`
+    }
+
     const exposurePrograms = exposureProgramsLookup(t)
 
     if (
@@ -246,6 +257,7 @@ const exifNameLookup = (t: TranslationFn): { [key: string]: string } => ({
   iso: t('sidebar.media.exif.name.iso', 'ISO'),
   focalLength: t('sidebar.media.exif.name.focal_length', 'Focal length'),
   flash: t('sidebar.media.exif.name.flash', 'Flash'),
+  coordinates: t('sidebar.media.exif.name.coordinates', 'Coordinates'),
 })
 
 // From https://exiftool.org/TagNames/EXIF.html
