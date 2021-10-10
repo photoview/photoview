@@ -69,7 +69,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		expire := time.Now().Add(time.Hour * 24 * 30)
 		tokenPassword := "token-password-123"
-		shareToken, err := actions.AddMediaShare(db, user.ID, media.ID, &expire, &tokenPassword)
+		shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
 		if !assert.NoError(t, err) {
 			return
 		}
