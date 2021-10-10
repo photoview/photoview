@@ -11,6 +11,12 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5 h1:TsNk/IfpBvmcwKDbthmS9cksd+8EdZ4WqpfAzT04s9c=
 github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5/go.mod h1:p/bSVnWMtzbsKAYw3hw2pd9vZ7dyRJ+3obEY1/UXZDM=
+github.com/PJ-Watson/clusters v0.0.0-20211010152327-3f396f578925 h1:ZqoA6Vs/TRjHA0Z9vmBeGt22aMy7M7jrkUwjwSON11o=
+github.com/PJ-Watson/clusters v0.0.0-20211010152327-3f396f578925/go.mod h1:p/bSVnWMtzbsKAYw3hw2pd9vZ7dyRJ+3obEY1/UXZDM=
+github.com/PJ-Watson/clusters v0.0.0-20211010152750-d66a034d08d4 h1:RO1xUk9teW0jWt4o2EvZ8GU7CRl50aRfjLAa0MK/Vds=
+github.com/PJ-Watson/clusters v0.0.0-20211010152750-d66a034d08d4/go.mod h1:p/bSVnWMtzbsKAYw3hw2pd9vZ7dyRJ+3obEY1/UXZDM=
+github.com/PJ-Watson/clusters v0.0.0-20211010154217-d8608bc27e55 h1:tQSxu1D/6nJh5ZANbN9S7IXxiK2UXVaTle5UrZeyRj8=
+github.com/PJ-Watson/clusters v0.0.0-20211010154217-d8608bc27e55/go.mod h1:p/bSVnWMtzbsKAYw3hw2pd9vZ7dyRJ+3obEY1/UXZDM=
 github.com/PJ-Watson/go-face v0.1.4-0.20211005201629-c4cf480431d8 h1:fnRcIwHx9qG6+ypf8XWZq2DV9C8emOXVXzzCeflZ404=
 github.com/PJ-Watson/go-face v0.1.4-0.20211005201629-c4cf480431d8/go.mod h1:msvh6dtM2g6ZrNFT/hJ0IyCrozlcHzUCHmto77q2i74=
 github.com/PJ-Watson/go-face v0.1.4-0.20211005202719-9679ac94f8ce h1:TGM2QNUHwfGWiaWgMqfwMTuVmqSS4E85HhtDLidFDHs=

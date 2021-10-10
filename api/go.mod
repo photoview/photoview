@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/PJ-Watson/clusters v0.0.0-20210929213940-2c77447f73c5
+	github.com/PJ-Watson/clusters v0.0.0-20211010154217-d8608bc27e55
 	github.com/PJ-Watson/go-face v0.1.4-0.20211007192406-65f06d596520
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/barasher/go-exiftool v1.4.0
