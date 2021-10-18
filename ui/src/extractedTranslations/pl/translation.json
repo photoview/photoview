@@ -268,6 +268,7 @@
       "title": ""
     },
     "media": {
+      "album": "",
       "exif": {
         "exposure_program": {
           "action_program": "Program działania",
@@ -307,6 +308,9 @@
           "maker": "Twórca"
         }
       }
+    },
+    "people": {
+      "title": ""
     },
     "sharing": {
       "add_share": "Dodaj udział",

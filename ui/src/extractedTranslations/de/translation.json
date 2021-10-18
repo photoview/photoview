@@ -263,6 +263,7 @@
       "title": ""
     },
     "media": {
+      "album": "",
       "exif": {
         "exposure_program": {
           "action_program": "Action (kurze Verschlusszeit)",
@@ -302,6 +303,9 @@
           "maker": "Hersteller"
         }
       }
+    },
+    "people": {
+      "title": ""
     },
     "sharing": {
       "add_share": "Freigabe hinzufügen",

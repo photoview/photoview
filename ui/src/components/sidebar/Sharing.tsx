@@ -13,7 +13,6 @@ import {
   sidebareDeleteShare,
   sidebareDeleteShareVariables,
 } from './__generated__/sidebareDeleteShare'
-import { sidbarGetPhotoShares_media_shares } from './__generated__/sidbarGetPhotoShares'
 import {
   sidebarPhotoAddShare,
   sidebarPhotoAddShareVariables,
@@ -25,6 +24,7 @@ import {
 import {
   sidebarGetPhotoShares,
   sidebarGetPhotoSharesVariables,
+  sidebarGetPhotoShares_media_shares,
 } from './__generated__/sidebarGetPhotoShares'
 import {
   sidebarGetAlbumShares,
@@ -358,7 +358,7 @@ type SidebarShareProps = {
   id: string
   isPhoto: boolean
   loading: boolean
-  shares?: sidbarGetPhotoShares_media_shares[]
+  shares?: sidebarGetPhotoShares_media_shares[]
   shareItem(item: { variables: { id: string } }): void
 }
 

@@ -263,6 +263,7 @@
       "title": "Location"
     },
     "media": {
+      "album": "Album",
       "exif": {
         "exposure_program": {
           "action_program": "Action program",
@@ -302,6 +303,9 @@
           "maker": "Maker"
         }
       }
+    },
+    "people": {
+      "title": "People"
     },
     "sharing": {
       "add_share": "Add shares",

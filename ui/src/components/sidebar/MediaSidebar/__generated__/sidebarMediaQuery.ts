@@ -6,10 +6,10 @@
 import { MediaType } from './../../../../__generated__/globalTypes'
 
 // ====================================================
-// GraphQL query operation: sidebarPhoto
+// GraphQL query operation: sidebarMediaQuery
 // ====================================================
 
-export interface sidebarPhoto_media_highRes {
+export interface sidebarMediaQuery_media_highRes {
   __typename: 'MediaURL'
   /**
    * URL for previewing the image
@@ -25,7 +25,7 @@ export interface sidebarPhoto_media_highRes {
   height: number
 }
 
-export interface sidebarPhoto_media_thumbnail {
+export interface sidebarMediaQuery_media_thumbnail {
   __typename: 'MediaURL'
   /**
    * URL for previewing the image
@@ -41,7 +41,7 @@ export interface sidebarPhoto_media_thumbnail {
   height: number
 }
 
-export interface sidebarPhoto_media_videoWeb {
+export interface sidebarMediaQuery_media_videoWeb {
   __typename: 'MediaURL'
   /**
    * URL for previewing the image
@@ -57,7 +57,7 @@ export interface sidebarPhoto_media_videoWeb {
   height: number
 }
 
-export interface sidebarPhoto_media_videoMetadata {
+export interface sidebarMediaQuery_media_videoMetadata {
   __typename: 'VideoMetadata'
   id: string
   width: number
@@ -70,7 +70,7 @@ export interface sidebarPhoto_media_videoMetadata {
   audio: string | null
 }
 
-export interface sidebarPhoto_media_exif_coordinates {
+export interface sidebarMediaQuery_media_exif_coordinates {
   __typename: 'Coordinates'
   /**
    * GPS latitude in degrees
@@ -82,7 +82,7 @@ export interface sidebarPhoto_media_exif_coordinates {
   longitude: number
 }
 
-export interface sidebarPhoto_media_exif {
+export interface sidebarMediaQuery_media_exif {
   __typename: 'MediaEXIF'
   id: string
   /**
@@ -125,16 +125,16 @@ export interface sidebarPhoto_media_exif {
   /**
    * GPS coordinates of where the image was taken
    */
-  coordinates: sidebarPhoto_media_exif_coordinates | null
+  coordinates: sidebarMediaQuery_media_exif_coordinates | null
 }
 
-export interface sidebarPhoto_media_album {
+export interface sidebarMediaQuery_media_album {
   __typename: 'Album'
   id: string
   title: string
 }
 
-export interface sidebarPhoto_media_faces_rectangle {
+export interface sidebarMediaQuery_media_faces_rectangle {
   __typename: 'FaceRectangle'
   minX: number
   maxX: number
@@ -142,19 +142,20 @@ export interface sidebarPhoto_media_faces_rectangle {
   maxY: number
 }
 
-export interface sidebarPhoto_media_faces_faceGroup {
+export interface sidebarMediaQuery_media_faces_faceGroup {
   __typename: 'FaceGroup'
   id: string
+  label: string | null
 }
 
-export interface sidebarPhoto_media_faces {
+export interface sidebarMediaQuery_media_faces {
   __typename: 'ImageFace'
   id: string
-  rectangle: sidebarPhoto_media_faces_rectangle
-  faceGroup: sidebarPhoto_media_faces_faceGroup
+  rectangle: sidebarMediaQuery_media_faces_rectangle
+  faceGroup: sidebarMediaQuery_media_faces_faceGroup
 }
 
-export interface sidebarPhoto_media {
+export interface sidebarMediaQuery_media {
   __typename: 'Media'
   id: string
   title: string
@@ -162,32 +163,32 @@ export interface sidebarPhoto_media {
   /**
    * URL to display the photo in full resolution, will be null for videos
    */
-  highRes: sidebarPhoto_media_highRes | null
+  highRes: sidebarMediaQuery_media_highRes | null
   /**
    * URL to display the media in a smaller resolution
    */
-  thumbnail: sidebarPhoto_media_thumbnail | null
+  thumbnail: sidebarMediaQuery_media_thumbnail | null
   /**
    * URL to get the video in a web format that can be played in the browser, will be null for photos
    */
-  videoWeb: sidebarPhoto_media_videoWeb | null
-  videoMetadata: sidebarPhoto_media_videoMetadata | null
-  exif: sidebarPhoto_media_exif | null
+  videoWeb: sidebarMediaQuery_media_videoWeb | null
+  videoMetadata: sidebarMediaQuery_media_videoMetadata | null
+  exif: sidebarMediaQuery_media_exif | null
   /**
    * The album that holds the media
    */
-  album: sidebarPhoto_media_album
-  faces: sidebarPhoto_media_faces[]
+  album: sidebarMediaQuery_media_album
+  faces: sidebarMediaQuery_media_faces[]
 }
 
-export interface sidebarPhoto {
+export interface sidebarMediaQuery {
   /**
    * Get media by id, user must own the media or be admin.
    * If valid tokenCredentials are provided, the media may be retrived without further authentication
    */
-  media: sidebarPhoto_media
+  media: sidebarMediaQuery_media
 }
 
-export interface sidebarPhotoVariables {
+export interface sidebarMediaQueryVariables {
   id: string
 }

@@ -1,5 +1,6 @@
 import { gql, useLazyQuery } from '@apollo/client'
 import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { authToken } from '../../../helpers/authentication'
@@ -16,20 +17,21 @@ import { SidebarPhotoShare } from '../Sharing'
 import SidebarMediaDownload from '../SidebarDownloadMedia'
 import SidebarHeader from '../SidebarHeader'
 import { sidebarDownloadQuery_media_downloads } from '../__generated__/sidebarDownloadQuery'
-import {
-  sidebarPhoto,
-  sidebarPhotoVariables,
-  sidebarPhoto_media_exif,
-  sidebarPhoto_media_faces,
-  sidebarPhoto_media_thumbnail,
-  sidebarPhoto_media_videoMetadata,
-} from '../__generated__/sidebarPhoto'
 import ExifDetails from './MediaSidebarExif'
+import MediaSidebarPeople from './MediaSidebarPeople'
 import MediaSidebarMap from './MediaSidebarMap'
-import { sidebarPhoto_media_album } from './__generated__/sidebarPhoto'
+import {
+  sidebarMediaQuery,
+  sidebarMediaQueryVariables,
+  sidebarMediaQuery_media_album,
+  sidebarMediaQuery_media_exif,
+  sidebarMediaQuery_media_faces,
+  sidebarMediaQuery_media_thumbnail,
+  sidebarMediaQuery_media_videoMetadata,
+} from './__generated__/sidebarMediaQuery'
 
 const SIDEBAR_MEDIA_QUERY = gql`
-  query sidebarPhoto($id: ID!) {
+  query sidebarMediaQuery($id: ID!) {
     media(id: $id) {
       id
       title
@@ -91,6 +93,7 @@ const SIDEBAR_MEDIA_QUERY = gql`
         }
         faceGroup {
           id
+          label
         }
       }
     }
@@ -143,6 +146,7 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
+  const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
   else if (media.thumbnail) previewImage = media.thumbnail
@@ -162,8 +166,10 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
   const mediaAlbum = media.album
   if (!isNil(mediaAlbum)) {
     albumLink = (
-      <div className="lg:mx-4 my-4">
-        <h2 className="uppercase text-sm text-gray-900 font-semibold">Album</h2>
+      <div className="mx-4 my-4">
+        <h2 className="uppercase text-xs text-gray-900 font-semibold">
+          {t('sidebar.media.album', 'Album')}
+        </h2>
         <Link
           className="text-blue-900 hover:underline"
           to={`/album/${mediaAlbum.id}`}
@@ -193,6 +199,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       </div>
       <ExifDetails media={media} />
       {albumLink}
+      <MediaSidebarPeople media={media} />
       {sidebarMap}
       <SidebarMediaDownload media={media} />
       <SidebarPhotoShare id={media.id} />
@@ -214,18 +221,18 @@ export interface MediaSidebarMedia {
     width?: number
     height?: number
   }
-  thumbnail?: sidebarPhoto_media_thumbnail | null
+  thumbnail?: sidebarMediaQuery_media_thumbnail | null
   videoWeb?: null | {
     __typename: 'MediaURL'
     url: string
     width?: number
     height?: number
   }
-  videoMetadata?: sidebarPhoto_media_videoMetadata | null
-  exif?: sidebarPhoto_media_exif | null
-  faces?: sidebarPhoto_media_faces[]
+  videoMetadata?: sidebarMediaQuery_media_videoMetadata | null
+  exif?: sidebarMediaQuery_media_exif | null
+  faces?: sidebarMediaQuery_media_faces[]
   downloads?: sidebarDownloadQuery_media_downloads[]
-  album?: sidebarPhoto_media_album
+  album?: sidebarMediaQuery_media_album
 }
 
 type MediaSidebarType = {
@@ -235,8 +242,8 @@ type MediaSidebarType = {
 
 const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
   const [loadMedia, { loading, error, data }] = useLazyQuery<
-    sidebarPhoto,
-    sidebarPhotoVariables
+    sidebarMediaQuery,
+    sidebarMediaQueryVariables
   >(SIDEBAR_MEDIA_QUERY)
 
   useEffect(() => {

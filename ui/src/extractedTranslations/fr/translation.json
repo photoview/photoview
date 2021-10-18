@@ -263,6 +263,7 @@
       "title": ""
     },
     "media": {
+      "album": "",
       "exif": {
         "exposure_program": {
           "action_program": "Programme d'action",
@@ -302,6 +303,9 @@
           "maker": "Fabriquant"
         }
       }
+    },
+    "people": {
+      "title": ""
     },
     "sharing": {
       "add_share": "Ajouter un partage",

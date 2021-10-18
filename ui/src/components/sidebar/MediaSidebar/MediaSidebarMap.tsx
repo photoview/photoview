@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { isNil } from '../../../helpers/utils'
 import useMapboxMap from '../../mapbox/MapboxMap'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
-import { sidebarPhoto_media_exif_coordinates } from '../__generated__/sidebarPhoto'
+import { sidebarMediaQuery_media_exif_coordinates } from './__generated__/sidebarMediaQuery'
 
 type MediaSidebarMapProps = {
-  coordinates: sidebarPhoto_media_exif_coordinates
+  coordinates: sidebarMediaQuery_media_exif_coordinates
 }
 
 const MediaSidebarMap = ({ coordinates }: MediaSidebarMapProps) => {

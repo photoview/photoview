@@ -268,6 +268,7 @@
       "title": ""
     },
     "media": {
+      "album": "",
       "exif": {
         "exposure_program": {
           "action_program": "Действие программа",
@@ -307,6 +308,9 @@
           "maker": "Производитель"
         }
       }
+    },
+    "people": {
+      "title": ""
     },
     "sharing": {
       "add_share": "Поделится",

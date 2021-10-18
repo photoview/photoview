@@ -263,6 +263,7 @@
       "title": "Lokation"
     },
     "media": {
+      "album": "Album",
       "exif": {
         "exposure_program": {
           "action_program": "Actionprogram",
@@ -302,6 +303,9 @@
           "maker": "Mærke"
         }
       }
+    },
+    "people": {
+      "title": "Personer"
     },
     "sharing": {
       "add_share": "Tilføj deling",
