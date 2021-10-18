@@ -1,7 +1,9 @@
 import { gql, useLazyQuery } from '@apollo/client'
 import React, { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { authToken } from '../../../helpers/authentication'
+import { isNil } from '../../../helpers/utils'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { SidebarFacesOverlay } from '../../facesOverlay/FacesOverlay'
 import {
@@ -24,6 +26,7 @@ import {
 } from '../__generated__/sidebarPhoto'
 import ExifDetails from './MediaSidebarExif'
 import MediaSidebarMap from './MediaSidebarMap'
+import { sidebarPhoto_media_album } from './__generated__/sidebarPhoto'
 
 const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarPhoto($id: ID!) {
@@ -73,6 +76,10 @@ const SIDEBAR_MEDIA_QUERY = gql`
           latitude
           longitude
         }
+      }
+      album {
+        id
+        title
       }
       faces {
         id
@@ -151,6 +158,22 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
     sidebarMap = <MediaSidebarMap coordinates={mediaCoordinates} />
   }
 
+  let albumLink = null
+  const mediaAlbum = media.album
+  if (!isNil(mediaAlbum)) {
+    albumLink = (
+      <div className="lg:mx-4 my-4">
+        <h2 className="uppercase text-sm text-gray-900 font-semibold">Album</h2>
+        <Link
+          className="text-blue-900 hover:underline"
+          to={`/album/${mediaAlbum.id}`}
+        >
+          {mediaAlbum.title}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div>
       <SidebarHeader title={media.title ?? 'Loading...'} />
@@ -169,6 +192,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         )}
       </div>
       <ExifDetails media={media} />
+      {albumLink}
       {sidebarMap}
       <SidebarMediaDownload media={media} />
       <SidebarPhotoShare id={media.id} />
@@ -201,6 +225,7 @@ export interface MediaSidebarMedia {
   exif?: sidebarPhoto_media_exif | null
   faces?: sidebarPhoto_media_faces[]
   downloads?: sidebarDownloadQuery_media_downloads[]
+  album?: sidebarPhoto_media_album
 }
 
 type MediaSidebarType = {
