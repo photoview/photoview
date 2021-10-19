@@ -60,6 +60,8 @@ models:
     fields:
       faceGroup:
         resolver: true
+      media:
+        resolver: true
   FaceRectangle:
     model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
   SiteInfo:

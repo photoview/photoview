@@ -23,12 +23,13 @@ import MediaSidebarMap from './MediaSidebarMap'
 import {
   sidebarMediaQuery,
   sidebarMediaQueryVariables,
-  sidebarMediaQuery_media_album,
+  sidebarMediaQuery_media_album_path,
   sidebarMediaQuery_media_exif,
   sidebarMediaQuery_media_faces,
   sidebarMediaQuery_media_thumbnail,
   sidebarMediaQuery_media_videoMetadata,
 } from './__generated__/sidebarMediaQuery'
+import { BreadcrumbList } from '../../album/AlbumTitle'
 
 const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarMediaQuery($id: ID!) {
@@ -82,6 +83,10 @@ const SIDEBAR_MEDIA_QUERY = gql`
       album {
         id
         title
+        path {
+          id
+          title
+        }
       }
       faces {
         id
@@ -94,6 +99,15 @@ const SIDEBAR_MEDIA_QUERY = gql`
         faceGroup {
           id
           label
+        }
+        media {
+          id
+          title
+          thumbnail {
+            url
+            width
+            height
+          }
         }
       }
     }
@@ -162,20 +176,26 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
     sidebarMap = <MediaSidebarMap coordinates={mediaCoordinates} />
   }
 
-  let albumLink = null
+  let albumPath = null
   const mediaAlbum = media.album
   if (!isNil(mediaAlbum)) {
-    albumLink = (
-      <div className="mx-4 my-4">
-        <h2 className="uppercase text-xs text-gray-900 font-semibold">
-          {t('sidebar.media.album', 'Album')}
-        </h2>
+    const pathElms = [...(mediaAlbum.path ?? []), mediaAlbum].map(album => (
+      <li key={album.id} className="inline-block hover:underline">
         <Link
           className="text-blue-900 hover:underline"
-          to={`/album/${mediaAlbum.id}`}
+          to={`/album/${album.id}`}
         >
-          {mediaAlbum.title}
+          {album.title}
         </Link>
+      </li>
+    ))
+
+    albumPath = (
+      <div className="mx-4 my-4">
+        <h2 className="uppercase text-xs text-gray-900 font-semibold">
+          {t('sidebar.media.album_path', 'Album path')}
+        </h2>
+        <BreadcrumbList hideLastArrow={true}>{pathElms}</BreadcrumbList>
       </div>
     )
   }
@@ -198,7 +218,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         )}
       </div>
       <ExifDetails media={media} />
-      {albumLink}
+      {albumPath}
       <MediaSidebarPeople media={media} />
       {sidebarMap}
       <SidebarMediaDownload media={media} />
@@ -232,7 +252,12 @@ export interface MediaSidebarMedia {
   exif?: sidebarMediaQuery_media_exif | null
   faces?: sidebarMediaQuery_media_faces[]
   downloads?: sidebarDownloadQuery_media_downloads[]
-  album?: sidebarMediaQuery_media_album
+  album?: {
+    __typename: 'Album'
+    id: string
+    title: string
+    path?: sidebarMediaQuery_media_album_path[]
+  }
 }
 
 type MediaSidebarType = {

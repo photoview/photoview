@@ -288,6 +288,8 @@ type FaceGroupResolver interface {
 	ImageFaceCount(ctx context.Context, obj *models.FaceGroup) (int, error)
 }
 type ImageFaceResolver interface {
+	Media(ctx context.Context, obj *models.ImageFace) (*models.Media, error)
+
 	FaceGroup(ctx context.Context, obj *models.ImageFace) (*models.FaceGroup, error)
 }
 type MediaResolver interface {
@@ -2054,6 +2056,7 @@ type MediaEXIF {
   flash: Int
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+  "GPS coordinates of where the image was taken"
   coordinates: Coordinates
 }
 
@@ -3892,14 +3895,14 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		Object:     "ImageFace",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Media, nil
+		return ec.resolvers.ImageFace().Media(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3911,9 +3914,9 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(models.Media)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImageFace_rectangle(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
@@ -10692,10 +10695,19 @@ func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "media":
-			out.Values[i] = ec._ImageFace_media(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ImageFace_media(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "rectangle":
 			out.Values[i] = ec._ImageFace_rectangle(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

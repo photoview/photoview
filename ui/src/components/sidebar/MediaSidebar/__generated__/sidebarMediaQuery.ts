@@ -128,10 +128,17 @@ export interface sidebarMediaQuery_media_exif {
   coordinates: sidebarMediaQuery_media_exif_coordinates | null
 }
 
+export interface sidebarMediaQuery_media_album_path {
+  __typename: 'Album'
+  id: string
+  title: string
+}
+
 export interface sidebarMediaQuery_media_album {
   __typename: 'Album'
   id: string
   title: string
+  path: sidebarMediaQuery_media_album_path[]
 }
 
 export interface sidebarMediaQuery_media_faces_rectangle {
@@ -148,11 +155,38 @@ export interface sidebarMediaQuery_media_faces_faceGroup {
   label: string | null
 }
 
+export interface sidebarMediaQuery_media_faces_media_thumbnail {
+  __typename: 'MediaURL'
+  /**
+   * URL for previewing the image
+   */
+  url: string
+  /**
+   * Width of the image in pixels
+   */
+  width: number
+  /**
+   * Height of the image in pixels
+   */
+  height: number
+}
+
+export interface sidebarMediaQuery_media_faces_media {
+  __typename: 'Media'
+  id: string
+  title: string
+  /**
+   * URL to display the media in a smaller resolution
+   */
+  thumbnail: sidebarMediaQuery_media_faces_media_thumbnail | null
+}
+
 export interface sidebarMediaQuery_media_faces {
   __typename: 'ImageFace'
   id: string
   rectangle: sidebarMediaQuery_media_faces_rectangle
   faceGroup: sidebarMediaQuery_media_faces_faceGroup
+  media: sidebarMediaQuery_media_faces_media
 }
 
 export interface sidebarMediaQuery_media {

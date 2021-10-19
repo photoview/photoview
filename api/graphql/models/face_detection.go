@@ -31,6 +31,19 @@ type ImageFace struct {
 	Rectangle   FaceRectangle  `gorm:"not null"`
 }
 
+func (f *ImageFace) FillMedia(db *gorm.DB) error {
+	if f.Media.ID != 0 {
+		// media already exists
+		return nil
+	}
+
+	if err := db.Model(&f).Association("Media").Find(&f.Media); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type FaceDescriptor face.Descriptor
 
 // GormDataType datatype used in database
