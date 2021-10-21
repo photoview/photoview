@@ -1,8 +1,8 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { MetadataInfo } from './MediaSidebar'
+import ExifDetails from './MediaSidebarExif'
 
-describe('MetadataInfo', () => {
+describe('ExifDetails', () => {
   test('without EXIF information', async () => {
     const media = {
       id: '1730',
@@ -25,7 +25,7 @@ describe('MetadataInfo', () => {
       __typename: 'Media',
     }
 
-    render(<MetadataInfo media={media} />)
+    render(<ExifDetails media={media} />)
 
     expect(screen.queryByText('Camera')).not.toBeInTheDocument()
     expect(screen.queryByText('Maker')).not.toBeInTheDocument()
@@ -61,7 +61,7 @@ describe('MetadataInfo', () => {
       __typename: 'Media',
     }
 
-    render(<MetadataInfo media={media} />)
+    render(<ExifDetails media={media} />)
 
     expect(screen.getByText('Camera')).toBeInTheDocument()
     expect(screen.getByText('Canon EOS R')).toBeInTheDocument()

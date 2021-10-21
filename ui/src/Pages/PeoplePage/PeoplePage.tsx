@@ -193,7 +193,7 @@ type FaceGroupProps = {
   group: myFaces_myFaceGroups
 }
 
-const FaceGroup = ({ group }: FaceGroupProps) => {
+export const FaceGroup = ({ group }: FaceGroupProps) => {
   const previewFace = group.imageFaces[0]
   const [editLabel, setEditLabel] = useState(false)
 

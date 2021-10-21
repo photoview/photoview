@@ -2,6 +2,7 @@ import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import PeoplePage, {
   FaceDetails,
+  FaceGroup,
   MY_FACES_QUERY,
   SET_GROUP_LABEL_MUTATION,
 } from './PeoplePage'
@@ -198,11 +199,9 @@ describe('FaceDetails component', () => {
     ]
     render(
       <MockedProvider mocks={graphqlMocks} addTypename={false}>
-        <FaceDetails
-          editLabel={false}
-          setEditLabel={jest.fn()}
-          group={faceGroup}
-        />
+        <MemoryRouter>
+          <FaceGroup group={faceGroup} />
+        </MemoryRouter>
       </MockedProvider>
     )
 
@@ -222,5 +221,31 @@ describe('FaceDetails component', () => {
     await waitFor(() => {
       expect(graphqlMocks[0].newData).toHaveBeenCalled()
     })
+  })
+
+  test('cancel add label to face group', async () => {
+    render(
+      <MockedProvider mocks={[]} addTypename={false}>
+        <MemoryRouter>
+          <FaceGroup group={faceGroup} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    const btn = screen.getByRole('button')
+    expect(btn).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unlabeled')).toBeInTheDocument()
+
+    fireEvent.click(btn)
+
+    const input = screen.getByRole('textbox')
+    expect(input).toBeInTheDocument()
+    expect(input).toHaveValue('')
+
+    fireEvent.change(input, { target: { value: 'John Doe' } })
+    fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' })
+
+    expect(screen.queryByText('Unlabeled')).toBeInTheDocument()
   })
 })
