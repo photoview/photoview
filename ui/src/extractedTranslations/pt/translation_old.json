@@ -1,0 +1,19 @@
+{
+  "people_page": {
+    "action_label": {
+      "change_label": null,
+      "merge_people": null,
+      "detach_images": null,
+      "move_faces": null
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado.",
+        "destination_table": {
+          "title": "Selecione a cara de destino"
+        },
+        "title": "Juntar grupos de cara"
+      }
+    }
+  }
+}

@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Changer le label",
-      "detach_face": "Détacher le visage",
-      "merge_face": "Fusionner le visage",
+      "detach_images": "Détacher le visage",
+      "merge_people": "Fusionner le visage",
       "move_faces": "Déplacer les visages"
     },
     "face_group": {
@@ -263,7 +263,7 @@
       "title": ""
     },
     "media": {
-      "album": "",
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Programme d'action",
@@ -305,6 +305,11 @@
       }
     },
     "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
       "title": ""
     },
     "sharing": {

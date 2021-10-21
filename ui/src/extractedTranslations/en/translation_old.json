@@ -36,6 +36,15 @@
       "select_image_faces": {
         "search_images_placeholder": "Search images..."
       }
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "All images within this face group will be merged into the selected face group.",
+        "destination_table": {
+          "title": "Select the destination face"
+        },
+        "title": "Merge Face Groups"
+      }
     }
   },
   "settings": {
@@ -54,6 +63,9 @@
     },
     "sharing": {
       "table_header": "Public shares"
+    },
+    "media": {
+      "album": "Album"
     }
   }
 }

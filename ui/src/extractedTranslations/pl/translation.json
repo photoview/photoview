@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "",
-      "detach_face": "",
-      "merge_face": "",
+      "detach_images": "",
+      "merge_people": "",
       "move_faces": ""
     },
     "face_group": {
@@ -268,7 +268,7 @@
       "title": ""
     },
     "media": {
-      "album": "",
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Program działania",
@@ -310,6 +310,11 @@
       }
     },
     "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
       "title": ""
     },
     "sharing": {

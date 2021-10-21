@@ -61,6 +61,13 @@
           "title": null
         },
         "title": null
+      },
+      "merge_people_groups": {
+        "description": "",
+        "destination_table": {
+          "title": ""
+        },
+        "title": ""
       }
     },
     "table": {
@@ -137,6 +144,9 @@
       "table_header": "Publiczne udostępnienia",
       "delete": null,
       "more": null
+    },
+    "media": {
+      "album": ""
     }
   },
   "title": {

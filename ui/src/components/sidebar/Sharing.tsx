@@ -106,10 +106,12 @@ const DELETE_SHARE_MUTATION = gql`
   }
 `
 
-const ArrowPopoverPanel = styled.div.attrs({
+export const ArrowPopoverPanel = styled.div.attrs({
   className:
-    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200 w-[260px]',
-})`
+    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200',
+})<{ width: number }>`
+  width: ${({ width }) => width}px;
+
   &::after {
     content: '';
     position: absolute;
@@ -247,7 +249,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
       </Popover.Button>
 
       <Popover.Panel>
-        <ArrowPopoverPanel>
+        <ArrowPopoverPanel width={260}>
           <MorePopoverSectionPassword id={id} share={share} query={query} />
           <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
             <Checkbox label="Expiration date" />

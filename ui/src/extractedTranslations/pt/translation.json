@@ -61,16 +61,16 @@
     "description": "Galeria de fotos simples e fácil de usar para servidores pessoais"
   },
   "people_page": {
+    "action_label": {
+      "change_label": "",
+      "detach_images": "",
+      "merge_people": "",
+      "move_faces": ""
+    },
     "face_group": {
       "label_placeholder": "Etiqueta",
       "unlabeled": "Sem etiqueta",
       "unlabeled_person": "Pessoa sem etiqueta"
-    },
-    "action_label": {
-      "change_label": null,
-      "merge_face": null,
-      "detach_face": null,
-      "move_faces": null
     },
     "modal": {
       "action": {
@@ -215,6 +215,27 @@
   },
   "sidebar": {
     "album": {
+      "album_cover": "",
+      "download": {
+        "high-resolutions": {
+          "description": "",
+          "title": ""
+        },
+        "originals": {
+          "description": "",
+          "title": ""
+        },
+        "thumbnails": {
+          "description": "",
+          "title": ""
+        },
+        "web-videos": {
+          "description": "",
+          "title": ""
+        }
+      },
+      "reset_cover": "",
+      "set_cover": "",
       "title_placeholder": "Título do Álbum"
     },
     "download": {
@@ -238,7 +259,11 @@
       },
       "title": "Descarregar"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Programa de ação",
@@ -267,6 +292,7 @@
         "name": {
           "aperture": "Abertura",
           "camera": "Câmera",
+          "coordinates": "",
           "date_shot": "Data da foto",
           "exposure": "Exposição",
           "exposure_program": "Programa",
@@ -277,6 +303,14 @@
           "maker": "Fabricante"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
+      "title": ""
     },
     "sharing": {
       "add_share": "Adicionar partilha",
@@ -294,6 +328,13 @@
     "photos": "Fotos",
     "places": "Locais",
     "settings": "Configurações"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "",
+      "dropdown_year": "",
+      "label": ""
+    }
   },
   "title": {
     "loading_album": "Carregar Álbum",

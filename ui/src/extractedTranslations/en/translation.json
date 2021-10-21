@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Change label",
-      "detach_face": "Detach face",
-      "merge_face": "Merge face",
+      "detach_images": "Detach face",
+      "merge_people": "Merge face",
       "move_faces": "Move faces"
     },
     "face_group": {
@@ -263,7 +263,7 @@
       "title": "Location"
     },
     "media": {
-      "album": "Album",
+      "album_path": "Album path",
       "exif": {
         "exposure_program": {
           "action_program": "Action program",
@@ -305,6 +305,11 @@
       }
     },
     "people": {
+      "action_label": {
+        "detach_image": "Detach image",
+        "merge_face": "Merge face",
+        "move_face": "Move face"
+      },
       "title": "People"
     },
     "sharing": {

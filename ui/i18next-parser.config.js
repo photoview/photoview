@@ -1,7 +1,20 @@
 module.exports = {
   skipDefaultValues: locale => locale != 'en',
   sort: true,
-  locales: ['da', 'de', 'en', 'es', 'fr', 'it', 'pl', 'ru', 'sv'],
+  locales: [
+    'da',
+    'de',
+    'en',
+    'es',
+    'fr',
+    'it',
+    'pl',
+    'pt',
+    'ru',
+    'sv',
+    'zh-CN',
+    'zh-HK',
+  ],
   input: 'src/**/*.{js,ts,jsx,tsx}',
   output: 'src/extractedTranslations/$LOCALE/$NAMESPACE.json',
 }

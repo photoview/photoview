@@ -60,6 +60,13 @@
           "title": null
         },
         "title": null
+      },
+      "merge_people_groups": {
+        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "destination_table": {
+          "title": "Sélectionner le visage de destination"
+        },
+        "title": "Fusionner des groupes de visages"
       }
     },
     "table": {
@@ -95,6 +102,9 @@
     },
     "sharing": {
       "table_header": "Partages publics"
+    },
+    "media": {
+      "album": ""
     }
   },
   "title": {

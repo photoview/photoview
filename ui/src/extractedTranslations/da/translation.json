@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Ændre navn",
-      "detach_face": "Løsriv billeder",
-      "merge_face": "Sammenflet personer",
+      "detach_images": "Løsriv billeder",
+      "merge_people": "Sammenflet personer",
       "move_faces": "Flyt ansigter"
     },
     "face_group": {
@@ -263,7 +263,7 @@
       "title": "Lokation"
     },
     "media": {
-      "album": "Album",
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Actionprogram",
@@ -305,6 +305,11 @@
       }
     },
     "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
       "title": "Personer"
     },
     "sharing": {
