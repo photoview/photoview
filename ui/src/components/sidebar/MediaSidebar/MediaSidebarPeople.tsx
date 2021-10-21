@@ -50,9 +50,11 @@ type PersonMoreMenuProps = {
   face: sidebarMediaQuery_media_faces
   setChangeLabel: React.Dispatch<React.SetStateAction<boolean>>
   className?: string
+  menuFlipped: boolean
 }
 
 const PersonMoreMenu = ({
+  menuFlipped,
   face,
   setChangeLabel,
   className,
@@ -119,7 +121,7 @@ const PersonMoreMenu = ({
           <PeopleDotsIcon className="text-gray-500" />
         </Menu.Button>
         <Menu.Items className="">
-          <ArrowPopoverPanel width={120}>
+          <ArrowPopoverPanel width={120} flipped={menuFlipped}>
             <PersonMoreMenuItem
               onClick={() => setChangeLabel(true)}
               className="border-b"
@@ -152,9 +154,10 @@ const PersonMoreMenu = ({
 
 type MediaSidebarFaceProps = {
   face: sidebarMediaQuery_media_faces
+  menuFlipped: boolean
 }
 
-const MediaSidebarPerson = ({ face }: MediaSidebarFaceProps) => {
+const MediaSidebarPerson = ({ face, menuFlipped }: MediaSidebarFaceProps) => {
   const [changeLabel, setChangeLabel] = useState(false)
 
   return (
@@ -172,6 +175,7 @@ const MediaSidebarPerson = ({ face }: MediaSidebarFaceProps) => {
         />
         {!changeLabel && (
           <PersonMoreMenu
+            menuFlipped={menuFlipped}
             className="pl-0.5"
             face={face}
             setChangeLabel={setChangeLabel}
@@ -189,8 +193,8 @@ type MediaSidebarFacesProps = {
 const MediaSidebarPeople = ({ media }: MediaSidebarFacesProps) => {
   const { t } = useTranslation()
 
-  const faceElms = (media.faces ?? []).map(face => (
-    <MediaSidebarPerson key={face.id} face={face} />
+  const faceElms = (media.faces ?? []).map((face, i) => (
+    <MediaSidebarPerson key={face.id} face={face} menuFlipped={i == 0} />
   ))
 
   if (faceElms.length == 0) return null

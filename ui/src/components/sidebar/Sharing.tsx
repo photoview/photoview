@@ -108,18 +108,36 @@ const DELETE_SHARE_MUTATION = gql`
 
 export const ArrowPopoverPanel = styled.div.attrs({
   className:
-    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200',
-})<{ width: number }>`
+    'absolute -top-3 bg-white rounded shadow-md border border-gray-200 z-10',
+})<{ width: number; flipped?: boolean }>`
   width: ${({ width }) => width}px;
+
+  ${({ flipped }) =>
+    flipped
+      ? `
+      left: 32px;
+        `
+      : `
+      right: 24px;
+    `}
 
   &::after {
     content: '';
     position: absolute;
     top: 18px;
-    right: -7px;
     width: 8px;
     height: 14px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpolyline stroke-width='1' stroke='%23E2E2E2' fill='%23FFFFFF' points='1 0 7 7 1 14'%3E%3C/polyline%3E%3C/svg%3E");
+
+    ${({ flipped }) =>
+      flipped
+        ? `
+      left: -7px;
+      transform: rotate(180deg);
+        `
+        : `
+      right: -7px;
+    `}
   }
 `
 
