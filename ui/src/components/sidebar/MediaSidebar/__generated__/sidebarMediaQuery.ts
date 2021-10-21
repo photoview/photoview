@@ -153,6 +153,7 @@ export interface sidebarMediaQuery_media_faces_faceGroup {
   __typename: 'FaceGroup'
   id: string
   label: string | null
+  imageFaceCount: number
 }
 
 export interface sidebarMediaQuery_media_faces_media_thumbnail {

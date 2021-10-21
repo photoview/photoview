@@ -1,34 +1,46 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import FaceCircleImage from '../../../Pages/PeoplePage/FaceCircleImage'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
-import { MediaSidebarMedia } from './MediaSidebar'
+import { MediaSidebarMedia, SIDEBAR_MEDIA_QUERY } from './MediaSidebar'
 import { sidebarMediaQuery_media_faces } from './__generated__/sidebarMediaQuery'
 
 import { ReactComponent as PeopleDotsIcon } from './icons/peopleDotsIcon.svg'
 import { Menu } from '@headlessui/react'
 import { Button } from '../../../primitives/form/Input'
 import { ArrowPopoverPanel } from '../Sharing'
-import { tailwindClassNames } from '../../../helpers/utils'
+import { isNil, tailwindClassNames } from '../../../helpers/utils'
+import MergeFaceGroupsModal from '../../../Pages/PeoplePage/SingleFaceGroup/MergeFaceGroupsModal'
+import { useDetachImageFaces } from '../../../Pages/PeoplePage/SingleFaceGroup/DetachImageFacesModal'
+import MoveImageFacesModal from '../../../Pages/PeoplePage/SingleFaceGroup/MoveImageFacesModal'
+import { FaceDetails } from '../../../Pages/PeoplePage/PeoplePage'
 
 type PersonMoreMenuItemProps = {
   label: string
   className?: string
+  onClick(): void
 }
 
-const PersonMoreMenuItem = ({ label, className }: PersonMoreMenuItemProps) => {
+const PersonMoreMenuItem = ({
+  label,
+  className,
+  onClick,
+}: PersonMoreMenuItemProps) => {
   return (
     <Menu.Item>
       {({ active }) => (
-        <a
+        <button
+          onClick={onClick}
           className={tailwindClassNames(
-            `block py-1 cursor-pointer ${active && 'bg-gray-50 text-black'}`,
+            `whitespace-normal w-full block py-1 cursor-pointer ${
+              active ? 'bg-gray-50 text-black' : 'text-gray-700'
+            }`,
             className
           )}
         >
           {label}
-        </a>
+        </button>
       )}
     </Menu.Item>
   )
@@ -36,40 +48,105 @@ const PersonMoreMenuItem = ({ label, className }: PersonMoreMenuItemProps) => {
 
 type PersonMoreMenuProps = {
   face: sidebarMediaQuery_media_faces
+  setChangeLabel: React.Dispatch<React.SetStateAction<boolean>>
+  className?: string
 }
 
-const PersonMoreMenu = ({ face }: PersonMoreMenuProps) => {
+const PersonMoreMenu = ({
+  face,
+  setChangeLabel,
+  className,
+}: PersonMoreMenuProps) => {
   const { t } = useTranslation()
 
-  face
+  const [mergeModalOpen, setMergeModalOpen] = useState(false)
+  const [moveModalOpen, setMoveModalOpen] = useState(false)
+
+  const refetchQueries = [
+    {
+      query: SIDEBAR_MEDIA_QUERY,
+      variables: {
+        id: face.media.id,
+      },
+    },
+  ]
+
+  const history = useHistory()
+  const detachImageFaceMutation = useDetachImageFaces({
+    refetchQueries,
+  })
+
+  const modals = (
+    <>
+      <MergeFaceGroupsModal
+        sourceFaceGroup={face.faceGroup}
+        open={mergeModalOpen}
+        setOpen={setMergeModalOpen}
+        refetchQueries={refetchQueries}
+      />
+      <MoveImageFacesModal
+        faceGroup={{ imageFaces: [], ...face.faceGroup }}
+        open={moveModalOpen}
+        setOpen={setMoveModalOpen}
+        preselectedImageFaces={[face]}
+      />
+    </>
+  )
+
+  const detachImageFace = () => {
+    if (
+      !confirm(
+        t(
+          'sidebar.people.confirm_image_detach',
+          'Are you sure you want to detach this image?'
+        )
+      )
+    )
+      return
+    detachImageFaceMutation([face]).then(({ data }) => {
+      if (isNil(data)) throw new Error('Expected data not to be null')
+      history.push(`/people/${data.detachImageFaces.id}`)
+    })
+  }
+
   return (
-    <Menu as="div" className="relative inline-block">
-      <Menu.Button as={Button} className="px-1.5 py-1.5 align-middle ml-1">
-        <PeopleDotsIcon className="text-gray-500" />
-      </Menu.Button>
-      <Menu.Items className="">
-        <ArrowPopoverPanel width={120}>
-          <PersonMoreMenuItem
-            className="border-b"
-            label={t('people_page.action_label.change_label', 'Change label')}
-          />
-          <PersonMoreMenuItem
-            className="border-b"
-            label={t('sidebar.people.action_label.merge_face', 'Merge face')}
-          />
-          <PersonMoreMenuItem
-            className="border-b"
-            label={t(
-              'sidebar.people.action_label.detach_image',
-              'Detach image'
-            )}
-          />
-          <PersonMoreMenuItem
-            label={t('sidebar.people.action_label.move_face', 'Move face')}
-          />
-        </ArrowPopoverPanel>
-      </Menu.Items>
-    </Menu>
+    <>
+      <Menu
+        as="div"
+        className={tailwindClassNames('relative inline-block', className)}
+      >
+        <Menu.Button as={Button} className="px-1.5 py-1.5 align-middle ml-1">
+          <PeopleDotsIcon className="text-gray-500" />
+        </Menu.Button>
+        <Menu.Items className="">
+          <ArrowPopoverPanel width={120}>
+            <PersonMoreMenuItem
+              onClick={() => setChangeLabel(true)}
+              className="border-b"
+              label={t('people_page.action_label.change_label', 'Change label')}
+            />
+            <PersonMoreMenuItem
+              onClick={() => setMergeModalOpen(true)}
+              className="border-b"
+              label={t('sidebar.people.action_label.merge_face', 'Merge face')}
+            />
+            <PersonMoreMenuItem
+              onClick={() => detachImageFace()}
+              className="border-b"
+              label={t(
+                'sidebar.people.action_label.detach_image',
+                'Detach image'
+              )}
+            />
+            <PersonMoreMenuItem
+              onClick={() => setMoveModalOpen(true)}
+              label={t('sidebar.people.action_label.move_face', 'Move face')}
+            />
+          </ArrowPopoverPanel>
+        </Menu.Items>
+      </Menu>
+      {modals}
+    </>
   )
 }
 
@@ -78,21 +155,28 @@ type MediaSidebarFaceProps = {
 }
 
 const MediaSidebarPerson = ({ face }: MediaSidebarFaceProps) => {
-  const { t } = useTranslation()
+  const [changeLabel, setChangeLabel] = useState(false)
 
   return (
     <li className="inline-block">
       <Link to={`/people/${face.faceGroup.id}`}>
         <FaceCircleImage imageFace={face} selectable={true} size="92px" />
       </Link>
-      <div
-        className={`text-center text-sm mt-1 ${
-          face.faceGroup.label ? 'text-black' : 'text-gray-600'
-        }`}
-      >
-        {face.faceGroup.label ??
-          t('people_page.face_group.unlabeled', 'Unlabeled')}
-        <PersonMoreMenu face={face} />
+      <div className="mt-1 whitespace-nowrap">
+        <FaceDetails
+          className="text-sm max-w-[80px] align-middle"
+          textFieldClassName="w-[100px]"
+          group={face.faceGroup}
+          editLabel={changeLabel}
+          setEditLabel={setChangeLabel}
+        />
+        {!changeLabel && (
+          <PersonMoreMenu
+            className="pl-0.5"
+            face={face}
+            setChangeLabel={setChangeLabel}
+          />
+        )}
       </div>
     </li>
   )

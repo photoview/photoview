@@ -263,7 +263,7 @@
       "title": "Lokation"
     },
     "media": {
-      "album_path": "",
+      "album_path": "Album sti",
       "exif": {
         "exposure_program": {
           "action_program": "Actionprogram",
@@ -306,10 +306,11 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "Løsriv billede",
+        "merge_face": "Sammenflet person",
+        "move_face": "Flyt person"
       },
+      "confirm_image_detach": "Er du sikker på at du vil løsrive dette billede?",
       "title": "Personer"
     },
     "sharing": {

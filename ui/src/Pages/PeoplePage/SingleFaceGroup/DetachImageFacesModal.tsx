@@ -1,4 +1,4 @@
-import { gql, useMutation } from '@apollo/client'
+import { BaseMutationOptions, gql, useMutation } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useHistory } from 'react-router-dom'
@@ -28,16 +28,50 @@ const DETACH_IMAGE_FACES_MUTATION = gql`
   }
 `
 
+export const useDetachImageFaces = (
+  mutationOptions: BaseMutationOptions<
+    detachImageFaces,
+    detachImageFacesVariables
+  >
+) => {
+  const [detachImageFacesMutation] = useMutation<
+    detachImageFaces,
+    detachImageFacesVariables
+  >(DETACH_IMAGE_FACES_MUTATION, mutationOptions)
+
+  return async (
+    selectedImageFaces: (
+      | myFaces_myFaceGroups_imageFaces
+      | singleFaceGroup_faceGroup_imageFaces
+    )[]
+  ) => {
+    const faceIDs = selectedImageFaces.map(face => face.id)
+
+    const result = await detachImageFacesMutation({
+      variables: {
+        faceIDs,
+      },
+    })
+
+    return result
+  }
+}
+
 type DetachImageFacesModalProps = {
   open: boolean
   setOpen(open: boolean): void
   faceGroup: myFaces_myFaceGroups | singleFaceGroup_faceGroup
+  selectedImageFaces?: (
+    | myFaces_myFaceGroups_imageFaces
+    | singleFaceGroup_faceGroup_imageFaces
+  )[]
 }
 
 const DetachImageFacesModal = ({
   open,
   setOpen,
   faceGroup,
+  selectedImageFaces: selectedImageFacesProp,
 }: DetachImageFacesModalProps) => {
   const { t } = useTranslation()
 
@@ -46,16 +80,26 @@ const DetachImageFacesModal = ({
   >([])
   const history = useHistory()
 
-  const [detachImageFacesMutation] = useMutation<
-    detachImageFaces,
-    detachImageFacesVariables
-  >(DETACH_IMAGE_FACES_MUTATION, {
+  const detachImageFacesMutation = useDetachImageFaces({
     refetchQueries: [
       {
         query: MY_FACES_QUERY,
       },
     ],
   })
+
+  const detachImageFaces = () => {
+    detachImageFacesMutation(selectedImageFaces).then(({ data }) => {
+      if (isNil(data)) throw new Error('Expected data not to be null')
+      setOpen(false)
+      history.push(`/people/${data.detachImageFaces.id}`)
+    })
+  }
+
+  useEffect(() => {
+    if (isNil(selectedImageFacesProp)) return
+    setSelectedImageFaces(selectedImageFacesProp)
+  }, [selectedImageFacesProp])
 
   useEffect(() => {
     if (!open) {
@@ -64,20 +108,6 @@ const DetachImageFacesModal = ({
   }, [open])
 
   if (open == false) return null
-
-  const detachImageFaces = () => {
-    const faceIDs = selectedImageFaces.map(face => face.id)
-
-    detachImageFacesMutation({
-      variables: {
-        faceIDs,
-      },
-    }).then(({ data }) => {
-      if (isNil(data)) throw new Error('Expected data not to be null')
-      setOpen(false)
-      history.push(`/people/${data.detachImageFaces.id}`)
-    })
-  }
 
   const imageFaces = faceGroup?.imageFaces ?? []
 
@@ -94,7 +124,7 @@ const DetachImageFacesModal = ({
       actions={[
         {
           key: 'cancel',
-          label: 'Cancel',
+          label: t('general.action.cancel', 'Cancel'),
           onClick: () => setOpen(false),
         },
         {

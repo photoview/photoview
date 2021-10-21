@@ -144,7 +144,11 @@ describe('FaceDetails component', () => {
 
     render(
       <MockedProvider mocks={[]} addTypename={false}>
-        <FaceDetails group={emptyFaceGroup} />
+        <FaceDetails
+          editLabel={false}
+          setEditLabel={jest.fn()}
+          group={emptyFaceGroup}
+        />
       </MockedProvider>
     )
 
@@ -159,7 +163,11 @@ describe('FaceDetails component', () => {
 
     render(
       <MockedProvider mocks={[]} addTypename={false}>
-        <FaceDetails group={labeledFaceGroup} />
+        <FaceDetails
+          editLabel={false}
+          setEditLabel={jest.fn()}
+          group={labeledFaceGroup}
+        />
       </MockedProvider>
     )
 
@@ -190,7 +198,11 @@ describe('FaceDetails component', () => {
     ]
     render(
       <MockedProvider mocks={graphqlMocks} addTypename={false}>
-        <FaceDetails group={faceGroup} />
+        <FaceDetails
+          editLabel={false}
+          setEditLabel={jest.fn()}
+          group={faceGroup}
+        />
       </MockedProvider>
     )
 

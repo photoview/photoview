@@ -19,6 +19,7 @@ import {
   myFaces_myFaceGroups,
 } from './__generated__/myFaces'
 import { recognizeUnlabeledFaces } from './__generated__/recognizeUnlabeledFaces'
+import { tailwindClassNames } from '../../helpers/utils'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -65,15 +66,8 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
   }
 `
 
-const FaceDetailsWrapper = styled.div<{ labeled: boolean }>`
+const FaceDetailsWrapper = styled.span<{ labeled: boolean }>`
   color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
-  width: 150px;
-  margin: 12px auto 24px;
-  text-align: center;
-  display: block;
-  background: none;
-  border: none;
-  cursor: pointer;
 
   &:hover,
   &:focus-visible {
@@ -82,12 +76,26 @@ const FaceDetailsWrapper = styled.div<{ labeled: boolean }>`
 `
 
 type FaceDetailsProps = {
-  group: myFaces_myFaceGroups
+  group: {
+    __typename: 'FaceGroup'
+    id: string
+    label: string | null
+    imageFaceCount: number
+  }
+  className?: string
+  textFieldClassName?: string
+  editLabel: boolean
+  setEditLabel: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export const FaceDetails = ({ group }: FaceDetailsProps) => {
+export const FaceDetails = ({
+  group,
+  className,
+  textFieldClassName,
+  editLabel,
+  setEditLabel,
+}: FaceDetailsProps) => {
   const { t } = useTranslation()
-  const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(group.label ?? '')
   const inputRef = createRef<HTMLInputElement>()
 
@@ -126,11 +134,15 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
   if (!editLabel) {
     label = (
       <FaceDetailsWrapper
+        className={tailwindClassNames(
+          className,
+          'whitespace-nowrap inline-block overflow-hidden overflow-clip'
+        )}
         labeled={!!group.label}
         onClick={() => setEditLabel(true)}
       >
         <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
-        <button>
+        <button className="">
           {group.label ?? t('people_page.face_group.unlabeled', 'Unlabeled')}
         </button>
         {/* <EditIcon name="pencil" /> */}
@@ -138,9 +150,9 @@ export const FaceDetails = ({ group }: FaceDetailsProps) => {
     )
   } else {
     label = (
-      <FaceDetailsWrapper labeled={!!group.label}>
+      <FaceDetailsWrapper className={className} labeled={!!group.label}>
         <TextField
-          className="w-[160px]"
+          className={textFieldClassName}
           loading={loading}
           ref={inputRef}
           // size="mini"
@@ -183,13 +195,20 @@ type FaceGroupProps = {
 
 const FaceGroup = ({ group }: FaceGroupProps) => {
   const previewFace = group.imageFaces[0]
+  const [editLabel, setEditLabel] = useState(false)
 
   return (
     <div style={{ margin: '12px' }}>
       <Link to={`/people/${group.id}`}>
         <FaceCircleImage imageFace={previewFace} selectable />
       </Link>
-      <FaceDetails group={group} />
+      <FaceDetails
+        className="block cursor-pointer text-center w-full mt-3"
+        textFieldClassName="w-[140px]"
+        group={group}
+        editLabel={editLabel}
+        setEditLabel={setEditLabel}
+      />
     </div>
   )
 }

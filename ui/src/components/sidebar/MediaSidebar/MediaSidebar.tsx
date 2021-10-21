@@ -31,7 +31,7 @@ import {
 } from './__generated__/sidebarMediaQuery'
 import { BreadcrumbList } from '../../album/AlbumTitle'
 
-const SIDEBAR_MEDIA_QUERY = gql`
+export const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarMediaQuery($id: ID!) {
     media(id: $id) {
       id
@@ -99,6 +99,7 @@ const SIDEBAR_MEDIA_QUERY = gql`
         faceGroup {
           id
           label
+          imageFaceCount
         }
         media {
           id

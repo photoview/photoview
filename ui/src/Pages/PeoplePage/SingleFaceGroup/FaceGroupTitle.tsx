@@ -8,7 +8,7 @@ import React, {
 import { useTranslation } from 'react-i18next'
 import { isNil } from '../../../helpers/utils'
 import { Button, TextField } from '../../../primitives/form/Input'
-import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
+import { MY_FACES_QUERY, SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
 import {
   setGroupLabel,
   setGroupLabelVariables,
@@ -112,6 +112,11 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
           open={mergeModalOpen}
           setOpen={setMergeModalOpen}
           sourceFaceGroup={faceGroup}
+          refetchQueries={[
+            {
+              query: MY_FACES_QUERY,
+            },
+          ]}
         />
         <MoveImageFacesModal
           open={moveModalOpen}

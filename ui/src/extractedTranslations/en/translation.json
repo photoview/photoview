@@ -310,6 +310,7 @@
         "merge_face": "Merge face",
         "move_face": "Move face"
       },
+      "confirm_image_detach": "Are you sure you want to detach this image?",
       "title": "People"
     },
     "sharing": {

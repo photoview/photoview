@@ -1,5 +1,5 @@
 import classNames, { Argument as ClassNamesArg } from 'classnames'
-import { overrideTailwindClasses } from 'tailwind-override'
+// import { overrideTailwindClasses } from 'tailwind-override'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface DebouncedFn<F extends (...args: any[]) => any> {
@@ -45,5 +45,6 @@ export function exhaustiveCheck(value: never) {
 }
 
 export function tailwindClassNames(...args: ClassNamesArg[]) {
-  return overrideTailwindClasses(classNames(args))
+  // return overrideTailwindClasses(classNames(args))
+  return classNames(args)
 }
