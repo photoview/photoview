@@ -8,7 +8,7 @@ import React, {
 import { useTranslation } from 'react-i18next'
 import { isNil } from '../../../helpers/utils'
 import { Button, TextField } from '../../../primitives/form/Input'
-import { SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
+import { MY_FACES_QUERY, SET_GROUP_LABEL_MUTATION } from '../PeoplePage'
 import {
   setGroupLabel,
   setGroupLabelVariables,
@@ -112,6 +112,11 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
           open={mergeModalOpen}
           setOpen={setMergeModalOpen}
           sourceFaceGroup={faceGroup}
+          refetchQueries={[
+            {
+              query: MY_FACES_QUERY,
+            },
+          ]}
         />
         <MoveImageFacesModal
           open={moveModalOpen}
@@ -133,16 +138,24 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
         <div className="mb-2">{title}</div>
         <ul className="flex gap-2 flex-wrap mb-6">
           <li>
-            <Button onClick={() => setEditLabel(true)}>{t('people_page.action_label.change_label', 'Change label')}</Button>
+            <Button onClick={() => setEditLabel(true)}>
+              {t('people_page.action_label.change_label', 'Change label')}
+            </Button>
           </li>
           <li>
-            <Button onClick={() => setMergeModalOpen(true)}>{t('people_page.action_label.merge_face', 'Merge face')}</Button>
+            <Button onClick={() => setMergeModalOpen(true)}>
+              {t('people_page.action_label.merge_people', 'Merge people')}
+            </Button>
           </li>
           <li>
-            <Button onClick={() => setDetachModalOpen(true)}>{t('people_page.action_label.detach_face', 'Detach face')}</Button>
+            <Button onClick={() => setDetachModalOpen(true)}>
+              {t('people_page.action_label.detach_images', 'Detach images')}
+            </Button>
           </li>
           <li>
-            <Button onClick={() => setMoveModalOpen(true)}>{t('people_page.action_label.move_faces', 'Moves faces')}</Button>
+            <Button onClick={() => setMoveModalOpen(true)}>
+              {t('people_page.action_label.move_faces', 'Move faces')}
+            </Button>
           </li>
         </ul>
       </div>

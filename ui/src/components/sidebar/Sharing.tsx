@@ -13,7 +13,6 @@ import {
   sidebareDeleteShare,
   sidebareDeleteShareVariables,
 } from './__generated__/sidebareDeleteShare'
-import { sidbarGetPhotoShares_media_shares } from './__generated__/sidbarGetPhotoShares'
 import {
   sidebarPhotoAddShare,
   sidebarPhotoAddShareVariables,
@@ -25,6 +24,7 @@ import {
 import {
   sidebarGetPhotoShares,
   sidebarGetPhotoSharesVariables,
+  sidebarGetPhotoShares_media_shares,
 } from './__generated__/sidebarGetPhotoShares'
 import {
   sidebarGetAlbumShares,
@@ -106,18 +106,38 @@ const DELETE_SHARE_MUTATION = gql`
   }
 `
 
-const ArrowPopoverPanel = styled.div.attrs({
+export const ArrowPopoverPanel = styled.div.attrs({
   className:
-    'absolute right-6 -top-3 bg-white rounded shadow-md border border-gray-200 w-[260px]',
-})`
+    'absolute -top-3 bg-white rounded shadow-md border border-gray-200 z-10',
+})<{ width: number; flipped?: boolean }>`
+  width: ${({ width }) => width}px;
+
+  ${({ flipped }) =>
+    flipped
+      ? `
+      left: 32px;
+        `
+      : `
+      right: 24px;
+    `}
+
   &::after {
     content: '';
     position: absolute;
     top: 18px;
-    right: -7px;
     width: 8px;
     height: 14px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpolyline stroke-width='1' stroke='%23E2E2E2' fill='%23FFFFFF' points='1 0 7 7 1 14'%3E%3C/polyline%3E%3C/svg%3E");
+
+    ${({ flipped }) =>
+      flipped
+        ? `
+      left: -7px;
+      transform: rotate(180deg);
+        `
+        : `
+      right: -7px;
+    `}
   }
 `
 
@@ -247,7 +267,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
       </Popover.Button>
 
       <Popover.Panel>
-        <ArrowPopoverPanel>
+        <ArrowPopoverPanel width={260}>
           <MorePopoverSectionPassword id={id} share={share} query={query} />
           <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
             <Checkbox label="Expiration date" />
@@ -358,7 +378,7 @@ type SidebarShareProps = {
   id: string
   isPhoto: boolean
   loading: boolean
-  shares?: sidbarGetPhotoShares_media_shares[]
+  shares?: sidebarGetPhotoShares_media_shares[]
   shareItem(item: { variables: { id: string } }): void
 }
 

@@ -15,6 +15,13 @@ type AuthorizeResult struct {
 	Token   *string `json:"token"`
 }
 
+type Coordinates struct {
+	// GPS latitude in degrees
+	Latitude float64 `json:"latitude"`
+	// GPS longitude in degrees
+	Longitude float64 `json:"longitude"`
+}
+
 type MediaDownload struct {
 	Title    string    `json:"title"`
 	MediaURL *MediaURL `json:"mediaUrl"`

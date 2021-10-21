@@ -1,0 +1,42 @@
+{
+  "people_page": {
+    "action_label": {
+      "change_label": null,
+      "merge_people": null,
+      "detach_images": null,
+      "move_faces": null
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "所有在此的脸孔群组将会合并到已选择的脸孔群组",
+        "destination_table": {
+          "title": "选择目标脸孔群组"
+        },
+        "title": "合并脸孔群组"
+      }
+    }
+  },
+  "sidebar": {
+    "download": {
+      "filesize": {
+        "byte": null,
+        "giga_byte": null,
+        "kilo_byte": null,
+        "mega_byte": null,
+        "tera_byte": null
+      }
+    },
+    "media": {
+      "exif": {
+        "flash": {
+          "did_not_fire": null,
+          "fired": null,
+          "no_flash": null,
+          "no_flash_function": null,
+          "return_detected": null,
+          "return_not_detected": null
+        }
+      }
+    }
+  }
+}

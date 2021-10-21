@@ -3,6 +3,7 @@ import classNames, { Argument as ClassNamesArg } from 'classnames'
 import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
 import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
 import styled from 'styled-components'
+import { tailwindClassNames } from '../../helpers/utils'
 
 type TextFieldProps = {
   label?: string
@@ -164,7 +165,10 @@ export const Submit = ({
   ...props
 }: SubmitProps & React.ButtonHTMLAttributes<HTMLInputElement>) => (
   <input
-    className={classNames(buttonStyles({ variant, background }), className)}
+    className={tailwindClassNames(
+      buttonStyles({ variant, background }),
+      className
+    )}
     type="submit"
     value={children}
     {...props}
@@ -179,7 +183,10 @@ export const Button = ({
   ...props
 }: ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
   <button
-    className={classNames(buttonStyles({ variant, background }), className)}
+    className={tailwindClassNames(
+      buttonStyles({ variant, background }),
+      className
+    )}
     {...props}
   >
     {children}

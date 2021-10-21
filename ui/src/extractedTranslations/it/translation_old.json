@@ -49,6 +49,15 @@
     },
     "tableselect_image_faces": {
       "search_images_placeholder": null
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
+        "destination_table": {
+          "title": "Seleziona il volto di destinazione"
+        },
+        "title": "Unisci immagini volto"
+      }
     }
   },
   "settings": {
@@ -82,6 +91,9 @@
         "mega_byte_plural": null,
         "tera_byte_plural": null
       }
+    },
+    "media": {
+      "album": ""
     }
   },
   "album_filter": {

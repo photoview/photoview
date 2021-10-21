@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Ændre navn",
-      "detach_face": "Løsriv billeder",
-      "merge_face": "Sammenflet personer",
+      "detach_images": "Løsriv billeder",
+      "merge_people": "Sammenflet personer",
       "move_faces": "Flyt ansigter"
     },
     "face_group": {
@@ -259,7 +259,11 @@
       },
       "title": "Download"
     },
+    "location": {
+      "title": "Lokation"
+    },
     "media": {
+      "album_path": "Album sti",
       "exif": {
         "exposure_program": {
           "action_program": "Actionprogram",
@@ -288,6 +292,7 @@
         "name": {
           "aperture": "Blænde",
           "camera": "Kamera",
+          "coordinates": "Koordinater",
           "date_shot": "Dato",
           "exposure": "Lukketid",
           "exposure_program": "Lukketid program",
@@ -298,6 +303,15 @@
           "maker": "Mærke"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Løsriv billede",
+        "merge_face": "Sammenflet person",
+        "move_face": "Flyt person"
+      },
+      "confirm_image_detach": "Er du sikker på at du vil løsrive dette billede?",
+      "title": "Personer"
     },
     "sharing": {
       "add_share": "Tilføj deling",
@@ -319,6 +333,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "Fra i dag",
+      "dropdown_year": "{{year}} og tidligere",
       "label": "Dato"
     }
   },

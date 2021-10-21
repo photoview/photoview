@@ -49,6 +49,15 @@
     },
     "tableselect_image_faces": {
       "search_images_placeholder": null
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
+        "destination_table": {
+          "title": "Выберете конечное лицо"
+        },
+        "title": "Обьединить группы лиц"
+      }
     }
   },
   "settings": {
@@ -99,6 +108,9 @@
       "table_header": "Общий доступ",
       "delete": null,
       "more": null
+    },
+    "media": {
+      "album": ""
     }
   },
   "album_filter": {

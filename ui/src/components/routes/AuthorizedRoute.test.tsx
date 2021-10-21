@@ -7,11 +7,15 @@ import * as authentication from '../../helpers/authentication'
 
 jest.mock('../../helpers/authentication.ts')
 
+const authToken = authentication.authToken as jest.Mock<
+  ReturnType<typeof authentication.authToken>
+>
+
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
   test('not logged in', async () => {
-    authentication.authToken.mockImplementation(() => null)
+    authToken.mockImplementation(() => null)
 
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -24,7 +28,7 @@ describe('AuthorizedRoute component', () => {
   })
 
   test('logged in', async () => {
-    authentication.authToken.mockImplementation(() => 'token-here')
+    authToken.mockImplementation(() => 'token-here')
 
     render(
       <MemoryRouter initialEntries={['/']}>

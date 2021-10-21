@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Changer le label",
-      "detach_face": "Détacher le visage",
-      "merge_face": "Fusionner le visage",
+      "detach_images": "Détacher le visage",
+      "merge_people": "Fusionner le visage",
       "move_faces": "Déplacer les visages"
     },
     "face_group": {
@@ -259,7 +259,11 @@
       },
       "title": "Télécharger"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Programme d'action",
@@ -288,6 +292,7 @@
         "name": {
           "aperture": "Ouverture",
           "camera": "Modèle",
+          "coordinates": "",
           "date_shot": "Prise de vue",
           "exposure": "Vitesse",
           "exposure_program": "Programme",
@@ -298,6 +303,15 @@
           "maker": "Fabriquant"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
+      "confirm_image_detach": "",
+      "title": ""
     },
     "sharing": {
       "add_share": "Ajouter un partage",
@@ -319,6 +333,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "Depuis aujourd'hui",
+      "dropdown_year": "",
       "label": "Date"
     }
   },

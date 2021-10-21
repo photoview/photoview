@@ -59,6 +59,10 @@ export const SHARE_TOKEN_QUERY = gql`
           focalLength
           flash
           exposureProgram
+          coordinates {
+            longitude
+            latitude
+          }
         }
       }
     }

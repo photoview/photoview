@@ -75,6 +75,11 @@ type ComplexityRoot struct {
 		Token   func(childComplexity int) int
 	}
 
+	Coordinates struct {
+		Latitude  func(childComplexity int) int
+		Longitude func(childComplexity int) int
+	}
+
 	FaceGroup struct {
 		ID             func(childComplexity int) int
 		ImageFaceCount func(childComplexity int) int
@@ -122,6 +127,7 @@ type ComplexityRoot struct {
 	MediaExif struct {
 		Aperture        func(childComplexity int) int
 		Camera          func(childComplexity int) int
+		Coordinates     func(childComplexity int) int
 		DateShot        func(childComplexity int) int
 		Exposure        func(childComplexity int) int
 		ExposureProgram func(childComplexity int) int
@@ -282,6 +288,8 @@ type FaceGroupResolver interface {
 	ImageFaceCount(ctx context.Context, obj *models.FaceGroup) (int, error)
 }
 type ImageFaceResolver interface {
+	Media(ctx context.Context, obj *models.ImageFace) (*models.Media, error)
+
 	FaceGroup(ctx context.Context, obj *models.ImageFace) (*models.FaceGroup, error)
 }
 type MediaResolver interface {
@@ -472,6 +480,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthorizeResult.Token(childComplexity), true
+
+	case "Coordinates.latitude":
+		if e.complexity.Coordinates.Latitude == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Latitude(childComplexity), true
+
+	case "Coordinates.longitude":
+		if e.complexity.Coordinates.Longitude == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Longitude(childComplexity), true
 
 	case "FaceGroup.id":
 		if e.complexity.FaceGroup.ID == nil {
@@ -694,6 +716,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MediaExif.Camera(childComplexity), true
+
+	case "MediaEXIF.coordinates":
+		if e.complexity.MediaExif.Coordinates == nil {
+			break
+		}
+
+		return e.complexity.MediaExif.Coordinates(childComplexity), true
 
 	case "MediaEXIF.dateShot":
 		if e.complexity.MediaExif.DateShot == nil {
@@ -1745,7 +1774,7 @@ type Query {
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
   "Get the mapbox api token, returns null if mapbox is not enabled"
-  mapboxToken: String @isAuthorized
+  mapboxToken: String
 
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
@@ -1955,8 +1984,6 @@ type Album {
   path: [Album!]!
 
   shares: [ShareToken!]!
-
-  #coverID: Int
 }
 
 type MediaURL {
@@ -2029,6 +2056,15 @@ type MediaEXIF {
   flash: Int
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+  "GPS coordinates of where the image was taken"
+  coordinates: Coordinates
+}
+
+type Coordinates {
+  "GPS latitude in degrees"
+  latitude: Float!
+  "GPS longitude in degrees"
+  longitude: Float!
 }
 
 type VideoMetadata {
@@ -3459,6 +3495,76 @@ func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Coordinates_latitude(ctx context.Context, field graphql.CollectedField, obj *models.Coordinates) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Latitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Coordinates_longitude(ctx context.Context, field graphql.CollectedField, obj *models.Coordinates) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Longitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _FaceGroup_id(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3789,14 +3895,14 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		Object:     "ImageFace",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Media, nil
+		return ec.resolvers.ImageFace().Media(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3808,9 +3914,9 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(models.Media)
+	res := resTmp.(*models.Media)
 	fc.Result = res
-	return ec.marshalNMedia2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImageFace_rectangle(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
@@ -4851,6 +4957,38 @@ func (ec *executionContext) _MediaEXIF_exposureProgram(ctx context.Context, fiel
 	res := resTmp.(*int64)
 	fc.Result = res
 	return ec.marshalOInt2ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_coordinates(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MediaEXIF",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Coordinates(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.Coordinates)
+	fc.Result = res
+	return ec.marshalOCoordinates2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaURL_url(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
@@ -7283,28 +7421,8 @@ func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphq
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().MapboxToken(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsAuthorized == nil {
-				return nil, errors.New("directive isAuthorized is not implemented")
-			}
-			return ec.directives.IsAuthorized(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MapboxToken(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10429,6 +10547,38 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 	return out
 }
 
+var coordinatesImplementors = []string{"Coordinates"}
+
+func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionSet, obj *models.Coordinates) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, coordinatesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Coordinates")
+		case "latitude":
+			out.Values[i] = ec._Coordinates_latitude(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "longitude":
+			out.Values[i] = ec._Coordinates_longitude(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var faceGroupImplementors = []string{"FaceGroup"}
 
 func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet, obj *models.FaceGroup) graphql.Marshaler {
@@ -10545,10 +10695,19 @@ func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "media":
-			out.Values[i] = ec._ImageFace_media(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ImageFace_media(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "rectangle":
 			out.Values[i] = ec._ImageFace_rectangle(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10824,6 +10983,8 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._MediaEXIF_flash(ctx, field, obj)
 		case "exposureProgram":
 			out.Values[i] = ec._MediaEXIF_exposureProgram(ctx, field, obj)
+		case "coordinates":
+			out.Values[i] = ec._MediaEXIF_coordinates(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12873,6 +13034,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) marshalOCoordinates2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v *models.Coordinates) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Coordinates(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {

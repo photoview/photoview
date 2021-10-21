@@ -66,6 +66,7 @@ export const SHARE_ALBUM_QUERY = gql`
           url
         }
         exif {
+          id
           camera
           maker
           lens
@@ -76,6 +77,10 @@ export const SHARE_ALBUM_QUERY = gql`
           focalLength
           flash
           exposureProgram
+          coordinates {
+            latitude
+            longitude
+          }
         }
       }
     }

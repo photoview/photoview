@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "",
-      "detach_face": "",
-      "merge_face": "",
+      "detach_images": "",
+      "merge_people": "",
       "move_faces": ""
     },
     "face_group": {
@@ -264,7 +264,11 @@
       },
       "title": "Pobierz"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Program działania",
@@ -293,6 +297,7 @@
         "name": {
           "aperture": "Przysłona",
           "camera": "Aparat ",
+          "coordinates": "",
           "date_shot": "Data wykonania",
           "exposure": "Ekspozycja",
           "exposure_program": "Program",
@@ -303,6 +308,15 @@
           "maker": "Twórca"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
+      "confirm_image_detach": "",
+      "title": ""
     },
     "sharing": {
       "add_share": "Dodaj udział",
@@ -324,6 +338,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

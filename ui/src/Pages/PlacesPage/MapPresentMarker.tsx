@@ -80,6 +80,9 @@ type MapPresetMarkerProps = {
   dispatchMarkerMedia: React.Dispatch<PlacesAction>
 }
 
+/**
+ * Full-screen present-view that works with PlacesState
+ */
 const MapPresentMarker = ({
   map,
   markerMediaState,

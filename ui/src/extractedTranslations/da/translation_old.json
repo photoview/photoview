@@ -42,6 +42,15 @@
       "merge_face": null,
       "detach_face": null,
       "move_faces": null
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
+        "destination_table": {
+          "title": "Vælg destinationsgruppe"
+        },
+        "title": "Vælg gruppe at flette med"
+      }
     }
   },
   "settings": {
@@ -71,6 +80,9 @@
         "mega_byte_plural": null,
         "tera_byte_plural": null
       }
+    },
+    "media": {
+      "album": "Album"
     }
   },
   "timeline_filter": {

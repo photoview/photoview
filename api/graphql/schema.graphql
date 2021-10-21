@@ -76,7 +76,7 @@ type Query {
   "Get media owned by the logged in user, returned in GeoJson format"
   myMediaGeoJson: Any! @isAuthorized
   "Get the mapbox api token, returns null if mapbox is not enabled"
-  mapboxToken: String @isAuthorized
+  mapboxToken: String
 
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
@@ -358,6 +358,15 @@ type MediaEXIF {
   flash: Int
   "An index describing the mode for adjusting the exposure of the image"
   exposureProgram: Int
+  "GPS coordinates of where the image was taken"
+  coordinates: Coordinates
+}
+
+type Coordinates {
+  "GPS latitude in degrees"
+  latitude: Float!
+  "GPS longitude in degrees"
+  longitude: Float!
 }
 
 type VideoMetadata {

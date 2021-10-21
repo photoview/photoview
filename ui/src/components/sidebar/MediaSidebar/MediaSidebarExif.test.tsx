@@ -1,13 +1,15 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { MetadataInfo } from './MediaSidebar'
+import ExifDetails from './MediaSidebarExif'
+import { MediaSidebarMedia } from './MediaSidebar'
+import { MediaType } from '../../../__generated__/globalTypes'
 
-describe('MetadataInfo', () => {
+describe('ExifDetails', () => {
   test('without EXIF information', async () => {
-    const media = {
+    const media: MediaSidebarMedia = {
       id: '1730',
       title: 'media_name.jpg',
-      type: 'Photo',
+      type: MediaType.Photo,
       exif: {
         id: '0',
         camera: null,
@@ -20,12 +22,13 @@ describe('MetadataInfo', () => {
         focalLength: null,
         flash: null,
         exposureProgram: null,
+        coordinates: null,
         __typename: 'MediaEXIF',
       },
       __typename: 'Media',
     }
 
-    render(<MetadataInfo media={media} />)
+    render(<ExifDetails media={media} />)
 
     expect(screen.queryByText('Camera')).not.toBeInTheDocument()
     expect(screen.queryByText('Maker')).not.toBeInTheDocument()
@@ -37,13 +40,14 @@ describe('MetadataInfo', () => {
     expect(screen.queryByText('ISO')).not.toBeInTheDocument()
     expect(screen.queryByText('Focal length')).not.toBeInTheDocument()
     expect(screen.queryByText('Flash')).not.toBeInTheDocument()
+    expect(screen.queryByText('Coordinates')).not.toBeInTheDocument()
   })
 
   test('with EXIF information', async () => {
-    const media = {
+    const media: MediaSidebarMedia = {
       id: '1730',
       title: 'media_name.jpg',
-      type: 'Photo',
+      type: MediaType.Photo,
       exif: {
         id: '1666',
         camera: 'Canon EOS R',
@@ -56,12 +60,17 @@ describe('MetadataInfo', () => {
         focalLength: 24,
         flash: 9,
         exposureProgram: 3,
+        coordinates: {
+          __typename: 'Coordinates',
+          latitude: 41.40338,
+          longitude: 2.17403,
+        },
         __typename: 'MediaEXIF',
       },
       __typename: 'Media',
     }
 
-    render(<MetadataInfo media={media} />)
+    render(<ExifDetails media={media} />)
 
     expect(screen.getByText('Camera')).toBeInTheDocument()
     expect(screen.getByText('Canon EOS R')).toBeInTheDocument()
@@ -94,5 +103,8 @@ describe('MetadataInfo', () => {
 
     expect(screen.getByText('Flash')).toBeInTheDocument()
     expect(screen.getByText('On, Fired')).toBeInTheDocument()
+
+    expect(screen.getByText('Coordinates')).toBeInTheDocument()
+    expect(screen.getByText('41.40338, 2.17403')).toBeInTheDocument()
   })
 })

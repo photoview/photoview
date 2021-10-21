@@ -12,6 +12,7 @@ import {
   resetAlbumCover,
   resetAlbumCoverVariables,
 } from './__generated__/resetAlbumCover'
+import { authToken } from '../../helpers/authentication'
 
 const RESET_ALBUM_COVER_MUTATION = gql`
   mutation resetAlbumCover($albumID: ID!) {
@@ -61,6 +62,11 @@ export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
   useEffect(() => {
     setButtonDisabled(false)
   }, [cover_id])
+
+  // hide when not authenticated
+  if (!authToken()) {
+    return null
+  }
 
   return (
     <SidebarSection>

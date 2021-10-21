@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
 import { PresentMediaProps_Media } from './presentView/PresentMedia'
-import { sidebarPhoto_media_thumbnail } from '../sidebar/__generated__/sidebarPhoto'
 import {
   openPresentModeAction,
   PhotoGalleryAction,
@@ -13,8 +12,9 @@ import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from './photoGalleryMutations'
-import MediaSidebar from '../sidebar/MediaSidebar'
+import MediaSidebar from '../sidebar/MediaSidebar/MediaSidebar'
 import { SidebarContext } from '../sidebar/Sidebar'
+import { sidebarMediaQuery_media_thumbnail } from '../sidebar/MediaSidebar/__generated__/sidebarMediaQuery'
 
 const Gallery = styled.div`
   display: flex;
@@ -36,7 +36,7 @@ export const PhotoFiller = styled.div`
 `
 
 export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
-  thumbnail: sidebarPhoto_media_thumbnail | null
+  thumbnail: sidebarMediaQuery_media_thumbnail | null
   favorite?: boolean
 }
 

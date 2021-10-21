@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "",
-      "detach_face": "",
-      "merge_face": "",
+      "detach_images": "",
+      "merge_people": "",
       "move_faces": ""
     },
     "face_group": {
@@ -259,7 +259,11 @@
       },
       "title": "Descargar"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "Programa de acción",
@@ -288,6 +292,7 @@
         "name": {
           "aperture": "Abertura",
           "camera": "Cámara",
+          "coordinates": "",
           "date_shot": "Fecha de captura",
           "exposure": "Exposición",
           "exposure_program": "Programa",
@@ -298,6 +303,15 @@
           "maker": "Fabricante"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
+      "confirm_image_detach": "",
+      "title": ""
     },
     "sharing": {
       "add_share": "Añadir compartido",
@@ -319,6 +333,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "",
+      "dropdown_year": "",
       "label": ""
     }
   },

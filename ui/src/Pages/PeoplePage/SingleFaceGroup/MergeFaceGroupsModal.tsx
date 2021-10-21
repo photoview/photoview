@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client'
+import { gql, PureQueryOptions, useMutation, useQuery } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useHistory } from 'react-router-dom'
@@ -31,18 +31,24 @@ const COMBINE_FACES_MUTATION = gql`
 type MergeFaceGroupsModalProps = {
   open: boolean
   setOpen(open: boolean): void
-  sourceFaceGroup: myFaces_myFaceGroups | singleFaceGroup_faceGroup
+  sourceFaceGroup: {
+    __typename: 'FaceGroup'
+    id: string
+  }
+  refetchQueries: PureQueryOptions[]
 }
 
 const MergeFaceGroupsModal = ({
   open,
   setOpen,
   sourceFaceGroup,
+  refetchQueries,
 }: MergeFaceGroupsModalProps) => {
   const { t } = useTranslation()
 
-  const [selectedFaceGroup, setSelectedFaceGroup] =
-    useState<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>(null)
+  const [selectedFaceGroup, setSelectedFaceGroup] = useState<
+    myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
+  >(null)
 
   const history = useHistory()
   const { data } = useQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
@@ -50,11 +56,7 @@ const MergeFaceGroupsModal = ({
     combineFaces,
     combineFacesVariables
   >(COMBINE_FACES_MUTATION, {
-    refetchQueries: [
-      {
-        query: MY_FACES_QUERY,
-      },
-    ],
+    refetchQueries: refetchQueries,
   })
 
   if (open == false) return null

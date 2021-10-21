@@ -40,20 +40,26 @@ type MoveImageFacesModalProps = {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
   faceGroup: singleFaceGroup_faceGroup
+  preselectedImageFaces?: (
+    | singleFaceGroup_faceGroup_imageFaces
+    | myFaces_myFaceGroups_imageFaces
+  )[]
 }
 
 const MoveImageFacesModal = ({
   open,
   setOpen,
   faceGroup,
+  preselectedImageFaces,
 }: MoveImageFacesModalProps) => {
   const { t } = useTranslation()
 
   const [selectedImageFaces, setSelectedImageFaces] = useState<
     (singleFaceGroup_faceGroup_imageFaces | myFaces_myFaceGroups_imageFaces)[]
   >([])
-  const [selectedFaceGroup, setSelectedFaceGroup] =
-    useState<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>(null)
+  const [selectedFaceGroup, setSelectedFaceGroup] = useState<
+    myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
+  >(null)
   const [imagesSelected, setImagesSelected] = useState(false)
   const history = useHistory()
 
@@ -68,8 +74,16 @@ const MoveImageFacesModal = ({
     ],
   })
 
-  const [loadFaceGroups, { data: faceGroupsData }] =
-    useLazyQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
+  const [loadFaceGroups, { data: faceGroupsData }] = useLazyQuery<
+    myFaces,
+    myFacesVariables
+  >(MY_FACES_QUERY)
+
+  useEffect(() => {
+    if (isNil(preselectedImageFaces)) return
+    setSelectedImageFaces(preselectedImageFaces)
+    setImagesSelected(true)
+  }, [preselectedImageFaces])
 
   useEffect(() => {
     if (imagesSelected) {

@@ -4,7 +4,7 @@ import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { TranslationFn } from '../../localization'
-import { MediaSidebarMedia } from './MediaSidebar'
+import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,

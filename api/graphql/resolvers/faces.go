@@ -46,6 +46,14 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 	return &faceGroup, nil
 }
 
+func (r imageFaceResolver) Media(ctx context.Context, obj *models.ImageFace) (*models.Media, error) {
+	if err := obj.FillMedia(r.Database); err != nil {
+		return nil, err
+	}
+
+	return &obj.Media, nil
+}
+
 func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup, paginate *models.Pagination) ([]*models.ImageFace, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {

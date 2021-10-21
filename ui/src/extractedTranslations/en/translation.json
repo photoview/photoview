@@ -63,8 +63,8 @@
   "people_page": {
     "action_label": {
       "change_label": "Change label",
-      "detach_face": "Detach face",
-      "merge_face": "Merge face",
+      "detach_images": "Detach face",
+      "merge_people": "Merge face",
       "move_faces": "Move faces"
     },
     "face_group": {
@@ -259,7 +259,11 @@
       },
       "title": "Download"
     },
+    "location": {
+      "title": "Location"
+    },
     "media": {
+      "album_path": "Album path",
       "exif": {
         "exposure_program": {
           "action_program": "Action program",
@@ -288,6 +292,7 @@
         "name": {
           "aperture": "Aperture",
           "camera": "Camera",
+          "coordinates": "Coordinates",
           "date_shot": "Date shot",
           "exposure": "Exposure",
           "exposure_program": "Program",
@@ -298,6 +303,15 @@
           "maker": "Maker"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Detach image",
+        "merge_face": "Merge face",
+        "move_face": "Move face"
+      },
+      "confirm_image_detach": "Are you sure you want to detach this image?",
+      "title": "People"
     },
     "sharing": {
       "add_share": "Add shares",
@@ -319,6 +333,7 @@
   "timeline_filter": {
     "date": {
       "dropdown_all": "From today",
+      "dropdown_year": "{{year}} and earlier",
       "label": "Date"
     }
   },

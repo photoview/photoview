@@ -61,6 +61,13 @@
           "title": null
         },
         "title": null
+      },
+      "merge_people_groups": {
+        "description": "",
+        "destination_table": {
+          "title": ""
+        },
+        "title": ""
       }
     },
     "table": {
@@ -123,6 +130,9 @@
         "mega_byte_plural": null,
         "tera_byte_plural": null
       }
+    },
+    "media": {
+      "album": ""
     }
   },
   "title": {

@@ -1,30 +1,24 @@
 import { gql, useQuery } from '@apollo/client'
 import type mapboxgl from 'mapbox-gl'
-import React, { useEffect, useReducer, useRef, useState } from 'react'
+import React, { useReducer } from 'react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
-import { makeUpdateMarkers } from './mapboxHelperFunctions'
-import MapPresentMarker from './MapPresentMarker'
+import { registerMediaMarkers } from '../../components/mapbox/mapboxHelperFunctions'
+import useMapboxMap from '../../components/mapbox/MapboxMap'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
-import { placesReducer } from './placesReducer'
-
-import 'mapbox-gl/dist/mapbox-gl.css'
+import MapPresentMarker from './MapPresentMarker'
+import { PlacesAction, placesReducer } from './placesReducer'
+import { mediaGeoJson } from './__generated__/mediaGeoJson'
 
 const MapWrapper = styled.div`
   width: 100%;
   height: calc(100vh - 120px);
 `
 
-const MapContainer = styled.div`
-  width: 100%;
-  height: 100%;
-`
-
 const MAPBOX_DATA_QUERY = gql`
-  query placePageMapboxToken {
-    mapboxToken
+  query mediaGeoJson {
     myMediaGeoJson
   }
 `
@@ -37,10 +31,9 @@ export type PresentMarker = {
 const MapPage = () => {
   const { t } = useTranslation()
 
-  const [mapboxLibrary, setMapboxLibrary] = useState<typeof mapboxgl | null>()
-  const mapContainer = useRef<HTMLDivElement | null>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
-  // const [presentMarker, setPresentMarker] = useState<PresentMarker | null>(null)
+  const { data: mapboxData } = useQuery<mediaGeoJson>(MAPBOX_DATA_QUERY, {
+    fetchPolicy: 'cache-first',
+  })
 
   const [markerMediaState, dispatchMarkerMedia] = useReducer(placesReducer, {
     presenting: false,
@@ -48,76 +41,21 @@ const MapPage = () => {
     media: [],
   })
 
-  const { data: mapboxData } = useQuery(MAPBOX_DATA_QUERY)
+  const { mapContainer, mapboxMap, mapboxToken } = useMapboxMap({
+    configureMapbox: configureMapbox({ mapboxData, dispatchMarkerMedia }),
+  })
 
-  useEffect(() => {
-    async function loadMapboxLibrary() {
-      const mapbox = (await import('mapbox-gl')).default
-
-      setMapboxLibrary(mapbox)
-    }
-    loadMapboxLibrary()
-  }, [])
-
-  useEffect(() => {
-    if (
-      mapboxLibrary == null ||
-      mapContainer.current == null ||
-      mapboxData == null ||
-      map.current != null
-    ) {
-      return
-    }
-
-    mapboxLibrary.accessToken = mapboxData.mapboxToken
-
-    map.current = new mapboxLibrary.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      zoom: 1,
-    })
-
-    // Add map navigation control
-    map.current.addControl(new mapboxLibrary.NavigationControl())
-
-    map.current.on('load', () => {
-      if (map.current == null) {
-        console.error('ERROR: map is null')
-        return
-      }
-
-      map.current.addSource('media', {
-        type: 'geojson',
-        data: mapboxData.myMediaGeoJson,
-        cluster: true,
-        clusterRadius: 50,
-        clusterProperties: {
-          thumbnail: ['coalesce', ['get', 'thumbnail'], false],
-        },
+  urlPresentModeSetupHook({
+    dispatchMedia: dispatchMarkerMedia,
+    openPresentMode: event => {
+      dispatchMarkerMedia({
+        type: 'openPresentMode',
+        activeIndex: event.state.activeIndex,
       })
+    },
+  })
 
-      // Add dummy layer for features to be queryable
-      map.current.addLayer({
-        id: 'media-points',
-        type: 'circle',
-        source: 'media',
-        filter: ['!', true],
-      })
-
-      const updateMarkers = makeUpdateMarkers({
-        map: map.current,
-        mapboxLibrary,
-        dispatchMarkerMedia,
-      })
-
-      map.current.on('move', updateMarkers)
-      map.current.on('moveend', updateMarkers)
-      map.current.on('sourcedata', updateMarkers)
-      updateMarkers()
-    })
-  }, [mapContainer, mapboxLibrary, mapboxData])
-
-  if (mapboxData && mapboxData.mapboxToken == null) {
+  if (mapboxData && mapboxToken == null) {
     return (
       <Layout title={t('places_page.title', 'Places')}>
         <h1>Mapbox token is not set</h1>
@@ -134,34 +72,64 @@ const MapPage = () => {
     )
   }
 
-  urlPresentModeSetupHook({
-    dispatchMedia: dispatchMarkerMedia,
-    openPresentMode: event => {
-      dispatchMarkerMedia({
-        type: 'openPresentMode',
-        activeIndex: event.state.activeIndex,
-      })
-    },
-  })
-
   return (
     <Layout title="Places">
       <Helmet>
         {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
         {/* <style type="text/css">{mapboxStyles}</style> */}
       </Helmet>
-      <MapWrapper>
-        <MapContainer ref={mapContainer}></MapContainer>
-      </MapWrapper>
+      <MapWrapper>{mapContainer}</MapWrapper>
       <MapPresentMarker
-        map={map.current}
+        map={mapboxMap}
         markerMediaState={markerMediaState}
         dispatchMarkerMedia={dispatchMarkerMedia}
-        // presentMarker={presentMarker}
-        // setPresentMarker={setPresentMarker}
       />
     </Layout>
   )
 }
+
+const configureMapbox =
+  ({
+    mapboxData,
+    dispatchMarkerMedia,
+  }: {
+    mapboxData?: mediaGeoJson
+    dispatchMarkerMedia: React.Dispatch<PlacesAction>
+  }) =>
+  (map: mapboxgl.Map, mapboxLibrary: typeof mapboxgl) => {
+    // Add map navigation control
+    map.addControl(new mapboxLibrary.NavigationControl())
+
+    map.on('load', () => {
+      if (map == null) {
+        console.error('ERROR: map is null')
+        return
+      }
+
+      map.addSource('media', {
+        type: 'geojson',
+        data: mapboxData?.myMediaGeoJson,
+        cluster: true,
+        clusterRadius: 50,
+        clusterProperties: {
+          thumbnail: ['coalesce', ['get', 'thumbnail'], false],
+        },
+      })
+
+      // Add dummy layer for features to be queryable
+      map.addLayer({
+        id: 'media-points',
+        type: 'circle',
+        source: 'media',
+        filter: ['!', true],
+      })
+
+      registerMediaMarkers({
+        map: map,
+        mapboxLibrary,
+        dispatchMarkerMedia,
+      })
+    })
+  }
 
 export default MapPage

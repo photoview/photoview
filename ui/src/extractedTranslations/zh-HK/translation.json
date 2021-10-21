@@ -61,16 +61,16 @@
     "description": "簡單及易用的照片庫給個人伺服器"
   },
   "people_page": {
+    "action_label": {
+      "change_label": "",
+      "detach_images": "",
+      "merge_people": "",
+      "move_faces": ""
+    },
     "face_group": {
       "label_placeholder": "名稱",
       "unlabeled": "未命名",
       "unlabeled_person": "未命名人物"
-    },
-    "action_label": {
-      "change_label": null,
-      "merge_face": null,
-      "detach_face": null,
-      "move_faces": null
     },
     "modal": {
       "action": {
@@ -215,30 +215,36 @@
   },
   "sidebar": {
     "album": {
+      "album_cover": "",
+      "download": {
+        "high-resolutions": {
+          "description": "",
+          "title": ""
+        },
+        "originals": {
+          "description": "",
+          "title": ""
+        },
+        "thumbnails": {
+          "description": "",
+          "title": ""
+        },
+        "web-videos": {
+          "description": "",
+          "title": ""
+        }
+      },
+      "reset_cover": "",
+      "set_cover": "",
       "title_placeholder": "相簿名稱"
     },
     "download": {
       "filesize": {
-        "byte": null,
-        "giga_byte": null,
-        "kilo_byte": null,
-        "mega_byte": null,
-        "tera_byte": null,
-        "byte_0": null,
-        "byte_1": null,
-        "byte_2": null,
-        "giga_byte_0": null,
-        "giga_byte_1": null,
-        "giga_byte_2": null,
-        "kilo_byte_0": null,
-        "kilo_byte_1": null,
-        "kilo_byte_2": null,
-        "mega_byte_0": null,
-        "mega_byte_1": null,
-        "mega_byte_2": null,
-        "tera_byte_0": null,
-        "tera_byte_1": null,
-        "tera_byte_2": null
+        "byte": "",
+        "giga_byte": "",
+        "kilo_byte": "",
+        "mega_byte": "",
+        "tera_byte": ""
       },
       "table_columns": {
         "dimensions": "尺寸",
@@ -248,7 +254,11 @@
       },
       "title": "下載"
     },
+    "location": {
+      "title": ""
+    },
     "media": {
+      "album_path": "",
       "exif": {
         "exposure_program": {
           "action_program": "動態模式",
@@ -264,19 +274,20 @@
         },
         "flash": {
           "auto": "自動",
-          "did_not_fire": null,
-          "fired": null,
-          "no_flash": null,
-          "no_flash_function": null,
+          "did_not_fire": "",
+          "fired": "",
+          "no_flash": "",
+          "no_flash_function": "",
           "off": "關閉",
           "on": "使用",
           "red_eye_reduction": "減輕紅眼",
-          "return_detected": null,
-          "return_not_detected": null
+          "return_detected": "",
+          "return_not_detected": ""
         },
         "name": {
           "aperture": "光圈",
           "camera": "相機",
+          "coordinates": "",
           "date_shot": "拍攝日期",
           "exposure": "曝光",
           "exposure_program": "模式",
@@ -287,6 +298,15 @@
           "maker": "製造商"
         }
       }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "",
+        "merge_face": "",
+        "move_face": ""
+      },
+      "confirm_image_detach": "",
+      "title": ""
     },
     "sharing": {
       "add_share": "新增分享",
@@ -304,6 +324,13 @@
     "photos": "時間線",
     "places": "地點",
     "settings": "設定"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "",
+      "dropdown_year": "",
+      "label": ""
+    }
   },
   "title": {
     "loading_album": "載入相簿",
