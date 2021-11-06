@@ -7,6 +7,7 @@ import (
 
 	"github.com/otiai10/copy"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,6 +15,10 @@ import (
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
+
+	if !assert.NoError(t, face_detection.InitializeFaceDetector(db)) {
+		return
+	}
 
 	test_dir := t.TempDir()
 	copy.Copy("./test_data", test_dir)
@@ -82,7 +87,15 @@ func TestCleanupMedia(t *testing.T) {
 		assert.Equal(t, 6, countAllMediaURLs())
 	})
 
-	// t.Run("Modify images", func(t *testing.T) {
+	t.Run("Modify images", func(t *testing.T) {
+		assert.NoError(t, os.Rename(path.Join(test_dir, "buttercup_close_summer_yellow.jpg"), path.Join(test_dir, "yellow-flower.jpg")))
+		test_utils.RunScannerAll(t, db)
+		assert.Equal(t, 3, countAllMedia())
+		assert.Equal(t, 6, countAllMediaURLs())
 
-	// })
+		assert.NoError(t, os.Remove(path.Join(test_dir, "lilac_lilac_bush_lilac.jpg")))
+		test_utils.RunScannerAll(t, db)
+		assert.Equal(t, 2, countAllMedia())
+		assert.Equal(t, 4, countAllMediaURLs())
+	})
 }
