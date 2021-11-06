@@ -83,7 +83,6 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		Table("user_albums").
 		Joins("JOIN albums ON user_albums.album_id = albums.id").
 		Where("user_id = ?", user.ID).
-		// Where("album_id IN (?)", userAlbumIDs).
 		Where("album_id NOT IN (?)", scannedAlbumIDs)
 
 	if err := query.Find(&deleteAlbums).Error; err != nil {
@@ -109,7 +108,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 
 	// Delete old albums from database
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&user).Association("Albums").Delete(deleteAlbums); err != nil {
+		if err := tx.Where("album_id IN ?", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
 			return err
 		}
 
