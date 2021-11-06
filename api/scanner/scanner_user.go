@@ -23,7 +23,7 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	// Open .photoviewignore file, if exists
 	photoviewIgnoreFile, err := os.Open(path.Join(ignorePath, ".photoviewignore"))
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return photoviewIgnore, nil
 		}
 		return photoviewIgnore, err

@@ -9,19 +9,19 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
-type exifParser interface {
+type ExifParser interface {
 	ParseExif(media_path string) (*models.MediaEXIF, error)
 }
 
-var globalExifParser exifParser
+var globalExifParser ExifParser
 
 func InitializeEXIFParser() {
 	// Decide between internal or external Exif parser
-	exiftoolParser, err := newExiftoolParser()
+	exiftoolParser, err := NewExiftoolParser()
 
 	if err != nil {
 		log.Printf("Failed to get exiftool, using internal exif parser instead: %v\n", err)
-		globalExifParser = &internalExifParser{}
+		globalExifParser = NewInternalExifParser()
 	} else {
 		log.Println("Found exiftool")
 		globalExifParser = exiftoolParser

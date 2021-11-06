@@ -83,7 +83,6 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		Table("user_albums").
 		Joins("JOIN albums ON user_albums.album_id = albums.id").
 		Where("user_id = ?", user.ID).
-		// Where("album_id IN (?)", userAlbumIDs).
 		Where("album_id NOT IN (?)", scannedAlbumIDs)
 
 	if err := query.Find(&deleteAlbums).Error; err != nil {
@@ -109,11 +108,11 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 
 	// Delete old albums from database
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&user).Association("Albums").Delete(deleteAlbums); err != nil {
+		if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id IN ?", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
+		if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
 			return err
 		}
 
@@ -126,7 +125,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	}
 
 	// Reload faces after deleting albums
-	if face_detection.GlobalFaceDetector == nil {
+	if face_detection.GlobalFaceDetector != nil {
 		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
 			deleteErrors = append(deleteErrors, err)
 		}

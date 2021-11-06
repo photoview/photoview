@@ -1,4 +1,4 @@
-package exif
+package exif_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,18 +23,18 @@ func TestExifParsers(t *testing.T) {
 
 	parsers := []struct {
 		name   string
-		parser exifParser
+		parser exif.ExifParser
 	}{
 		{
 			name:   "internal",
-			parser: &internalExifParser{},
+			parser: exif.NewInternalExifParser(),
 		},
 	}
 
-	if externalParser, err := newExiftoolParser(); err == nil {
+	if externalParser, err := exif.NewExiftoolParser(); err == nil {
 		parsers = append(parsers, struct {
 			name   string
-			parser exifParser
+			parser exif.ExifParser
 		}{
 			name:   "external",
 			parser: externalParser,

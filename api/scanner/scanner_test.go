@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -40,20 +39,11 @@ func TestFullScan(t *testing.T) {
 		return
 	}
 
-	if !assert.NoError(t, scanner.InitializeScannerQueue(db)) {
-		return
-	}
-
 	if !assert.NoError(t, face_detection.InitializeFaceDetector(db)) {
 		return
 	}
 
-	if !assert.NoError(t, scanner.AddUserToQueue(user)) {
-		return
-	}
-
-	// wait for all jobs to finish
-	scanner.CloseScannerQueue()
+	test_utils.RunScannerOnUser(t, db, user)
 
 	var all_media []*models.Media
 	if !assert.NoError(t, db.Find(&all_media).Error) {

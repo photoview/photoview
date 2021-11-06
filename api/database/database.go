@@ -103,6 +103,11 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// Manually enable foreign keys for sqlite, as this isn't done by default
+	if drivers.DatabaseDriver() == drivers.DatabaseDriverSqlite {
+		db.Exec("PRAGMA foreign_keys = ON")
+	}
+
 	return db, nil
 }
 
