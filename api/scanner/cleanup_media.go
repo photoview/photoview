@@ -126,7 +126,7 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	}
 
 	// Reload faces after deleting albums
-	if face_detection.GlobalFaceDetector == nil {
+	if face_detection.GlobalFaceDetector != nil {
 		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
 			deleteErrors = append(deleteErrors, err)
 		}

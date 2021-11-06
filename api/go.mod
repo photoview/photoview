@@ -19,6 +19,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/otiai10/copy v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f
 	github.com/stretchr/objx v0.3.0 // indirect
