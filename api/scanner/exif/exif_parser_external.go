@@ -15,7 +15,7 @@ type externalExifParser struct {
 	dataLoader *dataloader.ExiftoolLoader
 }
 
-func newExiftoolParser() (*externalExifParser, error) {
+func NewExiftoolParser() (ExifParser, error) {
 	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
 
 	if err != nil {

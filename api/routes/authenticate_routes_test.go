@@ -88,8 +88,8 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.True(t, success)
-			assert.Equal(t, responseMessage, "success")
-			assert.Equal(t, responseStatus, http.StatusAccepted)
+			assert.Equal(t, "success", responseMessage)
+			assert.Equal(t, http.StatusAccepted, responseStatus)
 		})
 	})
 
@@ -103,8 +103,8 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.True(t, success)
-			assert.Equal(t, responseMessage, "success")
-			assert.Equal(t, responseStatus, http.StatusAccepted)
+			assert.Equal(t, "success", responseMessage)
+			assert.Equal(t, http.StatusAccepted, responseStatus)
 		})
 
 		t.Run("Request without access token", func(t *testing.T) {
@@ -114,8 +114,8 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			assert.Error(t, err)
 			assert.False(t, success)
-			assert.Equal(t, responseMessage, "unauthorized")
-			assert.Equal(t, responseStatus, http.StatusForbidden)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
 		})
 
 		expire := time.Now().Add(time.Hour * 24 * 30)
@@ -139,8 +139,8 @@ func TestAuthenticateRoute(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.True(t, success)
-			assert.Equal(t, responseMessage, "success")
-			assert.Equal(t, responseStatus, http.StatusAccepted)
+			assert.Equal(t, "success", responseMessage)
+			assert.Equal(t, http.StatusAccepted, responseStatus)
 		})
 	})
 

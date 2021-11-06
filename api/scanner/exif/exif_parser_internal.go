@@ -16,7 +16,11 @@ import (
 // internalExifParser is an exif parser that parses the media without the use of external tools
 type internalExifParser struct{}
 
-func (p *internalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
+func NewInternalExifParser() ExifParser {
+	return internalExifParser{}
+}
+
+func (p internalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
 	photoFile, err := os.Open(media_path)
 	if err != nil {
 		return nil, err
