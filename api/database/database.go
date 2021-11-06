@@ -72,8 +72,8 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 
 func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 	var databaseDialect gorm.Dialector
-	switch drivers.DatabaseDriver() {
-	case drivers.DatabaseDriverMysql:
+	switch drivers.DatabaseDriverFromEnv() {
+	case drivers.MYSQL:
 		mysqlAddress, err := GetMysqlAddress(utils.EnvMysqlURL.GetValue())
 		if err != nil {
 			return nil, err
@@ -81,7 +81,7 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
 		databaseDialect = gorm_mysql.Open(mysqlAddress)
 
-	case drivers.DatabaseDriverSqlite:
+	case drivers.SQLITE:
 		sqliteAddress, err := GetSqliteAddress(utils.EnvSqlitePath.GetValue())
 		if err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		log.Printf("Opening SQLITE database: %s", sqliteAddress)
 		databaseDialect = sqlite.Open(sqliteAddress.String())
 
-	case drivers.DatabaseDriverPostgres:
+	case drivers.POSTGRES:
 		postgresAddress, err := GetPostgresAddress(utils.EnvPostgresURL.GetValue())
 		if err != nil {
 			return nil, err
@@ -104,7 +104,7 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 	}
 
 	// Manually enable foreign keys for sqlite, as this isn't done by default
-	if drivers.DatabaseDriver() == drivers.DatabaseDriverSqlite {
+	if drivers.SQLITE.MatchDatabase(db) {
 		db.Exec("PRAGMA foreign_keys = ON")
 	}
 
@@ -199,9 +199,9 @@ func MigrateDatabase(db *gorm.DB) error {
 func ClearDatabase(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
 
-		db_driver := drivers.DatabaseDriver()
+		db_driver := drivers.DatabaseDriverFromEnv()
 
-		if db_driver == drivers.DatabaseDriverMysql {
+		if db_driver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
 				return err
 			}
@@ -213,15 +213,15 @@ func ClearDatabase(db *gorm.DB) error {
 			table := dry_run.Find(model).Statement.Table
 
 			switch db_driver {
-			case drivers.DatabaseDriverPostgres:
+			case drivers.POSTGRES:
 				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
 					return err
 				}
-			case drivers.DatabaseDriverMysql:
+			case drivers.MYSQL:
 				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
 					return err
 				}
-			case drivers.DatabaseDriverSqlite:
+			case drivers.SQLITE:
 				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
 					return err
 				}
@@ -229,7 +229,7 @@ func ClearDatabase(db *gorm.DB) error {
 
 		}
 
-		if db_driver == drivers.DatabaseDriverMysql {
+		if db_driver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
 				return err
 			}

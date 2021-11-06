@@ -67,7 +67,7 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, errors.New("concurrent workers must at least be 1")
 	}
 
-	if workers > 1 && drivers.DatabaseDriver() == drivers.DatabaseDriverSqlite {
+	if workers > 1 && drivers.DatabaseDriverFromEnv() == drivers.SQLITE {
 		return 0, errors.New("multiple workers not supported for SQLite databases")
 	}
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Kagami/go-face"
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -48,10 +49,10 @@ type FaceDescriptor face.Descriptor
 
 // GormDataType datatype used in database
 func (FaceDescriptor) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "mysql", "sqlite":
+	switch drivers.GetDatabaseDriverType(db) {
+	case drivers.MYSQL, drivers.SQLITE:
 		return "BLOB"
-	case "postgres":
+	case drivers.POSTGRES:
 		return "BYTEA"
 	}
 	return ""

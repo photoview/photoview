@@ -3,6 +3,7 @@ package actions
 import (
 	"strings"
 
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -26,7 +27,7 @@ func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbum
 	var media []*models.Media
 
 	userSubquery := db.Table("user_albums").Where("user_id = ?", userID)
-	if db.Dialector.Name() == "postgres" {
+	if drivers.POSTGRES.MatchDatabase(db) {
 		userSubquery = userSubquery.Where("album_id = \"Album\".id")
 	} else {
 		userSubquery = userSubquery.Where("album_id = Album.id")

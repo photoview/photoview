@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/photoview/photoview/api/database/drivers"
 	"gorm.io/gorm"
 )
 
@@ -22,12 +23,10 @@ func DateExtract(db *gorm.DB, component DateComponent, attribute string) string 
 
 	var result string
 
-	switch db.Dialector.Name() {
-	case "mysql", "postgres":
+	switch drivers.GetDatabaseDriverType(db) {
+	case drivers.MYSQL, drivers.POSTGRES:
 		result = fmt.Sprintf("EXTRACT(%s FROM %s)", component, attribute)
-		break
-	case "sqlite":
-
+	case drivers.SQLITE:
 		var sqliteFormatted string
 		switch component {
 		case DateCompYear:
@@ -39,9 +38,8 @@ func DateExtract(db *gorm.DB, component DateComponent, attribute string) string 
 		}
 
 		result = fmt.Sprintf("CAST(strftime('%s', %s) AS INTEGER)", sqliteFormatted, attribute)
-		break
 	default:
-		log.Panicf("unsupported database backend: %s", db.Dialector.Name())
+		log.Panicf("unsupported database backend: %s", drivers.GetDatabaseDriverType(db))
 	}
 
 	return result

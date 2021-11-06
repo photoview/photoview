@@ -17,7 +17,7 @@ func TestSiteInfo(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, models.DefaultSiteInfo(), *site_info)
+	assert.Equal(t, models.DefaultSiteInfo(db), *site_info)
 
 	site_info.InitialSetup = false
 	site_info.PeriodicScanInterval = 360

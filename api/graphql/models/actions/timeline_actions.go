@@ -3,6 +3,7 @@ package actions
 import (
 	"time"
 
+	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
@@ -13,15 +14,15 @@ func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onl
 		Joins("JOIN albums ON media.album_id = albums.id").
 		Where("albums.id IN (?)", db.Table("user_albums").Select("user_albums.album_id").Where("user_id = ?", user.ID))
 
-	switch db.Dialector.Name() {
-	case "postgres":
+	switch drivers.GetDatabaseDriverType(db) {
+	case drivers.POSTGRES:
 		query = query.
 			Order("DATE_TRUNC('year', date_shot) DESC").
 			Order("DATE_TRUNC('month', date_shot) DESC").
 			Order("DATE_TRUNC('day', date_shot) DESC").
 			Order("albums.title ASC").
 			Order("media.date_shot DESC")
-	case "sqlite":
+	case drivers.SQLITE:
 		query = query.
 			Order("strftime('%j', media.date_shot) DESC"). // convert to day of year 001-366
 			Order("albums.title ASC").

@@ -16,9 +16,9 @@ func (SiteInfo) TableName() string {
 	return "site_info"
 }
 
-func DefaultSiteInfo() SiteInfo {
+func DefaultSiteInfo(db *gorm.DB) SiteInfo {
 	defaultConcurrentWorkers := 3
-	if db_drivers.DatabaseDriver() == db_drivers.DatabaseDriverSqlite {
+	if db_drivers.SQLITE.MatchDatabase(db) {
 		defaultConcurrentWorkers = 1
 	}
 
@@ -39,7 +39,7 @@ func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 	}
 
 	if len(siteInfo) == 0 {
-		newSiteInfo := DefaultSiteInfo()
+		newSiteInfo := DefaultSiteInfo(db)
 
 		if err := db.Create(&newSiteInfo).Error; err != nil {
 			return nil, errors.Wrap(err, "initialize site_info")
