@@ -66,13 +66,13 @@ func (v EnvironmentVariable) GetBool() bool {
 
 // ShouldServeUI whether or not the "serve ui" option is enabled
 func ShouldServeUI() bool {
-	return EnvServeUI.GetValue() == "1"
+	return EnvServeUI.GetBool()
 }
 
 // DevelopmentMode describes whether or not the server is running in development mode,
 // and should thus print debug informations and enable other features related to developing.
 func DevelopmentMode() bool {
-	return EnvDevelopmentMode.GetValue() == "1"
+	return EnvDevelopmentMode.GetBool()
 }
 
 // UIPath returns the value from where the static UI files are located if SERVE_UI=1

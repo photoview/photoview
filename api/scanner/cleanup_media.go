@@ -108,11 +108,11 @@ func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 
 	// Delete old albums from database
 	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("album_id IN ?", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
+		if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id IN ?", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
+		if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
 			return err
 		}
 

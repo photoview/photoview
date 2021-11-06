@@ -63,19 +63,26 @@ func TestCleanupMedia(t *testing.T) {
 		return
 	}
 
-	test_utils.RunScannerOnUser(t, db, user1)
-	assert.Equal(t, 9, countAllMedia())
-	assert.Equal(t, 18, countAllMediaURLs())
+	t.Run("Modify albums", func(t *testing.T) {
 
-	// move faces directory
-	assert.NoError(t, os.Rename(path.Join(test_dir, "faces"), path.Join(test_dir, "faces_moved")))
-	test_utils.RunScannerAll(t, db)
-	assert.Equal(t, 9, countAllMedia())
-	assert.Equal(t, 18, countAllMediaURLs())
+		test_utils.RunScannerOnUser(t, db, user1)
+		assert.Equal(t, 9, countAllMedia())
+		assert.Equal(t, 18, countAllMediaURLs())
 
-	// remove faces_moved directory
-	assert.NoError(t, os.RemoveAll(path.Join(test_dir, "faces_moved")))
-	test_utils.RunScannerAll(t, db)
-	assert.Equal(t, 3, countAllMedia())
-	assert.Equal(t, 6, countAllMediaURLs())
+		// move faces directory
+		assert.NoError(t, os.Rename(path.Join(test_dir, "faces"), path.Join(test_dir, "faces_moved")))
+		test_utils.RunScannerAll(t, db)
+		assert.Equal(t, 9, countAllMedia())
+		assert.Equal(t, 18, countAllMediaURLs())
+
+		// remove faces_moved directory
+		assert.NoError(t, os.RemoveAll(path.Join(test_dir, "faces_moved")))
+		test_utils.RunScannerAll(t, db)
+		assert.Equal(t, 3, countAllMedia())
+		assert.Equal(t, 6, countAllMediaURLs())
+	})
+
+	// t.Run("Modify images", func(t *testing.T) {
+
+	// })
 }
