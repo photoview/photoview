@@ -17,10 +17,11 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.MyAlbums(r.Database, user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites)
+	return actions.MyAlbums(r.DB(ctx), user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites)
 }
 
 func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error) {
+	db := r.DB(ctx)
 	if tokenCredentials != nil {
 
 		shareToken, err := r.ShareToken(ctx, *tokenCredentials)
@@ -33,7 +34,7 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 				return shareToken.Album, nil
 			}
 
-			subAlbum, err := shareToken.Album.GetChildren(r.Database, func(query *gorm.DB) *gorm.DB { return query.Where("sub_albums.id = ?", id) })
+			subAlbum, err := shareToken.Album.GetChildren(db, func(query *gorm.DB) *gorm.DB { return query.Where("sub_albums.id = ?", id) })
 			if err != nil {
 				return nil, errors.Wrapf(err, "find sub album of share token (%s)", tokenCredentials.Token)
 			}
@@ -49,7 +50,7 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.Album(r.Database, user, id)
+	return actions.Album(db, user, id)
 }
 
 func (r *Resolver) Album() api.AlbumResolver {
@@ -59,10 +60,11 @@ func (r *Resolver) Album() api.AlbumResolver {
 type albumResolver struct{ *Resolver }
 
 func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error) {
+	db := r.DB(ctx)
 
-	query := r.Database.
+	query := db.
 		Where("media.album_id = ?", album.ID).
-		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
+		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
 
 	if onlyFavorites != nil && *onlyFavorites == true {
 		user := auth.UserFromContext(ctx)
@@ -70,7 +72,7 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *m
 			return nil, errors.New("cannot get favorite media without being authorized")
 		}
 
-		favoriteQuery := r.Database.Model(&models.UserMediaData{
+		favoriteQuery := db.Model(&models.UserMediaData{
 			UserID: user.ID,
 		}).Where("user_media_data.media_id = media.id").Where("user_media_data.favorite = true")
 
@@ -88,14 +90,14 @@ func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *m
 }
 
 func (r *albumResolver) Thumbnail(ctx context.Context, album *models.Album) (*models.Media, error) {
-	return album.Thumbnail(r.Database)
+	return album.Thumbnail(r.DB(ctx))
 }
 
 func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error) {
 
 	var albums []*models.Album
 
-	query := r.Database.Where("parent_album_id = ?", parent.ID)
+	query := r.DB(ctx).Where("parent_album_id = ?", parent.ID)
 	query = models.FormatSQL(query, order, paginate)
 
 	if err := query.Find(&albums).Error; err != nil {
@@ -116,7 +118,7 @@ func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.U
 func (r *albumResolver) Shares(ctx context.Context, album *models.Album) ([]*models.ShareToken, error) {
 
 	var shareTokens []*models.ShareToken
-	if err := r.Database.Where("album_id = ?", album.ID).Find(&shareTokens).Error; err != nil {
+	if err := r.DB(ctx).Where("album_id = ?", album.ID).Find(&shareTokens).Error; err != nil {
 		return nil, err
 	}
 
@@ -131,7 +133,7 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 		return empty, nil
 	}
 
-	return actions.AlbumPath(r.Database, user, obj)
+	return actions.AlbumPath(r.DB(ctx), user, obj)
 }
 
 // Takes album_id, resets album.cover_id to 0 (null)
@@ -141,7 +143,7 @@ func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*m
 		return nil, errors.New("unauthorized")
 	}
 
-	return actions.ResetAlbumCover(r.Database, user, albumID)
+	return actions.ResetAlbumCover(r.DB(ctx), user, albumID)
 }
 
 func (r *mutationResolver) SetAlbumCover(ctx context.Context, mediaID int) (*models.Album, error) {
@@ -150,5 +152,5 @@ func (r *mutationResolver) SetAlbumCover(ctx context.Context, mediaID int) (*mod
 		return nil, errors.New("unauthorized")
 	}
 
-	return actions.SetAlbumCover(r.Database, user, mediaID)
+	return actions.SetAlbumCover(r.DB(ctx), user, mediaID)
 }

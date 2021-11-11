@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -14,6 +13,7 @@ import (
 	"github.com/photoview/photoview/api/database"
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/auth"
+	graphql_endpoint "github.com/photoview/photoview/api/graphql/endpoint"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/exif"
@@ -22,9 +22,7 @@ import (
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
-	"github.com/99designs/gqlgen/handler"
-	photoview_graphql "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/resolvers"
+	"github.com/99designs/gqlgen/graphql/playground"
 )
 
 func main() {
@@ -70,36 +68,19 @@ func main() {
 	rootRouter.Use(server.LoggingMiddleware)
 	rootRouter.Use(server.CORSMiddleware(devMode))
 
-	graphqlResolver := resolvers.Resolver{Database: db}
-	graphqlDirective := photoview_graphql.DirectiveRoot{}
-	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin
-	graphqlDirective.IsAuthorized = photoview_graphql.IsAuthorized
-
-	graphqlConfig := photoview_graphql.Config{
-		Resolvers:  &graphqlResolver,
-		Directives: graphqlDirective,
-	}
-
 	apiListenURL := utils.ApiListenUrl()
 
 	endpointRouter := rootRouter.PathPrefix(apiListenURL.Path).Subrouter()
 
 	if devMode {
-		endpointRouter.Handle("/", handler.Playground("GraphQL playground", path.Join(apiListenURL.Path, "/graphql")))
+		endpointRouter.Handle("/", playground.Handler("GraphQL playground", path.Join(apiListenURL.Path, "/graphql")))
 	} else {
 		endpointRouter.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte("photoview api endpoint"))
 		})
 	}
 
-	endpointRouter.Handle("/graphql",
-		handler.GraphQL(photoview_graphql.NewExecutableSchema(graphqlConfig),
-			handler.IntrospectionEnabled(devMode),
-			handler.WebsocketUpgrader(server.WebsocketUpgrader(devMode)),
-			handler.WebsocketKeepAliveDuration(time.Second*10),
-			handler.WebsocketInitFunc(auth.AuthWebsocketInit(db)),
-		),
-	)
+	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint(db))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)

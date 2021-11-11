@@ -19,10 +19,11 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 		return nil, errors.New("unauthorized")
 	}
 
-	return actions.MyMedia(r.Database, user, order, paginate)
+	return actions.MyMedia(r.DB(ctx), user, order, paginate)
 }
 
 func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
+	db := r.DB(ctx)
 	if tokenCredentials != nil {
 
 		shareToken, err := r.ShareToken(ctx, *tokenCredentials)
@@ -42,11 +43,11 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 
 	var media models.Media
 
-	err := r.Database.
+	err := db.
 		Joins("Album").
 		Where("media.id = ?", id).
 		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)", user.ID).
-		Where("media.id IN (?)", r.Database.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
+		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
 		First(&media).Error
 
 	if err != nil {
@@ -57,6 +58,7 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 }
 
 func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Media, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -67,7 +69,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 	}
 
 	var media []*models.Media
-	err := r.Database.Model(&media).
+	err := db.Model(&media).
 		Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
 		Where("media.id IN ?", ids).
 		Where("user_albums.user_id = ?", user.ID).
@@ -95,7 +97,7 @@ func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.M
 
 func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
 	var album models.Album
-	err := r.Database.Find(&album, obj.AlbumID).Error
+	err := r.DB(ctx).Find(&album, obj.AlbumID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +106,7 @@ func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.A
 
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken
-	if err := r.Database.Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
+	if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
 		return nil, errors.Wrapf(err, "get shares for media (%s)", media.Path)
 	}
 
@@ -114,7 +116,7 @@ func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*mod
 func (r *mediaResolver) Downloads(ctx context.Context, media *models.Media) ([]*models.MediaDownload, error) {
 
 	var mediaUrls []*models.MediaURL
-	if err := r.Database.Where("media_id = ?", media.ID).Find(&mediaUrls).Error; err != nil {
+	if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&mediaUrls).Error; err != nil {
 		return nil, errors.Wrapf(err, "get downloads for media (%s)", media.Path)
 	}
 
@@ -171,7 +173,7 @@ func (r *mediaResolver) Exif(ctx context.Context, media *models.Media) (*models.
 	}
 
 	var exif models.MediaEXIF
-	if err := r.Database.Model(&media).Association("Exif").Find(&exif); err != nil {
+	if err := r.DB(ctx).Model(&media).Association("Exif").Find(&exif); err != nil {
 		return nil, err
 	}
 
@@ -197,7 +199,7 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 		return nil, auth.ErrUnauthorized
 	}
 
-	return user.FavoriteMedia(r.Database, mediaID, favorite)
+	return user.FavoriteMedia(r.DB(ctx), mediaID, favorite)
 }
 
 func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
@@ -210,7 +212,7 @@ func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*mode
 	}
 
 	var faces []*models.ImageFace
-	if err := r.Database.Model(&media).Association("Faces").Find(&faces); err != nil {
+	if err := r.DB(ctx).Model(&media).Association("Faces").Find(&faces); err != nil {
 		return nil, err
 	}
 

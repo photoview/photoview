@@ -37,7 +37,7 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 	}
 
 	var faceGroup models.FaceGroup
-	if err := r.Database.Model(&obj).Association("FaceGroup").Find(&faceGroup); err != nil {
+	if err := r.DB(ctx).Model(&obj).Association("FaceGroup").Find(&faceGroup); err != nil {
 		return nil, err
 	}
 
@@ -47,7 +47,7 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 }
 
 func (r imageFaceResolver) Media(ctx context.Context, obj *models.ImageFace) (*models.Media, error) {
-	if err := obj.FillMedia(r.Database); err != nil {
+	if err := obj.FillMedia(r.DB(ctx)); err != nil {
 		return nil, err
 	}
 
@@ -55,6 +55,7 @@ func (r imageFaceResolver) Media(ctx context.Context, obj *models.ImageFace) (*m
 }
 
 func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup, paginate *models.Pagination) ([]*models.ImageFace, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -64,7 +65,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 		return nil, errors.New("face detector not initialized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
+	if err := user.FillAlbums(db); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +74,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 		userAlbumIDs[i] = album.ID
 	}
 
-	query := r.Database.
+	query := db.
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
 		Where("album_id IN (?)", userAlbumIDs)
@@ -89,6 +90,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 }
 
 func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceGroup) (int, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return -1, errors.New("unauthorized")
@@ -98,7 +100,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 		return -1, errors.New("face detector not initialized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
+	if err := user.FillAlbums(db); err != nil {
 		return -1, err
 	}
 
@@ -107,7 +109,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 		userAlbumIDs[i] = album.ID
 	}
 
-	query := r.Database.
+	query := db.
 		Model(&models.ImageFace{}).
 		Joins("Media").
 		Where("face_group_id = ?", obj.ID).
@@ -122,6 +124,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 }
 
 func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -131,7 +134,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 		return nil, errors.New("face detector not initialized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
+	if err := user.FillAlbums(db); err != nil {
 		return nil, err
 	}
 
@@ -140,10 +143,10 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 		userAlbumIDs[i] = album.ID
 	}
 
-	faceGroupQuery := r.Database.
+	faceGroupQuery := db.
 		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
 		Where("face_groups.id = ?", id).
-		Where("image_faces.media_id IN (?)", r.Database.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs))
+		Where("image_faces.media_id IN (?)", db.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs))
 
 	var faceGroup models.FaceGroup
 	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
@@ -154,6 +157,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 }
 
 func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -163,7 +167,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		return nil, errors.New("face detector not initialized")
 	}
 
-	if err := user.FillAlbums(r.Database); err != nil {
+	if err := user.FillAlbums(db); err != nil {
 		return nil, err
 	}
 
@@ -172,9 +176,9 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		userAlbumIDs[i] = album.ID
 	}
 
-	faceGroupQuery := r.Database.
+	faceGroupQuery := db.
 		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Where("image_faces.media_id IN (?)", r.Database.Select("media.id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
+		Where("image_faces.media_id IN (?)", db.Select("media.id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
 		Group("image_faces.face_group_id").
 		Group("face_groups.id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
@@ -191,6 +195,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 }
 
 func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -200,12 +205,12 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 		return nil, errors.New("face detector not initialized")
 	}
 
-	faceGroup, err := userOwnedFaceGroup(r.Database, user, faceGroupID)
+	faceGroup, err := userOwnedFaceGroup(db, user, faceGroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.Database.Model(faceGroup).Update("label", label).Error; err != nil {
+	if err := db.Model(faceGroup).Update("label", label).Error; err != nil {
 		return nil, err
 	}
 
@@ -213,6 +218,7 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 }
 
 func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -222,17 +228,17 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, errors.New("face detector not initialized")
 	}
 
-	destinationFaceGroup, err := userOwnedFaceGroup(r.Database, user, destinationFaceGroupID)
+	destinationFaceGroup, err := userOwnedFaceGroup(db, user, destinationFaceGroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	sourceFaceGroup, err := userOwnedFaceGroup(r.Database, user, sourceFaceGroupID)
+	sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceFaceGroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	updateError := r.Database.Transaction(func(tx *gorm.DB) error {
+	updateError := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
 			return err
 		}
@@ -254,6 +260,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 }
 
 func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -266,7 +273,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 	userOwnedImageFaceIDs := make([]int, 0)
 	var destFaceGroup *models.FaceGroup
 
-	transErr := r.Database.Transaction(func(tx *gorm.DB) error {
+	transErr := db.Transaction(func(tx *gorm.DB) error {
 
 		var err error
 		destFaceGroup, err = userOwnedFaceGroup(tx, user, destinationFaceGroupID)
@@ -325,6 +332,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 }
 
 func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -336,7 +344,7 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 
 	var updatedImageFaces []*models.ImageFace
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		var err error
 		updatedImageFaces, err = face_detection.GlobalFaceDetector.RecognizeUnlabeledFaces(tx, user)
 
@@ -351,6 +359,7 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 }
 
 func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -363,7 +372,7 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 	userOwnedImageFaceIDs := make([]int, 0)
 	newFaceGroup := models.FaceGroup{}
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
 
 		userOwnedImageFaces, err := getUserOwnedImageFaces(tx, user, imageFaceIDs)
 		if err != nil {

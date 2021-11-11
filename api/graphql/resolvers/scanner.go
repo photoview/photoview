@@ -27,9 +27,8 @@ func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, 
 }
 
 func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error) {
-
 	var user models.User
-	if err := r.Database.First(&user, userID).Error; err != nil {
+	if err := r.DB(ctx).First(&user, userID).Error; err != nil {
 		return nil, errors.Wrap(err, "get user from database")
 	}
 
@@ -44,16 +43,17 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 }
 
 func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval int) (int, error) {
+	db := r.DB(ctx)
 	if interval < 0 {
 		return 0, errors.New("interval must be 0 or above")
 	}
 
-	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
 		return 0, err
 	}
 
 	var siteInfo models.SiteInfo
-	if err := r.Database.First(&siteInfo).Error; err != nil {
+	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
 	}
 
@@ -63,6 +63,7 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 }
 
 func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error) {
+	db := r.DB(ctx)
 	if workers < 1 {
 		return 0, errors.New("concurrent workers must at least be 1")
 	}
@@ -71,12 +72,12 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, errors.New("multiple workers not supported for SQLite databases")
 	}
 
-	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
 		return 0, err
 	}
 
 	var siteInfo models.SiteInfo
-	if err := r.Database.First(&siteInfo).Error; err != nil {
+	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
 	}
 

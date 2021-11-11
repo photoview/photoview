@@ -43,7 +43,7 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 
 	var token models.ShareToken
-	if err := r.Database.Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
+	if err := r.DB(ctx).Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("share not found")
 		} else {
@@ -66,7 +66,7 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 
 func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error) {
 	var token models.ShareToken
-	if err := r.Database.Where("value = ?", credentials.Token).First(&token).Error; err != nil {
+	if err := r.DB(ctx).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, errors.New("share not found")
 		} else {
@@ -99,7 +99,7 @@ func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.AddAlbumShare(r.Database, user, albumID, expire, password)
+	return actions.AddAlbumShare(r.DB(ctx), user, albumID, expire, password)
 }
 
 func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
@@ -108,7 +108,7 @@ func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.AddMediaShare(r.Database, user, mediaID, expire, password)
+	return actions.AddMediaShare(r.DB(ctx), user, mediaID, expire, password)
 }
 
 func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue string) (*models.ShareToken, error) {
@@ -117,7 +117,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.DeleteShareToken(r.Database, user.ID, tokenValue)
+	return actions.DeleteShareToken(r.DB(ctx), user.ID, tokenValue)
 }
 
 func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
@@ -126,5 +126,5 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue str
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.ProtectShareToken(r.Database, user.ID, tokenValue, password)
+	return actions.ProtectShareToken(r.DB(ctx), user.ID, tokenValue, password)
 }

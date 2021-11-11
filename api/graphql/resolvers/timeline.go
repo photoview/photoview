@@ -15,5 +15,5 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.MyTimeline(r.Database, user, paginate, onlyFavorites, fromDate)
+	return actions.MyTimeline(r.DB(ctx), user, paginate, onlyFavorites, fromDate)
 }

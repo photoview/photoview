@@ -9,7 +9,7 @@ import (
 )
 
 func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {
-	return models.GetSiteInfo(r.Database)
+	return models.GetSiteInfo(r.DB(ctx))
 }
 
 type SiteInfoResolver struct {

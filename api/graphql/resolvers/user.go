@@ -30,7 +30,7 @@ func (r *queryResolver) User(ctx context.Context, order *models.Ordering, pagina
 
 	var users []*models.User
 
-	if err := models.FormatSQL(r.Database.Model(models.User{}), order, paginate).Find(&users).Error; err != nil {
+	if err := models.FormatSQL(r.DB(ctx).Model(models.User{}), order, paginate).Find(&users).Error; err != nil {
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func (r *queryResolver) User(ctx context.Context, order *models.Ordering, pagina
 }
 
 func (r *userResolver) Albums(ctx context.Context, user *models.User) ([]*models.Album, error) {
-	user.FillAlbums(r.Database)
+	user.FillAlbums(r.DB(ctx))
 
 	pointerAlbums := make([]*models.Album, len(user.Albums))
 	for i, album := range user.Albums {
@@ -49,10 +49,11 @@ func (r *userResolver) Albums(ctx context.Context, user *models.User) ([]*models
 }
 
 func (r *userResolver) RootAlbums(ctx context.Context, user *models.User) (albums []*models.Album, err error) {
+	db := r.DB(ctx)
 
-	err = r.Database.Model(&user).
+	err = db.Model(&user).
 		Where("albums.parent_album_id NOT IN (?)",
-			r.Database.Table("user_albums").
+			db.Table("user_albums").
 				Select("albums.id").
 				Joins("JOIN albums ON albums.id = user_albums.album_id AND user_albums.user_id = ?", user.ID),
 		).Or("albums.parent_album_id IS NULL").
@@ -72,7 +73,8 @@ func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 }
 
 func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error) {
-	user, err := models.AuthorizeUser(r.Database, username, password)
+	db := r.DB(ctx)
+	user, err := models.AuthorizeUser(db, username, password)
 	if err != nil {
 		return &models.AuthorizeResult{
 			Success: false,
@@ -82,7 +84,7 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 
 	var token *models.AccessToken
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		token, err = user.GenerateAccessToken(tx)
 		if err != nil {
 			return err
@@ -103,7 +105,8 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 }
 
 func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
-	siteInfo, err := models.GetSiteInfo(r.Database)
+	db := r.DB(ctx)
+	siteInfo, err := models.GetSiteInfo(db)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +119,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 
 	var token *models.AccessToken
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Exec("UPDATE site_info SET initial_setup = false").Error; err != nil {
 			return err
 		}
@@ -162,7 +165,7 @@ func (r *queryResolver) MyUserPreferences(ctx context.Context) (*models.UserPref
 	userPref := models.UserPreferences{
 		UserID: user.ID,
 	}
-	if err := r.Database.Where("user_id = ?", user.ID).FirstOrCreate(&userPref).Error; err != nil {
+	if err := r.DB(ctx).Where("user_id = ?", user.ID).FirstOrCreate(&userPref).Error; err != nil {
 		return nil, err
 	}
 
@@ -170,6 +173,7 @@ func (r *queryResolver) MyUserPreferences(ctx context.Context) (*models.UserPref
 }
 
 func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -182,14 +186,14 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 	}
 
 	var userPref models.UserPreferences
-	if err := r.Database.Where("user_id = ?", user.ID).FirstOrInit(&userPref).Error; err != nil {
+	if err := db.Where("user_id = ?", user.ID).FirstOrInit(&userPref).Error; err != nil {
 		return nil, err
 	}
 
 	userPref.UserID = user.ID
 	userPref.Language = langTrans
 
-	if err := r.Database.Save(&userPref).Error; err != nil {
+	if err := db.Save(&userPref).Error; err != nil {
 		return nil, err
 	}
 
@@ -198,13 +202,14 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 
 // Admin queries
 func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
+	db := r.DB(ctx)
 
 	if username == nil && password == nil && admin == nil {
 		return nil, errors.New("no updates requested")
 	}
 
 	var user models.User
-	if err := r.Database.First(&user, id).Error; err != nil {
+	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -226,7 +231,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 		user.Admin = *admin
 	}
 
-	if err := r.Database.Save(&user).Error; err != nil {
+	if err := db.Save(&user).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to update user")
 	}
 
@@ -237,7 +242,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 
 	var user *models.User
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := r.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		var err error
 		user, err = models.RegisterUser(tx, username, password, admin)
 		if err != nil {
@@ -255,19 +260,20 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
-	return actions.DeleteUser(r.Database, id)
+	return actions.DeleteUser(r.DB(ctx), id)
 }
 
 func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
+	db := r.DB(ctx)
 
 	rootPath = path.Clean(rootPath)
 
 	var user models.User
-	if err := r.Database.First(&user, id).Error; err != nil {
+	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 
-	newAlbum, err := scanner.NewRootAlbum(r.Database, rootPath, &user)
+	newAlbum, err := scanner.NewRootAlbum(db, rootPath, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -276,15 +282,16 @@ func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath
 }
 
 func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error) {
+	db := r.DB(ctx)
 
 	var album models.Album
-	if err := r.Database.First(&album, albumID).Error; err != nil {
+	if err := db.First(&album, albumID).Error; err != nil {
 		return nil, err
 	}
 
 	var deletedAlbumIDs []int = nil
 
-	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
 			return err
 		}
@@ -344,7 +351,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 
 		// Reload faces as media might have been deleted
 		if face_detection.GlobalFaceDetector != nil {
-			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(r.Database); err != nil {
+			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
 				return nil, err
 			}
 		}

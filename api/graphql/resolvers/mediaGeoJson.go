@@ -77,7 +77,7 @@ func (r *queryResolver) MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 
 	var media []*geoMedia
 
-	err := r.Database.Table("media").
+	err := r.DB(ctx).Table("media").
 		Select(
 			"media.id AS media_id, media.title AS media_title, "+
 				"media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, "+
