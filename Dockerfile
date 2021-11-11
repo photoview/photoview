@@ -32,7 +32,7 @@ COPY ui /app
 RUN npm run build -- --public-url $UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bullseye-slim AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
 ARG TARGETPLATFORM
 
 COPY docker/install_build_dependencies.sh /tmp/
@@ -67,24 +67,24 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bullseye-slim
+FROM debian:bookworm
 ARG TARGETPLATFORM
 WORKDIR /app
 
 COPY api/data /app/data
 
-RUN apt-get update \
+RUN apt update \
   # Required dependencies
-  && apt-get install -y curl gpg libdlib19 ffmpeg exiftool libheif1
+  && apt install -y curl gpg libdlib19 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt-get install -y darktable; fi
+  apt install -y darktable; fi
 
 # Remove build dependencies and cleanup
-RUN apt-get purge -y gpg \
-  && apt-get autoremove -y \
-  && apt-get clean \
+RUN apt purge -y gpg \
+  && apt autoremove -y \
+  && apt clean \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ui /app/build /ui
