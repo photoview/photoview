@@ -101,7 +101,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 		}
 
 		if result.RowsAffected > 0 {
-			log.Printf("Media already scanned: %s\n", mediaPath)
+			// log.Printf("Media already scanned: %s\n", mediaPath)
 			return media[0], false, nil
 		}
 	}
