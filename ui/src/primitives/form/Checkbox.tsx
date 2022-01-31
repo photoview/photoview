@@ -56,6 +56,7 @@ const CheckboxLabelWrapper = styled.label`
 
 type CheckboxProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string
+  className?: string
 }
 
 const Checkbox = ({ label, className, ...props }: CheckboxProps) => {

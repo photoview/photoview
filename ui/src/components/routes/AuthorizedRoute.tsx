@@ -1,18 +1,17 @@
-import React, { ReactChild, useEffect } from 'react'
-import PropTypes, { ReactComponentLike } from 'prop-types'
-import { Route, Redirect, RouteProps } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { RouteProps, Navigate } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { ADMIN_QUERY } from '../layout/Layout'
 
-export const useIsAdmin = (enabled = true) => {
+export const useIsAdmin = () => {
   const [fetchAdminQuery, { data, called }] = useLazyQuery(ADMIN_QUERY)
 
   useEffect(() => {
-    if (authToken() && !called && enabled) {
+    if (authToken() && !called) {
       fetchAdminQuery()
     }
-  }, [authToken(), enabled])
+  }, [authToken()])
 
   if (!authToken()) {
     return false
@@ -28,47 +27,23 @@ export const Authorized = ({ children }: { children: JSX.Element }) => {
 }
 
 interface AuthorizedRouteProps extends Omit<RouteProps, 'component'> {
-  component: ReactComponentLike
+  children: React.ReactNode
   admin?: boolean
 }
 
-const AuthorizedRoute = ({
-  component: Component,
-  admin = false,
-  ...props
-}: AuthorizedRouteProps) => {
+const AuthorizedRoute = ({ admin = false, children }: AuthorizedRouteProps) => {
   const token = authToken()
-  const isAdmin = useIsAdmin(admin)
+  const isAdmin = useIsAdmin()
 
-  let unauthorizedRedirect: null | ReactChild = null
   if (!token) {
-    unauthorizedRedirect = <Redirect to="/login" />
+    return <Navigate to="/" />
   }
 
-  let adminRedirect: null | ReactChild = null
-  if (token && admin) {
-    if (isAdmin === false) {
-      adminRedirect = <Redirect to="/" />
-    }
+  if (admin && !isAdmin) {
+    return <Navigate to="/" />
   }
 
-  return (
-    <Route
-      {...props}
-      render={routeProps => (
-        <>
-          {unauthorizedRedirect}
-          {adminRedirect}
-          <Component {...routeProps} />
-        </>
-      )}
-    />
-  )
-}
-
-AuthorizedRoute.propTypes = {
-  component: PropTypes.elementType.isRequired,
-  admin: PropTypes.bool,
+  return <>{children}</>
 }
 
 export default AuthorizedRoute

@@ -141,6 +141,7 @@ export const TextField = forwardRef(
 type ButtonProps = {
   variant?: 'negative' | 'positive' | 'default'
   background?: 'default' | 'white'
+  className?: string
 }
 
 const buttonStyles = ({ variant, background }: ButtonProps) =>
@@ -155,6 +156,7 @@ const buttonStyles = ({ variant, background }: ButtonProps) =>
 
 type SubmitProps = ButtonProps & {
   children: string
+  className?: string
 }
 
 export const Submit = ({

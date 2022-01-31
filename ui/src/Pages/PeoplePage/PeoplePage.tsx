@@ -2,7 +2,7 @@ import React, { createRef, useEffect, useState } from 'react'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import Layout from '../../components/layout/Layout'
 import styled from 'styled-components'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import SingleFaceGroup from './SingleFaceGroup/SingleFaceGroup'
 import { Button, TextField } from '../../primitives/form/Input'
 import FaceCircleImage from './FaceCircleImage'
@@ -19,7 +19,7 @@ import {
   myFaces_myFaceGroups,
 } from './__generated__/myFaces'
 import { recognizeUnlabeledFaces } from './__generated__/recognizeUnlabeledFaces'
-import { tailwindClassNames } from '../../helpers/utils'
+import { isNil, tailwindClassNames } from '../../helpers/utils'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -219,7 +219,10 @@ const FaceGroupsWrapper = styled.div`
   margin-top: 24px;
 `
 
-const PeopleGallery = () => {
+/**
+ * Renders a page that shows a gallery of all people
+ */
+export const PeoplePage = () => {
   const { t } = useTranslation()
   const { data, error, loading, fetchMore } = useQuery<
     myFaces,
@@ -275,26 +278,18 @@ const PeopleGallery = () => {
   )
 }
 
-type PeoplePageProps = {
-  match: {
-    params: {
-      person?: string
-    }
-  }
-}
-
-const PeoplePage = ({ match }: PeoplePageProps) => {
+/**
+ * Renders a page for an individual person
+ */
+export const PersonPage = () => {
   const { t } = useTranslation()
-  const faceGroup = match.params.person
-  if (faceGroup) {
-    return (
-      <Layout title={t('title.people', 'People')}>
-        <SingleFaceGroup faceGroupID={faceGroup} />
-      </Layout>
-    )
-  } else {
-    return <PeopleGallery />
-  }
-}
+  const { person } = useParams()
+  if (isNil(person))
+    throw new Error('Expected `person` parameter to be defined')
 
-export default PeoplePage
+  return (
+    <Layout title={t('title.people', 'People')}>
+      <SingleFaceGroup faceGroupID={person} />
+    </Layout>
+  )
+}

@@ -8,6 +8,8 @@ import PaginateLoader from '../../components/PaginateLoader'
 import { useTranslation } from 'react-i18next'
 import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
 import useOrderingParams from '../../hooks/useOrderingParams'
+import { useParams } from 'react-router-dom'
+import { isNil } from '../../helpers/utils'
 
 const ALBUM_QUERY = gql`
   query albumQuery(
@@ -61,17 +63,10 @@ const ALBUM_QUERY = gql`
 let refetchNeededAll = false
 let refetchNeededFavorites = false
 
-type AlbumPageProps = {
-  match: {
-    params: {
-      id: string
-      subPage: string
-    }
-  }
-}
-
-function AlbumPage({ match }: AlbumPageProps) {
-  const albumId = match.params.id
+function AlbumPage() {
+  const { id: albumId } = useParams()
+  if (isNil(albumId))
+    throw new Error('Expected parameter `id` to be defined for AlbumPage')
 
   const { t } = useTranslation()
 

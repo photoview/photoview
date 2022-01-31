@@ -1,7 +1,7 @@
 import { BaseMutationOptions, gql, useMutation } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { isNil } from '../../../helpers/utils'
 import Modal from '../../../primitives/Modal'
 import { MY_FACES_QUERY } from '../PeoplePage'
@@ -78,7 +78,7 @@ const DetachImageFacesModal = ({
   const [selectedImageFaces, setSelectedImageFaces] = useState<
     (myFaces_myFaceGroups_imageFaces | singleFaceGroup_faceGroup_imageFaces)[]
   >([])
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const detachImageFacesMutation = useDetachImageFaces({
     refetchQueries: [
@@ -92,7 +92,7 @@ const DetachImageFacesModal = ({
     detachImageFacesMutation(selectedImageFaces).then(({ data }) => {
       if (isNil(data)) throw new Error('Expected data not to be null')
       setOpen(false)
-      history.push(`/people/${data.detachImageFaces.id}`)
+      navigate(`/people/${data.detachImageFaces.id}`)
     })
   }
 
