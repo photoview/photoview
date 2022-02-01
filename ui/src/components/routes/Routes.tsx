@@ -1,12 +1,17 @@
 import React from 'react'
-import { Route, Switch, Redirect } from 'react-router-dom'
+import {
+  Navigate,
+  useNavigate,
+  NavigateFunction,
+  Outlet,
+  useRoutes,
+} from 'react-router-dom'
 
 import Layout from '../layout/Layout'
-import { clearTokenCookie } from '../../helpers/authentication'
-import { useTranslation } from 'react-i18next'
+import { authToken, clearTokenCookie } from '../../helpers/authentication'
+import { TFunction, useTranslation } from 'react-i18next'
 import Loader from '../../primitives/Loader'
-
-const AuthorizedRoute = React.lazy(() => import('./AuthorizedRoute'))
+import AuthorizedRoute from './AuthorizedRoute'
 
 const AlbumsPage = React.lazy(
   () => import('../../Pages/AllAlbumsPage/AlbumsPage')
@@ -16,20 +21,107 @@ const TimelinePage = React.lazy(
   () => import('../../Pages/TimelinePage/TimelinePage')
 )
 const PlacesPage = React.lazy(() => import('../../Pages/PlacesPage/PlacesPage'))
-const SharePage = React.lazy(() => import('../../Pages/SharePage/SharePage'))
-const PeoplePage = React.lazy(() => import('../../Pages/PeoplePage/PeoplePage'))
 
 const LoginPage = React.lazy(() => import('../../Pages/LoginPage/LoginPage'))
 const InitialSetupPage = React.lazy(
   () => import('../../Pages/LoginPage/InitialSetupPage')
 )
 
+const SharePageTokenRoute = React.lazy(() =>
+  import('../../Pages/SharePage/SharePage').then(x => ({
+    default: x.TokenRoute,
+  }))
+)
+
 const SettingsPage = React.lazy(
   () => import('../../Pages/SettingsPage/SettingsPage')
 )
 
+const PeoplePage = React.lazy(() =>
+  import('../../Pages/PeoplePage/PeoplePage').then(x => ({
+    default: x.PeoplePage,
+  }))
+)
+
+const PersonPage = React.lazy(() =>
+  import('../../Pages/PeoplePage/PeoplePage').then(x => ({
+    default: x.PersonPage,
+  }))
+)
+
 const Routes = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  const authorized = (element: React.ReactNode) => (
+    <AuthorizedRoute>{element}</AuthorizedRoute>
+  )
+
+  const routes = useRoutes([
+    {
+      index: true,
+      element: <IndexPage />,
+    },
+    {
+      path: '/login',
+      element: <LoginPage />,
+    },
+    {
+      path: '/logout',
+      element: <LogoutPage navigate={navigate} />,
+    },
+    {
+      path: '/initialSetup',
+      element: <InitialSetupPage />,
+    },
+    {
+      path: '/share/:token/*',
+      element: <SharePageTokenRoute />,
+    },
+    {
+      path: '/albums',
+      element: authorized(<AlbumsPage />),
+    },
+    {
+      path: '/album/:id',
+      element: authorized(<AlbumPage />),
+    },
+    {
+      path: '/timeline',
+      element: authorized(<TimelinePage />),
+    },
+    {
+      path: '/places',
+      element: authorized(<PlacesPage />),
+    },
+    {
+      path: '/settings',
+      element: authorized(<SettingsPage />),
+    },
+    {
+      path: '/people',
+      element: authorized(<Outlet />),
+      children: [
+        {
+          path: ':person',
+          element: <PersonPage />,
+        },
+        {
+          index: true,
+          element: <PeoplePage />,
+        },
+      ],
+    },
+    {
+      // for backwards-compatibility
+      path: '/photos',
+      element: <Navigate to="/timeline" />,
+    },
+    {
+      path: '*',
+      element: <NotFoundPage t={t} />,
+    },
+  ])
 
   return (
     <React.Suspense
@@ -39,37 +131,27 @@ const Routes = () => {
         </Layout>
       }
     >
-      <Switch>
-        <Route path="/login" component={LoginPage} />
-        <Route path="/logout">
-          {() => {
-            clearTokenCookie()
-            location.href = '/'
-          }}
-        </Route>
-        <Route path="/initialSetup" component={InitialSetupPage} />
-        <Route path="/share" component={SharePage} />
-        <AuthorizedRoute exact path="/albums" component={AlbumsPage} />
-        <AuthorizedRoute path="/album/:id" component={AlbumPage} />
-        <AuthorizedRoute path="/timeline" component={TimelinePage} />
-        <AuthorizedRoute path="/places" component={PlacesPage} />
-        <AuthorizedRoute path="/people/:person?" component={PeoplePage} />
-        <AuthorizedRoute path="/settings" component={SettingsPage} />
-        <Route path="/" exact render={() => <Redirect to="/timeline" />} />
-        {/* For backwards compatibility */}
-        <Route
-          path="/photos"
-          exact
-          render={() => <Redirect to="/timeline" />}
-        />
-        <Route
-          render={() => (
-            <div>{t('routes.page_not_found', 'Page not found')}</div>
-          )}
-        />
-      </Switch>
+      {routes}
     </React.Suspense>
   )
+}
+
+const IndexPage = () => {
+  const token = authToken()
+
+  const dest = token ? '/timeline' : '/login'
+
+  return <Navigate to={dest} />
+}
+
+export const NotFoundPage = ({ t }: { t: TFunction }) => {
+  return <div>{t('routes.page_not_found', 'Page not found')}</div>
+}
+
+const LogoutPage = ({ navigate }: { navigate: NavigateFunction }) => {
+  clearTokenCookie()
+  navigate('/')
+  return null
 }
 
 export default Routes

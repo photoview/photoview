@@ -4,6 +4,7 @@ import { useQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { mapboxEnabledQuery } from '../../__generated__/mapboxEnabledQuery'
+import classNames from 'classnames'
 
 export const MAPBOX_QUERY = gql`
   query mapboxEnabledQuery {
@@ -41,9 +42,12 @@ const MenuButton = ({
   return (
     <NavLink
       to={to}
-      exact={exact}
-      className={`rounded-lg my-2 ${className}`}
-      activeClassName={`ring-4 lg:ring-4 ${activeClasses}`}
+      end={exact}
+      className={({ isActive }) =>
+        classNames(`rounded-lg my-2`, className, {
+          [`ring-4 lg:ring-4 ${activeClasses}`]: isActive,
+        })
+      }
     >
       <li className="flex items-center">
         <div

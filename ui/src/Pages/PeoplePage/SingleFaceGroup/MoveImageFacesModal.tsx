@@ -1,6 +1,6 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client'
 import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import SelectFaceGroupTable from './SelectFaceGroupTable'
 import SelectImageFacesTable from './SelectImageFacesTable'
 import { MY_FACES_QUERY } from '../PeoplePage'
@@ -61,7 +61,7 @@ const MoveImageFacesModal = ({
     myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
   >(null)
   const [imagesSelected, setImagesSelected] = useState(false)
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const [moveImageFacesMutation] = useMutation<
     moveImageFaces,
@@ -115,7 +115,7 @@ const MoveImageFacesModal = ({
       },
     }).then(() => {
       setOpen(false)
-      history.push(`/people/${selectedFaceGroup.id}`)
+      navigate(`/people/${selectedFaceGroup.id}`)
     })
   }
 

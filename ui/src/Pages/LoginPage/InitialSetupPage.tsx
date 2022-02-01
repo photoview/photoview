@@ -1,6 +1,6 @@
 import React from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
-import { Redirect } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Container } from './loginUtilities'
 
 import { checkInitialSetupQuery, login } from './loginUtilities'
@@ -37,6 +37,7 @@ type InitialSetupFormData = {
 
 const InitialSetupPage = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const {
     register,
@@ -45,16 +46,18 @@ const InitialSetupPage = () => {
   } = useForm<InitialSetupFormData>()
 
   if (authToken()) {
-    return <Redirect to="/" />
+    navigate('/')
+    return null
   }
 
   const { data: initialSetupData } = useQuery<CheckInitialSetup>(
     checkInitialSetupQuery
   )
-  const initialSetupRedirect = initialSetupData?.siteInfo
-    ?.initialSetup ? null : (
-    <Redirect to="/" />
-  )
+
+  if (initialSetupData?.siteInfo?.initialSetup) {
+    navigate('/')
+    return null
+  }
 
   const [authorize, { loading: authorizeLoading, data: authorizationData }] =
     useMutation(initialSetupMutation, {
@@ -84,7 +87,6 @@ const InitialSetupPage = () => {
 
   return (
     <div>
-      {initialSetupRedirect}
       <Container>
         <h1 className="text-center text-xl">
           {t('login_page.initial_setup.title', 'Initial Setup')}

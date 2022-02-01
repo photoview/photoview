@@ -1,5 +1,5 @@
 import React from 'react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { MockedProvider } from '@apollo/client/testing'
 
 import {
@@ -8,8 +8,9 @@ import {
   waitForElementToBeRemoved,
 } from '@testing-library/react'
 
-import SharePage, {
+import {
   SHARE_TOKEN_QUERY,
+  TokenRoute,
   VALIDATE_TOKEN_PASSWORD_QUERY,
 } from './SharePage'
 
@@ -20,13 +21,6 @@ jest.mock('../../hooks/useScrollPagination')
 
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'
-
-  const matchMock = {
-    url: `/share`,
-    params: {},
-    path: `/share`,
-    isExact: false,
-  }
 
   const historyMock = [{ pathname: `/share/${token}` }]
 
@@ -101,7 +95,9 @@ describe('load correct share page, based on graphql query', () => {
         }}
       >
         <MemoryRouter initialEntries={historyMock}>
-          <SharePage match={matchMock} />
+          <Routes>
+            <Route path="/share/:token" element={<TokenRoute />} />
+          </Routes>
         </MemoryRouter>
       </MockedProvider>
     )
@@ -176,13 +172,93 @@ describe('load correct share page, based on graphql query', () => {
         }}
       >
         <MemoryRouter initialEntries={historyMock}>
-          <SharePage match={matchMock} />
+          <Routes>
+            <Route path="/share/:token" element={<TokenRoute />} />
+          </Routes>
         </MemoryRouter>
       </MockedProvider>
     )
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
+    await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
 
+    expect(screen.getByTestId('Layout')).toBeInTheDocument()
+    expect(screen.getByTestId('AlbumSharePage')).toBeInTheDocument()
+  })
+
+  test('load subalbum of a shared album', async () => {
+    const subalbumID = '456'
+    const subalbumHistoryMock = [{ pathname: `/share/${token}/${subalbumID}` }]
+
+    const subalbumPageMocks = [
+      {
+        request: {
+          query: SHARE_TOKEN_QUERY,
+          variables: {
+            token,
+            password: null,
+          },
+        },
+        result: {
+          data: {
+            shareToken: {
+              token: token,
+              album: {
+                id: subalbumID,
+              },
+              media: null,
+            },
+          },
+        },
+      },
+      {
+        request: {
+          query: SHARE_ALBUM_QUERY,
+          variables: {
+            id: subalbumID,
+            token: token,
+            password: null,
+            limit: 200,
+            offset: 0,
+            mediaOrderBy: 'date_shot',
+            mediaOrderDirection: 'ASC',
+          },
+        },
+        result: {
+          data: {
+            album: {
+              id: '1',
+              title: 'album_title',
+              subAlbums: [],
+              thumbnail: {
+                url: 'https://photoview.example.com/album_thumbnail.jpg',
+              },
+              media: [],
+            },
+          },
+        },
+      },
+    ]
+
+    render(
+      <MockedProvider
+        mocks={[...graphqlMocks, ...subalbumPageMocks]}
+        addTypename={false}
+        defaultOptions={{
+          // disable cache, required to make fragments work
+          watchQuery: { fetchPolicy: 'no-cache' },
+          query: { fetchPolicy: 'no-cache' },
+        }}
+      >
+        <MemoryRouter initialEntries={subalbumHistoryMock}>
+          <Routes>
+            <Route path="/share/:token/*" element={<TokenRoute />} />
+          </Routes>
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
     await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
 
     expect(screen.getByTestId('Layout')).toBeInTheDocument()

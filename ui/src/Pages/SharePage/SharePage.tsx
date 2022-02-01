@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types'
 import React from 'react'
 import { useQuery, gql } from '@apollo/client'
-import { match as MatchType, Route, Switch } from 'react-router-dom'
+import { Route, Routes, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import {
   getSharePassword,
@@ -11,6 +10,7 @@ import AlbumSharePage from './AlbumSharePage'
 import MediaSharePage from './MediaSharePage'
 import { useTranslation } from 'react-i18next'
 import PasswordProtectedShare from './PasswordProtectedShare'
+import { isNil } from '../../helpers/utils'
 
 export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -77,10 +77,16 @@ export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   }
 `
 
-const AuthorizedTokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
+const tokenFromParams = () => {
+  const { token } = useParams()
+  if (isNil(token)) throw new Error('Expected `token` param to be defined')
+  return token
+}
+
+const AuthorizedTokenRoute = () => {
   const { t } = useTranslation()
 
-  const token = match.params.token
+  const token = tokenFromParams()
   const password = getSharePassword(token)
 
   const { loading, error, data } = useQuery(SHARE_TOKEN_QUERY, {
@@ -94,35 +100,30 @@ const AuthorizedTokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
   if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
   if (data.shareToken.album) {
-    const SharedSubAlbumPage = ({ match }: MatchProps<SubalbumRouteMatch>) => {
+    const SharedSubAlbumPage = () => {
+      const { subAlbum } = useParams()
+      if (isNil(subAlbum))
+        throw new Error('Expected `subAlbum` param to be defined')
+
       return (
-        <AlbumSharePage
-          albumID={match.params.subAlbum}
-          token={token}
-          password={password}
-        />
+        <AlbumSharePage albumID={subAlbum} token={token} password={password} />
       )
     }
 
-    SharedSubAlbumPage.propTypes = {
-      match: PropTypes.any,
-    }
-
     return (
-      <Switch>
+      <Routes>
+        <Route path=":subAlbum" element={<SharedSubAlbumPage />} />
         <Route
-          exact
-          path={`${match.path}/:subAlbum`}
-          component={SharedSubAlbumPage}
+          index
+          element={
+            <AlbumSharePage
+              albumID={data.shareToken.album.id}
+              token={token}
+              password={password}
+            />
+          }
         />
-        <Route exact path={match.path}>
-          <AlbumSharePage
-            albumID={data.shareToken.album.id}
-            token={token}
-            password={password}
-          />
-        </Route>
-      </Switch>
+      </Routes>
     )
   }
 
@@ -133,39 +134,22 @@ const AuthorizedTokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
   return <h1>{t('share_page.share_not_found', 'Share not found')}</h1>
 }
 
-AuthorizedTokenRoute.propTypes = {
-  match: PropTypes.object.isRequired,
-}
-
 export const MessageContainer = styled.div`
   max-width: 400px;
   margin: 100px auto 0;
 `
 
-interface TokenRouteMatch {
-  token: string
-}
-
-interface SubalbumRouteMatch extends TokenRouteMatch {
-  subAlbum: string
-}
-
-interface MatchProps<Route> {
-  match: MatchType<Route>
-}
-
-const TokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
+export const TokenRoute = () => {
   const { t } = useTranslation()
-
-  const token = match.params.token
+  const token = tokenFromParams()
 
   const { loading, error, data, refetch } = useQuery(
     VALIDATE_TOKEN_PASSWORD_QUERY,
     {
       notifyOnNetworkStatusChange: true,
       variables: {
-        token: match.params.token,
-        password: getSharePassword(match.params.token),
+        token: token,
+        password: getSharePassword(token),
       },
     }
   )
@@ -202,22 +186,5 @@ const TokenRoute = ({ match }: MatchProps<TokenRouteMatch>) => {
 
   if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
-  return <AuthorizedTokenRoute match={match} />
+  return <AuthorizedTokenRoute />
 }
-
-const SharePage = ({ match }: { match: MatchType }) => {
-  const { t } = useTranslation()
-
-  return (
-    <Switch>
-      <Route path={`${match.url}/:token`}>
-        {({ match }: { match: MatchType<TokenRouteMatch> }) => {
-          return <TokenRoute match={match} />
-        }}
-      </Route>
-      <Route path="/">{t('routes.page_not_found', 'Page not found')}</Route>
-    </Switch>
-  )
-}
-
-export default SharePage

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { useLazyQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
-import { NavLink, useHistory, useRouteMatch } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   searchQuery,
@@ -77,11 +77,11 @@ const SearchBar = () => {
     }
   }
 
-  const routerMatch = useRouteMatch()
+  const location = useLocation()
   useEffect(() => {
     setExpanded(false)
     setQuery('')
-  }, [routerMatch])
+  }, [location])
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 
@@ -291,13 +291,11 @@ const SearchRow = ({
   setSelected,
 }: SearchRowProps) => {
   const rowEl = useRef<HTMLLIElement>(null)
-  const history = useHistory()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const keydownEvent = (event: KeyboardEvent) => {
-      if (event.key == 'Enter') {
-        history.push(link)
-      }
+      if (event.key == 'Enter') navigate(link)
     }
 
     document.addEventListener('keydown', keydownEvent)

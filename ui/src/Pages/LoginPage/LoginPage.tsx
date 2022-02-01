@@ -1,12 +1,12 @@
 import React from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
-import { useForm, SubmitHandler } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { checkInitialSetupQuery, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
-import { Redirect } from 'react-router'
+import { useNavigate } from 'react-router'
 import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
@@ -45,7 +45,7 @@ const LoginForm = () => {
     register,
     handleSubmit,
     formState: { errors: formErrors },
-  } = useForm()
+  } = useForm<LoginInputs>()
 
   const [authorize, { loading, data }] = useMutation<
     Authorize,
@@ -60,7 +60,7 @@ const LoginForm = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<LoginInputs> = data => {
+  const onSubmit = (data: LoginInputs) => {
     authorize({
       variables: {
         username: data.username,
@@ -127,13 +127,20 @@ type LoginInputs = {
 
 const LoginPage = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const { data: initialSetupData } = useQuery<CheckInitialSetup>(
     checkInitialSetupQuery
   )
 
   if (authToken()) {
-    return <Redirect to="/" />
+    navigate('/')
+    return null
+  }
+
+  if (initialSetupData?.siteInfo?.initialSetup) {
+    navigate('initialSetup')
+    return null
   }
 
   return (
@@ -141,9 +148,6 @@ const LoginPage = () => {
       <Helmet>
         <title>{t('title.login', 'Login')} - Photoview</title>
       </Helmet>
-      {initialSetupData?.siteInfo?.initialSetup && (
-        <Redirect to="/initialSetup" />
-      )}
       <div>
         <LogoHeader />
         <LoginForm />

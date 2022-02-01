@@ -1,7 +1,7 @@
 import { gql, PureQueryOptions, useMutation, useQuery } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { isNil } from '../../../helpers/utils'
 import Modal from '../../../primitives/Modal'
 import { MY_FACES_QUERY } from '../PeoplePage'
@@ -50,7 +50,7 @@ const MergeFaceGroupsModal = ({
     myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
   >(null)
 
-  const history = useHistory()
+  const navigate = useNavigate()
   const { data } = useQuery<myFaces, myFacesVariables>(MY_FACES_QUERY)
   const [combineFacesMutation] = useMutation<
     combineFaces,
@@ -74,7 +74,7 @@ const MergeFaceGroupsModal = ({
       },
     }).then(() => {
       setOpen(false)
-      history.push(`/people/${selectedFaceGroup.id}`)
+      navigate(`/people/${selectedFaceGroup.id}`)
     })
   }
 

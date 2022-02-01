@@ -19,6 +19,7 @@ type DropdownProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   items: DropdownItem[]
   selected?: string
   setSelected(value: string): void
+  className?: string
 }
 
 const Dropdown = ({

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useHistory } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import FaceCircleImage from '../../../Pages/PeoplePage/FaceCircleImage'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
 import { MediaSidebarMedia, SIDEBAR_MEDIA_QUERY } from './MediaSidebar'
@@ -73,7 +73,7 @@ const PersonMoreMenu = ({
     },
   ]
 
-  const history = useHistory()
+  const navigate = useNavigate()
   const detachImageFaceMutation = useDetachImageFaces({
     refetchQueries,
   })
@@ -107,7 +107,7 @@ const PersonMoreMenu = ({
       return
     detachImageFaceMutation([face]).then(({ data }) => {
       if (isNil(data)) throw new Error('Expected data not to be null')
-      history.push(`/people/${data.detachImageFaces.id}`)
+      navigate(`/people/${data.detachImageFaces.id}`)
     })
   }
 
