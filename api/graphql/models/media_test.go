@@ -67,3 +67,56 @@ func TestMediaURLGetURL(t *testing.T) {
 
 	assert.Equal(t, "video/video.mp4", video.URL())
 }
+
+func TestMediaGetThumbnail(t *testing.T) {
+	photo := models.Media{
+		Title: "test.png",
+		Path:  "path/test.png",
+		Type:  models.MediaTypePhoto,
+		MediaURL: []models.MediaURL{
+			{
+				MediaName:   "photo.jpg",
+				ContentType: "image/jpeg",
+				Purpose:     models.PhotoHighRes,
+			},
+			{
+				MediaName:   "thumbnail.jpg",
+				ContentType: "image/jpeg",
+				Purpose:     models.PhotoThumbnail,
+			},
+			{
+				MediaName:   "photo.png",
+				ContentType: "image/png",
+				Purpose:     models.MediaOriginal,
+			},
+		},
+	}
+
+	thumb, err := photo.GetThumbnail()
+	assert.NoError(t, err)
+	assert.Equal(t, thumb.MediaName, "thumbnail.jpg")
+	assert.NotNil(t, thumb.Media)
+
+	video := models.Media{
+		Title: "video-test.mp4",
+		Path:  "path/test.mp4",
+		Type:  models.MediaTypePhoto,
+		MediaURL: []models.MediaURL{
+			{
+				MediaName:   "video.mp4",
+				ContentType: "video/mp4",
+				Purpose:     models.VideoWeb,
+			},
+			{
+				MediaName:   "video-thumbnail.jpg",
+				ContentType: "image/jpg",
+				Purpose:     models.VideoThumbnail,
+			},
+		},
+	}
+
+	thumb, err = video.GetThumbnail()
+	assert.NoError(t, err)
+	assert.Equal(t, thumb.MediaName, "video-thumbnail.jpg")
+	assert.NotNil(t, thumb.Media)
+}
