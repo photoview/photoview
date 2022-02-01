@@ -9,6 +9,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -156,8 +157,20 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		notification.BroadcastNotification(&models.Notification{
 			Key:      "global-scanner-progress",
 			Type:     models.NotificationTypeMessage,
-			Header:   fmt.Sprintf("Scanner complete"),
-			Content:  fmt.Sprintf("All jobs have been scanned"),
+			Header:   "Generating blurhashes",
+			Content:  "Generating blurhashes for newly scanned media",
+			Positive: true,
+		})
+
+		if err := GenerateBlurhashes(queue.db); err != nil {
+			scanner_utils.ScannerError("Failed to generate blurhashes: %v", err)
+		}
+
+		notification.BroadcastNotification(&models.Notification{
+			Key:      "global-scanner-progress",
+			Type:     models.NotificationTypeMessage,
+			Header:   "Scanner complete",
+			Content:  "All jobs have been scanned",
 			Positive: true,
 		})
 	} else {
@@ -165,7 +178,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			notification.BroadcastNotification(&models.Notification{
 				Key:     "global-scanner-progress",
 				Type:    models.NotificationTypeMessage,
-				Header:  fmt.Sprintf("Scanning media"),
+				Header:  "Scanning media",
 				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
 			})
 		})
@@ -191,7 +204,9 @@ func AddAllToQueue() error {
 	}
 
 	for _, user := range users {
-		AddUserToQueue(user)
+		if err := AddUserToQueue(user); err != nil {
+			return errors.Wrapf(err, "failed to add user for scanning (%d)", user.ID)
+		}
 	}
 
 	return nil
