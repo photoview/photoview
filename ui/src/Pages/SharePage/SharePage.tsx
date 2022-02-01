@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery, gql } from '@apollo/client'
-import { Route, useParams } from 'react-router-dom'
+import { Route, Routes, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import {
   getSharePassword,
@@ -111,10 +111,10 @@ const AuthorizedTokenRoute = () => {
     }
 
     return (
-      <>
+      <Routes>
         <Route path=":subAlbum" element={<SharedSubAlbumPage />} />
         <Route
-          path="/"
+          index
           element={
             <AlbumSharePage
               albumID={data.shareToken.album.id}
@@ -123,7 +123,7 @@ const AuthorizedTokenRoute = () => {
             />
           }
         />
-      </>
+      </Routes>
     )
   }
 
