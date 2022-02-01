@@ -23,6 +23,7 @@ export const timelineData: myTimeline_myTimeline[] = [
     favorite: false,
     album: { __typename: 'Album', id: '522', title: 'random' },
     date: '2020-12-13T18:03:40Z',
+    blurhash: null,
   },
   {
     __typename: 'Media',
@@ -45,6 +46,7 @@ export const timelineData: myTimeline_myTimeline[] = [
     favorite: false,
     album: { __typename: 'Album', id: '523', title: 'another_album' },
     date: '2020-11-25T16:14:33Z',
+    blurhash: null,
   },
   {
     __typename: 'Media',
@@ -67,6 +69,7 @@ export const timelineData: myTimeline_myTimeline[] = [
     favorite: false,
     album: { __typename: 'Album', id: '523', title: 'another_album' },
     date: '2020-11-25T16:43:59Z',
+    blurhash: null,
   },
   {
     __typename: 'Media',
@@ -89,6 +92,7 @@ export const timelineData: myTimeline_myTimeline[] = [
     favorite: false,
     album: { __typename: 'Album', id: '522', title: 'random' },
     date: '2020-11-25T16:14:33Z',
+    blurhash: null,
   },
   {
     __typename: 'Media',
@@ -111,5 +115,6 @@ export const timelineData: myTimeline_myTimeline[] = [
     favorite: false,
     album: { __typename: 'Album', id: '522', title: 'random' },
     date: '2020-11-09T15:38:09Z',
+    blurhash: null,
   },
 ]

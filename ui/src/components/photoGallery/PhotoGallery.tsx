@@ -37,6 +37,7 @@ export const PhotoFiller = styled.div`
 
 export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
   thumbnail: sidebarMediaQuery_media_thumbnail | null
+  blurhash: string | null
   favorite?: boolean
 }
 

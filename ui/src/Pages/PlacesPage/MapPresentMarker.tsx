@@ -15,6 +15,7 @@ const QUERY_MEDIA = gql`
     mediaList(ids: $mediaIDs) {
       id
       title
+      blurhash
       thumbnail {
         url
         width

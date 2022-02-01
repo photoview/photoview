@@ -61,6 +61,10 @@ export interface myTimeline_myTimeline {
   title: string
   type: MediaType
   /**
+   * A short string that can be used to generate a blured version of the media, to show while the original is loading
+   */
+  blurhash: string | null
+  /**
    * URL to display the media in a smaller resolution
    */
   thumbnail: myTimeline_myTimeline_thumbnail | null

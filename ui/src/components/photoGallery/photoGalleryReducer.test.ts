@@ -11,6 +11,7 @@ describe('photo gallery reducer', () => {
         id: '1',
         highRes: null,
         thumbnail: null,
+        blurhash: null,
         type: MediaType.Photo,
       },
       {
@@ -18,6 +19,7 @@ describe('photo gallery reducer', () => {
         id: '2',
         highRes: null,
         thumbnail: null,
+        blurhash: null,
         type: MediaType.Photo,
       },
       {
@@ -25,6 +27,7 @@ describe('photo gallery reducer', () => {
         id: '3',
         highRes: null,
         thumbnail: null,
+        blurhash: null,
         type: MediaType.Photo,
       },
     ],

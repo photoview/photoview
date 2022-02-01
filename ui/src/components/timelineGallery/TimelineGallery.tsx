@@ -35,6 +35,7 @@ export const MY_TIMELINE_QUERY = gql`
       id
       title
       type
+      blurhash
       thumbnail {
         url
         width

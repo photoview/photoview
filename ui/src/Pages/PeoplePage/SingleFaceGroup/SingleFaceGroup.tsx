@@ -28,6 +28,7 @@ export const SINGLE_FACE_GROUP = gql`
           id
           type
           title
+          blurhash
           thumbnail {
             url
             width

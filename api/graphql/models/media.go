@@ -29,6 +29,7 @@ type Media struct {
 	SideCarPath     *string
 	SideCarHash     *string      `gorm:"unique"`
 	Faces           []*ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
+	Blurhash        *string      `gorm:""`
 
 	// Only used internally
 	CounterpartPath *string `gorm:"-"`
@@ -47,6 +48,21 @@ func (m *Media) BeforeSave(tx *gorm.DB) error {
 
 func (m *Media) Date() time.Time {
 	return m.DateShot
+}
+
+func (m *Media) GetThumbnail() (*MediaURL, error) {
+	if len(m.MediaURL) == 0 {
+		return nil, errors.New("media.MediaURL is empty")
+	}
+
+	for _, url := range m.MediaURL {
+		if url.Purpose == PhotoThumbnail || url.Purpose == VideoThumbnail {
+			url.Media = m
+			return &url, nil
+		}
+	}
+
+	return nil, nil
 }
 
 type MediaType string

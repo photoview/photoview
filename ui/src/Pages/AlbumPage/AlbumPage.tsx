@@ -43,6 +43,7 @@ const ALBUM_QUERY = gql`
       ) {
         id
         type
+        blurhash
         thumbnail {
           url
           width
