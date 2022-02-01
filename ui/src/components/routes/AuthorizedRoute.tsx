@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
-import { RouteProps, Navigate } from 'react-router-dom'
 import { useLazyQuery } from '@apollo/client'
+import React, { useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
 import { authToken } from '../../helpers/authentication'
 import { ADMIN_QUERY } from '../layout/Layout'
 
@@ -26,20 +26,14 @@ export const Authorized = ({ children }: { children: JSX.Element }) => {
   return token ? children : null
 }
 
-interface AuthorizedRouteProps extends Omit<RouteProps, 'component'> {
+interface AuthorizedRouteProps {
   children: React.ReactNode
-  admin?: boolean
 }
 
-const AuthorizedRoute = ({ admin = false, children }: AuthorizedRouteProps) => {
+const AuthorizedRoute = ({ children }: AuthorizedRouteProps) => {
   const token = authToken()
-  const isAdmin = useIsAdmin()
 
   if (!token) {
-    return <Navigate to="/" />
-  }
-
-  if (admin && !isAdmin) {
     return <Navigate to="/" />
   }
 

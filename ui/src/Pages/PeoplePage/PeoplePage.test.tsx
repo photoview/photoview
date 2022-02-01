@@ -1,6 +1,7 @@
 import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import PeoplePage, {
+import {
+  PeoplePage,
   FaceDetails,
   FaceGroup,
   MY_FACES_QUERY,
@@ -69,16 +70,10 @@ describe('PeoplePage component', () => {
   ]
 
   test('people page', async () => {
-    const matchMock = {
-      params: {
-        person: undefined,
-      },
-    }
-
     render(
       <MemoryRouter initialEntries={['/people']}>
         <MockedProvider mocks={graphqlMocks} addTypename={false}>
-          <PeoplePage match={matchMock} />
+          <PeoplePage />
         </MockedProvider>
       </MemoryRouter>
     )

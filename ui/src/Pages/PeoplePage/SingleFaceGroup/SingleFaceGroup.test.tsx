@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing'
 import SingleFaceGroup, { SINGLE_FACE_GROUP } from './SingleFaceGroup'
+import { MemoryRouter } from 'react-router-dom'
 
 jest.mock('../../../hooks/useScrollPagination')
 
@@ -83,9 +84,11 @@ test('single face group', async () => {
   ]
 
   render(
-    <MockedProvider mocks={graphqlMocks}>
-      <SingleFaceGroup faceGroupID="123" />
-    </MockedProvider>
+    <MemoryRouter initialEntries={['/person/123']}>
+      <MockedProvider mocks={graphqlMocks}>
+        <SingleFaceGroup faceGroupID="123" />
+      </MockedProvider>
+    </MemoryRouter>
   )
 
   await waitFor(() => {
