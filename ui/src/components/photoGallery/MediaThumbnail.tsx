@@ -25,6 +25,7 @@ const StyledPhoto = styled(ProtectedImage)`
 
 type LazyPhotoProps = {
   src?: string
+  blurhash: string | null
 }
 
 const LazyPhoto = (photoProps: LazyPhotoProps) => {
@@ -138,6 +139,7 @@ type MediaThumbnailProps = {
   media: {
     id: string
     type: MediaType
+    blurhash: string | null
     favorite?: boolean
     thumbnail: null | {
       url: string
@@ -201,7 +203,7 @@ export const MediaThumbnail = ({
           height: `200px`,
         }}
       >
-        <LazyPhoto src={media.thumbnail?.url} />
+        <LazyPhoto src={media.thumbnail?.url} blurhash={media.blurhash} />
       </div>
       <PhotoOverlay active={active}>
         {videoIcon}

@@ -24,14 +24,14 @@ func GenerateBlurhashes(db *gorm.DB) error {
 		Where("blurhash IS NULL").
 		Where("media_urls.purpose = 'thumbnail' OR media_urls.purpose = 'video-thumbnail'")
 
-	err := query.FindInBatches(&results, 100, func(tx *gorm.DB, batch int) error {
+	err := query.FindInBatches(&results, 50, func(tx *gorm.DB, batch int) error {
 		log.Printf("generating %d blurhashes", len(results))
 
 		hashes := make([]*string, len(results))
 
 		for i, row := range results {
 
-			thumbnail, err := row.Thumbnail()
+			thumbnail, err := row.GetThumbnail()
 			if err != nil {
 				log.Printf("failed to get thumbnail for media to generate blurhash (%d): %v", row.ID, err)
 				processErrors = append(processErrors, err)

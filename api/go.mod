@@ -7,7 +7,7 @@ require (
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/barasher/go-exiftool v1.7.0
-	github.com/buckket/go-blurhash v1.1.0 // indirect
+	github.com/buckket/go-blurhash v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/go-sql-driver/mysql v1.6.0

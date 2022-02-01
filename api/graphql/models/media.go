@@ -50,7 +50,7 @@ func (m *Media) Date() time.Time {
 	return m.DateShot
 }
 
-func (m *Media) Thumbnail() (*MediaURL, error) {
+func (m *Media) GetThumbnail() (*MediaURL, error) {
 	if len(m.MediaURL) == 0 {
 		return nil, errors.New("media.MediaURL is empty")
 	}

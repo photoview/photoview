@@ -328,6 +328,8 @@ type Media {
   type: MediaType!
   "The date the image was shot or the date it was imported as a fallback"
   date: Time!
+  "A short string that can be used to generate a blured version of the media, to show while the original is loading"
+  blurhash: String
 
   shares: [ShareToken!]!
   downloads: [MediaDownload!]!

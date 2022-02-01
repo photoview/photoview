@@ -3,6 +3,7 @@ import React, { DetailedHTMLProps, ImgHTMLAttributes } from 'react'
 import { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
+import { BlurhashCanvas } from 'react-blurhash'
 import { isNil } from '../../helpers/utils'
 
 const isNativeLazyLoadSupported = 'loading' in document.createElement('img')
@@ -31,6 +32,7 @@ export interface ProtectedImageProps
   src?: string
   key?: string
   lazyLoading?: boolean
+  blurhash?: string | null
 }
 
 /**
@@ -42,9 +44,14 @@ export interface ProtectedImageProps
 export const ProtectedImage = ({
   src,
   lazyLoading,
+  blurhash,
   ...props
 }: ProtectedImageProps) => {
+  const [loaded, setLoaded] = useState(false)
+
   const url = getProtectedUrl(src) || placeholder
+
+  const didLoad = () => setLoaded(true)
 
   if (!lazyLoading) {
     return (
@@ -53,12 +60,26 @@ export const ProtectedImage = ({
   }
 
   if (!isNativeLazyLoadSupported) {
-    return <FallbackLazyloadedImage src={url} {...props} />
+    return <FallbackLazyloadedImage src={url} blurhash={blurhash} {...props} />
   }
 
   // load with native lazy loading
   return (
-    <img {...props} src={url} loading="lazy" crossOrigin="use-credentials" />
+    <div className="w-full h-full">
+      <img
+        {...props}
+        src={url}
+        loading="lazy"
+        crossOrigin="use-credentials"
+        onLoad={didLoad}
+      />
+      {blurhash && !loaded && (
+        <BlurhashCanvas
+          className="absolute w-full h-full top-0"
+          hash={blurhash}
+        />
+      )}
+    </div>
   )
 }
 
@@ -68,14 +89,21 @@ interface FallbackLazyloadedImageProps
     'src'
   > {
   src?: string
+  blurhash?: string | null
 }
 
 const FallbackLazyloadedImage = ({
   src,
+  blurhash,
+  className,
   ...props
 }: FallbackLazyloadedImageProps) => {
   const [inView, setInView] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
   const imgRef = useRef<HTMLDivElement>(null)
+
+  const didLoad = () => setLoaded(true)
 
   useEffect(() => {
     const imgElm = imgRef.current
@@ -107,13 +135,33 @@ const FallbackLazyloadedImage = ({
   }, [imgRef])
 
   if (inView) {
-    return <img {...props} src={src} crossOrigin="use-credentials" />
+    return (
+      <div className={className}>
+        <img
+          className="w-full h-full"
+          {...props}
+          src={src}
+          onLoad={didLoad}
+          crossOrigin="use-credentials"
+        />
+        {blurhash && !loaded && (
+          <BlurhashCanvas
+            className="absolute w-full h-full top-0"
+            hash={blurhash}
+          />
+        )}
+      </div>
+    )
   } else {
     return (
-      <div
-        ref={imgRef}
-        className={classNames(props.className, 'bg-[#eee]')}
-      ></div>
+      <div ref={imgRef} className={classNames(className, 'bg-[#eee]')}>
+        {blurhash && (
+          <BlurhashCanvas
+            className="absolute w-full h-full top-0"
+            hash={blurhash}
+          />
+        )}
+      </div>
     )
   }
 }

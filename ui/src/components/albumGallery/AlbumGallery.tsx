@@ -38,6 +38,7 @@ type AlbumGalleryAlbum = {
      */
     videoWeb: albumQuery_album_media_videoWeb | null
     favorite?: boolean
+    blurhash: string | null
   }[]
 }
 

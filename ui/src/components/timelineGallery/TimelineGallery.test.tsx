@@ -34,6 +34,4 @@ test('timeline with media', async () => {
 
   expect(await screen.findAllByRole('link')).toHaveLength(4)
   expect(await screen.findAllByRole('img')).toHaveLength(5)
-
-  screen.debug()
 })
