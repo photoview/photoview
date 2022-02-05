@@ -35,7 +35,6 @@ func GraphqlEndpoint(db *gorm.DB) *graphql_handler.Server {
 
 	graphqlServer.SetQueryCache(lru.New(1000))
 
-	graphqlServer.Use(extension.Introspection{})
 	graphqlServer.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New(100),
 	})

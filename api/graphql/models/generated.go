@@ -10,9 +10,11 @@ import (
 )
 
 type AuthorizeResult struct {
-	Success bool    `json:"success"`
-	Status  string  `json:"status"`
-	Token   *string `json:"token"`
+	Success bool `json:"success"`
+	// A textual status message describing the result, can be used to show an error message when `success` is false
+	Status string `json:"status"`
+	// An access token used to authenticate new API requests as the newly authorized user. Is present when success is true
+	Token *string `json:"token"`
 }
 
 type Coordinates struct {
@@ -23,29 +25,41 @@ type Coordinates struct {
 }
 
 type MediaDownload struct {
+	// A description of the role of the media file
 	Title    string    `json:"title"`
 	MediaURL *MediaURL `json:"mediaUrl"`
 }
 
 type Notification struct {
-	Key      string           `json:"key"`
-	Type     NotificationType `json:"type"`
-	Header   string           `json:"header"`
-	Content  string           `json:"content"`
-	Progress *float64         `json:"progress"`
-	Positive bool             `json:"positive"`
-	Negative bool             `json:"negative"`
-	// Time in milliseconds before the notification will close
+	// A key used to identify the notification, new notification updates with the same key, should replace the old notifications
+	Key  string           `json:"key"`
+	Type NotificationType `json:"type"`
+	// The text for the title of the notification
+	Header string `json:"header"`
+	// The text for the body of the notification
+	Content string `json:"content"`
+	// A value between 0 and 1 when the notification type is `Progress`
+	Progress *float64 `json:"progress"`
+	// Whether or not the message of the notification is positive, the UI might reflect this with a green color
+	Positive bool `json:"positive"`
+	// Whether or not the message of the notification is negative, the UI might reflect this with a red color
+	Negative bool `json:"negative"`
+	// Time in milliseconds before the notification should close
 	Timeout *int `json:"timeout"`
 }
 
+// Used to specify how to sort items
 type Ordering struct {
+	// A column in the database to order by
 	OrderBy        *string         `json:"order_by"`
 	OrderDirection *OrderDirection `json:"order_direction"`
 }
 
+// Used to specify pagination on a list of items
 type Pagination struct {
-	Limit  *int `json:"limit"`
+	// How many items to maximally fetch
+	Limit *int `json:"limit"`
+	// How many items to skip from the beginning of the query, specified by the `Ordering`
 	Offset *int `json:"offset"`
 }
 
@@ -57,9 +71,12 @@ type ScannerResult struct {
 }
 
 type SearchResult struct {
-	Query  string   `json:"query"`
+	// The string that was searched for
+	Query string `json:"query"`
+	// A list of albums that matched the query
 	Albums []*Album `json:"albums"`
-	Media  []*Media `json:"media"`
+	// A list of media that matched the query
+	Media []*Media `json:"media"`
 }
 
 // Credentials used to identify and authenticate a share token
@@ -68,13 +85,19 @@ type ShareTokenCredentials struct {
 	Password *string `json:"password"`
 }
 
+// A group of media from the same album and the same day, that is grouped together in a timeline view
 type TimelineGroup struct {
-	Album      *Album    `json:"album"`
-	Media      []*Media  `json:"media"`
-	MediaTotal int       `json:"mediaTotal"`
-	Date       time.Time `json:"date"`
+	// The full album containing the media in this timeline group
+	Album *Album `json:"album"`
+	// The media contained in this timeline group
+	Media []*Media `json:"media"`
+	// The total amount of media in this timeline group
+	MediaTotal int `json:"mediaTotal"`
+	// The day shared for all media in this timeline group
+	Date time.Time `json:"date"`
 }
 
+// Supported language translations of the user interface
 type LanguageTranslation string
 
 const (
@@ -136,10 +159,13 @@ func (e LanguageTranslation) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// Specified the type a particular notification is of
 type NotificationType string
 
 const (
-	NotificationTypeMessage  NotificationType = "Message"
+	// A regular message with no special additions
+	NotificationTypeMessage NotificationType = "Message"
+	// A notification with an attached progress indicator
 	NotificationTypeProgress NotificationType = "Progress"
 	// Close a notification with a given key
 	NotificationTypeClose NotificationType = "Close"
@@ -180,10 +206,13 @@ func (e NotificationType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// Used to specify which order to sort items in
 type OrderDirection string
 
 const (
-	OrderDirectionAsc  OrderDirection = "ASC"
+	// Sort accending A-Z
+	OrderDirectionAsc OrderDirection = "ASC"
+	// Sort decending Z-A
 	OrderDirectionDesc OrderDirection = "DESC"
 )
 

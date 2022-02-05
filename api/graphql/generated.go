@@ -1710,17 +1710,25 @@ directive @isAdmin on FIELD_DEFINITION
 scalar Time
 scalar Any
 
+"Used to specify which order to sort items in"
 enum OrderDirection {
+  "Sort accending A-Z"
   ASC
+  "Sort decending Z-A"
   DESC
 }
 
+"Used to specify pagination on a list of items"
 input Pagination {
+  "How many items to maximally fetch"
   limit: Int
+  "How many items to skip from the beginning of the query, specified by the ` + "`" + `Ordering` + "`" + `"
   offset: Int
 }
 
+"Used to specify how to sort items"
 input Ordering {
+  "A column in the database to order by"
   order_by: String
   order_direction: OrderDirection
 }
@@ -1739,6 +1747,7 @@ type Query {
   "Information about the currently logged in user"
   myUser: User! @isAuthorized
 
+  "User preferences for the logged in user"
   myUserPreferences: UserPreferences! @isAuthorized
 
   "List of albums owned by the logged in user."
@@ -1784,16 +1793,22 @@ type Query {
   "Get the mapbox api token, returns null if mapbox is not enabled"
   mapboxToken: String
 
+  "Fetch a share token containing an ` + "`" + `Album` + "`" + ` or ` + "`" + `Media` + "`" + `"
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
+  "Check if the ` + "`" + `ShareToken` + "`" + ` credentials are valid"
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
 
+  "Perform a search query on the contents of the media library"
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 
+  "Get a list of ` + "`" + `FaceGroup` + "`" + `s for the logged in user"
   myFaceGroups(paginate: Pagination): [FaceGroup!]! @isAuthorized
+  "Get a particular ` + "`" + `FaceGroup` + "`" + ` specified by its ID"
   faceGroup(id: ID!): FaceGroup! @isAuthorized
 }
 
 type Mutation {
+  "Authorizes a user and returns a token used to identify the new session"
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
@@ -1820,21 +1835,29 @@ type Mutation {
   "Mark or unmark a media as being a favorite"
   favoriteMedia(mediaId: ID!, favorite: Boolean!): Media! @isAuthorized
 
+  "Update a user, fields left as ` + "`" + `null` + "`" + ` will not be changed"
   updateUser(
     id: ID!
     username: String
     password: String
     admin: Boolean
   ): User! @isAdmin
+  "Create a new user"
   createUser(
     username: String!
     password: String
     admin: Boolean!
   ): User! @isAdmin
+  "Delete an existing user"
   deleteUser(id: ID!): User! @isAdmin
 
-  "Add a root path from where to look for media for the given user"
+  "Add a root path from where to look for media for the given user, specified by their user id."
   userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+  """
+  Remove a root path from a user, specified by the id of the user and the top album representing the root path.
+  This album was returned when creating the path using ` + "`" + `userAddRootPath` + "`" + `.
+  A list of root paths for a particular user can be retrived from the ` + "`" + `User.rootAlbums` + "`" + ` path.
+  """
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   """
@@ -1846,6 +1869,7 @@ type Mutation {
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
 
+  "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
   "Reset the assigned cover photo for an album"
@@ -1869,28 +1893,39 @@ type Subscription {
   notification: Notification!
 }
 
+"Specified the type a particular notification is of"
 enum NotificationType {
+  "A regular message with no special additions"
   Message
+  "A notification with an attached progress indicator"
   Progress
   "Close a notification with a given key"
   Close
 }
 
 type Notification {
+  "A key used to identify the notification, new notification updates with the same key, should replace the old notifications"
   key: String!
   type: NotificationType!
+  "The text for the title of the notification"
   header: String!
+  "The text for the body of the notification"
   content: String!
+  "A value between 0 and 1 when the notification type is ` + "`" + `Progress` + "`" + `"
   progress: Float
+  "Whether or not the message of the notification is positive, the UI might reflect this with a green color"
   positive: Boolean!
+  "Whether or not the message of the notification is negative, the UI might reflect this with a red color"
   negative: Boolean!
-  "Time in milliseconds before the notification will close"
+  "Time in milliseconds before the notification should close"
   timeout: Int
 }
 
 type AuthorizeResult {
   success: Boolean!
+  "A textual status message describing the result, can be used to show an error message when ` + "`" + `success` + "`" + ` is false"
   status: String!
+  "An access token used to authenticate new API requests as the newly authorized user. Is present when success is true"
   token: String
 }
 
@@ -1933,16 +1968,15 @@ type SiteInfo {
 type User {
   id: ID!
   username: String!
-  #albums: [Album]
-  # rootPath: String! @isAdmin
   "All albums owned by this user"
   albums: [Album!]! @isAdmin
   "Top level albums owned by this user"
   rootAlbums: [Album!]! @isAdmin
+  "Whether or not the user has admin privileges"
   admin: Boolean!
-  #shareTokens: [ShareToken]
 }
 
+"Supported language translations of the user interface"
 enum LanguageTranslation {
   English,
   French,
@@ -1958,6 +1992,7 @@ enum LanguageTranslation {
   Portuguese
 }
 
+"Preferences for regular users"
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
@@ -1989,8 +2024,10 @@ type Album {
   filePath: String!
   "An image in this album used for previewing this album"
   thumbnail: Media
+  "A breadcrumb list of all parent albums down to this one"
   path: [Album!]!
 
+  "A list of share tokens pointing to this album, owned by the logged in user"
   shares: [ShareToken!]!
 }
 
@@ -2006,6 +2043,7 @@ type MediaURL {
 }
 
 type MediaDownload {
+  "A description of the role of the media file"
   title: String!
   mediaUrl: MediaURL!
 }
@@ -2037,9 +2075,12 @@ type Media {
   "A short string that can be used to generate a blured version of the media, to show while the original is loading"
   blurhash: String
 
+  "A list of share tokens pointing to this media, owned byt the logged in user"
   shares: [ShareToken!]!
+  "A list of different versions of files for this media that can be downloaded by the user"
   downloads: [MediaDownload!]!
 
+  "A list of faces present on the image"
   faces: [ImageFace!]!
 }
 
@@ -2077,6 +2118,7 @@ type Coordinates {
   longitude: Float!
 }
 
+"Metadata specific to video media"
 type VideoMetadata {
   id: ID!
   media: Media!
@@ -2091,32 +2133,48 @@ type VideoMetadata {
 }
 
 type SearchResult {
+  "The string that was searched for"
   query: String!
+  "A list of albums that matched the query"
   albums: [Album!]!
+  "A list of media that matched the query"
   media: [Media!]!
 }
 
+"A group of media from the same album and the same day, that is grouped together in a timeline view"
 type TimelineGroup {
+  "The full album containing the media in this timeline group"
   album: Album!
+  "The media contained in this timeline group"
   media: [Media!]!
+  "The total amount of media in this timeline group"
   mediaTotal: Int!
+  "The day shared for all media in this timeline group"
   date: Time!
 }
 
+"A collection of faces of a particular person"
 type FaceGroup {
   id: ID!
+  "The name of the person"
   label: String
   imageFaces(paginate: Pagination): [ImageFace!]!
+  "The total number of images in this collection"
   imageFaceCount: Int!
 }
 
+"A single face on a particular image"
 type ImageFace {
   id: ID!
+  "A reference to the image the face appears on"
   media: Media!
+  "A bounding box of where on the image the face is present"
   rectangle: FaceRectangle!
+  "The ` + "`" + `FaceGroup` + "`" + ` that contains this ` + "`" + `ImageFace` + "`" + `"
   faceGroup: FaceGroup!
 }
 
+"A bounding box of where a face is present on an image. The values map from 0 to 1 as a fraction of the image width/height"
 type FaceRectangle {
   minX: Float!
   maxX: Float!
