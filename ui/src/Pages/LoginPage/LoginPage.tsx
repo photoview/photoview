@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { useForm } from 'react-hook-form'
-import { checkInitialSetupQuery, login } from './loginUtilities'
+import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
 import { useTranslation } from 'react-i18next'
@@ -69,8 +69,6 @@ const LoginForm = () => {
     })
   }
 
-  console.log('errors', formErrors)
-
   const errorMessage =
     data && !data.authorizeUser.success ? data.authorizeUser.status : null
 
@@ -130,16 +128,19 @@ const LoginPage = () => {
   const navigate = useNavigate()
 
   const { data: initialSetupData } = useQuery<CheckInitialSetup>(
-    checkInitialSetupQuery
+    INITIAL_SETUP_QUERY,
+    { variables: {} }
   )
 
-  if (authToken()) {
-    navigate('/')
-    return null
-  }
+  useEffect(() => {
+    if (authToken()) navigate('/')
+  }, [])
 
-  if (initialSetupData?.siteInfo?.initialSetup) {
-    navigate('initialSetup')
+  useEffect(() => {
+    if (initialSetupData?.siteInfo?.initialSetup) navigate('/initialSetup')
+  }, [initialSetupData?.siteInfo?.initialSetup])
+
+  if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
     return null
   }
 

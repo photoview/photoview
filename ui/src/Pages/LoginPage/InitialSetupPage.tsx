@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { useNavigate } from 'react-router-dom'
 import { Container } from './loginUtilities'
 
-import { checkInitialSetupQuery, login } from './loginUtilities'
+import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
@@ -45,19 +45,18 @@ const InitialSetupPage = () => {
     formState: { errors: formErrors },
   } = useForm<InitialSetupFormData>()
 
-  if (authToken()) {
-    navigate('/')
-    return null
-  }
+  useEffect(() => {
+    if (authToken()) navigate('/')
+  }, [])
 
-  const { data: initialSetupData } = useQuery<CheckInitialSetup>(
-    checkInitialSetupQuery
-  )
+  const { data: initialSetupData } =
+    useQuery<CheckInitialSetup>(INITIAL_SETUP_QUERY)
 
-  if (initialSetupData?.siteInfo?.initialSetup) {
-    navigate('/')
-    return null
-  }
+  const notInitialSetup = initialSetupData?.siteInfo?.initialSetup === false
+
+  useEffect(() => {
+    if (notInitialSetup) navigate('/')
+  }, [notInitialSetup])
 
   const [authorize, { loading: authorizeLoading, data: authorizationData }] =
     useMutation(initialSetupMutation, {
@@ -79,6 +78,10 @@ const InitialSetupPage = () => {
       },
     })
   })
+
+  if (authToken() || notInitialSetup) {
+    return null
+  }
 
   let errorMessage = null
   if (authorizationData && !authorizationData.initialSetupWizard.success) {
