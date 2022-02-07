@@ -8,10 +8,13 @@
 // ====================================================
 
 export interface ShareTokenValidatePassword {
-  shareTokenValidatePassword: boolean;
+  /**
+   * Check if the `ShareToken` credentials are valid
+   */
+  shareTokenValidatePassword: boolean
 }
 
 export interface ShareTokenValidatePasswordVariables {
-  token: string;
-  password?: string | null;
+  token: string
+  password?: string | null
 }

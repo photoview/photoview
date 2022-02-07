@@ -52,6 +52,9 @@ export interface SharePageToken_shareToken_media_downloads_mediaUrl {
 
 export interface SharePageToken_shareToken_media_downloads {
   __typename: 'MediaDownload'
+  /**
+   * A description of the role of the media file
+   */
   title: string
   mediaUrl: SharePageToken_shareToken_media_downloads_mediaUrl
 }
@@ -155,6 +158,9 @@ export interface SharePageToken_shareToken_media {
    * URL to display the media in a smaller resolution
    */
   thumbnail: SharePageToken_shareToken_media_thumbnail | null
+  /**
+   * A list of different versions of files for this media that can be downloaded by the user
+   */
   downloads: SharePageToken_shareToken_media_downloads[]
   /**
    * URL to display the photo in full resolution, will be null for videos
@@ -181,6 +187,9 @@ export interface SharePageToken_shareToken {
 }
 
 export interface SharePageToken {
+  /**
+   * Fetch a share token containing an `Album` or `Media`
+   */
   shareToken: SharePageToken_shareToken
 }
 

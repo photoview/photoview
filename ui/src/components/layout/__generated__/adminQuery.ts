@@ -8,13 +8,16 @@
 // ====================================================
 
 export interface adminQuery_myUser {
-  __typename: "User";
-  admin: boolean;
+  __typename: 'User'
+  /**
+   * Whether or not the user has admin privileges
+   */
+  admin: boolean
 }
 
 export interface adminQuery {
   /**
    * Information about the currently logged in user
    */
-  myUser: adminQuery_myUser;
+  myUser: adminQuery_myUser
 }

@@ -8,18 +8,18 @@
 // ====================================================
 
 export interface userAddRootPath_userAddRootPath {
-  __typename: "Album";
-  id: string;
+  __typename: 'Album'
+  id: string
 }
 
 export interface userAddRootPath {
   /**
-   * Add a root path from where to look for media for the given user
+   * Add a root path from where to look for media for the given user, specified by their user id.
    */
-  userAddRootPath: userAddRootPath_userAddRootPath | null;
+  userAddRootPath: userAddRootPath_userAddRootPath | null
 }
 
 export interface userAddRootPathVariables {
-  id: string;
-  rootPath: string;
+  id: string
+  rootPath: string
 }

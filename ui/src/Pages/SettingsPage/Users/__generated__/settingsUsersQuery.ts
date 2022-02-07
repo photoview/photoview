@@ -8,28 +8,31 @@
 // ====================================================
 
 export interface settingsUsersQuery_user_rootAlbums {
-  __typename: "Album";
-  id: string;
+  __typename: 'Album'
+  id: string
   /**
    * The path on the filesystem of the server, where this album is located
    */
-  filePath: string;
+  filePath: string
 }
 
 export interface settingsUsersQuery_user {
-  __typename: "User";
-  id: string;
-  username: string;
-  admin: boolean;
+  __typename: 'User'
+  id: string
+  username: string
+  /**
+   * Whether or not the user has admin privileges
+   */
+  admin: boolean
   /**
    * Top level albums owned by this user
    */
-  rootAlbums: settingsUsersQuery_user_rootAlbums[];
+  rootAlbums: settingsUsersQuery_user_rootAlbums[]
 }
 
 export interface settingsUsersQuery {
   /**
    * List of registered users, must be admin to call
    */
-  user: settingsUsersQuery_user[];
+  user: settingsUsersQuery_user[]
 }

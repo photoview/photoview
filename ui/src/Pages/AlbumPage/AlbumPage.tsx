@@ -16,14 +16,16 @@ const ALBUM_QUERY = gql`
     $id: ID!
     $onlyFavorites: Boolean
     $mediaOrderBy: String
-    $mediaOrderDirection: OrderDirection
+    $orderDirection: OrderDirection
     $limit: Int
     $offset: Int
   ) {
     album(id: $id) {
       id
       title
-      subAlbums(order: { order_by: "title" }) {
+      subAlbums(
+        order: { order_by: "title", order_direction: $orderDirection }
+      ) {
         id
         title
         thumbnail {
@@ -35,10 +37,7 @@ const ALBUM_QUERY = gql`
       }
       media(
         paginate: { limit: $limit, offset: $offset }
-        order: {
-          order_by: $mediaOrderBy
-          order_direction: $mediaOrderDirection
-        }
+        order: { order_by: $mediaOrderBy, order_direction: $orderDirection }
         onlyFavorites: $onlyFavorites
       ) {
         id
@@ -86,7 +85,7 @@ function AlbumPage() {
       id: albumId,
       onlyFavorites,
       mediaOrderBy: orderParams.orderBy,
-      mediaOrderDirection: orderParams.orderDirection,
+      orderDirection: orderParams.orderDirection,
       offset: 0,
       limit: 200,
     },

@@ -64,18 +64,30 @@ export interface singleFaceGroup_faceGroup_imageFaces_media {
 export interface singleFaceGroup_faceGroup_imageFaces {
   __typename: 'ImageFace'
   id: string
+  /**
+   * A bounding box of where on the image the face is present
+   */
   rectangle: singleFaceGroup_faceGroup_imageFaces_rectangle
+  /**
+   * A reference to the image the face appears on
+   */
   media: singleFaceGroup_faceGroup_imageFaces_media
 }
 
 export interface singleFaceGroup_faceGroup {
   __typename: 'FaceGroup'
   id: string
+  /**
+   * The name of the person
+   */
   label: string | null
   imageFaces: singleFaceGroup_faceGroup_imageFaces[]
 }
 
 export interface singleFaceGroup {
+  /**
+   * Get a particular `FaceGroup` specified by its ID
+   */
   faceGroup: singleFaceGroup_faceGroup
 }
 
