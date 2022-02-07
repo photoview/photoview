@@ -18,7 +18,7 @@ export const SectionTitle = ({ children, nospace }: SectionTitleProps) => {
   return (
     <h2
       className={classNames(
-        'pb-1 border-b border-gray-200 text-xl mb-5',
+        'pb-1 border-b border-gray-200 dark:border-[#3B3B3B] text-xl mb-5',
         !nospace && 'mt-6'
       )}
     >

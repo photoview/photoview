@@ -12,7 +12,8 @@ html {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
-body.dark {
+body.dark,
+html.dark {
   @apply bg-dark-bg text-dark-text;
 }
 

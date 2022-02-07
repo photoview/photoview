@@ -7,11 +7,13 @@ import client from './apolloClient'
 import { ApolloProvider } from '@apollo/client'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { setupLocalization } from './localization'
+import { updateTheme } from './theme'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 
 import './index.css'
 import { SidebarProvider } from './components/sidebar/Sidebar'
 
+updateTheme()
 setupLocalization()
 
 const Main = () => (
@@ -23,8 +25,6 @@ const Main = () => (
     </Router>
   </ApolloProvider>
 )
-
-document.getElementsByTagName('body')[0].classList.add('dark')
 
 ReactDOM.render(<Main />, document.getElementById('root'))
 
