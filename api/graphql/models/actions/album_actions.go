@@ -23,7 +23,24 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	query := db.Model(models.Album{}).Where("id IN (?)", userAlbumIDs)
 
 	if onlyRoot != nil && *onlyRoot {
-		query = query.Where("parent_album_id IS NULL")
+
+		var singleRootAlbumID int = -1
+		for _, album := range user.Albums {
+			if album.ParentAlbumID == nil {
+				if singleRootAlbumID == -1 {
+					singleRootAlbumID = album.ID
+				} else {
+					singleRootAlbumID = -1
+					break
+				}
+			}
+		}
+
+		if singleRootAlbumID != -1 && len(user.Albums) > 1 {
+			query = query.Where("parent_album_id = ?", singleRootAlbumID)
+		} else {
+			query = query.Where("parent_album_id IS NULL")
+		}
 	}
 
 	if showEmpty == nil || !*showEmpty {
