@@ -3,18 +3,21 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { LanguageTranslation } from "./globalTypes";
+import { LanguageTranslation } from './globalTypes'
 
 // ====================================================
 // GraphQL query operation: siteTranslation
 // ====================================================
 
 export interface siteTranslation_myUserPreferences {
-  __typename: "UserPreferences";
-  id: string;
-  language: LanguageTranslation | null;
+  __typename: 'UserPreferences'
+  id: string
+  language: LanguageTranslation | null
 }
 
 export interface siteTranslation {
-  myUserPreferences: siteTranslation_myUserPreferences;
+  /**
+   * User preferences for the logged in user
+   */
+  myUserPreferences: siteTranslation_myUserPreferences
 }

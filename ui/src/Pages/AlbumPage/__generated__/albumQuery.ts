@@ -117,7 +117,7 @@ export interface albumQueryVariables {
   id: string
   onlyFavorites?: boolean | null
   mediaOrderBy?: string | null
-  mediaOrderDirection?: OrderDirection | null
+  orderDirection?: OrderDirection | null
   limit?: number | null
   offset?: number | null
 }

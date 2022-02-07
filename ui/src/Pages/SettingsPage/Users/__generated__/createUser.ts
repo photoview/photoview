@@ -8,17 +8,23 @@
 // ====================================================
 
 export interface createUser_createUser {
-  __typename: "User";
-  id: string;
-  username: string;
-  admin: boolean;
+  __typename: 'User'
+  id: string
+  username: string
+  /**
+   * Whether or not the user has admin privileges
+   */
+  admin: boolean
 }
 
 export interface createUser {
-  createUser: createUser_createUser;
+  /**
+   * Create a new user
+   */
+  createUser: createUser_createUser
 }
 
 export interface createUserVariables {
-  username: string;
-  admin: boolean;
+  username: string
+  admin: boolean
 }

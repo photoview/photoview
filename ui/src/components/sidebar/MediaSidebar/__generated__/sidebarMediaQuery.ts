@@ -138,6 +138,9 @@ export interface sidebarMediaQuery_media_album {
   __typename: 'Album'
   id: string
   title: string
+  /**
+   * A breadcrumb list of all parent albums down to this one
+   */
   path: sidebarMediaQuery_media_album_path[]
 }
 
@@ -152,7 +155,13 @@ export interface sidebarMediaQuery_media_faces_rectangle {
 export interface sidebarMediaQuery_media_faces_faceGroup {
   __typename: 'FaceGroup'
   id: string
+  /**
+   * The name of the person
+   */
   label: string | null
+  /**
+   * The total number of images in this collection
+   */
   imageFaceCount: number
 }
 
@@ -185,8 +194,17 @@ export interface sidebarMediaQuery_media_faces_media {
 export interface sidebarMediaQuery_media_faces {
   __typename: 'ImageFace'
   id: string
+  /**
+   * A bounding box of where on the image the face is present
+   */
   rectangle: sidebarMediaQuery_media_faces_rectangle
+  /**
+   * The `FaceGroup` that contains this `ImageFace`
+   */
   faceGroup: sidebarMediaQuery_media_faces_faceGroup
+  /**
+   * A reference to the image the face appears on
+   */
   media: sidebarMediaQuery_media_faces_media
 }
 
@@ -213,6 +231,9 @@ export interface sidebarMediaQuery_media {
    * The album that holds the media
    */
   album: sidebarMediaQuery_media_album
+  /**
+   * A list of faces present on the image
+   */
   faces: sidebarMediaQuery_media_faces[]
 }
 
