@@ -206,3 +206,64 @@ func TestAlbumCover(t *testing.T) {
 	})
 
 }
+
+func TestAlbumsSingleRootExpand(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolFalse := false
+	boolTrue := true
+
+	unrelatedAlbum := models.Album{
+		Title: "unrelated_album",
+		Path:  "/another_place",
+	}
+	err := db.Create(&unrelatedAlbum).Error
+	assert.NoError(t, err)
+
+	user, err := models.RegisterUser(db, "user", nil, false)
+	assert.NoError(t, err)
+
+	rootAlbum := models.Album{
+		Title: "root",
+		Path:  "/root",
+	}
+
+	err = db.Model(&user).Association("Albums").Replace(&rootAlbum)
+	assert.NoError(t, err)
+
+	t.Run("Single root album, no children", func(t *testing.T) {
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 1)
+	})
+
+	childAlbums := []models.Album{
+		{
+			Title:         "child1",
+			Path:          "/root/child1",
+			ParentAlbumID: &rootAlbum.ID,
+		},
+		{
+			Title:         "child2",
+			Path:          "/root/child2",
+			ParentAlbumID: &rootAlbum.ID,
+		},
+		{
+			Title:         "child3",
+			Path:          "/root/child3",
+			ParentAlbumID: &rootAlbum.ID,
+		},
+	}
+
+	err = db.Model(&user).Association("Albums").Append(&childAlbums)
+	assert.NoError(t, err)
+
+	t.Run("Single root album, multiple children", func(t *testing.T) {
+
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 3)
+	})
+
+}
