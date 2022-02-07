@@ -24,6 +24,8 @@ const Main = () => (
   </ApolloProvider>
 )
 
+document.getElementsByTagName('body')[0].classList.add('dark')
+
 ReactDOM.render(<Main />, document.getElementById('root'))
 
 serviceWorkerRegistration.register()

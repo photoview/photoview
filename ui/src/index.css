@@ -12,6 +12,10 @@ html {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
+body.dark {
+  @apply bg-dark-bg text-dark-text;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

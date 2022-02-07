@@ -25,7 +25,7 @@ const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
   let placeholder = null
   if (!loaded) {
     placeholder = (
-      <div className="bg-gray-100 animate-pulse w-full h-full rounded-lg absolute top-0"></div>
+      <div className="bg-gray-100 dark:bg-[#191c1f] animate-pulse w-full h-full rounded-lg absolute top-0"></div>
     )
   }
 
@@ -44,7 +44,7 @@ type AlbumBoxProps = {
 
 export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
   const wrapperClasses =
-    'inline-block text-center text-gray-900 mx-3 my-2 xs:h-60 xs:w-[220px]'
+    'inline-block text-center text-gray-900 dark:text-gray-200 mx-3 my-2 xs:h-60 xs:w-[220px]'
 
   if (album) {
     return (
