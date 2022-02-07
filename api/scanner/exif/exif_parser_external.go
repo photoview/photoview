@@ -103,7 +103,7 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	}
 
 	//Get time of photo
-	createDateKeys := []string{"DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate"}
+	createDateKeys := []string{"DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate", "FileCreateDate", "ModifyDate", "TrackModifyDate", "MediaModifyDate", "FileModifyDate"}
 	for _, createDateKey := range createDateKeys {
 		date, err := fileInfo.GetString(createDateKey)
 		if err == nil {
