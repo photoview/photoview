@@ -63,7 +63,7 @@ const MenuButton = ({
 }
 
 const MenuSeparator = () => (
-  <hr className="hidden lg:block my-3 border-gray-200 dark:border-[#3B3B3B]" />
+  <hr className="hidden lg:block my-3 border-gray-200 dark:border-dark-border" />
 )
 
 export const MainMenu = () => {

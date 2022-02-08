@@ -145,7 +145,7 @@ type ButtonProps = {
   className?: string
 }
 
-const buttonStyles = ({ variant, background }: ButtonProps) =>
+export const buttonStyles = ({ variant, background }: ButtonProps) =>
   classNames(
     'px-6 py-0.5 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100 whitespace-nowrap',
     'dark:bg-dark-input-bg dark:border-dark-input-border dark:text-dark-input-text dark:focus:border-blue-300',

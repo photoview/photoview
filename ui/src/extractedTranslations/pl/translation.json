@@ -2,13 +2,13 @@
   "album_filter": {
     "only_favorites": "Pokaż tylko ulubione",
     "sort": "",
+    "sort_by": "Sortuj",
     "sorting_options": {
       "date_imported": "Data zaimportowania",
       "date_shot": "Data wykonania",
       "title": "Tytuł",
       "type": "Rodzaj"
-    },
-    "sort_by": "Sortuj"
+    }
   },
   "general": {
     "action": {
@@ -155,6 +155,19 @@
       "language_selector": {
         "placeholder": "Wybierz język"
       },
+      "theme": {
+        "auto": {
+          "label": ""
+        },
+        "dark": {
+          "label": ""
+        },
+        "description": "",
+        "light": {
+          "label": ""
+        },
+        "title": ""
+      },
       "title": "Preferencje użytkownika"
     },
     "users": {
@@ -240,21 +253,26 @@
     },
     "download": {
       "filesize": {
-        "byte_0": "",
-        "byte_1": "",
-        "byte_2": "",
-        "giga_byte_0": "",
-        "giga_byte_1": "",
-        "giga_byte_2": "",
-        "kilo_byte_0": "",
-        "kilo_byte_1": "",
-        "kilo_byte_2": "",
-        "mega_byte_0": "",
-        "mega_byte_1": "",
-        "mega_byte_2": "",
-        "tera_byte_0": "",
-        "tera_byte_1": "",
-        "tera_byte_2": ""
+        "byte_one": "",
+        "byte_few": "",
+        "byte_many": "",
+        "byte_other": "",
+        "giga_byte_one": "",
+        "giga_byte_few": "",
+        "giga_byte_many": "",
+        "giga_byte_other": "",
+        "kilo_byte_one": "",
+        "kilo_byte_few": "",
+        "kilo_byte_many": "",
+        "kilo_byte_other": "",
+        "mega_byte_one": "",
+        "mega_byte_few": "",
+        "mega_byte_many": "",
+        "mega_byte_other": "",
+        "tera_byte_one": "",
+        "tera_byte_few": "",
+        "tera_byte_many": "",
+        "tera_byte_other": ""
       },
       "table_columns": {
         "dimensions": "Wymiary",

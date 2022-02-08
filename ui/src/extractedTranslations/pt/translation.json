@@ -2,13 +2,13 @@
   "album_filter": {
     "only_favorites": "Mostrar apenas os favoritos",
     "sort": "Ordenar",
+    "sort_by": "Ordenado por",
     "sorting_options": {
       "date_imported": "Data de importação",
       "date_shot": "Data da foto",
       "title": "Título",
       "type": "Tipo"
-    },
-    "sort_by": "Ordenado por"
+    }
   },
   "general": {
     "action": {
@@ -155,6 +155,19 @@
       "language_selector": {
         "placeholder": "Selecionar Idioma"
       },
+      "theme": {
+        "auto": {
+          "label": ""
+        },
+        "dark": {
+          "label": ""
+        },
+        "description": "",
+        "light": {
+          "label": ""
+        },
+        "title": ""
+      },
       "title": "Preferências do utilizador"
     },
     "users": {
@@ -240,16 +253,16 @@
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "giga_byte_plural": "{{count}} GB",
-        "kilo_byte": "{{count}} KB",
-        "kilo_byte_plural": "{{count}} KB",
-        "mega_byte": "{{count}} MB",
-        "mega_byte_plural": "{{count}} MB",
-        "tera_byte": "{{count}} TB",
-        "tera_byte_plural": "{{count}} TB"
+        "byte_one": "",
+        "byte_other": "",
+        "giga_byte_one": "",
+        "giga_byte_other": "",
+        "kilo_byte_one": "",
+        "kilo_byte_other": "",
+        "mega_byte_one": "",
+        "mega_byte_other": "",
+        "tera_byte_one": "",
+        "tera_byte_other": ""
       },
       "table_columns": {
         "dimensions": "Dimensões",

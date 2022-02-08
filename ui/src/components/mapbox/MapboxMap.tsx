@@ -5,6 +5,7 @@ import styled from 'styled-components'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { mapboxToken } from './__generated__/mapboxToken'
+import { isDarkMode } from '../../theme'
 
 const MAPBOX_TOKEN_QUERY = gql`
   query mapboxToken {
@@ -59,7 +60,9 @@ const useMapboxMap = ({
 
     map.current = new mapboxLibrary.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: isDarkMode()
+        ? 'mapbox://styles/mapbox/dark-v10'
+        : 'mapbox://styles/mapbox/streets-v11',
       ...mapboxOptions,
     })
 

@@ -32,3 +32,6 @@ export const getTheme = () => {
     return 'auto'
   }
 }
+
+export const isDarkMode = () =>
+  document.documentElement.classList.contains('dark')

@@ -2,13 +2,13 @@
   "album_filter": {
     "only_favorites": "只顯示喜愛",
     "sort": "排序",
+    "sort_by": "排序方式",
     "sorting_options": {
       "date_imported": "加入日期",
       "date_shot": "拍攝日期",
       "title": "標題",
       "type": "種類"
-    },
-    "sort_by": "排序方式"
+    }
   },
   "general": {
     "action": {
@@ -155,6 +155,19 @@
       "language_selector": {
         "placeholder": "Select language"
       },
+      "theme": {
+        "auto": {
+          "label": ""
+        },
+        "dark": {
+          "label": ""
+        },
+        "description": "",
+        "light": {
+          "label": ""
+        },
+        "title": ""
+      },
       "title": "使用者選項"
     },
     "users": {
@@ -240,11 +253,11 @@
     },
     "download": {
       "filesize": {
-        "byte": "",
-        "giga_byte": "",
-        "kilo_byte": "",
-        "mega_byte": "",
-        "tera_byte": ""
+        "byte_other": "",
+        "giga_byte_other": "",
+        "kilo_byte_other": "",
+        "mega_byte_other": "",
+        "tera_byte_other": ""
       },
       "table_columns": {
         "dimensions": "尺寸",

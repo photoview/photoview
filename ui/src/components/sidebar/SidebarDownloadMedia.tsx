@@ -212,7 +212,7 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   const bytes = formatBytes(t)
   const downloadRows = rows.map(x => (
     <tr
-      className="cursor-pointer border-gray-100 border-b hover:bg-gray-50 focus:bg-gray-50"
+      className="cursor-pointer border-gray-100 dark:border-dark-border2 border-b hover:bg-gray-50 focus:bg-gray-50 dark:hover:bg-[#3c4759] dark:focus:bg-[#3c4759]"
       key={x.url}
       onClick={() => download(x.url)}
       tabIndex={0}
@@ -226,8 +226,8 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
 
   return (
     <table className="table-fixed w-full">
-      <thead className="bg-[#f9f9fb]">
-        <tr className="text-left uppercase text-xs border-gray-100 border-b border-t">
+      <thead className="bg-[#f9f9fb] dark:bg-[#2B3037]">
+        <tr className="text-left uppercase text-xs border-gray-100 dark:border-dark-border2 border-b border-t">
           <th className="w-2/6 pl-4 py-2">
             {t('sidebar.download.table_columns.name', 'Name')}
           </th>

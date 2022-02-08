@@ -2,13 +2,13 @@
   "album_filter": {
     "only_favorites": "Show only favorites",
     "sort": "Sort",
+    "sort_by": "Sort by",
     "sorting_options": {
       "date_imported": "Date imported",
       "date_shot": "Date shot",
       "title": "Title",
       "type": "Kind"
-    },
-    "sort_by": "Sort by"
+    }
   },
   "general": {
     "action": {
@@ -155,6 +155,19 @@
       "language_selector": {
         "placeholder": "Select language"
       },
+      "theme": {
+        "auto": {
+          "label": "Same as system"
+        },
+        "dark": {
+          "label": "Dark"
+        },
+        "description": "Change the appearance of the website",
+        "light": {
+          "label": "Light"
+        },
+        "title": "Theme preferences"
+      },
       "title": "User preferences"
     },
     "users": {
@@ -240,16 +253,16 @@
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "giga_byte_plural": "{{count}} GB",
-        "kilo_byte": "{{count}} KB",
-        "kilo_byte_plural": "{{count}} KB",
-        "mega_byte": "{{count}} MB",
-        "mega_byte_plural": "{{count}} MB",
-        "tera_byte": "{{count}} TB",
-        "tera_byte_plural": "{{count}} TB"
+        "byte_one": "{{count}} Byte",
+        "byte_other": "{{count}} Bytes",
+        "giga_byte_one": "{{count}} GB",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "{{count}} KB",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "{{count}} MB",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "{{count}} TB",
+        "tera_byte_other": "{{count}} TB"
       },
       "table_columns": {
         "dimensions": "Dimensions",

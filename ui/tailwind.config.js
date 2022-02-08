@@ -27,6 +27,8 @@ module.exports = {
           bg: '#24292e',
           bg2: '#30363e',
           text: '#fafafa',
+          border: '#3b3b3b',
+          border2: '#1E1E1E',
           input: {
             bg: '#383e46',
             border: '#4a515a',

@@ -108,7 +108,7 @@ const DELETE_SHARE_MUTATION = gql`
 
 export const ArrowPopoverPanel = styled.div.attrs({
   className:
-    'absolute -top-3 bg-white rounded shadow-md border border-gray-200 z-10',
+    'absolute -top-3 bg-white dark:bg-dark-bg rounded shadow-md border border-gray-200 dark:border-dark-border z-10',
 })<{ width: number; flipped?: boolean }>`
   width: ${({ width }) => width}px;
 
@@ -269,7 +269,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
       <Popover.Panel>
         <ArrowPopoverPanel width={260}>
           <MorePopoverSectionPassword id={id} share={share} query={query} />
-          <div className="px-4 py-2 border-t border-gray-200 mt-2 mb-2">
+          <div className="px-4 py-2 border-t border-gray-200 dark:border-dark-border mt-2 mb-2">
             <Checkbox label="Expiration date" />
             <TextField className="mt-2 w-full" />
           </div>
@@ -405,9 +405,12 @@ const SidebarShare = ({
   }
 
   const optionsRows = shares.map(share => (
-    <tr key={share.token} className="border-gray-100 border-b border-t">
+    <tr
+      key={share.token}
+      className="border-gray-100 dark:border-dark-border2 border-b border-t"
+    >
       <td className="pl-4 py-2 w-full">
-        <span className="text-[#585858] mr-2">
+        <span className="text-[#585858] dark:text-[#C0C3C4] mr-2">
           <LinkIcon className="inline-block mr-2" />
           <span className="text-xs uppercase font-bold">
             {t('sidebar.sharing.public_link', 'Public Link') + ' '}
@@ -415,7 +418,7 @@ const SidebarShare = ({
         </span>
         <span className="text-sm">{share.token}</span>
       </td>
-      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] flex">
+      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] dark:text-[#7599ca] flex">
         <button
           className="align-middle p-1 ml-2"
           title={t('sidebar.sharing.copy_link', 'Copy Link')}
@@ -443,8 +446,14 @@ const SidebarShare = ({
 
   if (optionsRows.length == 0) {
     optionsRows.push(
-      <tr key="no-shares" className="border-gray-100 border-b border-t">
-        <td colSpan={2} className="pl-4 py-2 italic text-gray-600">
+      <tr
+        key="no-shares"
+        className="border-gray-100 dark:border-dark-border2 border-b border-t"
+      >
+        <td
+          colSpan={2}
+          className="pl-4 py-2 italic text-gray-600 dark:text-gray-300"
+        >
           {t('sidebar.sharing.no_shares_found', 'No shares found')}
         </td>
       </tr>
@@ -460,7 +469,7 @@ const SidebarShare = ({
         <table className="border-collapse w-full">
           <tbody>{optionsRows}</tbody>
           <tfoot>
-            <tr className="text-left border-gray-100 border-b border-t">
+            <tr className="text-left border-gray-100 dark:border-dark-border2 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
                   className="text-green-500 font-bold uppercase text-xs"
