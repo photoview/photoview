@@ -180,7 +180,11 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
   let albumPath = null
   const mediaAlbum = media.album
   if (!isNil(mediaAlbum)) {
-    const pathElms = [...(mediaAlbum.path ?? []), mediaAlbum].map(album => (
+    console.log('PATH reversed', mediaAlbum.path ?? [])
+    const pathElms = [
+      ...[...(mediaAlbum.path ?? [])].reverse(),
+      mediaAlbum,
+    ].map(album => (
       <li key={album.id} className="inline-block hover:underline">
         <Link
           className="text-blue-900 hover:underline"
