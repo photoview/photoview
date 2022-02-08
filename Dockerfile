@@ -25,7 +25,7 @@ WORKDIR /app
 
 # Download dependencies
 COPY ui/package*.json /app/
-RUN HUSKY=0 npm ci --only=production
+RUN npm ci --omit=dev --ignore-scripts
 
 # Build frontend
 COPY ui /app
