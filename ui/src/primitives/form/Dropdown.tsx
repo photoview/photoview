@@ -44,6 +44,7 @@ const Dropdown = ({
     <DropdownStyledSelect
       className={classNames(
         'bg-gray-50 px-2 py-0.5 pr-6 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100 disabled:hover:bg-gray-50 disabled:text-gray-500 disabled:cursor-default',
+        'dark:bg-dark-input-bg dark:border-dark-input-border dark:text-dark-input-text dark:focus:border-blue-300',
         className
       )}
       value={selected}

@@ -58,6 +58,7 @@ export const TextField = forwardRef(
         onKeyUp={keyUpEvent}
         className={classNames(
           'block border rounded-md focus:ring-2 focus:outline-none px-2',
+          'dark:bg-dark-input-bg dark:border-dark-input-border',
           variant,
           sizeVariant == 'big' ? 'py-2' : 'py-1',
           { 'w-full': fullWidth },
@@ -144,9 +145,10 @@ type ButtonProps = {
   className?: string
 }
 
-const buttonStyles = ({ variant, background }: ButtonProps) =>
+export const buttonStyles = ({ variant, background }: ButtonProps) =>
   classNames(
     'px-6 py-0.5 rounded border border-gray-200 focus:outline-none focus:border-blue-300 text-[#222] hover:bg-gray-100 whitespace-nowrap',
+    'dark:bg-dark-input-bg dark:border-dark-input-border dark:text-dark-input-text dark:focus:border-blue-300',
     variant == 'negative' &&
       'text-red-600 hover:bg-red-600 hover:border-red-700 hover:text-white transition-colors focus:border-red-600 focus:hover:border-red-700',
     variant == 'positive' &&

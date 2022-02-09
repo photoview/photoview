@@ -67,7 +67,7 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
       <>
         <h1
           className={`text-2xl font-semibold ${
-            faceGroup?.label ? 'text-black' : 'text-gray-600'
+            faceGroup?.label ? '' : 'text-gray-600 dark:text-gray-400'
           }`}
         >
           {faceGroup?.label ??

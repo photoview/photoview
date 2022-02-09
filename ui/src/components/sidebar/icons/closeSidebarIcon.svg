@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <path stroke="none" stroke-width="1" fill="none" d="M1,11 L11,1 M11,11 L1,1" stroke="#1F2021" stroke-width="2"></path>
+  <path stroke="none" stroke-width="1" fill="none" d="M1,11 L11,1 M11,11 L1,1" stroke="currentColor" stroke-width="2"></path>
 </svg>

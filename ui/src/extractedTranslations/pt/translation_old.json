@@ -2,8 +2,8 @@
   "people_page": {
     "action_label": {
       "change_label": null,
-      "merge_people": null,
       "detach_images": null,
+      "merge_people": null,
       "move_faces": null
     },
     "modal": {
@@ -13,6 +13,22 @@
           "title": "Selecione a cara de destino"
         },
         "title": "Juntar grupos de cara"
+      }
+    }
+  },
+  "sidebar": {
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "giga_byte_plural": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "mega_byte_plural": "{{count}} MB",
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": "{{count}} TB"
       }
     }
   }

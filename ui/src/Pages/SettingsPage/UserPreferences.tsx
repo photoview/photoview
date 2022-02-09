@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client'
 import gql from 'graphql-tag'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { LanguageTranslation } from '../../__generated__/globalTypes'
@@ -16,6 +16,8 @@ import {
   changeUserPreferencesVariables,
 } from './__generated__/changeUserPreferences'
 import { myUserPreferences } from './__generated__/myUserPreferences'
+import { TranslationFn } from '../../localization'
+import { changeTheme, getTheme } from '../../theme'
 
 const languagePreferences = [
   { key: 1, label: 'English', flag: 'uk', value: LanguageTranslation.English },
@@ -44,6 +46,24 @@ const languagePreferences = [
     label: 'Português',
     flag: 'pt',
     value: LanguageTranslation.Portuguese,
+  },
+]
+
+const themePreferences = (t: TranslationFn) => [
+  {
+    key: 1,
+    label: t('settings.user_preferences.theme.auto.label', 'Same as system'),
+    value: 'auto',
+  },
+  {
+    key: 2,
+    label: t('settings.user_preferences.theme.light.label', 'Light'),
+    value: 'light',
+  },
+  {
+    key: 2,
+    label: t('settings.user_preferences.theme.dark.label', 'Dark'),
+    value: 'dark',
   },
 ]
 
@@ -86,6 +106,12 @@ const UserPreferencesWrapper = styled.div`
 
 const UserPreferences = () => {
   const { t } = useTranslation()
+  const [theme, setTheme] = useState(getTheme())
+
+  const changeStateTheme = (value: string) => {
+    changeTheme(value)
+    setTheme(value)
+  }
 
   const { data } = useQuery<myUserPreferences>(MY_USER_PREFERENCES)
 
@@ -109,7 +135,7 @@ const UserPreferences = () => {
         {t('settings.user_preferences.title', 'User preferences')}
       </SectionTitle>
       <LogoutButton />
-      <label id="user_pref_change_language_field">
+      <label htmlFor="user_pref_change_language_field">
         <InputLabelTitle>
           {t(
             'settings.user_preferences.change_language.label',
@@ -139,6 +165,23 @@ const UserPreferences = () => {
         }}
         selected={data?.myUserPreferences.language || undefined}
         disabled={loadingPrefs}
+      />
+      <label htmlFor="user_pref_change_theme_field">
+        <InputLabelTitle>
+          {t('settings.user_preferences.theme.title', 'Theme preferences')}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.theme.description',
+            'Change the appearance of the website'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Dropdown
+        id="user_pref_change_theme_field"
+        items={themePreferences(t)}
+        setSelected={changeStateTheme}
+        selected={theme}
       />
     </UserPreferencesWrapper>
   )

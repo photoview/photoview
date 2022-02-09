@@ -1,4 +1,7 @@
 {
+  "album_filter": {
+    "sort": null
+  },
   "albums_page": {
     "title": "Альбомы"
   },
@@ -15,12 +18,18 @@
   "header": {
     "search": {
       "result_type": {
-        "photos": "Фото",
-        "media": null
+        "media": null,
+        "photos": "Фото"
       }
     }
   },
   "people_page": {
+    "action_label": {
+      "change_label": null,
+      "detach_face": null,
+      "merge_face": null,
+      "move_faces": null
+    },
     "face_group": {
       "action": {
         "add_label": "Добавить Метку",
@@ -28,6 +37,15 @@
         "detach_face": "Отсоединить Лицо",
         "merge_face": "Объединить Лицо",
         "move_faces": "Переместить Лица"
+      }
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
+        "destination_table": {
+          "title": "Выберете конечное лицо"
+        },
+        "title": "Обьединить группы лиц"
       }
     },
     "table": {
@@ -38,26 +56,11 @@
         "search_images_placeholder": "Поиск фото..."
       }
     },
-    "action_label": {
-      "change_label": null,
-      "merge_face": null,
-      "detach_face": null,
-      "move_faces": null
-    },
     "tableselect_face_group": {
       "search_faces_placeholder": null
     },
     "tableselect_image_faces": {
       "search_images_placeholder": null
-    },
-    "modal": {
-      "merge_people_groups": {
-        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
-        "destination_table": {
-          "title": "Выберете конечное лицо"
-        },
-        "title": "Обьединить группы лиц"
-      }
     }
   },
   "settings": {
@@ -70,55 +73,52 @@
       }
     }
   },
+  "share_page": {
+    "protected_share": {
+      "password_required_error": null
+    }
+  },
   "sidebar": {
     "album": {
-      "title": "Свойства альбома",
-      "title_placeholder": null,
       "album_cover": null,
       "cover_photo": "",
       "reset_cover": null,
-      "set_cover": null
+      "set_cover": null,
+      "title": "Свойства альбома",
+      "title_placeholder": null
     },
     "download": {
       "filesize": {
         "byte": "{{count}} Байт",
+        "byte_0": "",
+        "byte_1": "",
+        "byte_2": "",
         "byte_plural": "{{count}} Байт",
         "giga_byte": "{{count}} ГБ",
+        "giga_byte_0": "",
+        "giga_byte_1": "",
+        "giga_byte_2": "",
         "kilo_byte": "{{count}} КБ",
+        "kilo_byte_0": "",
+        "kilo_byte_1": "",
+        "kilo_byte_2": "",
         "mega_byte": "{{count}} МБ",
+        "mega_byte_0": "",
+        "mega_byte_1": "",
+        "mega_byte_2": "",
         "tera_byte": "{{count}} ТБ",
-        "byte_0": null,
-        "byte_1": null,
-        "byte_2": null,
-        "giga_byte_0": null,
-        "giga_byte_1": null,
-        "giga_byte_2": null,
-        "kilo_byte_0": null,
-        "kilo_byte_1": null,
-        "kilo_byte_2": null,
-        "mega_byte_0": null,
-        "mega_byte_1": null,
-        "mega_byte_2": null,
-        "tera_byte_0": null,
-        "tera_byte_1": null,
-        "tera_byte_2": null
+        "tera_byte_0": "",
+        "tera_byte_1": "",
+        "tera_byte_2": ""
       }
-    },
-    "sharing": {
-      "table_header": "Общий доступ",
-      "delete": null,
-      "more": null
     },
     "media": {
       "album": ""
-    }
-  },
-  "album_filter": {
-    "sort": null
-  },
-  "share_page": {
-    "protected_share": {
-      "password_required_error": null
+    },
+    "sharing": {
+      "delete": null,
+      "more": null,
+      "table_header": "Общий доступ"
     }
   },
   "timeline_filter": {

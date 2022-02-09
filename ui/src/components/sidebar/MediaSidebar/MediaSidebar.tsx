@@ -187,7 +187,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
     ].map(album => (
       <li key={album.id} className="inline-block hover:underline">
         <Link
-          className="text-blue-900 hover:underline"
+          className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
         >
           {album.title}
@@ -197,7 +197,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
 
     albumPath = (
       <div className="mx-4 my-4">
-        <h2 className="uppercase text-xs text-gray-900 font-semibold">
+        <h2 className="uppercase text-xs text-gray-900 dark:text-gray-300 font-semibold">
           {t('sidebar.media.album_path', 'Album path')}
         </h2>
         <BreadcrumbList hideLastArrow={true}>{pathElms}</BreadcrumbList>

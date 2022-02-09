@@ -49,6 +49,13 @@
         },
         "title": null
       },
+      "merge_people_groups": {
+        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "destination_table": {
+          "title": "Sélectionner le visage de destination"
+        },
+        "title": "Fusionner des groupes de visages"
+      },
       "move_image_faces": {
         "description": null,
         "destination_face_group_table": {
@@ -60,13 +67,6 @@
           "title": null
         },
         "title": null
-      },
-      "merge_people_groups": {
-        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
-        "destination_table": {
-          "title": "Sélectionner le visage de destination"
-        },
-        "title": "Fusionner des groupes de visages"
       }
     },
     "table": {
@@ -94,26 +94,40 @@
   },
   "sidebar": {
     "album": {
-      "title": "Paramètres de l'album",
       "album_cover": null,
       "cover_photo": "",
       "reset_cover": null,
-      "set_cover": null
+      "set_cover": null,
+      "title": "Paramètres de l'album"
     },
-    "sharing": {
-      "table_header": "Partages publics"
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Octets",
+        "byte_plural": "{{count}} Octets",
+        "giga_byte": "{{count}} Go",
+        "giga_byte_plural": "{{count}} Go",
+        "kilo_byte": "{{count}} Ko",
+        "kilo_byte_plural": "{{count}} Ko",
+        "mega_byte": "{{count}} Mo",
+        "mega_byte_plural": "{{count}} Mo",
+        "tera_byte": "{{count}} To",
+        "tera_byte_plural": "{{count}} To"
+      }
     },
     "media": {
       "album": ""
+    },
+    "sharing": {
+      "table_header": "Partages publics"
     }
-  },
-  "title": {
-    "login": null
   },
   "timeline_filter": {
     "date": {
       "dropdown_all": null,
       "label": null
     }
+  },
+  "title": {
+    "login": null
   }
 }

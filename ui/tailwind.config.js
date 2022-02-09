@@ -1,7 +1,7 @@
 module.exports = {
   mode: 'jit',
   purge: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'class',
   theme: {
     extend: {
       screens: {
@@ -22,6 +22,18 @@ module.exports = {
           700: '#168332',
           800: '#006624',
           900: '#00541d',
+        },
+        dark: {
+          bg: '#24292e',
+          bg2: '#30363e',
+          text: '#eee',
+          border: '#3b3b3b',
+          border2: '#202020',
+          input: {
+            bg: '#383e46',
+            border: '#4a515a',
+            text: '#ccdbe4',
+          },
         },
       },
     },

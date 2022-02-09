@@ -2,8 +2,8 @@
   "people_page": {
     "action_label": {
       "change_label": null,
-      "merge_people": null,
       "detach_images": null,
+      "merge_people": null,
       "move_faces": null
     },
     "modal": {
@@ -19,11 +19,11 @@
   "sidebar": {
     "download": {
       "filesize": {
-        "byte": null,
-        "giga_byte": null,
-        "kilo_byte": null,
-        "mega_byte": null,
-        "tera_byte": null
+        "byte": "",
+        "giga_byte": "",
+        "kilo_byte": "",
+        "mega_byte": "",
+        "tera_byte": ""
       }
     },
     "media": {

@@ -21,7 +21,7 @@ const SidebarHeader = ({ title }: SidebarHeaderProps) => {
         title="Close sidebar"
         onClick={() => updateSidebar(null)}
       >
-        <CloseIcon className="m-2" />
+        <CloseIcon className="m-2 text-[#1F2021] dark:text-[#abadaf]" />
       </button>
       <span className="flex-grow -mt-1 ml-2">{title}</span>
       <button
@@ -29,7 +29,7 @@ const SidebarHeader = ({ title }: SidebarHeaderProps) => {
         title="Pin sidebar"
         onClick={() => setPinned(!pinned)}
       >
-        <PinIcon className="m-2" />
+        <PinIcon className="m-2 text-[#1F2021] dark:text-[#abadaf]" />
       </button>
     </div>
   )

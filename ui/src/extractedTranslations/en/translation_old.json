@@ -29,14 +29,6 @@
         "move_faces": "Move Faces"
       }
     },
-    "table": {
-      "select_face_group": {
-        "search_faces_placeholder": "Search faces..."
-      },
-      "select_image_faces": {
-        "search_images_placeholder": "Search images..."
-      }
-    },
     "modal": {
       "merge_people_groups": {
         "description": "All images within this face group will be merged into the selected face group.",
@@ -44,6 +36,14 @@
           "title": "Select the destination face"
         },
         "title": "Merge Face Groups"
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "Search faces..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "Search images..."
       }
     }
   },
@@ -58,14 +58,28 @@
   },
   "sidebar": {
     "album": {
-      "title": "Album options",
-      "cover_photo": "Album cover"
+      "cover_photo": "Album cover",
+      "title": "Album options"
     },
-    "sharing": {
-      "table_header": "Public shares"
+    "download": {
+      "filesize": {
+        "byte": "{{count}} Byte",
+        "byte_plural": "{{count}} Bytes",
+        "giga_byte": "{{count}} GB",
+        "giga_byte_plural": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "mega_byte_plural": "{{count}} MB",
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": "{{count}} TB"
+      }
     },
     "media": {
       "album": "Album"
+    },
+    "sharing": {
+      "table_header": "Public shares"
     }
   }
 }

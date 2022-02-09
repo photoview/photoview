@@ -76,7 +76,7 @@ export const SidebarPhotoCover = ({ cover_id }: SidebarPhotoCoverProps) => {
       <div>
         <table className="border-collapse w-full">
           <tfoot>
-            <tr className="text-left border-gray-100 border-b border-t">
+            <tr className="text-left border-gray-100 dark:border-dark-border2 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
                   className="disabled:opacity-50 text-green-500 font-bold uppercase text-xs"
@@ -133,7 +133,7 @@ export const SidebarAlbumCover = ({ id }: SidebarAlbumCoverProps) => {
       <div>
         <table className="border-collapse w-full">
           <tfoot>
-            <tr className="text-left border-gray-100 border-b border-t">
+            <tr className="text-left border-gray-100 dark:border-dark-border2 border-b border-t">
               <td colSpan={2} className="pl-4 py-2">
                 <button
                   className="disabled:opacity-50 text-red-500 font-bold uppercase text-xs"

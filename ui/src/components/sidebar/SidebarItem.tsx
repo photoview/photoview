@@ -1,20 +1,4 @@
 import React from 'react'
-import styled from 'styled-components'
-
-const ItemName = styled.div`
-  display: inline-block;
-  width: 100px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #888;
-  text-align: right;
-  margin-right: 0.5rem;
-`
-
-const ItemValue = styled.div`
-  display: inline-block;
-  font-size: 1rem;
-`
 
 type SidebarItemProps = {
   name: string
@@ -23,8 +7,10 @@ type SidebarItemProps = {
 
 const SidebarItem = ({ name, value }: SidebarItemProps) => (
   <div>
-    <ItemName>{name}</ItemName>
-    <ItemValue>{value}</ItemValue>
+    <div className="inline-block w-[100px] font-semibold text-sm text-[#888] text-right mr-2">
+      {name}
+    </div>
+    <div className="inline-block text-base">{value}</div>
   </div>
 )
 

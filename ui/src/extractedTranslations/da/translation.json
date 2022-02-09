@@ -2,13 +2,13 @@
   "album_filter": {
     "only_favorites": "Vis kun favoritter",
     "sort": "Sorter",
+    "sort_by": "Sorter efter",
     "sorting_options": {
       "date_imported": "Dato for importering",
       "date_shot": "Dato",
       "title": "Titel",
       "type": "Type"
-    },
-    "sort_by": "Sorter efter"
+    }
   },
   "general": {
     "action": {
@@ -155,6 +155,19 @@
       "language_selector": {
         "placeholder": "Vælg sprog"
       },
+      "theme": {
+        "auto": {
+          "label": "Samme som system"
+        },
+        "dark": {
+          "label": "Mørk"
+        },
+        "description": "Ændre hjemmesidens udseende",
+        "light": {
+          "label": "Lys"
+        },
+        "title": "Temaindstillinger"
+      },
       "title": "Brugerindstillinger"
     },
     "users": {
@@ -240,16 +253,16 @@
     },
     "download": {
       "filesize": {
-        "byte": "{{count}} Byte",
-        "byte_plural": "{{count}} Bytes",
-        "giga_byte": "{{count}} GB",
-        "giga_byte_plural": "",
-        "kilo_byte": "{{count}} KB",
-        "kilo_byte_plural": "",
-        "mega_byte": "{{count}} MB",
-        "mega_byte_plural": "",
-        "tera_byte": "{{count}} TB",
-        "tera_byte_plural": ""
+        "byte_one": "",
+        "byte_other": "",
+        "giga_byte_one": "",
+        "giga_byte_other": "",
+        "kilo_byte_one": "",
+        "kilo_byte_other": "",
+        "mega_byte_one": "",
+        "mega_byte_other": "",
+        "tera_byte_one": "",
+        "tera_byte_other": ""
       },
       "table_columns": {
         "dimensions": "Dimension",

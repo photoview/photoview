@@ -9,6 +9,7 @@ import { ReactComponent as SortingIcon } from './icons/sorting.svg'
 import { ReactComponent as DirectionIcon } from './icons/direction-arrow.svg'
 
 import Dropdown from '../../primitives/form/Dropdown'
+import classNames from 'classnames'
 
 export type FavoriteCheckboxProps = {
   onlyFavorites: boolean
@@ -94,9 +95,11 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
         <button
           title="Sort direction"
           aria-label="Sort direction"
-          className={`bg-gray-50 h-[30px] align-top px-2 py-1 rounded ml-2 border border-gray-200 focus:outline-none focus:border-blue-300 text-[#8b8b8b] hover:bg-gray-100 hover:text-[#777] ${
-            ordering?.orderDirection == OrderDirection.ASC ? 'flip-y' : null
-          }`}
+          className={classNames(
+            'bg-gray-50 h-[30px] align-top px-2 py-1 rounded ml-2 border border-gray-200 focus:outline-none focus:border-blue-300 text-[#8b8b8b] hover:bg-gray-100 hover:text-[#777]',
+            'dark:bg-dark-input-bg dark:border-dark-input-border dark:text-dark-input-text dark:focus:border-blue-300',
+            { 'flip-y': ordering?.orderDirection == OrderDirection.ASC }
+          )}
           onClick={changeOrderDirection}
         >
           <DirectionIcon />

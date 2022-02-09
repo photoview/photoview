@@ -2,6 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { API_ENDPOINT } from '../../apolloClient'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
+import SidebarTable from './SidebarTable'
 
 type SidebarAlbumDownladProps = {
   albumID: string
@@ -49,8 +50,7 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   ]
 
   const downloadRows = downloads.map(x => (
-    <tr
-      className="cursor-pointer border-gray-100 border-b hover:bg-gray-50 focus:bg-gray-50"
+    <SidebarTable.Row
       key={x.purpose}
       onClick={() =>
         (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
@@ -58,8 +58,8 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
       tabIndex={0}
     >
       <td className="pl-4 py-2">{`${x.title}`}</td>
-      <td className="pr-4 py-2 text-sm text-gray-800 italic">{`${x.description}`}</td>
-    </tr>
+      <td className="pr-4 py-2 text-sm text-gray-800 dark:text-gray-400 italic">{`${x.description}`}</td>
+    </SidebarTable.Row>
   ))
 
   return (
@@ -68,16 +68,16 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
         {t('sidebar.download.title', 'Download')}
       </SidebarSectionTitle>
 
-      <table className="table-auto w-full">
-        <thead className="bg-[#f9f9fb]">
-          <tr className="text-left uppercase text-xs border-gray-100 border-b border-t">
+      <SidebarTable.Table>
+        <SidebarTable.Head>
+          <SidebarTable.HeadRow>
             <th className="px-4 py-2" colSpan={2}>
               {t('sidebar.download.table_columns.name', 'Name')}
             </th>
-          </tr>
-        </thead>
+          </SidebarTable.HeadRow>
+        </SidebarTable.Head>
         <tbody>{downloadRows}</tbody>
-      </table>
+      </SidebarTable.Table>
     </SidebarSection>
   )
 }
