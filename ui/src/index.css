@@ -12,11 +12,6 @@ html {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
-body.dark,
-html.dark {
-  @apply bg-dark-bg text-dark-text;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,6 +23,16 @@ html.dark {
 }
 
 @layer base {
+  body.dark,
+  html.dark {
+    @apply bg-dark-bg text-dark-text;
+  }
+
+  body.dark *,
+  html.dark * {
+    @apply border-dark-border;
+  }
+
   img {
     max-width: revert;
   }

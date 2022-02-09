@@ -5,6 +5,7 @@ import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { TranslationFn } from '../../localization'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
+import SidebarTable from './SidebarTable'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,
@@ -211,23 +212,18 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   const download = downloadMedia(t)
   const bytes = formatBytes(t)
   const downloadRows = rows.map(x => (
-    <tr
-      className="cursor-pointer border-gray-100 dark:border-dark-border2 border-b hover:bg-gray-50 focus:bg-gray-50 dark:hover:bg-[#3c4759] dark:focus:bg-[#3c4759]"
-      key={x.url}
-      onClick={() => download(x.url)}
-      tabIndex={0}
-    >
+    <SidebarTable.Row key={x.url} onClick={() => download(x.url)} tabIndex={0}>
       <td className="pl-4 py-2">{`${x.title}`}</td>
       <td className="py-2">{`${x.width} x ${x.height}`}</td>
       <td className="py-2">{`${bytes(x.fileSize)}`}</td>
       <td className="pr-4 py-2">{extractExtension(x.url)}</td>
-    </tr>
+    </SidebarTable.Row>
   ))
 
   return (
-    <table className="table-fixed w-full">
-      <thead className="bg-[#f9f9fb] dark:bg-[#2B3037]">
-        <tr className="text-left uppercase text-xs border-gray-100 dark:border-dark-border2 border-b border-t">
+    <SidebarTable.Table>
+      <SidebarTable.Head>
+        <SidebarTable.HeadRow>
           <th className="w-2/6 pl-4 py-2">
             {t('sidebar.download.table_columns.name', 'Name')}
           </th>
@@ -240,10 +236,10 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
           <th className="w-1/6 pr-4 py-2">
             {t('sidebar.download.table_columns.file_type', 'Type')}
           </th>
-        </tr>
-      </thead>
+        </SidebarTable.HeadRow>
+      </SidebarTable.Head>
       <tbody>{downloadRows}</tbody>
-    </table>
+    </SidebarTable.Table>
   )
 }
 

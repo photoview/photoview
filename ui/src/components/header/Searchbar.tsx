@@ -174,7 +174,7 @@ const SearchBar = () => {
           selectedItemId ? `search-item-${selectedItemId}` : ''
         }
         aria-expanded={expanded}
-        className="w-full py-2 px-3 z-10 relative rounded-md bg-gray-50 focus:bg-white border border-gray-50 focus:border-blue-400 outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+        className="w-full py-2 px-3 z-10 relative rounded-md bg-gray-50 focus:bg-white border border-gray-50 focus:border-blue-400 outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 dark:bg-dark-bg2 dark:border-dark-bg2 dark:focus:bg-[#2a2f35]"
         type="search"
         placeholder={t('header.search.placeholder', 'Search')}
         onChange={fetchEvent}
@@ -186,7 +186,8 @@ const SearchBar = () => {
 }
 
 const ResultTitle = styled.h1.attrs({
-  className: 'uppercase text-gray-700 text-sm font-semibold mt-4 mb-2 mx-1',
+  className:
+    'uppercase text-gray-700 dark:text-gray-200 text-sm font-semibold mt-4 mb-2 mx-1',
 })``
 
 type SearchResultsProps = {
@@ -242,7 +243,7 @@ const SearchResults = ({
       id="search-results"
       role="listbox"
       className={classNames(
-        'absolute bg-white left-0 right-0 top-[72px] overflow-y-auto h-[calc(100vh-152px)] border px-4 z-0',
+        'absolute bg-white dark:bg-dark-bg left-0 right-0 top-[72px] overflow-y-auto h-[calc(100vh-152px)] border dark:border-dark-border px-4 z-0',
         'lg:top-[40px] lg:shadow-md lg:rounded-b lg:max-h-[560px]',
         { hidden: !expanded }
       )}
@@ -319,7 +320,7 @@ const SearchRow = ({
       aria-selected={selected}
       onMouseOver={() => setSelected()}
       className={classNames('rounded p-1 mt-1', {
-        'bg-gray-100': selected,
+        'bg-gray-100 dark:bg-dark-bg2': selected,
       })}
     >
       <NavLink to={link} className="flex items-center" tabIndex={-1}>

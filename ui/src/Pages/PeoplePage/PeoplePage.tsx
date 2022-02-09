@@ -20,6 +20,7 @@ import {
 } from './__generated__/myFaces'
 import { recognizeUnlabeledFaces } from './__generated__/recognizeUnlabeledFaces'
 import { isNil, tailwindClassNames } from '../../helpers/utils'
+import classNames from 'classnames'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -66,9 +67,32 @@ const RECOGNIZE_UNLABELED_FACES_MUTATION = gql`
   }
 `
 
-const FaceDetailsWrapper = styled.span<{ labeled: boolean }>`
-  color: ${({ labeled }) => (labeled ? 'black' : '#aaa')};
+type FaceDetailsWrapperProps = {
+  labeled: boolean
+  className?: string
+} & React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLSpanElement>,
+  HTMLSpanElement
+>
 
+const FaceDetailsWrapperInner = ({
+  labeled,
+  children,
+  className,
+  ...otherProps
+}: FaceDetailsWrapperProps) => (
+  <span
+    {...otherProps}
+    className={classNames(
+      className,
+      `${labeled ? '' : 'text-gray-400 dark:text-gray-500'}`
+    )}
+  >
+    {children}
+  </span>
+)
+
+const FaceDetailsWrapper = styled(FaceDetailsWrapperInner)`
   &:hover,
   &:focus-visible {
     color: #2683ca;
@@ -180,14 +204,10 @@ export const FaceDetails = ({
   return label
 }
 
-const FaceImagesCount = styled.span`
-  background-color: #eee;
-  color: #222;
-  font-size: 0.9em;
-  padding: 0 4px;
-  margin-right: 6px;
-  border-radius: 4px;
-`
+const FaceImagesCount = styled.span.attrs({
+  className:
+    'bg-gray-100 text-gray-900 dark:bg-gray-400 dark:text-black text-sm px-1 mr-2 rounded-md',
+})``
 
 type FaceGroupProps = {
   group: myFaces_myFaceGroups
@@ -198,7 +218,7 @@ export const FaceGroup = ({ group }: FaceGroupProps) => {
   const [editLabel, setEditLabel] = useState(false)
 
   return (
-    <div style={{ margin: '12px' }}>
+    <div className="m-3">
       <Link to={`/people/${group.id}`}>
         <FaceCircleImage imageFace={previewFace} selectable />
       </Link>
