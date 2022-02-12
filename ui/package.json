@@ -54,11 +54,12 @@
     "tailwind-override": "^0.6.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",
     "typescript": "^4.5.5",
+	"react-swipeable": "^6.1.0",
     "url-join": "^4.0.1"
   },
   "scripts": {
     "start": "BROWSER=none PORT=1234 craco start",
-    "build": "craco build",
+    "build": "HOST_TYPE=dev craco build",
     "test": "npm run lint && npm run jest -- --watchAll=false",
     "test:ci": "npm run lint && npm run jest:ci",
     "lint": "npm run lint:types & npm run lint:eslint",
