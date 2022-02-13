@@ -118,6 +118,15 @@ func migrate_exif_fields_flash(db *gorm.DB) error {
 
 	err := db.Transaction(func(tx *gorm.DB) error {
 
+		var data_type string
+		if err := tx.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").Find(&data_type).Error; err != nil {
+			return errors.Wrapf(err, "read data_type of column media_exif.flash")
+		}
+
+		if data_type == "bigint" {
+			return nil
+		}
+
 		if err := tx.Exec("UPDATE media_exif SET flash = NULL WHERE flash = ''").Error; err != nil {
 			return errors.Wrapf(err, "convert flash attribute empty values to NULL")
 		}
