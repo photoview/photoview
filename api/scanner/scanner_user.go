@@ -42,7 +42,7 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
