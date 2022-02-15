@@ -1,4 +1,4 @@
-package scanner
+package cleanup_tasks
 
 import (
 	"os"
@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// CleanupMedia removes media entries from the database that are no longer present on the filesystem
 func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]int, len(albumMedia))
 	for i, media := range albumMedia {
@@ -63,8 +64,8 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	return deleteErrors
 }
 
-// Find and delete old albums in the database and cache that does not exist on the filesystem anymore.
-func deleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *models.User) []error {
+// DeleteOldUserAlbums finds and deletes old albums in the database and cache that does not exist on the filesystem anymore.
+func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *models.User) []error {
 	if len(scannedAlbums) == 0 {
 		return nil
 	}

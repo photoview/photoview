@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks"
@@ -86,68 +86,61 @@ func ValidRootPath(rootPath string) bool {
 	return true
 }
 
-func ScanAlbum(ctx scanner_task.TaskContext) {
+func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
 	if err != nil {
-		scanner_utils.ScannerError("before scan album (%s): %s", ctx.GetAlbum().Path, err)
-		return
+		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
 	}
 	ctx = newCtx
 
 	// Scan for photos
 	albumMedia, err := findMediaForAlbum(ctx)
 	if err != nil {
-		scanner_utils.ScannerError("find media for album (%s): %s", ctx.GetAlbum().Path, err)
-		return
+		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path)
 	}
 
-	albumHasChanges := false
-	for count, media := range albumMedia {
-		didProcess := false
+	changedMedia := make([]*models.Media, 0)
+	for i, media := range albumMedia {
+		updatedURLs := []*models.MediaURL{}
 
-		transactionError := ctx.GetDB().Transaction(func(tx *gorm.DB) error {
-			// processing_was_needed, err = ProcessMedia(tx, media)
-			didProcess, err = processMedia(ctx, media)
+		mediaData := media_encoding.EncodeMediaData{
+			Media: media,
+		}
+
+		// define new ctx for scope of for-loop
+		ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, &mediaData)
+		if err != nil {
+			return err
+		}
+
+		transactionError := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+			updatedURLs, err = processMedia(ctx, &mediaData)
 			if err != nil {
 				return errors.Wrapf(err, "process media (%s)", media.Path)
 			}
 
-			if didProcess {
-				albumHasChanges = true
-			}
-
-			if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, media, didProcess, count, len(albumMedia)); err != nil {
-				return err
+			if len(updatedURLs) > 0 {
+				changedMedia = append(changedMedia, media)
 			}
 
 			return nil
 		})
 
 		if transactionError != nil {
-			scanner_utils.ScannerError("begin database transaction: %s", transactionError)
+			return errors.Wrap(err, "process media database transaction")
 		}
 
-		if didProcess && media.Type == models.MediaTypePhoto {
-			go func(media *models.Media) {
-				if face_detection.GlobalFaceDetector == nil {
-					return
-				}
-				if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), media); err != nil {
-					scanner_utils.ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
-				}
-			}(media)
+		if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, &mediaData, updatedURLs, i, len(albumMedia)); err != nil {
+			return errors.Wrap(err, "after process media")
 		}
 	}
 
-	cleanup_errors := CleanupMedia(ctx.GetDB(), ctx.GetAlbum().ID, albumMedia)
-	for _, err := range cleanup_errors {
-		scanner_utils.ScannerError("delete old media: %s", err)
+	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
+		return errors.Wrap(err, "after scan album")
 	}
 
-	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, albumHasChanges); err != nil {
-		scanner_utils.ScannerError("after scan album: %s", err)
-	}
+	return nil
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
@@ -178,14 +171,9 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 				continue
 			}
 
-			// Skip the JPEGs that are compressed version of raw files
-			counterpartFile := scanForRawCounterpartFile(mediaPath)
-			if counterpartFile != nil {
-				continue
-			}
+			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
 
-			err = ctx.GetDB().Transaction(func(tx *gorm.DB) error {
-				media, isNewMedia, err := ScanMedia(tx, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
@@ -210,21 +198,46 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	return albumMedia, nil
 }
 
-func processMedia(ctx scanner_task.TaskContext, media *models.Media) (bool, error) {
-	mediaData := media_encoding.EncodeMediaData{
-		Media: media,
-	}
+func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
 
 	_, err := mediaData.ContentType()
 	if err != nil {
-		return false, errors.Wrapf(err, "get content-type of media (%s)", media.Path)
+		return []*models.MediaURL{}, errors.Wrapf(err, "get content-type of media (%s)", mediaData.Media.Path)
 	}
 
 	// Make sure media cache directory exists
-	mediaCachePath, err := makeMediaCacheDir(media)
+	mediaCachePath, err := makeMediaCacheDir(mediaData.Media)
 	if err != nil {
-		return false, errors.Wrap(err, "cache directory error")
+		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
 	}
 
-	return scanner_tasks.Tasks.ProcessMedia(ctx, &mediaData, *mediaCachePath)
+	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, *mediaCachePath)
+}
+
+func makeMediaCacheDir(media *models.Media) (*string, error) {
+
+	// Make root cache dir if not exists
+	if _, err := os.Stat(utils.MediaCachePath()); os.IsNotExist(err) {
+		if err := os.Mkdir(utils.MediaCachePath(), os.ModePerm); err != nil {
+			return nil, errors.Wrap(err, "could not make root image cache directory")
+		}
+	}
+
+	// Make album cache dir if not exists
+	albumCachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(media.AlbumID)))
+	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
+		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
+			return nil, errors.Wrap(err, "could not make album image cache directory")
+		}
+	}
+
+	// Make photo cache dir if not exists
+	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(media.ID)))
+	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
+		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
+			return nil, errors.Wrap(err, "could not make photo image cache directory")
+		}
+	}
+
+	return &photoCachePath, nil
 }

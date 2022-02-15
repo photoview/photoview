@@ -1,4 +1,4 @@
-package scanner_test
+package cleanup_tasks_test
 
 import (
 	"os"

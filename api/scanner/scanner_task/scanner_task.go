@@ -2,6 +2,7 @@ package scanner_task
 
 import (
 	"context"
+	"database/sql"
 	"io/fs"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -15,14 +16,22 @@ type ScannerTask interface {
 	// BeforeScanAlbum will run at the beginning of the scan task.
 	// New values can be stored in the returned TaskContext that will live throughout the lifetime of the task.
 	BeforeScanAlbum(ctx TaskContext) (TaskContext, error)
-	AfterScanAlbum(ctx TaskContext, albumHadChanges bool) error
 
+	// AfterScanAlbum will run at the end of the scan task.
+	AfterScanAlbum(ctx TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error
+
+	// MediaFound will run for each media file found on the filesystem.
+	// It will run even when the media is already present in the database.
+	// If the returned skip value is true, the media will be skipped and further steps will not be executed for the given file.
 	MediaFound(ctx TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error)
+
+	// AfterMediaFound will run each media file after is has been saved to the database, but not processed yet.
+	// It will run even when the media is already present in the database, in that case `newMedia` will be true.
 	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool) error
 
-	BeforeProcessMedia(ctx TaskContext, media *models.Media) (TaskContext, error)
-	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (didProcess bool, err error)
-	AfterProcessMedia(ctx TaskContext, media *models.Media, didProcess bool, mediaIndex int, mediaTotal int) error
+	BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error)
+	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
+	AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error
 }
 
 type TaskContext struct {
@@ -30,14 +39,12 @@ type TaskContext struct {
 }
 
 func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
-	ctx := parent
-	ctx = context.WithValue(ctx, taskCtxKeyAlbum, album)
-	ctx = context.WithValue(ctx, taskCtxKeyAlbumCache, cache)
-	ctx = context.WithValue(ctx, taskCtxKeyDatabase, db.WithContext(ctx))
+	ctx := TaskContext{ctx: parent}
+	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
+	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
+	ctx = ctx.WithDB(db)
 
-	return TaskContext{
-		ctx: ctx,
-	}
+	return ctx
 }
 
 type taskCtxKeyType string
@@ -60,6 +67,12 @@ func (c TaskContext) GetDB() *gorm.DB {
 	return c.ctx.Value(taskCtxKeyDatabase).(*gorm.DB)
 }
 
+func (c TaskContext) DatabaseTransaction(transFunc func(ctx TaskContext) error, opts ...*sql.TxOptions) error {
+	return c.GetDB().Transaction(func(tx *gorm.DB) error {
+		return transFunc(c.WithDB(tx))
+	}, opts...)
+}
+
 func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 	return TaskContext{
 		ctx: context.WithValue(c.ctx, key, val),
@@ -68,4 +81,16 @@ func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 
 func (c TaskContext) Value(key interface{}) interface{} {
 	return c.ctx.Value(key)
+}
+
+func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
+	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.ctx))
+}
+
+func (c TaskContext) Done() <-chan struct{} {
+	return c.ctx.Done()
+}
+
+func (c TaskContext) Err() error {
+	return c.ctx.Err()
 }

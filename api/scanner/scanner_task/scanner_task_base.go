@@ -14,7 +14,7 @@ func (t ScannerTaskBase) BeforeScanAlbum(ctx TaskContext) (TaskContext, error) {
 	return ctx, nil
 }
 
-func (t ScannerTaskBase) AfterScanAlbum(ctx TaskContext, albumHadChanges bool) error {
+func (t ScannerTaskBase) AfterScanAlbum(ctx TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error {
 	return nil
 }
 
@@ -26,14 +26,14 @@ func (t ScannerTaskBase) AfterMediaFound(ctx TaskContext, media *models.Media, n
 	return nil
 }
 
-func (t ScannerTaskBase) BeforeProcessMedia(ctx TaskContext, media *models.Media) (TaskContext, error) {
+func (t ScannerTaskBase) BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error) {
 	return ctx, nil
 }
 
-func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (bool, error) {
-	return false, nil
+func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+	return []*models.MediaURL{}, nil
 }
 
-func (t ScannerTaskBase) AfterProcessMedia(ctx TaskContext, media *models.Media, didProcess bool, mediaIndex int, mediaTotal int) error {
+func (t ScannerTaskBase) AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
 	return nil
 }
