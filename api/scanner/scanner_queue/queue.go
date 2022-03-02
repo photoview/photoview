@@ -217,6 +217,8 @@ func AddAllToQueue() error {
 	return nil
 }
 
+// AddUserToQueue finds all root albums owned by the given user and adds them to the scanner queue.
+// Function does not block.
 func AddUserToQueue(user *models.User) error {
 	album_cache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, album_cache)

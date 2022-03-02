@@ -52,7 +52,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		if _, err := os.Stat(cachedPath); err != nil {
 			if os.IsNotExist(err) {
 				err := db.Transaction(func(tx *gorm.DB) error {
-					if _, err := scanner.ProcessMedia(tx, media); err != nil {
+					if err := scanner.ProcessSingleMedia(tx, media); err != nil {
 						log.Printf("ERROR: processing video not found in cache: %s\n", err)
 						return err
 					}

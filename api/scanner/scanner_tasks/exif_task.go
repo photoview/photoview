@@ -5,7 +5,6 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/exif"
-	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 )
 
@@ -13,11 +12,15 @@ type ExifTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ExifTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
 
-	_, err := exif.SaveEXIF(ctx.GetDB(), mediaData.Media)
+	if !newMedia {
+		return nil
+	}
+
+	_, err := exif.SaveEXIF(ctx.GetDB(), media)
 	if err != nil {
-		log.Printf("WARN: SaveEXIF for %s failed: %s\n", mediaData.Media.Title, err)
+		log.Printf("WARN: SaveEXIF for %s failed: %s\n", media.Title, err)
 	}
 
 	return nil

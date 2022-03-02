@@ -77,6 +77,10 @@ func (m *Media) GetHighRes() (*MediaURL, error) {
 	return nil, nil
 }
 
+func (m *Media) CachePath() (string, error) {
+	return utils.CachePathForMedia(m.AlbumID, m.ID)
+}
+
 type MediaType string
 
 const (

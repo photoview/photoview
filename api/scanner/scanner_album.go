@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -104,9 +103,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	for i, media := range albumMedia {
 		updatedURLs := []*models.MediaURL{}
 
-		mediaData := media_encoding.EncodeMediaData{
-			Media: media,
-		}
+		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		// define new ctx for scope of for-loop
 		ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, &mediaData)
@@ -200,44 +197,11 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
 func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
 
-	_, err := mediaData.ContentType()
-	if err != nil {
-		return []*models.MediaURL{}, errors.Wrapf(err, "get content-type of media (%s)", mediaData.Media.Path)
-	}
-
 	// Make sure media cache directory exists
-	mediaCachePath, err := makeMediaCacheDir(mediaData.Media)
+	mediaCachePath, err := mediaData.Media.CachePath()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
 	}
 
-	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, *mediaCachePath)
-}
-
-func makeMediaCacheDir(media *models.Media) (*string, error) {
-
-	// Make root cache dir if not exists
-	if _, err := os.Stat(utils.MediaCachePath()); os.IsNotExist(err) {
-		if err := os.Mkdir(utils.MediaCachePath(), os.ModePerm); err != nil {
-			return nil, errors.Wrap(err, "could not make root image cache directory")
-		}
-	}
-
-	// Make album cache dir if not exists
-	albumCachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(media.AlbumID)))
-	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
-		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
-			return nil, errors.Wrap(err, "could not make album image cache directory")
-		}
-	}
-
-	// Make photo cache dir if not exists
-	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(media.ID)))
-	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
-		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
-			return nil, errors.Wrap(err, "could not make photo image cache directory")
-		}
-	}
-
-	return &photoCachePath, nil
+	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
 }

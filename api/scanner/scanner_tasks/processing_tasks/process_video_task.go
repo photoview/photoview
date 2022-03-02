@@ -59,7 +59,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		origVideoPath := video.Path
 		videoMediaName := generateUniqueMediaName(video.Path)
 
-		webMetadata, err := readVideoStreamMetadata(origVideoPath)
+		webMetadata, err := ReadVideoStreamMetadata(origVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for original video (%s)", video.Title)
 		}
@@ -99,7 +99,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
 
-		webMetadata, err := readVideoStreamMetadata(webVideoPath)
+		webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
 		}
@@ -205,7 +205,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	return updatedURLs, nil
 }
 
-func readVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {
+func ReadVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
@@ -217,8 +217,8 @@ func readVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {
 	return data, nil
 }
 
-func readVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
-	data, err := readVideoMetadata(videoPath)
+func ReadVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
+	data, err := ReadVideoMetadata(videoPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "read video stream metadata")
 	}

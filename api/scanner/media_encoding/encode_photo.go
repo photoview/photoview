@@ -61,6 +61,12 @@ type EncodeMediaData struct {
 	_videoMetadata  *ffprobe.ProbeData
 }
 
+func NewEncodeMediaData(media *models.Media) EncodeMediaData {
+	return EncodeMediaData{
+		Media: media,
+	}
+}
+
 // ContentType reads the image to determine its content type
 func (img *EncodeMediaData) ContentType() (*media_type.MediaType, error) {
 	if img._contentType != nil {

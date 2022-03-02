@@ -19,6 +19,7 @@ var allTasks []scanner_task.ScannerTask = []scanner_task.ScannerTask{
 	processing_tasks.ProcessVideoTask{},
 	FaceDetectionTask{},
 	ExifTask{},
+	VideoMetadataTask{},
 	cleanup_tasks.MediaCleanupTask{},
 }
 
