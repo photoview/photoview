@@ -145,8 +145,9 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 
 	faceGroupQuery := db.
 		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
+		Joins("LEFT JOIN media ON image_faces.media_id = media.id").
 		Where("face_groups.id = ?", id).
-		Where("image_faces.media_id IN (?)", db.Select("media_id").Table("media").Where("media.album_id IN (?)", userAlbumIDs))
+		Where("media.album_id IN (?)", userAlbumIDs)
 
 	var faceGroup models.FaceGroup
 	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
