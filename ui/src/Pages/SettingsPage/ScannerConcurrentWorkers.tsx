@@ -26,6 +26,9 @@ const SET_CONCURRENT_WORKERS_MUTATION = gql`
 const ScannerConcurrentWorkers = () => {
   const { t } = useTranslation()
 
+  const workerAmountServerValue = useRef<null | number>(null)
+  const [workerAmount, setWorkerAmount] = useState(0)
+
   const workerAmountQuery = useQuery<concurrentWorkersQuery>(
     CONCURRENT_WORKERS_QUERY,
     {
@@ -40,9 +43,6 @@ const ScannerConcurrentWorkers = () => {
     setConcurrentWorkers,
     setConcurrentWorkersVariables
   >(SET_CONCURRENT_WORKERS_MUTATION)
-
-  const workerAmountServerValue = useRef<null | number>(null)
-  const [workerAmount, setWorkerAmount] = useState(0)
 
   const updateWorkerAmount = (workerAmount: number) => {
     if (workerAmountServerValue.current != workerAmount) {
