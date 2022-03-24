@@ -59,7 +59,6 @@
   "scripts": {
     "start": "BROWSER=none PORT=1234 craco start",
     "build": "craco build",
-    "eject": "react-scripts eject",
     "test": "npm run lint && npm run jest -- --watchAll=false",
     "test:ci": "npm run lint && npm run jest:ci",
     "lint": "npm run lint:types & npm run lint:eslint",
