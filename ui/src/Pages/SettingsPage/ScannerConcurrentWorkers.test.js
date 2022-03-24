@@ -9,7 +9,7 @@ import {
   ScannerConcurrentWorkers,
 } from './ScannerConcurrentWorkers'
 
-describe('load correct share page, based on graphql query', () => {
+test('load ScannerConcurrentWorkers', async () => {
   const graphqlMocks = [
     {
       request: {
@@ -33,22 +33,19 @@ describe('load correct share page, based on graphql query', () => {
       },
     },
   ]
+  render(
+    <MockedProvider
+      mocks={graphqlMocks}
+      addTypename={false}
+      defaultOptions={{
+        // disable cache, required to make fragments work
+        watchQuery: { fetchPolicy: 'no-cache' },
+        query: { fetchPolicy: 'no-cache' },
+      }}
+    >
+      <ScannerConcurrentWorkers />
+    </MockedProvider>
+  )
 
-  test('load media share page', async () => {
-    render(
-      <MockedProvider
-        mocks={graphqlMocks}
-        addTypename={false}
-        defaultOptions={{
-          // disable cache, required to make fragments work
-          watchQuery: { fetchPolicy: 'no-cache' },
-          query: { fetchPolicy: 'no-cache' },
-        }}
-      >
-        <ScannerConcurrentWorkers />
-      </MockedProvider>
-    )
-
-    expect(screen.getByText('Scanner concurrent workers')).toBeInTheDocument()
-  })
+  expect(screen.getByText('Scanner concurrent workers')).toBeInTheDocument()
 })
