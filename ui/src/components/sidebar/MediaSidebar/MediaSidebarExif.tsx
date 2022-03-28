@@ -120,6 +120,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
 }
 
 const exifNameLookup = (t: TranslationFn): { [key: string]: string } => ({
+  description: t('sidebar.media.exif.description', 'Description'),
   camera: t('sidebar.media.exif.name.camera', 'Camera'),
   maker: t('sidebar.media.exif.name.maker', 'Maker'),
   lens: t('sidebar.media.exif.name.lens', 'Lens'),

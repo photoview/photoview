@@ -65,6 +65,7 @@ export const SIDEBAR_MEDIA_QUERY = gql`
       }
       exif {
         id
+        description
         camera
         maker
         lens

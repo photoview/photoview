@@ -68,6 +68,7 @@ export const SHARE_ALBUM_QUERY = gql`
         }
         exif {
           id
+          description
           camera
           maker
           lens

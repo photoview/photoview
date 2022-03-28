@@ -44,6 +44,11 @@ func (p internalExifParser) ParseExif(media_path string) (returnExif *models.Med
 
 	newExif := models.MediaEXIF{}
 
+	description, err := p.readStringTag(exifTags, exif.ImageDescription, media_path)
+	if err == nil {
+		newExif.Description = description
+	}
+
 	model, err := p.readStringTag(exifTags, exif.Model, media_path)
 	if err == nil {
 		newExif.Camera = model

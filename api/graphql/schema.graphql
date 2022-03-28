@@ -382,6 +382,8 @@ type Media {
 type MediaEXIF {
   id: ID!
   media: Media!
+  "The description of the image"
+  description: String
   "The model name of the camera"
   camera: String
   "The maker of the camera"
