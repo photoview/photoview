@@ -6,6 +6,7 @@ import (
 
 type MediaEXIF struct {
 	Model
+	Description     *string
 	Camera          *string
 	Maker           *string
 	Lens            *string

@@ -130,6 +130,7 @@ type ComplexityRoot struct {
 		Camera          func(childComplexity int) int
 		Coordinates     func(childComplexity int) int
 		DateShot        func(childComplexity int) int
+		Description     func(childComplexity int) int
 		Exposure        func(childComplexity int) int
 		ExposureProgram func(childComplexity int) int
 		Flash           func(childComplexity int) int
@@ -738,6 +739,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MediaEXIF.DateShot(childComplexity), true
+
+	case "MediaEXIF.description":
+		if e.complexity.MediaEXIF.Description == nil {
+			break
+		}
+
+		return e.complexity.MediaEXIF.Description(childComplexity), true
 
 	case "MediaEXIF.exposure":
 		if e.complexity.MediaEXIF.Exposure == nil {
@@ -2088,6 +2096,8 @@ type Media {
 type MediaEXIF {
   id: ID!
   media: Media!
+  "The description of the image"
+  description: String
   "The model name of the camera"
   camera: String
   "The maker of the camera"
@@ -4752,6 +4762,38 @@ func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.
 	res := resTmp.(*models.Media)
 	fc.Result = res
 	return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MediaEXIF_description(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MediaEXIF",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MediaEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -11377,6 +11419,13 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "description":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._MediaEXIF_description(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
 		case "camera":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._MediaEXIF_camera(ctx, field, obj)

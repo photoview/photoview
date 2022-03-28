@@ -12,6 +12,7 @@ describe('ExifDetails', () => {
       type: MediaType.Photo,
       exif: {
         id: '0',
+        description: null,
         camera: null,
         maker: null,
         lens: null,
@@ -30,6 +31,7 @@ describe('ExifDetails', () => {
 
     render(<ExifDetails media={media} />)
 
+    expect(screen.queryByText('Description')).not.toBeInTheDocument()
     expect(screen.queryByText('Camera')).not.toBeInTheDocument()
     expect(screen.queryByText('Maker')).not.toBeInTheDocument()
     expect(screen.queryByText('Lens')).not.toBeInTheDocument()
@@ -50,6 +52,7 @@ describe('ExifDetails', () => {
       type: MediaType.Photo,
       exif: {
         id: '1666',
+        description: "Media description",
         camera: 'Canon EOS R',
         maker: 'Canon',
         lens: 'TAMRON SP 24-70mm F/2.8',
@@ -71,6 +74,8 @@ describe('ExifDetails', () => {
     }
 
     render(<ExifDetails media={media} />)
+
+    expect(screen.getByText('Description')).toBeInTheDocument()
 
     expect(screen.getByText('Camera')).toBeInTheDocument()
     expect(screen.getByText('Canon EOS R')).toBeInTheDocument()
