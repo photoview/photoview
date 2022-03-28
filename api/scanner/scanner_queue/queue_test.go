@@ -1,10 +1,12 @@
 package scanner_queue
 
 import (
+	"context"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_task"
 )
 
 func makeAlbumWithID(id int) *models.Album {
@@ -14,11 +16,15 @@ func makeAlbumWithID(id int) *models.Album {
 	return &album
 }
 
+func makeScannerJob(albumID int) ScannerJob {
+	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache()))
+}
+
 func TestScannerQueue_AddJob(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
-		{album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache()},
-		{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()},
+		makeScannerJob(100),
+		makeScannerJob(20),
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -29,7 +35,7 @@ func TestScannerQueue_AddJob(t *testing.T) {
 	}
 
 	t.Run("add new job to scanner queue", func(t *testing.T) {
-		newJob := ScannerJob{album: makeAlbumWithID(42), cache: scanner_cache.MakeAlbumCache()}
+		newJob := makeScannerJob(42)
 
 		startingJobs := len(mockScannerQueue.up_next)
 
@@ -49,7 +55,8 @@ func TestScannerQueue_AddJob(t *testing.T) {
 	t.Run("add existing job to scanner queue", func(t *testing.T) {
 		startingJobs := len(mockScannerQueue.up_next)
 
-		err := mockScannerQueue.addJob(&ScannerJob{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()})
+		job := makeScannerJob(20)
+		err := mockScannerQueue.addJob(&job)
 		if err != nil {
 			t.Errorf(".AddJob() returned an unexpected error: %s", err)
 		}
@@ -59,14 +66,13 @@ func TestScannerQueue_AddJob(t *testing.T) {
 		}
 
 	})
-
 }
 
 func TestScannerQueue_JobOnQueue(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
-		{album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache()},
-		{album: makeAlbumWithID(20), cache: scanner_cache.MakeAlbumCache()},
+		makeScannerJob(100),
+		makeScannerJob(20),
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -81,12 +87,8 @@ func TestScannerQueue_JobOnQueue(t *testing.T) {
 		bool
 		ScannerJob
 	}{
-		{"album which owner is already on the queue", true, ScannerJob{
-			album: makeAlbumWithID(100), cache: scanner_cache.MakeAlbumCache(),
-		}},
-		{"album that is not on the queue", false, ScannerJob{
-			album: makeAlbumWithID(321), cache: scanner_cache.MakeAlbumCache(),
-		}},
+		{"album which owner is already on the queue", true, makeScannerJob(100)},
+		{"album that is not on the queue", false, makeScannerJob(321)},
 	}
 
 	for _, test := range onQueueTests {

@@ -96,7 +96,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	// Scan for photos
 	albumMedia, err := findMediaForAlbum(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path)
+		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path, err)
 	}
 
 	changedMedia := make([]*models.Media, 0)

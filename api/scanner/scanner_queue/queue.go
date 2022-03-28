@@ -25,6 +25,12 @@ type ScannerJob struct {
 	// cache *scanner_cache.AlbumScannerCache
 }
 
+func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
+	return ScannerJob{
+		ctx,
+	}
+}
+
 func (job *ScannerJob) Run(db *gorm.DB) {
 	scanner.ScanAlbum(job.ctx)
 }
