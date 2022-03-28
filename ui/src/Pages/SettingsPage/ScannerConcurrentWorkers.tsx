@@ -9,7 +9,7 @@ import {
 } from './__generated__/setConcurrentWorkers'
 import { TextField } from '../../primitives/form/Input'
 
-const CONCURRENT_WORKERS_QUERY = gql`
+export const CONCURRENT_WORKERS_QUERY = gql`
   query concurrentWorkersQuery {
     siteInfo {
       concurrentWorkers
@@ -17,14 +17,17 @@ const CONCURRENT_WORKERS_QUERY = gql`
   }
 `
 
-const SET_CONCURRENT_WORKERS_MUTATION = gql`
+export const SET_CONCURRENT_WORKERS_MUTATION = gql`
   mutation setConcurrentWorkers($workers: Int!) {
     setScannerConcurrentWorkers(workers: $workers)
   }
 `
 
-const ScannerConcurrentWorkers = () => {
+export const ScannerConcurrentWorkers = () => {
   const { t } = useTranslation()
+
+  const workerAmountServerValue = useRef<null | number>(null)
+  const [workerAmount, setWorkerAmount] = useState(0)
 
   const workerAmountQuery = useQuery<concurrentWorkersQuery>(
     CONCURRENT_WORKERS_QUERY,
@@ -40,9 +43,6 @@ const ScannerConcurrentWorkers = () => {
     setConcurrentWorkers,
     setConcurrentWorkersVariables
   >(SET_CONCURRENT_WORKERS_MUTATION)
-
-  const workerAmountServerValue = useRef<null | number>(null)
-  const [workerAmount, setWorkerAmount] = useState(0)
 
   const updateWorkerAmount = (workerAmount: number) => {
     if (workerAmountServerValue.current != workerAmount) {
@@ -86,5 +86,3 @@ const ScannerConcurrentWorkers = () => {
     </div>
   )
 }
-
-export default ScannerConcurrentWorkers
