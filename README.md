@@ -195,4 +195,10 @@ And the graphql playground at [localhost:4001](http://localhost:4001)
       <b>@FKrauss</b>
     </a>
   </td>
+  <td>
+    <a href="https://github.com/jupblb">
+      <img src="https://avatars.githubusercontent.com/u/3370617?v=4" height="auto" width="100" style="border-radius:50%"><br/>
+      <b>@jupblb</b>
+    </a>
+  </td>
 </table>
