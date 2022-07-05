@@ -11,13 +11,6 @@ export type TranslationFn = TFunction<'translation'>
 
 export function setupLocalization(): void {
   i18n.use(initReactI18next).init({
-    resources: {
-      en: {
-        translation: {
-          'Welcome to React': 'Welcome to React and react-i18next',
-        },
-      },
-    },
     lng: 'en',
     fallbackLng: 'en',
     returnNull: false,
@@ -60,82 +53,86 @@ export const loadTranslations = () => {
 
     switch (language) {
       case LanguageTranslation.Danish:
-        import('./extractedTranslations/da/translation.json').then(danish => {
-          i18n.addResourceBundle('da', 'translation', danish)
+        import('./extractedTranslations/da/translation.json').then(language => {
+          i18n.addResourceBundle('da', 'translation', language)
           i18n.changeLanguage('da')
         })
         return
       case LanguageTranslation.English:
-        import('./extractedTranslations/en/translation.json').then(english => {
-          i18n.addResourceBundle('en', 'translation', english)
+        import('./extractedTranslations/en/translation.json').then(language => {
+          i18n.addResourceBundle('en', 'translation', language)
           i18n.changeLanguage('en')
         })
         return
       case LanguageTranslation.French:
-        import('./extractedTranslations/fr/translation.json').then(english => {
-          i18n.addResourceBundle('fr', 'translation', english)
+        import('./extractedTranslations/fr/translation.json').then(language => {
+          i18n.addResourceBundle('fr', 'translation', language)
           i18n.changeLanguage('fr')
         })
         return
       case LanguageTranslation.Swedish:
-        import('./extractedTranslations/sv/translation.json').then(swedish => {
-          i18n.addResourceBundle('sv', 'translation', swedish)
+        import('./extractedTranslations/sv/translation.json').then(language => {
+          i18n.addResourceBundle('sv', 'translation', language)
           i18n.changeLanguage('sv')
         })
         return
       case LanguageTranslation.Italian:
-        import('./extractedTranslations/it/translation.json').then(italian => {
-          i18n.addResourceBundle('it', 'translation', italian)
+        import('./extractedTranslations/it/translation.json').then(language => {
+          i18n.addResourceBundle('it', 'translation', language)
           i18n.changeLanguage('it')
         })
         return
       case LanguageTranslation.Spanish:
-        import('./extractedTranslations/es/translation.json').then(spanish => {
-          i18n.addResourceBundle('es', 'translation', spanish)
+        import('./extractedTranslations/es/translation.json').then(language => {
+          i18n.addResourceBundle('es', 'translation', language)
           i18n.changeLanguage('es')
         })
         return
       case LanguageTranslation.Polish:
-        import('./extractedTranslations/pl/translation.json').then(polish => {
-          i18n.addResourceBundle('pl', 'translation', polish)
+        import('./extractedTranslations/pl/translation.json').then(language => {
+          i18n.addResourceBundle('pl', 'translation', language)
           i18n.changeLanguage('pl')
         })
         return
       case LanguageTranslation.German:
-        import('./extractedTranslations/de/translation.json').then(german => {
-          i18n.addResourceBundle('de', 'translation', german)
+        import('./extractedTranslations/de/translation.json').then(language => {
+          i18n.addResourceBundle('de', 'translation', language)
           i18n.changeLanguage('de')
         })
         return
       case LanguageTranslation.Russian:
-        import('./extractedTranslations/ru/translation.json').then(russian => {
-          i18n.addResourceBundle('ru', 'translation', russian)
+        import('./extractedTranslations/ru/translation.json').then(language => {
+          i18n.addResourceBundle('ru', 'translation', language)
           i18n.changeLanguage('ru')
         })
         return
       case LanguageTranslation.TraditionalChinese:
         import('./extractedTranslations/zh-HK/translation.json').then(
-          traditionalChinese => {
-            i18n.addResourceBundle('zh-HK', 'translation', traditionalChinese)
+          language => {
+            i18n.addResourceBundle('zh-HK', 'translation', language)
             i18n.changeLanguage('zh-HK')
           }
         )
         return
       case LanguageTranslation.SimplifiedChinese:
         import('./extractedTranslations/zh-CN/translation.json').then(
-          traditionalChinese => {
-            i18n.addResourceBundle('zh-CN', 'translation', traditionalChinese)
+          language => {
+            i18n.addResourceBundle('zh-CN', 'translation', language)
             i18n.changeLanguage('zh-CN')
           }
         )
         return
       case LanguageTranslation.Portuguese:
-        import('./extractedTranslations/pt/translation.json').then(
-          traditionalChinese => {
-            i18n.addResourceBundle('pt', 'translation', traditionalChinese)
-            i18n.changeLanguage('pt')
-          }
-        )
+        import('./extractedTranslations/pt/translation.json').then(language => {
+          i18n.addResourceBundle('pt', 'translation', language)
+          i18n.changeLanguage('pt')
+        })
+        return
+      case LanguageTranslation.Basque:
+        import('./extractedTranslations/eu/translation.json').then(language => {
+          i18n.addResourceBundle('eu', 'translation', language)
+          i18n.changeLanguage('eu')
+        })
         return
     }
 
