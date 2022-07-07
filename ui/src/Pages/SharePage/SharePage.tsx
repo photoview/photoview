@@ -49,6 +49,7 @@ export const SHARE_TOKEN_QUERY = gql`
         }
         exif {
           id
+          description
           camera
           maker
           lens

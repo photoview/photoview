@@ -1,5 +1,5 @@
 import { gql, useLazyQuery } from '@apollo/client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -7,6 +7,7 @@ import { authToken } from '../../../helpers/authentication'
 import { isNil } from '../../../helpers/utils'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { SidebarFacesOverlay } from '../../facesOverlay/FacesOverlay'
+import { SidebarContext } from '../Sidebar'
 import {
   ProtectedImage,
   ProtectedVideo,
@@ -65,6 +66,7 @@ export const SIDEBAR_MEDIA_QUERY = gql`
       }
       exif {
         id
+        description
         camera
         maker
         lens
@@ -161,6 +163,7 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
+	const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
@@ -189,6 +192,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         <Link
           className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
+					onClick={() => updateSidebar(null)}
         >
           {album.title}
         </Link>

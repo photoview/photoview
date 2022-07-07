@@ -11,6 +11,7 @@
  * Supported language translations of the user interface
  */
 export enum LanguageTranslation {
+  Basque = 'Basque',
   Danish = 'Danish',
   English = 'English',
   French = 'French',
