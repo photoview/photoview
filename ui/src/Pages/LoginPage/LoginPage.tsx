@@ -29,7 +29,7 @@ const LogoHeader = () => {
     <div className="flex justify-center flex-col mb-14 mt-20">
       <img
         className="h-24"
-        src={process.env.PUBLIC_URL + '/photoview-logo.svg'}
+        src={import.meta.env.BASE_URL + 'photoview-logo.svg'}
         alt="photoview logo"
       />
       <h1 className="text-3xl text-center mt-4">

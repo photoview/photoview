@@ -100,7 +100,7 @@ function AlbumPage() {
     })
 
   const toggleFavorites = useCallback(
-    onlyFavorites => {
+    (onlyFavorites: boolean) => {
       if (
         (refetchNeededAll && !onlyFavorites) ||
         (refetchNeededFavorites && onlyFavorites)

@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useReducer } from 'react'
-import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
 import PresentView from '../photoGallery/presentView/PresentView'
@@ -195,11 +194,6 @@ const TimelineGallery = () => {
       )}
     </div>
   )
-}
-
-TimelineGallery.propTypes = {
-  favorites: PropTypes.bool,
-  setFavorites: PropTypes.func,
 }
 
 export default TimelineGallery

@@ -17,8 +17,8 @@ import { MessageState } from './components/messages/Messages'
 import { Message } from './components/messages/SubscriptionsHook'
 import { NotificationType } from './__generated__/globalTypes'
 
-export const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT
-  ? (process.env.REACT_APP_API_ENDPOINT as string)
+export const API_ENDPOINT = import.meta.env.REACT_APP_API_ENDPOINT
+  ? (import.meta.env.REACT_APP_API_ENDPOINT as string)
   : urlJoin(location.origin, '/api')
 
 export const GRAPHQL_ENDPOINT = urlJoin(API_ENDPOINT, '/graphql')

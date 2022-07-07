@@ -18,7 +18,7 @@ const Header = () => {
       <h1 className="mr-4 lg:mr-8 flex-shrink-0 flex items-center">
         <img
           className="h-12 lg:h-10"
-          src={process.env.PUBLIC_URL + '/photoview-logo.svg'}
+          src={import.meta.env.BASE_URL + 'photoview-logo.svg'}
           alt="logo"
         />
         <span className="hidden lg:block ml-2 text-2xl font-light">

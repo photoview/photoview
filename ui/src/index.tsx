@@ -1,7 +1,7 @@
 import 'regenerator-runtime/runtime'
 
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import App from './App'
 import client from './apolloClient'
 import { ApolloProvider } from '@apollo/client'
@@ -26,6 +26,7 @@ const Main = () => (
   </ApolloProvider>
 )
 
-ReactDOM.render(<Main />, document.getElementById('root'))
+const root = createRoot(document.getElementById('root')!)
+root.render(<Main />)
 
 serviceWorkerRegistration.register()

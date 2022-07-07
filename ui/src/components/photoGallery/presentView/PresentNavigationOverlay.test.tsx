@@ -2,7 +2,7 @@ import React from 'react'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import { fireEvent, render, screen, act } from '@testing-library/react'
 
-jest.useFakeTimers('modern')
+jest.useFakeTimers()
 
 describe('PresentNavigationOverlay component', () => {
   test('simple render', () => {

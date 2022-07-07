@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { animated, useTransition } from 'react-spring'
 import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
 import MessageProgress from './MessageProgress'
@@ -83,29 +82,30 @@ const Messages = () => {
     }
   }
 
-  const transitions = useTransition(messages.slice().reverse(), x => x.key, {
-    from: {
-      opacity: 0,
-      height: '0px',
-    },
-    enter: {
-      opacity: 1,
-      height: `100px`,
-    },
-    leave: { opacity: 0, height: '0px' },
+  // const transitions = useTransition(messages.slice().reverse(), x => x.key, {
+  //   from: {
+  //     opacity: 0,
+  //     height: '0px',
+  //   },
+  //   enter: {
+  //     opacity: 1,
+  //     height: `100px`,
+  //   },
+  //   leave: { opacity: 0, height: '0px' },
+  // })
+
+  const messageElems = messages.map(msg => {
+    const Elem = getMessageElement(msg)
+    return (
+      <div key={msg.key}>
+        <Elem />
+      </div>
+    )
   })
 
   return (
     <Container>
-      {transitions.map(({ item, props: style, key }) => {
-        const MessageElement = getMessageElement(item)
-
-        return (
-          <animated.div key={key} style={style}>
-            <MessageElement />
-          </animated.div>
-        )
-      })}
+      {messageElems}
       {authToken() && (
         <SubscriptionsHook messages={messages} setMessages={setMessages} />
       )}
