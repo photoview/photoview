@@ -159,7 +159,6 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		}
 
 		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-
 			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
 			if err != nil {
 				return nil, err
@@ -169,7 +168,6 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			}
 
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-
 				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
@@ -188,8 +186,8 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 				scanner_utils.ScannerError("Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
 			}
-
 		}
+
 	}
 
 	return albumMedia, nil

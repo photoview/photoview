@@ -270,7 +270,6 @@ func GetExtensionMediaType(ext string) (MediaType, bool) {
 }
 
 func GetMediaType(path string) (*MediaType, error) {
-
 	ext := filepath.Ext(path)
 
 	fileExtType, found := GetExtensionMediaType(ext)

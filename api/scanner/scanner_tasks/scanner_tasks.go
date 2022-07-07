@@ -29,31 +29,15 @@ type scannerTasks struct {
 
 var Tasks scannerTasks = scannerTasks{}
 
-type scannerTasksKey string
-
-const (
-	tasksSubContextsGlobal     scannerTasksKey = "tasks_sub_contexts_global"
-	tasksSubContextsProcessing scannerTasksKey = "tasks_sub_contexts_processing"
-)
-
-func getSubContextsGlobal(ctx scanner_task.TaskContext) []scanner_task.TaskContext {
-	return ctx.Value(tasksSubContextsGlobal).([]scanner_task.TaskContext)
-}
-
-func getSubContextsProcessing(ctx scanner_task.TaskContext) []scanner_task.TaskContext {
-	return ctx.Value(tasksSubContextsGlobal).([]scanner_task.TaskContext)
-}
-
-func simpleCombinedTasks(subContexts []scanner_task.TaskContext, doTask func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error) error {
-	for i, task := range allTasks {
-		subCtx := subContexts[i]
+func simpleCombinedTasks(ctx scanner_task.TaskContext, doTask func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error) error {
+	for _, task := range allTasks {
 		select {
-		case <-subCtx.Done():
-			continue
+		case <-ctx.Done():
+			return ctx.Err()
 		default:
 		}
 
-		err := doTask(subCtx, task)
+		err := doTask(ctx, task)
 		if err != nil {
 			return err
 		}
@@ -62,11 +46,9 @@ func simpleCombinedTasks(subContexts []scanner_task.TaskContext, doTask func(ctx
 }
 
 func (t scannerTasks) BeforeScanAlbum(ctx scanner_task.TaskContext) (scanner_task.TaskContext, error) {
-	subContexts := make([]scanner_task.TaskContext, len(allTasks))
-
-	for i, task := range allTasks {
+	for _, task := range allTasks {
 		var err error
-		subContexts[i], err = task.BeforeScanAlbum(ctx)
+		ctx, err = task.BeforeScanAlbum(ctx)
 		if err != nil {
 			return ctx, err
 		}
@@ -78,22 +60,18 @@ func (t scannerTasks) BeforeScanAlbum(ctx scanner_task.TaskContext) (scanner_tas
 		}
 	}
 
-	return ctx.WithValue(tasksSubContextsGlobal, subContexts), nil
+	return ctx, nil
 }
 
 func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (bool, error) {
-
-	subContexts := getSubContextsGlobal(ctx)
-
-	for i, task := range allTasks {
-		subCtx := subContexts[i]
+	for _, task := range allTasks {
 		select {
-		case <-subCtx.Done():
-			continue
+		case <-ctx.Done():
+			return false, ctx.Err()
 		default:
 		}
 
-		skip, err := task.MediaFound(subCtx, fileInfo, mediaPath)
+		skip, err := task.MediaFound(ctx, fileInfo, mediaPath)
 
 		if err != nil {
 			return false, err
@@ -108,50 +86,46 @@ func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileI
 }
 
 func (t scannerTasks) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error {
-	return simpleCombinedTasks(getSubContextsGlobal(ctx), func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
+	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
 		return task.AfterScanAlbum(ctx, changedMedia, albumMedia)
 	})
 }
 
 func (t scannerTasks) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
-	return simpleCombinedTasks(getSubContextsGlobal(ctx), func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
+	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
 		return task.AfterMediaFound(ctx, media, newMedia)
 	})
 }
 
 func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
-	globalSubContexts := getSubContextsGlobal(ctx)
-	processSubContexts := make([]scanner_task.TaskContext, len(allTasks))
-
-	for i, task := range allTasks {
+	for _, task := range allTasks {
 		select {
-		case <-globalSubContexts[i].Done():
-			continue
+		case <-ctx.Done():
+			return ctx, ctx.Err()
 		default:
 		}
 
 		var err error
-		processSubContexts[i], err = task.BeforeProcessMedia(ctx, mediaData)
+		ctx, err = task.BeforeProcessMedia(ctx, mediaData)
 		if err != nil {
 			return ctx, err
 		}
 	}
 
-	return ctx.WithValue(tasksSubContextsProcessing, processSubContexts), nil
+	return ctx, nil
 }
 
 func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
-	subContexts := getSubContextsProcessing(ctx)
 	allNewMedia := make([]*models.MediaURL, 0)
 
-	for i, task := range allTasks {
+	for _, task := range allTasks {
 		select {
-		case <-subContexts[i].Done():
-			continue
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		default:
 		}
 
-		newMedia, err := task.ProcessMedia(subContexts[i], mediaData, mediaCachePath)
+		newMedia, err := task.ProcessMedia(ctx, mediaData, mediaCachePath)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}
@@ -163,7 +137,7 @@ func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *medi
 }
 
 func (t scannerTasks) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
-	return simpleCombinedTasks(getSubContextsProcessing(ctx), func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
+	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
 		return task.AfterProcessMedia(ctx, mediaData, updatedURLs, mediaIndex, mediaTotal)
 	})
 }
