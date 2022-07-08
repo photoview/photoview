@@ -3,6 +3,7 @@ package scanner_task
 import (
 	"context"
 	"database/sql"
+	"flag"
 	"io/fs"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -84,6 +85,11 @@ func (c TaskContext) Value(key interface{}) interface{} {
 }
 
 func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
+	// Allow db to be nil in tests
+	if db == nil && flag.Lookup("test.v") != nil {
+		return c
+	}
+
 	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.ctx))
 }
 

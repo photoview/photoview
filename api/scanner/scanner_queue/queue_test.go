@@ -2,12 +2,16 @@ package scanner_queue
 
 import (
 	"context"
+	"flag"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 )
+
+var _ = flag.Bool("database", false, "run database integration tests")
+var _ = flag.Bool("filesystem", false, "run filesystem integration tests")
 
 func makeAlbumWithID(id int) *models.Album {
 	var album models.Album
