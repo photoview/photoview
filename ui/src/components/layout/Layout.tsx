@@ -40,7 +40,6 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             id="layout-content"
           >
             {children}
-            {/* <div className="h-6"></div> */}
           </div>
         </div>
         <Sidebar />

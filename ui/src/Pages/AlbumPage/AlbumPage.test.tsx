@@ -4,7 +4,7 @@ import React from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import AlbumPage from './AlbumPage'
 
-jest.mock('../../hooks/useScrollPagination')
+vi.mock('../../hooks/useScrollPagination')
 
 test('AlbumPage renders', () => {
   render(

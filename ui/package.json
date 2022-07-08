@@ -11,14 +11,12 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "test": "npm run lint && npm run jest -- --watchAll=false",
-    "test:ci": "npm run lint && npm run jest:ci",
     "lint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
-    "jest": "craco test --setupFilesAfterEnv ./testing/setupTests.ts",
-    "jest:ci": "CI=true craco test --setupFilesAfterEnv ./testing/setupTests.ts --verbose --ci --coverage",
+    "test": "vitest",
+    "test:ci": "CI=true vitest --verbose --ci --coverage",
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts && prettier --write */**/__generated__/*.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
-    "prepare": "(cd .. && npx husky install)"
+    "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
   },
   "dependencies": {
     "@apollo/client": "^3.6.9",
@@ -39,8 +37,6 @@
     "classnames": "^2.3.1",
     "connect-history-api-fallback": "^2.0.0",
     "copy-to-clipboard": "^3.3.1",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-jest-dom": "^4.0.2",
     "i18next": "^21.8.13",
     "mapbox-gl": "^2.9.1",
     "postcss": "^8.4.14",
@@ -67,14 +63,18 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.2.1",
+    "@vitest/ui": "^0.17.1",
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",
+    "eslint": "^8.19.0",
+    "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
     "i18next-parser": "^6.5.0",
-    "lint-staged": "^13.0.3"
+    "lint-staged": "^13.0.3",
+    "vitest": "^0.17.1"
   },
   "overrides": {
-    "graphql": "^15.0.0"
+    "graphql": "^15.5.0"
   },
   "prettier": {
     "trailingComma": "es5",

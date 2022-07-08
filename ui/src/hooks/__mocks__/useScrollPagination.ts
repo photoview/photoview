@@ -1,4 +1,4 @@
 export default () => ({
   finished: true,
-  containerElem: jest.fn(),
+  containerElem: vi.fn(),
 })

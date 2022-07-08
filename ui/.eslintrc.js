@@ -43,24 +43,24 @@ module.exports = {
   },
   // parser: 'babel-eslint',
   overrides: [
-    Object.assign(require('eslint-plugin-jest').configs.recommended, {
-      files: ['**/*.test.js', '**/*.test.ts', '**/*.test.tsx'],
-      env: { jest: true },
-      plugins: ['jest', 'jest-dom'],
-      rules: Object.assign(
-        require('eslint-plugin-jest').configs.recommended.rules,
-        {
-          'no-import-assign': 'off',
-          'react/prop-types': 'off',
-          'jest/valid-title': 'off',
-        }
-      ),
-      settings: {
-        jest: {
-          version: 26,
-        },
-      },
-    }),
+    // Object.assign(require('eslint-plugin-jest').configs.recommended, {
+    //   files: ['**/*.test.js', '**/*.test.ts', '**/*.test.tsx'],
+    //   env: { jest: true },
+    //   plugins: ['jest', 'jest-dom'],
+    //   rules: Object.assign(
+    //     require('eslint-plugin-jest').configs.recommended.rules,
+    //     {
+    //       'no-import-assign': 'off',
+    //       'react/prop-types': 'off',
+    //       'jest/valid-title': 'off',
+    //     }
+    //   ),
+    //   settings: {
+    //     jest: {
+    //       version: 26,
+    //     },
+    //   },
+    // }),
     {
       files: ['**/*.js'],
       rules: {

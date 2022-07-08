@@ -4,7 +4,7 @@ import Layout from './Layout'
 
 test('Layout component', async () => {
   render(
-    <Layout>
+    <Layout title="Test title">
       <p>layout_content</p>
     </Layout>
   )

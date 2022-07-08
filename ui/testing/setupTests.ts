@@ -5,5 +5,7 @@
 import '@testing-library/jest-dom'
 import '@testing-library/user-event'
 
+import { setupLocalization } from '../src/localization'
+
 // setup localization to make it easier to select elements by text
-require('../src/localization').setupLocalization()
+setupLocalization()

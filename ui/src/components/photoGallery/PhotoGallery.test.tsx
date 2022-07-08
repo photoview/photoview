@@ -5,12 +5,12 @@ import { MediaType } from '../../__generated__/globalTypes'
 import PhotoGallery from './PhotoGallery'
 import { PhotoGalleryState } from './photoGalleryReducer'
 
-jest.mock('./photoGalleryMutations', () => ({
-  useMarkFavoriteMutation: () => [jest.fn()],
+vi.mock('./photoGalleryMutations', () => ({
+  useMarkFavoriteMutation: () => [vi.fn()],
 }))
 
 test('photo gallery with media', () => {
-  const dispatchMedia = jest.fn()
+  const dispatchMedia = vi.fn()
 
   const mediaState: PhotoGalleryState = {
     activeIndex: 0,
@@ -68,7 +68,7 @@ test('photo gallery with media', () => {
 })
 
 describe('photo gallery presenting', () => {
-  const dispatchMedia = jest.fn()
+  const dispatchMedia = vi.fn()
 
   test('not presenting', () => {
     const mediaStateNoPresent: PhotoGalleryState = {

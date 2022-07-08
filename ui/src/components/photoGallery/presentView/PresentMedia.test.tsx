@@ -20,7 +20,7 @@ test('render present image', () => {
 
   expect(screen.getByTestId('present-img-thumbnail')).toHaveAttribute(
     'src',
-    'http://localhost/sample_image.jpg'
+    'http://localhost:3000/sample_image.jpg'
   )
   expect(screen.getByTestId('present-img-highres')).toHaveStyle({
     display: 'none',
@@ -47,10 +47,10 @@ test('render present video', () => {
 
   expect(screen.getByTestId('present-video')).toHaveAttribute(
     'poster',
-    'http://localhost/sample_video_thumb.jpg'
+    'http://localhost:3000/sample_video_thumb.jpg'
   )
 
   expect(
     screen.getByTestId('present-video').querySelector('source')
-  ).toHaveAttribute('src', 'http://localhost/sample_video.mp4')
+  ).toHaveAttribute('src', 'http://localhost:3000/sample_video.mp4')
 })

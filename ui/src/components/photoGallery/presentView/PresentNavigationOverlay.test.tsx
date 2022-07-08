@@ -2,11 +2,11 @@ import React from 'react'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import { fireEvent, render, screen, act } from '@testing-library/react'
 
-jest.useFakeTimers()
+vi.useFakeTimers()
 
 describe('PresentNavigationOverlay component', () => {
   test('simple render', () => {
-    const dispatchMedia = jest.fn()
+    const dispatchMedia = vi.fn()
     render(<PresentNavigationOverlay dispatchMedia={dispatchMedia} />)
 
     expect(screen.getByLabelText('Previous image')).toBeInTheDocument()
@@ -15,7 +15,7 @@ describe('PresentNavigationOverlay component', () => {
   })
 
   test('click buttons', () => {
-    const dispatchMedia = jest.fn()
+    const dispatchMedia = vi.fn()
     render(<PresentNavigationOverlay dispatchMedia={dispatchMedia} />)
 
     expect(dispatchMedia).not.toHaveBeenCalled()
@@ -28,7 +28,7 @@ describe('PresentNavigationOverlay component', () => {
   })
 
   test('mouse move, show and hide', () => {
-    const dispatchMedia = jest.fn()
+    const dispatchMedia = vi.fn()
     const { container } = render(
       <PresentNavigationOverlay dispatchMedia={dispatchMedia} />
     )
@@ -39,7 +39,7 @@ describe('PresentNavigationOverlay component', () => {
     expect(screen.getByLabelText('Next image')).not.toHaveClass('hide')
 
     act(() => {
-      jest.advanceTimersByTime(3000)
+      vi.advanceTimersByTime(3000)
     })
 
     expect(screen.getByLabelText('Next image')).toHaveClass('hide')

@@ -7,11 +7,9 @@ import { ADMIN_QUERY } from './Layout'
 import { MemoryRouter } from 'react-router-dom'
 import MainMenu, { MAPBOX_QUERY } from './MainMenu'
 
-jest.mock('../../helpers/authentication.ts')
+vi.mock('../../helpers/authentication.ts')
 
-const authTokenMock = authentication.authToken as jest.MockedFunction<
-  typeof authentication.authToken
->
+const authTokenMock = authentication.authToken // as vi.MockedFunction<typeof authentication.authToken>
 
 afterEach(() => {
   authTokenMock.mockClear()
