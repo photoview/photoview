@@ -67,7 +67,7 @@ const PresentView = ({
   })
 
   return (
-    <StyledContainer {...className}>
+    <StyledContainer className={className}>
       <PreventScroll />
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}

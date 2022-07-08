@@ -33,8 +33,8 @@ const gqlMock = [
 ]
 
 test('Add user with username and path', async () => {
-  const userAdded = jest.fn()
-  const setShow = jest.fn()
+  const userAdded = vi.fn()
+  const setShow = vi.fn()
 
   render(
     <MockedProvider addTypename={true} mocks={gqlMock}>
@@ -62,8 +62,8 @@ test('Add user with username and path', async () => {
 })
 
 test('Add user with only username', async () => {
-  const userAdded = jest.fn()
-  const setShow = jest.fn()
+  const userAdded = vi.fn()
+  const setShow = vi.fn()
 
   render(
     <MockedProvider addTypename={true} mocks={gqlMock}>

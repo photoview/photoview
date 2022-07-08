@@ -1,4 +1,4 @@
-package scanner_test
+package cleanup_tasks_test
 
 import (
 	"os"
@@ -12,6 +12,10 @@ import (
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(test_utils.IntegrationTestRun(m))
+}
 
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
@@ -27,7 +31,7 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	test_dir := t.TempDir()
-	copy.Copy("./test_data", test_dir)
+	assert.NoError(t, copy.Copy("../../test_data", test_dir))
 
 	countAllMedia := func() int {
 		var all_media []*models.Media

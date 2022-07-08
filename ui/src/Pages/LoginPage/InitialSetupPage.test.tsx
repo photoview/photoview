@@ -7,11 +7,9 @@ import * as authentication from '../../helpers/authentication'
 import InitialSetupPage from './InitialSetupPage'
 import { mockInitialSetupGraphql } from './loginTestHelpers'
 
-jest.mock('../../helpers/authentication.ts')
+vi.mock('../../helpers/authentication.ts')
 
-const authToken = authentication.authToken as jest.Mock<
-  ReturnType<typeof authentication.authToken>
->
+const authToken = authentication.authToken // as vi.Mock<ReturnType<typeof authentication.authToken>>
 
 describe('Initial setup page', () => {
   test('Render initial setup form', async () => {

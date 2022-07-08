@@ -7,11 +7,9 @@ import { createMemoryHistory } from 'history'
 import { MockedProvider } from '@apollo/client/testing'
 import { mockInitialSetupGraphql } from './loginTestHelpers'
 
-jest.mock('../../helpers/authentication.ts')
+vi.mock('../../helpers/authentication.ts')
 
-const authToken = authentication.authToken as jest.Mock<
-  ReturnType<typeof authentication.authToken>
->
+const authToken = authentication.authToken // as vi.Mock<ReturnType<typeof authentication.authToken>>
 
 describe('Login page redirects', () => {
   test('Auth token redirect', async () => {

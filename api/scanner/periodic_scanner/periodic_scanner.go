@@ -1,4 +1,4 @@
-package scanner
+package periodic_scanner
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"gorm.io/gorm"
 )
 
@@ -81,7 +82,7 @@ func scanIntervalRunner() {
 				log.Print("Scan interval runner: New ticker detected")
 			case <-mainPeriodicScanner.ticker.C:
 				log.Print("Scan interval runner: Starting periodic scan")
-				AddAllToQueue()
+				scanner_queue.AddAllToQueue()
 			}
 		} else {
 			<-mainPeriodicScanner.ticker_changed

@@ -30,9 +30,6 @@ type Media struct {
 	SideCarHash     *string      `gorm:"unique"`
 	Faces           []*ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
 	Blurhash        *string      `gorm:""`
-
-	// Only used internally
-	CounterpartPath *string `gorm:"-"`
 }
 
 func (Media) TableName() string {
@@ -63,6 +60,25 @@ func (m *Media) GetThumbnail() (*MediaURL, error) {
 	}
 
 	return nil, nil
+}
+
+func (m *Media) GetHighRes() (*MediaURL, error) {
+	if len(m.MediaURL) == 0 {
+		return nil, errors.New("media.MediaURL is empty")
+	}
+
+	for _, url := range m.MediaURL {
+		if url.Purpose == PhotoHighRes {
+			url.Media = m
+			return &url, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (m *Media) CachePath() (string, error) {
+	return utils.CachePathForMedia(m.AlbumID, m.ID)
 }
 
 type MediaType string

@@ -6,13 +6,14 @@ import (
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/scanner/periodic_scanner"
+	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
-	err := scanner.AddAllToQueue()
+	err := scanner_queue.AddAllToQueue()
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		return nil, errors.Wrap(err, "get user from database")
 	}
 
-	scanner.AddUserToQueue(&user)
+	scanner_queue.AddUserToQueue(&user)
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{
@@ -57,7 +58,7 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 		return 0, err
 	}
 
-	scanner.ChangePeriodicScanInterval(time.Duration(siteInfo.PeriodicScanInterval) * time.Second)
+	periodic_scanner.ChangePeriodicScanInterval(time.Duration(siteInfo.PeriodicScanInterval) * time.Second)
 
 	return siteInfo.PeriodicScanInterval, nil
 }
@@ -81,7 +82,7 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, err
 	}
 
-	scanner.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
+	scanner_queue.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
 
 	return siteInfo.ConcurrentWorkers, nil
 }

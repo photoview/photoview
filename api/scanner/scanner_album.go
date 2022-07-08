@@ -6,16 +6,14 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/graphql/notification"
-	"github.com/photoview/photoview/api/scanner/face_detection"
-	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/photoview/photoview/api/scanner/scanner_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
-	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
 
@@ -56,7 +54,7 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		}
 
 		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
-			return nil, errors.Wrap(err, "failed to add owner to already existing album")
+			return nil, errors.Wrap(err, "add owner to already existing album")
 		}
 
 		return &album, nil
@@ -87,142 +85,121 @@ func ValidRootPath(rootPath string) bool {
 	return true
 }
 
-func scanAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache, db *gorm.DB) {
+func ScanAlbum(ctx scanner_task.TaskContext) error {
 
-	album_notify_key := utils.GenerateToken()
-	notifyThrottle := utils.NewThrottle(500 * time.Millisecond)
-	notifyThrottle.Trigger(nil)
+	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
+	}
+	ctx = newCtx
 
 	// Scan for photos
-	albumMedia, err := findMediaForAlbum(album, cache, db, func(photo *models.Media, newPhoto bool) {
-		if newPhoto {
-			notifyThrottle.Trigger(func() {
-				notification.BroadcastNotification(&models.Notification{
-					Key:     album_notify_key,
-					Type:    models.NotificationTypeMessage,
-					Header:  fmt.Sprintf("Found new media in album '%s'", album.Title),
-					Content: fmt.Sprintf("Found %s", photo.Path),
-				})
-			})
-		}
-	})
+	albumMedia, err := findMediaForAlbum(ctx)
 	if err != nil {
-		scanner_utils.ScannerError("Failed to find media for album (%s): %s", album.Path, err)
+		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path, err)
 	}
 
-	album_has_changes := false
-	for count, media := range albumMedia {
-		processing_was_needed := false
+	changedMedia := make([]*models.Media, 0)
+	for i, media := range albumMedia {
+		updatedURLs := []*models.MediaURL{}
 
-		transactionError := db.Transaction(func(tx *gorm.DB) error {
-			processing_was_needed, err = ProcessMedia(tx, media)
+		mediaData := media_encoding.NewEncodeMediaData(media)
+
+		// define new ctx for scope of for-loop
+		ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, &mediaData)
+		if err != nil {
+			return err
+		}
+
+		transactionError := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+			updatedURLs, err = processMedia(ctx, &mediaData)
 			if err != nil {
-				return errors.Wrapf(err, "failed to process photo (%s)", media.Path)
+				return errors.Wrapf(err, "process media (%s)", media.Path)
 			}
 
-			if processing_was_needed {
-				album_has_changes = true
-				progress := float64(count) / float64(len(albumMedia)) * 100.0
-				notification.BroadcastNotification(&models.Notification{
-					Key:      album_notify_key,
-					Type:     models.NotificationTypeProgress,
-					Header:   fmt.Sprintf("Processing media for album '%s'", album.Title),
-					Content:  fmt.Sprintf("Processed media at %s", media.Path),
-					Progress: &progress,
-				})
+			if len(updatedURLs) > 0 {
+				changedMedia = append(changedMedia, media)
 			}
 
 			return nil
 		})
 
 		if transactionError != nil {
-			scanner_utils.ScannerError("Failed to begin database transaction: %s", transactionError)
+			return errors.Wrap(err, "process media database transaction")
 		}
 
-		if processing_was_needed && media.Type == models.MediaTypePhoto {
-			go func(media *models.Media) {
-				if face_detection.GlobalFaceDetector == nil {
-					return
-				}
-				if err := face_detection.GlobalFaceDetector.DetectFaces(db, media); err != nil {
-					scanner_utils.ScannerError("Error detecting faces in image (%s): %s", media.Path, err)
-				}
-			}(media)
+		if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, &mediaData, updatedURLs, i, len(albumMedia)); err != nil {
+			return errors.Wrap(err, "after process media")
 		}
 	}
 
-	cleanup_errors := CleanupMedia(db, album.ID, albumMedia)
-	for _, err := range cleanup_errors {
-		scanner_utils.ScannerError("Failed to delete old media: %s", err)
+	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
+		return errors.Wrap(err, "after scan album")
 	}
 
-	if album_has_changes {
-		timeoutDelay := 2000
-		notification.BroadcastNotification(&models.Notification{
-			Key:      album_notify_key,
-			Type:     models.NotificationTypeMessage,
-			Positive: true,
-			Header:   fmt.Sprintf("Done processing media for album '%s'", album.Title),
-			Content:  fmt.Sprintf("All media have been processed"),
-			Timeout:  &timeoutDelay,
-		})
-	}
+	return nil
 }
 
-func findMediaForAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache, db *gorm.DB, onScanPhoto func(photo *models.Media, newPhoto bool)) ([]*models.Media, error) {
+func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
-	albumPhotos := make([]*models.Media, 0)
+	albumMedia := make([]*models.Media, 0)
 
-	dirContent, err := ioutil.ReadDir(album.Path)
+	dirContent, err := ioutil.ReadDir(ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get ignore data
-	albumIgnore := ignore.CompileIgnoreLines(*cache.GetAlbumIgnore(album.Path)...)
-
 	for _, item := range dirContent {
-		photoPath := path.Join(album.Path, item.Name())
+		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 
-		isDirSymlink, err := utils.IsDirSymlink(photoPath)
+		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
 		if err != nil {
-			log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", photoPath)
+			log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", mediaPath)
 			isDirSymlink = false
 		}
 
-		if !item.IsDir() && !isDirSymlink && cache.IsPathMedia(photoPath) {
-			// Match file against ignore data
-			if albumIgnore.MatchesPath(item.Name()) {
-				log.Printf("File %s ignored\n", item.Name())
+		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
+			if err != nil {
+				return nil, err
+			}
+			if skip {
 				continue
 			}
 
-			// Skip the JPEGs that are compressed version of raw files
-			counterpartFile := scanForRawCounterpartFile(photoPath)
-			if counterpartFile != nil {
-				continue
-			}
-
-			err := db.Transaction(func(tx *gorm.DB) error {
-				media, isNewMedia, err := ScanMedia(tx, photoPath, album.ID, cache)
+			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
-					return errors.Wrapf(err, "Scanning media error (%s)", photoPath)
+					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
 
-				onScanPhoto(media, isNewMedia)
+				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+					return err
+				}
 
-				albumPhotos = append(albumPhotos, media)
+				albumMedia = append(albumMedia, media)
 
 				return nil
 			})
 
 			if err != nil {
-				scanner_utils.ScannerError("Error scanning media for album (%d): %s\n", album.ID, err)
+				scanner_utils.ScannerError("Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
 			}
-
 		}
+
 	}
 
-	return albumPhotos, nil
+	return albumMedia, nil
+}
+
+func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
+
+	// Make sure media cache directory exists
+	mediaCachePath, err := mediaData.Media.CachePath()
+	if err != nil {
+		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
+	}
+
+	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
 }

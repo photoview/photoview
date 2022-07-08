@@ -54,10 +54,17 @@ func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
 type EncodeMediaData struct {
-	Media          *models.Media
-	_photoImage    image.Image
-	_contentType   *media_type.MediaType
-	_videoMetadata *ffprobe.ProbeData
+	Media           *models.Media
+	CounterpartPath *string
+	_photoImage     image.Image
+	_contentType    *media_type.MediaType
+	_videoMetadata  *ffprobe.ProbeData
+}
+
+func NewEncodeMediaData(media *models.Media) EncodeMediaData {
+	return EncodeMediaData{
+		Media: media,
+	}
 }
 
 // ContentType reads the image to determine its content type
@@ -86,7 +93,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 	}
 
 	// Use darktable if there is no counterpart JPEG file to use instead
-	if contentType.IsRaw() && img.Media.CounterpartPath == nil {
+	if contentType.IsRaw() && img.CounterpartPath == nil {
 		if executable_worker.DarktableCli.IsInstalled() {
 			err := executable_worker.DarktableCli.EncodeJpeg(img.Media.Path, outputPath, 70)
 			if err != nil {
@@ -114,8 +121,8 @@ func (img *EncodeMediaData) photoImage() (image.Image, error) {
 	}
 
 	var photoPath string
-	if img.Media.CounterpartPath != nil {
-		photoPath = *img.Media.CounterpartPath
+	if img.CounterpartPath != nil {
+		photoPath = *img.CounterpartPath
 	} else {
 		photoPath = img.Media.Path
 	}

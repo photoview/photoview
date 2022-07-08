@@ -1,5 +1,4 @@
 import { notificationSubscription } from './__generated__/notificationSubscription'
-import PropTypes from 'prop-types'
 import { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
@@ -120,11 +119,6 @@ const SubscriptionsHook = ({
   }, [data, error])
 
   return null
-}
-
-SubscriptionsHook.propTypes = {
-  messages: PropTypes.array.isRequired,
-  setMessages: PropTypes.func.isRequired,
 }
 
 export default SubscriptionsHook

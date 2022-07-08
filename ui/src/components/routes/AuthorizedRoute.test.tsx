@@ -7,11 +7,9 @@ import * as authentication from '../../helpers/authentication'
 import { MockedProvider } from '@apollo/client/testing'
 import { ADMIN_QUERY } from '../layout/Layout'
 
-jest.mock('../../helpers/authentication.ts')
+vi.mock('../../helpers/authentication.ts')
 
-const authToken = authentication.authToken as jest.Mock<
-  ReturnType<typeof authentication.authToken>
->
+const authToken = vi.mocked(authentication.authToken)
 
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
