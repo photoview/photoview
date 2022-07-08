@@ -32,7 +32,7 @@ COPY ui /app
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} ubuntu:22.10 AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
 ARG TARGETPLATFORM
 
 COPY docker/install_build_dependencies.sh /tmp/
@@ -67,7 +67,7 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM ubuntu:22.10
+FROM debian:bookworm
 ARG TARGETPLATFORM
 WORKDIR /app
 
