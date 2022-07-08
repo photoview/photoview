@@ -13,7 +13,7 @@
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
     "test": "vitest",
-    "test:ci": "CI=true vitest --verbose --ci --coverage",
+    "test:ci": "CI=true vitest --reporter verbose --run --coverage",
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts && prettier --write */**/__generated__/*.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
@@ -66,6 +66,7 @@
     "@vitest/ui": "^0.17.1",
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",
+    "c8": "^7.11.3",
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",

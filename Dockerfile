@@ -1,5 +1,5 @@
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:15 as ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 as ui
 
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
@@ -29,10 +29,10 @@ RUN npm ci --omit=dev --ignore-scripts
 
 # Build frontend
 COPY ui /app
-RUN npm run build -- --public-url $UI_PUBLIC_URL
+RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} ubuntu:22.10 AS api
 ARG TARGETPLATFORM
 
 COPY docker/install_build_dependencies.sh /tmp/
@@ -67,7 +67,7 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm
+FROM ubuntu:22.10
 ARG TARGETPLATFORM
 WORKDIR /app
 
@@ -75,7 +75,7 @@ COPY api/data /app/data
 
 RUN apt update \
   # Required dependencies
-  && apt install -y curl gpg libdlib19 ffmpeg exiftool libheif1
+  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
@@ -87,7 +87,7 @@ RUN apt purge -y gpg \
   && apt clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ui /app/build /ui
+COPY --from=ui /app/dist /ui
 COPY --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
