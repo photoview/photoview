@@ -2,17 +2,23 @@ import { render, screen } from '@testing-library/react'
 
 import React from 'react'
 import { MediaType } from '../../../__generated__/globalTypes'
-import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
+import PresentMedia from './PresentMedia'
 
 test('render present image', () => {
-  const media: PresentMediaProps_Media = {
+  const media: MediaGalleryFields = {
     __typename: 'Media',
     id: '123',
     type: MediaType.Photo,
     highRes: null,
+    blurhash: null,
+    videoWeb: null,
+    favorite: false,
     thumbnail: {
       __typename: 'MediaURL',
       url: '/sample_image.jpg',
+      width: 300,
+      height: 200,
     },
   }
 
@@ -28,11 +34,13 @@ test('render present image', () => {
 })
 
 test('render present video', () => {
-  const media: PresentMediaProps_Media = {
+  const media: MediaGalleryFields = {
     __typename: 'Media',
     id: '123',
     type: MediaType.Video,
     highRes: null,
+    blurhash: null,
+    favorite: false,
     videoWeb: {
       __typename: 'MediaURL',
       url: '/sample_video.mp4',
@@ -40,6 +48,8 @@ test('render present video', () => {
     thumbnail: {
       __typename: 'MediaURL',
       url: '/sample_video_thumb.jpg',
+      width: 300,
+      height: 200,
     },
   }
 

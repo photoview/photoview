@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { MediaThumbnail } from '../photoGallery/MediaThumbnail'
-import { PhotoFiller } from '../photoGallery/PhotoGallery'
+import { PhotoFiller } from '../photoGallery/MediaGallery'
 import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,

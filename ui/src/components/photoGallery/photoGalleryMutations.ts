@@ -1,5 +1,5 @@
 import { gql, MutationFunction, useMutation } from '@apollo/client'
-import { PhotoGalleryProps_Media } from './PhotoGallery'
+import { PhotoGalleryProps_Media } from './MediaGallery'
 import {
   markMediaFavorite,
   markMediaFavoriteVariables,

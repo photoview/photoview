@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react'
 import AlbumTitle from '../album/AlbumTitle'
-import PhotoGallery from '../photoGallery/PhotoGallery'
+import MediaGallery from '../photoGallery/MediaGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../album/AlbumFilter'
 import {
@@ -114,7 +114,7 @@ const AlbumGallery = React.forwardRef(
         )}
         <AlbumTitle album={album} disableLink />
         {subAlbumElement}
-        <PhotoGallery
+        <MediaGallery
           loading={loading}
           mediaState={mediaState}
           dispatchMedia={dispatchMedia}

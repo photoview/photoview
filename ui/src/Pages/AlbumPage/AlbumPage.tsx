@@ -10,8 +10,11 @@ import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
 import useOrderingParams from '../../hooks/useOrderingParams'
 import { useParams } from 'react-router-dom'
 import { isNil } from '../../helpers/utils'
+import { MEDIA_GALLERY_FRAGMENT } from '../../components/photoGallery/MediaGallery'
 
 const ALBUM_QUERY = gql`
+  ${MEDIA_GALLERY_FRAGMENT}
+
   query albumQuery(
     $id: ID!
     $onlyFavorites: Boolean
@@ -40,21 +43,7 @@ const ALBUM_QUERY = gql`
         order: { order_by: $mediaOrderBy, order_direction: $orderDirection }
         onlyFavorites: $onlyFavorites
       ) {
-        id
-        type
-        blurhash
-        thumbnail {
-          url
-          width
-          height
-        }
-        highRes {
-          url
-        }
-        videoWeb {
-          url
-        }
-        favorite
+        ...MediaGalleryFields
       }
     }
   }

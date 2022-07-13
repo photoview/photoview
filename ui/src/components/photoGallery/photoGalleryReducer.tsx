@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react'
-import { PhotoGalleryProps_Media } from './PhotoGallery'
+import { MediaGalleryFields } from './__generated__/MediaGalleryFields'
 
 export interface PhotoGalleryState {
   presenting: boolean
   activeIndex: number
-  media: PhotoGalleryProps_Media[]
+  media: MediaGalleryFields[]
 }
 
 export type GalleryAction =
@@ -16,7 +16,7 @@ export type PhotoGalleryAction =
   | GalleryAction
   | { type: 'openPresentMode'; activeIndex: number }
   | { type: 'selectImage'; index: number }
-  | { type: 'replaceMedia'; media: PhotoGalleryProps_Media[] }
+  | { type: 'replaceMedia'; media: MediaGalleryFields[] }
 
 export function photoGalleryReducer(
   state: PhotoGalleryState,

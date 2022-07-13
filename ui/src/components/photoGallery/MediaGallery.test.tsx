@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 
 import React from 'react'
 import { MediaType } from '../../__generated__/globalTypes'
-import PhotoGallery from './PhotoGallery'
+import MediaGallery from './MediaGallery'
 import { PhotoGalleryState } from './photoGalleryReducer'
 
 vi.mock('./photoGalleryMutations', () => ({
@@ -55,7 +55,7 @@ test('photo gallery with media', () => {
   }
 
   render(
-    <PhotoGallery
+    <MediaGallery
       dispatchMedia={dispatchMedia}
       mediaState={mediaState}
       loading={false}
@@ -78,7 +78,7 @@ describe('photo gallery presenting', () => {
     }
 
     render(
-      <PhotoGallery
+      <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStateNoPresent}
@@ -112,7 +112,7 @@ describe('photo gallery presenting', () => {
     }
 
     render(
-      <PhotoGallery
+      <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStatePresent}
