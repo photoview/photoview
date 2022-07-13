@@ -11,10 +11,10 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "lint": "eslint ./src --max-warnings 0 --cache --config .eslintrc.js",
+    "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "test": "vitest",
     "test:ci": "CI=true vitest --reporter verbose --run --coverage",
-    "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts && prettier --write */**/__generated__/*.ts",
+    "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars && prettier --write */**/__generated__/*.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
   },
@@ -63,6 +63,8 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.2.1",
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
+    "@typescript-eslint/parser": "^5.30.6",
     "@vitest/ui": "^0.17.1",
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",

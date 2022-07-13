@@ -1,21 +1,19 @@
 import classNames, { Argument as ClassNamesArg } from 'classnames'
 import { overrideTailwindClasses } from 'tailwind-override'
-// import { overrideTailwindClasses } from 'tailwind-override'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export interface DebouncedFn<F extends (...args: any[]) => any> {
+export interface DebouncedFn<F extends (...args: unknown[]) => unknown> {
   (...args: Parameters<F>): void
   cancel(): void
 }
 
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
+export function debounce<F extends (...args: unknown[]) => unknown>(
+  func: F,
   wait: number,
   triggerRising?: boolean
-): DebouncedFn<T> {
+): DebouncedFn<F> {
   let timeout: number | undefined = undefined
 
-  const debounced = (...args: Parameters<T>) => {
+  const debounced = (...args: Parameters<F>) => {
     if (timeout) {
       clearTimeout(timeout)
       timeout = undefined
@@ -37,11 +35,12 @@ export function debounce<T extends (...args: any[]) => any>(
   return debounced
 }
 
-export function isNil(value: any): value is undefined | null {
+export function isNil(value: unknown): value is undefined | null {
   return value === undefined || value === null
 }
 
 export function exhaustiveCheck(value: never) {
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   throw new Error(`Exhaustive check failed with value: ${value}`)
 }
 

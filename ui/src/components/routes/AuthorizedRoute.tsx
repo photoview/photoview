@@ -2,10 +2,12 @@ import { useLazyQuery } from '@apollo/client'
 import React, { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { authToken } from '../../helpers/authentication'
+import { adminQuery } from '../../__generated__/adminQuery'
 import { ADMIN_QUERY } from '../layout/Layout'
 
 export const useIsAdmin = () => {
-  const [fetchAdminQuery, { data, called }] = useLazyQuery(ADMIN_QUERY)
+  const [fetchAdminQuery, { data, called }] =
+    useLazyQuery<adminQuery>(ADMIN_QUERY)
 
   useEffect(() => {
     if (authToken() && !called) {

@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
 import { registerMediaMarkers } from '../../components/mapbox/mapboxHelperFunctions'
 import useMapboxMap from '../../components/mapbox/MapboxMap'
-import { urlPresentModeSetupHook } from '../../components/photoGallery/photoGalleryReducer'
+import { urlPresentModeSetupHook } from '../../components/photoGallery/mediaGalleryReducer'
 import MapPresentMarker from './MapPresentMarker'
 import { PlacesAction, placesReducer } from './placesReducer'
 import { mediaGeoJson } from './__generated__/mediaGeoJson'
@@ -108,7 +108,7 @@ const configureMapbox =
 
       map.addSource('media', {
         type: 'geojson',
-        data: mapboxData?.myMediaGeoJson,
+        data: mapboxData?.myMediaGeoJson as never,
         cluster: true,
         clusterRadius: 50,
         clusterProperties: {

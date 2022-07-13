@@ -13,7 +13,7 @@ export interface earliestMedia_myMedia {
   /**
    * The date the image was shot or the date it was imported as a fallback
    */
-  date: any
+  date: Time
 }
 
 export interface earliestMedia {

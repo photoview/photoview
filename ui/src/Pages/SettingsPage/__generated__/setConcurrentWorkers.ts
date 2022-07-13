@@ -11,9 +11,9 @@ export interface setConcurrentWorkers {
   /**
    * Set max number of concurrent scanner jobs running at once
    */
-  setScannerConcurrentWorkers: number;
+  setScannerConcurrentWorkers: number
 }
 
 export interface setConcurrentWorkersVariables {
-  workers: number;
+  workers: number
 }

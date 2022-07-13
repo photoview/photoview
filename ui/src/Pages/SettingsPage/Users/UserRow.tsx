@@ -67,7 +67,7 @@ export type UserRowChildProps = {
 
 export type UserRowProps = {
   user: settingsUsersQuery_user
-  refetchUsers(): void
+  refetchUsers: () => void
 }
 
 const UserRow = ({ user, refetchUsers }: UserRowProps) => {

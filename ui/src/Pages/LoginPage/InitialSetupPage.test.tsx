@@ -9,10 +9,10 @@ import { mockInitialSetupGraphql } from './loginTestHelpers'
 
 vi.mock('../../helpers/authentication.ts')
 
-const authToken = authentication.authToken // as vi.Mock<ReturnType<typeof authentication.authToken>>
+const authToken = vi.mocked(authentication.authToken)
 
 describe('Initial setup page', () => {
-  test('Render initial setup form', async () => {
+  test('Render initial setup form', () => {
     authToken.mockImplementation(() => null)
 
     const history = createMemoryHistory({

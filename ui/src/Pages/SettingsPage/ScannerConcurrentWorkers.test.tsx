@@ -9,7 +9,7 @@ import {
   ScannerConcurrentWorkers,
 } from './ScannerConcurrentWorkers'
 
-test('load ScannerConcurrentWorkers', async () => {
+test('load ScannerConcurrentWorkers', () => {
   const graphqlMocks = [
     {
       request: {

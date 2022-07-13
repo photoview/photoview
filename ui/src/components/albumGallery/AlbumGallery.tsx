@@ -1,49 +1,46 @@
 import React, { useEffect, useReducer } from 'react'
 import AlbumTitle from '../album/AlbumTitle'
-import PhotoGallery from '../photoGallery/PhotoGallery'
+import MediaGallery, {
+  MEDIA_GALLERY_FRAGMENT,
+} from '../photoGallery/MediaGallery'
 import AlbumBoxes from './AlbumBoxes'
 import AlbumFilter from '../album/AlbumFilter'
 import {
-  albumQuery_album_media_highRes,
-  albumQuery_album_media_thumbnail,
-  albumQuery_album_media_videoWeb,
-  albumQuery_album_subAlbums,
-} from '../../Pages/AlbumPage/__generated__/albumQuery'
-import {
-  photoGalleryReducer,
+  mediaGalleryReducer,
   urlPresentModeSetupHook,
-} from '../photoGallery/photoGalleryReducer'
+} from '../photoGallery/mediaGalleryReducer'
 import { MediaOrdering, SetOrderingFn } from '../../hooks/useOrderingParams'
-import { MediaType } from '../../__generated__/globalTypes'
+import { gql } from '@apollo/client'
+import { AlbumGalleryFields } from './__generated__/AlbumGalleryFields'
 
-type AlbumGalleryAlbum = {
-  __typename: 'Album'
-  id: string
-  title: string
-  subAlbums: albumQuery_album_subAlbums[]
-  media: {
-    __typename: 'Media'
-    id: string
-    type: MediaType
-    /**
-     * URL to display the media in a smaller resolution
-     */
-    thumbnail: albumQuery_album_media_thumbnail | null
-    /**
-     * URL to display the photo in full resolution, will be null for videos
-     */
-    highRes: albumQuery_album_media_highRes | null
-    /**
-     * URL to get the video in a web format that can be played in the browser, will be null for photos
-     */
-    videoWeb: albumQuery_album_media_videoWeb | null
-    favorite?: boolean
-    blurhash: string | null
-  }[]
-}
+export const ALBUM_GALLERY_FRAGMENT = gql`
+  ${MEDIA_GALLERY_FRAGMENT}
+
+  fragment AlbumGalleryFields on Album {
+    id
+    title
+    subAlbums(order: { order_by: "title", order_direction: $orderDirection }) {
+      id
+      title
+      thumbnail {
+        id
+        thumbnail {
+          url
+        }
+      }
+    }
+    media(
+      paginate: { limit: $limit, offset: $offset }
+      order: { order_by: $mediaOrderBy, order_direction: $orderDirection }
+      onlyFavorites: $onlyFavorites
+    ) {
+      ...MediaGalleryFields
+    }
+  }
+`
 
 type AlbumGalleryProps = {
-  album?: AlbumGalleryAlbum
+  album?: AlbumGalleryFields
   loading?: boolean
   customAlbumLink?(albumID: string): string
   showFilter?: boolean
@@ -68,7 +65,7 @@ const AlbumGallery = React.forwardRef(
     }: AlbumGalleryProps,
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
-    const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
+    const [mediaState, dispatchMedia] = useReducer(mediaGalleryReducer, {
       presenting: false,
       activeIndex: -1,
       media: album?.media || [],
@@ -114,7 +111,7 @@ const AlbumGallery = React.forwardRef(
         )}
         <AlbumTitle album={album} disableLink />
         {subAlbumElement}
-        <PhotoGallery
+        <MediaGallery
           loading={loading}
           mediaState={mediaState}
           dispatchMedia={dispatchMedia}

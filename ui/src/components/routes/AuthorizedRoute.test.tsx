@@ -14,7 +14,7 @@ const authToken = vi.mocked(authentication.authToken)
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
-  test('not logged in', async () => {
+  test('not logged in', () => {
     authToken.mockImplementation(() => null)
 
     render(
@@ -37,7 +37,7 @@ describe('AuthorizedRoute component', () => {
     expect(screen.queryByText('authorized content')).toBeNull()
   })
 
-  test('logged in', async () => {
+  test('logged in', () => {
     authToken.mockImplementation(() => 'token-here')
 
     render(

@@ -15,5 +15,5 @@ export interface mapboxToken {
   /**
    * Get media owned by the logged in user, returned in GeoJson format
    */
-  myMediaGeoJson: any
+  myMediaGeoJson: Any
 }

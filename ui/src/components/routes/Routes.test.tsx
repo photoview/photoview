@@ -29,7 +29,7 @@ describe('routes', () => {
     expect(screen.getByText('mocked login page')).toBeInTheDocument()
   })
 
-  test('invalid page should print a "not found" message', async () => {
+  test('invalid page should print a "not found" message', () => {
     render(
       <MemoryRouter initialEntries={['/random_non_existent_page']}>
         <Routes />

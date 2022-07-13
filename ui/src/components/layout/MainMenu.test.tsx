@@ -9,7 +9,7 @@ import MainMenu, { MAPBOX_QUERY } from './MainMenu'
 
 vi.mock('../../helpers/authentication.ts')
 
-const authTokenMock = authentication.authToken // as vi.MockedFunction<typeof authentication.authToken>
+const authTokenMock = vi.mocked(authentication.authToken)
 
 afterEach(() => {
   authTokenMock.mockClear()

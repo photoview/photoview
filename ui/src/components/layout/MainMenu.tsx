@@ -5,6 +5,7 @@ import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { mapboxEnabledQuery } from '../../__generated__/mapboxEnabledQuery'
 import { tailwindClassNames } from '../../helpers/utils'
+import { faceDetectionEnabled } from './__generated__/faceDetectionEnabled'
 
 export const MAPBOX_QUERY = gql`
   query mapboxEnabledQuery {
@@ -27,7 +28,7 @@ type MenuButtonProps = {
   background: string
   activeClasses?: string
   className?: string
-  icon?: React.ReactChild
+  icon?: React.ReactNode
 }
 
 const MenuButton = ({
@@ -48,7 +49,7 @@ const MenuButton = ({
           `rounded-lg my-2 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-bg`,
           className,
           {
-            [`ring-4 lg:ring-4 ${activeClasses}`]: isActive,
+            [`ring-4 lg:ring-4 ${activeClasses ?? ''}`]: isActive,
           }
         )
       }
@@ -77,7 +78,7 @@ export const MainMenu = () => {
     ? useQuery<mapboxEnabledQuery>(MAPBOX_QUERY)
     : null
   const faceDetectionEnabledQuery = authToken()
-    ? useQuery(FACE_DETECTION_ENABLED_QUERY)
+    ? useQuery<faceDetectionEnabled>(FACE_DETECTION_ENABLED_QUERY)
     : null
 
   const mapboxEnabled = !!mapboxQuery?.data?.mapboxToken

@@ -15,7 +15,7 @@ import {
   getActiveTimelineImage as getActiveTimelineMedia,
   timelineGalleryReducer,
 } from './timelineGalleryReducer'
-import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
+import { urlPresentModeSetupHook } from '../photoGallery/mediaGalleryReducer'
 import TimelineFilters from './TimelineFilters'
 import client from '../../apolloClient'
 

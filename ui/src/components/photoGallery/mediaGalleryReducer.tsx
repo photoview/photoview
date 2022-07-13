@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react'
-import { PhotoGalleryProps_Media } from './PhotoGallery'
+import { MediaGalleryFields } from './__generated__/MediaGalleryFields'
 
-export interface PhotoGalleryState {
+export interface MediaGalleryState {
   presenting: boolean
   activeIndex: number
-  media: PhotoGalleryProps_Media[]
+  media: MediaGalleryFields[]
 }
 
 export type GalleryAction =
@@ -16,12 +16,12 @@ export type PhotoGalleryAction =
   | GalleryAction
   | { type: 'openPresentMode'; activeIndex: number }
   | { type: 'selectImage'; index: number }
-  | { type: 'replaceMedia'; media: PhotoGalleryProps_Media[] }
+  | { type: 'replaceMedia'; media: MediaGalleryFields[] }
 
-export function photoGalleryReducer(
-  state: PhotoGalleryState,
+export function mediaGalleryReducer(
+  state: MediaGalleryState,
   action: PhotoGalleryAction
-): PhotoGalleryState {
+): MediaGalleryState {
   switch (action.type) {
     case 'nextImage':
       return {
@@ -69,15 +69,19 @@ export function photoGalleryReducer(
   }
 }
 
+export interface MediaGalleryPopStateEvent extends PopStateEvent {
+  state: MediaGalleryState
+}
+
 export const urlPresentModeSetupHook = ({
   dispatchMedia,
   openPresentMode,
 }: {
   dispatchMedia: React.Dispatch<GalleryAction>
-  openPresentMode: (event: PopStateEvent) => void
+  openPresentMode: (event: MediaGalleryPopStateEvent) => void
 }) => {
   useEffect(() => {
-    const urlChangeListener = (event: PopStateEvent) => {
+    const urlChangeListener = (event: MediaGalleryPopStateEvent) => {
       if (event.state.presenting === true) {
         openPresentMode(event)
       } else {

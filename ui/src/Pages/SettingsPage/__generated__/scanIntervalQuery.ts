@@ -8,13 +8,13 @@
 // ====================================================
 
 export interface scanIntervalQuery_siteInfo {
-  __typename: "SiteInfo";
+  __typename: 'SiteInfo'
   /**
    * How often automatic scans should be initiated in seconds
    */
-  periodicScanInterval: number;
+  periodicScanInterval: number
 }
 
 export interface scanIntervalQuery {
-  siteInfo: scanIntervalQuery_siteInfo;
+  siteInfo: scanIntervalQuery_siteInfo
 }

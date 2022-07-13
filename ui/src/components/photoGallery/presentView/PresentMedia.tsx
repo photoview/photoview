@@ -2,11 +2,8 @@ import React from 'react'
 import styled from 'styled-components'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { exhaustiveCheck } from '../../../helpers/utils'
-import {
-  ProtectedImage,
-  ProtectedVideo,
-  ProtectedVideoProps_Media,
-} from '../ProtectedMedia'
+import { ProtectedImage, ProtectedVideo } from '../ProtectedMedia'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 
 const StyledPhoto = styled(ProtectedImage)`
   position: absolute;
@@ -26,16 +23,8 @@ const StyledVideo = styled(ProtectedVideo)`
   height: 100vh;
 `
 
-export interface PresentMediaProps_Media extends ProtectedVideoProps_Media {
-  type: MediaType
-  highRes: null | {
-    __typename: 'MediaURL'
-    url: string
-  }
-}
-
 type PresentMediaProps = {
-  media: PresentMediaProps_Media
+  media: MediaGalleryFields
   imageLoaded?(): void
 }
 

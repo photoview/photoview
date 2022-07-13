@@ -49,7 +49,7 @@ const MapClusterMarker = ({
   marker,
   dispatchMarkerMedia,
 }: MapClusterMarkerProps) => {
-  const thumbnail = JSON.parse(marker.thumbnail)
+  const thumbnail = JSON.parse(marker.thumbnail) as { url: string }
 
   const presentMedia = () => {
     dispatchMarkerMedia({

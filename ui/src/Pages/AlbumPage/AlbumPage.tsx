@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react'
 import { useQuery, gql } from '@apollo/client'
-import AlbumGallery from '../../components/albumGallery/AlbumGallery'
+import AlbumGallery, {
+  ALBUM_GALLERY_FRAGMENT,
+} from '../../components/albumGallery/AlbumGallery'
 import Layout from '../../components/layout/Layout'
 import useURLParameters from '../../hooks/useURLParameters'
 import useScrollPagination from '../../hooks/useScrollPagination'
@@ -12,6 +14,8 @@ import { useParams } from 'react-router-dom'
 import { isNil } from '../../helpers/utils'
 
 const ALBUM_QUERY = gql`
+  ${ALBUM_GALLERY_FRAGMENT}
+
   query albumQuery(
     $id: ID!
     $onlyFavorites: Boolean
@@ -21,41 +25,7 @@ const ALBUM_QUERY = gql`
     $offset: Int
   ) {
     album(id: $id) {
-      id
-      title
-      subAlbums(
-        order: { order_by: "title", order_direction: $orderDirection }
-      ) {
-        id
-        title
-        thumbnail {
-          id
-          thumbnail {
-            url
-          }
-        }
-      }
-      media(
-        paginate: { limit: $limit, offset: $offset }
-        order: { order_by: $mediaOrderBy, order_direction: $orderDirection }
-        onlyFavorites: $onlyFavorites
-      ) {
-        id
-        type
-        blurhash
-        thumbnail {
-          url
-          width
-          height
-        }
-        highRes {
-          url
-        }
-        videoWeb {
-          url
-        }
-        favorite
-      }
+      ...AlbumGalleryFields
     }
   }
 `
