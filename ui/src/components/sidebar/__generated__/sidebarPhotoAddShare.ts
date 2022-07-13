@@ -22,5 +22,5 @@ export interface sidebarPhotoAddShare {
 export interface sidebarPhotoAddShareVariables {
   id: string
   password?: string | null
-  expire?: any | null
+  expire?: Time | null
 }

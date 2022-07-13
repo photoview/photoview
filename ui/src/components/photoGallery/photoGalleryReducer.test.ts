@@ -1,8 +1,8 @@
-import { photoGalleryReducer, PhotoGalleryState } from './photoGalleryReducer'
+import { mediaGalleryReducer, MediaGalleryState } from './mediaGalleryReducer'
 import { MediaType } from '../../__generated__/globalTypes'
 
 describe('photo gallery reducer', () => {
-  const defaultState: PhotoGalleryState = {
+  const defaultState: MediaGalleryState = {
     presenting: false,
     activeIndex: 0,
     media: [
@@ -34,13 +34,13 @@ describe('photo gallery reducer', () => {
   }
 
   test('next image', () => {
-    expect(photoGalleryReducer(defaultState, { type: 'nextImage' })).toEqual({
+    expect(mediaGalleryReducer(defaultState, { type: 'nextImage' })).toEqual({
       ...defaultState,
       activeIndex: 1,
     })
 
     expect(
-      photoGalleryReducer(
+      mediaGalleryReducer(
         { ...defaultState, activeIndex: 2 },
         { type: 'nextImage' }
       )
@@ -52,14 +52,14 @@ describe('photo gallery reducer', () => {
 
   test('previous image', () => {
     expect(
-      photoGalleryReducer(defaultState, { type: 'previousImage' })
+      mediaGalleryReducer(defaultState, { type: 'previousImage' })
     ).toEqual({
       ...defaultState,
       activeIndex: 2,
     })
 
     expect(
-      photoGalleryReducer(
+      mediaGalleryReducer(
         { ...defaultState, activeIndex: 2 },
         { type: 'previousImage' }
       )
@@ -71,21 +71,21 @@ describe('photo gallery reducer', () => {
 
   test('select image', () => {
     expect(
-      photoGalleryReducer(defaultState, { type: 'selectImage', index: 1 })
+      mediaGalleryReducer(defaultState, { type: 'selectImage', index: 1 })
     ).toEqual({
       ...defaultState,
       activeIndex: 1,
     })
 
     expect(
-      photoGalleryReducer(defaultState, { type: 'selectImage', index: 100 })
+      mediaGalleryReducer(defaultState, { type: 'selectImage', index: 100 })
     ).toEqual({
       ...defaultState,
       activeIndex: 2,
     })
 
     expect(
-      photoGalleryReducer(defaultState, { type: 'selectImage', index: -5 })
+      mediaGalleryReducer(defaultState, { type: 'selectImage', index: -5 })
     ).toEqual({
       ...defaultState,
       activeIndex: 0,
@@ -93,7 +93,7 @@ describe('photo gallery reducer', () => {
   })
 
   test('present mode', () => {
-    const openState = photoGalleryReducer(defaultState, {
+    const openState = mediaGalleryReducer(defaultState, {
       type: 'openPresentMode',
       activeIndex: 10,
     })
@@ -104,7 +104,7 @@ describe('photo gallery reducer', () => {
     })
 
     expect(
-      photoGalleryReducer(openState, { type: 'closePresentMode' })
+      mediaGalleryReducer(openState, { type: 'closePresentMode' })
     ).toEqual({
       ...openState,
       presenting: false,

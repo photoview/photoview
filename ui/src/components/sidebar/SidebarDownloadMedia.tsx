@@ -51,7 +51,7 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
     case 4:
       return t('sidebar.download.filesize.tera_byte', '{{count}} TB', { count })
     default:
-      return new Error(`invalid byte value: ${bytes}`)
+      throw new Error(`invalid byte value: ${bytes}`)
   }
 }
 
@@ -172,7 +172,7 @@ const downloadMediaShowProgress =
     return content
   }
 
-const downloadBlob = async (blob: Blob, filename: string) => {
+const downloadBlob = (blob: Blob, filename: string) => {
   const objectUrl = window.URL.createObjectURL(blob)
 
   const anchor = document.createElement('a')

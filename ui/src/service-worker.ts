@@ -78,6 +78,7 @@ registerRoute(
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', event => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
   }

@@ -10,6 +10,10 @@ import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { useForm } from 'react-hook-form'
 import { Submit, TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
+import {
+  InitialSetup,
+  InitialSetupVariables,
+} from './__generated__/InitialSetup'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -59,13 +63,12 @@ const InitialSetupPage = () => {
   }, [notInitialSetup])
 
   const [authorize, { loading: authorizeLoading, data: authorizationData }] =
-    useMutation(initialSetupMutation, {
+    useMutation<InitialSetup, InitialSetupVariables>(initialSetupMutation, {
       onCompleted: data => {
-        const { success, token } = data.initialSetupWizard
+        if (!data.initialSetupWizard) return
 
-        if (success) {
-          login(token)
-        }
+        const { success, token } = data.initialSetupWizard
+        if (success && token) login(token)
       },
     })
 
@@ -84,8 +87,8 @@ const InitialSetupPage = () => {
   }
 
   let errorMessage = null
-  if (authorizationData && !authorizationData.initialSetupWizard.success) {
-    errorMessage = authorizationData.initialSetupWizard.status
+  if (authorizationData && !authorizationData?.initialSetupWizard?.success) {
+    errorMessage = authorizationData?.initialSetupWizard?.status
   }
 
   return (
@@ -138,7 +141,7 @@ const InitialSetupPage = () => {
           <MessageBox
             type="negative"
             message={errorMessage}
-            show={errorMessage}
+            show={!!errorMessage}
           />
           <Submit className="mt-2" disabled={authorizeLoading}>
             {t('login_page.initial_setup.field.submit', 'Setup Photoview')}

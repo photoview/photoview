@@ -379,7 +379,7 @@ type SidebarShareProps = {
   isPhoto: boolean
   loading: boolean
   shares?: sidebarGetPhotoShares_media_shares[]
-  shareItem(item: { variables: { id: string } }): void
+  shareItem: (item: { variables: { id: string } }) => Promise<unknown>
 }
 
 const SidebarShare = ({

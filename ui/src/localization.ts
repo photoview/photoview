@@ -10,20 +10,23 @@ import { exhaustiveCheck, isNil } from './helpers/utils'
 export type TranslationFn = TFunction<'translation'>
 
 export function setupLocalization(): void {
-  i18n.use(initReactI18next).init({
-    lng: 'en',
-    fallbackLng: 'en',
-    returnNull: false,
-    returnEmptyString: false,
+  i18n
+    .use(initReactI18next)
+    .init({
+      lng: 'en',
+      fallbackLng: 'en',
+      returnNull: false,
+      returnEmptyString: false,
 
-    interpolation: {
-      escapeValue: false,
-    },
+      interpolation: {
+        escapeValue: false,
+      },
 
-    react: {
-      useSuspense: import.meta.env.PROD,
-    },
-  })
+      react: {
+        useSuspense: import.meta.env.PROD,
+      },
+    })
+    .catch(err => console.error('Failed to setup localization', err))
 }
 
 const SITE_TRANSLATION = gql`

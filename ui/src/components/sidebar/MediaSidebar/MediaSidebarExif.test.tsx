@@ -5,7 +5,7 @@ import { MediaSidebarMedia } from './MediaSidebar'
 import { MediaType } from '../../../__generated__/globalTypes'
 
 describe('ExifDetails', () => {
-  test('without EXIF information', async () => {
+  test('without EXIF information', () => {
     const media: MediaSidebarMedia = {
       id: '1730',
       title: 'media_name.jpg',
@@ -45,14 +45,14 @@ describe('ExifDetails', () => {
     expect(screen.queryByText('Coordinates')).not.toBeInTheDocument()
   })
 
-  test('with EXIF information', async () => {
+  test('with EXIF information', () => {
     const media: MediaSidebarMedia = {
       id: '1730',
       title: 'media_name.jpg',
       type: MediaType.Photo,
       exif: {
         id: '1666',
-        description: "Media description",
+        description: 'Media description',
         camera: 'Canon EOS R',
         maker: 'Canon',
         lens: 'TAMRON SP 24-70mm F/2.8',

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
-import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
+import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 
 const StyledContainer = styled.div`

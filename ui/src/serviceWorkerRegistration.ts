@@ -45,12 +45,16 @@ export function register(config?: Config) {
 
         // Add some additional logging to localhost, pointing developers to the
         // service worker/PWA documentation.
-        navigator.serviceWorker.ready.then(() => {
-          console.log(
-            'This web app is being served cache-first by a service worker.' +
-              'worker. To learn more, visit https://cra.link/PWA'
-          )
-        })
+        navigator.serviceWorker.ready
+          .then(() => {
+            console.log(
+              'This web app is being served cache-first by a service worker.' +
+                'worker. To learn more, visit https://cra.link/PWA'
+            )
+          })
+          .catch(() => {
+            console.log('Failed to load service worker')
+          })
       } else {
         // Is not localhost. Just register service worker
         registerValidSW(swUrl, config)
@@ -139,7 +143,7 @@ export function unregister() {
       .then(registration => {
         registration.unregister()
       })
-      .catch(error => {
+      .catch((error: Error) => {
         console.error(error.message)
       })
   }

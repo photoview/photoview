@@ -1,7 +1,7 @@
 import React from 'react'
 import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import { TimelineGroup, TimelineGroupAlbum } from './TimelineGallery'
-import { GalleryAction } from '../photoGallery/photoGalleryReducer'
+import { GalleryAction } from '../photoGallery/mediaGalleryReducer'
 import { isNil } from '../../helpers/utils'
 
 export interface TimelineMediaIndex {
@@ -179,8 +179,8 @@ export const getActiveTimelineImage = ({
   mediaState: TimelineGalleryState
 }) => {
   if (
-    Object.values(mediaState.activeIndex).reduce(
-      (acc, next) => next == -1 || acc,
+    Object.values(mediaState.activeIndex).reduce<boolean>(
+      (acc, next) => next === -1 || acc,
       false
     )
   ) {

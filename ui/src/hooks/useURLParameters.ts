@@ -3,12 +3,12 @@ import { useState } from 'react'
 export type UrlKeyValuePair = { key: string; value: string | null }
 
 export type UrlParams = {
-  getParam(key: string, defaultValue?: string | null): string | null
-  setParam(key: string, value: string | null): void
-  setParams(pairs: UrlKeyValuePair[]): void
+  getParam: (key: string, defaultValue?: string | null) => string | null
+  setParam: (key: string, value: string | null) => void
+  setParams: (pairs: UrlKeyValuePair[]) => void
 }
 
-function useURLParameters(): UrlParams {
+const useURLParameters: () => UrlParams = () => {
   const [urlString, setUrlString] = useState(document.location.href)
 
   const url = new URL(urlString)

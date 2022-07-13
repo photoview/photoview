@@ -25,7 +25,7 @@ const PasswordProtectedShare = ({
   const [invalidPassword, setInvalidPassword] = useState(false)
 
   const onSubmit = () => {
-    refetchWithPassword(watch('password'))
+    refetchWithPassword(watch('password') as string)
     setInvalidPassword(true)
   }
 

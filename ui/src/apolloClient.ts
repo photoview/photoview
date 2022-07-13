@@ -56,19 +56,24 @@ const link = split(
 const linkError = onError(({ graphQLErrors, networkError }) => {
   const errorMessages = []
 
+  const formatPath = (path: readonly (string | number)[] | undefined) =>
+    path?.join('::') ?? 'undefined'
+
   if (graphQLErrors) {
     graphQLErrors.map(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(
           locations
-        )} Path: ${path}`
+        )} Path: ${formatPath(path)}`
       )
     )
 
     if (graphQLErrors.length == 1) {
       errorMessages.push({
         header: 'Something went wrong',
-        content: `Server error: ${graphQLErrors[0].message} at (${graphQLErrors[0].path})`,
+        content: `Server error: ${graphQLErrors[0].message} at (${formatPath(
+          graphQLErrors[0].path
+        )})`,
       })
     } else if (graphQLErrors.length > 1) {
       errorMessages.push({
@@ -88,7 +93,8 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
     clearTokenCookie()
 
-    const errors = (networkError as ServerError)?.result.errors || []
+    const errors =
+      ((networkError as ServerError)?.result.errors as Error[]) || []
 
     if (errors.length == 1) {
       errorMessages.push({
@@ -120,7 +126,7 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
 
 type PaginateCacheType = {
   keyArgs: string[]
-  merge: FieldMergeFunction
+  merge: FieldMergeFunction<unknown[], unknown[]>
 }
 
 // Modified version of Apollo's offsetLimitPagination()
@@ -130,7 +136,7 @@ const paginateCache = (keyArgs: string[]) =>
     merge(existing, incoming, { args, fieldName }) {
       const merged = existing ? existing.slice(0) : []
       if (args?.paginate) {
-        const { offset = 0 } = args.paginate
+        const { offset = 0 } = args.paginate as { offset: number }
         for (let i = 0; i < incoming.length; ++i) {
           merged[offset + i] = incoming[i]
         }

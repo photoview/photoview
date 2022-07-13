@@ -3,7 +3,7 @@ import React, { useEffect, useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 import PaginateLoader from '../../../components/PaginateLoader'
 import MediaGallery from '../../../components/photoGallery/MediaGallery'
-import { photoGalleryReducer } from '../../../components/photoGallery/photoGalleryReducer'
+import { mediaGalleryReducer } from '../../../components/photoGallery/mediaGalleryReducer'
 import useScrollPagination from '../../../hooks/useScrollPagination'
 import FaceGroupTitle from './FaceGroupTitle'
 import {
@@ -62,7 +62,7 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
     },
   })
 
-  const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
+  const [mediaState, dispatchMedia] = useReducer(mediaGalleryReducer, {
     presenting: false,
     activeIndex: -1,
     media: [],

@@ -92,7 +92,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
     let metadata = Object.keys(videoMetadata)
       .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
       .reduce((prev, curr) => {
-        const value = videoMetadata[curr as string]
+        const value = videoMetadata[curr]
         if (isNil(value)) return prev
 
         return {

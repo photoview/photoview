@@ -1,15 +1,26 @@
 import React from 'react'
 import styled from 'styled-components'
-import { ProtectedImage } from '../../components/photoGallery/ProtectedMedia'
+import {
+  ProtectedImage,
+  ProtectedImageProps,
+} from '../../components/photoGallery/ProtectedMedia'
 import {
   myFaces_myFaceGroups_imageFaces_media,
   myFaces_myFaceGroups_imageFaces_rectangle,
 } from './__generated__/myFaces'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FaceImage = styled(({ origin, selectable, scale, ...rest }) => (
-  <ProtectedImage {...rest} />
-))<{ origin: { x: number; y: number }; selectable: boolean; scale: number }>`
+type FaceImageProps = ProtectedImageProps & {
+  origin: { x: number; y: number }
+  selectable: boolean
+  scale: number
+}
+
+const FaceImage = styled(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ({ origin, selectable, scale, ...rest }: FaceImageProps) => (
+    <ProtectedImage {...rest} />
+  )
+)`
   position: absolute;
   transform-origin: ${({ origin }) => `${origin.x * 100}% ${origin.y * 100}%`};
   object-fit: cover;

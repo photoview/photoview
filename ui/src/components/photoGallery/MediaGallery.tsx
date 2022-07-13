@@ -5,8 +5,8 @@ import PresentView from './presentView/PresentView'
 import {
   openPresentModeAction,
   PhotoGalleryAction,
-  PhotoGalleryState,
-} from './photoGalleryReducer'
+  MediaGalleryState,
+} from './mediaGalleryReducer'
 import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
@@ -56,7 +56,7 @@ export const MEDIA_GALLERY_FRAGMENT = gql`
 
 type MediaGalleryProps = {
   loading: boolean
-  mediaState: PhotoGalleryState
+  mediaState: MediaGalleryState
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
