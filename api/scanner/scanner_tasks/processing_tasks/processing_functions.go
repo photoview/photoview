@@ -59,7 +59,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(photoCachePath, thumbnail_name)
 
-	thumbSize, err := media_encoding.EncodeThumbnail(baseImagePath, thumbOutputPath)
+	thumbSize, err := media_encoding.EncodeThumbnail(tx, baseImagePath, thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}

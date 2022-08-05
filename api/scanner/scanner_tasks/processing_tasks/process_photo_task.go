@@ -128,7 +128,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			updatedURLs = append(updatedURLs, thumbURL)
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.MediaName)
 
-			_, err := media_encoding.EncodeThumbnail(baseImagePath, thumbPath)
+			_, err := media_encoding.EncodeThumbnail(ctx.GetDB(), baseImagePath, thumbPath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "could not create thumbnail cached image")
 			}

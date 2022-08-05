@@ -163,6 +163,9 @@ type Mutation {
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
 
+  "Set the filter to be used when generating thumbnails"
+  setThumbnailDownsampleMethod(method: Int!): Int! @isAdmin
+
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
@@ -257,6 +260,8 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "The filter to use when generating thumbnails"
+  thumbnailMethod: Int! @isAdmin
 }
 
 type User {
