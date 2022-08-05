@@ -3,10 +3,9 @@ import { MockedProvider } from '@apollo/client/testing'
 
 import { render, screen } from '@testing-library/react'
 
-import {
+import ThumbnailPreferences, {
   THUMBNAIL_METHOD_QUERY,
   SET_THUMBNAIL_METHOD_MUTATION,
-  ThumbnailPreferences,
 } from './ThumbnailPreferences'
 
 test('load ThumbnailPreferences', () => {
