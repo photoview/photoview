@@ -22,7 +22,7 @@ func TestSiteInfo(t *testing.T) {
 	site_info.InitialSetup = false
 	site_info.PeriodicScanInterval = 360
 	site_info.ConcurrentWorkers = 10
-	site_info.ThumbnailMethod = ThumbnailFilterLanczos
+	site_info.ThumbnailMethod = models.ThumbnailFilterLanczos
 
 	if !assert.NoError(t, db.Session(&gorm.Session{AllowGlobalUpdate: true}).Save(&site_info).Error) {
 		return
@@ -37,7 +37,7 @@ func TestSiteInfo(t *testing.T) {
 		InitialSetup:         false,
 		PeriodicScanInterval: 360,
 		ConcurrentWorkers:    10,
-		ThumbnailMethod:    	ThumbnailFilterLanczos,
+		ThumbnailMethod:    	models.ThumbnailFilterLanczos,
 	}, *site_info)
 
 }
