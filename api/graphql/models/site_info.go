@@ -10,7 +10,7 @@ type SiteInfo struct {
 	InitialSetup         bool `gorm:"not null"`
 	PeriodicScanInterval int  `gorm:"not null"`
 	ConcurrentWorkers    int  `gorm:"not null"`
-	ThumbnailMethod   	 int  `gorm:"not null"`
+	ThumbnailMethod   	 ThumbnailFilter  `gorm:"not null"`
 }
 
 func (SiteInfo) TableName() string {
@@ -27,7 +27,7 @@ func DefaultSiteInfo(db *gorm.DB) SiteInfo {
 		InitialSetup:         true,
 		PeriodicScanInterval: 0,
 		ConcurrentWorkers:    defaultConcurrentWorkers,
-		ThumbnailMethod:			0,
+		ThumbnailMethod:			ThumbnailFilterNearestNeighbor,
 	}
 }
 

@@ -21,13 +21,13 @@ import (
 	"gorm.io/gorm"
 )
 
-var thumbFilter = map[int]imaging.ResampleFilter{
-	0:  imaging.NearestNeighbor,
-	1:  imaging.Box,
-	2:	imaging.Linear,
-	3:	imaging.MitchellNetravali,
-	4:	imaging.CatmullRom,
-	5:	imaging.Lanczos,
+var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
+	models.ThumbnailFilterNearestNeighbor:  imaging.NearestNeighbor,
+	models.ThumbnailFilterBox:  imaging.Box,
+	models.ThumbnailFilterLinear:	imaging.Linear,
+	models.ThumbnailFilterMitchellNetravali:	imaging.MitchellNetravali,
+	models.ThumbnailFilterCatmullRom:	imaging.CatmullRom,
+	models.ThumbnailFilterLanczos:	imaging.Lanczos,
 }
 
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {

@@ -3,6 +3,8 @@ import { MockedProvider } from '@apollo/client/testing'
 
 import { render, screen } from '@testing-library/react'
 
+import { ThumbnailFilter } from '../../__generated__/globalTypes'
+
 import ThumbnailPreferences, {
   THUMBNAIL_METHOD_QUERY,
   SET_THUMBNAIL_METHOD_MUTATION,
@@ -16,7 +18,7 @@ test('load ThumbnailPreferences', () => {
       },
       result: {
         data: {
-          siteInfo: { method: 0 },
+          siteInfo: { method: ThumbnailFilter.NearestNeighbor },
         },
       },
     },
@@ -24,7 +26,7 @@ test('load ThumbnailPreferences', () => {
       request: {
         query: SET_THUMBNAIL_METHOD_MUTATION,
         variables: {
-          method: '5',
+          method: ThumbnailFilter.Lanczos,
         },
       },
       result: {

@@ -251,3 +251,53 @@ func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
 func (e OrderDirection) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
+
+// Supported downsampling filters for thumbnail generation
+type ThumbnailFilter string
+
+const (
+	ThumbnailFilterNearestNeighbor   ThumbnailFilter = "NearestNeighbor"
+	ThumbnailFilterBox               ThumbnailFilter = "Box"
+	ThumbnailFilterLinear            ThumbnailFilter = "Linear"
+	ThumbnailFilterMitchellNetravali ThumbnailFilter = "MitchellNetravali"
+	ThumbnailFilterCatmullRom        ThumbnailFilter = "CatmullRom"
+	ThumbnailFilterLanczos           ThumbnailFilter = "Lanczos"
+)
+
+var AllThumbnailFilter = []ThumbnailFilter{
+	ThumbnailFilterNearestNeighbor,
+	ThumbnailFilterBox,
+	ThumbnailFilterLinear,
+	ThumbnailFilterMitchellNetravali,
+	ThumbnailFilterCatmullRom,
+	ThumbnailFilterLanczos,
+}
+
+func (e ThumbnailFilter) IsValid() bool {
+	switch e {
+	case ThumbnailFilterNearestNeighbor, ThumbnailFilterBox, ThumbnailFilterLinear, ThumbnailFilterMitchellNetravali, ThumbnailFilterCatmullRom, ThumbnailFilterLanczos:
+		return true
+	}
+	return false
+}
+
+func (e ThumbnailFilter) String() string {
+	return string(e)
+}
+
+func (e *ThumbnailFilter) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ThumbnailFilter(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ThumbnailFilter", str)
+	}
+	return nil
+}
+
+func (e ThumbnailFilter) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}

@@ -7,6 +7,7 @@ import {
   InputLabelTitle,
 } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
+import { ThumbnailFilter } from '../../__generated__/globalTypes'
 import { thumbnailMethodQuery } from './__generated__/thumbnailMethodQuery'
 import {
   setThumbnailMethodMutation,
@@ -24,7 +25,7 @@ export const THUMBNAIL_METHOD_QUERY = gql`
 `
 
 export const SET_THUMBNAIL_METHOD_MUTATION = gql`
-  mutation setThumbnailMethodMutation($method: Int!) {
+  mutation setThumbnailMethodMutation($method: ThumbnailFilter!) {
     setThumbnailDownsampleMethod(method: $method)
   }
 `
@@ -67,33 +68,33 @@ const ThumbnailPreferences = () => {
         'settings.thumbnails.method.filter.nearest_neighbor',
         'Nearest Neighbor (default)'
       ),
-      value: 0,
+      value: ThumbnailFilter.NearestNeighbor,
     },
     {
       label: t('settings.thumbnails.method.filter.box', 'Box'),
-      value: 1,
+      value: ThumbnailFilter.Box,
     },
     {
       label: t('settings.thumbnails.method.filter.linear', 'Linear'),
-      value: 2,
+      value: ThumbnailFilter.Linear,
     },
     {
       label: t(
         'settings.thumbnails.method.filter.mitchell_netravali',
         'Mitchell-Netravali'
       ),
-      value: 3,
+      value: ThumbnailFilter.MitchellNetravali,
     },
     {
       label: t('settings.thumbnails.method.filter.catmull_rom', 'Catmull-Rom'),
-      value: 4,
+      value: ThumbnailFilter.CatmullRom,
     },
     {
       label: t(
         'settings.thumbnails.method.filter.Lanczos',
         'Lanczos (highest quality)'
       ),
-      value: 5,
+      value: ThumbnailFilter.Lanczos,
     },
   ]
 

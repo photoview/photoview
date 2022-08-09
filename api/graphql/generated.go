@@ -170,7 +170,7 @@ type ComplexityRoot struct {
 		SetFaceGroupLabel            func(childComplexity int, faceGroupID int, label *string) int
 		SetPeriodicScanInterval      func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers  func(childComplexity int, workers int) int
-		SetThumbnailDownsampleMethod func(childComplexity int, method int) int
+		SetThumbnailDownsampleMethod func(childComplexity int, method models.ThumbnailFilter) int
 		ShareAlbum                   func(childComplexity int, albumID int, expire *time.Time, password *string) int
 		ShareMedia                   func(childComplexity int, mediaID int, expire *time.Time, password *string) int
 		UpdateUser                   func(childComplexity int, id int, username *string, password *string, admin *bool) int
@@ -328,7 +328,7 @@ type MutationResolver interface {
 	UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
-	SetThumbnailDownsampleMethod(ctx context.Context, method int) (int, error)
+	SetThumbnailDownsampleMethod(ctx context.Context, method models.ThumbnailFilter) (models.ThumbnailFilter, error)
 	ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error)
 	ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error)
 	SetAlbumCover(ctx context.Context, coverID int) (*models.Album, error)
@@ -1070,7 +1070,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetThumbnailDownsampleMethod(childComplexity, args["method"].(int)), true
+		return e.complexity.Mutation.SetThumbnailDownsampleMethod(childComplexity, args["method"].(models.ThumbnailFilter)), true
 
 	case "Mutation.shareAlbum":
 		if e.complexity.Mutation.ShareAlbum == nil {
@@ -2181,10 +2181,10 @@ func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_args(ctx 
 func (ec *executionContext) field_Mutation_setThumbnailDownsampleMethod_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 models.ThumbnailFilter
 	if tmp, ok := rawArgs["method"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("method"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -7210,7 +7210,7 @@ func (ec *executionContext) _Mutation_setThumbnailDownsampleMethod(ctx context.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().SetThumbnailDownsampleMethod(rctx, fc.Args["method"].(int))
+			return ec.resolvers.Mutation().SetThumbnailDownsampleMethod(rctx, fc.Args["method"].(models.ThumbnailFilter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAdmin == nil {
@@ -7226,10 +7226,10 @@ func (ec *executionContext) _Mutation_setThumbnailDownsampleMethod(ctx context.C
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(int); ok {
+		if data, ok := tmp.(models.ThumbnailFilter); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7241,9 +7241,9 @@ func (ec *executionContext) _Mutation_setThumbnailDownsampleMethod(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(models.ThumbnailFilter)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_setThumbnailDownsampleMethod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7253,7 +7253,7 @@ func (ec *executionContext) fieldContext_Mutation_setThumbnailDownsampleMethod(c
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type ThumbnailFilter does not have child fields")
 		},
 	}
 	defer func() {
@@ -10729,10 +10729,10 @@ func (ec *executionContext) _SiteInfo_thumbnailMethod(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(int); ok {
+		if data, ok := tmp.(models.ThumbnailFilter); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10744,9 +10744,9 @@ func (ec *executionContext) _SiteInfo_thumbnailMethod(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(models.ThumbnailFilter)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SiteInfo_thumbnailMethod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10756,7 +10756,7 @@ func (ec *executionContext) fieldContext_SiteInfo_thumbnailMethod(ctx context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type ThumbnailFilter does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16800,6 +16800,16 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx context.Context, v interface{}) (models.ThumbnailFilter, error) {
+	var res models.ThumbnailFilter
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx context.Context, sel ast.SelectionSet, v models.ThumbnailFilter) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
