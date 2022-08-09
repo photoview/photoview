@@ -48,6 +48,18 @@ export enum OrderDirection {
   DESC = 'DESC',
 }
 
+/**
+ * Supported downsampling filters for thumbnail generation
+ */
+export enum ThumbnailFilter {
+  Box = 'Box',
+  CatmullRom = 'CatmullRom',
+  Lanczos = 'Lanczos',
+  Linear = 'Linear',
+  MitchellNetravali = 'MitchellNetravali',
+  NearestNeighbor = 'NearestNeighbor',
+}
+
 //==============================================================
 // END Enums and Input Objects
 //==============================================================

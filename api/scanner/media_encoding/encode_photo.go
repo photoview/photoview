@@ -17,9 +17,25 @@ import (
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	_ "github.com/strukturag/libheif/go/heif"
+
+	"gorm.io/gorm"
 )
 
-func EncodeThumbnail(inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
+var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
+	models.ThumbnailFilterNearestNeighbor:  imaging.NearestNeighbor,
+	models.ThumbnailFilterBox:  imaging.Box,
+	models.ThumbnailFilterLinear:	imaging.Linear,
+	models.ThumbnailFilterMitchellNetravali:	imaging.MitchellNetravali,
+	models.ThumbnailFilterCatmullRom:	imaging.CatmullRom,
+	models.ThumbnailFilterLanczos:	imaging.Lanczos,
+}
+
+func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
+
+	var siteInfo models.SiteInfo
+	if err := db.First(&siteInfo).Error; err != nil {
+		return nil, err
+	}
 
 	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
 	if err != nil {
@@ -29,7 +45,7 @@ func EncodeThumbnail(inputPath string, outputPath string) (*media_utils.PhotoDim
 	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
 	dimensions = dimensions.ThumbnailScale()
 
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
+	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, thumbFilter[siteInfo.ThumbnailMethod])
 	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
 		return nil, err
 	}
