@@ -29,6 +29,7 @@ const (
 	TypeSR2 MediaType = "image/x-sony-sr2"
 	TypeSRF MediaType = "image/x-sony-srf"
 	TypeCR2 MediaType = "image/x-canon-cr2"
+	TypeCR3 MediaType = "image/x-canon-cr3"
 	TypeCRW MediaType = "image/x-canon-crw"
 	TypeERF MediaType = "image/x-epson-erf"
 	TypeDCS MediaType = "image/x-kodak-dcs"
@@ -92,6 +93,7 @@ var RawMimeTypes = [...]MediaType{
 	TypeSR2,
 	TypeSRF,
 	TypeCR2,
+	TypeCR3,
 	TypeCRW,
 	TypeERF,
 	TypeDCS,
@@ -158,6 +160,7 @@ var fileExtensions = map[string]MediaType{
 	".srf": TypeSRF,
 	".srw": TypeSRW,
 	".cr2": TypeCR2,
+	".cr3": TypeCR3,
 	".crw": TypeCRW,
 	".erf": TypeERF,
 	".dcr": TypeDCR,
