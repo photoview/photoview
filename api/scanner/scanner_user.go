@@ -10,6 +10,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -42,7 +43,7 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
@@ -215,7 +216,7 @@ func findAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 		}
 	}
 
-	deleteErrors := deleteOldUserAlbums(db, userAlbums, user)
+	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
 	scanErrors = append(scanErrors, deleteErrors...)
 
 	return userAlbums, scanErrors

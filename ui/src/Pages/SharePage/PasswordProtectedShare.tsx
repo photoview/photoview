@@ -25,7 +25,7 @@ const PasswordProtectedShare = ({
   const [invalidPassword, setInvalidPassword] = useState(false)
 
   const onSubmit = () => {
-    refetchWithPassword(watch('password'))
+    refetchWithPassword(watch('password') as string)
     setInvalidPassword(true)
   }
 
@@ -35,7 +35,7 @@ const PasswordProtectedShare = ({
       'share_page.wrong_password',
       'Wrong password, please try again.'
     )
-  } else if (errors.password?.type === 'required') {
+  } else if (errors.password) {
     errorMessage = t(
       'share_page.protected_share.password_required_error',
       'Password is required'

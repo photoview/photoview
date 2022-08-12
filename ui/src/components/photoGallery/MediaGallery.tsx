@@ -2,19 +2,18 @@ import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
 import PresentView from './presentView/PresentView'
-import { PresentMediaProps_Media } from './presentView/PresentMedia'
 import {
   openPresentModeAction,
   PhotoGalleryAction,
-  PhotoGalleryState,
-} from './photoGalleryReducer'
+  MediaGalleryState,
+} from './mediaGalleryReducer'
 import {
   toggleFavoriteAction,
   useMarkFavoriteMutation,
 } from './photoGalleryMutations'
 import MediaSidebar from '../sidebar/MediaSidebar/MediaSidebar'
 import { SidebarContext } from '../sidebar/Sidebar'
-import { sidebarMediaQuery_media_thumbnail } from '../sidebar/MediaSidebar/__generated__/sidebarMediaQuery'
+import { gql } from '@apollo/client'
 
 const Gallery = styled.div`
   display: flex;
@@ -35,28 +34,42 @@ export const PhotoFiller = styled.div`
   flex-grow: 999999;
 `
 
-export interface PhotoGalleryProps_Media extends PresentMediaProps_Media {
-  thumbnail: sidebarMediaQuery_media_thumbnail | null
-  blurhash: string | null
-  favorite?: boolean
-}
+export const MEDIA_GALLERY_FRAGMENT = gql`
+  fragment MediaGalleryFields on Media {
+    id
+    type
+    blurhash
+    thumbnail {
+      url
+      width
+      height
+    }
+    highRes {
+      url
+    }
+    videoWeb {
+      url
+    }
+    favorite
+  }
+`
 
-type PhotoGalleryProps = {
+type MediaGalleryProps = {
   loading: boolean
-  mediaState: PhotoGalleryState
+  mediaState: MediaGalleryState
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
 }
 
-const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
+const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
   const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState
 
   const { updateSidebar } = useContext(SidebarContext)
 
-  let photoElements = []
+  let mediaElements = []
   if (media) {
-    photoElements = media.map((media, index) => {
+    mediaElements = media.map((media, index) => {
       const active = activeIndex == index
 
       return (
@@ -85,14 +98,14 @@ const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
     })
   } else {
     for (let i = 0; i < 6; i++) {
-      photoElements.push(<MediaPlaceholder key={i} />)
+      mediaElements.push(<MediaPlaceholder key={i} />)
     }
   }
 
   return (
     <>
       <Gallery data-testid="photo-gallery-wrapper">
-        {photoElements}
+        {mediaElements}
         <PhotoFiller />
       </Gallery>
       {presenting && (
@@ -105,4 +118,4 @@ const PhotoGallery = ({ mediaState, dispatchMedia }: PhotoGalleryProps) => {
   )
 }
 
-export default PhotoGallery
+export default MediaGallery

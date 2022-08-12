@@ -8,18 +8,18 @@
 // ====================================================
 
 export interface combineFaces_combineFaceGroups {
-  __typename: "FaceGroup";
-  id: string;
+  __typename: 'FaceGroup'
+  id: string
 }
 
 export interface combineFaces {
   /**
    * Merge two face groups into a single one, all ImageFaces from source will be moved to destination
    */
-  combineFaceGroups: combineFaces_combineFaceGroups;
+  combineFaceGroups: combineFaces_combineFaceGroups
 }
 
 export interface combineFacesVariables {
-  destID: string;
-  srcID: string;
+  destID: string
+  srcID: string
 }

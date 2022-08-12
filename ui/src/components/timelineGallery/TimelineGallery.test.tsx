@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import TimelineGallery, { MY_TIMELINE_QUERY } from './TimelineGallery'
 import { timelineData } from './timelineTestData'
 
-jest.mock('../../hooks/useScrollPagination')
+vi.mock('../../hooks/useScrollPagination')
 
 test('timeline with media', async () => {
   const graphqlMocks = [

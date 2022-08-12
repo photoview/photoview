@@ -81,6 +81,13 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	newExif := models.MediaEXIF{}
 	found_exif := false
 
+	// Get description
+	description, err := fileInfo.GetString("ImageDescription")
+	if err == nil {
+		found_exif = true
+		newExif.Description = &description
+	}
+
 	// Get camera model
 	model, err := fileInfo.GetString("Model")
 	if err == nil {

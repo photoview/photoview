@@ -11,6 +11,14 @@ import MediaSharePage from './MediaSharePage'
 import { useTranslation } from 'react-i18next'
 import PasswordProtectedShare from './PasswordProtectedShare'
 import { isNil } from '../../helpers/utils'
+import {
+  SharePageToken,
+  SharePageTokenVariables,
+} from './__generated__/SharePageToken'
+import {
+  ShareTokenValidatePassword,
+  ShareTokenValidatePasswordVariables,
+} from './__generated__/ShareTokenValidatePassword'
 
 export const SHARE_TOKEN_QUERY = gql`
   query SharePageToken($token: String!, $password: String) {
@@ -49,6 +57,7 @@ export const SHARE_TOKEN_QUERY = gql`
         }
         exif {
           id
+          description
           camera
           maker
           lens
@@ -89,17 +98,20 @@ const AuthorizedTokenRoute = () => {
   const token = tokenFromParams()
   const password = getSharePassword(token)
 
-  const { loading, error, data } = useQuery(SHARE_TOKEN_QUERY, {
+  const { loading, error, data } = useQuery<
+    SharePageToken,
+    SharePageTokenVariables
+  >(SHARE_TOKEN_QUERY, {
     variables: {
       token,
       password,
     },
   })
 
-  if (error) return <div>{error.message}</div>
+  if (!isNil(error)) return <div>{error.message}</div>
   if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
-  if (data.shareToken.album) {
+  if (data?.shareToken.album) {
     const SharedSubAlbumPage = () => {
       const { subAlbum } = useParams()
       if (isNil(subAlbum))
@@ -127,7 +139,7 @@ const AuthorizedTokenRoute = () => {
     )
   }
 
-  if (data.shareToken.media) {
+  if (data?.shareToken.media) {
     return <MediaSharePage media={data.shareToken.media} />
   }
 
@@ -143,16 +155,16 @@ export const TokenRoute = () => {
   const { t } = useTranslation()
   const token = tokenFromParams()
 
-  const { loading, error, data, refetch } = useQuery(
-    VALIDATE_TOKEN_PASSWORD_QUERY,
-    {
-      notifyOnNetworkStatusChange: true,
-      variables: {
-        token: token,
-        password: getSharePassword(token),
-      },
-    }
-  )
+  const { loading, error, data, refetch } = useQuery<
+    ShareTokenValidatePassword,
+    ShareTokenValidatePasswordVariables
+  >(VALIDATE_TOKEN_PASSWORD_QUERY, {
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      token: token,
+      password: getSharePassword(token),
+    },
+  })
 
   if (error) {
     if (error.message == 'GraphQL error: share not found') {

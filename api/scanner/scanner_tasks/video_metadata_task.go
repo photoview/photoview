@@ -1,18 +1,39 @@
-package scanner
+package scanner_tasks
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/photoview/photoview/api/scanner/scanner_tasks/processing_tasks"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
+type VideoMetadataTask struct {
+	scanner_task.ScannerTaskBase
+}
+
+func (t VideoMetadataTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+
+	if !newMedia || media.Type != models.MediaTypeVideo {
+		return nil
+	}
+
+	err := ScanVideoMetadata(ctx.GetDB(), media)
+	if err != nil {
+		log.Printf("WARN: ScanVideoMetadata for %s failed: %s\n", media.Title, err)
+	}
+
+	return nil
+}
+
 func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 
-	data, err := readVideoMetadata(video.Path)
+	data, err := processing_tasks.ReadVideoMetadata(video.Path)
 	if err != nil {
 		return errors.Wrapf(err, "scan video metadata failed (%s)", video.Title)
 	}

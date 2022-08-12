@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
-import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
+import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 
 import { useSwipeable } from 'react-swipeable';
 

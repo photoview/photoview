@@ -17,9 +17,25 @@ import (
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	_ "github.com/strukturag/libheif/go/heif"
+
+	"gorm.io/gorm"
 )
 
-func EncodeThumbnail(inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
+var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
+	models.ThumbnailFilterNearestNeighbor:  imaging.NearestNeighbor,
+	models.ThumbnailFilterBox:  imaging.Box,
+	models.ThumbnailFilterLinear:	imaging.Linear,
+	models.ThumbnailFilterMitchellNetravali:	imaging.MitchellNetravali,
+	models.ThumbnailFilterCatmullRom:	imaging.CatmullRom,
+	models.ThumbnailFilterLanczos:	imaging.Lanczos,
+}
+
+func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
+
+	var siteInfo models.SiteInfo
+	if err := db.First(&siteInfo).Error; err != nil {
+		return nil, err
+	}
 
 	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
 	if err != nil {
@@ -29,7 +45,7 @@ func EncodeThumbnail(inputPath string, outputPath string) (*media_utils.PhotoDim
 	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
 	dimensions = dimensions.ThumbnailScale()
 
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
+	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, thumbFilter[siteInfo.ThumbnailMethod])
 	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
 		return nil, err
 	}
@@ -54,10 +70,17 @@ func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) erro
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
 type EncodeMediaData struct {
-	Media          *models.Media
-	_photoImage    image.Image
-	_contentType   *media_type.MediaType
-	_videoMetadata *ffprobe.ProbeData
+	Media           *models.Media
+	CounterpartPath *string
+	_photoImage     image.Image
+	_contentType    *media_type.MediaType
+	_videoMetadata  *ffprobe.ProbeData
+}
+
+func NewEncodeMediaData(media *models.Media) EncodeMediaData {
+	return EncodeMediaData{
+		Media: media,
+	}
 }
 
 // ContentType reads the image to determine its content type
@@ -86,7 +109,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 	}
 
 	// Use darktable if there is no counterpart JPEG file to use instead
-	if contentType.IsRaw() && img.Media.CounterpartPath == nil {
+	if contentType.IsRaw() && img.CounterpartPath == nil {
 		if executable_worker.DarktableCli.IsInstalled() {
 			err := executable_worker.DarktableCli.EncodeJpeg(img.Media.Path, outputPath, 70)
 			if err != nil {
@@ -114,8 +137,8 @@ func (img *EncodeMediaData) photoImage() (image.Image, error) {
 	}
 
 	var photoPath string
-	if img.Media.CounterpartPath != nil {
-		photoPath = *img.Media.CounterpartPath
+	if img.CounterpartPath != nil {
+		photoPath = *img.CounterpartPath
 	} else {
 		photoPath = img.Media.Path
 	}

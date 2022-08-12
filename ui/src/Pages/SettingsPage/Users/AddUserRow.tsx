@@ -4,6 +4,11 @@ import { useTranslation } from 'react-i18next'
 import Checkbox from '../../../primitives/form/Checkbox'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
+import { createUser, createUserVariables } from './__generated__/createUser'
+import {
+  userAddRootPath,
+  userAddRootPathVariables,
+} from './__generated__/userAddRootPath'
 
 export const CREATE_USER_MUTATION = gql`
   mutation createUser($username: String!, $admin: Boolean!) {
@@ -46,35 +51,35 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
     onUserAdded()
   }
 
-  const [addRootPath, { loading: addRootPathLoading }] = useMutation(
-    USER_ADD_ROOT_PATH_MUTATION,
-    {
-      onCompleted: () => {
-        finished()
-      },
-      onError: () => {
-        finished()
-      },
-    }
-  )
+  const [addRootPath, { loading: addRootPathLoading }] = useMutation<
+    userAddRootPath,
+    userAddRootPathVariables
+  >(USER_ADD_ROOT_PATH_MUTATION, {
+    onCompleted: () => {
+      finished()
+    },
+    onError: () => {
+      finished()
+    },
+  })
 
-  const [createUser, { loading: createUserLoading }] = useMutation(
-    CREATE_USER_MUTATION,
-    {
-      onCompleted: ({ createUser: { id } }) => {
-        if (state.rootPath) {
-          addRootPath({
-            variables: {
-              id: id,
-              rootPath: state.rootPath,
-            },
-          })
-        } else {
-          finished()
-        }
-      },
-    }
-  )
+  const [createUser, { loading: createUserLoading }] = useMutation<
+    createUser,
+    createUserVariables
+  >(CREATE_USER_MUTATION, {
+    onCompleted: ({ createUser: { id } }) => {
+      if (state.rootPath) {
+        addRootPath({
+          variables: {
+            id: id,
+            rootPath: state.rootPath,
+          },
+        })
+      } else {
+        finished()
+      }
+    },
+  })
 
   const loading = addRootPathLoading || createUserLoading
 

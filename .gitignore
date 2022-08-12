@@ -1,7 +1,8 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 cache/
-media_cache/
+/media_cache/
+/api/media_cache/
 /photos_path
 photoview.db
 photoview.db-journal

@@ -5,6 +5,7 @@ import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 import Layout from '../../components/layout/Layout'
 import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'
+import ThumbnailPreferences from './ThumbnailPreferences'
 import UsersTable from './Users/UsersTable'
 import VersionInfo from './VersionInfo'
 import classNames from 'classnames'
@@ -46,6 +47,7 @@ const SettingsPage = () => {
         <>
           <ScannerSection />
           <UsersTable />
+          <ThumbnailPreferences />
         </>
       )}
       <VersionInfo />

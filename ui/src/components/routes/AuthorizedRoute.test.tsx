@@ -7,16 +7,14 @@ import * as authentication from '../../helpers/authentication'
 import { MockedProvider } from '@apollo/client/testing'
 import { ADMIN_QUERY } from '../layout/Layout'
 
-jest.mock('../../helpers/authentication.ts')
+vi.mock('../../helpers/authentication.ts')
 
-const authToken = authentication.authToken as jest.Mock<
-  ReturnType<typeof authentication.authToken>
->
+const authToken = vi.mocked(authentication.authToken)
 
 describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
-  test('not logged in', async () => {
+  test('not logged in', () => {
     authToken.mockImplementation(() => null)
 
     render(
@@ -39,7 +37,7 @@ describe('AuthorizedRoute component', () => {
     expect(screen.queryByText('authorized content')).toBeNull()
   })
 
-  test('logged in', async () => {
+  test('logged in', () => {
     authToken.mockImplementation(() => 'token-here')
 
     render(

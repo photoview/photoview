@@ -17,7 +17,7 @@ import {
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownloadMedia'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
 
-jest.mock('../../hooks/useScrollPagination')
+vi.mock('../../hooks/useScrollPagination')
 
 describe('load correct share page, based on graphql query', () => {
   const token = 'TOKEN123'
@@ -96,7 +96,7 @@ describe('load correct share page, based on graphql query', () => {
       >
         <MemoryRouter initialEntries={historyMock}>
           <Routes>
-            <Route path="/share/:token" element={<TokenRoute />} />
+            <Route path="/share/:token/*" element={<TokenRoute />} />
           </Routes>
         </MemoryRouter>
       </MockedProvider>
@@ -173,7 +173,7 @@ describe('load correct share page, based on graphql query', () => {
       >
         <MemoryRouter initialEntries={historyMock}>
           <Routes>
-            <Route path="/share/:token" element={<TokenRoute />} />
+            <Route path="/share/:token/*" element={<TokenRoute />} />
           </Routes>
         </MemoryRouter>
       </MockedProvider>

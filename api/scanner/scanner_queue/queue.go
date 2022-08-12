@@ -1,6 +1,7 @@
-package scanner
+package scanner_queue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -8,20 +9,33 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
+// ScannerJob describes a job on the queue to be run by the scanner over a single album
 type ScannerJob struct {
-	album *models.Album
-	cache *scanner_cache.AlbumScannerCache
+	ctx scanner_task.TaskContext
+	// album *models.Album
+	// cache *scanner_cache.AlbumScannerCache
+}
+
+func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
+	return ScannerJob{
+		ctx,
+	}
 }
 
 func (job *ScannerJob) Run(db *gorm.DB) {
-	scanAlbum(job.album, job.cache, db)
+	err := scanner.ScanAlbum(job.ctx)
+	if err != nil {
+		scanner_utils.ScannerError("Failed to scan album: %v", err)
+	}
 }
 
 type ScannerQueueSettings struct {
@@ -162,7 +176,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			Positive: true,
 		})
 
-		if err := GenerateBlurhashes(queue.db); err != nil {
+		if err := scanner.GenerateBlurhashes(queue.db); err != nil {
 			scanner_utils.ScannerError("Failed to generate blurhashes: %v", err)
 		}
 
@@ -212,9 +226,11 @@ func AddAllToQueue() error {
 	return nil
 }
 
+// AddUserToQueue finds all root albums owned by the given user and adds them to the scanner queue.
+// Function does not block.
 func AddUserToQueue(user *models.User) error {
 	album_cache := scanner_cache.MakeAlbumCache()
-	albums, album_errors := findAlbumsForUser(global_scanner_queue.db, user, album_cache)
+	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, album_cache)
 	for _, err := range album_errors {
 		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
 	}
@@ -222,8 +238,7 @@ func AddUserToQueue(user *models.User) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		global_scanner_queue.addJob(&ScannerJob{
-			album: album,
-			cache: album_cache,
+			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, album_cache),
 		})
 	}
 	global_scanner_queue.mutex.Unlock()
@@ -248,7 +263,7 @@ func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
 	scannerJobs := append(queue.in_progress, queue.up_next...)
 
 	for _, scannerJob := range scannerJobs {
-		if scannerJob.album.ID == job.album.ID {
+		if scannerJob.ctx.GetAlbum().ID == job.ctx.GetAlbum().ID {
 			return true, nil
 		}
 	}

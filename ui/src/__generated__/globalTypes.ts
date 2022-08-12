@@ -11,6 +11,7 @@
  * Supported language translations of the user interface
  */
 export enum LanguageTranslation {
+  Basque = 'Basque',
   Danish = 'Danish',
   English = 'English',
   French = 'French',
@@ -45,6 +46,18 @@ export enum NotificationType {
 export enum OrderDirection {
   ASC = 'ASC',
   DESC = 'DESC',
+}
+
+/**
+ * Supported downsampling filters for thumbnail generation
+ */
+export enum ThumbnailFilter {
+  Box = 'Box',
+  CatmullRom = 'CatmullRom',
+  Lanczos = 'Lanczos',
+  Linear = 'Linear',
+  MitchellNetravali = 'MitchellNetravali',
+  NearestNeighbor = 'NearestNeighbor',
 }
 
 //==============================================================

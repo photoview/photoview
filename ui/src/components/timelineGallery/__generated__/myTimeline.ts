@@ -84,7 +84,7 @@ export interface myTimeline_myTimeline {
   /**
    * The date the image was shot or the date it was imported as a fallback
    */
-  date: any
+  date: Time
 }
 
 export interface myTimeline {
@@ -98,5 +98,5 @@ export interface myTimelineVariables {
   onlyFavorites?: boolean | null
   limit?: number | null
   offset?: number | null
-  fromDate?: any | null
+  fromDate?: Time | null
 }

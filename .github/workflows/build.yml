@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     strategy:
+      fail-fast: false
       matrix:
         target_platform:
           - "linux/amd64"
@@ -134,7 +135,7 @@ jobs:
             docker manifest create ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGES}
             docker manifest push ${DOCKER_IMAGE}:${TAG}
           done
-          
+
       - name: Cleanup tags
         run: |
           ACCESS_TOKEN=$(curl -X POST \
@@ -142,18 +143,18 @@ jobs:
             -H "Accept: application/json" \
             -d "{\"username\":\"${DOCKER_USERNAME}\",\"password\":\"${DOCKER_PASSWORD}\"}" \
             https://hub.docker.com/v2/users/login/ | jq --raw-output '.token')
-          
+
           PLATFORMS=("amd64" "arm64" "arm-v7" "arm-v6")
           for PLATFORM in ${PLATFORMS[@]}; do
             TAG="linux-${PLATFORM}-${GITHUB_SHA::8}-${{ github.event_name }}"
             echo "Deleting tag: ${DOCKER_IMAGE}:${TAG}"
-            
+
             curl -X DELETE \
               -H "Accept: application/json" \
               -H "Authorization: JWT ${ACCESS_TOKEN}" \
               https://hub.docker.com/v2/repositories/${DOCKER_IMAGE}/tags/${TAG}/
           done
-          
+
       - name: Clear
         if: always()
         run: |

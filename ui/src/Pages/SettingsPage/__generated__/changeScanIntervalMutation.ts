@@ -12,9 +12,9 @@ export interface changeScanIntervalMutation {
    * Set how often, in seconds, the server should automatically scan for new media,
    * a value of 0 will disable periodic scans
    */
-  setPeriodicScanInterval: number;
+  setPeriodicScanInterval: number
 }
 
 export interface changeScanIntervalMutationVariables {
-  interval: number;
+  interval: number
 }

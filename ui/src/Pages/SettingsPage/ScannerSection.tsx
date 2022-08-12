@@ -1,7 +1,7 @@
 import React from 'react'
 import { useMutation, gql } from '@apollo/client'
 import PeriodicScanner from './PeriodicScanner'
-import ScannerConcurrentWorkers from './ScannerConcurrentWorkers'
+import { ScannerConcurrentWorkers } from './ScannerConcurrentWorkers'
 import { SectionTitle, InputLabelDescription } from './SettingsPage'
 import { useTranslation } from 'react-i18next'
 import { scanAllMutation } from './__generated__/scanAllMutation'

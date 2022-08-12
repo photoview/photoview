@@ -1,3 +1,5 @@
+/* global __dirname */
+
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -11,6 +13,7 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'prettier',
   ],
   globals: {
@@ -21,6 +24,8 @@ module.exports = {
     require: 'readonly',
   },
   parserOptions: {
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.json'],
     ecmaFeatures: {
       jsx: true,
     },
@@ -41,30 +46,13 @@ module.exports = {
       version: 'detect',
     },
   },
-  // parser: 'babel-eslint',
   overrides: [
-    Object.assign(require('eslint-plugin-jest').configs.recommended, {
-      files: ['**/*.test.js', '**/*.test.ts', '**/*.test.tsx'],
-      env: { jest: true },
-      plugins: ['jest', 'jest-dom'],
-      rules: Object.assign(
-        require('eslint-plugin-jest').configs.recommended.rules,
-        {
-          'no-import-assign': 'off',
-          'react/prop-types': 'off',
-          'jest/valid-title': 'off',
-        }
-      ),
-      settings: {
-        jest: {
-          version: 26,
-        },
-      },
-    }),
     {
-      files: ['**/*.js'],
+      files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
       rules: {
         '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
       },
     },
   ],

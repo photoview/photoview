@@ -163,6 +163,9 @@ type Mutation {
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
 
+  "Set the filter to be used when generating thumbnails"
+  setThumbnailDownsampleMethod(method: ThumbnailFilter!): ThumbnailFilter! @isAdmin
+
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
@@ -247,6 +250,16 @@ type ShareToken {
   media: Media
 }
 
+"Supported downsampling filters for thumbnail generation"
+enum ThumbnailFilter {
+  NearestNeighbor,
+  Box,
+	Linear,
+	MitchellNetravali,
+	CatmullRom,
+	Lanczos,
+}
+
 "General information about the site"
 type SiteInfo {
   "Whether or not the initial setup wizard should be shown"
@@ -257,6 +270,8 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "The filter to use when generating thumbnails"
+  thumbnailMethod: ThumbnailFilter! @isAdmin
 }
 
 type User {
@@ -283,7 +298,8 @@ enum LanguageTranslation {
   Russian,
   TraditionalChinese,
   SimplifiedChinese,
-  Portuguese
+  Portuguese,
+  Basque
 }
 
 "Preferences for regular users"
@@ -382,6 +398,8 @@ type Media {
 type MediaEXIF {
   id: ID!
   media: Media!
+  "The description of the image"
+  description: String
   "The model name of the camera"
   camera: String
   "The maker of the camera"

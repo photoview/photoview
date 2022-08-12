@@ -1,0 +1,359 @@
+{
+  "album_filter": {
+    "only_favorites": "Erakutsi gogokoak bakarrik",
+    "sort": "Sailkatu",
+    "sort_by": "Sailkatu honen arabera",
+    "sorting_options": {
+      "date_imported": "Gehitutako data",
+      "date_shot": "Egindako data",
+      "title": "Izena",
+      "type": "Mota"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "Gehitu",
+      "cancel": "Utzi",
+      "remove": "Kendu",
+      "save": "Gorde"
+    },
+    "loading": {
+      "album": "Albuma kargatzen",
+      "default": "Kargatzen…",
+      "page": "Orrialdea kargatzen",
+      "paginate": {
+        "faces": "Jende gehiago kargatzen",
+        "media": "Eduki gehiago kargatzen"
+      },
+      "shares": "Partekatutakoak kargatzen…"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Emaitzak kargatzen…",
+      "no_results": "Ez da emaitzarik aurkitu",
+      "placeholder": "Bilatu",
+      "result_type": {
+        "albums": "Albumak",
+        "media": "Edukia"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Pasahitza",
+      "submit": "Hasi saioa",
+      "username": "Erabiltzailea"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Argazkien bidea",
+          "placeholder": "/argazkiak/dauden/direktorioa"
+        },
+        "submit": "Konfiguratu Photoview"
+      },
+      "title": "Aurreneko konfigurazioa"
+    },
+    "welcome": "Ongi etorri Photoview-ra"
+  },
+  "meta": {
+    "description": "Zerbitzari pertsonaletarako argazki-galeria samur eta erabilterreza"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "Aldatu etiketa",
+      "detach_images": "Kendu aurpegia",
+      "merge_people": "Bateratu aurpegiak",
+      "move_faces": "Mugitu aurpegiak"
+    },
+    "face_group": {
+      "label_placeholder": "Etiketa",
+      "unlabeled": "Etiketarik gabea",
+      "unlabeled_person": "Etiketarik gabeko pertsona"
+    },
+    "modal": {
+      "action": {
+        "merge": "Bateratu"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Kendu irudiko aurpegiak",
+          "select_images": "Aukeratu aurpegiak kentzeko irudiak"
+        },
+        "description": "Kendu aukeratutako irudiak aurpegi-multzo honetatik eta mugitu beste aurpegi-multzo batera",
+        "title": "Kendu irudiko aurpegiak"
+      },
+      "merge_face_groups": {
+        "description": "Aurpegi-multzo honetako irudi guztiak aukeratutako aurpegi-multzoarekin bateratuko dira.",
+        "destination_table": {
+          "title": "Aukeratu zein aurpegira mugituko d(ir)en"
+        },
+        "title": "Bateratu aurpegi-multzoak"
+      },
+      "move_image_faces": {
+        "description": "Mugitu aurpegi-multzo honetan aukeratutako irudiak beste aurpegi-multzo batera",
+        "destination_face_group_table": {
+          "move_action": "Mugitu irudiko aurpegiak",
+          "title": "Aukeratu zein aurpegi-multzora mugituko d(ir)en"
+        },
+        "image_select_table": {
+          "next_action": "Hurrengoa",
+          "title": "Aukeratu mugitzeko irudiak"
+        },
+        "title": "Mugitu irudiko aurpegiak"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Antzeman etiketarik gabeko aurpegiak",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Bilatu aurpegiak…"
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Bilatu irudiak…"
+    }
+  },
+  "photos_page": {
+    "title": "Denbora-lerroa"
+  },
+  "places_page": {
+    "title": "Tokiak"
+  },
+  "routes": {
+    "page_not_found": "Ez da orrialdea aurkitu"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Aldi berean jardun dezaketen baimendutako azterketa-lan kopuru maximoa",
+      "title": "Aldibereko azterketa-lanak"
+    },
+    "logout": "Amaitu saioa",
+    "periodic_scanner": {
+      "checkbox_label": "Aktibatu aldizkako azterketa",
+      "field": {
+        "description": "Zenbatero aztertu beharko lirateken automatikoki erabiltzaile guztiak",
+        "label": "Aldizkako azterketaren maiztasuna"
+      },
+      "interval_unit": {
+        "days": "Egun",
+        "hour": "Ordu",
+        "minutes": "Minutu",
+        "months": "Hilabete",
+        "seconds": "Segundu"
+      },
+      "title": "Aldizkako azterketa"
+    },
+    "scanner": {
+      "description": "Erabiltzaile guztiak aztertuko ditugu eduki berri edo eguneratuen bila",
+      "scan_all_users": "Aztertu erabiltzaile guztiak",
+      "title": "Azterketa"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Aldatu webgunearen hizkuntza erabiltzaile honentzat",
+        "label": "Webgunearen hizkuntza"
+      },
+      "language_selector": {
+        "placeholder": "Aukeratu hizkuntza"
+      },
+      "theme": {
+        "auto": {
+          "label": "Sistemak darabilena"
+        },
+        "dark": {
+          "label": "Iluna"
+        },
+        "description": "Aldatu webgunearen itxura",
+        "light": {
+          "label": "Argia"
+        },
+        "title": "Itxura-aukerak"
+      },
+      "title": "Erabiltzaile-ezarpenak"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Gehitu erabiltzailea"
+      },
+      "confirm_delete_user": {
+        "action": "Ezabatu {{user}}",
+        "description": "<0>Ziur al zaude <1></1> ezabatu nahi duzula?</0><p>Eragiketa hau ezin da desegin</p>",
+        "title": "Ezabatu erabiltzailea"
+      },
+      "password_reset": {
+        "description": "Aldatu <1>{{username}}</1>(r)en pasahitza",
+        "form": {
+          "label": "Pasahitz berria",
+          "placeholder": "pasahitza",
+          "submit": "Aldatu pasahitza"
+        },
+        "title": "Aldatu pasahitza"
+      },
+      "table": {
+        "column_names": {
+          "action": "Eragiketa",
+          "capabilities": "Ahalmenak",
+          "photo_path": "Argazkien bidea",
+          "username": "Erabiltzailea"
+        },
+        "new_user": "Erabiltzaile berria",
+        "row": {
+          "action": {
+            "change_password": "Aldatu pasahitza",
+            "delete": "Ezabatu",
+            "edit": "Editatu",
+            "scan": "Aztertu"
+          }
+        }
+      },
+      "title": "Erabiltzaileak"
+    },
+    "version_info": {
+      "build_date_title": "Build-aren data",
+      "title": "Photoview-ren bertsioa",
+      "version_title": "Argitaratze-bertsioa"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Partekatutako edukia"
+    },
+    "protected_share": {
+      "description": "Partekatutakoa pasahitz bidez dago babestuta.",
+      "password_required_error": "Pasahitza beharrezkoa da",
+      "title": "Babestu partekatutakoa"
+    },
+    "share_not_found": "Ez da partekatutakoa aurkitu",
+    "share_not_found_description": "Agian partekatutakoa iraungi da edo ezabatua izan da.",
+    "wrong_password": "Pasahitz okerra. Mesedez, saia zaitez berriro."
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "Albumaren azala",
+      "download": {
+        "high-resolutions": {
+          "description": "RAW irudien bereizmen handiko jpeg-ak",
+          "title": "Bereizmen handikoak"
+        },
+        "originals": {
+          "description": "Jatorrizko irudi eta bideoak",
+          "title": "Jatorrizkoak"
+        },
+        "thumbnails": {
+          "description": "Bereizmen txikiko irudiak, ez bideoak",
+          "title": "Irudi txikiak"
+        },
+        "web-videos": {
+          "description": "Sarerako optimizatu diren bideoak",
+          "title": "Bihurtutako bideoak"
+        }
+      },
+      "reset_cover": "Berrezarri azalaren argazkia",
+      "set_cover": "Ezarri albumaren azal bezala",
+      "title_placeholder": "Albumaren titulua"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "Byte {{count}}",
+        "byte_other": "{{count}} Byte",
+        "giga_byte_one": "GB {{count}}",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "KB {{count}}",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "MB {{count}}",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "TB {{count}}",
+        "tera_byte_other": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Neurriak",
+        "file_size": "Tamaina",
+        "file_type": "Mota",
+        "name": "Izena"
+      },
+      "title": "Deskargatu"
+    },
+    "location": {
+      "title": "Kokapena"
+    },
+    "media": {
+      "album_path": "Albumaren bidea",
+      "exif": {
+        "exposure_program": {
+          "action_program": "Kirola",
+          "aperture_priority": "Irekidurari lehentasuna",
+          "bulb": "Bulb",
+          "creative_program": "Sormenezkoa",
+          "landscape_mode": "Paisaia",
+          "manual": "Eskuzkoa",
+          "normal_program": "Arrunta",
+          "not_defined": "Ezarri gabe",
+          "portrait_mode": "Erretratua",
+          "shutter_priority": "Abiaduari lehentasuna"
+        },
+        "flash": {
+          "auto": "Automatikoa",
+          "did_not_fire": "Ez da atera",
+          "fired": "Atera da",
+          "no_flash": "Flashik ez",
+          "no_flash_function": "Flash aukerarik ez",
+          "off": "Itzalita",
+          "on": "Piztuta",
+          "red_eye_reduction": "Begi gorrien gutxitzea",
+          "return_detected": "Kamerak antzeman du",
+          "return_not_detected": "Kamerak ez du antzeman"
+        },
+        "name": {
+          "aperture": "Irekidura",
+          "camera": "Kamera",
+          "coordinates": "Koordenatuak",
+          "date_shot": "Egindako data",
+          "exposure": "Esposizioa",
+          "exposure_program": "Programa",
+          "flash": "Flasha",
+          "focal_length": "Foku-distantzia",
+          "iso": "Sentikortasuna",
+          "lens": "Objektiboa",
+          "maker": "Fabrikatzailea"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Kendu irudia",
+        "merge_face": "Bateratu aurpegia",
+        "move_face": "Mugitu aurpegia"
+      },
+      "confirm_image_detach": "Ziur al zaude irudi hau kendu nahi duzula?",
+      "title": "Jendea"
+    },
+    "sharing": {
+      "add_share": "Gehitu partekatzeak",
+      "copy_link": "Kopiatu esteka",
+      "delete": "Ezabatu",
+      "more": "Gehiago",
+      "no_shares_found": "Ez da partekatutakorik aurkitu",
+      "public_link": "Esteka publikoa",
+      "title": "Partekatze-aukerak"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albumak",
+    "people": "Jendea",
+    "photos": "Denbora-lerroa",
+    "places": "Tokiak",
+    "settings": "Ezarpenak"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "Une honetatik aurrera",
+      "dropdown_year": "{{year}} eta zaharragoak",
+      "label": "Data"
+    }
+  },
+  "title": {
+    "loading_album": "Albuma kargatzen",
+    "login": "Saioa",
+    "people": "Jendea",
+    "settings": "Ezarpenak"
+  }
+}

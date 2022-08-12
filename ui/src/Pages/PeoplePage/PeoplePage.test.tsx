@@ -11,7 +11,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import { MemoryRouter } from 'react-router'
 import { myFaces_myFaceGroups } from './__generated__/myFaces'
 
-jest.mock('../../hooks/useScrollPagination')
+vi.mock('../../hooks/useScrollPagination')
 
 describe('PeoplePage component', () => {
   const graphqlMocks = [
@@ -142,7 +142,7 @@ describe('FaceDetails component', () => {
       <MockedProvider mocks={[]} addTypename={false}>
         <FaceDetails
           editLabel={false}
-          setEditLabel={jest.fn()}
+          setEditLabel={vi.fn()}
           group={emptyFaceGroup}
         />
       </MockedProvider>
@@ -161,7 +161,7 @@ describe('FaceDetails component', () => {
       <MockedProvider mocks={[]} addTypename={false}>
         <FaceDetails
           editLabel={false}
-          setEditLabel={jest.fn()}
+          setEditLabel={vi.fn()}
           group={labeledFaceGroup}
         />
       </MockedProvider>
@@ -181,7 +181,7 @@ describe('FaceDetails component', () => {
             label: 'John Doe',
           },
         },
-        newData: jest.fn(() => ({
+        newData: vi.fn(() => ({
           data: {
             setFaceGroupLabel: {
               __typename: 'FaceGroup',
@@ -218,7 +218,7 @@ describe('FaceDetails component', () => {
     })
   })
 
-  test('cancel add label to face group', async () => {
+  test('cancel add label to face group', () => {
     render(
       <MockedProvider mocks={[]} addTypename={false}>
         <MemoryRouter>

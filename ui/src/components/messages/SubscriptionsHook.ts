@@ -1,5 +1,4 @@
 import { notificationSubscription } from './__generated__/notificationSubscription'
-import PropTypes from 'prop-types'
 import { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
@@ -20,7 +19,7 @@ const NOTIFICATION_SUBSCRIPTION = gql`
   }
 `
 
-const messageTimeoutHandles = new Map()
+const messageTimeoutHandles = new Map<string, number>()
 
 export interface Message {
   key: string
@@ -102,7 +101,7 @@ const SubscriptionsHook = ({
 
       const timeoutHandle = setTimeout(() => {
         setMessages(messages => messages.filter(m => m.key != msg.key))
-      }, msg.timeout)
+      }, msg.timeout) as unknown as number
 
       messageTimeoutHandles.set(msg.key, timeoutHandle)
     }
@@ -120,11 +119,6 @@ const SubscriptionsHook = ({
   }, [data, error])
 
   return null
-}
-
-SubscriptionsHook.propTypes = {
-  messages: PropTypes.array.isRequired,
-  setMessages: PropTypes.func.isRequired,
 }
 
 export default SubscriptionsHook

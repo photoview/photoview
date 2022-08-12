@@ -29,7 +29,7 @@ const LogoHeader = () => {
     <div className="flex justify-center flex-col mb-14 mt-20">
       <img
         className="h-24"
-        src={process.env.PUBLIC_URL + '/photoview-logo.svg'}
+        src={import.meta.env.BASE_URL + 'photoview-logo.svg'}
         alt="photoview logo"
       />
       <h1 className="text-3xl text-center mt-4">
@@ -106,7 +106,7 @@ const LoginForm = () => {
       <input
         type="submit"
         disabled={loading}
-        value={t('login_page.field.submit', 'Sign in') as string}
+        value={t('login_page.field.submit', 'Sign in')}
         className="rounded-md px-8 py-2 mt-2 focus:outline-none cursor-pointer bg-gradient-to-bl from-[#FF8246] to-[#D6264D] text-white font-semibold focus:ring-2 focus:ring-red-200 disabled:cursor-default disabled:opacity-80"
       />
       <MessageBox

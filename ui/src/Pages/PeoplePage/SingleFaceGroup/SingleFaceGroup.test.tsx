@@ -4,7 +4,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import SingleFaceGroup, { SINGLE_FACE_GROUP } from './SingleFaceGroup'
 import { MemoryRouter } from 'react-router-dom'
 
-jest.mock('../../../hooks/useScrollPagination')
+vi.mock('../../../hooks/useScrollPagination')
 
 test('single face group', async () => {
   const graphqlMocks = [
@@ -92,9 +92,6 @@ test('single face group', async () => {
   )
 
   await waitFor(() => {
-    // expect(screen.queryByText('Loading more media')).not.toHaveClass('active')
-    expect(screen.queryByText('Face Group Name')).toBeInTheDocument()
+    expect(screen.getAllByRole('img')).toHaveLength(2)
   })
-
-  expect(screen.getAllByRole('img')).toHaveLength(2)
 })

@@ -2,8 +2,8 @@ import { gql, useQuery } from '@apollo/client'
 import React, { useEffect, useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 import PaginateLoader from '../../../components/PaginateLoader'
-import PhotoGallery from '../../../components/photoGallery/PhotoGallery'
-import { photoGalleryReducer } from '../../../components/photoGallery/photoGalleryReducer'
+import MediaGallery from '../../../components/photoGallery/MediaGallery'
+import { mediaGalleryReducer } from '../../../components/photoGallery/mediaGalleryReducer'
 import useScrollPagination from '../../../hooks/useScrollPagination'
 import FaceGroupTitle from './FaceGroupTitle'
 import {
@@ -62,7 +62,7 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
     },
   })
 
-  const [mediaState, dispatchMedia] = useReducer(photoGalleryReducer, {
+  const [mediaState, dispatchMedia] = useReducer(mediaGalleryReducer, {
     presenting: false,
     activeIndex: -1,
     media: [],
@@ -91,7 +91,7 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
     <div ref={containerElem}>
       <FaceGroupTitle faceGroup={faceGroup} />
       <div>
-        <PhotoGallery
+        <MediaGallery
           loading={loading}
           dispatchMedia={dispatchMedia}
           mediaState={mediaState}

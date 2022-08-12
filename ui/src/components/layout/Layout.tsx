@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client'
-import PropTypes from 'prop-types'
 import React, { useContext } from 'react'
 import { Helmet } from 'react-helmet'
 import Header from '../header/Header'
@@ -41,18 +40,12 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             id="layout-content"
           >
             {children}
-            {/* <div className="h-6"></div> */}
           </div>
         </div>
         <Sidebar />
       </div>
     </>
   )
-}
-
-Layout.propTypes = {
-  children: PropTypes.any.isRequired,
-  title: PropTypes.string,
 }
 
 export default Layout

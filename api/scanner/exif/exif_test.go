@@ -48,6 +48,7 @@ func TestExifParsers(t *testing.T) {
 		{
 			path: "./test_data/bird.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF) {
+				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
 				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")

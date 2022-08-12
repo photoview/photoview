@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../__generated__/globalTypes'
 import { ReactComponent as VideoThumbnailIconSVG } from './icons/videoThumbnailIcon.svg'
+import { MediaGalleryFields } from './__generated__/MediaGalleryFields'
 
 const MediaContainer = styled.div`
   flex-grow: 1;
@@ -136,17 +137,7 @@ const VideoThumbnailIcon = styled(VideoThumbnailIconSVG)`
 `
 
 type MediaThumbnailProps = {
-  media: {
-    id: string
-    type: MediaType
-    blurhash: string | null
-    favorite?: boolean
-    thumbnail: null | {
-      url: string
-      width: number
-      height: number
-    }
-  }
+  media: MediaGalleryFields
   active: boolean
   selectImage(): void
   clickPresent(): void

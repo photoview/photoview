@@ -55,7 +55,7 @@ registerRoute(
     // Return true to signal that we want to use the handler.
     return true
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+  createHandlerBoundToURL(import.meta.env.BASE_URL + 'index.html')
 )
 
 // An example runtime caching route for requests that aren't handled by the
@@ -78,6 +78,7 @@ registerRoute(
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', event => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
   }

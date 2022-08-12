@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
-import PresentMedia, { PresentMediaProps_Media } from './PresentMedia'
-import { closePresentModeAction, GalleryAction } from '../photoGalleryReducer'
+import PresentMedia from './PresentMedia'
+import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -24,7 +25,7 @@ const PreventScroll = createGlobalStyle`
 type PresentViewProps = {
   className?: string
   imageLoaded?(): void
-  activeMedia: PresentMediaProps_Media
+  activeMedia: MediaGalleryFields
   dispatchMedia: React.Dispatch<GalleryAction>
   disableSaveCloseInHistory?: boolean
 }
@@ -67,7 +68,7 @@ const PresentView = ({
   })
 
   return (
-    <StyledContainer {...className}>
+    <StyledContainer className={className}>
       <PreventScroll />
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}

@@ -92,7 +92,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
     let metadata = Object.keys(videoMetadata)
       .filter(x => !['id', '__typename', 'width', 'height'].includes(x))
       .reduce((prev, curr) => {
-        const value = videoMetadata[curr as string]
+        const value = videoMetadata[curr]
         if (isNil(value)) return prev
 
         return {
@@ -120,6 +120,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
 }
 
 const exifNameLookup = (t: TranslationFn): { [key: string]: string } => ({
+  description: t('sidebar.media.exif.description', 'Description'),
   camera: t('sidebar.media.exif.name.camera', 'Camera'),
   maker: t('sidebar.media.exif.name.maker', 'Maker'),
   lens: t('sidebar.media.exif.name.lens', 'Lens'),

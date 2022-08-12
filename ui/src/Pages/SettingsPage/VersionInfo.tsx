@@ -7,10 +7,10 @@ import {
   SectionTitle,
 } from './SettingsPage'
 
-const VERSION = process.env.REACT_APP_BUILD_VERSION ?? 'undefined'
-const BUILD_DATE = process.env.REACT_APP_BUILD_DATE ?? 'undefined'
+const VERSION = import.meta.env.REACT_APP_BUILD_VERSION ?? 'undefined'
+const BUILD_DATE = import.meta.env.REACT_APP_BUILD_DATE ?? 'undefined'
 
-const COMMIT_SHA = process.env.REACT_APP_BUILD_COMMIT_SHA as string | undefined
+const COMMIT_SHA = import.meta.env.REACT_APP_BUILD_COMMIT_SHA
 let commitLink: ReactElement
 
 if (COMMIT_SHA) {

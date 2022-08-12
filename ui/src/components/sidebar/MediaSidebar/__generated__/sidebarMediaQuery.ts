@@ -86,6 +86,10 @@ export interface sidebarMediaQuery_media_exif {
   __typename: 'MediaEXIF'
   id: string
   /**
+   * The description of the image
+   */
+  description: string | null
+  /**
    * The model name of the camera
    */
   camera: string | null
@@ -97,7 +101,7 @@ export interface sidebarMediaQuery_media_exif {
    * The name of the lens
    */
   lens: string | null
-  dateShot: any | null
+  dateShot: Time | null
   /**
    * The exposure time of the image
    */

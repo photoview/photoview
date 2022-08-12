@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useReducer } from 'react'
-import PropTypes from 'prop-types'
 import { useQuery, gql } from '@apollo/client'
 import TimelineGroupDate from './TimelineGroupDate'
 import PresentView from '../photoGallery/presentView/PresentView'
@@ -16,7 +15,7 @@ import {
   getActiveTimelineImage as getActiveTimelineMedia,
   timelineGalleryReducer,
 } from './timelineGalleryReducer'
-import { urlPresentModeSetupHook } from '../photoGallery/photoGalleryReducer'
+import { urlPresentModeSetupHook } from '../photoGallery/mediaGalleryReducer'
 import TimelineFilters from './TimelineFilters'
 import client from '../../apolloClient'
 
@@ -195,11 +194,6 @@ const TimelineGallery = () => {
       )}
     </div>
   )
-}
-
-TimelineGallery.propTypes = {
-  favorites: PropTypes.bool,
-  setFavorites: PropTypes.func,
 }
 
 export default TimelineGallery

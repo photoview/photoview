@@ -4,24 +4,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 interface ScrollPaginationArgs<D> {
   loading: boolean
   data: D | undefined
-  fetchMore(args: {
+  fetchMore: (args: {
     variables: { offset: number }
-  }): Promise<ApolloQueryResult<D>>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getItems(data: D): any[]
+  }) => Promise<ApolloQueryResult<D>>
+  getItems: (data: D) => unknown[]
 }
 
 type ScrollPaginationResult = {
   finished: boolean
-  containerElem(node: null | Element): void
+  containerElem: (node: null | Element) => void
 }
 
-function useScrollPagination<D>({
-  loading,
-  fetchMore,
-  data,
-  getItems,
-}: ScrollPaginationArgs<D>): ScrollPaginationResult {
+const useScrollPagination: <D>(
+  args: ScrollPaginationArgs<D>
+) => ScrollPaginationResult = ({ loading, fetchMore, data, getItems }) => {
   const observer = useRef<IntersectionObserver | null>(null)
   const observerElem = useRef<Element | null>(null)
   const [finished, setFinished] = useState(false)

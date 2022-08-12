@@ -1,11 +1,11 @@
 import { PresentMarker } from './PlacesPage'
 import {
-  PhotoGalleryState,
+  MediaGalleryState,
   PhotoGalleryAction,
-  photoGalleryReducer,
-} from './../../components/photoGallery/photoGalleryReducer'
+  mediaGalleryReducer,
+} from '../../components/photoGallery/mediaGalleryReducer'
 
-export interface PlacesState extends PhotoGalleryState {
+export interface PlacesState extends MediaGalleryState {
   presentMarker?: PresentMarker
 }
 
@@ -36,6 +36,6 @@ export function placesReducer(
         }
       }
     default:
-      return photoGalleryReducer(state, action)
+      return mediaGalleryReducer(state, action)
   }
 }

@@ -47,26 +47,6 @@ func HandleError(message string, err error) PhotoviewError {
 	}
 }
 
-var test_cache_path string = ""
-
-func ConfigureTestCache(tmp_dir string) {
-	test_cache_path = tmp_dir
-}
-
-// MediaCachePath returns the path for where the media cache is located on the file system
-func MediaCachePath() string {
-	if test_cache_path != "" {
-		return test_cache_path
-	}
-
-	photoCache := EnvMediaCachePath.GetValue()
-	if photoCache == "" {
-		photoCache = "./media_cache"
-	}
-
-	return photoCache
-}
-
 var test_face_recognition_models_path string = ""
 
 func ConfigureTestFaceRecognitionModelsPath(path string) {

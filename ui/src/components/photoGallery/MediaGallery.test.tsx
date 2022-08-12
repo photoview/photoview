@@ -2,17 +2,17 @@ import { render, screen } from '@testing-library/react'
 
 import React from 'react'
 import { MediaType } from '../../__generated__/globalTypes'
-import PhotoGallery from './PhotoGallery'
-import { PhotoGalleryState } from './photoGalleryReducer'
+import MediaGallery from './MediaGallery'
+import { MediaGalleryState } from './mediaGalleryReducer'
 
-jest.mock('./photoGalleryMutations', () => ({
-  useMarkFavoriteMutation: () => [jest.fn()],
+vi.mock('./photoGalleryMutations', () => ({
+  useMarkFavoriteMutation: () => [vi.fn()],
 }))
 
 test('photo gallery with media', () => {
-  const dispatchMedia = jest.fn()
+  const dispatchMedia = vi.fn()
 
-  const mediaState: PhotoGalleryState = {
+  const mediaState: MediaGalleryState = {
     activeIndex: 0,
     media: [
       {
@@ -55,7 +55,7 @@ test('photo gallery with media', () => {
   }
 
   render(
-    <PhotoGallery
+    <MediaGallery
       dispatchMedia={dispatchMedia}
       mediaState={mediaState}
       loading={false}
@@ -68,17 +68,17 @@ test('photo gallery with media', () => {
 })
 
 describe('photo gallery presenting', () => {
-  const dispatchMedia = jest.fn()
+  const dispatchMedia = vi.fn()
 
   test('not presenting', () => {
-    const mediaStateNoPresent: PhotoGalleryState = {
+    const mediaStateNoPresent: MediaGalleryState = {
       activeIndex: -1,
       media: [],
       presenting: false,
     }
 
     render(
-      <PhotoGallery
+      <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStateNoPresent}
@@ -89,7 +89,7 @@ describe('photo gallery presenting', () => {
   })
 
   test('presenting', () => {
-    const mediaStatePresent: PhotoGalleryState = {
+    const mediaStatePresent: MediaGalleryState = {
       activeIndex: 0,
       media: [
         {
@@ -112,7 +112,7 @@ describe('photo gallery presenting', () => {
     }
 
     render(
-      <PhotoGallery
+      <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStatePresent}
