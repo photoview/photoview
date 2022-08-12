@@ -32,7 +32,10 @@ func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
 }
 
 func (job *ScannerJob) Run(db *gorm.DB) {
-	scanner.ScanAlbum(job.ctx)
+	err := scanner.ScanAlbum(job.ctx)
+	if err != nil {
+		scanner_utils.ScannerError("Failed to scan album: %v", err)
+	}
 }
 
 type ScannerQueueSettings struct {
