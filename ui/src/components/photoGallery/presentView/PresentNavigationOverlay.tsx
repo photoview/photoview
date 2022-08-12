@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
 import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 
-import { useSwipeable } from 'react-swipeable';
+import { useSwipeable } from 'react-swipeable'
 
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
@@ -98,21 +98,19 @@ const PresentNavigationOverlay = ({
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
     onSwipedRight: () => dispatchMedia({ type: 'previousImage' }),
-    preventDefaultTouchmoveEvent: false,
-    trackMouse: false
-  });
+    preventScrollOnSwipe: false,
+    trackMouse: false,
+  })
 
   return (
-  
     <StyledOverlayContainer
       data-testid="present-overlay"
       onMouseMove={() => {
         onMouseMove.current && onMouseMove.current()
       }}
     >
-	  <div {...handlers} >
+    <div {...handlers}>
       {children}
-	  
       <NavigationButton
         aria-label="Previous image"
         className={hide ? 'hide' : undefined}
@@ -142,9 +140,8 @@ const PresentNavigationOverlay = ({
       >
         <ExitIcon />
       </ExitButton>
-	  </div>
+    </div>
     </StyledOverlayContainer>
-	
   )
 }
 
