@@ -7,7 +7,7 @@
       "date_imported": "加入日期",
       "date_shot": "拍摄日期",
       "title": "标题",
-      "type": "种类"
+      "type": "文件类型"
     }
   },
   "general": {
@@ -22,7 +22,7 @@
       "default": "载入中...",
       "page": "载入页面中",
       "paginate": {
-        "faces": "载入更多脸孔",
+        "faces": "载入更多面孔",
         "media": "载入更多媒体"
       },
       "shares": "载入分享..."
@@ -32,7 +32,7 @@
     "search": {
       "loading": "载入结果...",
       "no_results": "找不到结果",
-      "placeholder": "搜寻",
+      "placeholder": "查找",
       "result_type": {
         "albums": "相册",
         "media": "媒体"
@@ -58,14 +58,14 @@
     "welcome": "欢迎使用 Photoview"
   },
   "meta": {
-    "description": "简单及易用的照片库给个人服务器"
+    "description": "为个人服务器打造的简单及易用的照片库"
   },
   "people_page": {
     "action_label": {
-      "change_label": "",
-      "detach_images": "",
-      "merge_people": "",
-      "move_faces": ""
+      "change_label": "修改面孔命名",
+      "detach_images": "解除面孔标记",
+      "merge_people": "合并面孔至",
+      "move_faces": "移动面孔至"
     },
     "face_group": {
       "label_placeholder": "名称",
@@ -78,42 +78,42 @@
       },
       "detach_image_faces": {
         "action": {
-          "detach": "分离照片脸孔",
-          "select_images": "选择分离照片"
+          "detach": "解除标记",
+          "select_images": "选择要解除标记的照片"
         },
-        "description": "分离已选择照片中的脸孔群组及移动到新脸孔群组",
-        "title": "分离照片中的脸孔"
+        "description": "将该组面孔选中的照片取消标记，并移动至新的面孔",
+        "title": "解除面孔标记"
       },
       "merge_face_groups": {
-        "description": "所有在此的脸孔群组将会合并到已选择的脸孔群组",
+        "description": "该组面孔中的所有照片都会被合并至选择的面孔",
         "destination_table": {
-          "title": "选择目标脸孔群组"
+          "title": "选择目标面孔"
         },
-        "title": "合并脸孔群组"
+        "title": "合并面孔组"
       },
       "move_image_faces": {
-        "description": "移动已选择的脸孔群组到另一个面孔群组",
+        "description": "将该组面孔中选择的照片移动到另一组面孔",
         "destination_face_group_table": {
-          "move_action": "移动照片的面孔",
-          "title": "选择目标脸孔群组"
+          "move_action": "移动照片",
+          "title": "选择目标面孔"
         },
         "image_select_table": {
           "next_action": "下一步",
           "title": "选择想移动的照片"
         },
-        "title": "移动照片脸孔"
+        "title": "移动照片面孔"
       }
     },
-    "recognize_unlabeled_faces_button": "已识别的未命名脸孔",
+    "recognize_unlabeled_faces_button": "已识别的未命名面孔",
     "tableselect_face_group": {
-      "search_faces_placeholder": "搜寻脸孔..."
+      "search_faces_placeholder": "搜寻面孔..."
     },
     "tableselect_image_faces": {
       "search_images_placeholder": "搜寻照片..."
     }
   },
   "photos_page": {
-    "title": "照片"
+    "title": "时间线"
   },
   "places_page": {
     "title": "地点"
@@ -123,18 +123,18 @@
   },
   "settings": {
     "concurrent_workers": {
-      "description": "最多同时进行的扫描工作数目",
-      "title": "同时扫描工作"
+      "description": "最多允许同时进行的扫描任务数目",
+      "title": "同时扫描任务"
     },
     "logout": "登出",
     "periodic_scanner": {
       "checkbox_label": "启用周期性扫描",
       "field": {
-        "description": "对全部使用者自动扫描的频率",
+        "description": "对全部用户自动扫描的频率",
         "label": "扫描频率"
       },
       "interval_unit": {
-        "days": "日",
+        "days": "天",
         "hour": "小时",
         "minutes": "分钟",
         "months": "月",
@@ -143,41 +143,41 @@
       "title": "周期性扫描"
     },
     "scanner": {
-      "description": "将扫描所有使用者的新媒体或更新媒体",
-      "scan_all_users": "扫描所有使用者",
+      "description": "将扫描所有用户新添加及更新的媒体文件",
+      "scan_all_users": "扫描所有用户",
       "title": "扫描"
     },
     "user_preferences": {
       "change_language": {
-        "description": "Change website language specific for this user",
-        "label": "Website language"
+        "description": "修改网站语言，仅对本用户生效",
+        "label": "网站语言"
       },
       "language_selector": {
-        "placeholder": "Select language"
+        "placeholder": "选择语言"
       },
       "theme": {
         "auto": {
-          "label": ""
+          "label": "跟随系统"
         },
         "dark": {
-          "label": ""
+          "label": "暗黑"
         },
-        "description": "",
+        "description": "修改网站外观",
         "light": {
-          "label": ""
+          "label": "明亮"
         },
-        "title": ""
+        "title": "主题设置"
       },
-      "title": "使用者选项"
+      "title": "用户选项"
     },
     "users": {
       "add_user": {
-        "submit": "新增使用者"
+        "submit": "新增用户"
       },
       "confirm_delete_user": {
         "action": "删除 {{user}}",
         "description": "<0>确定删除 <1></1>?</0><p>此操作无法取消</p>",
-        "title": "删除使用者"
+        "title": "删除用户"
       },
       "password_reset": {
         "description": "更改 <1>{{username}}</1> 的密码",
@@ -190,12 +190,12 @@
       },
       "table": {
         "column_names": {
-          "action": "动作",
-          "capabilities": "能力",
+          "action": "操作",
+          "capabilities": "权限",
           "photo_path": "相册路径",
           "username": "用户名"
         },
-        "new_user": "新增使用者",
+        "new_user": "新增用户",
         "row": {
           "action": {
             "change_password": "更改密码",
@@ -205,12 +205,12 @@
           }
         }
       },
-      "title": "使用者"
+      "title": "用户"
     },
     "version_info": {
       "build_date_title": "编译日期",
       "title": "Photoview 版本",
-      "version_title": "释出版本"
+      "version_title": "发行版"
     }
   },
   "share_page": {
@@ -228,47 +228,44 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": "",
+      "album_cover": "相册封面",
       "download": {
         "high-resolutions": {
-          "description": "",
-          "title": ""
+          "description": "原始图片的高清jpeg版本",
+          "title": "高清"
         },
         "originals": {
-          "description": "",
-          "title": ""
+          "description": "原始的图片和视频",
+          "title": "原文件"
         },
         "thumbnails": {
-          "description": "",
-          "title": ""
+          "description": "低清晰度的图片，不包含视频",
+          "title": "低清"
         },
         "web-videos": {
-          "description": "",
-          "title": ""
+          "description": "为了网页展示而优化过的视频",
+          "title": "已转换视频"
         }
       },
-      "reset_cover": "",
-      "set_cover": "",
+      "reset_cover": "重设封面照片",
+      "set_cover": "设置为封面图片",
       "title_placeholder": "相册名称"
     },
     "download": {
       "filesize": {
-        "byte_other": "",
-        "giga_byte_other": "",
-        "kilo_byte_other": "",
-        "mega_byte_other": "",
-        "tera_byte_other": ""
+        "byte_one": "{{count}} 字节",
+        "byte_other": "{{count}} 字节"
       },
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
-        "file_type": "类型",
+        "file_type": "格式",
         "name": "名称"
       },
       "title": "下载"
     },
     "location": {
-      "title": ""
+      "title": "位置"
     },
     "media": {
       "album_path": "",
@@ -287,20 +284,20 @@
         },
         "flash": {
           "auto": "自动",
-          "did_not_fire": "",
-          "fired": "",
-          "no_flash": "",
-          "no_flash_function": "",
+          "did_not_fire": "未使用闪光灯",
+          "fired": "使用闪光灯",
+          "no_flash": "无闪光灯",
+          "no_flash_function": "无闪光灯功能",
           "off": "关闭",
           "on": "使用",
           "red_eye_reduction": "减轻红眼",
-          "return_detected": "",
-          "return_not_detected": ""
+          "return_detected": "检测到回光",
+          "return_not_detected": "未检测到回光"
         },
         "name": {
           "aperture": "光圈",
           "camera": "相机",
-          "coordinates": "",
+          "coordinates": "坐标",
           "date_shot": "拍摄日期",
           "exposure": "曝光",
           "exposure_program": "模式",
@@ -314,12 +311,12 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "修改面孔命名",
+        "merge_face": "合并面孔",
+        "move_face": "移动面孔"
       },
-      "confirm_image_detach": "",
-      "title": ""
+      "confirm_image_detach": "您确认要取消该图片的面孔标记吗？",
+      "title": "人物"
     },
     "sharing": {
       "add_share": "新增分享",
@@ -340,9 +337,9 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "dropdown_year": "",
-      "label": ""
+      "dropdown_all": "最新",
+      "dropdown_year": "{{year}}及更早",
+      "label": "日期"
     }
   },
   "title": {
