@@ -76,7 +76,9 @@ const TimelineGroupAlbum = ({
   return (
     <div className="mx-2">
       <Link to={`/album/${albumID}`} className="hover:underline">
-        {albumTitle}
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {albumTitle}
+        </span>
       </Link>
       <div className="flex flex-wrap items-center relative -mx-1 overflow-hidden">
         {mediaElms}

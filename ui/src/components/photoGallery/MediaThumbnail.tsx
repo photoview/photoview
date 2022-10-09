@@ -9,7 +9,7 @@ const MediaContainer = styled.div`
   flex-grow: 1;
   flex-basis: 0;
   height: 200px;
-  margin: 4px;
+  margin: 4px 2px;
   background-color: #eee;
   position: relative;
   overflow: hidden;
@@ -214,7 +214,7 @@ export const MediaPlaceholder = styled.div`
   flex-grow: 1;
   height: 200px;
   width: 300px;
-  margin: 4px;
+  margin: 4px 2px;
   background-color: #eee;
   position: relative;
 `
