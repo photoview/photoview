@@ -324,9 +324,10 @@ export const SidebarAlbumShare = ({ id }: SidebarShareAlbumProps) => {
 }
 type SidebarSharePhotoProps = {
   id: string
+  photoUrl: string | undefined
 }
 
-export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
+export const SidebarPhotoShare = ({ id, photoUrl }: SidebarSharePhotoProps) => {
   const { t } = useTranslation()
 
   const [
@@ -370,6 +371,7 @@ export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
       loading={loading}
       shares={sharesData?.media.shares}
       shareItem={sharePhoto}
+      itemUrl={photoUrl}
     />
   )
 }
@@ -380,6 +382,7 @@ type SidebarShareProps = {
   loading: boolean
   shares?: sidebarGetPhotoShares_media_shares[]
   shareItem: (item: { variables: { id: string } }) => Promise<unknown>
+  itemUrl?: string
 }
 
 const SidebarShare = ({
@@ -388,6 +391,7 @@ const SidebarShare = ({
   isPhoto,
   id,
   shareItem,
+  itemUrl,
 }: SidebarShareProps) => {
   const { t } = useTranslation()
 
@@ -418,7 +422,18 @@ const SidebarShare = ({
         </span>
         <span className="text-sm">{share.token}</span>
       </td>
-      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] dark:text-[#7599ca] flex">
+      <td className="pr-6 py-2 whitespace-nowrap text-[#5C6A7F] dark:text-[#7599ca] flex justify-end">
+        {isPhoto && !share.hasPassword && (
+          <button
+            className="align-middle p-1 ml-2"
+            title={t('sidebar.sharing.copy_direct_link', 'Copy Direct Link')}
+            onClick={() => {
+              copy(`${itemUrl as string}?token=${share.token}`)
+            }}
+          >
+            <LinkIcon />
+          </button>
+        )}
         <button
           className="align-middle p-1 ml-2"
           title={t('sidebar.sharing.copy_link', 'Copy Link')}
