@@ -53,6 +53,12 @@ const languagePreferences = [
     flag: 'eu',
     value: LanguageTranslation.Basque,
   },
+  {
+    key: 14,
+    label: 'Türkçe',
+    flag: 'tr',
+    value: LanguageTranslation.Turkish,
+  },
 ]
 
 const themePreferences = (t: TranslationFn) => [
