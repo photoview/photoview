@@ -261,14 +261,14 @@ func AddMediaToQueue(mediaPath string) error {
 	// add album to the queue
 	var album *models.Album
 	var subalbumPath string
-	if media == nil {
-		albumPath := path.Base(mediaPath)
+	if media == nil || media.ID == 0 {
+		albumPath := path.Dir(mediaPath)
 		for album == nil {
 			if err := global_scanner_queue.db.Where("path = ?", albumPath).Find(&album).Error; err != nil {
 				return errors.Wrap(err, "album by path database query")
 			}
 			subalbumPath = albumPath
-			albumPath = path.Base(albumPath)
+			albumPath = path.Dir(albumPath)
 		}
 		if album == nil {
 			return errors.New("No root album found")
