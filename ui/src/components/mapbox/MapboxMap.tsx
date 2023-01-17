@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { mapboxToken } from './__generated__/mapboxToken'
 import { isDarkMode } from '../../theme'
+import { SetMapLanguages } from '../../localization'
 
 const MAPBOX_TOKEN_QUERY = gql`
   query mapboxToken {
@@ -59,12 +60,16 @@ const useMapboxMap = ({
       mapboxLibrary.accessToken = mapboxData.mapboxToken
 
     map.current = new mapboxLibrary.Map({
+      zoom: 6, // zoom must be initialized to 6 or more, or the language of map cannot be set.
+      center: [-77.0259, 38.901], // Initial to the land.
       container: mapContainer.current,
       style: isDarkMode()
         ? 'mapbox://styles/mapbox/dark-v10'
         : 'mapbox://styles/mapbox/streets-v11',
       ...mapboxOptions,
     })
+
+    SetMapLanguages(map.current)
 
     configureMapbox(map.current, mapboxLibrary)
     map.current?.resize()
