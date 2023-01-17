@@ -15,6 +15,7 @@ import (
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 )
 
@@ -43,6 +44,12 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
+type ScanInfo struct {
+	Path   string
+	Parent *models.Album
+	Ignore []string
+}
+
 func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
@@ -61,12 +68,6 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 
 	scanErrors := make([]error, 0)
 
-	type scanInfo struct {
-		path   string
-		parent *models.Album
-		ignore []string
-	}
-
 	scanQueue := list.New()
 
 	for _, album := range userRootAlbums {
@@ -78,26 +79,44 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
 			}
 		} else {
-			scanQueue.PushBack(scanInfo{
-				path:   album.Path,
-				parent: nil,
-				ignore: nil,
+			scanQueue.PushBack(ScanInfo{
+				Path:   album.Path,
+				Parent: nil,
+				Ignore: nil,
 			})
 		}
 	}
 
+	userAlbums, err2 := ProcessUserAlbums(scanQueue, db, []*models.User{user}, album_cache)
+	if err2 != nil {
+		scanErrors = append(scanErrors, err2...)
+	}
+
+	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
+	scanErrors = append(scanErrors, deleteErrors...)
+
+	return userAlbums, scanErrors
+}
+
+func ProcessUserAlbums(scanQueue *list.List, db *gorm.DB, users []*models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 	userAlbums := make([]*models.Album, 0)
+	var scanErrors []error
+
+	userIds := make([]int, len(users))
+	for i, user := range users {
+		userIds[i] = user.ID
+	}
 
 	for scanQueue.Front() != nil {
-		albumInfo := scanQueue.Front().Value.(scanInfo)
+		albumInfo := scanQueue.Front().Value.(ScanInfo)
 		scanQueue.Remove(scanQueue.Front())
 
-		albumPath := albumInfo.path
-		albumParent := albumInfo.parent
-		albumIgnore := albumInfo.ignore
+		albumPath := albumInfo.Path
+		albumParent := albumInfo.Parent
+		albumIgnore := albumInfo.Ignore
 
 		// Read path
-		dirContent, err := ioutil.ReadDir(albumPath)
+		dirContent, err := os.ReadDir(albumPath)
 		if err != nil {
 			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
@@ -166,14 +185,20 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 
 				// Add user as an owner of the album if not already
 				var userAlbumOwner []models.User
-				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
+				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id in (?)", userIds); err != nil {
 					return err
 				}
-				if len(userAlbumOwner) == 0 {
-					newUser := models.User{}
-					newUser.ID = user.ID
-					if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
-						return err
+				if len(userAlbumOwner) != len(userIds) {
+					for userId := range userIds {
+						i := slices.IndexFunc(userAlbumOwner, func(user models.User) bool { return user.ID == userId })
+						if i != -1 {
+							continue
+						}
+						newUser := models.User{}
+						newUser.ID = userId
+						if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+							return err
+						}
 					}
 				}
 
@@ -207,17 +232,14 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 			}
 
 			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, album_cache, albumIgnore) {
-				scanQueue.PushBack(scanInfo{
-					path:   subalbumPath,
-					parent: album,
-					ignore: albumIgnore,
+				scanQueue.PushBack(ScanInfo{
+					Path:   subalbumPath,
+					Parent: album,
+					Ignore: albumIgnore,
 				})
 			}
 		}
 	}
-
-	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
-	scanErrors = append(scanErrors, deleteErrors...)
 
 	return userAlbums, scanErrors
 }
