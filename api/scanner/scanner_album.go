@@ -149,8 +149,20 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		return nil, err
 	}
 
-	for _, item := range dirContent {
-		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
+	var mediaNames = ctx.GetMediaNames()
+	if len(mediaNames) == 0 {
+		for _, item := range dirContent {
+			mediaNames = append(mediaNames, item.Name())
+		}
+	}
+
+	for _, mediaName := range mediaNames {
+		mediaPath := path.Join(ctx.GetAlbum().Path, mediaName)
+		item, err := os.Stat(mediaPath)
+		if err != nil {
+			log.Printf("cannot find file")
+			continue
+		}
 
 		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
 		if err != nil {

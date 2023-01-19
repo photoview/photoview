@@ -39,9 +39,10 @@ type TaskContext struct {
 	ctx context.Context
 }
 
-func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, mediapaths []string, cache *scanner_cache.AlbumScannerCache) TaskContext {
 	ctx := TaskContext{ctx: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
+	ctx = ctx.WithValue(taskCtxKeyMediaNames, mediapaths)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
 	ctx = ctx.WithDB(db)
 
@@ -52,12 +53,17 @@ type taskCtxKeyType string
 
 const (
 	taskCtxKeyAlbum      taskCtxKeyType = "task_album"
+	taskCtxKeyMediaNames taskCtxKeyType = "task_media_names"
 	taskCtxKeyAlbumCache taskCtxKeyType = "task_album_cache"
 	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
 	return c.ctx.Value(taskCtxKeyAlbum).(*models.Album)
+}
+
+func (c TaskContext) GetMediaNames() []string {
+	return c.ctx.Value(taskCtxKeyMediaNames).([]string)
 }
 
 func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {

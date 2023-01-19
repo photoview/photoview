@@ -4,9 +4,9 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"log"
 	"path"
-	"reflect"
 	"sync"
 	"time"
 
@@ -23,8 +23,7 @@ import (
 
 // ScannerJob describes a job on the queue to be run by the scanner over a single album
 type ScannerJob struct {
-	ctx         scanner_task.TaskContext
-	media_paths []string
+	ctx scanner_task.TaskContext
 	// album *models.Album
 	// cache *scanner_cache.AlbumScannerCache
 }
@@ -32,7 +31,6 @@ type ScannerJob struct {
 func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
 	return ScannerJob{
 		ctx,
-		make([]string, 0),
 	}
 }
 
@@ -155,7 +153,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			// Delete finished job from queue
 			queue.mutex.Lock()
 			for i, x := range queue.in_progress {
-				if x.ctx == nextJob.ctx && reflect.DeepEqual(x.media_paths, nextJob.media_paths) {
+				if x.ctx == nextJob.ctx {
 					queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
 					queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
 					break
@@ -243,7 +241,7 @@ func AddUserToQueue(user *models.User) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		global_scanner_queue.addJob(&ScannerJob{
-			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, album_cache),
+			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, make([]string, 0), album_cache),
 		})
 	}
 	global_scanner_queue.mutex.Unlock()
@@ -254,6 +252,14 @@ func AddUserToQueue(user *models.User) error {
 func AddMediaToQueue(mediaPath string) error {
 	var media *models.Media
 
+	mediatype, err := media_type.GetMediaType(mediaPath)
+	if err != nil {
+		return errors.Wrap(err, "not media")
+	}
+	if mediatype == nil || !mediatype.IsSupported() {
+		return errors.New("unsupported media")
+	}
+
 	if err := global_scanner_queue.db.Preload("Album").Where("path = ?", mediaPath).Find(&media).Error; err != nil {
 		return errors.Wrap(err, "media by path database query")
 	}
@@ -262,6 +268,7 @@ func AddMediaToQueue(mediaPath string) error {
 	var album *models.Album
 	var subalbumPath string
 	if media == nil || media.ID == 0 {
+
 		albumPath := path.Dir(mediaPath)
 		for album == nil {
 			if err := global_scanner_queue.db.Where("path = ?", albumPath).Find(&album).Error; err != nil {
@@ -280,14 +287,31 @@ func AddMediaToQueue(mediaPath string) error {
 		return errors.Wrap(err, "find owners for album")
 	}
 
+	album_cache := scanner_cache.MakeAlbumCache()
 	scanQueue := list.New()
 	scanQueue.PushBack(scanner.ScanInfo{
 		Path:   subalbumPath,
 		Parent: album,
 		Ignore: nil,
 	})
-	album_cache := scanner_cache.MakeAlbumCache()
-	scanner.ProcessUserAlbums(scanQueue, global_scanner_queue.db, userAlbumOwner, album_cache)
+	all_albums, album_errors := scanner.ProcessUserAlbums(scanQueue, global_scanner_queue.db, userAlbumOwner, album_cache)
+	for _, err := range album_errors {
+		return errors.Wrapf(err, "find albums")
+	}
+
+	var mediapaths []string
+	if len(all_albums) > 1 {
+		mediapaths = []string{path.Base(mediaPath)}
+	} else {
+		mediapaths = []string{}
+	}
+	global_scanner_queue.mutex.Lock()
+	for _, album := range all_albums {
+		global_scanner_queue.addJob(&ScannerJob{
+			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, mediapaths, album_cache),
+		})
+	}
+	global_scanner_queue.mutex.Unlock()
 
 	return nil
 }
