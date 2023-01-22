@@ -281,6 +281,8 @@ func AddMediaToQueue(mediaPath string) error {
 		if err := global_scanner_queue.db.Where("path = ?", albumPath).Find(&parentAlbum).Error; err != nil {
 			return errors.Wrap(err, "parentalbum by path database query")
 		}
+	} else {
+		album = &media.Album
 	}
 
 	var userAlbumOwner []*models.User
@@ -288,7 +290,7 @@ func AddMediaToQueue(mediaPath string) error {
 		return errors.Wrap(err, "find owners for album")
 	}
 
-	if parentAlbum.ID == 0 {
+	if parentAlbum != nil && parentAlbum.ID == 0 {
 		parentAlbum = nil
 	}
 	/*scanQueue := list.New()

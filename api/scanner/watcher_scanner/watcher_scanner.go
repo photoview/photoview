@@ -80,7 +80,7 @@ func (ws watcherScanner) processWatchEvents() {
 			}
 			log.Println("event:", event)
 			var media *models.Media
-			if event.Has(fsnotify.Create) {
+			if event.Has(fsnotify.Create) || event.Has(fsnotify.Write) {
 				scanner_queue.AddMediaToQueue(event.Name)
 				log.Println("create event ", event.Name, event.Op)
 			} else if event.Has(fsnotify.Remove) {

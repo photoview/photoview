@@ -135,5 +135,6 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 	}
 
+	ctx.GetDB().Save(mediaData.Media)
 	return updatedURLs, nil
 }
