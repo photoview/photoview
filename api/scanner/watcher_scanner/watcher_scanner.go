@@ -4,10 +4,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"log"
+	"os"
+	"path"
+	"strconv"
 	"sync"
 )
 
@@ -87,8 +91,14 @@ func (ws watcherScanner) processWatchEvents() {
 			} else if event.Has(fsnotify.Remove) {
 				ws.db.Preload(clause.Associations).Where("path = ?", event.Name).Find(&media)
 				// todo: why doesnt exif cascade delete invoked ?
+				// todo: remove from media_cache
 				if media.Exif != nil {
 					ws.db.Delete(&media.Exif)
+				}
+				cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(media.ID)))
+				err := os.RemoveAll(cachePath)
+				if err != nil {
+					log.Println("delete media from cache", err)
 				}
 				ws.db.Select(clause.Associations).Delete(&media)
 				log.Println("remove event ", event.Name, event.Op)
