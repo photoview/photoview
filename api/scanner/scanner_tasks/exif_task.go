@@ -14,10 +14,6 @@ type ExifTask struct {
 
 func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
 
-	if !newMedia {
-		return nil
-	}
-
 	_, err := exif.SaveEXIF(ctx.GetDB(), media)
 	if err != nil {
 		log.Printf("WARN: SaveEXIF for %s failed: %s\n", media.Title, err)

@@ -100,7 +100,9 @@ func (ws watcherScanner) processWatchEvents() {
 				if err != nil {
 					log.Println("delete media from cache", err)
 				}
-				ws.db.Select(clause.Associations).Delete(&media)
+				if media != nil && media.ID != 0 {
+					ws.db.Select(clause.Associations).Delete(&media)
+				}
 				log.Println("remove event ", event.Name, event.Op)
 			} else if event.Has(fsnotify.Rename) {
 				log.Println("rename event ", event.Name, event.Op)
