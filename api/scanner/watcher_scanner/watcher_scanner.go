@@ -6,6 +6,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"log"
 	"sync"
 )
@@ -84,10 +85,14 @@ func (ws watcherScanner) processWatchEvents() {
 				scanner_queue.AddMediaToQueue(event.Name)
 				log.Println("create event ", event.Name, event.Op)
 			} else if event.Has(fsnotify.Remove) {
-				ws.db.Where("path = ?", event.Name).Delete(&media)
+				ws.db.Preload(clause.Associations).Where("path = ?", event.Name).Find(&media)
+				// todo: why doesnt exif cascade delete invoked ?
+				if media.Exif != nil {
+					ws.db.Delete(&media.Exif)
+				}
+				ws.db.Select(clause.Associations).Delete(&media)
 				log.Println("remove event ", event.Name, event.Op)
 			} else if event.Has(fsnotify.Rename) {
-				ws.db.Where("path = ?", event.Name).Delete(&media)
 				log.Println("rename event ", event.Name, event.Op)
 			}
 		case err, ok := <-ws.watcher.Errors:
