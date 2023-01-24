@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
@@ -17,7 +18,7 @@ type VideoMetadataTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t VideoMetadataTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+func (t VideoMetadataTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error {
 
 	if !newMedia || media.Type != models.MediaTypeVideo {
 		return nil

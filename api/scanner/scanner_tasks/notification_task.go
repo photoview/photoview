@@ -27,7 +27,7 @@ func NewNotificationTask() NotificationTask {
 	}
 }
 
-func (t NotificationTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+func (t NotificationTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error {
 	if newMedia {
 		t.throttle.Trigger(func() {
 			notification.BroadcastNotification(&models.Notification{

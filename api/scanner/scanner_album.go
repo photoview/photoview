@@ -185,11 +185,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
 
-				if !isNewMedia && media.UpdatedAt.After(item.ModTime()) {
-					return errors.New("nothing to do, processed already")
-				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia, item.ModTime()); err != nil {
 					return err
 				}
 

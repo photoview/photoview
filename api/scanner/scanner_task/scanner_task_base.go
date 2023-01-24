@@ -2,6 +2,7 @@ package scanner_task
 
 import (
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -22,7 +23,7 @@ func (t ScannerTaskBase) MediaFound(ctx TaskContext, fileInfo fs.FileInfo, media
 	return false, nil
 }
 
-func (t ScannerTaskBase) AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool) error {
+func (t ScannerTaskBase) AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool, mediaModTime time.Time) error {
 	return nil
 }
 

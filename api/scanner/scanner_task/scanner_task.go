@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -28,7 +29,7 @@ type ScannerTask interface {
 
 	// AfterMediaFound will run each media file after is has been saved to the database, but not processed yet.
 	// It will run even when the media is already present in the database, in that case `newMedia` will be true.
-	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool) error
+	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error
 
 	BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error)
 	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
