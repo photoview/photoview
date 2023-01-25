@@ -32,7 +32,7 @@ type ScannerTask interface {
 	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error
 
 	BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error)
-	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
+	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) (updatedURLs []*models.MediaURL, err error)
 	AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error
 }
 

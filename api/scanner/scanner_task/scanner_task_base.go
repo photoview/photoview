@@ -31,7 +31,7 @@ func (t ScannerTaskBase) BeforeProcessMedia(ctx TaskContext, mediaData *media_en
 	return ctx, nil
 }
 
-func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) (updatedURLs []*models.MediaURL, err error) {
 	return []*models.MediaURL{}, nil
 }
 

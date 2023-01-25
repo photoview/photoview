@@ -116,7 +116,7 @@ func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData
 	return ctx, nil
 }
 
-func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) ([]*models.MediaURL, error) {
 	allNewMedia := make([]*models.MediaURL, 0)
 
 	for _, task := range allTasks {
@@ -126,7 +126,7 @@ func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *medi
 		default:
 		}
 
-		newMedia, err := task.ProcessMedia(ctx, mediaData, mediaCachePath)
+		newMedia, err := task.ProcessMedia(ctx, mediaData, mediaCachePath, newModTime)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}

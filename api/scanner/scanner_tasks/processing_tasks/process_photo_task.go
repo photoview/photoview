@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -25,7 +26,7 @@ type ProcessPhotoTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) ([]*models.MediaURL, error) {
 	if mediaData.Media.Type != models.MediaTypePhoto {
 		return []*models.MediaURL{}, nil
 	}
@@ -66,7 +67,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, err
 		}
 
-		if !contentType.IsWebCompatible() {
+		if !contentType.IsWebCompatible() || mediaData.Media.UpdatedAt.Before(newModTime) {
 			highresName := generateUniqueMediaNamePrefixed("highres", photo.Path, ".jpg")
 			baseImagePath = path.Join(mediaCachePath, highresName)
 
@@ -81,7 +82,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		// Verify that highres photo still exists in cache
 		baseImagePath = path.Join(mediaCachePath, highResURL.MediaName)
 
-		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) {
+		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) || mediaData.Media.UpdatedAt.Before(newModTime) {
 			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.MediaName)
 			updatedURLs = append(updatedURLs, highResURL)
 
@@ -93,7 +94,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	}
 
 	// Save original photo to database
-	if origURL == nil {
+	if origURL == nil || mediaData.Media.UpdatedAt.Before(newModTime) {
 
 		// Make sure photo dimensions is set
 		if photoDimensions == nil {
@@ -124,7 +125,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		// Verify that thumbnail photo still exists in cache
 		thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 
-		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
+		if _, err := os.Stat(thumbPath); os.IsNotExist(err) || mediaData.Media.UpdatedAt.Before(newModTime) {
 			updatedURLs = append(updatedURLs, thumbURL)
 			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.MediaName)
 
@@ -135,6 +136,5 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 	}
 
-	ctx.GetDB().Save(mediaData.Media)
 	return updatedURLs, nil
 }

@@ -23,7 +23,7 @@ type ProcessVideoTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) ([]*models.MediaURL, error) {
 	if mediaData.Media.Type != models.MediaTypeVideo {
 		return []*models.MediaURL{}, nil
 	}
@@ -55,7 +55,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error getting video content type")
 	}
 
-	if videoOriginalURL == nil && videoType.IsWebCompatible() {
+	if videoType.IsWebCompatible() && (videoOriginalURL == nil || mediaData.Media.UpdatedAt.Before(newModTime)) {
 		origVideoPath := video.Path
 		videoMediaName := generateUniqueMediaName(video.Path)
 
@@ -86,7 +86,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		updatedURLs = append(updatedURLs, &mediaURL)
 	}
 
-	if videoWebURL == nil && !videoType.IsWebCompatible() {
+	if !videoType.IsWebCompatible() && (videoWebURL == nil || mediaData.Media.UpdatedAt.Before(newModTime)) {
 		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
 		web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
 		web_video_name = strings.ReplaceAll(web_video_name, " ", "_")
@@ -173,7 +173,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		// Verify that video thumbnail still exists in cache
 		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
 
-		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
+		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) || mediaData.Media.UpdatedAt.Before(newModTime) {
 			fmt.Printf("Video thumbnail found in database but not in cache, re-encoding photo to cache: %s\n", videoThumbnailURL.MediaName)
 			updatedURLs = append(updatedURLs, videoThumbnailURL)
 
