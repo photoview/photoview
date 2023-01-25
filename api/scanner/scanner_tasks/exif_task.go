@@ -2,6 +2,7 @@ package scanner_tasks
 
 import (
 	"log"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/exif"
@@ -12,9 +13,8 @@ type ExifTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
-
-	if !newMedia {
+func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error {
+	if !newMedia && media.UpdatedAt.After(newModTime) {
 		return nil
 	}
 

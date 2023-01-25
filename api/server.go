@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/photoview/photoview/api/scanner/watcher_scanner"
 	"log"
 	"net/http"
 	"path"
@@ -52,6 +53,10 @@ func main() {
 
 	if err := periodic_scanner.InitializePeriodicScanner(db); err != nil {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
+	}
+
+	if err := watcher_scanner.InitializeWatcherScanner(db); err != nil {
+		log.Panicf("Could not initialize watcher scanner: %s", err)
 	}
 
 	executable_worker.InitializeExecutableWorkers()

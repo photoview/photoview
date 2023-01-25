@@ -3,7 +3,9 @@ package scanner_queue
 import (
 	"context"
 	"fmt"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"log"
+	"path"
 	"sync"
 	"time"
 
@@ -150,7 +152,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			// Delete finished job from queue
 			queue.mutex.Lock()
 			for i, x := range queue.in_progress {
-				if x == nextJob {
+				if x.ctx == nextJob.ctx {
 					queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
 					queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
 					break
@@ -238,9 +240,82 @@ func AddUserToQueue(user *models.User) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		global_scanner_queue.addJob(&ScannerJob{
-			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, album_cache),
+			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, make([]string, 0), album_cache),
 		})
 	}
+	global_scanner_queue.mutex.Unlock()
+
+	return nil
+}
+
+func AddMediaToQueue(mediaPath string) error {
+	var media *models.Media
+
+	mediatype, err := media_type.GetMediaType(mediaPath)
+	if err != nil {
+		return errors.Wrap(err, "not media")
+	}
+	if mediatype == nil || !mediatype.IsSupported() {
+		return errors.New("unsupported media")
+	}
+
+	if err := global_scanner_queue.db.Preload("Album").Where("path = ?", mediaPath).Find(&media).Error; err != nil {
+		return errors.Wrap(err, "media by path database query")
+	}
+
+	// add album to the queue
+	var album *models.Album
+	var parentAlbum *models.Album
+	if media == nil || media.ID == 0 {
+
+		albumPath := path.Dir(mediaPath)
+		for album == nil {
+			if err := global_scanner_queue.db.Where("path = ?", albumPath).Find(&album).Error; err != nil {
+				return errors.Wrap(err, "album by path database query")
+			}
+			albumPath = path.Dir(albumPath)
+		}
+		if album == nil {
+			return errors.New("No root album found")
+		}
+		if err := global_scanner_queue.db.Where("path = ?", albumPath).Find(&parentAlbum).Error; err != nil {
+			return errors.Wrap(err, "parentalbum by path database query")
+		}
+	} else {
+		album = &media.Album
+	}
+
+	var userAlbumOwner []*models.User
+	if err := global_scanner_queue.db.Model(&album).Association("Owners").Find(&userAlbumOwner); err != nil {
+		return errors.Wrap(err, "find owners for album")
+	}
+
+	if parentAlbum != nil && parentAlbum.ID == 0 {
+		parentAlbum = nil
+	}
+	/*scanQueue := list.New()
+	scanQueue.PushBack(scanner.ScanInfo{
+		Path:   subalbumPath,
+		Parent: parentAlbum,
+		Ignore: nil,
+	})
+	//all_albums, album_errors := scanner.ProcessUserAlbums(scanQueue, global_scanner_queue.db, userAlbumOwner, album_cache)
+	//for _, err := range album_errors {
+	//	return errors.Wrapf(err, "find albums")
+	//}*/
+
+	album_cache := scanner_cache.MakeAlbumCache()
+	album_cache.InsertAlbumIgnore(album.Path, []string{})
+	var mediapaths []string
+	if album.Path == path.Dir(mediaPath) {
+		mediapaths = []string{path.Base(mediaPath)}
+	} else {
+		mediapaths = []string{}
+	}
+	global_scanner_queue.mutex.Lock()
+	global_scanner_queue.addJob(&ScannerJob{
+		ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, mediapaths, album_cache),
+	})
 	global_scanner_queue.mutex.Unlock()
 
 	return nil

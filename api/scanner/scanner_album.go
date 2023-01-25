@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -85,6 +86,11 @@ func ValidRootPath(rootPath string) bool {
 	return true
 }
 
+type ChangedMedia struct {
+	media      *models.Media
+	newModTime time.Time
+}
+
 func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
@@ -94,16 +100,16 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	ctx = newCtx
 
 	// Scan for photos
-	albumMedia, err := findMediaForAlbum(ctx)
+	albumUpdatedMedia, err := findMediaForAlbum(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path, err)
 	}
 
 	changedMedia := make([]*models.Media, 0)
-	for i, media := range albumMedia {
+	for i, media := range albumUpdatedMedia {
 		updatedURLs := []*models.MediaURL{}
 
-		mediaData := media_encoding.NewEncodeMediaData(media)
+		mediaData := media_encoding.NewEncodeMediaData(media.media)
 
 		// define new ctx for scope of for-loop
 		ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, &mediaData)
@@ -112,15 +118,18 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		}
 
 		transactionError := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-			updatedURLs, err = processMedia(ctx, &mediaData)
+			updatedURLs, err = processMedia(ctx, &mediaData, media.newModTime)
 			if err != nil {
-				return errors.Wrapf(err, "process media (%s)", media.Path)
+				return errors.Wrapf(err, "process media (%s)", media.media.Path)
 			}
 
 			if len(updatedURLs) > 0 {
-				changedMedia = append(changedMedia, media)
+				changedMedia = append(changedMedia, media.media)
 			}
 
+			if media.media.UpdatedAt.Before(media.newModTime) {
+				ctx.GetDB().Save(mediaData.Media)
+			}
 			return nil
 		})
 
@@ -128,11 +137,15 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 			return errors.Wrap(err, "process media database transaction")
 		}
 
-		if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, &mediaData, updatedURLs, i, len(albumMedia)); err != nil {
+		if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, &mediaData, updatedURLs, i, len(albumUpdatedMedia)); err != nil {
 			return errors.Wrap(err, "after process media")
 		}
 	}
 
+	albumMedia := make([]*models.Media, 0)
+	for _, media := range albumUpdatedMedia {
+		albumMedia = append(albumMedia, media.media)
+	}
 	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
 		return errors.Wrap(err, "after scan album")
 	}
@@ -140,17 +153,29 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	return nil
 }
 
-func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
+func findMediaForAlbum(ctx scanner_task.TaskContext) ([]ChangedMedia, error) {
 
-	albumMedia := make([]*models.Media, 0)
+	albumMedia := make([]ChangedMedia, 0)
 
 	dirContent, err := ioutil.ReadDir(ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, item := range dirContent {
-		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
+	var mediaNames = ctx.GetMediaNames()
+	if len(mediaNames) == 0 {
+		for _, item := range dirContent {
+			mediaNames = append(mediaNames, item.Name())
+		}
+	}
+
+	for _, mediaName := range mediaNames {
+		mediaPath := path.Join(ctx.GetAlbum().Path, mediaName)
+		item, err := os.Stat(mediaPath)
+		if err != nil {
+			log.Printf("cannot find file")
+			continue
+		}
 
 		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
 		if err != nil {
@@ -173,11 +198,11 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
 
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia, item.ModTime()); err != nil {
 					return err
 				}
 
-				albumMedia = append(albumMedia, media)
+				albumMedia = append(albumMedia, ChangedMedia{media, item.ModTime()})
 
 				return nil
 			})
@@ -193,7 +218,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	return albumMedia, nil
 }
 
-func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
+func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, newModTime time.Time) ([]*models.MediaURL, error) {
 
 	// Make sure media cache directory exists
 	mediaCachePath, err := mediaData.Media.CachePath()
@@ -201,5 +226,5 @@ func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.Encode
 		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
 	}
 
-	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
+	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath, newModTime)
 }

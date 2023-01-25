@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -28,10 +29,10 @@ type ScannerTask interface {
 
 	// AfterMediaFound will run each media file after is has been saved to the database, but not processed yet.
 	// It will run even when the media is already present in the database, in that case `newMedia` will be true.
-	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool) error
+	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error
 
 	BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error)
-	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
+	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) (updatedURLs []*models.MediaURL, err error)
 	AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error
 }
 
@@ -39,9 +40,10 @@ type TaskContext struct {
 	ctx context.Context
 }
 
-func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, mediapaths []string, cache *scanner_cache.AlbumScannerCache) TaskContext {
 	ctx := TaskContext{ctx: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
+	ctx = ctx.WithValue(taskCtxKeyMediaNames, mediapaths)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
 	ctx = ctx.WithDB(db)
 
@@ -52,12 +54,17 @@ type taskCtxKeyType string
 
 const (
 	taskCtxKeyAlbum      taskCtxKeyType = "task_album"
+	taskCtxKeyMediaNames taskCtxKeyType = "task_media_names"
 	taskCtxKeyAlbumCache taskCtxKeyType = "task_album_cache"
 	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
 	return c.ctx.Value(taskCtxKeyAlbum).(*models.Album)
+}
+
+func (c TaskContext) GetMediaNames() []string {
+	return c.ctx.Value(taskCtxKeyMediaNames).([]string)
 }
 
 func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {

@@ -2,6 +2,7 @@ package scanner_tasks
 
 import (
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -91,9 +92,9 @@ func (t scannerTasks) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia 
 	})
 }
 
-func (t scannerTasks) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+func (t scannerTasks) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error {
 	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
-		return task.AfterMediaFound(ctx, media, newMedia)
+		return task.AfterMediaFound(ctx, media, newMedia, newModTime)
 	})
 }
 
@@ -115,7 +116,7 @@ func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData
 	return ctx, nil
 }
 
-func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) ([]*models.MediaURL, error) {
 	allNewMedia := make([]*models.MediaURL, 0)
 
 	for _, task := range allTasks {
@@ -125,7 +126,7 @@ func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *medi
 		default:
 		}
 
-		newMedia, err := task.ProcessMedia(ctx, mediaData, mediaCachePath)
+		newMedia, err := task.ProcessMedia(ctx, mediaData, mediaCachePath, newModTime)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}

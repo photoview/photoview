@@ -40,7 +40,7 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 				return nil, errors.Wrap(err, "get EXIF for media from database")
 			}
 
-			return &exif, nil
+			tx.Delete(&exif)
 		}
 	}
 

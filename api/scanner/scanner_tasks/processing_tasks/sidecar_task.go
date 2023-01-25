@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -20,7 +21,7 @@ type SidecarTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool, newModTime time.Time) error {
 	if media.Type != models.MediaTypePhoto || !newMedia {
 		return nil
 	}
@@ -52,7 +53,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	return nil
 }
 
-func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string, newModTime time.Time) (updatedURLs []*models.MediaURL, err error) {
 	mediaType, err := mediaData.ContentType()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")

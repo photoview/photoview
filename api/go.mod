@@ -23,6 +23,7 @@ require (
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+	golang.org/x/exp v0.0.0-20230116083435-1de6713980de
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.3
 	gorm.io/driver/mysql v1.3.4
@@ -31,10 +32,13 @@ require (
 	gorm.io/gorm v1.23.7
 )
 
+require golang.org/x/sys v0.1.0 // indirect
+
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.12.1 // indirect
