@@ -51,22 +51,15 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if _, err := os.Stat(cachedPath); err != nil {
 			if os.IsNotExist(err) {
-				err := db.Transaction(func(tx *gorm.DB) error {
-					if err := scanner.ProcessSingleMedia(tx, media); err != nil {
-						log.Printf("ERROR: processing video not found in cache: %s\n", err)
-						return err
-					}
+				if err := scanner.ProcessSingleMedia(db, media); err != nil {
+					log.Printf("ERROR: processing video not found in cache: %s\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte("internal server error"))
+					return
+				}
 
-					if _, err := os.Stat(cachedPath); err != nil {
-						log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
-						return err
-					}
-
-					return nil
-				})
-
-				if err != nil {
-					log.Printf("ERROR: %s\n", err)
+				if _, err := os.Stat(cachedPath); err != nil {
+					log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte("internal server error"))
 					return
