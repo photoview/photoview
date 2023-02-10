@@ -48,6 +48,11 @@ func (dimensions *PhotoDimensions) ThumbnailScale() PhotoDimensions {
 		height = 1024
 	}
 
+	if width > dimensions.Width {
+		width = dimensions.Width
+		height = dimensions.Height
+	}
+
 	return PhotoDimensions{
 		Width:  width,
 		Height: height,
