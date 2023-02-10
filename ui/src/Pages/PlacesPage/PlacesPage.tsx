@@ -44,9 +44,7 @@ const MapPage = () => {
   const { mapContainer, mapboxMap, mapboxToken } = useMapboxMap({
     configureMapbox: configureMapbox({ mapboxData, dispatchMarkerMedia }),
     mapboxOptions: {
-      projection: {
-        name: 'globe',
-      },
+        zoom: 1
     },
   })
 
