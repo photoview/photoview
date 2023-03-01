@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useIsAdmin } from '../../../components/routes/AuthorizedRoute'
 import { Link, useNavigate } from 'react-router-dom'
 import FaceCircleImage from '../../../Pages/PeoplePage/FaceCircleImage'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
@@ -60,6 +61,7 @@ const PersonMoreMenu = ({
   className,
 }: PersonMoreMenuProps) => {
   const { t } = useTranslation()
+  const isAdmin = useIsAdmin()  
 
   const [mergeModalOpen, setMergeModalOpen] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
@@ -113,40 +115,42 @@ const PersonMoreMenu = ({
 
   return (
     <>
-      <Menu
-        as="div"
-        className={tailwindClassNames('relative inline-block', className)}
-      >
-        <Menu.Button as={Button} className="px-1.5 py-1.5 align-middle ml-1">
-          <PeopleDotsIcon className="text-gray-500" />
-        </Menu.Button>
-        <Menu.Items className="">
-          <ArrowPopoverPanel width={120} flipped={menuFlipped}>
-            <PersonMoreMenuItem
-              onClick={() => setChangeLabel(true)}
-              className="border-b"
-              label={t('people_page.action_label.change_label', 'Change label')}
-            />
-            <PersonMoreMenuItem
-              onClick={() => setMergeModalOpen(true)}
-              className="border-b"
-              label={t('sidebar.people.action_label.merge_face', 'Merge face')}
-            />
-            <PersonMoreMenuItem
-              onClick={() => detachImageFace()}
-              className="border-b"
-              label={t(
-                'sidebar.people.action_label.detach_image',
-                'Detach image'
-              )}
-            />
-            <PersonMoreMenuItem
-              onClick={() => setMoveModalOpen(true)}
-              label={t('sidebar.people.action_label.move_face', 'Move face')}
-            />
-          </ArrowPopoverPanel>
-        </Menu.Items>
-      </Menu>
+      {isAdmin && (
+        <Menu
+          as="div"
+          className={tailwindClassNames('relative inline-block', className)}
+        >
+          <Menu.Button as={Button} className="px-1.5 py-1.5 align-middle ml-1">
+            <PeopleDotsIcon className="text-gray-500" />
+          </Menu.Button>
+          <Menu.Items className="">
+            <ArrowPopoverPanel width={120} flipped={menuFlipped}>
+              <PersonMoreMenuItem
+                onClick={() => setChangeLabel(true)}
+                className="border-b"
+                label={t('people_page.action_label.change_label', 'Change label')}
+              />
+              <PersonMoreMenuItem
+                onClick={() => setMergeModalOpen(true)}
+                className="border-b"
+                label={t('sidebar.people.action_label.merge_face', 'Merge face')}
+              />
+              <PersonMoreMenuItem
+                onClick={() => detachImageFace()}
+                className="border-b"
+                label={t(
+                  'sidebar.people.action_label.detach_image',
+                  'Detach image'
+                )}
+              />
+              <PersonMoreMenuItem
+                onClick={() => setMoveModalOpen(true)}
+                label={t('sidebar.people.action_label.move_face', 'Move face')}
+              />
+            </ArrowPopoverPanel>
+          </Menu.Items>
+        </Menu>
+      )}
       {modals}
     </>
   )

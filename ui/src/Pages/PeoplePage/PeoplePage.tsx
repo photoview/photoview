@@ -9,6 +9,7 @@ import FaceCircleImage from './FaceCircleImage'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
 import { useTranslation } from 'react-i18next'
+import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 import {
   setGroupLabel,
   setGroupLabelVariables,
@@ -122,6 +123,7 @@ export const FaceDetails = ({
   const { t } = useTranslation()
   const [inputValue, setInputValue] = useState(group.label ?? '')
   const inputRef = createRef<HTMLInputElement>()
+  const isAdmin = useIsAdmin()
 
   const [setGroupLabel, { loading }] = useMutation<
     setGroupLabel,
@@ -163,7 +165,7 @@ export const FaceDetails = ({
           'whitespace-nowrap inline-block overflow-hidden overflow-clip'
         )}
         labeled={!!group.label}
-        onClick={() => setEditLabel(true)}
+        onClick={isAdmin ? () => setEditLabel(true) : () => {}}
       >
         <FaceImagesCount>{group.imageFaceCount}</FaceImagesCount>
         <button className="">
