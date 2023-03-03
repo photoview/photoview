@@ -16,7 +16,9 @@ type externalExifParser struct {
 }
 
 func NewExiftoolParser() (ExifParser, error) {
-	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
+	buf := make([]byte, 256*1024)
+
+	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
 
 	if err != nil {
 		log.Printf("Error initializing ExifTool: %s\n", err)
