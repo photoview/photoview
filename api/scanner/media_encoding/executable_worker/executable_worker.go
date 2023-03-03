@@ -125,7 +125,7 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 		inputPath,
 		"-vcodec", "h264",
 		"-acodec", "aac",
-		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease",
+		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
 		outputPath,
 	}
 
@@ -147,7 +147,7 @@ func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath st
 		inputPath,
 		"-vframes", "1", // output one frame
 		"-an", // disable audio
-		"-vf", "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease",
+		"-vf", "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
 		"-ss", thumbnailOffsetSeconds, // grab frame at time offset
 		outputPath,
 	}
