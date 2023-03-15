@@ -1,0 +1,359 @@
+{
+  "album_filter": {
+    "only_favorites": "Sadece favorileri göster",
+    "sort": "Sırala",
+    "sort_by": "Sırala:",
+    "sorting_options": {
+      "date_imported": "Alındığı tarih",
+      "date_shot": "Çekildiği tarih",
+      "title": "Başlık",
+      "type": "Tür"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "Ekle",
+      "cancel": "İptal",
+      "remove": "Kaldır",
+      "save": "Kaydet"
+    },
+    "loading": {
+      "album": "Albüm yükleniyor",
+      "default": "Yükleniyor...",
+      "page": "Sayfa yükleniyor",
+      "paginate": {
+        "faces": "Daha fazla kişi yükleniyor",
+        "media": "Daha fazla medya yükleniyor"
+      },
+      "shares": "Paylaşımlar yükleniyor..."
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Sonuçlar yükleniyor...",
+      "no_results": "Sonuç bulunamadı",
+      "placeholder": "Ara",
+      "result_type": {
+        "albums": "Albümler",
+        "media": "Medya"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Parola",
+      "submit": "Oturum aç",
+      "username": "Kullanıcı adı"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Fotoğraf yolu",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Photoview Kurulumu"
+      },
+      "title": "İlk Kurulum"
+    },
+    "welcome": "Photoview Uygulamasına Hoş Geldiniz"
+  },
+  "meta": {
+    "description": "Kişisel Sunucular için Basit ve Kullanıcı Dostu Fotoğraf Galerisi"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "Etiketi değiştir",
+      "detach_images": "Yüzü ayır",
+      "merge_people": "Yüzü birleştir",
+      "move_faces": "Yüzleri taşı"
+    },
+    "face_group": {
+      "label_placeholder": "Etiket",
+      "unlabeled": "Etiketsiz",
+      "unlabeled_person": "Etiketsiz kişi"
+    },
+    "modal": {
+      "action": {
+        "merge": "Birleştir"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Resimdeki yüzleri ayır",
+          "select_images": "Ayırılacak resimleri seçin"
+        },
+        "description": "Bu yüz grubunun seçili resimlerini ayırın ve bunları yeni bir yüz grubuna taşıyın",
+        "title": "Resimdeki Yüzleri Ayır"
+      },
+      "merge_face_groups": {
+        "description": "Bu yüz grubundaki tüm resimler seçilen yüz grubunda birleştirilecektir.",
+        "destination_table": {
+          "title": "Hedef yüzü seçin"
+        },
+        "title": "Yüz Gruplarını Birleştir"
+      },
+      "move_image_faces": {
+        "description": "Bu yüz grubunun seçili resimlerini başka bir yüz grubuna taşı",
+        "destination_face_group_table": {
+          "move_action": "Resimdeki yüzleri taşı",
+          "title": "Hedef yüz grubunu seçin"
+        },
+        "image_select_table": {
+          "next_action": "Sonraki",
+          "title": "Taşınacak resimleri seçin"
+        },
+        "title": "Resimdeki Yüzleri Taşı"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Etiketlenmemiş yüzleri tanı",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Yüzlerde ara..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Resimlerde ara..."
+    }
+  },
+  "photos_page": {
+    "title": "Zaman çizelgesi"
+  },
+  "places_page": {
+    "title": "Yerler"
+  },
+  "routes": {
+    "page_not_found": "Sayfa bulunamadı"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Aynı anda çalışmasına izin verilen tarayıcı işi miktarı",
+      "title": "Eş zamanlı tarayıcı işlemleri"
+    },
+    "logout": "Oturumu kapat",
+    "periodic_scanner": {
+      "checkbox_label": "Düzenli tarayıcıyı etkinleştir",
+      "field": {
+        "description": "Tarayıcının tüm kullanıcılar için otomatik taramaları ne sıklıkla gerçekleştirmesi gerekir",
+        "label": "Düzenli tarama aralığı"
+      },
+      "interval_unit": {
+        "days": "Gün",
+        "hour": "Saat",
+        "minutes": "Dakika",
+        "months": "Ay",
+        "seconds": "Saniye"
+      },
+      "title": "Düzenli tarayıcı"
+    },
+    "scanner": {
+      "description": "Yeni veya güncellenmiş medya için tüm kullanıcıları tarar",
+      "scan_all_users": "Tüm kullanıcıları tara",
+      "title": "Tarayıcı"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Bu kullanıcıya özel web sitesi dilini değiştir",
+        "label": "Web sitesi dili"
+      },
+      "language_selector": {
+        "placeholder": "Dil seç"
+      },
+      "theme": {
+        "auto": {
+          "label": "Sistem ile aynı"
+        },
+        "dark": {
+          "label": "Koyu"
+        },
+        "description": "Web sitesinin görünümünü değiştirin",
+        "light": {
+          "label": "Açık"
+        },
+        "title": "Tema tercihleri"
+      },
+      "title": "Kullanıcı tercihleri"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Kullanıcı ekle"
+      },
+      "confirm_delete_user": {
+        "action": "Sil: {{user}}",
+        "description": "<0>Silmek istediğinize emin misiniz <1></1>?</0><p>Bu işlem geri alınamaz</p>",
+        "title": "Kullanıcı sil"
+      },
+      "password_reset": {
+        "description": "<1>{{username}}</1> için parola değiştir",
+        "form": {
+          "label": "Yeni parola",
+          "placeholder": "parola",
+          "submit": "Parolayı değiştir"
+        },
+        "title": "Parola değiştir"
+      },
+      "table": {
+        "column_names": {
+          "action": "Eylem",
+          "capabilities": "Özellikler",
+          "photo_path": "Fotoğraf yolu",
+          "username": "Kullanıcı adı"
+        },
+        "new_user": "Yeni kullanıcı",
+        "row": {
+          "action": {
+            "change_password": "Parola değiştir",
+            "delete": "Sil",
+            "edit": "Düzenle",
+            "scan": "Tara"
+          }
+        }
+      },
+      "title": "Kullanıcılar"
+    },
+    "version_info": {
+      "build_date_title": "Yapı tarihi",
+      "title": "Photoview Sürümü",
+      "version_title": "Yayın Sürümü"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Paylaşılan medya"
+    },
+    "protected_share": {
+      "description": "Bu paylaşım şifre ile korunmaktadır.",
+      "password_required_error": "Parola gereklidir",
+      "title": "Korumalı paylaşım"
+    },
+    "share_not_found": "Paylaşım bulunamadı",
+    "share_not_found_description": "Paylaşımın süresi dolmuş veya silinmiş olabilir.",
+    "wrong_password": "Yanlış parola, lütfen tekrar deneyin."
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "Albüm kapağı",
+      "download": {
+        "high-resolutions": {
+          "description": "RAW resimlerin yüksek çözünürlüklü jpeg dosyaları",
+          "title": "Yüksek çözünürlükler"
+        },
+        "originals": {
+          "description": "Orijinal resimler ve videolar",
+          "title": "Orijinaller"
+        },
+        "thumbnails": {
+          "description": "Düşük çözünürlüklü resimler, video yok",
+          "title": "Küçük resimler"
+        },
+        "web-videos": {
+          "description": "Web için optimize edilmiş videolar",
+          "title": "Dönüştürülmüş videolar"
+        }
+      },
+      "reset_cover": "Kapak fotoğrafını sıfırla",
+      "set_cover": "Albüm kapak fotoğrafı olarak ayarla",
+      "title_placeholder": "Albüm başlığı"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "{{count}} Bayt",
+        "byte_other": "{{count}} Bayt",
+        "giga_byte_one": "{{count}} GB",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "{{count}} KB",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "{{count}} MB",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "{{count}} TB",
+        "tera_byte_other": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Boyutlar",
+        "file_size": "Boyut",
+        "file_type": "Tür",
+        "name": "Ad"
+      },
+      "title": "İndir"
+    },
+    "location": {
+      "title": "Konum"
+    },
+    "media": {
+      "album_path": "Albüm yolu",
+      "exif": {
+        "exposure_program": {
+          "action_program": "Action program",
+          "aperture_priority": "Diyafram önceliği",
+          "bulb": "Ampul",
+          "creative_program": "Yaratıcı izlence",
+          "landscape_mode": "Manzara modu",
+          "manual": "El ile",
+          "normal_program": "Normal izlence",
+          "not_defined": "Tanımlanmamış",
+          "portrait_mode": "Portre modu",
+          "shutter_priority": "Perde önceliği"
+        },
+        "flash": {
+          "auto": "Otomatik",
+          "did_not_fire": "Patlamadı",
+          "fired": "Patladı",
+          "no_flash": "Flaşsız",
+          "no_flash_function": "Flaş fonksiyonu yok",
+          "off": "Kapalı",
+          "on": "Açık",
+          "red_eye_reduction": "Kırmızı göz önleme",
+          "return_detected": "Dönüş algılandı",
+          "return_not_detected": "Dönüş algılanmadı"
+        },
+        "name": {
+          "aperture": "Diyafram",
+          "camera": "Kamera",
+          "coordinates": "Koordinatlar",
+          "date_shot": "Çekildiği tarih",
+          "exposure": "Pozlandırma",
+          "exposure_program": "Program",
+          "flash": "Flaş",
+          "focal_length": "Odak uzunluğu",
+          "iso": "ISO",
+          "lens": "Lens",
+          "maker": "Üretici"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Resmi ayır",
+        "merge_face": "Yüzü birleştir",
+        "move_face": "Yüzü taşı"
+      },
+      "confirm_image_detach": "Bu resmi ayırmak istediğinizden emin misiniz?",
+      "title": "Kişiler"
+    },
+    "sharing": {
+      "add_share": "Paylaşımlara ekle",
+      "copy_link": "Bağlantıyı Kopyala",
+      "delete": "Sil",
+      "more": "Diğer",
+      "no_shares_found": "Paylaşım bulunamadı",
+      "public_link": "Genel bağlantı",
+      "title": "Paylaşım seçenekleri"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albümler",
+    "people": "Kişiler",
+    "photos": "Zaman Çizelgesi",
+    "places": "Yerler",
+    "settings": "Ayarlar"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "Bugün",
+      "dropdown_year": "{{year}} ve öncesi",
+      "label": "Tarih"
+    }
+  },
+  "title": {
+    "loading_album": "Albüm yükleniyor",
+    "login": "Oturum Aç",
+    "people": "Kişiler",
+    "settings": "Ayarlar"
+  }
+}

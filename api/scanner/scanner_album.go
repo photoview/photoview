@@ -86,7 +86,6 @@ func ValidRootPath(rootPath string) bool {
 }
 
 func ScanAlbum(ctx scanner_task.TaskContext) error {
-
 	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
@@ -101,35 +100,10 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
-		updatedURLs := []*models.MediaURL{}
-
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
-		// define new ctx for scope of for-loop
-		ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, &mediaData)
-		if err != nil {
-			return err
-		}
-
-		transactionError := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-			updatedURLs, err = processMedia(ctx, &mediaData)
-			if err != nil {
-				return errors.Wrapf(err, "process media (%s)", media.Path)
-			}
-
-			if len(updatedURLs) > 0 {
-				changedMedia = append(changedMedia, media)
-			}
-
-			return nil
-		})
-
-		if transactionError != nil {
-			return errors.Wrap(err, "process media database transaction")
-		}
-
-		if err = scanner_tasks.Tasks.AfterProcessMedia(ctx, &mediaData, updatedURLs, i, len(albumMedia)); err != nil {
-			return errors.Wrap(err, "after process media")
+		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
+			return errors.Wrap(err, "album scan")
 		}
 	}
 

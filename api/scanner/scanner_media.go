@@ -10,7 +10,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_tasks"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -82,24 +81,8 @@ func ProcessSingleMedia(db *gorm.DB, media *models.Media) error {
 	media_data := media_encoding.NewEncodeMediaData(media)
 
 	task_context := scanner_task.NewTaskContext(context.Background(), db, &album, album_cache)
-	new_ctx, err := scanner_tasks.Tasks.BeforeProcessMedia(task_context, &media_data)
-	if err != nil {
-		return err
-	}
-
-	mediaCachePath, err := media.CachePath()
-	if err != nil {
-		return err
-	}
-
-	updated_urls, err := scanner_tasks.Tasks.ProcessMedia(new_ctx, &media_data, mediaCachePath)
-	if err != nil {
-		return err
-	}
-
-	err = scanner_tasks.Tasks.AfterProcessMedia(new_ctx, &media_data, updated_urls, 0, 1)
-	if err != nil {
-		return err
+	if err := scanMedia(task_context, media, &media_data, 0, 1); err != nil {
+		return errors.Wrap(err, "single media scan")
 	}
 
 	return nil

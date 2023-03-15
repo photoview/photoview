@@ -311,7 +311,7 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "修改面孔命名",
+        "detach_image": "解除面孔标记",
         "merge_face": "合并面孔",
         "move_face": "移动面孔"
       },

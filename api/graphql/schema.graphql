@@ -299,7 +299,8 @@ enum LanguageTranslation {
   TraditionalChinese,
   SimplifiedChinese,
   Portuguese,
-  Basque
+  Basque,
+  Turkish
 }
 
 "Preferences for regular users"

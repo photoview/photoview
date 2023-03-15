@@ -16,7 +16,9 @@ type externalExifParser struct {
 }
 
 func NewExiftoolParser() (ExifParser, error) {
-	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
+	buf := make([]byte, 256*1024)
+
+	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
 
 	if err != nil {
 		log.Printf("Error initializing ExifTool: %s\n", err)
@@ -119,6 +121,13 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 			if err == nil {
 				found_exif = true
 				newExif.DateShot = &dateTime
+			} else {
+				layoutWithOffset := "2006:01:02 15:04:05+02:00"
+				dateTime, err = time.Parse(layoutWithOffset, date)
+				if err == nil {
+					found_exif = true
+					newExif.DateShot = &dateTime
+				}	
 			}
 			break
 		}
