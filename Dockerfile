@@ -78,8 +78,10 @@ RUN apt update \
   && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
+# And create darktable directories for non-root users
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt install -y darktable; fi
+  apt install -y darktable && \
+  mkdir -p /.cache/darktable /.config/darktable; fi
 
 # Remove build dependencies and cleanup
 RUN apt purge -y gpg \
