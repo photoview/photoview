@@ -13,7 +13,7 @@ const placeholder =
 const getProtectedUrl = (url?: string) => {
   if (url == undefined) return undefined
 
-  const imgUrl = new URL(url, location.origin)
+  const imgUrl = new URL(`${import.meta.env.BASE_URL}/${url}`, location.origin)
 
   const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
   if (tokenRegex) {
