@@ -12,7 +12,7 @@ export const INITIAL_SETUP_QUERY = gql`
 
 export function login(token: string) {
   saveTokenCookie(token)
-  window.location.href = '/'
+  window.location.href = `${import.meta.env.BASE_URL}`
 }
 
 export const Container = styled.div.attrs({ className: 'mt-20' })``
