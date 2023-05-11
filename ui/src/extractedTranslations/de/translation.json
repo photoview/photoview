@@ -157,7 +157,7 @@
       },
       "theme": {
         "auto": {
-          "label": "Darstellung"
+          "label": "automatisch"
         },
         "dark": {
           "label": "dunkel"
@@ -345,9 +345,9 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "dropdown_year": "und früher",
-      "label": ""
+      "dropdown_all": "bis heute",
+      "dropdown_year": "alle bis {{year}}",
+      "label": "Datum"
     }
   },
   "title": {
