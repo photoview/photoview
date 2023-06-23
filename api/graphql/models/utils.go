@@ -20,6 +20,17 @@ func FormatSQL(tx *gorm.DB, order *Ordering, paginate *Pagination) *gorm.DB {
 		}
 	}
 
+	if *order.OrderBy == "random" {
+		tx.Order("RAND()")
+	} else {
+		tx.Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: *order.OrderBy,
+			},
+			Desc: desc,
+		})
+	}
+
 	if order != nil && order.OrderBy != nil {
 		desc := false
 		if order.OrderDirection != nil && order.OrderDirection.IsValid() {

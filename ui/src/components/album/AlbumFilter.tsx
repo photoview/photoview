@@ -63,6 +63,10 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
       label: t('album_filter.sorting_options.date_shot', 'Date shot'),
     },
     {
+      value: 'random',
+      label: t('album_filter.sorting_options.random', 'Random'),
+},
+    {
       value: 'updated_at',
       label: t('album_filter.sorting_options.date_imported', 'Date imported'),
     },
