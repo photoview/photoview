@@ -28,13 +28,16 @@ func FormatSQL(tx *gorm.DB, order *Ordering, paginate *Pagination) *gorm.DB {
 			}
 		}
 
-		tx.Order(clause.OrderByColumn{
-			Column: clause.Column{
-				Name: *order.OrderBy,
-			},
-			Desc: desc,
-		})
-	}
+		if *order.OrderBy == "random" {
+			tx.Order("RAND()")
+		} else {
+			tx.Order(clause.OrderByColumn{
+				Column: clause.Column{
+					Name: *order.OrderBy,
+				},
+				Desc: desc,
+			})
+		}
 
 	return tx
 }

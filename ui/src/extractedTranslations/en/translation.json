@@ -6,6 +6,7 @@
     "sorting_options": {
       "date_imported": "Date imported",
       "date_shot": "Date shot",
+      "random": "Random",
       "title": "Title",
       "type": "Kind"
     }

@@ -67,9 +67,14 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
       label: t('album_filter.sorting_options.date_imported', 'Date imported'),
     },
     {
+      value: 'random',
+      label: t('album_filter.sorting_options.random', 'Random'),
+},
+    {
       value: 'title',
       label: t('album_filter.sorting_options.title', 'Title'),
     },
+
     {
       value: 'type',
       label: t('album_filter.sorting_options.type', 'Kind'),
