@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { useForm } from 'react-hook-form'
 import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
-import { authToken } from '../../helpers/authentication'
+import { authToken, isGuestUser } from '../../helpers/authentication'
 
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
@@ -133,14 +133,17 @@ const LoginPage = () => {
   )
 
   useEffect(() => {
-    if (authToken()) navigate('/')
+    if (authToken() && !isGuestUser()) navigate('/')
   }, [])
 
   useEffect(() => {
     if (initialSetupData?.siteInfo?.initialSetup) navigate('/initialSetup')
   }, [initialSetupData?.siteInfo?.initialSetup])
 
-  if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
+  if (
+    (authToken() && !isGuestUser()) ||
+    initialSetupData?.siteInfo?.initialSetup
+  ) {
     return null
   }
 

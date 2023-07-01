@@ -14,6 +14,9 @@ func IsAdmin(ctx context.Context, obj interface{}, next graphql.Resolver) (res i
 		return nil, errors.New("user must be admin")
 	}
 
+	if auth.IsGuestUserFromContext(ctx) {
+		return nil, errors.New("logged in as guest users")
+	}
 	return next(ctx)
 }
 

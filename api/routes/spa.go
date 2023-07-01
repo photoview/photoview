@@ -1,10 +1,15 @@
 package routes
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"github.com/photoview/photoview/api/utils"
 )
 
 // SpaHandler implements the http.Handler interface, so we can use it
@@ -36,9 +41,15 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// check whether a file exists at the given path
 	_, err := os.Stat(servePath)
-	if os.IsNotExist(err) {
-		// file does not exist, serve index.html
-		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+	if r.URL.Path == "/" || r.URL.Path == "/index.html" || os.IsNotExist(err) {
+		// serve index.html, if index.html is asked for, or if file does not exist
+		bytes, err := h.renderIndexHtml()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to renderIndexHtml as %v", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(bytes)
 		return
 	} else if err != nil {
 		// if we got an error (that wasn't that the file doesn't exist) stating the
@@ -49,4 +60,26 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// otherwise, use http.FileServer to serve the static dir
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+}
+
+func (h SpaHandler) renderIndexHtml() ([]byte, error) {
+	indexFilePath := filepath.Join(h.staticPath, h.indexPath)
+
+	f, err := os.Open(indexFilePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	bytes, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	if utils.GuestAccepted() {
+		return []byte(strings.ReplaceAll(string(bytes), "<head>", "<head><script>window.GuestAccepted=true;</script>")), nil
+	} else {
+		return bytes, nil
+	}
+
 }

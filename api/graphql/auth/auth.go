@@ -10,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +19,7 @@ var ErrUnauthorized = errors.New("unauthorized")
 // A private key for context that only this package can access. This is important
 // to prevent collisions between different context uses
 var userCtxKey = &contextKey{"user"}
+var isGuestUserCtxKey = &contextKey{"isGuestUser"}
 
 type contextKey struct {
 	name string
@@ -43,6 +45,14 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				// and call the next with our new context
 				r = r.WithContext(ctx)
 			} else {
+				if utils.GuestAccepted() {
+					user := &models.User{}
+					username := utils.UserToShowGuests()
+					db.Model(&models.User{}).Where("username = ?", username).First(&user)
+
+					ctx := AddGuestUserFlagToContext(AddUserToContext(r.Context(), user))
+					r = r.WithContext(ctx)
+				}
 				log.Println("Did not find auth-token cookie")
 			}
 
@@ -53,6 +63,10 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 
 func AddUserToContext(ctx context.Context, user *models.User) context.Context {
 	return context.WithValue(ctx, userCtxKey, user)
+}
+
+func AddGuestUserFlagToContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, isGuestUserCtxKey, true)
 }
 
 func TokenFromBearer(bearer *string) (*string, error) {
@@ -70,6 +84,12 @@ func TokenFromBearer(bearer *string) (*string, error) {
 func UserFromContext(ctx context.Context) *models.User {
 	raw, _ := ctx.Value(userCtxKey).(*models.User)
 	return raw
+}
+
+// IsGuestUserFromContext checks if the user is a guest from the context. REQUIRES Middleware to have run.
+func IsGuestUserFromContext(ctx context.Context) bool {
+	raw, ok := ctx.Value(isGuestUserCtxKey).(bool)
+	return ok && raw == true
 }
 
 func AuthWebsocketInit(db *gorm.DB) func(context.Context, handler.InitPayload) (context.Context, error) {
