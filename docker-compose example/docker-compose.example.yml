@@ -1,0 +1,116 @@
+version: '3.9'
+
+services:
+  photoview:
+    image: viktorstrate/photoview:latest
+    container_name: photoview
+    restart: unless-stopped
+    stop_grace_period: 10s
+    ports:
+      - "8000:80" ## HTTP port (host:container)
+    depends_on:
+      db:
+        condition: service_healthy ## To make sure that DB is initialised and ready for connections
+    ## Security options for some restricted systems
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    environment:
+      PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
+      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(db)/${MARIADB_DATABASE}"
+      PHOTOVIEW_LISTEN_IP: "photoview"
+      PHOTOVIEW_LISTEN_PORT: 80
+      PHOTOVIEW_MEDIA_CACHE: "/app/cache"
+      ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
+      ## Enable the following Godebug
+      # - GODEBUG=asyncpreemptoff=1
+      ## Optional: To enable map related features, you need to create a mapbox token.
+      ## A token can be generated for free here https://account.mapbox.com/access-tokens/
+      ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
+      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+    ## Share hardware devices with FFmpeg (optional):
+    # devices:
+      ## Uncomment next devices mappings if they are available in your host system
+      ## Intel QSV
+      # - "/dev/dri:/dev/dri"
+      ## Nvidia CUDA
+      # - "/dev/nvidia0:/dev/nvidia0"
+      # - "/dev/nvidiactl:/dev/nvidiactl"
+      # - "/dev/nvidia-modeset:/dev/nvidia-modeset"
+      # - "/dev/nvidia-nvswitchctl:/dev/nvidia-nvswitchctl"
+      # - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+      # - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+      ## Video4Linux Video Encode Device (h264_v4l2m2m)
+      # - "/dev/video11:/dev/video11"
+    volumes:
+      ## Example:
+      ## - "/host/folder:/container/folder"
+      - "/etc/localtime:/etc/localtime:ro" ## use timezone from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "${HOST_PHOTOVIW_LOCATION}/storage:/app/cache"
+      ## Change This in the .env file: to the directory where your photos are located on your server.
+      ## If the photos are located at `/home/user/photos`, then change this value
+      ## to the following: `/home/user/photos:/photos:ro`.
+      ## You can mount multiple paths, if your photos are spread across multiple directories.
+      ## The same path, as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
+      ## If you mounted several folders, provide the path to the parent one on the init page.
+      - "${HOST_PHOTOVIW_MEDIA_ROOT}:/photos:ro"
+      ## *Additional* media folders can be mounted like this (set variable in .env file):
+      # - "${HOST_PHOTOVIW_MEDIA_FAMILY}:/photos/Family:ro"
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "[ $(curl -s -o /dev/null -w '%{http_code}' http://$$PHOTOVIEW_LISTEN_IP:$$PHOTOVIEW_LISTEN_PORT/login) == '200' ]" ]
+      interval: 1m
+      timeout: 2s
+      retries: 5
+      start_period: 30s
+
+  db:
+    image: mariadb:lts
+    container_name: mariadb
+    restart: unless-stopped
+    stop_grace_period: 5s
+    ## Optimized MariaDB startup command for better performance and compatibility
+    command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    security_opt: ## see https://github.com/MariaDB/mariadb-docker/issues/434#issuecomment-1136151239
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ## Uncomment next 2 lines if you want to access the database directly
+    # ports:
+      # - "3306:3306"
+    environment:
+      MARIADB_AUTO_UPGRADE: "1"
+      # MARIADB_INITDB_SKIP_TZINFO: "1"
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      ## Example:
+      ## - "/host/folder:/container/folder"
+      - "/etc/localtime:/etc/localtime:ro" ## use timezone from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "${HOST_PHOTOVIW_LOCATION}/database:/var/lib/mysql" ## DO NOT REMOVE
+    healthcheck:
+      test: mysqladmin ping -s -h localhost -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      interval: 1m
+      timeout: 5s
+      retries: 5
+      start_period: 3m
+
+  ## Watchtower upgrades services automatically (optional)
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    ## Uncomment next line and add the same line to the service definition, which you'd like to be auto-updated by Watchtower ONLY.
+    ## In this way you'll tell Watchtower to update ONLY that service, while now it will update all of them.
+    # profiles: ["update"]
+    environment:
+      WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}
+      WATCHTOWER_TIMEOUT: ${WATCHTOWER_TIMEOUT}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "~/.docker/config.json:/config.json:ro" ## optional, for authentication if you have a Docker Hub account
+      - "/etc/localtime:/etc/localtime:ro"      ## use timezone from host
+      - "/etc/timezone:/etc/timezone:ro"        ## use timezone from host
