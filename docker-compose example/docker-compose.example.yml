@@ -17,7 +17,7 @@ services:
       - apparmor:unconfined
     environment:
       PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
-      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(db)/${MARIADB_DATABASE}"
+      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
       PHOTOVIEW_LISTEN_IP: "photoview"
       PHOTOVIEW_LISTEN_PORT: 80
       PHOTOVIEW_MEDIA_CACHE: "/app/cache"
@@ -66,7 +66,7 @@ services:
 
   db:
     image: mariadb:lts
-    container_name: mariadb
+    container_name: photoview-mariadb
     restart: unless-stopped
     stop_grace_period: 5s
     ## Optimized MariaDB startup command for better performance and compatibility
