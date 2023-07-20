@@ -2,9 +2,9 @@ name: Docker builds
 
 on:
   pull_request:
-    branches: master
+    branches: [master]
   push:
-    branches: master
+    branches: [master]
     tags:
       - v*
 
@@ -17,15 +17,6 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        target_platform:
-          - "linux/amd64"
-          - "linux/arm64"
-          - "linux/arm/v7"
-          - "linux/arm/v6"
 
     steps:
       - name: Checkout
@@ -48,114 +39,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Prepare
-        id: prepare
-        run: |
-          DOCKER_PLATFORMS=${{ matrix.target_platform }}
-
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-
-          OUTPUT_PLATFORM=$(echo ${{ matrix.target_platform }} | sed 's/\//-/g')
-          echo ::set-output name=output_platform::${OUTPUT_PLATFORM}
-
-          TAG="--tag ${DOCKER_IMAGE}:${OUTPUT_PLATFORM}-${GITHUB_SHA::8}-${{ github.event_name }}"
-
-          echo ::set-output name=docker_username::${DOCKER_USERNAME}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
-            --progress=plain \
-            --cache-from "type=local,src=/tmp/.buildx-cache" \
-            --cache-to "type=local,dest=/tmp/.buildx-cache" \
-            --build-arg VERSION=${VERSION} \
-            --build-arg COMMIT_SHA=${GITHUB_SHA} \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg VCS_REF=${GITHUB_SHA::8} \
-            ${TAG} --file Dockerfile .
-
-      - name: Docker Build
-        run: |
-          docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
-
       - name: Docker Login
         if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login --username "${{ steps.prepare.outputs.docker_username }}" --password-stdin
+        uses: docker/login-action@v2
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Push to Docker Hub
-        if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        run: |
-          docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: ${{ env.DOCKER_IMAGE }}
+          # Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
 
-      - name: Clear
-        if: always() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        run: |
-          rm -f ${HOME}/.docker/config.json
-
-  docker-manifest:
-    name: Combine Docker Images
-    runs-on: ubuntu-20.04
-    if: github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-    defaults:
-      run:
-        shell: bash
-
-    needs: [build]
-
-    steps:
-      - name: Docker Login
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
-
-      - name: Create Manifests
-        run: |
-          DOCKER_IMAGES="${DOCKER_IMAGE}:linux-amd64-${GITHUB_SHA::8}-${{ github.event_name }}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm64-${GITHUB_SHA::8}-${{ github.event_name }}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v7-${GITHUB_SHA::8}-${{ github.event_name }}"
-          DOCKER_IMAGES="${DOCKER_IMAGES} ${DOCKER_IMAGE}:linux-arm-v6-${GITHUB_SHA::8}-${{ github.event_name }}"
-
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-
-          TAGS=("${VERSION}")
-
-          if [[ $VERSION =~ ^(([0-9]{1,3})\.[0-9]{1,3})\.[0-9]{1,3}$ ]]; then
-            VERSION_MINOR=${BASH_REMATCH[1]}
-            VERSION_MAJOR=${BASH_REMATCH[2]}
-            TAGS+=("${VERSION_MAJOR}" "${VERSION_MINOR}" "latest")
-          fi
-
-          for TAG in ${TAGS[*]}; do
-            echo "Creating tag: ${TAG}"
-            docker manifest create ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGES}
-            docker manifest push ${DOCKER_IMAGE}:${TAG}
-          done
-
-      - name: Cleanup tags
-        run: |
-          ACCESS_TOKEN=$(curl -X POST \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d "{\"username\":\"${DOCKER_USERNAME}\",\"password\":\"${DOCKER_PASSWORD}\"}" \
-            https://hub.docker.com/v2/users/login/ | jq --raw-output '.token')
-
-          PLATFORMS=("amd64" "arm64" "arm-v7" "arm-v6")
-          for PLATFORM in ${PLATFORMS[@]}; do
-            TAG="linux-${PLATFORM}-${GITHUB_SHA::8}-${{ github.event_name }}"
-            echo "Deleting tag: ${DOCKER_IMAGE}:${TAG}"
-
-            curl -X DELETE \
-              -H "Accept: application/json" \
-              -H "Authorization: JWT ${ACCESS_TOKEN}" \
-              https://hub.docker.com/v2/repositories/${DOCKER_IMAGE}/tags/${TAG}/
-          done
-
-      - name: Clear
-        if: always()
-        run: |
-          rm -f ${HOME}/.docker/config.json
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          push: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}

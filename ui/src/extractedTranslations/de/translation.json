@@ -62,10 +62,10 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": "",
-      "detach_images": "",
-      "merge_people": "",
-      "move_faces": ""
+      "change_label": "Name ändern",
+      "detach_images": "Bild ablösen",
+      "merge_people": "Gesichter zusammenführen",
+      "move_faces": "Gesicht verschieben "
     },
     "face_group": {
       "label_placeholder": "Zuordnung",
@@ -74,34 +74,34 @@
     },
     "modal": {
       "action": {
-        "merge": ""
+        "merge": "zusammenführen"
       },
       "detach_image_faces": {
         "action": {
-          "detach": "",
-          "select_images": ""
+          "detach": "Ablösen",
+          "select_images": "Bilder auswählen"
         },
-        "description": "",
-        "title": ""
+        "description": "Ausgewählte Bilder werden von dieser Person abgelöst.",
+        "title": "Bilder von Person ablösen"
       },
       "merge_face_groups": {
-        "description": "",
+        "description": "Alle Bilder dieser nicht Zugeordneten Person werden mit folgender Person zusammengeführt",
         "destination_table": {
-          "title": ""
+          "title": "Personen zusammenführen"
         },
-        "title": ""
+        "title": "Personen zusammenführen"
       },
       "move_image_faces": {
-        "description": "",
+        "description": "Verschiebe ausgewählte Bilder in eine andere Person",
         "destination_face_group_table": {
-          "move_action": "",
-          "title": ""
+          "move_action": "Verschiebe",
+          "title": "Verschiebe Bilder zu Person"
         },
         "image_select_table": {
-          "next_action": "",
-          "title": ""
+          "next_action": "weiter...",
+          "title": "Verschiebe Bilder zu Person"
         },
-        "title": ""
+        "title": "Verschiebe Bilder zu Person"
       }
     },
     "recognize_unlabeled_faces_button": "Nicht zugeordnete Gesichter erkennen",
@@ -128,10 +128,10 @@
     },
     "logout": "Ausloggen",
     "periodic_scanner": {
-      "checkbox_label": "Kontinuierlichen Scanner aktivieren",
+      "checkbox_label": "Automatischen Scanner aktivieren",
       "field": {
         "description": "Intervall, in dem automatische Scans aller Nutzer wiederholt werden",
-        "label": "Intervall - kontinuierlicher Scanner"
+        "label": "Intervall - Automatischer Scanner"
       },
       "interval_unit": {
         "days": "Tage",
@@ -140,7 +140,7 @@
         "months": "Monate",
         "seconds": "Sekunden"
       },
-      "title": "Kontinuierlicher Scanner"
+      "title": "Automatischer Scanner"
     },
     "scanner": {
       "description": "Neue und aktualisierte Medien aller Benutzer scannen",
@@ -157,16 +157,16 @@
       },
       "theme": {
         "auto": {
-          "label": ""
+          "label": "automatisch"
         },
         "dark": {
-          "label": ""
+          "label": "dunkel"
         },
-        "description": "",
+        "description": "Ändert die Darstellung der Seiten",
         "light": {
-          "label": ""
+          "label": "hell"
         },
-        "title": ""
+        "title": "Darstellung Einstellungen"
       },
       "title": "Persönliche Einstellungen"
     },
@@ -180,25 +180,25 @@
         "title": "Benutzer löschen"
       },
       "password_reset": {
-        "description": "Passwort von Benutzer <1>{{username}}</1> aktualisieren",
+        "description": "Passwort von diesem Benutzer zurücksetzen.",
         "form": {
           "label": "Neues Passwort",
           "placeholder": "Passwort",
-          "submit": "Passwört aktualisieren"
+          "submit": "Passwort zurücksetzen"
         },
-        "title": "Passwort aktualisieren"
+        "title": "Passwort zurücksetzen"
       },
       "table": {
         "column_names": {
           "action": "Aktion",
-          "capabilities": "",
-          "photo_path": "Pfad der Medien",
+          "capabilities": "Berechtigung",
+          "photo_path": "Speicherort der Medien",
           "username": "Benutzername"
         },
         "new_user": "Neuer Benutzer",
         "row": {
           "action": {
-            "change_password": "Passwort aktualisieren",
+            "change_password": "Passwort zurücksetzen",
             "delete": "Löschen",
             "edit": "Bearbeiten",
             "scan": "Scannen"
@@ -219,7 +219,7 @@
     },
     "protected_share": {
       "description": "Diese Freigabe ist passwortgeschützt.",
-      "password_required_error": "",
+      "password_required_error": "Password wird benötigt",
       "title": "Passwortgeschützte Freigabe"
     },
     "share_not_found": "Freigabe nicht gefunden",
@@ -228,27 +228,27 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": "",
+      "album_cover": "Album Titelbild",
       "download": {
         "high-resolutions": {
-          "description": "",
-          "title": ""
+          "description": "hochauflösende Bilder von RAW Dateien",
+          "title": "Hochauflösend"
         },
         "originals": {
-          "description": "",
-          "title": ""
+          "description": "Originale Bilder",
+          "title": "Originale"
         },
         "thumbnails": {
-          "description": "",
-          "title": ""
+          "description": "Geringe Auflösung ohne Videos",
+          "title": "Miniaturansichten"
         },
         "web-videos": {
-          "description": "",
-          "title": ""
+          "description": "Videos, für Web optimiert",
+          "title": "Weboptimiert"
         }
       },
-      "reset_cover": "",
-      "set_cover": "",
+      "reset_cover": "Titelbild zurücksetzen",
+      "set_cover": "Als Album Titelbild setzen",
       "title_placeholder": ""
     },
     "download": {
@@ -265,23 +265,23 @@
         "tera_byte_other": ""
       },
       "table_columns": {
-        "dimensions": "Dimension",
-        "file_size": "Dateigröße",
+        "dimensions": "Auflösung",
+        "file_size": "Größe",
         "file_type": "Typ",
         "name": "Name"
       },
       "title": "Download"
     },
     "location": {
-      "title": ""
+      "title": "Karte"
     },
     "media": {
-      "album_path": "",
+      "album_path": "Pfad",
       "exif": {
         "exposure_program": {
           "action_program": "Action (kurze Verschlusszeit)",
           "aperture_priority": "Blende Priorität",
-          "bulb": "Glühbirne",
+          "bulb": "Bulb",
           "creative_program": "Creative (lange Verschlusszeit)",
           "landscape_mode": "Querformat",
           "manual": "Manuell",
@@ -292,8 +292,8 @@
         },
         "flash": {
           "auto": "Auto",
-          "did_not_fire": "Nicht gezündet",
-          "fired": "Gezündet",
+          "did_not_fire": "Nicht ausgelöst",
+          "fired": "ausgelöst",
           "no_flash": "Kein Blitz",
           "no_flash_function": "Keine Blitz Funktionalität",
           "off": "Aus",
@@ -305,7 +305,7 @@
         "name": {
           "aperture": "Blende",
           "camera": "Kamera",
-          "coordinates": "",
+          "coordinates": "Koordinaten",
           "date_shot": "Aufnahmedatum",
           "exposure": "Belichtung",
           "exposure_program": "Programm",
@@ -319,18 +319,18 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "Bilder ablösen",
+        "merge_face": "Gesichter zusammenführen",
+        "move_face": "Gesicht verschieben"
       },
-      "confirm_image_detach": "",
-      "title": ""
+      "confirm_image_detach": "Ablösen",
+      "title": "Bilder ablösen"
     },
     "sharing": {
       "add_share": "Freigabe hinzufügen",
       "copy_link": "Link kopieren",
-      "delete": "",
-      "more": "",
+      "delete": "Freigabe löschen",
+      "more": "mehr infos",
       "no_shares_found": "Keine Freigaben gefunden",
       "public_link": "Öffentlicher Link",
       "title": "Freigabeoptionen"
@@ -345,9 +345,9 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "dropdown_year": "",
-      "label": ""
+      "dropdown_all": "bis heute",
+      "dropdown_year": "alle bis {{year}}",
+      "label": "Datum"
     }
   },
   "title": {

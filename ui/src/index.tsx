@@ -16,7 +16,7 @@ setupLocalization()
 
 const Main = () => (
   <ApolloProvider client={client}>
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <SidebarProvider>
         <App />
       </SidebarProvider>
