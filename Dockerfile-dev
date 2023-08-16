@@ -1,5 +1,15 @@
+## To setup development env in Docker:
+## - go to the "./docker-compose example" folder
+## - make a copy of (or rename) "example.env" to ".env"
+## - edit it and set correct values for vars inside according to the descriptions
+## - read and understand "Makefile" at the same folder, "docker-compose-dev.yml", and "Dockerfile-dev" in the project root folder
+## - go to the "./docker-compose example" folder and run "make dev" command
+## if you did everything correctly, you should have "photoview-dev" and "photoview-dev-mariadb" containers running with the 8008 (and optionally 3307) port opened for external connection
+## - run "make dev" command every time, you need to rebuild project with recent changes
+## - run "make dev-down" to shut down the development env
+
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 as ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18
 
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
@@ -25,15 +35,14 @@ WORKDIR /app
 
 # Download dependencies
 COPY ui/package*.json /app/
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --ignore-scripts
 
 # Build frontend
 COPY ui /app
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
-ARG TARGETPLATFORM
+ENV TARGETPLATFORM=${BUILDPLATFORM:-linux/amd64}
 
 COPY docker/install_build_dependencies.sh /tmp/
 RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
@@ -46,9 +55,6 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED 1
 
 RUN go env
-
-RUN mkdir -p /app
-WORKDIR /app
 
 # Download dependencies
 COPY api/go.mod api/go.sum /app/
@@ -67,26 +73,16 @@ COPY api /app
 RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm
-ARG TARGETPLATFORM
-WORKDIR /app
-
 COPY api/data /app/data
 
 RUN apt update \
   # Required dependencies
-  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
-  # Install Darktable if building for a supported architecture
-  && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-    apt install -y darktable; fi \
-  # Remove build dependencies and cleanup
-  && apt purge -y gpg \
-  && apt autoremove -y \
-  && apt clean \
-  && rm -rf /var/lib/apt/lists/*
+  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
 
-COPY --from=ui /app/dist /ui
-COPY --from=api /app/photoview /app/photoview
+# Install Darktable if building for a supported architecture
+RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+  apt install -y darktable; fi \
+  && cp -r /app/dist /ui
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT 80

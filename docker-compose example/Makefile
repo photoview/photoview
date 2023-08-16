@@ -46,5 +46,13 @@ backup:
 	$(DOCKER_COMPOSE) exec db mariadb-dump -u root --password=${MARIADB_ROOT_PASSWORD} -e -x --all-databases -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.tar.xz ${HOST_PHOTOVIW_LOCATION}/storage
-# To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
-# To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
+	# To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
+	# To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
+dev-down:
+	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml down
+dev: dev-down
+	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml pull --ignore-pull-failures
+	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
+	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
+	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml build --build-arg COMMIT_SHA=$$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$$(date +%Y-%m-%d) --build-arg VERSION="dev" --pull photoview-dev
+	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml up -d --remove-orphans

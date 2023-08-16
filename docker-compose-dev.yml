@@ -1,13 +1,30 @@
 version: '3.9'
 
+## To setup development env in Docker:
+## - go to the "./docker-compose example" folder
+## - make a copy of (or rename) "example.env" to ".env"
+## - edit it and set correct values for vars inside according to the descriptions
+## - read and understand "Makefile" at the same folder, "docker-compose-dev.yml", and "Dockerfile-dev" in the project root folder
+## - go to the "./docker-compose example" folder and run "make dev" command
+## if you did everything correctly, you should have "photoview-dev" and "photoview-dev-mariadb" containers running with the 8008 (and optionally 3307) port opened for external connection
+## - run "make dev" command every time, you need to rebuild project with recent changes
+## - run "make dev-down" to shut down the development env
+
 services:
-  photoview:
-    image: viktorstrate/photoview:latest
-    container_name: photoview
+  photoview-dev:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-dev
+      args:
+        COMMIT_SHA: $$(git rev-parse --short HEAD)
+        BUILD_DATE: $$(date +%Y-%m-%d)
+        VERSION: "dev"
+    container_name: photoview-dev
+    hostname: photoview-dev
     restart: unless-stopped
     stop_grace_period: 10s
     ports:
-      - "8000:80" ## HTTP port (host:container)
+      - "8008:80" ## HTTP port (host:container)
     depends_on:
       db:
         condition: service_healthy ## To make sure that DB is initialised and ready for connections
@@ -17,7 +34,7 @@ services:
       - apparmor:unconfined
     environment:
       PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
-      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
+      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-dev-mariadb)/${MARIADB_DATABASE}"
       PHOTOVIEW_LISTEN_IP: "photoview"
       PHOTOVIEW_LISTEN_PORT: 80
       PHOTOVIEW_MEDIA_CACHE: "/app/cache"
@@ -60,7 +77,7 @@ services:
 
   db:
     image: mariadb:lts
-    container_name: photoview-mariadb
+    container_name: photoview-dev-mariadb
     restart: unless-stopped
     stop_grace_period: 5s
     ## Optimized MariaDB startup command for better performance and compatibility
@@ -70,7 +87,7 @@ services:
       - apparmor:unconfined
     ## Uncomment next 2 lines if you want to access the database directly
     # ports:
-      # - "3306:3306"
+      # - "3307:3306"
     environment:
       MARIADB_AUTO_UPGRADE: "1"
       # MARIADB_INITDB_SKIP_TZINFO: "1"
@@ -90,21 +107,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 3m
-
-  ## Watchtower upgrades services automatically (optional)
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    ## Uncomment next line and add the same line to the service definition, which you'd like to be auto-updated by Watchtower ONLY.
-    ## In this way you'll tell Watchtower to update ONLY that service, while now it will update all of them.
-    # profiles: ["update"]
-    environment:
-      WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
-      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}
-      WATCHTOWER_TIMEOUT: ${WATCHTOWER_TIMEOUT}
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "~/.docker/config.json:/config.json:ro" ## optional, for authentication if you have a Docker Hub account
-      - "/etc/localtime:/etc/localtime:ro"      ## use timezone from host
-      - "/etc/timezone:/etc/timezone:ro"        ## use timezone from host
