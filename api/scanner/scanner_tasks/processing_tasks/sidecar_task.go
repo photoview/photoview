@@ -34,7 +34,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 		return nil
 	}
 
-	var sideCarPath *string = nil
+	var sideCarPath *string
 	var sideCarHash *string = nil
 
 	sideCarPath = scanForSideCarFile(media.Path)

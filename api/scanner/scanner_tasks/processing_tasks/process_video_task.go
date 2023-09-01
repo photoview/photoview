@@ -55,75 +55,97 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error getting video content type")
 	}
 
-	if videoOriginalURL == nil && videoType.IsWebCompatible() {
-		origVideoPath := video.Path
-		videoMediaName := generateUniqueMediaName(video.Path)
-
-		webMetadata, err := ReadVideoStreamMetadata(origVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for original video (%s)", video.Title)
-		}
-
-		fileStats, err := os.Stat(origVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of original video")
-		}
-
-		mediaURL := models.MediaURL{
-			MediaID:     video.ID,
-			MediaName:   videoMediaName,
-			Width:       webMetadata.Width,
-			Height:      webMetadata.Height,
-			Purpose:     models.MediaOriginal,
-			ContentType: string(*videoType),
-			FileSize:    fileStats.Size(),
-		}
-
-		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "insert original video into database (%s)", video.Title)
-		}
-
-		updatedURLs = append(updatedURLs, &mediaURL)
+	// Re-encode to h264 if the web video cache is missing.
+	var videoWebURLStatErr error
+	// to prevent nil pointer dereferece
+	if videoWebURL != nil && len(videoWebURL.MediaName) > 0 {
+		_, videoWebURLStatErr = os.Stat(path.Join(mediaCachePath, videoWebURL.MediaName))
 	}
 
-	if videoWebURL == nil && !videoType.IsWebCompatible() {
-		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
-		web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
-		web_video_name = strings.ReplaceAll(web_video_name, " ", "_")
-		web_video_name = web_video_name + ".mp4"
+	if videoOriginalURL == nil && (videoWebURL == nil || videoWebURLStatErr != nil) {
+		// Decide whether the original video file is compatible with web browsers.
+		origVideoPath := video.Path
+		videoMediaName := generateUniqueMediaName(origVideoPath)
 
-		webVideoPath := path.Join(mediaCachePath, web_video_name)
-
-		err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
+		// Read video and audio codec names.
+		origFileMetadata, err := ReadVideoMetadata(origVideoPath)
 		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
+			return nil, errors.Wrap(err, "read video stream metadata")
 		}
-
-		webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
+		origVideoStream := origFileMetadata.FirstVideoStream()
+		if origVideoStream == nil {
+			return []*models.MediaURL{}, errors.Wrapf(err, "could not get video stream from file metadata (%s)", origVideoPath)
 		}
+		origAudioStream := origFileMetadata.FirstAudioStream()
 
-		fileStats, err := os.Stat(webVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
+		if videoType.IsWebCompatible() && videoCodecIsWebCompatible(origVideoStream) && audioCodecIsWebCompatible(origAudioStream) {
+			log.Printf("Video has a compatible container and : %s", video.Path)
+
+			fileStats, err := os.Stat(origVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of original video")
+			}
+
+			mediaURL := models.MediaURL{
+				MediaID:     video.ID,
+				MediaName:   videoMediaName,
+				Width:       origVideoStream.Width,
+				Height:      origVideoStream.Height,
+				Purpose:     models.MediaOriginal,
+				ContentType: string(*videoType),
+				FileSize:    fileStats.Size(),
+			}
+
+			if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "insert original video into database (%s)", video.Title)
+			}
+
+			updatedURLs = append(updatedURLs, &mediaURL)
+		} else {
+			web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
+			web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
+			web_video_name = strings.ReplaceAll(web_video_name, " ", "_")
+			web_video_name = web_video_name + ".mp4"
+
+			webVideoPath := path.Join(mediaCachePath, web_video_name)
+
+			err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
+			}
+
+			webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
+			}
+
+			fileStats, err := os.Stat(webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
+			}
+
+			mediaURL := models.MediaURL{
+				MediaID:     video.ID,
+				MediaName:   web_video_name,
+				Width:       webMetadata.Width,
+				Height:      webMetadata.Height,
+				Purpose:     models.VideoWeb,
+				ContentType: "video/mp4",
+				FileSize:    fileStats.Size(),
+			}
+
+			if videoWebURL == nil { // Newly encoded video.
+				if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
+					return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
+				}
+			} else { // A missing video cache is restored.
+				if err := ctx.GetDB().Save(&mediaURL).Error; err != nil {
+					return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
+				}
+			}
+
+			updatedURLs = append(updatedURLs, &mediaURL)
 		}
-
-		mediaURL := models.MediaURL{
-			MediaID:     video.ID,
-			MediaName:   web_video_name,
-			Width:       webMetadata.Width,
-			Height:      webMetadata.Height,
-			Purpose:     models.VideoWeb,
-			ContentType: "video/mp4",
-			FileSize:    fileStats.Size(),
-		}
-
-		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
-		}
-
-		updatedURLs = append(updatedURLs, &mediaURL)
 	}
 
 	probeData, err := mediaData.VideoMetadata()
@@ -203,6 +225,29 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	}
 
 	return updatedURLs, nil
+}
+
+// audioCodecIsWebCompatible returns true if the audio codec is compatible with
+// web browsers, as defined by https://en.wikipedia.org/wiki/HTML5_audio#Supported_audio_coding_formats
+func audioCodecIsWebCompatible(audio *ffprobe.Stream) bool {
+	if audio == nil ||
+		audio.CodecName == "aac" ||
+		audio.CodecName == "mp3" ||
+		audio.CodecName == "opus" ||
+		audio.CodecName == "flac" ||
+		audio.CodecName == "vorbis" {
+		return true
+	}
+	return false
+}
+
+// videoCodecIsWebCompatible returns true if the video codec is compatible with
+// web browsers, as defined by https://en.wikipedia.org/wiki/HTML5_video#Browser_support
+func videoCodecIsWebCompatible(video *ffprobe.Stream) bool {
+	if video.CodecName == "h264" || video.CodecName == "vp8" || video.CodecName == "vp9" || video.CodecName == "av1" {
+		return true
+	}
+	return false
 }
 
 func ReadVideoMetadata(videoPath string) (*ffprobe.ProbeData, error) {
