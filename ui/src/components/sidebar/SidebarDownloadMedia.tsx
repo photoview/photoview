@@ -1,18 +1,18 @@
-import React from 'react'
-import { MessageState } from '../messages/Messages'
-import { useLazyQuery, gql } from '@apollo/client'
-import { authToken } from '../../helpers/authentication'
+import { gql, useLazyQuery } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
+import { NotificationType } from '../../__generated__/globalTypes'
+import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
+import { MessageState } from '../messages/Messages'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
+import React from 'react'
+import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
-import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
-import { NotificationType } from '../../__generated__/globalTypes'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -56,7 +56,10 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
 }
 
 const downloadMedia = (t: TranslationFn) => async (url: string) => {
-  const imgUrl = new URL(url, location.origin)
+  const imgUrl = new URL(
+    `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
+    location.origin
+  )
 
   if (authToken() == null) {
     // Get share token if not authorized
