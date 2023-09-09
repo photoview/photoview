@@ -103,7 +103,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
-			return errors.Wrap(err, "album scan")
+			log.Println("Media scan failed: ", err)
 		}
 	}
 
