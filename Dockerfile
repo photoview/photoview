@@ -71,9 +71,8 @@ FROM debian:bookworm
 ARG TARGETPLATFORM
 WORKDIR /app
 
-COPY api/data /app/data
-
-RUN apt update \
+RUN chmod -R 777 /app \
+  && apt update \
   # Required dependencies
   && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
   # Install Darktable if building for a supported architecture
@@ -85,8 +84,9 @@ RUN apt update \
   && apt clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ui /app/dist /ui
-COPY --from=api /app/photoview /app/photoview
+COPY --chmod=777 api/data /app/data
+COPY --chmod=777 --from=ui /app/dist /ui
+COPY --chmod=777 --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT 80
