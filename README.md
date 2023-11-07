@@ -83,12 +83,15 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 ## Getting started - Setup with Docker
 
 > This section describes how to get Photoview up and running on your server with Docker.
-> Make sure you have Docker and docker-compose installed and running on your server
+> Make sure you have Docker and docker-compose installed and running on your server.
+> `make` should be installed as well if you'd like to use provided `Makefile`, which is optional (see step 4 for more details).
+> `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located in the `backup` section for more details.
 
 1. Download the content of the `docker-compose example` folder to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files).
 3. Open that files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
-4. Start the server by running the following command
+4. In case, you don't have `make` installed in your system or don't want to use it for the Photoview management activities, you could use the same commands from the `Makefile` and run them in your shell directly, or create your own scripts. Make sure to apply or replace the variables from your `.env` first in this case. `Makefile` is provided just for your convenience and simplicity, but is optional.
+5. Start the server by running the following command (or corresponding sequence of commands from the `Makefile`):
 
 ```bash
 make all
