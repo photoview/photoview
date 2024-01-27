@@ -24,6 +24,8 @@ help:
 	@echo '   all       Pulls fresh Docker images from the Registry and (re)starts the service.'
 	@echo '             Useful for the 1st start or update scenarios.'
 	@echo '   update    The same as `all`, created for convenience.'
+	@echo '   build     Builds the local `photoview` image from the source code on this system'
+	@echo '             using latest versions of the base image and installed software'
 	@echo '   start     Creates folders for service data in the ${HOST_PHOTOVIW_LOCATION} if not exist,'
 	@echo '             and starts the service. Optionally runs a Docker system cleanup, if uncommented.'
 	@echo '   stop      Just stops the service, keeping all containers and volumes in Docker.'
@@ -43,10 +45,14 @@ help:
 	@echo ''
 all: pull restart
 uninstall: down remove
-restart: stop start
+restart: stop build start
 update: pull restart
 pull:
 	$(DOCKER_COMPOSE) pull --ignore-pull-failures
+build:
+	## Uncomment the next line for debug purpose and comment the other one
+	# $(DOCKER_COMPOSE) --progress plain build --pull photoview
+	$(DOCKER_COMPOSE) build --pull photoview
 start:
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
@@ -87,10 +93,10 @@ backup:
     # 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
     # 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
 dev-down:
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml down
+	$(DOCKER_COMPOSE) -f docker-compose-dev.yml down
 dev: dev-down
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml pull --ignore-pull-failures
+	$(DOCKER_COMPOSE) -f docker-compose-dev.yml pull --ignore-pull-failures
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml build --build-arg COMMIT_SHA=$$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$$(date +%Y-%m-%d) --build-arg VERSION="dev" --pull photoview-dev
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml up -d --remove-orphans
+	$(DOCKER_COMPOSE) -f docker-compose-dev.yml build --build-arg COMMIT_SHA=$$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$$(date +%Y-%m-%d) --build-arg VERSION="dev" --pull photoview-dev
+	$(DOCKER_COMPOSE) -f docker-compose-dev.yml up -d --remove-orphans
