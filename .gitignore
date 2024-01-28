@@ -13,6 +13,7 @@ testing.env
 # docker
 docker-compose.yml
 storage
+database
 
 # dependencies
 node_modules/

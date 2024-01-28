@@ -13,10 +13,10 @@ services:
         UI_PUBLIC_URL: /
         VERSION: selfbuilt
         REACT_APP_BUILD_VERSION: selfbuilt
-        BUILD_DATE: $$(date +%Y-%m-%d)
-        REACT_APP_BUILD_DATE: $$(date +%Y-%m-%d)
-        COMMIT_SHA: $$(git rev-parse --short HEAD)
-        REACT_APP_BUILD_COMMIT_SHA: $$(git rev-parse --short HEAD)
+        BUILD_DATE: $(date +%Y-%m-%d)
+        REACT_APP_BUILD_DATE: $(date +%Y-%m-%d)
+        COMMIT_SHA: $(git rev-parse --short HEAD)
+        REACT_APP_BUILD_COMMIT_SHA: $(git rev-parse --short HEAD)
     container_name: photoview
     restart: unless-stopped
     stop_grace_period: 10s
@@ -24,7 +24,8 @@ services:
       - "8000:80" ## HTTP port (host:container)
     depends_on:
       db:
-        condition: service_healthy ## To make sure that DB is initialised and ready for connections
+        ## To make sure that DB is initialized and ready for connections
+        condition: service_healthy
     ## Security options for some restricted systems
     security_opt:
       - seccomp:unconfined

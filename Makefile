@@ -50,17 +50,22 @@ update: pull restart
 pull:
 	$(DOCKER_COMPOSE) pull --ignore-pull-failures
 build:
-	## Uncomment the next line for debug purpose and comment the other one
-	# $(DOCKER_COMPOSE) --progress plain build --pull photoview
-	$(DOCKER_COMPOSE) build --pull photoview
+	@## Uncomment the next line for debug purpose and comment the other one
+	@# $(DOCKER_COMPOSE) --progress plain build --pull photoview
+	$(DOCKER_COMPOSE) build \
+	--build-arg BUILD_DATE=$$(date +%Y-%m-%d) \
+	--build-arg REACT_APP_BUILD_DATE=$$(date +%Y-%m-%d) \
+	--build-arg COMMIT_SHA=$$(git rev-parse --short HEAD) \
+	--build-arg REACT_APP_BUILD_COMMIT_SHA=$$(git rev-parse --short HEAD) \
+	--pull photoview
 start:
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
 	$(DOCKER_COMPOSE) up -d --remove-orphans
-	## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
-	## Make sure to read the Docker documentation to understand how it works
-	## Please note that this command is applied to the Docker host affecting all hosted services, not only the PhotoView
-	# docker system prune -f
+	@## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
+	@## Make sure to read the Docker documentation to understand how it works
+	@## Please note that this command is applied to the Docker host affecting all hosted services, not only the PhotoView
+	@# docker system prune -f
 stop:
 	$(DOCKER_COMPOSE) stop
 down:
@@ -82,16 +87,16 @@ backup:
 	$(DOCKER_COMPOSE) exec db mariadb-dump -u root --password=${MARIADB_ROOT_PASSWORD} -e -x --all-databases -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.tar.xz ${HOST_PHOTOVIW_LOCATION}/storage
-	## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
-	## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
-	## -----------------------
-	## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of resources and time.
-	## It was selected, because it is pre-installed on most distros. However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
-	## Make sure to install the 7zz first and then comment out the 2 lines with tar command before this comment, uncomment the next lines
-	# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
-    # 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql || exit 1
-    # 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
-    # 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
+	@## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
+	@## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
+	@## -----------------------
+	@## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of resources and time.
+	@## It was selected, because it is pre-installed on most distros. However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
+	@## Make sure to install the 7zz first and then comment out the 2 lines with tar command before this comment, uncomment the next lines
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
+	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql || exit 1
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
+	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
 dev-down:
 	$(DOCKER_COMPOSE) -f docker-compose-dev.yml down
 dev: dev-down
