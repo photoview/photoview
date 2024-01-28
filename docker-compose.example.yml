@@ -7,6 +7,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       args:
+        ## Make sure to change values of the next 2 args if building on another platform type
         BUILDPLATFORM: linux/amd64
         TARGETPLATFORM: linux/amd64
         #REACT_APP_API_ENDPOINT: http://localhost:4001/
@@ -22,6 +23,7 @@ services:
     stop_grace_period: 10s
     ports:
       - "8000:80" ## HTTP port (host:container)
+    ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     depends_on:
       db:
         ## To make sure that DB is initialized and ready for connections
@@ -32,7 +34,10 @@ services:
       - apparmor:unconfined
     environment:
       PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
+      ## Comment out the next variable in the case PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
+      ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
+      # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
       PHOTOVIEW_LISTEN_IP: "photoview"
       PHOTOVIEW_LISTEN_PORT: 80
       PHOTOVIEW_MEDIA_CACHE: "/app/cache"
@@ -62,17 +67,20 @@ services:
       ## - "/host/folder:/container/folder"
       - "/etc/localtime:/etc/localtime:ro" ## use timezone from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
+      # - "${HOST_PHOTOVIW_LOCATION}/database:/app/database"
       - "${HOST_PHOTOVIW_LOCATION}/storage:/app/cache"
       ## Change This in the .env file: to the directory where your photos are located on your server.
       ## If the photos are located at `/home/user/photos`, then change this value
       ## to the following: `/home/user/photos:/photos:ro`.
-      ## You can mount multiple paths, if your photos are spread across multiple directories.
-      ## The same path, as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
+      ## You can mount multiple paths if your photos are spread across multiple directories.
+      ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
       ## If you mounted several folders, provide the path to the parent one on the init page.
       - "${HOST_PHOTOVIW_MEDIA_ROOT}:/photos:ro"
       ## *Additional* media folders can be mounted like this (set variable in .env file):
       # - "${HOST_PHOTOVIW_MEDIA_FAMILY}:/photos/Family:ro"
 
+  ## Comment out / remove the `db` service completely if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
   db:
     image: mariadb:lts
     container_name: photoview-mariadb
