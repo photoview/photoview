@@ -24,8 +24,8 @@ help:
 	@echo '   all       Pulls fresh Docker images from the Registry and (re)starts the service.'
 	@echo '             Useful for the 1st start or update scenarios.'
 	@echo '   update    The same as `all`, created for convenience.'
-	@echo '   build     Builds the local `photoview` image from the source code on this system'
-	@echo '             using latest versions of the base image and installed software'
+	@echo '   build     Pulls the latest updates from GIT and (re)builds the local `photoview` image from the'
+	@echo '             source code on this system using latest versions of the base image and installed software'
 	@echo '   start     Creates folders for service data in the ${HOST_PHOTOVIW_LOCATION} if not exist,'
 	@echo '             and starts the service. Optionally runs a Docker system cleanup, if uncommented.'
 	@echo '   stop      Just stops the service, keeping all containers and volumes in Docker.'
@@ -33,7 +33,7 @@ help:
 	@echo '   backup    Verifies service database and creates new service backup'
 	@echo '             in the ${HOST_PHOTOVIW_BACKUP}/<date of execution> using .tar.xz by default.'
 	@echo '             If you want to use 7zz instead (which is faster), read the comment in the target script.'
-	@echo '   pull      Pulls fresh Docker images from the Registry.'
+	@echo '   pull      Pulls the latest updates from GIT and fresh Docker images from the Registry.'
 	@echo '   terminal  Starts a Bash shell session inside the `photoview` container for troubleshooting.'
 	@echo '   logs      Shows the last 100 lines (if the command not modified) from the log'
 	@echo '             and stays listening for new lines and show them interactively. Ctrl + C to exit.'
@@ -48,10 +48,12 @@ uninstall: down remove
 restart: stop build start
 update: pull restart
 pull:
+	git pull
 	$(DOCKER_COMPOSE) pull --ignore-pull-failures
 build:
 	@## Uncomment the next line for debug purpose and comment the other one
 	@# $(DOCKER_COMPOSE) --progress plain build --pull photoview
+	git pull
 	$(DOCKER_COMPOSE) build \
 	--build-arg BUILD_DATE=$$(date +%Y-%m-%d) \
 	--build-arg REACT_APP_BUILD_DATE=$$(date +%Y-%m-%d) \

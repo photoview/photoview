@@ -88,6 +88,10 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 > `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located in the `backup` section for more details.
 
 1. Clone this repo to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
+   - `cd <path to the folder on your server, where you expect to host the Photoview internal data>`
+   - `git clone https://github.com/kkovaletp/photoview.git .`
+   - `git checkout NOT-FOR-MERGE-rebuild-photoview-image`
+   - `git pull`
 2. Rename `docker-compose.example.yml` and `example.env` files and remove the `example` from their names (so, you need to have `.env` and `docker-compose.yml` files).
 3. Open these files and the `Makefile` in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
 4. In case, you don't have `make` installed in your system or don't want to use it for the Photoview management activities, you could use the same commands from the `Makefile` and run them in your shell directly, or create your own scripts. Make sure to apply or replace the variables from your `.env` first in this case. `Makefile` is provided just for your convenience and simplicity, but is optional.
