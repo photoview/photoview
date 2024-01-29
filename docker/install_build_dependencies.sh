@@ -8,6 +8,7 @@ elif [ "$TARGETPLATFORM" == "linux/arm/v6" ] || [ "$TARGETPLATFORM" == "linux/ar
   dpkg --add-architecture armhf
   DEBIAN_ARCH='armhf'
 else
+  dpkg --add-architecture amd64
   DEBIAN_ARCH='amd64'
 fi
 
@@ -22,6 +23,10 @@ elif [ "$DEBIAN_ARCH" == "armhf" ]; then
   apt-get install -y \
     g++-arm-linux-gnueabihf \
     libc6-dev-armhf-cross
+else
+  apt-get install -y \
+    g++-x86-64-linux-gnu \
+    libc6-dev-amd64-cross
 fi
 
 # Install Golang
