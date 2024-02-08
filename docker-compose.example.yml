@@ -14,10 +14,10 @@ services:
         UI_PUBLIC_URL: /
         VERSION: selfbuilt
         REACT_APP_BUILD_VERSION: selfbuilt
-        BUILD_DATE: $(date +%Y-%m-%d)
-        REACT_APP_BUILD_DATE: $(date +%Y-%m-%d)
-        COMMIT_SHA: $(git rev-parse --short HEAD)
-        REACT_APP_BUILD_COMMIT_SHA: $(git rev-parse --short HEAD)
+        BUILD_DATE: $$(date +%Y-%m-%d)
+        REACT_APP_BUILD_DATE: $$(date +%Y-%m-%d)
+        COMMIT_SHA: $$(git rev-parse --short HEAD)
+        REACT_APP_BUILD_COMMIT_SHA: $$(git rev-parse --short HEAD)
     container_name: photoview
     restart: unless-stopped
     stop_grace_period: 10s
