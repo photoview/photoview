@@ -218,7 +218,11 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 	return faceGroup, nil
 }
 
-func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error) {
+func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupIDs []int) (*models.FaceGroup, error) {
+	if len(sourceFaceGroupIDs) == 0 {
+		return nil, errors.New("at least one source face group ID is required")
+	}
+
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -234,28 +238,40 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, err
 	}
 
-	sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceFaceGroupID)
-	if err != nil {
-		return nil, err
-	}
+	var sourceFaceGroups []*models.FaceGroup
 
-	updateError := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
-			return err
+	for _, sourceID := range sourceFaceGroupIDs {
+		if sourceID == destinationFaceGroup.ID {
+			return nil, errors.New("source face groups cannot include the destination face group")
 		}
 
-		if err := tx.Delete(&sourceFaceGroup).Error; err != nil {
-			return err
+		sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceID)
+		if err != nil {
+			return nil, err
 		}
 
-		return nil
-	})
+		sourceFaceGroups = append(sourceFaceGroups, sourceFaceGroup)
+	}
+	for _, sourceFaceGroup := range sourceFaceGroups {
+		updateError := db.Transaction(func(tx *gorm.DB) error {
 
-	if updateError != nil {
-		return nil, updateError
+			if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Delete(&sourceFaceGroup).Error; err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if updateError != nil {
+			return nil, updateError
+		}
 	}
 
-	face_detection.GlobalFaceDetector.MergeCategories(int32(sourceFaceGroupID), int32(destinationFaceGroupID))
+	face_detection.GlobalFaceDetector.MergeImageFaces(sourceFaceGroupIDs, int32(destinationFaceGroupID))
 
 	return destinationFaceGroup, nil
 }

@@ -11,7 +11,9 @@ import { Menu } from '@headlessui/react'
 import { Button } from '../../../primitives/form/Input'
 import { ArrowPopoverPanel } from '../Sharing'
 import { isNil, tailwindClassNames } from '../../../helpers/utils'
-import MergeFaceGroupsModal from '../../../Pages/PeoplePage/SingleFaceGroup/MergeFaceGroupsModal'
+import MergeFaceGroupsModal, {
+  MergeFaceGroupsModalState,
+} from '../../../Pages/PeoplePage/SingleFaceGroup/MergeFaceGroupsModal'
 import { useDetachImageFaces } from '../../../Pages/PeoplePage/SingleFaceGroup/DetachImageFacesModal'
 import MoveImageFacesModal from '../../../Pages/PeoplePage/SingleFaceGroup/MoveImageFacesModal'
 import { FaceDetails } from '../../../Pages/PeoplePage/PeoplePage'
@@ -61,7 +63,9 @@ const PersonMoreMenu = ({
 }: PersonMoreMenuProps) => {
   const { t } = useTranslation()
 
-  const [mergeModalOpen, setMergeModalOpen] = useState(false)
+  const [mergeModalState, setMergeModalState] = useState(
+    MergeFaceGroupsModalState.Closed
+  )
   const [moveModalOpen, setMoveModalOpen] = useState(false)
 
   const refetchQueries = [
@@ -81,9 +85,9 @@ const PersonMoreMenu = ({
   const modals = (
     <>
       <MergeFaceGroupsModal
-        sourceFaceGroup={face.faceGroup}
-        open={mergeModalOpen}
-        setOpen={setMergeModalOpen}
+        initialDestinationFaceGroup={face.faceGroup}
+        state={mergeModalState}
+        setState={setMergeModalState}
         refetchQueries={refetchQueries}
       />
       <MoveImageFacesModal
@@ -128,7 +132,9 @@ const PersonMoreMenu = ({
               label={t('people_page.action_label.change_label', 'Change label')}
             />
             <PersonMoreMenuItem
-              onClick={() => setMergeModalOpen(true)}
+              onClick={() =>
+                setMergeModalState(MergeFaceGroupsModalState.SelectDestination)
+              }
               className="border-b"
               label={t('sidebar.people.action_label.merge_face', 'Merge face')}
             />

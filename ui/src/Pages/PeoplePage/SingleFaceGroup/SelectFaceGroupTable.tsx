@@ -35,16 +35,16 @@ export const RowLabel = styled.span<{ $selected: boolean }>`
 type FaceGroupRowProps = {
   faceGroup: myFaces_myFaceGroups
   faceSelected: boolean
-  setFaceSelected(): void
+  toggleFaceSelected(): void
 }
 
 const FaceGroupRow = ({
   faceGroup,
   faceSelected,
-  setFaceSelected,
+  toggleFaceSelected,
 }: FaceGroupRowProps) => {
   return (
-    <TableRow key={faceGroup.id} onClick={setFaceSelected}>
+    <TableRow key={faceGroup.id} onClick={toggleFaceSelected}>
       <FlexCell>
         <FaceCircleWrapper $selected={faceSelected}>
           <FaceCircleImage
@@ -54,9 +54,9 @@ const FaceGroupRow = ({
           />
         </FaceCircleWrapper>
         <span
-          className={`ml-3 ${faceSelected ? 'font-semibold' : ''} ${
-            !faceGroup.label ? 'text-gray-500 italic' : ''
-          }`}
+          className={`ml-3 ${
+            faceSelected ? 'font-semibold text-slate-100' : 'text-gray-400'
+          } ${!faceSelected && !faceGroup.label ? 'text-gray-600 italic' : ''}`}
         >
           {faceGroup.label ?? 'Unlabeled'}
         </span>
@@ -67,8 +67,10 @@ const FaceGroupRow = ({
 
 type SelectFaceGroupTableProps = {
   faceGroups: myFaces_myFaceGroups[]
-  selectedFaceGroup: singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
-  setSelectedFaceGroup: React.Dispatch<
+  selectedFaceGroups: Set<
+    singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
+  >
+  toggleSelectedFaceGroup: React.Dispatch<
     React.SetStateAction<
       singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
     >
@@ -78,8 +80,8 @@ type SelectFaceGroupTableProps = {
 
 const SelectFaceGroupTable = ({
   faceGroups,
-  selectedFaceGroup,
-  setSelectedFaceGroup,
+  selectedFaceGroups,
+  toggleSelectedFaceGroup,
   title,
 }: SelectFaceGroupTableProps) => {
   const { t } = useTranslation()
@@ -96,8 +98,8 @@ const SelectFaceGroupTable = ({
       <FaceGroupRow
         key={face.id}
         faceGroup={face}
-        faceSelected={selectedFaceGroup?.id == face.id}
-        setFaceSelected={() => setSelectedFaceGroup(face)}
+        faceSelected={[...selectedFaceGroups].some(val => val?.id == face.id)}
+        toggleFaceSelected={() => toggleSelectedFaceGroup(face)}
       />
     ))
 

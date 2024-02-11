@@ -269,7 +269,7 @@ export const PeoplePage = () => {
     return <div>{error.message}</div>
   }
 
-  let faces = null
+  let faces: JSX.Element[] | null = null
   if (data) {
     faces = data.myFaceGroups.map(faceGroup => (
       <FaceGroup key={faceGroup.id} group={faceGroup} />

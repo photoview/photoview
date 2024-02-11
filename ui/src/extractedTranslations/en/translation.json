@@ -74,7 +74,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Merge"
+        "merge": "Merge",
+        "next": "Next"
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +86,13 @@
         "title": "Detach Image Faces"
       },
       "merge_face_groups": {
-        "description": "All images within this face group will be merged into the selected face group.",
+        "destination_description": "Select the face group that other groups should be merged into.",
+        "sources_description": "Select all face groups that will be merged into the destination group.",
         "destination_table": {
           "title": "Select the destination face"
+        },
+        "sources_table": {
+          "title": "Select one or more source faces"
         },
         "title": "Merge Face Groups"
       },

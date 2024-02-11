@@ -9,7 +9,7 @@ export type ModalAction = {
   onClick(event: React.MouseEvent<HTMLButtonElement>): void
 }
 
-type ModalProps = {
+export type ModalProps = {
   title: string
   description: React.ReactNode
   children?: React.ReactNode

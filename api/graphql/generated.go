@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AuthorizeUser                func(childComplexity int, username string, password string) int
 		ChangeUserPreferences        func(childComplexity int, language *string) int
-		CombineFaceGroups            func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupID int) int
+		CombineFaceGroups            func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
 		CreateUser                   func(childComplexity int, username string, password *string, admin bool) int
 		DeleteShareToken             func(childComplexity int, token string) int
 		DeleteUser                   func(childComplexity int, id int) int
@@ -333,7 +333,7 @@ type MutationResolver interface {
 	ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error)
 	SetAlbumCover(ctx context.Context, coverID int) (*models.Album, error)
 	SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error)
-	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error)
+	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupIDs []int) (*models.FaceGroup, error)
 	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
 	RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error)
 	DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error)
@@ -876,7 +876,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupID"].(int)), true
+		return e.complexity.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupIDs"].([]int)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -1884,15 +1884,15 @@ func (ec *executionContext) field_Mutation_combineFaceGroups_args(ctx context.Co
 		}
 	}
 	args["destinationFaceGroupID"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["sourceFaceGroupID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceFaceGroupID"))
-		arg1, err = ec.unmarshalNID2int(ctx, tmp)
+	var arg1 []int
+	if tmp, ok := rawArgs["sourceFaceGroupIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceFaceGroupIDs"))
+		arg1, err = ec.unmarshalNID2ᚕintᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sourceFaceGroupID"] = arg1
+	args["sourceFaceGroupIDs"] = arg1
 	return args, nil
 }
 
@@ -7645,7 +7645,7 @@ func (ec *executionContext) _Mutation_combineFaceGroups(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CombineFaceGroups(rctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupID"].(int))
+			return ec.resolvers.Mutation().CombineFaceGroups(rctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupIDs"].([]int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthorized == nil {
