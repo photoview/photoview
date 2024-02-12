@@ -37,7 +37,7 @@ export enum MergeFaceGroupsModalState {
 type MergeFaceGroupsModalProps = {
   state: MergeFaceGroupsModalState
   setState(state: MergeFaceGroupsModalState): void
-  initialDestinationFaceGroup?: {
+  preselectedDestinationFaceGroup?: {
     __typename: 'FaceGroup'
     id: string
   }
@@ -52,7 +52,7 @@ type StateContent = {
 const MergeFaceGroupsModal = ({
   state,
   setState,
-  initialDestinationFaceGroup,
+  preselectedDestinationFaceGroup,
   refetchQueries,
 }: MergeFaceGroupsModalProps) => {
   const { t } = useTranslation()
@@ -92,6 +92,20 @@ const MergeFaceGroupsModal = ({
       return s
     })
 
+  // Go straight to the sources page if a destination face group is preselected, using the preselection as the destination
+  useEffect(() => {
+    if (isNil(preselectedDestinationFaceGroup)) return
+    if (state != MergeFaceGroupsModalState.SelectDestination) return
+
+    const destinationFaceGroup = data?.myFaceGroups.find(
+      x => x.id == preselectedDestinationFaceGroup?.id
+    )
+    if (isNil(destinationFaceGroup)) return
+
+    setSelectedDestinationFaceGroup(destinationFaceGroup)
+    setState(MergeFaceGroupsModalState.SelectSources)
+  }, [state, preselectedDestinationFaceGroup])
+
   // Handle when a new face group is selected
   useEffect(() => {
     switch (state) {
@@ -117,8 +131,7 @@ const MergeFaceGroupsModal = ({
     data?.myFaceGroups.filter(
       x =>
         state === MergeFaceGroupsModalState.SelectDestination ||
-        x.id !=
-          (selectedDestinationFaceGroup ?? initialDestinationFaceGroup)?.id
+        x.id != selectedDestinationFaceGroup?.id
     ) ?? []
 
   const goNext = () => {
@@ -209,10 +222,16 @@ const MergeFaceGroupsModal = ({
       onClose: closeModal,
       open: isOpen,
     },
-    searchTitle: t(
-      'people_page.modal.merge_face_groups.sources_table.title',
-      'Select one or more source faces'
-    ),
+    searchTitle:
+      t(
+        'people_page.modal.merge_face_groups.sources_table.title',
+        'Select one or more source faces to merge into:'
+      ) +
+      ` ${
+        selectedDestinationFaceGroup?.label ??
+        t('people_page.face_group.unlabeled', 'Unlabeled') ??
+        'Unlabeled'
+      }`,
   }
 
   const modalContent: StateContent =

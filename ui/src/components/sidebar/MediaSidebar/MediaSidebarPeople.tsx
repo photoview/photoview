@@ -85,7 +85,7 @@ const PersonMoreMenu = ({
   const modals = (
     <>
       <MergeFaceGroupsModal
-        initialDestinationFaceGroup={face.faceGroup}
+        preselectedDestinationFaceGroup={face.faceGroup}
         state={mergeModalState}
         setState={setMergeModalState}
         refetchQueries={refetchQueries}

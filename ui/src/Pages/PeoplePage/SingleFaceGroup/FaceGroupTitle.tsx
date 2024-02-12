@@ -115,7 +115,7 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
         <MergeFaceGroupsModal
           state={mergeModalState}
           setState={setMergeModalState}
-          initialDestinationFaceGroup={faceGroup}
+          preselectedDestinationFaceGroup={faceGroup}
           refetchQueries={[
             {
               query: MY_FACES_QUERY,

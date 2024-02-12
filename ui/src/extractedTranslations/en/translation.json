@@ -93,7 +93,7 @@
           "title": "Select the destination face"
         },
         "sources_table": {
-          "title": "Select one or more source faces"
+          "title": "Select one or more source faces to merge into:"
         },
         "title": "Merge Face Groups"
       },

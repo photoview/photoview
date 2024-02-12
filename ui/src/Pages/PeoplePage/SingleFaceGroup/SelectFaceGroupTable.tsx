@@ -43,6 +43,8 @@ const FaceGroupRow = ({
   faceSelected,
   toggleFaceSelected,
 }: FaceGroupRowProps) => {
+  const { t } = useTranslation()
+
   return (
     <TableRow key={faceGroup.id} onClick={toggleFaceSelected}>
       <FlexCell>
@@ -58,7 +60,8 @@ const FaceGroupRow = ({
             faceSelected ? 'font-semibold text-slate-100' : 'text-gray-400'
           } ${!faceSelected && !faceGroup.label ? 'text-gray-600 italic' : ''}`}
         >
-          {faceGroup.label ?? 'Unlabeled'}
+          {faceGroup.label ??
+            t('people_page.face_group.unlabeled', 'Unlabeled')}
         </span>
       </FlexCell>
     </TableRow>
