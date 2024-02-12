@@ -85,9 +85,13 @@
         "title": "分離相片中的臉孔"
       },
       "merge_face_groups": {
-        "description": "所有在此的臉孔群組將會合併到已選擇的臉孔群組",
+        "destination_description": "所有在此的臉孔群組將會合併到已選擇的臉孔群組",
+        "sources_description": "",
         "destination_table": {
           "title": "選擇目標臉孔群組"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "合併臉孔群組"
       },

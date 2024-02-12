@@ -85,9 +85,13 @@
         "title": "解除面孔标记"
       },
       "merge_face_groups": {
-        "description": "该组面孔中的所有照片都会被合并至选择的面孔",
+        "destination_description": "该组面孔中的所有照片都会被合并至选择的面孔",
+        "sources_description": "",
         "destination_table": {
           "title": "选择目标面孔"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "合并面孔组"
       },

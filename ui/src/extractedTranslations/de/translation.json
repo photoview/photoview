@@ -85,9 +85,13 @@
         "title": "Bilder von Person ablösen"
       },
       "merge_face_groups": {
-        "description": "Alle Bilder dieser nicht Zugeordneten Person werden mit folgender Person zusammengeführt",
+        "destination_description": "Alle Bilder dieser nicht Zugeordneten Person werden mit folgender Person zusammengeführt",
+        "sources_description": "",
         "destination_table": {
           "title": "Personen zusammenführen"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Personen zusammenführen"
       },

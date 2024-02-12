@@ -85,9 +85,13 @@
         "title": "Desanexar caras de imagens"
       },
       "merge_face_groups": {
-        "description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado.",
+        "destination_description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado.",
+        "sources_description": "",
         "destination_table": {
           "title": "Selecione a cara de destino"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Juntar grupos de cara"
       },

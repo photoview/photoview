@@ -85,9 +85,13 @@
         "title": "Détacher les visages des images"
       },
       "merge_face_groups": {
-        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "destination_description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "sources_description": "",
         "destination_table": {
           "title": "Sélectionner le visage de destination"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Fusionner des groupes de visages"
       },

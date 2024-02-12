@@ -85,9 +85,13 @@
         "title": "Separa immagini volto"
       },
       "merge_face_groups": {
-        "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
+        "destination_description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
+        "sources_description": "",
         "destination_table": {
           "title": "Seleziona il volto di destinazione"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Unisci immagini volto"
       },

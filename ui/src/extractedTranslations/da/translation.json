@@ -85,9 +85,13 @@
         "title": "Løsriv Billeder"
       },
       "merge_face_groups": {
-        "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
+        "destination_description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
+        "sources_description": "",
         "destination_table": {
           "title": "Vælg destinationsgruppe"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Vælg gruppe at flette med"
       },
