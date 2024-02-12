@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },

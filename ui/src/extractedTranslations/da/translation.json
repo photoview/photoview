@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Ændre navn",
       "detach_images": "Løsriv billeder",
+      "merge_face": "Sammenflet person",
       "merge_people": "Sammenflet personer",
       "move_faces": "Flyt ansigter"
     },

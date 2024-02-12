@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Byt märkning",
       "detach_images": "Skilj ansikte",
+      "merge_face": "Slå ihop ansikte",
       "merge_people": "Slå ihop ansikten",
       "move_faces": "Flytta ansikten"
     },

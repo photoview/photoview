@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "修改面孔命名",
       "detach_images": "解除面孔标记",
+      "merge_face": "",
       "merge_people": "合并面孔至",
       "move_faces": "移动面孔至"
     },

@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Changer le label",
       "detach_images": "Détacher le visage",
+      "merge_face": "",
       "merge_people": "Fusionner le visage",
       "move_faces": "Déplacer les visages"
     },

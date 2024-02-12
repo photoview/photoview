@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Etiketi değiştir",
       "detach_images": "Yüzü ayır",
+      "merge_face": "",
       "merge_people": "Yüzü birleştir",
       "move_faces": "Yüzleri taşı"
     },

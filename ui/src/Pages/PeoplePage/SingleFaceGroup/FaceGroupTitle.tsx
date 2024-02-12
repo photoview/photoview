@@ -152,7 +152,7 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
                 setMergeModalState(MergeFaceGroupsModalState.SelectDestination)
               }
             >
-              {t('people_page.action_label.merge_people', 'Merge people')}
+              {t('people_page.action_label.merge_face', 'Merge face')}
             </Button>
           </li>
           <li>

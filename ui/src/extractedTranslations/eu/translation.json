@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Aldatu etiketa",
       "detach_images": "Kendu aurpegia",
+      "merge_face": "",
       "merge_people": "Bateratu aurpegiak",
       "move_faces": "Mugitu aurpegiak"
     },

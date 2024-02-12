@@ -37,7 +37,7 @@ export enum MergeFaceGroupsModalState {
 type MergeFaceGroupsModalProps = {
   state: MergeFaceGroupsModalState
   setState(state: MergeFaceGroupsModalState): void
-  initialDestinationFaceGroup: {
+  initialDestinationFaceGroup?: {
     __typename: 'FaceGroup'
     id: string
   }

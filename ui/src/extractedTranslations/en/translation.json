@@ -64,7 +64,8 @@
     "action_label": {
       "change_label": "Change label",
       "detach_images": "Detach face",
-      "merge_people": "Merge face",
+      "merge_face": "Merge face",
+      "merge_people": "Merge people",
       "move_faces": "Move faces"
     },
     "face_group": {

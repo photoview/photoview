@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Name ändern",
       "detach_images": "Bild ablösen",
+      "merge_face": "",
       "merge_people": "Gesichter zusammenführen",
       "move_faces": "Gesicht verschieben "
     },
