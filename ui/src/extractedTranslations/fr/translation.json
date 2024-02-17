@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Changer le label",
       "detach_images": "Détacher le visage",
+      "merge_face": "",
       "merge_people": "Fusionner le visage",
       "move_faces": "Déplacer les visages"
     },
@@ -85,9 +86,13 @@
         "title": "Détacher les visages des images"
       },
       "merge_face_groups": {
-        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "destination_description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "sources_description": "",
         "destination_table": {
           "title": "Sélectionner le visage de destination"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Fusionner des groupes de visages"
       },

@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Etiketi değiştir",
       "detach_images": "Yüzü ayır",
+      "merge_face": "",
       "merge_people": "Yüzü birleştir",
       "move_faces": "Yüzleri taşı"
     },
@@ -85,9 +86,13 @@
         "title": "Resimdeki Yüzleri Ayır"
       },
       "merge_face_groups": {
-        "description": "Bu yüz grubundaki tüm resimler seçilen yüz grubunda birleştirilecektir.",
+        "destination_description": "Bu yüz grubundaki tüm resimler seçilen yüz grubunda birleştirilecektir.",
+        "sources_description": "",
         "destination_table": {
           "title": "Hedef yüzü seçin"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Yüz Gruplarını Birleştir"
       },

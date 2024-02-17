@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },
@@ -85,8 +86,12 @@
         "title": ""
       },
       "merge_face_groups": {
-        "description": "",
+        "destination_description": "",
+        "sources_description": "",
         "destination_table": {
+          "title": ""
+        },
+        "sources_table": {
           "title": ""
         },
         "title": ""

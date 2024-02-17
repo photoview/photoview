@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Aldatu etiketa",
       "detach_images": "Kendu aurpegia",
+      "merge_face": "",
       "merge_people": "Bateratu aurpegiak",
       "move_faces": "Mugitu aurpegiak"
     },
@@ -85,9 +86,13 @@
         "title": "Kendu irudiko aurpegiak"
       },
       "merge_face_groups": {
-        "description": "Aurpegi-multzo honetako irudi guztiak aukeratutako aurpegi-multzoarekin bateratuko dira.",
+        "destination_description": "Aurpegi-multzo honetako irudi guztiak aukeratutako aurpegi-multzoarekin bateratuko dira.",
+        "sources_description": "",
         "destination_table": {
           "title": "Aukeratu zein aurpegira mugituko d(ir)en"
+        },
+        "sources_table": {
+          "title": ""
         },
         "title": "Bateratu aurpegi-multzoak"
       },
