@@ -85,12 +85,32 @@ const MergeFaceGroupsModal = ({
   ) => setSelectedFaceGroups(prev => new Set(prev).add(faceGroup))
   const removeSelectedFaceGroup = (
     faceGroup: myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
-  ) =>
+  ) => {
     setSelectedFaceGroups(prev => {
       const s = new Set(prev)
       s.delete(faceGroup)
       return s
     })
+  }
+
+  const setDestinationFaceGroup = (
+    faceGroup: myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
+  ) => {
+    if (isNil(faceGroup)) {
+      setSelectedFaceGroups(new Set())
+      setSelectedDestinationFaceGroup(null)
+      return
+    }
+
+    // Overwrite the selected face groups with a set containing only the selected group
+    setSelectedFaceGroups(
+      new Set<myFaces_myFaceGroups | singleFaceGroup_faceGroup | null>().add(
+        faceGroup
+      )
+    )
+
+    setSelectedDestinationFaceGroup(faceGroup)
+  }
 
   // Go straight to the sources page if a destination face group is preselected, using the preselection as the destination
   useEffect(() => {
@@ -102,20 +122,13 @@ const MergeFaceGroupsModal = ({
     )
     if (isNil(destinationFaceGroup)) return
 
-    setSelectedDestinationFaceGroup(destinationFaceGroup)
-    setState(MergeFaceGroupsModalState.SelectSources)
+    setDestinationFaceGroup(destinationFaceGroup)
   }, [state, preselectedDestinationFaceGroup])
 
   // Handle when a new face group is selected
   useEffect(() => {
     switch (state) {
       case MergeFaceGroupsModalState.SelectDestination:
-        // Overwrite the selected face groups with a set containing only the selected group
-        setSelectedFaceGroups(
-          new Set<
-            myFaces_myFaceGroups | singleFaceGroup_faceGroup | null
-          >().add(lastSelectedFaceGroup)
-        )
         setSelectedDestinationFaceGroup(lastSelectedFaceGroup)
         break
       case MergeFaceGroupsModalState.SelectSources:
