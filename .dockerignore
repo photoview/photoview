@@ -17,7 +17,7 @@ Makefile
 photos_path
 screenshots
 storage
-
+vulnerabilities
 ui/node_modules/
 ui/build/
 ui/.cache/
