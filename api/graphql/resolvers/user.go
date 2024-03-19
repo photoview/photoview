@@ -200,7 +200,6 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 	return &userPref, nil
 }
 
-// Admin queries
 func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
@@ -236,6 +235,39 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	}
 
 	return &user, nil
+}
+
+func (r *mutationResolver) UpdatePassword(ctx context.Context, currentPassword, password string) (*models.PasswordChangeResult, error) {
+	db := r.DB(ctx)
+	user := auth.UserFromContext(ctx)
+
+	if err := models.ValidateUserPassword(user, currentPassword); err != nil {
+		return createPasswordChangeErrorResult("Invalid current password")
+	}
+
+	hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return nil, err
+	}
+	hashedPass := string(hashedPassBytes)
+
+	user.Password = &hashedPass
+
+	if err := db.Save(&user).Error; err != nil {
+		return createPasswordChangeErrorResult("Failed to update user your password has not changed")
+	}
+
+	return &models.PasswordChangeResult{
+		Success: true,
+	}, nil
+}
+
+func createPasswordChangeErrorResult(msg string) (*models.PasswordChangeResult, error) {
+	result := &models.PasswordChangeResult{
+		Success: false,
+		Message: &msg,
+	}
+	return result, nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error) {
