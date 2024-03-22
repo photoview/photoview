@@ -173,6 +173,7 @@ type ComplexityRoot struct {
 		SetThumbnailDownsampleMethod func(childComplexity int, method models.ThumbnailFilter) int
 		ShareAlbum                   func(childComplexity int, albumID int, expire *time.Time, password *string) int
 		ShareMedia                   func(childComplexity int, mediaID int, expire *time.Time, password *string) int
+		UpdatePassword               func(childComplexity int, currentPassword string, newPassword string) int
 		UpdateUser                   func(childComplexity int, id int, username *string, password *string, admin *bool) int
 		UserAddRootPath              func(childComplexity int, id int, rootPath string) int
 		UserRemoveRootAlbum          func(childComplexity int, userID int, albumID int) int
@@ -187,6 +188,11 @@ type ComplexityRoot struct {
 		Progress func(childComplexity int) int
 		Timeout  func(childComplexity int) int
 		Type     func(childComplexity int) int
+	}
+
+	PasswordChangeResult struct {
+		Message func(childComplexity int) int
+		Success func(childComplexity int) int
 	}
 
 	Query struct {
@@ -322,6 +328,7 @@ type MutationResolver interface {
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
+	UpdatePassword(ctx context.Context, currentPassword string, newPassword string) (*models.PasswordChangeResult, error)
 	CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 	UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error)
@@ -1096,6 +1103,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 
+	case "Mutation.updatePassword":
+		if e.complexity.Mutation.UpdatePassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePassword(childComplexity, args["currentPassword"].(string), args["newPassword"].(string)), true
+
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
 			break
@@ -1187,6 +1206,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Notification.Type(childComplexity), true
+
+	case "PasswordChangeResult.message":
+		if e.complexity.PasswordChangeResult.Message == nil {
+			break
+		}
+
+		return e.complexity.PasswordChangeResult.Message(childComplexity), true
+
+	case "PasswordChangeResult.success":
+		if e.complexity.PasswordChangeResult.Success == nil {
+			break
+		}
+
+		return e.complexity.PasswordChangeResult.Success(childComplexity), true
 
 	case "Query.album":
 		if e.complexity.Query.Album == nil {
@@ -2256,6 +2289,30 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 		}
 	}
 	args["password"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["currentPassword"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPassword"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["currentPassword"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["newPassword"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newPassword"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newPassword"] = arg1
 	return args, nil
 }
 
@@ -6683,6 +6740,87 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updatePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updatePassword(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdatePassword(rctx, fc.Args["currentPassword"].(string), fc.Args["newPassword"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthorized == nil {
+				return nil, errors.New("directive isAuthorized is not implemented")
+			}
+			return ec.directives.IsAuthorized(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*models.PasswordChangeResult); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.PasswordChangeResult`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.PasswordChangeResult)
+	fc.Result = res
+	return ec.marshalNPasswordChangeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPasswordChangeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_PasswordChangeResult_success(ctx, field)
+			case "message":
+				return ec.fieldContext_PasswordChangeResult_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PasswordChangeResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
 	if err != nil {
@@ -8300,6 +8438,91 @@ func (ec *executionContext) fieldContext_Notification_timeout(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PasswordChangeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.PasswordChangeResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PasswordChangeResult_success(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PasswordChangeResult_success(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PasswordChangeResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PasswordChangeResult_message(ctx context.Context, field graphql.CollectedField, obj *models.PasswordChangeResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PasswordChangeResult_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PasswordChangeResult_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PasswordChangeResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14758,6 +14981,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updatePassword":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePassword(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -14957,6 +15189,38 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 		case "timeout":
 
 			out.Values[i] = ec._Notification_timeout(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var passwordChangeResultImplementors = []string{"PasswordChangeResult"}
+
+func (ec *executionContext) _PasswordChangeResult(ctx context.Context, sel ast.SelectionSet, obj *models.PasswordChangeResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, passwordChangeResultImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PasswordChangeResult")
+		case "success":
+
+			out.Values[i] = ec._PasswordChangeResult_success(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "message":
+
+			out.Values[i] = ec._PasswordChangeResult_message(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -16680,6 +16944,20 @@ func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋphotoview�
 
 func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNPasswordChangeResult2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPasswordChangeResult(ctx context.Context, sel ast.SelectionSet, v models.PasswordChangeResult) graphql.Marshaler {
+	return ec._PasswordChangeResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPasswordChangeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPasswordChangeResult(ctx context.Context, sel ast.SelectionSet, v *models.PasswordChangeResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PasswordChangeResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNScannerResult2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v models.ScannerResult) graphql.Marshaler {
