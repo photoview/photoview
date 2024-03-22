@@ -44857,6 +44857,39 @@
       }
     },
     {
+      "id": "494a1ca9521be3d2",
+      "name": "github.com/cpuguy83/go-md2man/v2",
+      "version": "v2.0.1",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:cpuguy83:go-md2man\\/v2:v2.0.1:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        },
+        {
+          "cpe": "cpe:2.3:a:cpuguy83:go_md2man\\/v2:v2.0.1:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/github.com/cpuguy83/go-md2man@v2.0.1#v2",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:r/myEWzV9lfsM1tFLgDyu0atFtJ1fXn261LKYj/3DxU="
+      }
+    },
+    {
       "id": "e5b69a25d8443834",
       "name": "github.com/davecgh/go-spew",
       "version": "v1.1.1",
@@ -45461,6 +45494,35 @@
       }
     },
     {
+      "id": "ef27e426f315ef81",
+      "name": "github.com/matryer/moq",
+      "version": "v0.2.7",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:matryer:moq:v0.2.7:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/github.com/matryer/moq@v0.2.7",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:RtpiPUM8L7ZSCbSwK+QcZH/E9tgqAkFjKQxsRs25b4w="
+      }
+    },
+    {
       "id": "74af528ef29fd17a",
       "name": "github.com/mattn/go-sqlite3",
       "version": "v1.14.14",
@@ -45614,6 +45676,35 @@
       }
     },
     {
+      "id": "75ec84c96f797ac0",
+      "name": "github.com/russross/blackfriday/v2",
+      "version": "v2.1.0",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:russross:blackfriday\\/v2:v2.1.0:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/github.com/russross/blackfriday@v2.1.0#v2",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk="
+      }
+    },
+    {
       "id": "39a712e61565f2d9",
       "name": "github.com/sabhiram/go-gitignore",
       "version": "v0.0.0-20210923224102-525f6e181f06",
@@ -45702,6 +45793,35 @@
       "metadataType": "go-module-entry",
       "metadata": {
         "h1Digest": "h1:Z5V5lCC5xbI59V77b4kGXcHsOohA6tQIvzLGIjhLsfY="
+      }
+    },
+    {
+      "id": "de5e1f715d0c206c",
+      "name": "github.com/urfave/cli/v2",
+      "version": "v2.8.1",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:urfave:cli\\/v2:v2.8.1:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/github.com/urfave/cli@v2.8.1#v2",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:CGuYNZF9IKZY/rfBe3lJpccSoIY1ytfvmgQT90cNOl4="
       }
     },
     {
@@ -45797,6 +45917,35 @@
       "metadataType": "go-module-entry",
       "metadata": {
         "h1Digest": "h1:OvTZ5iEvsDhRWFjV5xY3wT7uHFna28nSSP7ucau+cXQ="
+      }
+    },
+    {
+      "id": "9e219ac90b7a1559",
+      "name": "github.com/xrash/smetrics",
+      "version": "v0.0.0-20201216005158-039620a65673",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:xrash:smetrics:v0.0.0-20201216005158-039620a65673:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/github.com/xrash/smetrics@v0.0.0-20201216005158-039620a65673",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:bAn7/zixMGCfxrRTfdpNzjtPYqr8smhKouy9mxVdGPU="
       }
     },
     {
@@ -46684,6 +46833,64 @@
       }
     },
     {
+      "id": "54c69ed06a0b0fdc",
+      "name": "golang.org/x/mod",
+      "version": "v0.6.0-dev.0.20220106191415-9b9b3d81d5e3",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:golang:x\\/mod:v0.6.0-dev.0.20220106191415-9b9b3d81d5e3:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/golang.org/x/mod@v0.6.0-dev.0.20220106191415-9b9b3d81d5e3",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:kQgndtyPBW/JIYERgdxfwMYh3AVStj88WQTlNDi2a+o="
+      }
+    },
+    {
+      "id": "22f5b5189b9b3971",
+      "name": "golang.org/x/sys",
+      "version": "v0.0.0-20211019181941-9d821ace8654",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:golang:x\\/sys:v0.0.0-20211019181941-9d821ace8654:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20211019181941-9d821ace8654",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:id054HUawV2/6IGm2IV8KZQjqtwAOo2CYlOToYqa0d0="
+      }
+    },
+    {
       "id": "d4f7fc47897e5493",
       "name": "golang.org/x/text",
       "version": "v0.3.7",
@@ -46713,6 +46920,64 @@
       }
     },
     {
+      "id": "06b541392abeb47a",
+      "name": "golang.org/x/tools",
+      "version": "v0.1.10",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:golang:x\\/tools:v0.1.10:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/golang.org/x/tools@v0.1.10",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:QjFRCZxdOhBJ/UNgnBZLbNV13DlbnK0quyivTnXJM20="
+      }
+    },
+    {
+      "id": "e7ae298eeab40847",
+      "name": "golang.org/x/xerrors",
+      "version": "v0.0.0-20200804184101-5ec99f83aff1",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [
+        {
+          "cpe": "cpe:2.3:a:golang:x\\/xerrors:v0.0.0-20200804184101-5ec99f83aff1:*:*:*:*:*:*:*",
+          "source": "syft-generated"
+        }
+      ],
+      "purl": "pkg:golang/golang.org/x/xerrors@v0.0.0-20200804184101-5ec99f83aff1",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE="
+      }
+    },
+    {
       "id": "f5f52ae41d7801d8",
       "name": "gopkg.in/vansante/go-ffprobe.v2",
       "version": "v2.0.3",
@@ -46734,6 +46999,30 @@
       "metadataType": "go-module-entry",
       "metadata": {
         "h1Digest": "h1:nmR7yLalb5p5UmXhXUYnrsIkbb8j7h2OYMDoLETCQ5U="
+      }
+    },
+    {
+      "id": "31ec6c58eb57bce5",
+      "name": "gopkg.in/yaml.v2",
+      "version": "v2.4.0",
+      "type": "go-module",
+      "foundBy": "go-module-file-cataloger",
+      "locations": [
+        {
+          "path": "/api/go.mod",
+          "accessPath": "/api/go.mod",
+          "annotations": {
+            "evidence": "primary"
+          }
+        }
+      ],
+      "licenses": [],
+      "language": "go",
+      "cpes": [],
+      "purl": "pkg:golang/gopkg.in/yaml.v2@v2.4.0",
+      "metadataType": "go-module-entry",
+      "metadata": {
+        "h1Digest": "h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY="
       }
     },
     {
@@ -88534,6 +88823,11 @@
       "type": "evident-by"
     },
     {
+      "parent": "06b541392abeb47a",
+      "child": "5677f0b9250c9184",
+      "type": "evident-by"
+    },
+    {
       "parent": "06e4c601644fa0bc",
       "child": "28e1883464aa51dd",
       "type": "evident-by"
@@ -89429,6 +89723,11 @@
       "type": "evident-by"
     },
     {
+      "parent": "22f5b5189b9b3971",
+      "child": "5677f0b9250c9184",
+      "type": "evident-by"
+    },
+    {
       "parent": "23148deb7f972b9d",
       "child": "28e1883464aa51dd",
       "type": "evident-by"
@@ -89936,6 +90235,11 @@
     {
       "parent": "31cb1f2df2f5b5c7",
       "child": "28e1883464aa51dd",
+      "type": "evident-by"
+    },
+    {
+      "parent": "31ec6c58eb57bce5",
+      "child": "5677f0b9250c9184",
       "type": "evident-by"
     },
     {
@@ -90769,6 +91073,11 @@
       "type": "evident-by"
     },
     {
+      "parent": "494a1ca9521be3d2",
+      "child": "5677f0b9250c9184",
+      "type": "evident-by"
+    },
+    {
       "parent": "4963a76b9dc6f7e6",
       "child": "28e1883464aa51dd",
       "type": "evident-by"
@@ -91101,6 +91410,11 @@
     {
       "parent": "54959b90748c1eaf",
       "child": "28e1883464aa51dd",
+      "type": "evident-by"
+    },
+    {
+      "parent": "54c69ed06a0b0fdc",
+      "child": "5677f0b9250c9184",
       "type": "evident-by"
     },
     {
@@ -92151,6 +92465,11 @@
     {
       "parent": "75d203fd063387ee",
       "child": "28e1883464aa51dd",
+      "type": "evident-by"
+    },
+    {
+      "parent": "75ec84c96f797ac0",
+      "child": "5677f0b9250c9184",
       "type": "evident-by"
     },
     {
@@ -93466,6 +93785,11 @@
     {
       "parent": "9e142676077d8647",
       "child": "28e1883464aa51dd",
+      "type": "evident-by"
+    },
+    {
+      "parent": "9e219ac90b7a1559",
+      "child": "5677f0b9250c9184",
       "type": "evident-by"
     },
     {
@@ -95970,6 +96294,11 @@
     },
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "06b541392abeb47a",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "06e4c601644fa0bc",
       "type": "contains"
     },
@@ -96865,6 +97194,11 @@
     },
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "22f5b5189b9b3971",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "23148deb7f972b9d",
       "type": "contains"
     },
@@ -97371,6 +97705,11 @@
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "31cb1f2df2f5b5c7",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "31ec6c58eb57bce5",
       "type": "contains"
     },
     {
@@ -98205,6 +98544,11 @@
     },
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "494a1ca9521be3d2",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "4963a76b9dc6f7e6",
       "type": "contains"
     },
@@ -98536,6 +98880,11 @@
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "54959b90748c1eaf",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "54c69ed06a0b0fdc",
       "type": "contains"
     },
     {
@@ -99586,6 +99935,11 @@
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "75d203fd063387ee",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "75ec84c96f797ac0",
       "type": "contains"
     },
     {
@@ -100901,6 +101255,11 @@
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "9e142676077d8647",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "9e219ac90b7a1559",
       "type": "contains"
     },
     {
@@ -103190,6 +103549,11 @@
     },
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "de5e1f715d0c206c",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "de7ed80b12690718",
       "type": "contains"
     },
@@ -103560,6 +103924,11 @@
     },
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "e7ae298eeab40847",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "e823d83b3f7630d2",
       "type": "contains"
     },
@@ -103881,6 +104250,11 @@
     {
       "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
       "child": "ef06fbcd3b3162ee",
+      "type": "contains"
+    },
+    {
+      "parent": "de29f1519bcc3b05c638f4a162c1b7f01c52cf9681d6f901e073fc92dbb94d0f",
+      "child": "ef27e426f315ef81",
       "type": "contains"
     },
     {
@@ -104494,6 +104868,11 @@
       "type": "evident-by"
     },
     {
+      "parent": "de5e1f715d0c206c",
+      "child": "5677f0b9250c9184",
+      "type": "evident-by"
+    },
+    {
       "parent": "de7ed80b12690718",
       "child": "28e1883464aa51dd",
       "type": "evident-by"
@@ -104864,6 +105243,11 @@
       "type": "evident-by"
     },
     {
+      "parent": "e7ae298eeab40847",
+      "child": "5677f0b9250c9184",
+      "type": "evident-by"
+    },
+    {
       "parent": "e823d83b3f7630d2",
       "child": "28e1883464aa51dd",
       "type": "evident-by"
@@ -105186,6 +105570,11 @@
     {
       "parent": "ef06fbcd3b3162ee",
       "child": "28e1883464aa51dd",
+      "type": "evident-by"
+    },
+    {
+      "parent": "ef27e426f315ef81",
+      "child": "5677f0b9250c9184",
       "type": "evident-by"
     },
     {

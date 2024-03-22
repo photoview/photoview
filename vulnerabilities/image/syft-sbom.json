@@ -16,7 +16,7 @@
         "source_location": "viktorstrate/photoview:latest:/app/photoview"
       },
       "metadata": {
-        "syft:filesystem": "sha256:97b038c44d5989a739ae2beb951771a8318ce458e87bb6e4ade4a5a0ccfd8880"
+        "syft:filesystem": "sha256:1e750d6a12409e8b7a2aef99dc78819c675aafa1ca82903cb4135052fe439422"
       },
       "resolved": {
         "pkg:golang/github.com/99designs/gqlgen@v0.17.12": {
@@ -10772,5 +10772,5 @@
       }
     }
   },
-  "scanned": "2024-03-15T18:59:41+02:00"
+  "scanned": "2024-03-22T22:09:12+02:00"
 }
