@@ -13,7 +13,7 @@ test('face circle image', () => {
       title: 'my_image.jpg',
       thumbnail: {
         __typename: 'MediaURL',
-        url: 'http://localhost:4001/photo/thumbnail_my_image_jpg_p9x8dLWr.jpg',
+        url: '/photo/thumbnail_my_image_jpg_p9x8dLWr.jpg',
         width: 1024,
         height: 641,
       },
@@ -32,6 +32,6 @@ test('face circle image', () => {
   expect(screen.getByRole('img')).toBeInTheDocument()
   expect(screen.getByRole('img')).toHaveAttribute(
     'src',
-    imageFace.media.thumbnail!.url
+    'http://localhost:3000/photo/thumbnail_my_image_jpg_p9x8dLWr.jpg'
   )
 })

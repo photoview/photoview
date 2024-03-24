@@ -83,21 +83,39 @@ All of the photo galleries can do a lot of what I need, but no single one can do
 ## Getting started - Setup with Docker
 
 > This section describes how to get Photoview up and running on your server with Docker.
-> Make sure you have Docker and docker-compose installed and running on your server
+> Make sure you have Docker and docker-compose installed and running on your server.
+> `make` should be installed as well if you'd like to use provided `Makefile`, which is optional (see step 4 for more details).
+> `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located in the `backup` section for more details.
 
-1. Make a new `docker-compose.yml` file on your computer, and copy the content of [docker-compose.example.yml](/docker-compose.example.yml) to the new file.
-2. Edit `docker-compose.yml`, find the comments starting with `Change This:`, and change the values, to properly match your setup. If you are just testing locally, you don't have to change anything.
-3. Start the server by running the following command
+1. Clone this repo to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
+   - `cd <path to the folder on your server, where you expect to host the Photoview internal data>`
+   - `git clone https://github.com/kkovaletp/photoview.git .`
+   - `git checkout NOT-FOR-MERGE-rebuild-photoview-image`
+   - `git pull`
+2. Rename `docker-compose.example.yml` and `example.env` files and remove the `example` from their names (so, you need to have `.env` and `docker-compose.yml` files).
+3. Open these files and the `Makefile` in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
+4. In case, you don't have `make` installed in your system or don't want to use it for the Photoview management activities, you could use the same commands from the `Makefile` and run them in your shell directly, or create your own scripts. Make sure to apply or replace the variables from your `.env` first in this case. `Makefile` is provided just for your convenience and simplicity, but is optional.
+5. Start the server by running the following command (or corresponding sequence of commands from the `Makefile`):
 
 ```bash
-$ docker-compose up -d
+make all
 ```
 
 If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, Photoview can now be accessed at http://localhost:8000
 
+> NOTE:
+> This sequence will build the Photoview image from local sources replacing the original
+> `viktorstrate/photoview:latest` image, published on the docker hub by the repo owner.
+> This is a workaround of the fact that the project is not actively maintained,
+> and that image is pretty outdated, having some vulnerabilities and old software.
+> If you want to use the original image, do not build the local one
+> (exclude the `build` step from the sequence in the `Makefile`)
+> and remove the local `viktorstrate/photoview:latest` image.
+> Next time you start the service, the original image will be pulled from the docker hub.
+
 ### Initial Setup
 
-If everything is setup correctly, you should be presented with an initial setup wizard, when accessing the website the first time.
+If everything is set up correctly, you should be presented with an initial setup wizard, when accessing the website the first time.
 
 ![Initial setup](./screenshots/initial-setup.png)
 

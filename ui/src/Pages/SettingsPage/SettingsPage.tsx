@@ -9,6 +9,7 @@ import ThumbnailPreferences from './ThumbnailPreferences'
 import UsersTable from './Users/UsersTable'
 import VersionInfo from './VersionInfo'
 import classNames from 'classnames'
+import PasswordChange from './Users/PasswordChange'
 
 type SectionTitleProps = {
   children: string
@@ -43,6 +44,7 @@ const SettingsPage = () => {
   return (
     <Layout title={t('title.settings', 'Settings')}>
       <UserPreferences />
+      {!isAdmin && <PasswordChange />}
       {isAdmin && (
         <>
           <ScannerSection />

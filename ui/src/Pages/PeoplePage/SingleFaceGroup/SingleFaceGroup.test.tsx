@@ -37,13 +37,13 @@ test('single face group', async () => {
                   title: '122A2785-2.jpg',
                   thumbnail: {
                     __typename: 'MediaURL',
-                    url: 'http://localhost:4001/photo/thumbnail_122A2785-2_jpg_lFmZcaN5.jpg',
+                    url: '/photo/thumbnail_122A2785-2_jpg_lFmZcaN5.jpg',
                     width: 1024,
                     height: 1024,
                   },
                   highRes: {
                     __typename: 'MediaURL',
-                    url: 'http://localhost:4001/photo/122A2785-2_e4nCeMHU.jpg',
+                    url: '/photo/122A2785-2_e4nCeMHU.jpg',
                   },
                   favorite: false,
                 },
@@ -65,13 +65,13 @@ test('single face group', async () => {
                   title: 'image.png',
                   thumbnail: {
                     __typename: 'MediaURL',
-                    url: 'http://localhost:4001/photo/thumbnail_image_png_OwTDG5fM.jpg',
+                    url: '/photo/thumbnail_image_png_OwTDG5fM.jpg',
                     width: 1024,
                     height: 699,
                   },
                   highRes: {
                     __typename: 'MediaURL',
-                    url: 'http://localhost:4001/photo/image_A2YB0x3z.png',
+                    url: '/photo/image_A2YB0x3z.png',
                   },
                   favorite: false,
                 },

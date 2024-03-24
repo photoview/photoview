@@ -19,13 +19,13 @@ describe('MediaSidebar', () => {
     type: MediaType.Photo,
     thumbnail: {
       __typename: 'MediaURL',
-      url: 'http://localhost:4001/photo/thumbnail.jpg',
+      url: '/photo/thumbnail.jpg',
       width: 1024,
       height: 839,
     },
     highRes: {
       __typename: 'MediaURL',
-      url: 'http://localhost:4001/photo/highres.jpg',
+      url: '/photo/highres.jpg',
       width: 5322,
       height: 4362,
     },
@@ -51,7 +51,7 @@ describe('MediaSidebar', () => {
     expect(screen.getByText('122A6069.jpg')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute(
       'src',
-      'http://localhost:4001/photo/highres.jpg'
+      'http://localhost:3000/photo/highres.jpg'
     )
 
     expect(
@@ -74,7 +74,7 @@ describe('MediaSidebar', () => {
     expect(screen.getByText('122A6069.jpg')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute(
       'src',
-      'http://localhost:4001/photo/highres.jpg'
+      'http://localhost:3000/photo/highres.jpg'
     )
 
     expect(screen.getByText('Set as album cover photo')).toBeInTheDocument()
