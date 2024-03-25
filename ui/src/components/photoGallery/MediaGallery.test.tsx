@@ -19,7 +19,7 @@ test('photo gallery with media', () => {
         id: '165',
         type: MediaType.Photo,
         thumbnail: {
-          url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+          url: '/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
           width: 768,
           height: 1024,
           __typename: 'MediaURL',
@@ -96,7 +96,7 @@ describe('photo gallery presenting', () => {
           id: '165',
           type: MediaType.Photo,
           thumbnail: {
-            url: 'http://localhost:4001/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
+            url: '/photo/thumbnail_3666760020_jpg_x76GG5pS.jpg',
             width: 768,
             height: 1024,
             __typename: 'MediaURL',
