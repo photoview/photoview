@@ -8,9 +8,25 @@ export function clearTokenCookie() {
   document.cookie = 'auth-token= ;max-age=0 ;path=/ ;sameSite=Lax'
 }
 
+declare const window: Window &
+  typeof globalThis & {
+    GuestAccepted: boolean
+  }
+
+const GuestToken = 'guest'
+
 export function authToken() {
   const match = document.cookie.match(/auth-token=([\d\w]+)/)
+
+  if (!match && window.GuestAccepted) {
+    return GuestToken
+  }
+
   return match && match[1]
+}
+
+export function isGuestUser() {
+  return authToken() == GuestToken
 }
 
 export function saveSharePassword(shareToken: string, password: string) {

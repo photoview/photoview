@@ -15,6 +15,7 @@ const (
 	EnvUIPath                    EnvironmentVariable = "PHOTOVIEW_UI_PATH"
 	EnvMediaCachePath            EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
 	EnvFaceRecognitionModelsPath EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH"
+	EnvUserToShowGuests          EnvironmentVariable = "USER_TO_SHOW_GUESTS"
 )
 
 // Network related
@@ -62,6 +63,16 @@ func (v EnvironmentVariable) GetBool() bool {
 	}
 
 	return false
+}
+
+// GuestAccepted returns whether a guest can see photos
+func GuestAccepted() bool {
+	return EnvUserToShowGuests.GetValue() != ""
+}
+
+// UserToShowGuests returns the name of the user that guests can see photos of
+func UserToShowGuests() string {
+	return EnvUserToShowGuests.GetValue()
 }
 
 // ShouldServeUI whether or not the "serve ui" option is enabled
