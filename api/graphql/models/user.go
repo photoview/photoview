@@ -73,6 +73,21 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 
 var ErrorInvalidUserCredentials = errors.New("invalid credentials")
 
+func ValidateUserPassword(user *User, password string) error {
+	if user.Password == nil {
+		return errors.New("user does not have a password")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return ErrorInvalidUserCredentials
+		} else {
+			return errors.Wrap(err, "compare user password hash")
+		}
+	}
+
+	return nil
+}
+
 func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error) {
 	var user User
 
@@ -84,16 +99,9 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 		return nil, errors.Wrap(result.Error, "failed to get user by username when authorizing")
 	}
 
-	if user.Password == nil {
-		return nil, errors.New("user does not have a password")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return nil, ErrorInvalidUserCredentials
-		} else {
-			return nil, errors.Wrap(err, "compare user password hash")
-		}
+	err := ValidateUserPassword(&user, password)
+	if err != nil {
+		return nil, err
 	}
 
 	return &user, nil

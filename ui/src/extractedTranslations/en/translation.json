@@ -170,6 +170,20 @@
       },
       "title": "User preferences"
     },
+    "user": {
+      "password_reset": {
+        "form": {
+          "current_password": "Current password",
+          "new_password": "New password",
+          "confirm_password": "New password",
+          "placeholder": "password",
+          "submit": "Change password",
+          "success": "Password changed successfully",
+          "mismatch": "Passwords do not match"
+        },
+        "title": "Change password"
+      }
+    },
     "users": {
       "add_user": {
         "submit": "Add user"
@@ -183,6 +197,9 @@
         "description": "Change password for <1>{{username}}</1>",
         "form": {
           "label": "New password",
+          "current_password": "Current password",
+          "new_password": "New password",
+          "confirm_password": "New password",
           "placeholder": "password",
           "submit": "Change password"
         },
