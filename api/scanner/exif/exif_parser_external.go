@@ -122,12 +122,12 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 				found_exif = true
 				newExif.DateShot = &dateTime
 			} else {
-				layoutWithOffset := "2006:01:02 15:04:05+02:00"
+				layoutWithOffset := "2006:01:02 15:04:05-07:00"
 				dateTime, err = time.Parse(layoutWithOffset, date)
 				if err == nil {
 					found_exif = true
 					newExif.DateShot = &dateTime
-				}	
+				}
 			}
 			break
 		}
