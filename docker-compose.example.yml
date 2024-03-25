@@ -15,6 +15,7 @@ services:
   photoview:
     image: viktorstrate/photoview:2
     restart: always
+    # Remove the following ports section if you enable Traefik reverse proxy labels
     ports:
       - "8000:80"
     depends_on:
@@ -45,6 +46,22 @@ services:
       # to the following: `/home/user/photos:/photos:ro`.
       # You can mount multiple paths, if your photos are spread across multiple directories.
       - ./photos_path:/photos:ro
+
+    labels:
+      # Configuration for Traefik reverse proxy, assuming the following:
+      # - Traefik runs in host network mode
+      # - public hostname is photoview.foo.bar
+      # - certificate resolver is named "le"
+      # - https entrypoint is named "websecure"
+      # If you enable these labels, remove the ports section
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.photoview.rule=Host(`photoview.foo.bar`)"
+      # - "traefik.http.routers.photoview.service=photoview"
+      # - "traefik.http.routers.photoview.tls=true"
+      # - "traefik.http.routers.photoview.tls.certresolver=le"
+      # - "traefik.http.routers.photoview.entrypoints=websecure"
+      # - "traefik.http.services.photoview.loadbalancer.server.port=80"
+      # - "traefik.http.services.photoview.loadbalancer.server.scheme=http"
 
 volumes:
   db_data:
