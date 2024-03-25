@@ -163,7 +163,7 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
-	const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
@@ -192,7 +192,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         <Link
           className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
-					onClick={() => updateSidebar(null)}
+          onClick={() => updateSidebar(null)}
         >
           {album.title}
         </Link>
@@ -231,7 +231,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       <MediaSidebarPeople media={media} />
       {sidebarMap}
       <SidebarMediaDownload media={media} />
-      <SidebarPhotoShare id={media.id} />
+      <SidebarPhotoShare photoUrl={media.highRes?.url} id={media.id} />
       <div className="mt-8">
         <SidebarPhotoCover cover_id={media.id} />
       </div>
