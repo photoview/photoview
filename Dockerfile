@@ -74,15 +74,12 @@ WORKDIR /app
 COPY api/data /app/data
 
 RUN apt update \
-  # Required dependencies
-  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
-
-# Install Darktable if building for a supported architecture
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt install -y darktable; fi
-
-# Remove build dependencies and cleanup
-RUN apt purge -y gpg \
+  `# Required dependencies` \
+  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
+  `# Install Darktable if building for a supported architecture` \
+  && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+    apt install -y darktable; fi \
+  && apt purge -y gpg \
   && apt autoremove -y \
   && apt clean \
   && rm -rf /var/lib/apt/lists/*
