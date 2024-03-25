@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
@@ -45,7 +44,7 @@ func (f *ImageFace) FillMedia(db *gorm.DB) error {
 	return nil
 }
 
-type FaceDescriptor face.Descriptor
+type FaceDescriptor [128]float32 // same as go-face's Descriptor
 
 // GormDataType datatype used in database
 func (FaceDescriptor) GormDBDataType(db *gorm.DB, field *schema.Field) string {
