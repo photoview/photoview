@@ -15,11 +15,13 @@ import (
 
 func InitializeExecutableWorkers() {
 	DarktableCli = newDarktableWorker()
+	ImageMagickCli = newImageMagickWorker()
 	FfmpegCli = newFfmpegWorker()
 }
 
 var DarktableCli *DarktableWorker = nil
 var FfmpegCli *FfmpegWorker = nil
+var ImageMagickCli *ImageMagickWorker = nil
 
 type ExecutableWorker interface {
 	Path() string
@@ -30,6 +32,10 @@ type DarktableWorker struct {
 }
 
 type FfmpegWorker struct {
+	path string
+}
+
+type ImageMagickWorker struct {
 	path string
 }
 
@@ -52,6 +58,33 @@ func newDarktableWorker() *DarktableWorker {
 		log.Printf("Found executable worker: darktable (%s)\n", strings.Split(string(version), "\n")[0])
 
 		return &DarktableWorker{
+			path: path,
+		}
+	}
+
+	return nil
+}
+
+
+func newImageMagickWorker() *ImageMagickWorker {
+	if utils.EnvDisableRawProcessing.GetBool() {
+		log.Printf("Executable worker disabled (%s=1): ImageMagick\n", utils.EnvDisableRawProcessing.GetName())
+		return nil
+	}
+
+	path, err := exec.LookPath("convert")
+	if err != nil {
+		log.Println("Executable worker not found: convert")
+	} else {
+		version, err := exec.Command(path, "-version").Output()
+		if err != nil {
+			log.Printf("Error getting version of convert: %s\n", err)
+			return nil
+		}
+
+		log.Printf("Found executable worker: convert (%s)\n", strings.Split(string(version), "\n")[0])
+
+		return &ImageMagickWorker{
 			path: path,
 		}
 	}
@@ -93,6 +126,10 @@ func (worker *FfmpegWorker) IsInstalled() bool {
 	return worker != nil
 }
 
+func (worker *ImageMagickWorker) IsInstalled() bool {
+	return worker != nil
+}
+
 func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
 	tmpDir, err := ioutil.TempDir("/tmp", "photoview-darktable")
 	if err != nil {
@@ -108,6 +145,30 @@ func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, j
 		fmt.Sprintf("plugins/imageio/format/jpeg/quality=%d", jpegQuality),
 		"--configdir",
 		tmpDir,
+	}
+
+	cmd := exec.Command(worker.path, args...)
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "encoding image using: %s %v", worker.path, args)
+	}
+
+	return nil
+}
+
+
+func (worker *ImageMagickWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+	tmpDir, err := ioutil.TempDir("/tmp", "photoview-convert")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	args := []string{
+		inputPath,
+		"-quality",
+		fmt.Sprintf("%d", jpegQuality),
+		outputPath,
 	}
 
 	cmd := exec.Command(worker.path, args...)
