@@ -263,6 +263,10 @@ func (imgType *MediaType) IsSupported() bool {
 	if executable_worker.FfmpegCli.IsInstalled() && imgType.IsVideo() {
 		return true
 	}
+	
+	if executable_worker.ImageMagickCli.IsInstalled() && imgType.IsRaw() {
+		return true
+	}
 
 	return false
 }
