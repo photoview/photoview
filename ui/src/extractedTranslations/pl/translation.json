@@ -1,7 +1,7 @@
 {
   "album_filter": {
     "only_favorites": "Pokaż tylko ulubione",
-    "sort": "",
+    "sort": "Sortuj",
     "sort_by": "Sortuj",
     "sorting_options": {
       "date_imported": "Data zaimportowania",
@@ -35,7 +35,7 @@
       "placeholder": "Szukaj",
       "result_type": {
         "albums": "Albumy",
-        "media": ""
+        "media": "Multimedia"
       }
     }
   },
@@ -62,58 +62,58 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": "",
-      "detach_images": "",
-      "merge_people": "",
-      "move_faces": ""
+      "change_label": "Zmień etykietę",
+      "detach_images": "Odłącz twarz",
+      "merge_people": "Połącz twarze",
+      "move_faces": "Przenieś twarze"
     },
     "face_group": {
       "label_placeholder": "Etykieta",
       "unlabeled": "Nieoznakowany",
-      "unlabeled_person": ""
+      "unlabeled_person": "Nieoznakowana osoba"
     },
     "modal": {
       "action": {
-        "merge": ""
+        "merge": "Połącz"
       },
       "detach_image_faces": {
         "action": {
-          "detach": "",
-          "select_images": ""
+          "detach": "Odłącz zdjęcia twarzy",
+          "select_images": "Zaznacz zdjęcia do odłączenia"
         },
-        "description": "",
-        "title": ""
+        "description": "Odłącz wybrane zdjęcia w tej grupie twarzy i przenieś je do nowej grupy twarzy",
+        "title": "Odłącz zdjęcia twarzy"
       },
       "merge_face_groups": {
-        "description": "",
+        "description": "Wszystkie obrazy w tej grupie twarzy zostaną połączone z wybraną grupą twarzy.",
         "destination_table": {
-          "title": ""
+          "title": "Wybierz twarz"
         },
-        "title": ""
+        "title": "Połącz grupy twarzy"
       },
       "move_image_faces": {
-        "description": "",
+        "description": "Przenieś wybrane obrazy tej grupy twarzy do innej grupy twarzy",
         "destination_face_group_table": {
-          "move_action": "",
-          "title": ""
+          "move_action": "Przenieś twarze z obrazu",
+          "title": "Wybierz docelową grupę twarzy"
         },
         "image_select_table": {
-          "next_action": "",
-          "title": ""
+          "next_action": "Dalej",
+          "title": "Wybierz obrazy do przeniesienia"
         },
-        "title": ""
+        "title": "Przenieś twarze z obrazu"
       }
     },
     "recognize_unlabeled_faces_button": "Rozpoznaj nieoznakowane twarze",
     "tableselect_face_group": {
-      "search_faces_placeholder": ""
+      "search_faces_placeholder": "Szukaj twarzy..."
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": ""
+      "search_images_placeholder": "Szukaj obrazów..."
     }
   },
   "photos_page": {
-    "title": "Zdjęcia"
+    "title": "Oś czasu"
   },
   "places_page": {
     "title": "Miejsca"
@@ -157,16 +157,16 @@
       },
       "theme": {
         "auto": {
-          "label": ""
+          "label": "Taki jak system"
         },
         "dark": {
-          "label": ""
+          "label": "Ciemny"
         },
-        "description": "",
+        "description": "Zmień wygląd strony",
         "light": {
-          "label": ""
+          "label": "Jasny"
         },
-        "title": ""
+        "title": "Motyw"
       },
       "title": "Preferencje użytkownika"
     },
@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Akcja",
-          "capabilities": "",
+          "capabilities": "Możliwości",
           "photo_path": "Ścieżka zdjęć",
           "username": "Nazwa użytkownika"
         },
@@ -208,9 +208,9 @@
       "title": "Użytkownicy"
     },
     "version_info": {
-      "build_date_title": "",
-      "title": "",
-      "version_title": ""
+      "build_date_title": "Data kompilacji",
+      "title": "Wersja Photoview",
+      "version_title": "Wersja produkcyjna"
     }
   },
   "share_page": {
@@ -219,7 +219,7 @@
     },
     "protected_share": {
       "description": "Ten udział jest chroniony hasłem.",
-      "password_required_error": "",
+      "password_required_error": "Hasło jest wymagane",
       "title": "Udział chroniony"
     },
     "share_not_found": "Nie znaleziono udziału",
@@ -228,35 +228,35 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": "",
+      "album_cover": "Okładka albumu",
       "download": {
         "high-resolutions": {
-          "description": "",
-          "title": ""
+          "description": "Wysokiej rozdzielczości zdjęcia typu jpeg z obrazów RAW",
+          "title": "Wysokie rozdzielczości"
         },
         "originals": {
-          "description": "",
-          "title": ""
+          "description": "Oryginalne zdjęcia i filmy",
+          "title": "Oryginały"
         },
         "thumbnails": {
-          "description": "",
-          "title": ""
+          "description": "Zdjęcia o niskiej rozdzielczości, bez filmów",
+          "title": "Miniatury"
         },
         "web-videos": {
-          "description": "",
-          "title": ""
+          "description": "Filmy zoptymalizowane pod kątem sieci",
+          "title": "Przekonwertowane filmy"
         }
       },
-      "reset_cover": "",
-      "set_cover": "",
-      "title_placeholder": ""
+      "reset_cover": "Zresetuj zdjęcie okładki",
+      "set_cover": "Ustaw jako zdjęcie okładki albumu",
+      "title_placeholder": "Tytuł albumu"
     },
     "download": {
       "filesize": {
-        "byte_one": "",
+        "byte_one": "{{count}} bajt",
+        "byte_other": "{{count}} bajty",
         "byte_few": "",
         "byte_many": "",
-        "byte_other": "",
         "giga_byte_one": "",
         "giga_byte_few": "",
         "giga_byte_many": "",
@@ -283,10 +283,10 @@
       "title": "Pobierz"
     },
     "location": {
-      "title": ""
+      "title": "Lokalizacja"
     },
     "media": {
-      "album_path": "",
+      "album_path": "Ścieżka albumu",
       "exif": {
         "exposure_program": {
           "action_program": "Program działania",
@@ -329,18 +329,18 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "Odłącz zdjęcie",
+        "merge_face": "Połącz twarz",
+        "move_face": "Przesuń twarz"
       },
-      "confirm_image_detach": "",
-      "title": ""
+      "confirm_image_detach": "Czy na pewno chcesz odłączyć to zdjęcie?",
+      "title": "Ludzie"
     },
     "sharing": {
       "add_share": "Dodaj udział",
       "copy_link": "Skopiuj link",
-      "delete": "",
-      "more": "",
+      "delete": "Usuń",
+      "more": "Więcej",
       "no_shares_found": "Nie znaleziono udostępnionych",
       "public_link": "Link publiczny",
       "title": "Opcje udostępniania"
@@ -355,14 +355,14 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "dropdown_year": "",
-      "label": ""
+      "dropdown_all": "Od dziś",
+      "dropdown_year": "{{year}} i wcześniej",
+      "label": "Data"
     }
   },
   "title": {
     "loading_album": "Ładowanie albumu",
-    "login": "",
+    "login": "Logowanie",
     "people": "Ludzie",
     "settings": "Ustawienia"
   }
