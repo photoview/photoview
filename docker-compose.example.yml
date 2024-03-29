@@ -26,6 +26,10 @@ services:
       - PHOTOVIEW_LISTEN_IP=photoview
       - PHOTOVIEW_LISTEN_PORT=80
       - PHOTOVIEW_MEDIA_CACHE=/app/cache
+
+      # If you want to use sqlite driver, you can get rid of the mariadb service defined above and the PHOTOVIEW_MYSQL_URL variable
+      # - PHOTOVIEW_DATABASE_DRIVER=sqlite
+      # - PHOTOVIEW_SQLITE_PATH=/app/database/photoview.db
       
       # Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       # Enable the following Godebug
@@ -45,6 +49,9 @@ services:
       # to the following: `/home/user/photos:/photos:ro`.
       # You can mount multiple paths, if your photos are spread across multiple directories.
       - ./photos_path:/photos:ro
+
+      # If using sqlite, you can bind the datbase folder to the host
+      # -  /opt/photoview/database:/app/database
 
 volumes:
   db_data:
