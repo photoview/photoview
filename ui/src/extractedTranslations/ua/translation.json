@@ -1,0 +1,359 @@
+{
+  "album_filter": {
+    "only_favorites": "Показати тільки улюблені",
+    "sort": "Сортування",
+    "sort_by": "Сортувати за",
+    "sorting_options": {
+      "date_imported": "Дата імпортування",
+      "date_shot": "Дата фотографування",
+      "title": "Назва",
+      "type": "Тип"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "Додати",
+      "cancel": "Відмінити",
+      "remove": "Видалити",
+      "save": "Зберегти"
+    },
+    "loading": {
+      "album": "Завантаження альбому",
+      "default": "Завантаження...",
+      "page": "Завантаження сторінки",
+      "paginate": {
+        "faces": "Завантаження ще людей",
+        "media": "Завантаження ще медіафайлів"
+      },
+      "shares": "Завантаження спільних ресурсів..."
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Завантаження результатів...",
+      "no_results": "Результатів не знайдено",
+      "placeholder": "Пошук",
+      "result_type": {
+        "albums": "Альбоми",
+        "media": "Медіафайли"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Пароль",
+      "submit": "Увійти",
+      "username": "Імʼя користувача"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Шлях до медіафайлів",
+          "placeholder": "/шлях/до/медіафайлів"
+        },
+        "submit": "Налаштувати Photoview"
+      },
+      "title": "Початкове налаштування"
+    },
+    "welcome": "Ласкаво просимо до Photoview"
+  },
+  "meta": {
+    "description": "Проста та зручна фотогалерея для персональних серверів"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "Змінити мітку",
+      "detach_images": "Від’єднати обличчя",
+      "merge_people": "Обʼєднати обличчя",
+      "move_faces": "Перемістити обличчя"
+    },
+    "face_group": {
+      "label_placeholder": "Мітка",
+      "unlabeled": "Без мітки",
+      "unlabeled_person": "Людина без мітки"
+    },
+    "modal": {
+      "action": {
+        "merge": "Обʼєднати"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Від’єднати світлини з обличчями",
+          "select_images": "Вибрати світлини для від’єднання"
+        },
+        "description": "Від’єднати обрані світлини цієї групи обличь та перемістити їх до нових груп",
+        "title": "Від’єднати світлини з обличчями"
+      },
+      "merge_face_groups": {
+        "description": "Усі світлини цієї групи обличь будуть обʼєднані з обраною групою.",
+        "destination_table": {
+          "title": "Оберіть обличчя призначення"
+        },
+        "title": "Об’єднати групи обличь"
+      },
+      "move_image_faces": {
+        "description": "Перемістити вибрані світлини цієї групи обличь до іншої групи обличь",
+        "destination_face_group_table": {
+          "move_action": "Перемістити світлини обличь",
+          "title": "Оберіть групу обличь призначення"
+        },
+        "image_select_table": {
+          "next_action": "Далі",
+          "title": "Оберіть світлини для переміщення"
+        },
+        "title": "Перемістити світлини обличь"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Розпізнати обличчя без міток",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Шукати обличчя..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Шукати світлини..."
+    }
+  },
+  "photos_page": {
+    "title": "Хронологія"
+  },
+  "places_page": {
+    "title": "Місця"
+  },
+  "routes": {
+    "page_not_found": "Сторінку не знайдено"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Максимальна кількість завдань сканування, які можна запускати одночасно",
+      "title": "Кількість одночасних оброблювачів завдань"
+    },
+    "logout": "Завершити сесію користувача",
+    "periodic_scanner": {
+      "checkbox_label": "Увімкнути періодичне сканування",
+      "field": {
+        "description": "Як часто сканер повинен виконувати автоматичне сканування для всіх користувачів",
+        "label": "Періодичний інтервал сканування"
+      },
+      "interval_unit": {
+        "days": "Дні",
+        "hour": "Години",
+        "minutes": "Хвилини",
+        "months": "Місяці",
+        "seconds": "Секунди"
+      },
+      "title": "Періодичне сканування"
+    },
+    "scanner": {
+      "description": "Сканує всіх користувачів на наявність нових або оновлених медіафайлів",
+      "scan_all_users": "Сканувати всіх користувачів",
+      "title": "Сканер"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Змінити мову сайту для цього користувача",
+        "label": "Мова сайту"
+      },
+      "language_selector": {
+        "placeholder": "Обрати мову"
+      },
+      "theme": {
+        "auto": {
+          "label": "Така-ж, як в системі"
+        },
+        "dark": {
+          "label": "Темна"
+        },
+        "description": "Змінити зовнішній вигляд сайту",
+        "light": {
+          "label": "Світла"
+        },
+        "title": "Налаштування теми"
+      },
+      "title": "Налаштування користувача"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Додати користувача"
+      },
+      "confirm_delete_user": {
+        "action": "Видалити {{user}}",
+        "description": "<0>Ви впевнені, що бажаєте видалити <1></1>?</0><p>Цю дію не можна буде скасувати</p>",
+        "title": "Видалити користувача"
+      },
+      "password_reset": {
+        "description": "Зміна пароля для <1>{{username}}</1>",
+        "form": {
+          "label": "Новий пароль",
+          "placeholder": "пароль",
+          "submit": "Змінити пароль"
+        },
+        "title": "Зміна пароля"
+      },
+      "table": {
+        "column_names": {
+          "action": "Дія",
+          "capabilities": "Можливості",
+          "photo_path": "Шлях до медіафайлів",
+          "username": "Імʼя користувача"
+        },
+        "new_user": "Новий користувач",
+        "row": {
+          "action": {
+            "change_password": "Змінити пароль",
+            "delete": "Видалити",
+            "edit": "Редагувати",
+            "scan": "Сканувати"
+          }
+        }
+      },
+      "title": "Користувачі"
+    },
+    "version_info": {
+      "build_date_title": "Дата збірки",
+      "title": "Версія Photoview",
+      "version_title": "Версія релізу"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Спільні медіатеки"
+    },
+    "protected_share": {
+      "description": "Ця спільна медіатека захищена паролем.",
+      "password_required_error": "Пароль потрібен",
+      "title": "Захищена медіатека"
+    },
+    "share_not_found": "Спільну медіатеку не знайдено",
+    "share_not_found_description": "Можливо, спільний доступ закінчився або його було видалено.",
+    "wrong_password": "Неправильний пароль, спробуйте ще раз."
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "Обкладинка альбому",
+      "download": {
+        "high-resolutions": {
+          "description": "JPEG-файли високої роздільної здатності RAW-зображень",
+          "title": "Висока роздільна здатність"
+        },
+        "originals": {
+          "description": "Оригінальні світлини та відео",
+          "title": "Оригінали"
+        },
+        "thumbnails": {
+          "description": "Зображення з низькою роздільною здатністю, без відео",
+          "title": "Мініатюри"
+        },
+        "web-videos": {
+          "description": "Відео, оптимізовані для Інтернету",
+          "title": "Конвертовані відео"
+        }
+      },
+      "reset_cover": "Скинути обкладинку",
+      "set_cover": "Встановити як обкладинку альбому",
+      "title_placeholder": "Назва альбому"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "{{count}} Байт",
+        "byte_other": "{{count}} Байтів",
+        "giga_byte_one": "{{count}} ГБ",
+        "giga_byte_other": "{{count}} ГБ",
+        "kilo_byte_one": "{{count}} КБ",
+        "kilo_byte_other": "{{count}} КБ",
+        "mega_byte_one": "{{count}} МБ",
+        "mega_byte_other": "{{count}} МБ",
+        "tera_byte_one": "{{count}} ТБ",
+        "tera_byte_other": "{{count}} ТБ"
+      },
+      "table_columns": {
+        "dimensions": "Габарити",
+        "file_size": "Розмір",
+        "file_type": "Тип",
+        "name": "Імʼя"
+      },
+      "title": "Завантажити"
+    },
+    "location": {
+      "title": "Місцезнаходження"
+    },
+    "media": {
+      "album_path": "Шлях до альбому",
+      "exif": {
+        "exposure_program": {
+          "action_program": "Програма дії",
+          "aperture_priority": "Пріоритет діафрагми",
+          "bulb": "Лампочка",
+          "creative_program": "Творча програма",
+          "landscape_mode": "Альбомний режим",
+          "manual": "Ручний",
+          "normal_program": "Нормальна програма",
+          "not_defined": "Не визначений",
+          "portrait_mode": "Портретний режим",
+          "shutter_priority": "Пріоритет витримки"
+        },
+        "flash": {
+          "auto": "Автоматичний",
+          "did_not_fire": "Не стріляв",
+          "fired": "Стріляв",
+          "no_flash": "Без спалаху",
+          "no_flash_function": "Немає функції спалаху",
+          "off": "Вимкнено",
+          "on": "Увімкнено",
+          "red_eye_reduction": "Зменшення ефекту червоних очей",
+          "return_detected": "Повернення виявлено",
+          "return_not_detected": "Повернення не виявлено"
+        },
+        "name": {
+          "aperture": "Діафрагма",
+          "camera": "Камера",
+          "coordinates": "Координати",
+          "date_shot": "Дата зйомки",
+          "exposure": "Експозиція",
+          "exposure_program": "Експозиційна програма",
+          "flash": "Спалах",
+          "focal_length": "Фокусна відстань",
+          "iso": "ISO",
+          "lens": "Об'єктив",
+          "maker": "Виробник"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Від’єднати зображення",
+        "merge_face": "Об'єднати обличчя",
+        "move_face": "Перемістити обличчя"
+      },
+      "confirm_image_detach": "Ви впевнені, що бажаєте від’єднати це зображення?",
+      "title": "Люди"
+    },
+    "sharing": {
+      "add_share": "Додати спільний доступ",
+      "copy_link": "Копіювати посилання",
+      "delete": "Видалити",
+      "more": "Більше",
+      "no_shares_found": "Спільних доступів не знайдено",
+      "public_link": "Публічне посилання",
+      "title": "Параметри спільного доступу"
+    }
+  },
+  "sidemenu": {
+    "albums": "Альбоми",
+    "people": "Люди",
+    "photos": "Хронологія",
+    "places": "Місця",
+    "settings": "Налаштування"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "Від сьогодні",
+      "dropdown_year": "{{year}} та раніше",
+      "label": "Дата"
+    }
+  },
+  "title": {
+    "loading_album": "Завантаження альбому",
+    "login": "Логін",
+    "people": "Люди",
+    "settings": "Налаштування"
+  }
+}

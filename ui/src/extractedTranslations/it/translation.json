@@ -1,7 +1,7 @@
 {
   "album_filter": {
     "only_favorites": "Mostra solo i preferiti",
-    "sort": "",
+    "sort": "Ordina",
     "sort_by": "Ordina per",
     "sorting_options": {
       "date_imported": "Data importazione",
@@ -62,10 +62,10 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": "",
-      "detach_images": "",
-      "merge_people": "",
-      "move_faces": ""
+      "change_label": "Cambia etichetta",
+      "detach_images": "Separa viso",
+      "merge_people": "Unisci viso",
+      "move_faces": "Sposta visi"
     },
     "face_group": {
       "label_placeholder": "Etichetta",
@@ -106,10 +106,10 @@
     },
     "recognize_unlabeled_faces_button": "Identifica facce senza etichetta",
     "tableselect_face_group": {
-      "search_faces_placeholder": ""
+      "search_faces_placeholder": "Ricerca visi..."
     },
     "tableselect_image_faces": {
-      "search_images_placeholder": ""
+      "search_images_placeholder": "Ricerca immagini..."
     }
   },
   "photos_page": {
@@ -157,16 +157,16 @@
       },
       "theme": {
         "auto": {
-          "label": ""
+          "label": "Predefinito di sistema"
         },
         "dark": {
-          "label": ""
+          "label": "Scuro"
         },
-        "description": "",
+        "description": "Cambia aspetto del sito",
         "light": {
-          "label": ""
+          "label": "Chiaro"
         },
-        "title": ""
+        "title": "Preferenze tema"
       },
       "title": "Preferenze utente"
     },
@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Azioni",
-          "capabilities": "",
+          "capabilities": "Azioni consentite",
           "photo_path": "Percorso foto",
           "username": "Username"
         },
@@ -219,7 +219,7 @@
     },
     "protected_share": {
       "description": "Questa condivisione è protetta da una password.",
-      "password_required_error": "",
+      "password_required_error": "La password è obbligatoria",
       "title": "Condivisione protetta"
     },
     "share_not_found": "Condivisone non trovata",
@@ -228,28 +228,28 @@
   },
   "sidebar": {
     "album": {
-      "album_cover": "",
+      "album_cover": "Copertina album",
       "download": {
         "high-resolutions": {
-          "description": "",
-          "title": ""
+          "description": "Jpeg ad alta risoluzione di immagini RAW",
+          "title": "Alta risoluzione"
         },
         "originals": {
-          "description": "",
-          "title": ""
+          "description": "Immagini e video originali",
+          "title": "Originali"
         },
         "thumbnails": {
-          "description": "",
-          "title": ""
+          "description": "Immagini a bassa risoluzione, video esclusi",
+          "title": "Miniatura"
         },
         "web-videos": {
-          "description": "",
-          "title": ""
+          "description": "Video ottimizzati per la rete",
+          "title": "Video processati"
         }
       },
-      "reset_cover": "",
-      "set_cover": "",
-      "title_placeholder": ""
+      "reset_cover": "Reimposta la foto di copertina",
+      "set_cover": "Imposta come foto di copertina",
+      "title_placeholder": "Titolo album"
     },
     "download": {
       "filesize": {
@@ -273,10 +273,10 @@
       "title": "Download"
     },
     "location": {
-      "title": ""
+      "title": "Posizione"
     },
     "media": {
-      "album_path": "",
+      "album_path": "Percorso album",
       "exif": {
         "exposure_program": {
           "action_program": "Programma sport",
@@ -305,7 +305,7 @@
         "name": {
           "aperture": "Apertura",
           "camera": "Fotocamera",
-          "coordinates": "",
+          "coordinates": "Coordinate",
           "date_shot": "Data di scatto",
           "exposure": "Esposizione",
           "exposure_program": "Programma",
@@ -319,18 +319,18 @@
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "Scollega immagine",
+        "merge_face": "Unisci viso",
+        "move_face": "Sposta viso"
       },
-      "confirm_image_detach": "",
-      "title": ""
+      "confirm_image_detach": "Sei sicuro di volere scollegare questa immagine?",
+      "title": "Persone"
     },
     "sharing": {
       "add_share": "Aggiungi condivisione",
       "copy_link": "Copia il link",
-      "delete": "",
-      "more": "",
+      "delete": "Elimina",
+      "more": "Altro",
       "no_shares_found": "Nessuna condivisione trovata",
       "public_link": "Link pubblico",
       "title": "Opzioni di condivisione"
@@ -345,9 +345,9 @@
   },
   "timeline_filter": {
     "date": {
-      "dropdown_all": "",
-      "dropdown_year": "",
-      "label": ""
+      "dropdown_all": "Da oggi",
+      "dropdown_year": "{{year}} e antecedenti",
+      "label": "Data"
     }
   },
   "title": {
