@@ -59,6 +59,12 @@ const languagePreferences = [
     flag: 'tr',
     value: LanguageTranslation.Turkish,
   },
+  {
+    key: 15,
+    label: 'Українська',
+    flag: 'ua',
+    value: LanguageTranslation.Ukrainian,
+  },
 ]
 
 const themePreferences = (t: TranslationFn) => [

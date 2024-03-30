@@ -294,6 +294,7 @@ enum LanguageTranslation {
   Danish,
   Spanish,
   Polish,
+  Ukrainian,
   German,
   Russian,
   TraditionalChinese,
