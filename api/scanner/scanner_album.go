@@ -104,7 +104,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
 	    scanner_utils.ScannerError("Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
-	    log.Println("Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
+	    log.Printf("Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
 		}
 	}
 
