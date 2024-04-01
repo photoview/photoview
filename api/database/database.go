@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/photoview/photoview/api/database/migrations"
 	"log"
 	"net/url"
 	"time"
@@ -153,8 +154,13 @@ func SetupDatabase() (*gorm.DB, error) {
 	return db, nil
 }
 
-var database_models []interface{} = []interface{}{
+var database_models_1 []interface{} = []interface{}{
 	&models.User{},
+	&models.Role{},
+	&models.PermissionModel{},
+}
+
+var database_models []interface{} = []interface{}{
 	&models.AccessToken{},
 	&models.SiteInfo{},
 	&models.Media{},
@@ -178,8 +184,12 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Setup UserAlbums join table failed: %v\n", err)
 	}
 
+	if err := db.AutoMigrate(database_models_1...); err != nil {
+		log.Printf("Auto migration failed on 1: %v\n", err)
+	}
+
 	if err := db.AutoMigrate(database_models...); err != nil {
-		log.Printf("Auto migration failed: %v\n", err)
+		log.Printf("Auto migration failed on 2: %v\n", err)
 	}
 
 	// v2.1.0 - Replaced by Media.CreatedAt
@@ -191,6 +201,12 @@ func MigrateDatabase(db *gorm.DB) error {
 	// from string values to decimal and int respectively
 	if err := migrate_exif_fields(db); err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
+	}
+
+	// vx.x.x - Added permissions system removing need for admin role.
+	// Then, iterate over each permission in the AllPermission array
+	if err := migrations.MigrateForPermissions(db); err != nil {
+		return err
 	}
 
 	return nil

@@ -18,7 +18,9 @@ import (
 func TestAuthenticateRoute(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	user, err := models.RegisterUser(db, "username", nil, false)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "username", nil, ids[0])
 	if !assert.NoError(t, err) {
 		return
 	}

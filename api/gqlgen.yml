@@ -17,20 +17,17 @@ resolver:
   filename: graphql/resolvers/root.go
   type: Resolver
 
-autobind: []
+autobind:
+  - github.com/photoview/photoview/api/graphql/models
 
 models:
   ID:
     model: github.com/99designs/gqlgen/graphql.IntID
   User:
-    model: github.com/photoview/photoview/api/graphql/models.User
     fields:
       albums:
         resolver: true
-  UserPreferences:
-    model: github.com/photoview/photoview/api/graphql/models.UserPreferences
   Media:
-    model: github.com/photoview/photoview/api/graphql/models.Media
     fields:
       exif:
         resolver: true
@@ -40,31 +37,13 @@ models:
         resolver: true
       album:
         resolver: true
-  MediaURL:
-    model: github.com/photoview/photoview/api/graphql/models.MediaURL
-  MediaEXIF:
-    model: github.com/photoview/photoview/api/graphql/models.MediaEXIF
-  VideoMetadata:
-    model: github.com/photoview/photoview/api/graphql/models.VideoMetadata
-  Album:
-    model: github.com/photoview/photoview/api/graphql/models.Album
-  ShareToken:
-    model: github.com/photoview/photoview/api/graphql/models.ShareToken
   FaceGroup:
-    model: github.com/photoview/photoview/api/graphql/models.FaceGroup
     fields:
       imageFaces:
         resolver: true
   ImageFace:
-    model: github.com/photoview/photoview/api/graphql/models.ImageFace
     fields:
       faceGroup:
         resolver: true
       media:
         resolver: true
-  FaceRectangle:
-    model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
-  SiteInfo:
-    model: github.com/photoview/photoview/api/graphql/models.SiteInfo
-  MediaType:
-    model: github.com/photoview/photoview/api/graphql/models.MediaType

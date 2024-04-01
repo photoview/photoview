@@ -50,12 +50,12 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	pass := "1234"
-	user1, err := models.RegisterUser(db, "user1", &pass, true)
+	user1, err := models.RegisterUser(db, "user1", &pass, 1)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	user2, err := models.RegisterUser(db, "user2", &pass, true)
+	user2, err := models.RegisterUser(db, "user2", &pass, 1)
 	if !assert.NoError(t, err) {
 		return
 	}

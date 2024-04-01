@@ -12,11 +12,13 @@ import (
 func TestDeleteUser(t *testing.T) {
 	t.Run("Delete regular user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
+		ids := make([]int, 0)
+		db.Model(&models.Role{}).Where("name in (?, ?)", "ADMIN", "USER").Pluck("id", &ids)
 
-		adminUser, err := models.RegisterUser(db, "admin", nil, true)
+		adminUser, err := models.RegisterUser(db, "admin", nil, ids[0])
 		assert.NoError(t, err)
 
-		regularUser, err := models.RegisterUser(db, "regular", nil, false)
+		regularUser, err := models.RegisterUser(db, "regular", nil, ids[1])
 		assert.NoError(t, err)
 
 		var dbUsers []*models.User
@@ -36,11 +38,12 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("Try to delete sole admin user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
-
-		adminUser, err := models.RegisterUser(db, "admin", nil, true)
+		ids := make([]int, 0)
+		db.Model(&models.Role{}).Where("name in (?, ?)", "ADMIN", "USER").Pluck("id", &ids)
+		adminUser, err := models.RegisterUser(db, "admin", nil, ids[0])
 		assert.NoError(t, err)
 
-		_, err = models.RegisterUser(db, "regular", nil, false)
+		_, err = models.RegisterUser(db, "regular", nil, ids[1])
 		assert.NoError(t, err)
 
 		var dbUsers []*models.User
@@ -59,10 +62,12 @@ func TestDeleteUser(t *testing.T) {
 	t.Run("Delete admin user when multiple admins exist", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
 
-		adminUser1, err := models.RegisterUser(db, "admin", nil, true)
+		ids := make([]int, 0)
+		db.Model(&models.Role{}).Where("name in (?, ?)", "ADMIN", "USER").Pluck("id", &ids)
+		adminUser1, err := models.RegisterUser(db, "admin", nil, ids[0])
 		assert.NoError(t, err)
 
-		adminUser2, err := models.RegisterUser(db, "another_admin", nil, true)
+		adminUser2, err := models.RegisterUser(db, "another_admin", nil, ids[2])
 		assert.NoError(t, err)
 
 		var dbUsers []*models.User

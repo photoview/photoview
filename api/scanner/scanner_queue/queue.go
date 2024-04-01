@@ -212,7 +212,7 @@ func (queue *ScannerQueue) notify() bool {
 func AddAllToQueue() error {
 
 	var users []*models.User
-	result := global_scanner_queue.db.Find(&users)
+	result := global_scanner_queue.db.Find(&users).Preload("Role").Preload("Role.Permissions")
 	if result.Error != nil {
 		return errors.Wrap(result.Error, "get all users from database")
 	}

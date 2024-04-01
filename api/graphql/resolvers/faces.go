@@ -408,14 +408,14 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 }
 
 func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
-	if user.Admin {
-		var faceGroup models.FaceGroup
-		if err := db.Where("id = ?", faceGroupID).Find(&faceGroup).Error; err != nil {
-			return nil, err
-		}
-
-		return &faceGroup, nil
-	}
+	//if user.Admin {
+	//	var faceGroup models.FaceGroup
+	//	if err := db.Where("id = ?", faceGroupID).Find(&faceGroup).Error; err != nil {
+	//		return nil, err
+	//	}
+	//
+	//	return &faceGroup, nil
+	//}
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, err
