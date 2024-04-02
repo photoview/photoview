@@ -14,12 +14,18 @@ import (
 )
 
 func InitializeExecutableWorkers() {
+	CustomRawCli = newCustomRawWorker()
 	DarktableCli = newDarktableWorker()
 	FfmpegCli = newFfmpegWorker()
 }
 
+var CustomRawCli *CustomRawWorker = nil
 var DarktableCli *DarktableWorker = nil
 var FfmpegCli *FfmpegWorker = nil
+
+type CustomRawWorker struct {
+	path string
+}
 
 type ExecutableWorker interface {
 	Path() string
@@ -31,6 +37,22 @@ type DarktableWorker struct {
 
 type FfmpegWorker struct {
 	path string
+}
+
+func newCustomRawWorker() *CustomRawWorker {
+	if utils.EnvDisableRawProcessing.GetBool() {
+		log.Printf("Executable worker disabled (%s=1)\n", utils.EnvDisableRawProcessing.GetName())
+		return nil
+	}
+
+	var path = utils.EnvCustomRawProcessing.GetValue()
+
+	if path != "" {
+		return &CustomRawWorker{
+			path:path,
+		}
+	}
+	return nil
 }
 
 func newDarktableWorker() *DarktableWorker {
@@ -85,12 +107,40 @@ func newFfmpegWorker() *FfmpegWorker {
 	return nil
 }
 
+func (worker *CustomRawWorker) IsInstalled() bool {
+	return worker != nil
+}
+
 func (worker *DarktableWorker) IsInstalled() bool {
 	return worker != nil
 }
 
 func (worker *FfmpegWorker) IsInstalled() bool {
 	return worker != nil
+}
+
+func (worker *CustomRawWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+	tmpDir, err := ioutil.TempDir("/tmp", "photoview-convert")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	args := []string{
+		worker.path,
+		inputPath,
+		outputPath,
+		fmt.Sprintf("%d", jpegQuality),
+	}
+	
+
+	cmd := exec.Command("sh", args...)
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "encoding image using: %s %v", worker.path, args)
+	}
+
+	return nil
 }
 
 func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
