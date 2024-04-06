@@ -6,6 +6,8 @@ import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { useSwipeable } from 'react-swipeable'
 
 import ExitIcon from './icons/Exit'
+import PlayIcon from './icons/Play'
+import PauseIcon from './icons/Pause'
 import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
 
@@ -13,6 +15,40 @@ const StyledOverlayContainer = styled.div`
   width: 100%;
   height: 100%;
   position: relative;
+`
+
+
+const OverlayIconContainer = styled.button`
+  width: 64px;
+  height: 64px;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  display: inline-grid;
+
+  & h1 {
+    font-size: 32px;
+    font-weight: bolder;
+    opacity: 40%;
+    display: flex;
+    overflow: visible !important;
+    transition-property: stroke, filter;
+    transition-duration: 140ms;
+  }
+
+  &:hover h1 {
+    visibility: unset;
+    filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  &.hide h1 {
+    visibility: hidden;
+    transition: stroke 300ms;
+  }
 `
 
 const OverlayButton = styled.button`
@@ -23,6 +59,9 @@ const OverlayButton = styled.button`
   outline: none;
   cursor: pointer;
   position: absolute;
+  align-items: center;
+  justify-content: center;
+  display: inline-grid;
 
   & svg {
     width: 32px;
@@ -49,6 +88,14 @@ const OverlayButton = styled.button`
 
 const ExitButton = styled(OverlayButton)`
   left: 28px;
+  top: 28px;
+`
+const SlideButton = styled(OverlayButton)<{active:boolean}>`
+  left: 92px;
+  top: 28px;
+`
+const IntervalButton = styled(OverlayIconContainer)<{time:integer}>`
+  left: 156px;
   top: 28px;
 `
 
@@ -79,6 +126,8 @@ const PresentNavigationOverlay = ({
   disableSaveCloseInHistory,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
+  const [slide, setSlide] = useState<boolean>(false)
+  const [slideInterval, setSlideInterval] = useState<integer>(3)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
 
   useEffect(() => {
@@ -89,11 +138,29 @@ const PresentNavigationOverlay = ({
       2000,
       true
     )
-
+    
     return () => {
       onMouseMove.current?.cancel()
     }
   }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (slide) { 
+        dispatchMedia({ type: 'nextImage'})
+      }
+    }, slideInterval*1000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [slide,slideInterval])
+  
+  const toggle = () => {
+    setSlide( (s) => !s ) 
+  }
+  const toggleSlideInterval = () => {
+    setSlideInterval( (s) => (s+1) % 10 == 0 ? 1 : (s+1) % 10  ) 
+  }
 
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
@@ -139,7 +206,25 @@ const PresentNavigationOverlay = ({
         }}
       >
         <ExitIcon />
-      </ExitButton>
+      </ExitButton>      
+      <SlideButton
+        aria-label="Slideshow Button"
+        className={hide ? 'hide' : undefined}
+        active={slide}
+        onClick={toggle}
+      >
+        {slide ? <PauseIcon /> : <PlayIcon />}
+      </SlideButton>
+      <IntervalButton
+        aria-label="Slideshow Button"
+        className={hide ? 'hide' : undefined}
+	time={slideInterval}
+        onClick={toggleSlideInterval}
+      >
+        <h1
+          className={hide ? 'hide' : undefined}
+	> {slideInterval}s </h1>
+      </IntervalButton>
     </div>
     </StyledOverlayContainer>
   )
