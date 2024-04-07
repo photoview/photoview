@@ -96,7 +96,7 @@ const LoginForm = () => {
         className="w-full"
         type="password"
         label={t('login_page.field.password', 'Password')}
-        {...register('password', { required: false })}
+        {...register('password')}
       />
       <input
         type="submit"
