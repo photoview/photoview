@@ -19,8 +19,8 @@ func TestMain(m *testing.M) {
 
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
-	db := test_utils.DatabaseTest(t)
-
+	db := test_utils.DatabaseTestDB(t)
+	defer test_utils.ScannerCleanup(t, db)
 	// Sqlite doesn't seem to support foreign key cascading
 	if drivers.SQLITE.MatchDatabase(db) {
 		t.SkipNow()

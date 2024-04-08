@@ -7,40 +7,52 @@ import (
 )
 
 type TestDBManager struct {
-	DB *gorm.DB
+	db *gorm.DB
+	TX *gorm.DB
 }
 
-func (dbm *TestDBManager) SetupOrReset() error {
-	if dbm.DB == nil {
-		return dbm.setup()
-	} else {
-		return dbm.reset()
+func (dbm *TestDBManager) SetupOrReset(withTransaction bool) error {
+	if dbm.db == nil {
+		if err := dbm.setup(); err != nil {
+			return err
+		}
 	}
+
+	if dbm.TX != nil {
+		dbm.TX.Rollback()
+		dbm.TX = nil
+	}
+	if withTransaction {
+		dbm.TX = dbm.db.Begin()
+	}
+
+	return nil
 }
 
 func (dbm *TestDBManager) Close() error {
-	if dbm.DB == nil {
+	if dbm.db == nil {
 		return nil
 	}
 
-	if err := dbm.reset(); err != nil {
-		return err
-	}
-
-	sqlDB, err := dbm.DB.DB()
+	sqlDB, err := dbm.db.DB()
 	if err != nil {
 		return errors.Wrap(err, "get db instance when closing test database")
 	}
+	if dbm.TX != nil {
+		dbm.TX.Rollback()
+	}
 
 	sqlDB.Close()
-	dbm.DB = nil
+
+	dbm.db = nil
+	dbm.TX = nil
 
 	return nil
 }
 
 func (dbm *TestDBManager) setup() error {
-	config := gorm.Config{}
-	db, err := database.ConfigureDatabase(&config)
+	config := &gorm.Config{}
+	db, err := database.ConfigureDatabase(config)
 	if err != nil {
 		return errors.Wrap(err, "configure test database")
 	}
@@ -49,20 +61,7 @@ func (dbm *TestDBManager) setup() error {
 		return errors.Wrap(err, "migrate test database")
 	}
 
-	dbm.DB = db
-
-	if err := dbm.reset(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (dbm *TestDBManager) reset() error {
-
-	if err := database.ClearDatabase(dbm.DB); err != nil {
-		return errors.Wrap(err, "reset test database")
-	}
+	dbm.db = db
 
 	return nil
 }

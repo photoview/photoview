@@ -63,11 +63,11 @@ func TestDeleteUser(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
 
 		ids := make([]int, 0)
-		db.Model(&models.Role{}).Where("name in (?, ?)", "ADMIN", "USER").Pluck("id", &ids)
+		db.Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
 		adminUser1, err := models.RegisterUser(db, "admin", nil, ids[0])
 		assert.NoError(t, err)
 
-		adminUser2, err := models.RegisterUser(db, "another_admin", nil, ids[2])
+		adminUser2, err := models.RegisterUser(db, "another_admin", nil, ids[0])
 		assert.NoError(t, err)
 
 		var dbUsers []*models.User

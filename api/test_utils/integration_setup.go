@@ -68,9 +68,24 @@ func DatabaseTest(t *testing.T) *gorm.DB {
 		t.Skip("Database integration tests disabled")
 	}
 
-	if err := test_dbm.SetupOrReset(); err != nil {
+	if err := test_dbm.SetupOrReset(true); err != nil {
 		t.Fatalf("failed to setup or reset test database: %v", err)
 	}
 
-	return test_dbm.DB
+	return test_dbm.TX
+}
+
+// DatabaseTestDB Initilises a database connection returning the database directly. Cleanup of such is the responsibility
+// of the test try not to use this one if you can and use the normal DatabaseTest function, which will put everything
+// within a transaction
+func DatabaseTestDB(t *testing.T) *gorm.DB {
+	if !*integration_flags.Database {
+		t.Skip("Database integration tests disabled")
+	}
+
+	if err := test_dbm.SetupOrReset(false); err != nil {
+		t.Fatalf("failed to setup or reset test database: %v", err)
+	}
+
+	return test_dbm.db
 }

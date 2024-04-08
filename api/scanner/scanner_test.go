@@ -17,7 +17,8 @@ func TestMain(m *testing.M) {
 
 func TestFullScan(t *testing.T) {
 	test_utils.FilesystemTest(t)
-	db := test_utils.DatabaseTest(t)
+	db := test_utils.DatabaseTestDB(t)
+	defer test_utils.ScannerCleanup(t, db)
 
 	pass := "1234"
 	ids := make([]int, 0)
@@ -79,5 +80,4 @@ func TestFullScan(t *testing.T) {
 
 		return len(all_image_faces) == 6
 	}, time.Second*5, time.Millisecond*500)
-
 }

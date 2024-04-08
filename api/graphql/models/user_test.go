@@ -26,7 +26,6 @@ func TestUserRegistrationAuthorization(t *testing.T) {
 		assert.EqualValues(t, "admin", user.Username)
 		assert.NotNil(t, user.Password)
 		assert.NotEqualValues(t, "1234", user.Password) // should be hashed
-		assert.True(t, user.Admin)
 	})
 
 	t.Run("Authorize user", func(t *testing.T) {
