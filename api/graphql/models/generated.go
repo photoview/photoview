@@ -63,6 +63,11 @@ type Pagination struct {
 	Offset *int `json:"offset"`
 }
 
+type PasswordChangeResult struct {
+	Success bool    `json:"success"`
+	Message *string `json:"message"`
+}
+
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`

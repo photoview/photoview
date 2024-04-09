@@ -136,6 +136,7 @@ type Mutation {
     password: String
     admin: Boolean
   ): User! @isAdmin
+  updatePassword(currentPassword: String!, newPassword: String!): PasswordChangeResult! @isAuthorized
   "Create a new user"
   createUser(
     username: String!
@@ -185,6 +186,12 @@ type Mutation {
   "Move a list of ImageFaces to a new face group"
   detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup! @isAuthorized
 }
+
+type PasswordChangeResult {
+  success: Boolean!
+  message: String
+}
+
 
 type Subscription {
   notification: Notification!
