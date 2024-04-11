@@ -1,5 +1,10 @@
 module.exports = {
-  skipDefaultValues: locale => locale != 'en',
+  defaultValue: function (locale, namespace, key, value) {
+    if (locale != 'en'){
+      return '';
+    }
+    return value || key;
+  },
   sort: true,
   locales: [
     'da',
