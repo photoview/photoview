@@ -1,8 +1,7 @@
-version: '3.9'
-
 services:
   photoview:
     image: viktorstrate/photoview:latest
+    profiles: ["photoview-wt-update"]
     container_name: photoview
     restart: unless-stopped
     stop_grace_period: 10s
@@ -50,14 +49,12 @@ services:
     volumes:
       ## Example:
       ## - "/host/folder:/container/folder"
-      - "/etc/localtime:/etc/localtime:ro" ## use timezone from host
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # - "${HOST_PHOTOVIW_LOCATION}/database:/app/database"
       - "${HOST_PHOTOVIW_LOCATION}/storage:/app/cache"
       ## Change This in the .env file: to the directory where your photos are located on your server.
-      ## If the photos are located at `/home/user/photos`, then change this value
-      ## to the following: `/home/user/photos:/photos:ro`.
       ## You can mount multiple paths if your photos are spread across multiple directories.
       ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
       ## If you mounted several folders, provide the path to the parent one on the init page.
@@ -68,6 +65,7 @@ services:
   ## Comment out / remove the `db` service completely if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
   db:
     image: mariadb:lts
+    profiles: ["photoview-wt-update"]
     container_name: photoview-mariadb
     restart: unless-stopped
     stop_grace_period: 5s
@@ -81,7 +79,6 @@ services:
       # - "3306:3306"
     environment:
       MARIADB_AUTO_UPGRADE: "1"
-      # MARIADB_INITDB_SKIP_TZINFO: "1"
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
@@ -89,7 +86,7 @@ services:
     volumes:
       ## Example:
       ## - "/host/folder:/container/folder"
-      - "/etc/localtime:/etc/localtime:ro" ## use timezone from host
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
       - "${HOST_PHOTOVIW_LOCATION}/database:/var/lib/mysql" ## DO NOT REMOVE
     healthcheck:
@@ -104,9 +101,9 @@ services:
     image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
-    ## Uncomment next line and add the same line to the service definition, which you'd like to be auto-updated by Watchtower ONLY.
-    ## In this way you'll tell Watchtower to update ONLY that service, while now it will update all of them.
-    # profiles: ["update"]
+    ## With the next line uncommented Watchtower ONLY auto-updates images for services, having the same profile in their definitions.
+    ## If comment out the 'profiles' line here and in other services, Watchtower will update all images with running containers in the system.
+    profiles: ["photoview-wt-update"]
     environment:
       WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
       WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}

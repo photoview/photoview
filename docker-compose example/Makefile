@@ -4,11 +4,11 @@ MAKEFLAGS += --always-make
 export
 
 ## Ensure compatibility with "docker-compose" (old) and "docker compose" (new).
-HAS_DOCKER_COMPOSE_WITH_DASH := $(shell which docker-compose)
-ifdef HAS_DOCKER_COMPOSE_WITH_DASH
-    DOCKER_COMPOSE=docker-compose
-else
+HAS_DOCKER_COMPOSE_NO_DASH := $(shell docker compose version)
+ifdef HAS_DOCKER_COMPOSE_NO_DASH
     DOCKER_COMPOSE=docker compose
+else
+    DOCKER_COMPOSE=docker-compose
 endif
 ## If you want to use only the new compose command, comment previous section
 ## and uncomment next line:
@@ -35,7 +35,9 @@ help:
 	@echo '   terminal  Starts a Bash shell session inside the `photoview` container for troubleshooting.'
 	@echo '   logs      Shows the last 100 lines (if the command not modified) from the log'
 	@echo '             and stays listening for new lines and show them interactively. Ctrl + C to exit.'
-	@echo '   down      The same as `stop`, but also removes containers and volumes from Docker.'
+	@echo '             It can be used as a source for a log viewer: "make logs | lnav", so that you can'
+	@echo '             interactively filter and search for needed info.'
+	@echo '   down      The same as `stop`, but also removes containers and volumes from Docker. Your data is safe.'
 	@echo '   remove    Removes the service from Docker, including all items.'
 	@echo '   uninstall Stops and removes the service from Docker, including all items.'
 	@echo '   dev       Pulls, builds and (re)starts the service in development mode.'
@@ -66,6 +68,7 @@ terminal:
 logs:
 	$(DOCKER_COMPOSE) logs --tail=100 -f
 backup:
+	@## These 2 lines for MariaDB only
 	$(DOCKER_COMPOSE) exec db mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --check --check-upgrade --flush --process-views=YES --auto-repair --all-databases
 	$(DOCKER_COMPOSE) exec db mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --optimize --flush --auto-repair --all-databases
 	mkdir -p ${HOST_PHOTOVIW_BACKUP}
@@ -76,16 +79,16 @@ backup:
 	$(DOCKER_COMPOSE) exec db mariadb-dump -u root --password=${MARIADB_ROOT_PASSWORD} -e -x --all-databases -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.tar.xz ${HOST_PHOTOVIW_LOCATION}/storage
-	## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
-	## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
-	## -----------------------
-	## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of resources and time.
-	## It was selected, because it is pre-installed on most distros. However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
-	## Make sure to install the 7zz first and then comment out the 2 lines with tar command before this comment, uncomment the next lines
-	# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
-    # 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql || exit 1
-    # 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
-    # 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
+	@## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
+	@## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
+	@## -----------------------
+	@## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of resources and time.
+	@## It was selected, because it is pre-installed on most distros. However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
+	@## Make sure to install the 7zz first and then comment out the 2 lines with tar command before this comment, uncomment the next lines
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
+	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql || exit 1
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
+	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
 dev-down:
 	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml down
 dev: dev-down

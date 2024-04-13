@@ -20,73 +20,67 @@ ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
-RUN mkdir -p /app
-WORKDIR /app
-
 # Download dependencies
-COPY ui/package*.json /app/
-RUN npm ci --omit=dev --ignore-scripts
-
-# Build frontend
 COPY ui /app
-RUN npm run build -- --base=$UI_PUBLIC_URL
+WORKDIR /app
+RUN npm ci --omit=dev --ignore-scripts \
+  # Build frontend
+  && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
 ARG TARGETPLATFORM
 
 COPY docker/install_build_dependencies.sh /tmp/
-RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
-
 COPY docker/go_wrapper.sh /go/bin/go
-RUN chmod +x /go/bin/go
-ENV GOPATH="/go"
-ENV PATH="${GOPATH}/bin:${PATH}"
-
-ENV CGO_ENABLED 1
-
-RUN go env
-
-RUN mkdir -p /app
+COPY api /app
 WORKDIR /app
 
+ENV GOPATH="/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
+ENV CGO_ENABLED 1
+
 # Download dependencies
-COPY api/go.mod api/go.sum /app/
-RUN go mod download
-
-# Patch go-face
-RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-
-# Build dependencies that use CGO
-RUN go install \
-  github.com/mattn/go-sqlite3 \
-  github.com/Kagami/go-face
-
-# Copy and build api source
-COPY api /app
-RUN go build -v -o photoview .
+RUN chmod +x /tmp/install_build_dependencies.sh \
+  && chmod +x /go/bin/go \
+  && /tmp/install_build_dependencies.sh \
+  && go env \
+  && go mod download \
+  # Patch go-face
+  && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
+  # Build dependencies that use CGO
+  && go install \
+    github.com/mattn/go-sqlite3 \
+    github.com/Kagami/go-face \
+  # Build api source
+  && go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
 FROM debian:bookworm-slim
 ARG TARGETPLATFORM
 WORKDIR /app
 
-RUN chmod -R 777 /app \
-  && apt update \
+# Create a user to run Photoview server
+RUN groupadd -r photoveiw \
+  && useradd -r -g photoveiw photoveiw \
+  && mkdir -p /home/photoveiw \
+  && chown -R photoveiw:photoveiw /app /home/photoveiw \
   # Required dependencies
+  && apt update \
   && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
   # Install Darktable if building for a supported architecture
   && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-    apt install -y darktable; fi \
+    apt install -y darktable; \
+  fi \
   # Remove build dependencies and cleanup
   && apt purge -y gpg \
   && apt autoremove -y \
   && apt clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=777 api/data /app/data
-COPY --chmod=777 --from=ui /app/dist /ui
-COPY --chmod=777 --from=api /app/photoview /app/photoview
+COPY --chown=photoveiw:photoveiw api/data /app/data
+COPY --chown=photoveiw:photoveiw --from=ui /app/dist /ui
+COPY --chown=photoveiw:photoveiw --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT 80
@@ -98,4 +92,5 @@ EXPOSE 80
 
 HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:80/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
 
+USER photoveiw
 ENTRYPOINT ["/app/photoview"]

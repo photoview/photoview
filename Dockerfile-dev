@@ -30,58 +30,46 @@ ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
-RUN mkdir -p /app
-WORKDIR /app
-
-# Download dependencies
-COPY ui/package*.json /app/
-RUN npm ci --ignore-scripts
-
-# Build frontend
 COPY ui /app
-RUN npm run build -- --base=$UI_PUBLIC_URL
+WORKDIR /app
+# Download dependencies
+RUN npm ci --ignore-scripts \
+  # Build frontend
+  && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 ENV TARGETPLATFORM=${BUILDPLATFORM:-linux/amd64}
 
 COPY docker/install_build_dependencies.sh /tmp/
-RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
-
 COPY docker/go_wrapper.sh /go/bin/go
-RUN chmod +x /go/bin/go
+COPY api /app
+WORKDIR /app
+
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
-
 ENV CGO_ENABLED 1
 
-RUN go env
-
 # Download dependencies
-COPY api/go.mod api/go.sum /app/
-RUN go mod download
-
-# Patch go-face
-RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-
-# Build dependencies that use CGO
-RUN go install \
-  github.com/mattn/go-sqlite3 \
-  github.com/Kagami/go-face
-
-# Copy and build api source
-COPY api /app
-RUN go build -v -o photoview .
-
-### Copy api and ui to production environment ###
-COPY api/data /app/data
-
-RUN apt update \
+RUN chmod +x /tmp/install_build_dependencies.sh \
+  && chmod +x /go/bin/go \
+  && /tmp/install_build_dependencies.sh \
+  && go env \
+  && go mod download \
+  # Patch go-face
+  && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
+  # Build dependencies that use CGO
+  && go install \
+    github.com/mattn/go-sqlite3 \
+    github.com/Kagami/go-face \
+  # Build api source
+  && go build -v -o photoview . \
+  ### Final stage ###
+  && apt update \
   # Required dependencies
-  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
-
-# Install Darktable if building for a supported architecture
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt install -y darktable; fi \
+  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
+  # Install Darktable if building for a supported architecture
+  && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+    apt install -y darktable; fi \
   && cp -r /app/dist /ui
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
