@@ -16,18 +16,22 @@ export interface settingsUsersQuery_user_rootAlbums {
   filePath: string
 }
 
+export interface settingsUsersQuery_user_role {
+  __typename: 'Role'
+  id: string
+  name: string
+}
+
 export interface settingsUsersQuery_user {
   __typename: 'User'
   id: string
   username: string
-  /**
-   * Whether or not the user has admin privileges
-   */
   admin: boolean
   /**
    * Top level albums owned by this user
    */
   rootAlbums: settingsUsersQuery_user_rootAlbums[]
+  role: settingsUsersQuery_user_role
 }
 
 export interface settingsUsersQuery {

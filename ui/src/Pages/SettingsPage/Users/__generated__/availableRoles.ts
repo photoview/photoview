@@ -4,17 +4,15 @@
 // This file was automatically generated and should not be edited.
 
 // ====================================================
-// GraphQL query operation: adminQuery
+// GraphQL query operation: availableRoles
 // ====================================================
 
-export interface adminQuery_myUser {
-  __typename: 'User'
-  admin: boolean
+export interface availableRoles_roles {
+  __typename: 'Role'
+  id: string
+  name: string
 }
 
-export interface adminQuery {
-  /**
-   * Information about the currently logged in user
-   */
-  myUser: adminQuery_myUser
+export interface availableRoles {
+  roles: availableRoles_roles[]
 }
