@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Acción",
-          "capabilities": "",
+
           "photo_path": "Ruta de las fotos",
           "username": "Usuario"
         },

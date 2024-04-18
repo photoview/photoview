@@ -13,11 +13,15 @@ import { updateUser, updateUserVariables } from './__generated__/updateUser'
 import { deleteUser, deleteUserVariables } from './__generated__/deleteUser'
 
 const updateUserMutation = gql`
-  mutation updateUser($id: ID!, $username: String, $admin: Boolean) {
-    updateUser(id: $id, username: $username, admin: $admin) {
+  mutation updateUser($id: ID!, $username: String, $roleId: ID!) {
+    updateUser(id: $id, username: $username, roleId: $roleId) {
       id
       username
       admin
+      role {
+        id
+        name
+      }
     }
   }
 `

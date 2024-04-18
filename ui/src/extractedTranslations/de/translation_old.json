@@ -98,8 +98,7 @@
     "users": {
       "table": {
         "column_names": {
-          "admin": "Administrator",
-          "capabilities": null
+          "admin": "Administrator"
         }
       }
     }

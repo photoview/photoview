@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Akcja",
-          "capabilities": "Możliwości",
+
           "photo_path": "Ścieżka zdjęć",
           "username": "Nazwa użytkownika"
         },
