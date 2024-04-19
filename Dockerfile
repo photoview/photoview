@@ -95,6 +95,9 @@ ENV PHOTOVIEW_LISTEN_PORT 80
 
 ENV PHOTOVIEW_SERVE_UI 1
 ENV PHOTOVIEW_UI_PATH /ui
+ENV PHOTOVIEW_RAW_PROCESSING_EXECUTABLE="darktable-cli"
+ENV PHOTOVIEW_RAW_PROCESSING_EXECUTABLE_CHECK="--version"
+ENV PHOTOVIEW_RAW_PROCESSING_ARGS="{{ .InputPath }} {{ .OutputPath }} --core --conf plugins/imageio/format/jpeg/quality={{ .Quality }} --configdir /tmp/photoview-convert"
 
 EXPOSE 80
 
