@@ -115,12 +115,6 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 			if err != nil {
 				return err
 			}
-
-		}else if executable_worker.DarktableCli.IsInstalled() {
-			err := executable_worker.DarktableCli.EncodeJpeg(img.Media.Path, outputPath, 70)
-			if err != nil {
-				return err
-			}
 		} else {
 			return errors.New("could not convert photo as no RAW converter was found")
 		}
