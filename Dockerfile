@@ -61,10 +61,10 @@ ARG TARGETPLATFORM
 WORKDIR /app
 
 # Create a user to run Photoview server
-RUN groupadd -r photoveiw \
-  && useradd -r -g photoveiw photoveiw \
-  && mkdir -p /home/photoveiw \
-  && chown -R photoveiw:photoveiw /app /home/photoveiw \
+RUN groupadd -r photoview \
+  && useradd -r -g photoview photoview \
+  && mkdir -p /home/photoview \
+  && chown -R photoview:photoview /app /home/photoview \
   # Required dependencies
   && apt update \
   && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
@@ -92,5 +92,5 @@ EXPOSE 80
 
 HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:80/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
 
-USER photoveiw
+USER photoview
 ENTRYPOINT ["/app/photoview"]

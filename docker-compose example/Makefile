@@ -50,13 +50,18 @@ update: pull restart
 pull:
 	$(DOCKER_COMPOSE) pull --ignore-pull-failures
 start:
-	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
+	@## The next line is for MariaDB. If you use SQLite or PostgreSQL, comment it out and uncomment the corresponding line instead
+	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database/mariadb
+	@## The next line is for SQLite
+	@# mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
+	@## The next line is for PostgreSQL
+	@# mkdir -p ${HOST_PHOTOVIW_LOCATION}/database/postgres
 	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
 	$(DOCKER_COMPOSE) up -d --remove-orphans
-	## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
-	## Make sure to read the Docker documentation to understand how it works
-	## Please note that this command is applied to the Docker host affecting all hosted services, not only the PhotoView
-	# docker system prune -f
+	@## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
+	@## Make sure to read the Docker documentation to understand how it works
+	@## Please note that this command is applied to the Docker host affecting all hosted services, not only the PhotoView
+	@# docker system prune -f
 stop:
 	$(DOCKER_COMPOSE) stop
 down:
@@ -67,28 +72,44 @@ terminal:
 	$(DOCKER_COMPOSE) exec photoview bash
 logs:
 	$(DOCKER_COMPOSE) logs --tail=100 -f
-backup:
-	@## These 2 lines for MariaDB only
-	$(DOCKER_COMPOSE) exec db mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --check --check-upgrade --flush --process-views=YES --auto-repair --all-databases
-	$(DOCKER_COMPOSE) exec db mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --optimize --flush --auto-repair --all-databases
+## By default the `backup` uses MariaDB. If you use SQLite or PostgreSQL, replace the `backup-mariadb` with corresponding target
+## keeping the order of the calls the same
+## -----------------------
+## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
+## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
+## -----------------------
+## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of
+## resources and time. It was selected, because it is pre-installed on most distros.
+## However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
+## Make sure to install the 7zz first and then comment out the 2 lines with tar command (1st one in the corresponding DB backup
+## target, 2nd one in the `backup-post` target), uncomment corresponding lines with 7zz command
+backup: backup-pre backup-mariadb backup-post
+backup-pre:
 	mkdir -p ${HOST_PHOTOVIW_BACKUP}
 	mkdir ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`
+backup-mariadb:
+	$(DOCKER_COMPOSE) exec mariadb mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --check --check-upgrade --flush --process-views=YES --auto-repair --all-databases
+	$(DOCKER_COMPOSE) exec mariadb mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --optimize --flush --auto-repair --all-databases
+	$(DOCKER_COMPOSE) exec mariadb mariadb-dump -u root --password=${MARIADB_ROOT_PASSWORD} -e -x --all-databases -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
+	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
+backup-sqlite:
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "PRAGMA integrity_check;" | sqlite3 /app/database/photoview.db'
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "VACUUM;" | sqlite3 /app/database/photoview.db'
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo ".backup \"/app/database/sqlite_backup.db\"" | sqlite3 /app/database/photoview.db'
+	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.tar.xz ${HOST_PHOTOVIW_LOCATION}/database/sqlite_backup.db --remove-files
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.7z ${HOST_PHOTOVIW_LOCATION}/database/sqlite_backup.db && rm ${HOST_PHOTOVIW_LOCATION}/database/sqlite_backup.db
+backup-postgres:
+	$(DOCKER_COMPOSE) exec postgres PGPASSWORD=${PGSQL_PASSWORD} psql -U ${PGSQL_USER} -d ${PGSQL_DATABASE} -c "VACUUM (VERBOSE, ANALYZE)"
+	$(DOCKER_COMPOSE) exec postgres PGPASSWORD=${PGSQL_PASSWORD} pg_dump -U ${PGSQL_USER} -c --if-exists -C -v ${PGSQL_DATABASE} -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
+	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql --remove-files
+	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
+backup-post:
 	cp ${HOST_PHOTOVIW_LOCATION}/Makefile ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/
 	cp ${HOST_PHOTOVIW_LOCATION}/docker-compose.yml ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/
 	cp ${HOST_PHOTOVIW_LOCATION}/.env ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/
-	$(DOCKER_COMPOSE) exec db mariadb-dump -u root --password=${MARIADB_ROOT_PASSWORD} -e -x --all-databases -- > ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
-	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.tar.xz ${HOST_PHOTOVIW_LOCATION}/storage
-	@## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
-	@## To unpack the *.tar.xz into current folder use the command `tar -xJf archive_name.tar.xz`
-	@## -----------------------
-	@## The backup script creates .tar.xz archives. This type of archives provides great compression rate, but utilizes a lot of resources and time.
-	@## It was selected, because it is pre-installed on most distros. However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
-	@## Make sure to install the 7zz first and then comment out the 2 lines with tar command before this comment, uncomment the next lines
-	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
-	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z && rm ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql || exit 1
 	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
-	@# 7zz t ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z
 dev-down:
 	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml down
 dev: dev-down
