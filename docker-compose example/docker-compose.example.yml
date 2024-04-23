@@ -1,20 +1,22 @@
 services:
   photoview:
     image: viktorstrate/photoview:latest
-    profiles: ["photoview-wt-update"]
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    hostname: photoview
     container_name: photoview
     restart: unless-stopped
     stop_grace_period: 10s
     ports:
-      - "8000:80" ## HTTP port (host:container)
+      - "8000:8080" ## HTTP port (host:container)
+    ## This ensures that DB is initialized and ready for connections.
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     ## Or comment out the `mariadb` and its nested `condition` definition and uncomment corresponding 2 lines for the `postgres` case
     depends_on:
       mariadb:
-        ## To make sure that DB is initialized and ready for connections
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
     ## Security options for some restricted systems
     security_opt:
       - seccomp:unconfined
@@ -28,8 +30,8 @@ services:
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
       # PHOTOVIEW_POSTGRES_URL=postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
       PHOTOVIEW_LISTEN_IP: "photoview"
-      PHOTOVIEW_LISTEN_PORT: 80
-      PHOTOVIEW_MEDIA_CACHE: "/app/cache"
+      PHOTOVIEW_LISTEN_PORT: 8080
+      PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
       ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       ## Enable the following Godebug
       # - GODEBUG=asyncpreemptoff=1
@@ -57,8 +59,8 @@ services:
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
-      # - "${HOST_PHOTOVIW_LOCATION}/database:/app/database"
-      - "${HOST_PHOTOVIW_LOCATION}/storage:/app/cache"
+      # - "${HOST_PHOTOVIW_LOCATION}/database:/home/photoview/database"
+      - "${HOST_PHOTOVIW_LOCATION}/storage:/home/photoview/media-cache"
       ## Change This in the .env file: to the directory where your photos are located on your server.
       ## You can mount multiple paths if your photos are spread across multiple directories.
       ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
@@ -67,12 +69,32 @@ services:
       ## *Additional* media folders can be mounted like this (set variable in .env file):
       # - "${HOST_PHOTOVIW_MEDIA_FAMILY}:/photos/Family:ro"
 
+  ## Watchtower upgrades services automatically (optional)
+  watchtower:
+    image: containrrr/watchtower:latest
+    hostname: watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      ## Comment out the next variable if you want Watchtower to auto-update all containers, running on the host,
+      ## while now it will update only those with the label "com.centurylinklabs.watchtower.enable=true"
+      WATCHTOWER_LABEL_ENABLE: true
+      WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}
+      WATCHTOWER_TIMEOUT: ${WATCHTOWER_TIMEOUT}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "~/.docker/config.json:/config.json:ro" ## optional, for authentication if you have a Docker Hub account
+      - "/etc/localtime:/etc/localtime:ro"      ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"        ## use timezone from host
+
   ## Comment out the `mariadb` service if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` or `postgres` in the .env
   mariadb:
     image: mariadb:lts
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     hostname: photoview-mariadb
     container_name: photoview-mariadb
-    profiles: ["photoview-wt-update"]
     restart: unless-stopped
     stop_grace_period: 5s
     ## Optimized MariaDB startup command for better performance and compatibility
@@ -105,9 +127,10 @@ services:
   ## Uncomment the `postgres` service if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
 #  postgres:
 #    image: postgres:16-alpine
+#    labels:
+#      - "com.centurylinklabs.watchtower.enable=true"
 #    hostname: photoview-pgsql
 #    container_name: photoview-pgsql
-#    profiles: ["photoview-wt-update"]
 #    restart: unless-stopped
 #    stop_grace_period: 5s
 #    ## Security options for some restricted systems
@@ -134,21 +157,3 @@ services:
 #      timeout: 5s
 #      retries: 5
 #      start_period: 3m
-
-  ## Watchtower upgrades services automatically (optional)
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    ## With the next line uncommented Watchtower ONLY auto-updates images for services, having the same profile in their definitions.
-    ## If comment out the 'profiles' line here and in other services, Watchtower will update all images with running containers in the system.
-    profiles: ["photoview-wt-update"]
-    environment:
-      WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
-      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}
-      WATCHTOWER_TIMEOUT: ${WATCHTOWER_TIMEOUT}
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "~/.docker/config.json:/config.json:ro" ## optional, for authentication if you have a Docker Hub account
-      - "/etc/localtime:/etc/localtime:ro"      ## use timezone from host
-      - "/etc/timezone:/etc/timezone:ro"        ## use timezone from host
