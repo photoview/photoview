@@ -30,18 +30,16 @@ help:
 	@echo '   restart   Simply stops and starts the service.'
 	@echo '   backup    Verifies service database and creates new service backup'
 	@echo '             in the ${HOST_PHOTOVIW_BACKUP}/<date of execution> using .tar.xz by default.'
-	@echo '             If you want to use 7zz instead (which is faster), read the comment in the target script.'
+	@echo '             If you want to use 7zz instead (which is faster), read the comment on top of the target script.'
 	@echo '   pull      Pulls fresh Docker images from the Registry.'
 	@echo '   terminal  Starts a Bash shell session inside the `photoview` container for troubleshooting.'
-	@echo '   logs      Shows the last 100 lines (if the command not modified) from the log'
-	@echo '             and stays listening for new lines and show them interactively. Ctrl + C to exit.'
-	@echo '             It can be used as a source for a log viewer: "make logs | lnav", so that you can'
+	@echo '   logs      Shows the last 100 lines (if the command not modified) from the log,'
+	@echo '             stays listening for new lines, and shows them interactively. Ctrl + C to exit.'
+	@echo '             It can be used as a source for a log viewer, like "make logs | lnav", so that you can'
 	@echo '             interactively filter and search for needed info.'
 	@echo '   down      The same as `stop`, but also removes containers and volumes from Docker. Your data is safe.'
 	@echo '   remove    Removes the service from Docker, including all items.'
 	@echo '   uninstall Stops and removes the service from Docker, including all items.'
-	@echo '   dev       Pulls, builds and (re)starts the service in development mode.'
-	@echo '   dev-down  The same as `down`, but for service in development mode.'
 	@echo ''
 all: pull restart
 uninstall: down remove
@@ -110,11 +108,3 @@ backup-post:
 	cp ${HOST_PHOTOVIW_LOCATION}/.env ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/
 	tar -cJf ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.tar.xz ${HOST_PHOTOVIW_LOCATION}/storage
 	@# 7zz a -mx=9 ${HOST_PHOTOVIW_BACKUP}/`date +%Y-%m-%d`/storage.7z ${HOST_PHOTOVIW_LOCATION}/storage
-dev-down:
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml down
-dev: dev-down
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml pull --ignore-pull-failures
-	mkdir -p ${HOST_PHOTOVIW_LOCATION}/database
-	mkdir -p ${HOST_PHOTOVIW_LOCATION}/storage
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml build --build-arg COMMIT_SHA=$$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$$(date +%Y-%m-%d) --build-arg VERSION="dev" --pull photoview-dev
-	$(DOCKER_COMPOSE) -f ../docker-compose-dev.yml up -d --remove-orphans
