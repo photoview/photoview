@@ -58,39 +58,42 @@ RUN chmod +x /tmp/install_build_dependencies.sh \
 ### Copy api and ui to production environment ###
 FROM debian:bookworm-slim
 ARG TARGETPLATFORM
-WORKDIR /app
 
 # Create a user to run Photoview server
-RUN groupadd -r photoview \
-  && useradd -r -g photoview photoview \
-  && mkdir -p /home/photoview \
-  && chown -R photoview:photoview /app /home/photoview \
-  # Required dependencies
-  && apt update \
-  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1 \
+RUN useradd -r -U -m photoview \
+  # Required dependencies \
+  && apt-get update \
+  && apt-get install -y curl gnupg gpg libdlib19.1 ffmpeg exiftool libheif1 \
   # Install Darktable if building for a supported architecture
   && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-    apt install -y darktable; \
+    echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
+      | tee /etc/apt/sources.list.d/graphics:darktable.list; \
+    curl -fsSL https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/Release.key \
+      | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null; \
+    apt-get update; \
+    apt-get install -y darktable; \
   fi \
   # Remove build dependencies and cleanup
-  && apt purge -y gpg \
-  && apt autoremove -y \
-  && apt clean \
+  && apt-get purge -y gnupg gpg \
+  && apt-get autoremove -y \
+  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --chown=photoveiw:photoveiw api/data /app/data
-COPY --chown=photoveiw:photoveiw --from=ui /app/dist /ui
-COPY --chown=photoveiw:photoveiw --from=api /app/photoview /app/photoview
+WORKDIR /home/photoview
+COPY api/data /home/photoview/data
+COPY --from=ui /app/dist /app/ui
+COPY --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
-ENV PHOTOVIEW_LISTEN_PORT 80
+ENV PHOTOVIEW_LISTEN_PORT 8080
 
 ENV PHOTOVIEW_SERVE_UI 1
-ENV PHOTOVIEW_UI_PATH /ui
+ENV PHOTOVIEW_UI_PATH /app/ui
+ENV PHOTOVIEW_MEDIA_CACHE /home/photoview/media-cache
 
-EXPOSE 80
+EXPOSE 8080
 
-HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:80/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
+HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:8080/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
 
 USER photoview
 ENTRYPOINT ["/app/photoview"]
