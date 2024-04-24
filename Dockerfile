@@ -80,7 +80,7 @@ RUN useradd -r -U -m photoview \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/photoview
-COPY api/data /home/photoview/data
+COPY api/data /app/data
 COPY --from=ui /app/dist /app/ui
 COPY --from=api /app/photoview /app/photoview
 
@@ -89,6 +89,7 @@ ENV PHOTOVIEW_LISTEN_PORT 8080
 
 ENV PHOTOVIEW_SERVE_UI 1
 ENV PHOTOVIEW_UI_PATH /app/ui
+ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH /app/data/models
 ENV PHOTOVIEW_MEDIA_CACHE /home/photoview/media-cache
 
 EXPOSE 8080

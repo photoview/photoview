@@ -30,8 +30,12 @@ services:
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
       # PHOTOVIEW_POSTGRES_URL=postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
       PHOTOVIEW_LISTEN_IP: "photoview"
-      PHOTOVIEW_LISTEN_PORT: 8080
-      PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
+      ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
+      ## If you change this, remember to update the port mapping (under the `ports:`) above!
+      # PHOTOVIEW_LISTEN_PORT: 8080
+      ## Uncomment the next variable and set a different value to set the location of the media cache inside the container.
+      ## If you change this, remember to update the right side of the storage volume mount (under the `volumes:`) below!
+      # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
       ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       ## Enable the following Godebug
       # - GODEBUG=asyncpreemptoff=1
@@ -59,15 +63,15 @@ services:
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
-      # - "${HOST_PHOTOVIW_LOCATION}/database:/home/photoview/database"
-      - "${HOST_PHOTOVIW_LOCATION}/storage:/home/photoview/media-cache"
+      # - "${HOST_PHOTOVIEW_LOCATION}/database:/home/photoview/database"
+      - "${HOST_PHOTOVIEW_LOCATION}/storage:/home/photoview/media-cache"
       ## Change This in the .env file: to the directory where your photos are located on your server.
       ## You can mount multiple paths if your photos are spread across multiple directories.
       ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
-      ## If you mounted several folders, provide the path to the parent one on the init page.
-      - "${HOST_PHOTOVIW_MEDIA_ROOT}:/photos:ro"
-      ## *Additional* media folders can be mounted like this (set variable in .env file):
-      # - "${HOST_PHOTOVIW_MEDIA_FAMILY}:/photos/Family:ro"
+      ## If you mount several folders, provide the path to the parent one on the init page.
+      - "${HOST_PHOTOVIEW_MEDIA_ROOT}:/photos:ro"
+      ## *Additional* media folders can be mounted like this (set the variable in .env file):
+      # - "${HOST_PHOTOVIEW_MEDIA_FAMILY}:/photos/Family:ro"
 
   ## Watchtower upgrades services automatically (optional)
   watchtower:
@@ -116,7 +120,7 @@ services:
       ## - "/host/folder:/container/folder"
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
-      - "${HOST_PHOTOVIW_LOCATION}/database/mariadb:/var/lib/mysql" ## DO NOT REMOVE
+      - "${HOST_PHOTOVIEW_LOCATION}/database/mariadb:/var/lib/mysql" ## DO NOT REMOVE
     healthcheck:
       test: mysqladmin ping -s -h localhost -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
       interval: 1m
@@ -150,7 +154,7 @@ services:
 #      ## - "/host/folder:/container/folder"
 #      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
 #      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
-#      - "${HOST_PHOTOVIW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
+#      - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
 #    healthcheck:
 #      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
 #      interval: 1m
