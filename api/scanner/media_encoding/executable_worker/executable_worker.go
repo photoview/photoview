@@ -56,11 +56,11 @@ func newCustomRawWorker() *CustomRawWorker {
 
 	path, err := exec.LookPath(_exec)
 	if err != nil {
-		log.Println("Executable worker not found: %s",_exec)
+		log.Printf("Executable worker not found: %s",_exec)
 	} else {
 		version, err := exec.Command(path, _check).Output()
 		if err != nil {
-			log.Printf("Error getting version of %s: %s\n",_exec,_check, err)
+			log.Printf("Error getting version of %s: %s\n",_exec, err)
 			return nil
 		}
 
