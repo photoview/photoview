@@ -22,7 +22,7 @@ func migrate_exif_fields(db *gorm.DB) error {
 		for _, exifCol := range mediaExifColumns {
 			if exifCol.Name() == "exposure" {
 				switch exifCol.DatabaseTypeName() {
-				case "double", "numeric", "real", "bigint":
+				case "double", "numeric", "real", "bigint", "integer":
 					// correct type, do nothing
 				default:
 					// do migration
@@ -34,7 +34,7 @@ func migrate_exif_fields(db *gorm.DB) error {
 
 			if exifCol.Name() == "flash" {
 				switch exifCol.DatabaseTypeName() {
-				case "double", "numeric", "real", "bigint":
+				case "double", "numeric", "real", "bigint", "integer":
 					// correct type, do nothing
 				default:
 					// do migration
