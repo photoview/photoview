@@ -13,10 +13,9 @@ services:
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     ## Or comment out the `mariadb` and its nested `condition` definition and uncomment corresponding 2 lines for the `postgres` case
     depends_on:
+      # postgres:
       mariadb:
         condition: service_healthy
-      # postgres:
-      #   condition: service_healthy
     ## Security options for some restricted systems
     security_opt:
       - seccomp:unconfined
@@ -69,8 +68,12 @@ services:
       ## You can mount multiple paths if your photos are spread across multiple directories.
       ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
       ## If you mount several folders, provide the path to the parent one on the init page.
+      ## If you mount several folders, make sure that there are no direct mappings to the media root folder.
+      ## This means that you need to also modify the container path of the HOST_PHOTOVIEW_MEDIA_ROOT
+      ## to something like '/photos/main'. Note that this new name ('main' in this example) will become an album in Photoview.
       - "${HOST_PHOTOVIEW_MEDIA_ROOT}:/photos:ro"
-      ## *Additional* media folders can be mounted like this (set the variable in .env file):
+      ## *Additional* media folders can be mounted like this (set the variable in .env file)
+      ## Note that a mount cannot be located in a subfolder of another mount.
       # - "${HOST_PHOTOVIEW_MEDIA_FAMILY}:/photos/Family:ro"
 
   ## Watchtower upgrades services automatically (optional)
