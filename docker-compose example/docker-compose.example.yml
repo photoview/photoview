@@ -11,7 +11,7 @@ services:
       - "8000:8080" ## HTTP port (host:container)
     ## This ensures that DB is initialized and ready for connections.
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
-    ## Or comment out the `mariadb` and its nested `condition` definition and uncomment corresponding 2 lines for the `postgres` case
+    ## Or comment out the `mariadb:` and uncomment the `postgres:` if PHOTOVIEW_DATABASE_DRIVER is set to `postgres`
     depends_on:
       # postgres:
       mariadb:
@@ -27,7 +27,7 @@ services:
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
-      # PHOTOVIEW_POSTGRES_URL=postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
+      # PHOTOVIEW_POSTGRES_URL: postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
       PHOTOVIEW_LISTEN_IP: "photoview"
       ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
       ## If you change this, remember to update the port mapping (under the `ports:`) above!

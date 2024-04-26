@@ -92,15 +92,15 @@ backup-mariadb:
 	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.tar.xz ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql --remove-files
 	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.7z ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/mariaDB_mysql_dump.sql
 backup-sqlite:
-	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "PRAGMA integrity_check;" | sqlite3 /app/database/photoview.db'
-	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "VACUUM;" | sqlite3 /app/database/photoview.db'
-	$(DOCKER_COMPOSE) exec photoview sh -c 'echo ".backup \"/app/database/sqlite_backup.db\"" | sqlite3 /app/database/photoview.db'
-	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.tar.xz ${HOST_PHOTOVIEW_LOCATION}/database/sqlite_backup.db --remove-files
-	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.7z ${HOST_PHOTOVIEW_LOCATION}/database/sqlite_backup.db && rm ${HOST_PHOTOVIEW_LOCATION}/database/sqlite_backup.db
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "PRAGMA integrity_check;" | sqlite3 ${PHOTOVIEW_SQLITE_PATH}'
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo "VACUUM;" | sqlite3 ${PHOTOVIEW_SQLITE_PATH}'
+	$(DOCKER_COMPOSE) exec photoview sh -c 'echo ".backup \"${PHOTOVIEW_SQLITE_PATH}_backup.db\"" | sqlite3 ${PHOTOVIEW_SQLITE_PATH}'
+	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.tar.xz ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db && rm ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db
+	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.7z ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db && rm ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db
 backup-postgres:
-	$(DOCKER_COMPOSE) exec postgres PGPASSWORD=${PGSQL_PASSWORD} psql -U ${PGSQL_USER} -d ${PGSQL_DATABASE} -c "VACUUM (VERBOSE, ANALYZE)"
-	$(DOCKER_COMPOSE) exec postgres PGPASSWORD=${PGSQL_PASSWORD} pg_dump -U ${PGSQL_USER} -c --if-exists -C -v ${PGSQL_DATABASE} -- > ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
-	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.tar.xz ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql --remove-files
+	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} psql -U ${PGSQL_USER} -d ${PGSQL_DATABASE} -c "VACUUM (VERBOSE, ANALYZE)"'
+	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} pg_dump -U ${PGSQL_USER} -c --if-exists -C -v ${PGSQL_DATABASE} --' > ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
+	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.tar.xz ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
 	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.7z ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
 backup-post:
 	cp ${HOST_PHOTOVIEW_LOCATION}/Makefile ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/

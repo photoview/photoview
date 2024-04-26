@@ -61,9 +61,9 @@ ARG TARGETPLATFORM
 
 # Create a user to run Photoview server
 RUN useradd -r -U -m photoview \
-  # Required dependencies \
+  # Required dependencies
   && apt-get update \
-  && apt-get install -y curl gnupg gpg libdlib19.1 ffmpeg exiftool libheif1 \
+  && apt-get install -y curl gnupg gpg libdlib19.1 ffmpeg exiftool libheif1 sqlite3 \
   # Install Darktable if building for a supported architecture
   && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
     echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
