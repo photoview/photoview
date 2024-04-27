@@ -7,6 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"text/template"
+	"bytes"
+
 
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -14,45 +17,58 @@ import (
 )
 
 func InitializeExecutableWorkers() {
-	DarktableCli = newDarktableWorker()
+	CustomRawCli = newCustomRawWorker()
 	FfmpegCli = newFfmpegWorker()
 }
 
-var DarktableCli *DarktableWorker = nil
+var CustomRawCli *CustomRawWorker = nil
 var FfmpegCli *FfmpegWorker = nil
 
 type ExecutableWorker interface {
 	Path() string
 }
 
-type DarktableWorker struct {
-	path string
-}
-
 type FfmpegWorker struct {
 	path string
 }
 
-func newDarktableWorker() *DarktableWorker {
+type CustomRawWorker struct {
+	path string
+	args string
+}
+
+type RawArgs struct {
+    InputPath string
+    OutputPath string
+	Quality int
+}
+
+
+func newCustomRawWorker() *CustomRawWorker {
 	if utils.EnvDisableRawProcessing.GetBool() {
-		log.Printf("Executable worker disabled (%s=1): darktable\n", utils.EnvDisableRawProcessing.GetName())
+		log.Printf("Executable worker disabled (%s=1) \n", utils.EnvDisableRawProcessing.GetName())
 		return nil
 	}
 
-	path, err := exec.LookPath("darktable-cli")
+	var _check = utils.EnvRawProcessingCheck.GetValue()
+	var _exec = utils.EnvRawProcessing.GetValue()
+	var _args = utils.EnvRawProcessingArgs.GetValue()
+
+	path, err := exec.LookPath(_exec)
 	if err != nil {
-		log.Println("Executable worker not found: darktable")
+		log.Printf("Executable worker not found: %s",_exec)
 	} else {
-		version, err := exec.Command(path, "--version").Output()
+		version, err := exec.Command(path, _check).Output()
 		if err != nil {
-			log.Printf("Error getting version of darktable: %s\n", err)
+			log.Printf("Error getting version of %s: %s\n",_exec, err)
 			return nil
 		}
 
-		log.Printf("Found executable worker: darktable (%s)\n", strings.Split(string(version), "\n")[0])
+		log.Printf("Found executable worker: %s (%s)\n", _exec, strings.Split(string(version), "\n")[0])
 
-		return &DarktableWorker{
+		return &CustomRawWorker{
 			path: path,
+			args: _args,
 		}
 	}
 
@@ -85,7 +101,7 @@ func newFfmpegWorker() *FfmpegWorker {
 	return nil
 }
 
-func (worker *DarktableWorker) IsInstalled() bool {
+func (worker *CustomRawWorker) IsInstalled() bool {
 	return worker != nil
 }
 
@@ -93,22 +109,24 @@ func (worker *FfmpegWorker) IsInstalled() bool {
 	return worker != nil
 }
 
-func (worker *DarktableWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
-	tmpDir, err := ioutil.TempDir("/tmp", "photoview-darktable")
+func (worker *CustomRawWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+	tmpDir, err := ioutil.TempDir("/tmp", "photoview-convert")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	args := []string{
-		inputPath,
-		outputPath,
-		"--core",
-		"--conf",
-		fmt.Sprintf("plugins/imageio/format/jpeg/quality=%d", jpegQuality),
-		"--configdir",
-		tmpDir,
-	}
+	tmpl, err := template.New("RawArgs").Parse(worker.args)
+	if err != nil { 
+		log.Fatal(err)
+    }
+	_args := RawArgs{inputPath,outputPath,jpegQuality}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf,_args)
+	if err != nil { 
+        log.Fatal(err)
+    }
+	args := strings.Split(buf.String()," ")
 
 	cmd := exec.Command(worker.path, args...)
 
