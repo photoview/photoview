@@ -27,11 +27,17 @@ Password: **demo**
 ## Contents
 
 - [Demo site](#demo-site)
+- [Contents](#contents)
 - [Main features](#main-features)
-- [Supported Platforms](#supported-platforms)
+- [Supported platforms](#supported-platforms)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started - Setup with Docker](#getting-started---setup-with-docker)
-- [Set up development environment](#setup-development-environment)
+  - [Initial Setup](#initial-setup)
+- [Set up development environment](#set-up-development-environment)
+  - [Using Docker](#using-docker)
+  - [Local setup](#local-setup)
+  - [Start API server](#start-api-server)
+  - [Start UI server](#start-ui-server)
 - [Sponsors](#sponsors)
 
 ## Main features
@@ -112,6 +118,14 @@ A new admin user will be created, with access to the photos located at the path 
 The photos will have to be scanned before they show up, you can start a scan manually, by navigating to `Settings` and clicking on `Scan All`
 
 ## Set up development environment
+
+### Using Docker
+
+The steps below may not work for you. You can also use a Docker-based development environment, using the docker-compose.yml file in development/ . You may need to increase the resources available to Docker beyond the default 2GB. (Preferences->Resources if you're using Docker Desktop gui)
+
+On an M1, you may need to build it with `TARGETPLATFORM='linux/arm64' docker-compose build`. 
+
+After that, `docker-compose up -d`, wait up to a few minutes, then hit http://localhost:1234/. You'll need to go to Settings->Scan All Users to see the photos.
 
 ### Local setup
 
