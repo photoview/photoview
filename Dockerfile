@@ -92,9 +92,13 @@ ENV PHOTOVIEW_UI_PATH /app/ui
 ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH /app/data/models
 ENV PHOTOVIEW_MEDIA_CACHE /home/photoview/media-cache
 
-EXPOSE 8080
+EXPOSE ${PHOTOVIEW_LISTEN_PORT}
 
-HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:8080/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
+HEALTHCHECK --interval=60s --timeout=10s \
+  CMD curl --fail http://localhost:${PHOTOVIEW_LISTEN_PORT}/api/graphql \
+    -X POST -H 'Content-Type: application/json' \
+    --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
+    || exit 1
 
 USER photoview
 ENTRYPOINT ["/app/photoview"]
