@@ -1,0 +1,166 @@
+services:
+  photoview:
+    image: viktorstrate/photoview:2
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    hostname: photoview
+    container_name: photoview
+    restart: unless-stopped
+    stop_grace_period: 10s
+    ports:
+      - "8000:8080" ## HTTP port (host:container)
+    ## This ensures that DB is initialized and ready for connections.
+    ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
+    ## Or comment out the `mariadb:` and uncomment the `postgres:` if PHOTOVIEW_DATABASE_DRIVER is set to `postgres`
+    depends_on:
+      # postgres:
+      mariadb:
+        condition: service_healthy
+    ## Security options for some restricted systems
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    environment:
+      PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
+      ## Comment out the next variable in the case PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` or `postgres` in the .env
+      PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
+      ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
+      # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
+      ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
+      # PHOTOVIEW_POSTGRES_URL: postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
+      PHOTOVIEW_LISTEN_IP: "photoview"
+      ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
+      ## If you change this, remember to update the port mapping (under the `ports:`) above!
+      # PHOTOVIEW_LISTEN_PORT: 8080
+      ## Uncomment the next variable and set a different value to set the location of the media cache inside the container.
+      ## If you change this, remember to update the right side of the storage volume mount (under the `volumes:`) below!
+      # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
+      ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
+      ## Enable the following Godebug
+      # - GODEBUG=asyncpreemptoff=1
+      ## Optional: To enable map related features, you need to create a mapbox token.
+      ## A token can be generated for free here https://account.mapbox.com/access-tokens/
+      ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
+      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+    ## Share hardware devices with FFmpeg (optional):
+    # devices:
+      ## Uncomment next devices mappings if they are available in your host system
+      ## Intel QSV
+      # - "/dev/dri:/dev/dri"
+      ## Nvidia CUDA
+      # - "/dev/nvidia0:/dev/nvidia0"
+      # - "/dev/nvidiactl:/dev/nvidiactl"
+      # - "/dev/nvidia-modeset:/dev/nvidia-modeset"
+      # - "/dev/nvidia-nvswitchctl:/dev/nvidia-nvswitchctl"
+      # - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+      # - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+      ## Video4Linux Video Encode Device (h264_v4l2m2m)
+      # - "/dev/video11:/dev/video11"
+    volumes:
+      ## Example:
+      ## - "/host/folder:/container/folder"
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
+      # - "${HOST_PHOTOVIEW_LOCATION}/database:/home/photoview/database"
+      - "${HOST_PHOTOVIEW_LOCATION}/storage:/home/photoview/media-cache"
+      ## Change This in the .env file: to the directory where your photos are located on your server.
+      ## You can mount multiple paths if your photos are spread across multiple directories.
+      ## The same path as the container path set here, you'll need to provide on the Photoview's init page (the one between the ':' chars).
+      ## If you mount several folders, provide the path to the parent one on the init page.
+      ## If you mount several folders, make sure that there are no direct mappings to the media root folder.
+      ## This means that you need to also modify the container path of the HOST_PHOTOVIEW_MEDIA_ROOT
+      ## to something like '/photos/main'. Note that this new name ('main' in this example) will become an album in Photoview.
+      - "${HOST_PHOTOVIEW_MEDIA_ROOT}:/photos:ro"
+      ## *Additional* media folders can be mounted like this (set the variable in .env file)
+      ## Note that a mount cannot be located in a subfolder of another mount.
+      # - "${HOST_PHOTOVIEW_MEDIA_FAMILY}:/photos/Family:ro"
+
+  ## Watchtower upgrades services automatically (optional)
+  watchtower:
+    image: containrrr/watchtower:latest
+    hostname: watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      ## Comment out the next variable if you want Watchtower to auto-update all containers, running on the host,
+      ## while now it will update only those with the label "com.centurylinklabs.watchtower.enable=true"
+      WATCHTOWER_LABEL_ENABLE: true
+      WATCHTOWER_CLEANUP: ${WATCHTOWER_CLEANUP}
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL}
+      WATCHTOWER_TIMEOUT: ${WATCHTOWER_TIMEOUT}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "~/.docker/config.json:/config.json:ro" ## optional, for authentication if you have a Docker Hub account
+      - "/etc/localtime:/etc/localtime:ro"      ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"        ## use timezone from host
+
+  ## Comment out the `mariadb` service if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` or `postgres` in the .env
+  mariadb:
+    image: mariadb:lts
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    hostname: photoview-mariadb
+    container_name: photoview-mariadb
+    restart: unless-stopped
+    stop_grace_period: 5s
+    ## Optimized MariaDB startup command for better performance and compatibility
+    command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    security_opt: ## see https://github.com/MariaDB/mariadb-docker/issues/434#issuecomment-1136151239
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ## Uncomment next 2 lines if you want to access the database directly
+    # ports:
+      # - "3306:3306"
+    environment:
+      MARIADB_AUTO_UPGRADE: "1"
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      ## Example:
+      ## - "/host/folder:/container/folder"
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "${HOST_PHOTOVIEW_LOCATION}/database/mariadb:/var/lib/mysql" ## DO NOT REMOVE
+    healthcheck:
+      test: mysqladmin ping -s -h localhost -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      interval: 1m
+      timeout: 5s
+      retries: 5
+      start_period: 3m
+
+  ## Uncomment the `postgres` service if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
+#  postgres:
+#    image: postgres:16-alpine
+#    labels:
+#      - "com.centurylinklabs.watchtower.enable=true"
+#    hostname: photoview-pgsql
+#    container_name: photoview-pgsql
+#    restart: unless-stopped
+#    stop_grace_period: 5s
+#    ## Security options for some restricted systems
+#    security_opt:
+#      - seccomp:unconfined
+#      - apparmor:unconfined
+#    ## Uncomment next 2 lines if you want to access the database directly
+#    # ports:
+#      # - 5432:5432
+#    environment:
+#      POSTGRES_DB: ${PGSQL_DATABASE}
+#      POSTGRES_USER: ${PGSQL_USER}
+#      POSTGRES_PASSWORD: ${PGSQL_PASSWORD}
+#      ## See other optional variables in the https://hub.docker.com/_/postgres
+#    volumes:
+#      ## Example:
+#      ## - "/host/folder:/container/folder"
+#      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+#      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+#      - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
+#    healthcheck:
+#      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+#      interval: 1m
+#      timeout: 5s
+#      retries: 5
+#      start_period: 3m
