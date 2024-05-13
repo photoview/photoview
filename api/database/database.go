@@ -72,21 +72,21 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 
 func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 	var databaseDialect gorm.Dialector
-	switch drivers.DatabaseDriverFromEnv() {
+	driver := drivers.DatabaseDriverFromEnv()
+	log.Printf("Utilizing %s database driver based on environment variables", driver)
+
+	switch driver {
 	case drivers.MYSQL:
 		mysqlAddress, err := GetMysqlAddress(utils.EnvMysqlURL.GetValue())
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Connecting to MYSQL database: %s", mysqlAddress)
 		databaseDialect = gorm_mysql.Open(mysqlAddress)
-
 	case drivers.SQLITE:
 		sqliteAddress, err := GetSqliteAddress(utils.EnvSqlitePath.GetValue())
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Opening SQLITE database: %s", sqliteAddress)
 		databaseDialect = sqlite.Open(sqliteAddress.String())
 
 	case drivers.POSTGRES:
@@ -94,7 +94,6 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Connecting to POSTGRES database: %s", postgresAddress.Redacted())
 		databaseDialect = postgres.Open(postgresAddress.String())
 	}
 
