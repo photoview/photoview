@@ -9,7 +9,7 @@ on:
 jobs:
   test-api:
     name: Test API
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -18,7 +18,7 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:10.5
+        image: mariadb:lts
         env:
           MYSQL_DATABASE: photoview_test
           MYSQL_USER: photoview
@@ -33,7 +33,7 @@ jobs:
           - 3306:3306
 
       postgres:
-        image: postgres:13.2
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: photoview
           POSTGRES_PASSWORD: photosecret

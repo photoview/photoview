@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { mapboxToken } from './__generated__/mapboxToken'
 import { isDarkMode } from '../../theme'
+import { SetMapLanguages } from '../../localization'
 
 const MAPBOX_TOKEN_QUERY = gql`
   query mapboxToken {
@@ -65,6 +66,8 @@ const useMapboxMap = ({
         : 'mapbox://styles/mapbox/streets-v11',
       ...mapboxOptions,
     })
+
+    SetMapLanguages(map.current)
 
     configureMapbox(map.current, mapboxLibrary)
     map.current?.resize()

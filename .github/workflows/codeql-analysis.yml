@@ -12,8 +12,8 @@ on:
 jobs:
   analyze:
     name: Analyze
-    if: github.repository == 'photoview/photoview'
-    runs-on: ubuntu-20.04
+    if: github.repository == 'kkovaletp/photoview'
+    runs-on: ubuntu-latest
 
     # strategy:
     #   fail-fast: false
