@@ -89,7 +89,13 @@ All the photo galleries can do a lot of what I need, but no single one can do it
 > `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located on top of the `backup` section for more details.
 
 1. Download the content of the `docker-compose example` folder to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
-2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files).
+   
+   Please note that this folder contains 2 versions of the docker-compose file:
+   - `docker-compose.example.yml` - the fully-functional and recommended for the most cases config
+   - `docker-compose.minimal.example.yml` - the minimal and simple config for those, who find the previous one too complex and difficult to understand and manage
+   
+   When downloading files, you need to choose only one of them.
+2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
 4. In case, you don't have `make` installed in your system or don't want to use it for the Photoview management activities, you could use the same commands from the `Makefile` and run them in your shell directly, or create your own scripts. Make sure to apply or replace the variables from your `.env` first in this case. `Makefile` is provided just for your convenience and simplicity, but is optional.
 5. Start the server by running the following command (or corresponding sequence of commands from the `Makefile`):
