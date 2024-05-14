@@ -48,12 +48,12 @@ update: pull restart
 pull:
 	$(DOCKER_COMPOSE) pull --ignore-pull-failures
 start:
-	@## The next line is for MariaDB. If you use SQLite or PostgreSQL, comment it out and uncomment the corresponding line instead
-	mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database/mariadb
+	@## The next line is for PostgreSQL. If you use SQLite or MariaDB, comment it out and uncomment the corresponding line instead
+	mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database/postgres
+	@## The next line is for MariaDB
+	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database/mariadb
 	@## The next line is for SQLite
 	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database
-	@## The next line is for PostgreSQL
-	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database/postgres
 	mkdir -p ${HOST_PHOTOVIEW_LOCATION}/storage
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 	@## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
@@ -70,7 +70,7 @@ terminal:
 	$(DOCKER_COMPOSE) exec photoview bash
 logs:
 	$(DOCKER_COMPOSE) logs --tail=100 -f
-## By default the `backup` uses MariaDB. If you use SQLite or PostgreSQL, replace the `backup-mariadb` with corresponding target
+## By default the `backup` uses PostgreSQL. If you use SQLite or MariaDB, replace the `backup-postgres` with corresponding target
 ## keeping the order of the calls the same
 ## -----------------------
 ## To see the content of the *.tar.xz use the command `tar -tvJf archive_name.tar.xz`
@@ -81,10 +81,15 @@ logs:
 ## However, you could replace it with the 7zz, which uses much less resources with comparable compression rate.
 ## Make sure to install the 7zz first and then comment out the 2 lines with tar command (1st one in the corresponding DB backup
 ## target, 2nd one in the `backup-post` target), uncomment corresponding lines with 7zz command
-backup: backup-pre backup-mariadb backup-post
+backup: backup-pre backup-postgres backup-post
 backup-pre:
 	mkdir -p ${HOST_PHOTOVIEW_BACKUP}
 	mkdir ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`
+backup-postgres:
+	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} psql -U ${PGSQL_USER} -d ${PGSQL_DATABASE} -c "VACUUM (VERBOSE, ANALYZE)"'
+	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} pg_dump -U ${PGSQL_USER} -c --if-exists -C -v ${PGSQL_DATABASE} --' > ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
+	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.tar.xz ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
+	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.7z ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
 backup-mariadb:
 	$(DOCKER_COMPOSE) exec mariadb mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --check --check-upgrade --flush --process-views=YES --auto-repair --all-databases
 	$(DOCKER_COMPOSE) exec mariadb mysqlcheck -u root --password=${MARIADB_ROOT_PASSWORD} --optimize --flush --auto-repair --all-databases
@@ -97,11 +102,6 @@ backup-sqlite:
 	$(DOCKER_COMPOSE) exec photoview sh -c 'echo ".backup \"${PHOTOVIEW_SQLITE_PATH}_backup.db\"" | sqlite3 ${PHOTOVIEW_SQLITE_PATH}'
 	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.tar.xz ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db && rm ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db
 	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/sqlite_backup.7z ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db && rm ${HOST_PHOTOVIEW_LOCATION}/database/photoview.db_backup.db
-backup-postgres:
-	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} psql -U ${PGSQL_USER} -d ${PGSQL_DATABASE} -c "VACUUM (VERBOSE, ANALYZE)"'
-	$(DOCKER_COMPOSE) exec postgres sh -c 'PGPASSWORD=${PGSQL_PASSWORD} pg_dump -U ${PGSQL_USER} -c --if-exists -C -v ${PGSQL_DATABASE} --' > ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
-	tar -cJf ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.tar.xz ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
-	@# 7zz a -mx=9 ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.7z ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql && rm ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/postgres_pg_dump.sql
 backup-post:
 	cp ${HOST_PHOTOVIEW_LOCATION}/Makefile ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/
 	cp ${HOST_PHOTOVIEW_LOCATION}/docker-compose.yml ${HOST_PHOTOVIEW_BACKUP}/`date +%Y-%m-%d`/
