@@ -1,39 +1,48 @@
 <img src="./screenshots/photoview-logo.svg" height="92px" alt="photoview logo" />
 
-[![License](https://img.shields.io/github/license/viktorstrate/photoview)](./LICENSE.txt)
-[![GitHub contributors](https://img.shields.io/github/contributors/viktorstrate/photoview)](https://github.com/viktorstrate/photoview/graphs/contributors)
-[![Docker Pulls](https://img.shields.io/docker/pulls/viktorstrate/photoview)](https://hub.docker.com/r/viktorstrate/photoview)
-[![Docker builds](https://github.com/photoview/photoview/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/photoview/photoview/actions/workflows/build.yml)
-[![codecov](https://codecov.io/gh/photoview/photoview/branch/master/graph/badge.svg?token=AATZKC93F7)](https://codecov.io/gh/photoview/photoview)
+[![License](https://img.shields.io/github/license/kkovaletp/photoview)](./LICENSE.txt)
+[![GitHub contributors](https://img.shields.io/github/contributors/kkovaletp/photoview)](https://github.com/kkovaletp/photoview/graphs/contributors)
+[![Docker Pulls](https://img.shields.io/docker/pulls/kkoval/photoview)](https://hub.docker.com/r/kkoval/photoview)
+[![Docker builds](https://github.com/kkovaletp/photoview/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/kkovaletp/photoview/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/kkovaletp/photoview/branch/master/graph/badge.svg?token=ENP02P5NYS)](https://codecov.io/gh/kkovaletp/photoview)
 
 ![screenshot](./screenshots/timeline.png)
 
-Photoview is a simple and user-friendly photo gallery that's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high-resolution photos.
+**This is a forked repository from the [photoview/photoview](https://github.com/photoview/photoview).** 
+My vision of the product development strategy is different from the Photoview owner and the maintainer of the upstream repo, so I decided to fork and go my way.
+
+**Photoview** is a simple and user-friendly photo gallery that's made for photographers and aims to provide an easy and fast way to navigate directories, with thousands of high-resolution photos.
 
 You configure Photoview to look for photos and videos within a directory on your file system. The scanner automatically picks up your media and starts to generate thumbnail images to make browsing super fast.
 
-When your media has been scanned, they show up on the website, organised in the same way as on the filesystem.
+When your media has been scanned, they show up on the website, organized in the same way as on the filesystem.
 
 > If you have questions regarding setup or development,
-feel free to join the Discord server https://discord.gg/jQ392948u9
+feel free to start or join a discussion in this repo
 
-## Demo site
+## Terms of use
 
-Visit https://photos.qpqp.dk/
+By using this project or its source code, for any purpose and in any shape or form, you grant your **implicit agreement** to all of the following statements:
 
-Username: **demo**
-Password: **demo**
+- You unequivocally condemn Russia and its military aggression against Ukraine;
+- You recognize that Russia is an occupant that unlawfully invaded a sovereign state;
+- You agree that [Russia is a terrorist state](https://www.europarl.europa.eu/doceo/document/RC-9-2022-0482_EN.html);
+- You fully support Ukraine's territorial integrity, including its claims over [temporarily occupied territories](https://en.wikipedia.org/wiki/Russian-occupied_territories_of_Ukraine);
+- You reject false narratives perpetuated by Russian state propaganda.
+
+To learn more about the war and how you can help, [click here](https://war.ukraine.ua/).
+
+Glory to Ukraine! 🇺🇦
 
 ## Contents
 
-- [Demo site](#demo-site)
+- [Terms of use](#Terms-of-use)
 - [Main features](#main-features)
 - [Supported Platforms](#supported-platforms)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
 - [Advanced setup](#advanced-setup)
 - [Set up development environment](#set-up-development-environment)
-- [Sponsors](#sponsors)
 
 ## Main features
 
@@ -48,7 +57,9 @@ Password: **demo**
 
 ## Supported platforms
 
-- [Docker](https://hub.docker.com/r/viktorstrate/photoview/)
+- [Docker](https://hub.docker.com/r/kkoval/photoview/) - recommended and preferred
+- Debian, Ubuntu and similar Linux distros
+- Fedora Linux
 - [Arch Linux Aur](https://aur.archlinux.org/packages/photoview)
 - [Unraid](https://forums.unraid.net/topic/103028-support-photoview-corneliousjd-repo/)
 - EmbassyOS: [announcement](https://start9labs.medium.com/new-service-photoview-72ee681b2ff0), [repo](https://github.com/Start9Labs/embassyos-photoview-wrapper)
@@ -118,7 +129,7 @@ The photos will have to be scanned before they show up, you can start a scan man
 
 ## Advanced setup
 
-We suggest securing the Photoview instance before exposing it outside your local network: even while it provides read-only access to your media gallery and has basic user authentication functionality, it is not enough to protect your private media from malicious actors on the Internet.
+I suggest securing the Photoview instance before exposing it outside your local network: even while it provides read-only access to your media gallery and has basic user authentication functionality, it is not enough to protect your private media from malicious actors on the Internet.
 
 Possible ways of securing a self-hosted service might be (but not limited to):
 
@@ -185,45 +196,3 @@ npm start
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
 And the graphql playground at [localhost:4001](http://localhost:4001)
-
-## Sponsors
-
-<table>
-<tr>
-  <td>
-    <a href="https://github.com/ericerkz">
-      <img src="https://avatars.githubusercontent.com/u/79728329?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@ericerkz</b>
-    </a>
-  </td>
-  <td>
-    <a href="https://github.com/robin-moser">
-      <img src="https://avatars.githubusercontent.com/u/26254821?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@robin-moser</b>
-    </a>
-  </td>
-  <td>
-    <a href="https://github.com/Revorge">
-      <img src="https://avatars.githubusercontent.com/u/32901816?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@Revorge</b>
-    </a>
-  </td>
-  <td>
-    <a href="https://github.com/deexno">
-      <img src="https://avatars.githubusercontent.com/u/50229919?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@deexno</b>
-    </a>
-  </td>
-  <td>
-    <a href="https://github.com/FKrauss">
-      <img src="https://avatars.githubusercontent.com/u/4820683?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@FKrauss</b>
-    </a>
-  </td>
-  <td>
-    <a href="https://github.com/jupblb">
-      <img src="https://avatars.githubusercontent.com/u/3370617?v=4" height="auto" width="100" style="border-radius:50%"><br/>
-      <b>@jupblb</b>
-    </a>
-  </td>
-</table>
