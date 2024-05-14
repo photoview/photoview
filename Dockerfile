@@ -85,7 +85,7 @@ COPY --from=ui /app/dist /app/ui
 COPY --from=api /app/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
-ENV PHOTOVIEW_LISTEN_PORT 8080
+ENV PHOTOVIEW_LISTEN_PORT 80
 
 ENV PHOTOVIEW_SERVE_UI 1
 ENV PHOTOVIEW_UI_PATH /app/ui
