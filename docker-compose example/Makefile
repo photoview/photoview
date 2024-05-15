@@ -32,6 +32,8 @@ help:
 	@echo '             in the ${HOST_PHOTOVIEW_BACKUP}/<date of execution> using .tar.xz by default.'
 	@echo '             If you want to use 7zz instead (which is faster), read the comment on top of the target script.'
 	@echo '   pull      Pulls fresh Docker images from the Registry.'
+	@echo '   readable  Makes sure that the ${HOST_PHOTOVIEW_MEDIA_ROOT} and all its files and subdirectories'
+	@echo '             are searchable and readable by other users.'
 	@echo '   terminal  Starts a Bash shell session inside the `photoview` container for troubleshooting.'
 	@echo '   logs      Shows the last 100 lines (if the command not modified) from the log,'
 	@echo '             stays listening for new lines, and shows them interactively. Ctrl + C to exit.'
@@ -55,6 +57,7 @@ start:
 	@## The next line is for SQLite
 	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database
 	mkdir -p ${HOST_PHOTOVIEW_LOCATION}/storage
+	chmod 777 ${HOST_PHOTOVIEW_LOCATION}/storage
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 	@## Uncomment the next line if you want to run an automatic cleanup of Docker leftovers
 	@## Make sure to read the Docker documentation to understand how it works
@@ -70,6 +73,9 @@ terminal:
 	$(DOCKER_COMPOSE) exec photoview bash
 logs:
 	$(DOCKER_COMPOSE) logs --tail=100 -f
+readable:
+	find ${HOST_PHOTOVIEW_MEDIA_ROOT} -type d -exec chmod o+rx {} \;
+	find ${HOST_PHOTOVIEW_MEDIA_ROOT} -type f -exec chmod o+r {} \;
 ## By default the `backup` uses PostgreSQL. If you use SQLite or MariaDB, replace the `backup-postgres` with corresponding target
 ## keeping the order of the calls the same
 ## -----------------------
