@@ -159,7 +159,7 @@ services:
 #      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
 #      - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
 #    healthcheck:
-#      test: ["CMD", "pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+#      test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
 #      interval: 1m
 #      timeout: 5s
 #      retries: 5
