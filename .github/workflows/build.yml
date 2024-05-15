@@ -53,6 +53,12 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
+      - name: Set Build Args
+        id: vars
+        run: |
+          echo "BUILD_DATE=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "VERSION=kkoval-2-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
       - name: Build and push
         id: docker_buildx
         uses: docker/build-push-action@v5
@@ -68,9 +74,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            BUILD_DATE=$(date +%Y-%m-%d)
-            REACT_APP_BUILD_DATE=$(date +%Y-%m-%d)
-            VERSION=kkoval-2-$(date +%Y-%m-%d)
-            REACT_APP_BUILD_VERSION=kkoval-2-$(date +%Y-%m-%d)
+            BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
+            REACT_APP_BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
+            VERSION=${{ steps.vars.outputs.VERSION }}
+            REACT_APP_BUILD_VERSION=${{ steps.vars.outputs.VERSION }}
             COMMIT_SHA=${{ github.sha }}
             REACT_APP_BUILD_COMMIT_SHA=${{ github.sha }}
