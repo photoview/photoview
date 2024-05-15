@@ -7,4 +7,4 @@ assignees: ''
 
 ---
 
-> Note that if you have a question please use the [Discussions](https://github.com/photoview/photoview/discussions) instead
+> Note that if you have a question please use the [Discussions](https://github.com/kkovaletp/photoview/discussions) instead

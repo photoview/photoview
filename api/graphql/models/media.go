@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )

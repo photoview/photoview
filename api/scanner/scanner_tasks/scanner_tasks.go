@@ -3,11 +3,11 @@ package scanner_tasks
 import (
 	"io/fs"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/media_encoding"
-	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
-	"github.com/photoview/photoview/api/scanner/scanner_tasks/processing_tasks"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_tasks/cleanup_tasks"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_tasks/processing_tasks"
 )
 
 var allTasks []scanner_task.ScannerTask = []scanner_task.ScannerTask{

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_queue"
 	"gorm.io/gorm"
 )
 

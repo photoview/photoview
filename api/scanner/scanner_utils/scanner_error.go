@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/graphql/notification"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/notification"
+	"github.com/kkovaletp/photoview/api/utils"
 )
 
 func ScannerError(format string, args ...interface{}) {

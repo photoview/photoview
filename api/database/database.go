@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/photoview/photoview/api/database/drivers"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/database/drivers"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/utils"
 	"github.com/pkg/errors"
 
 	"github.com/go-sql-driver/mysql"

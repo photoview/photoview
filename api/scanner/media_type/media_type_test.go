@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/kkovaletp/photoview/api/scanner/media_type"
+	"github.com/kkovaletp/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 

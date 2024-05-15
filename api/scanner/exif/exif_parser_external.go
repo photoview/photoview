@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/barasher/go-exiftool"
-	"github.com/photoview/photoview/api/dataloader"
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/dataloader"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 )
 
 type externalExifParser struct {

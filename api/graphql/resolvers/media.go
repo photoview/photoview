@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/photoview/photoview/api/dataloader"
-	api "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/graphql/models/actions"
-	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/kkovaletp/photoview/api/dataloader"
+	api "github.com/kkovaletp/photoview/api/graphql"
+	"github.com/kkovaletp/photoview/api/graphql/auth"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models/actions"
+	"github.com/kkovaletp/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 )
 

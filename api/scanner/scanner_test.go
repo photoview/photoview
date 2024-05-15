@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/face_detection"
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/face_detection"
+	"github.com/kkovaletp/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 

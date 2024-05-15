@@ -6,8 +6,8 @@ import (
 	"path"
 	"sync"
 
-	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
+	"github.com/kkovaletp/photoview/api/scanner/media_type"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 )
 

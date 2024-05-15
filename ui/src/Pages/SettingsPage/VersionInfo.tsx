@@ -17,7 +17,7 @@ if (COMMIT_SHA) {
   commitLink = React.createElement(
     'a',
     {
-      href: 'https://github.com/photoview/photoview/commit/' + COMMIT_SHA,
+      href: 'https://github.com/kkovaletp/photoview/commit/' + COMMIT_SHA,
       title: COMMIT_SHA,
     },
     COMMIT_SHA.substring(0, 8)

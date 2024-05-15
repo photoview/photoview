@@ -9,10 +9,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/media_encoding"
-	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 )
 

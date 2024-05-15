@@ -3,7 +3,7 @@ package dataloader
 import (
 	"time"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 

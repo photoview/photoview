@@ -8,10 +8,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	api "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/graphql/models/actions"
+	api "github.com/kkovaletp/photoview/api/graphql"
+	"github.com/kkovaletp/photoview/api/graphql/auth"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models/actions"
 	"golang.org/x/crypto/bcrypt"
 )
 

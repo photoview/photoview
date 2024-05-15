@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 )
 
 type ExifParser interface {

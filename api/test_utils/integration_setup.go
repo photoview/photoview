@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/utils"
 	"gorm.io/gorm"
 )
 

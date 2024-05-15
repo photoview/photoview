@@ -5,9 +5,9 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/scanner_cache"
-	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_cache"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
 )
 
 var _ = flag.Bool("database", false, "run database integration tests")

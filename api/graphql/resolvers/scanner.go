@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/photoview/photoview/api/database/drivers"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/periodic_scanner"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/kkovaletp/photoview/api/database/drivers"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/periodic_scanner"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_queue"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )

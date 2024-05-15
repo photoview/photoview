@@ -3,8 +3,8 @@ package actions
 import (
 	"strings"
 
-	"github.com/photoview/photoview/api/database/drivers"
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/database/drivers"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

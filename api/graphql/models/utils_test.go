@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 	"github.com/stretchr/testify/assert"
 )
 

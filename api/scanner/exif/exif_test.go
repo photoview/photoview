@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/barasher/go-exiftool"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/exif"
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/exif"
+	"github.com/kkovaletp/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 

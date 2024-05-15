@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/kkovaletp/photoview/api/graphql/auth"
+	"github.com/kkovaletp/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 

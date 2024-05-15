@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"log"
 
-	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
 	ignore "github.com/sabhiram/go-gitignore"
 )
 

@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	api "github.com/photoview/photoview/api/graphql"
+	api "github.com/kkovaletp/photoview/api/graphql"
 	"gorm.io/gorm"
 )
 

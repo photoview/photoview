@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 	"github.com/pkg/errors"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"

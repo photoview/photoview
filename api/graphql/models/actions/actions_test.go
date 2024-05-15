@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/kkovaletp/photoview/api/test_utils"
 )
 
 func TestMain(m *testing.M) {

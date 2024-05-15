@@ -3,8 +3,8 @@ package test_utils
 import (
 	"testing"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_queue"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )

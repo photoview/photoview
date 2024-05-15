@@ -23,14 +23,14 @@ models:
   ID:
     model: github.com/99designs/gqlgen/graphql.IntID
   User:
-    model: github.com/photoview/photoview/api/graphql/models.User
+    model: github.com/kkovaletp/photoview/api/graphql/models.User
     fields:
       albums:
         resolver: true
   UserPreferences:
-    model: github.com/photoview/photoview/api/graphql/models.UserPreferences
+    model: github.com/kkovaletp/photoview/api/graphql/models.UserPreferences
   Media:
-    model: github.com/photoview/photoview/api/graphql/models.Media
+    model: github.com/kkovaletp/photoview/api/graphql/models.Media
     fields:
       exif:
         resolver: true
@@ -41,30 +41,30 @@ models:
       album:
         resolver: true
   MediaURL:
-    model: github.com/photoview/photoview/api/graphql/models.MediaURL
+    model: github.com/kkovaletp/photoview/api/graphql/models.MediaURL
   MediaEXIF:
-    model: github.com/photoview/photoview/api/graphql/models.MediaEXIF
+    model: github.com/kkovaletp/photoview/api/graphql/models.MediaEXIF
   VideoMetadata:
-    model: github.com/photoview/photoview/api/graphql/models.VideoMetadata
+    model: github.com/kkovaletp/photoview/api/graphql/models.VideoMetadata
   Album:
-    model: github.com/photoview/photoview/api/graphql/models.Album
+    model: github.com/kkovaletp/photoview/api/graphql/models.Album
   ShareToken:
-    model: github.com/photoview/photoview/api/graphql/models.ShareToken
+    model: github.com/kkovaletp/photoview/api/graphql/models.ShareToken
   FaceGroup:
-    model: github.com/photoview/photoview/api/graphql/models.FaceGroup
+    model: github.com/kkovaletp/photoview/api/graphql/models.FaceGroup
     fields:
       imageFaces:
         resolver: true
   ImageFace:
-    model: github.com/photoview/photoview/api/graphql/models.ImageFace
+    model: github.com/kkovaletp/photoview/api/graphql/models.ImageFace
     fields:
       faceGroup:
         resolver: true
       media:
         resolver: true
   FaceRectangle:
-    model: github.com/photoview/photoview/api/graphql/models.FaceRectangle
+    model: github.com/kkovaletp/photoview/api/graphql/models.FaceRectangle
   SiteInfo:
-    model: github.com/photoview/photoview/api/graphql/models.SiteInfo
+    model: github.com/kkovaletp/photoview/api/graphql/models.SiteInfo
   MediaType:
-    model: github.com/photoview/photoview/api/graphql/models.MediaType
+    model: github.com/kkovaletp/photoview/api/graphql/models.MediaType

@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/kkovaletp/photoview/api/graphql/auth"
 )
 
 func IsAdmin(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 )
 
 // UserLoaderConfig captures the config to create a new UserLoader

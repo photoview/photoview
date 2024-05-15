@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
-	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding/media_utils"
+	"github.com/kkovaletp/photoview/api/scanner/media_type"
+	"github.com/kkovaletp/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 

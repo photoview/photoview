@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/Kagami/go-face"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )

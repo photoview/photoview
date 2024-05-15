@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 )
 
 type NotificationChannel = chan<- *models.Notification

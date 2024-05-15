@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/photoview/photoview/api/database/drivers"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
+	"github.com/kkovaletp/photoview/api/database/drivers"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )

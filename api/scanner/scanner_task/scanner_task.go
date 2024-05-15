@@ -6,9 +6,9 @@ import (
 	"flag"
 	"io/fs"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/media_encoding"
-	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_cache"
 	"gorm.io/gorm"
 )
 

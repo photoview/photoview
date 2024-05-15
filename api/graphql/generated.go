@@ -16,7 +16,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/graphql/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -6041,7 +6041,7 @@ func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql
 		if data, ok := tmp.(*models.ScannerResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ScannerResult`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ScannerResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6115,7 +6115,7 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 		if data, ok := tmp.(*models.ScannerResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ScannerResult`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ScannerResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6200,7 +6200,7 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 		if data, ok := tmp.(*models.ShareToken); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ShareToken`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ShareToken`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6291,7 +6291,7 @@ func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field grap
 		if data, ok := tmp.(*models.ShareToken); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ShareToken`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ShareToken`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6382,7 +6382,7 @@ func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, fiel
 		if data, ok := tmp.(*models.ShareToken); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ShareToken`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ShareToken`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6473,7 +6473,7 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 		if data, ok := tmp.(*models.ShareToken); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.ShareToken`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.ShareToken`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6564,7 +6564,7 @@ func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field g
 		if data, ok := tmp.(*models.Media); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Media`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.Media`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6673,7 +6673,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6760,7 +6760,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6847,7 +6847,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6934,7 +6934,7 @@ func (ec *executionContext) _Mutation_userAddRootPath(ctx context.Context, field
 		if data, ok := tmp.(*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7028,7 +7028,7 @@ func (ec *executionContext) _Mutation_userRemoveRootAlbum(ctx context.Context, f
 		if data, ok := tmp.(*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7272,7 +7272,7 @@ func (ec *executionContext) _Mutation_setThumbnailDownsampleMethod(ctx context.C
 		if data, ok := tmp.(models.ThumbnailFilter); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/kkovaletp/photoview/api/graphql/models.ThumbnailFilter`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7347,7 +7347,7 @@ func (ec *executionContext) _Mutation_changeUserPreferences(ctx context.Context,
 		if data, ok := tmp.(*models.UserPreferences); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.UserPreferences`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.UserPreferences`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7428,7 +7428,7 @@ func (ec *executionContext) _Mutation_resetAlbumCover(ctx context.Context, field
 		if data, ok := tmp.(*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7525,7 +7525,7 @@ func (ec *executionContext) _Mutation_setAlbumCover(ctx context.Context, field g
 		if data, ok := tmp.(*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7622,7 +7622,7 @@ func (ec *executionContext) _Mutation_setFaceGroupLabel(ctx context.Context, fie
 		if data, ok := tmp.(*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7707,7 +7707,7 @@ func (ec *executionContext) _Mutation_combineFaceGroups(ctx context.Context, fie
 		if data, ok := tmp.(*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7792,7 +7792,7 @@ func (ec *executionContext) _Mutation_moveImageFaces(ctx context.Context, field 
 		if data, ok := tmp.(*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7877,7 +7877,7 @@ func (ec *executionContext) _Mutation_recognizeUnlabeledFaces(ctx context.Contex
 		if data, ok := tmp.([]*models.ImageFace); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.ImageFace`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.ImageFace`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7951,7 +7951,7 @@ func (ec *executionContext) _Mutation_detachImageFaces(ctx context.Context, fiel
 		if data, ok := tmp.(*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8438,7 +8438,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		if data, ok := tmp.([]*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8525,7 +8525,7 @@ func (ec *executionContext) _Query_myUser(ctx context.Context, field graphql.Col
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8601,7 +8601,7 @@ func (ec *executionContext) _Query_myUserPreferences(ctx context.Context, field 
 		if data, ok := tmp.(*models.UserPreferences); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.UserPreferences`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.UserPreferences`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8671,7 +8671,7 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 		if data, ok := tmp.([]*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8845,7 +8845,7 @@ func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.Co
 		if data, ok := tmp.([]*models.Media); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Media`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.Media`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9132,7 +9132,7 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 		if data, ok := tmp.([]*models.Media); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Media`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.Media`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9535,7 +9535,7 @@ func (ec *executionContext) _Query_myFaceGroups(ctx context.Context, field graph
 		if data, ok := tmp.([]*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9620,7 +9620,7 @@ func (ec *executionContext) _Query_faceGroup(ctx context.Context, field graphql.
 		if data, ok := tmp.(*models.FaceGroup); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/photoview/photoview/api/graphql/models.FaceGroup`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/kkovaletp/photoview/api/graphql/models.FaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10775,7 +10775,7 @@ func (ec *executionContext) _SiteInfo_thumbnailMethod(ctx context.Context, field
 		if data, ok := tmp.(models.ThumbnailFilter); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/kkovaletp/photoview/api/graphql/models.ThumbnailFilter`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11235,7 +11235,7 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		if data, ok := tmp.([]*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11321,7 +11321,7 @@ func (ec *executionContext) _User_rootAlbums(ctx context.Context, field graphql.
 		if data, ok := tmp.([]*models.Album); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/photoview/photoview/api/graphql/models.Album`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/kkovaletp/photoview/api/graphql/models.Album`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

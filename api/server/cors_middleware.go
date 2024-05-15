@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/utils"
 )
 
 func CORSMiddleware(devMode bool) mux.MiddlewareFunc {

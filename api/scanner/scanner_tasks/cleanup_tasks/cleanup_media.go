@@ -5,10 +5,10 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/face_detection"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/face_detection"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_utils"
+	"github.com/kkovaletp/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )

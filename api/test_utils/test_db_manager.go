@@ -1,7 +1,7 @@
 package test_utils
 
 import (
-	"github.com/photoview/photoview/api/database"
+	"github.com/kkovaletp/photoview/api/database"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )

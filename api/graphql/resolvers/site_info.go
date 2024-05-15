@@ -3,9 +3,9 @@ package resolvers
 import (
 	"context"
 
-	api "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/face_detection"
+	api "github.com/kkovaletp/photoview/api/graphql"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/face_detection"
 )
 
 func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {

@@ -3,9 +3,9 @@ package scanner_tasks
 import (
 	"log"
 
-	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/exif"
-	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/kkovaletp/photoview/api/graphql/models"
+	"github.com/kkovaletp/photoview/api/scanner/exif"
+	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
 )
 
 type ExifTask struct {

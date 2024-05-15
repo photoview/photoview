@@ -7,10 +7,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	photoview_graphql "github.com/photoview/photoview/api/graphql"
-	"github.com/photoview/photoview/api/graphql/resolvers"
-	"github.com/photoview/photoview/api/server"
-	"github.com/photoview/photoview/api/utils"
+	photoview_graphql "github.com/kkovaletp/photoview/api/graphql"
+	"github.com/kkovaletp/photoview/api/graphql/resolvers"
+	"github.com/kkovaletp/photoview/api/server"
+	"github.com/kkovaletp/photoview/api/utils"
 	"gorm.io/gorm"
 )
 

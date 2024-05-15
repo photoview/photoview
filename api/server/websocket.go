@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/gorilla/websocket"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/utils"
 )
 
 func WebsocketUpgrader(devMode bool) websocket.Upgrader {

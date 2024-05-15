@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/photoview/photoview/api/graphql/auth"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/kkovaletp/photoview/api/graphql/auth"
+	"github.com/kkovaletp/photoview/api/utils"
 )
 
 type geoMedia struct {

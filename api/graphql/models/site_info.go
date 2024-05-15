@@ -1,7 +1,7 @@
 package models
 
 import (
-	db_drivers "github.com/photoview/photoview/api/database/drivers"
+	db_drivers "github.com/kkovaletp/photoview/api/database/drivers"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
