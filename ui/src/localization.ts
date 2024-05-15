@@ -185,6 +185,9 @@ export const SetMapLanguages = (map: mapboxgl.Map) => {
     case LanguageTranslation.Spanish:
       map.addControl(new MapboxLanguage({ defaultLanguage: 'es' }))
       return
+    case LanguageTranslation.Ukrainian:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'ua' }))
+      return
     case LanguageTranslation.Polish:
       map.addControl(new MapboxLanguage({ defaultLanguage: 'pl' }))
       return
