@@ -12,6 +12,9 @@ testing.env
 
 # docker
 docker-compose.yml
+/Makefile
+storage
+database
 
 # dependencies
 node_modules/
