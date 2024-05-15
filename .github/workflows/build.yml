@@ -54,6 +54,7 @@ jobs:
             type=sha
 
       - name: Build and push
+        id: docker_buildx
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -66,3 +67,10 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=$(date +%Y-%m-%d)
+            REACT_APP_BUILD_DATE=$(date +%Y-%m-%d)
+            VERSION=kkoval-2-$(date +%Y-%m-%d)
+            REACT_APP_BUILD_VERSION=kkoval-2-$(date +%Y-%m-%d)
+            COMMIT_SHA=${{ github.sha }}
+            REACT_APP_BUILD_COMMIT_SHA=${{ github.sha }}
