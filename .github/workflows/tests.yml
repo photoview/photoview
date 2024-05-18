@@ -60,6 +60,9 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
 
+      - name: Fetch branches
+        run: git fetch --all
+
       - name: Cache Go dependencies
         uses: actions/cache@v4
         with:
@@ -103,13 +106,23 @@ jobs:
           cp ../.github/sqlite.testing.env testing.env
 
       - name: Test
-        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        if: always()
         with:
           flags: api
           token: ${{ secrets.CODECOV_TKN }}
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        if: always() && github.repository == 'kkovaletp/photoview'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_API }}
+        with:
+          projectBaseDir: api/
 
   test-ui:
     name: Test UI
@@ -121,11 +134,14 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Fetch branches
+        run: git fetch --all
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -137,6 +153,16 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
+      - name: NPM audit
+        uses: oke-py/npm-audit-action@v2
+        with:
+          audit_level: none
+          create_issues: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dedupe_issues: true
+          production_flag: true
+          working_directory: ui
+
       - name: Test
         run: npm run test:ci
 
@@ -145,3 +171,27 @@ jobs:
         with:
           flags: ui
           token: ${{ secrets.CODECOV_TKN }}
+
+      - name: Run ESLint
+        run: |
+          npm clean-install --include dev
+          npm run lint:ci || true
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        if: always() && github.repository == 'kkovaletp/photoview'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_UI }}
+        with:
+          projectBaseDir: ui/
+
+      - name: Run Coverity Scan
+        uses: vapier/coverity-scan-action@v1
+        if: always() && github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
+        with:
+          email: ${{ secrets.COVERITY_SCAN_EMAIL }}
+          token: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          build_language: "javascript"
+          working-directory: 'ui'
+          command: '--no-command --fs-capture-search ./src/'

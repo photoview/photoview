@@ -53,3 +53,192 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+
+  anchore:
+    name: Anchore scan code dependencies
+    if: github.repository == 'kkovaletp/photoview'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate report
+        id: scan
+        uses: anchore/scan-action@v3
+        with:
+          path: "."
+          fail-build: false
+          add-cpes-if-none: true
+
+      - name: Upload report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
+      - name: Scan PR source code
+        id: scan-fixed
+        uses: anchore/scan-action@v3
+        if: always() && github.event_name == 'pull_request'
+        with:
+          path: "."
+          fail-build: false
+          add-cpes-if-none: true
+          output-format: json
+          severity-cutoff: high
+          only-fixed: true
+
+      - name: Prepare JSON
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          jq '{
+            "|": .matches | map({
+              "language": .artifact.language,
+              "id": .vulnerability.id,
+              "severity": .vulnerability.severity,
+              "name": .artifact.name,
+              "version": .artifact.version,
+              "fix-versions": .vulnerability.fix.versions[0],
+              "path": .artifact.locations[0].path,
+              "description": .vulnerability.description
+            })
+          }' ${{ steps.scan-fixed.outputs.json }} > vulns.json
+          cat vulns.json | jq
+
+      - name: JSON to Table
+        uses: Teebra/JSON-to-HTML-table@v2.0.0
+        if: always() && github.event_name == 'pull_request'
+        with:
+          json-file: vulns.json
+
+      - name: Update Pull Request
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            let scanResults = fs.readFileSync('output.html', 'utf8');
+            let output = '';
+
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Anchore'));
+
+            output += '#### Anchore Grype scan results:\n';
+            output += 'Anchore Grype detected vulnerabilities in project dependencies, for which fixed versions are available.\n';
+            output += 'Please find more details in the "Checks" tab of this PR > "Code scanning results" > "Grype".\n';
+
+            if (scanResults) {
+              output += '\n' + scanResults + '\n';
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              }
+            } else {
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+              }
+            }
+
+  hadolint:
+    name: Hadolint Dockerfile
+    if: github.repository == 'kkovaletp/photoview'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        id: hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Generate report
+        uses: hadolint/hadolint-action@v3.1.0
+        if: always()
+        with:
+          dockerfile: Dockerfile
+          output-file: hadolint.sarif
+          format: sarif
+          failure-threshold: ignore
+
+      - name: Upload report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: hadolint.sarif
+
+      - name: Update Pull Request
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            let hadolintResults = process.env.HADOLINT_RESULTS;
+            let hadolintOutcome = "${{ steps.hadolint.outcome }}";
+            let output = '';
+
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Hadolint'));
+
+            if (hadolintOutcome === 'success') {
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+              }
+            }else if (hadolintOutcome === 'failure') {
+
+              output += '#### Hadolint: ' + hadolintOutcome + '\n';
+              output += 'Hadolint detected issues during execution.\n';
+  
+              if (hadolintResults) {
+                output += '\n```\n' + hadolintResults + '\n```\n';
+                output += '\nFind more info about detected issues and recommendations for fixes in the [Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
+              }
+  
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              }
+            }

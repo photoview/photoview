@@ -22,6 +22,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fetch branches
+        run: git fetch --all
+
+      - name: Hadolint report
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          output-file: hadolint.json
+          format: json
+          failure-threshold: ignore
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        if: github.repository == 'kkovaletp/photoview'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_DOCKER }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -80,3 +98,35 @@ jobs:
             REACT_APP_BUILD_VERSION=${{ steps.vars.outputs.VERSION }}
             COMMIT_SHA=${{ github.sha }}
             REACT_APP_BUILD_COMMIT_SHA=${{ github.sha }}
+
+  dockle:
+    name: Dockle Container Analysis
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
+    steps:
+       # Makes sure your .dockleignore file is available to the next step
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Run Dockle
+        uses: erzz/dockle-action@v1
+        with:
+          image: kkoval/photoview:master
+          report-name: dockle-results
+          report-format: sarif
+          failure-threshold: fatal
+          exit-code: 1
+          timeout: 5m
+
+      - name: Upload SARIF file
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dockle-results.sarif
