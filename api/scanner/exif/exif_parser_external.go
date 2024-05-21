@@ -4,7 +4,9 @@ import (
 	"log"
 	"math"
 	"time"
+	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
