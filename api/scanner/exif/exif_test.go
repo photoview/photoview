@@ -75,6 +75,22 @@ func TestExifParsers(t *testing.T) {
 				assert.Nil(t, exif.Exposure)
 			},
 		},
+		{
+			path: "./test_data/IncorrectGPS.jpg",
+			assert: func(t *testing.T, exif *models.MediaEXIF) {
+				assert.Nil(t, exif.GPSLatitude)
+				assert.Nil(t, exif.GPSLongitude)
+			},
+		},
+		{
+			path: "./test_data/CorrectGPS.jpg",
+			assert: func(t *testing.T, exif *models.MediaEXIF) {
+				assert.NotNil(t, exif.GPSLatitude)
+				assert.NotNil(t, exif.GPSLongitude)
+				assert.True(t, *exif.GPSLatitude >= -90 && *exif.GPSLatitude <= 90)
+				assert.True(t, *exif.GPSLongitude >= -90 && *exif.GPSLongitude <= 90)
+			},
+		},
 	}
 
 	for _, p := range parsers {

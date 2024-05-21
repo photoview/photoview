@@ -196,6 +196,14 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 		newExif.GPSLatitude = &latitudeRaw
 	}
 
+	// **Added GPS data validation**
+	// https://github.com/photoview/photoview/issues/850
+	if found_exif && (latitudeRaw < -90 || latitudeRaw > 90 || longitudeRaw < -90 || longitudeRaw > 90) {
+		returnErr = errors.New(fmt.Sprintf("Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'", media_path, longitudeRaw, latitudeRaw))
+		newExif.GPSLatitude = nil
+		newExif.GPSLongitude = nil
+	}
+
 	if !found_exif {
 		return nil, nil
 	}
