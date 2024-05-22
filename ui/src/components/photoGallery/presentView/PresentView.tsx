@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { useRef } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
@@ -15,7 +16,7 @@ const StyledContainer = styled.div`
   left: 0;
   z-index: 100;
 `
-
+ 
 const PreventScroll = createGlobalStyle`
   * {
     overflow: hidden !important;
@@ -37,6 +38,13 @@ const PresentView = ({
   dispatchMedia,
   disableSaveCloseInHistory,
 }: PresentViewProps) => {
+  const videoRef = useRef(null);
+
+  const setVideo = (ref) => {
+    videoRef.current = ref;
+    console.log("passed");
+  };
+
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
       if (e.key == 'ArrowRight') {
@@ -51,7 +59,6 @@ const PresentView = ({
 
       if (e.key == 'Escape') {
         e.stopPropagation()
-
         if (disableSaveCloseInHistory === true) {
           dispatchMedia({ type: 'closePresentMode' })
         } else {
@@ -67,14 +74,17 @@ const PresentView = ({
     }
   })
 
-  return (
+
+  return ( 
     <StyledContainer className={className}>
       <PreventScroll />
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}
         disableSaveCloseInHistory
+        activeMedia={activeMedia}
+        videoRef={videoRef}
       >
-        <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
+        <PresentMedia media={activeMedia} imageLoaded={imageLoaded} setVideo={setVideo}/>
       </PresentNavigationOverlay>
     </StyledContainer>
   )

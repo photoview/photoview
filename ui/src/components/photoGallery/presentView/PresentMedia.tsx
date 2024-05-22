@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import styled from 'styled-components'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { exhaustiveCheck } from '../../../helpers/utils'
@@ -31,6 +31,7 @@ type PresentMediaProps = {
 const PresentMedia = ({
   media,
   imageLoaded,
+  setVideo,
   ...otherProps
 }: PresentMediaProps) => {
   switch (media.type) {
@@ -56,7 +57,7 @@ const PresentMedia = ({
         </div>
       )
     case MediaType.Video:
-      return <StyledVideo media={media} data-testid="present-video" />
+      return <StyledVideo media={media} setVideo={setVideo} data-testid="present-video" />
   }
 
   exhaustiveCheck(media.type)

@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react'
 import { MediaGalleryFields } from './__generated__/MediaGalleryFields'
+import { MediaType } from '../../__generated__/globalTypes'
+
 
 export interface MediaGalleryState {
+  videoMedia: number[]
   presenting: boolean
   activeIndex: number
   media: MediaGalleryFields[]
@@ -65,6 +68,34 @@ export function mediaGalleryReducer(
         media: action.media,
         activeIndex: -1,
         presenting: false,
+      }
+    case 'nextSlidePhoto':
+      if (state.videoMedia.length != state.media.length){
+        let a = (state.activeIndex + 1) % state.media.length;
+        while (state.media[a].type !== MediaType.Photo)
+          a = (a + 1) % state.media.length;
+        return {
+          ...state,
+          activeIndex: a,
+        }
+      } else {
+        return {
+          ...state,
+        }
+      }
+    case 'nextSlideVideo':
+      if (state.videoMedia.length > 0) {
+        let b = (state.activeIndex + 1) % state.media.length;
+        while (state.media[b].type !== MediaType.Video)
+          b = (b + 1) % state.media.length;
+        return {
+          ...state,
+          activeIndex: b, 
+        }
+      } else {
+        return {
+          ...state,
+        }
       }
   }
 }
