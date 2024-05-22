@@ -65,6 +65,30 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
+func extractValidGpsData(fileInfo) (GPSLat float, GPSLong float, returnErr error) {
+  	// GPS coordinates - longitude
+	longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
+	if err == nil {
+		found_exif = true
+		GPSLong = &longitudeRaw
+	}
+
+	// GPS coordinates - latitude
+	latitudeRaw, err := fileInfo.GetFloat("GPSLatitude")
+	if err == nil {
+		found_exif = true
+		GPSLat = &latitudeRaw
+	}
+
+  // GPS data validation
+  if found_exif && (math.Abs(latitudeRaw) > 90 || math.Abs(longitudeRaw) > 90) {
+		returnErr = errors.New(fmt.Sprintf("Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'", media_path, longitudeRaw, latitudeRaw))
+		GPSLat = nil
+		GPSLong = nil
+	}
+  return GPSLat, GPSLong, returnErr
+}
+
 func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
 	// ExifTool - No print conversion mode
 	if p.et == nil {
@@ -184,27 +208,8 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 		newExif.ExposureProgram = &expProgram
 	}
 
-	// GPS coordinates - longitude
-	longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
-	if err == nil {
-		found_exif = true
-		newExif.GPSLongitude = &longitudeRaw
-	}
-
-	// GPS coordinates - latitude
-	latitudeRaw, err := fileInfo.GetFloat("GPSLatitude")
-	if err == nil {
-		found_exif = true
-		newExif.GPSLatitude = &latitudeRaw
-	}
-
-	// **Added GPS data validation**
-	// https://github.com/photoview/photoview/issues/850
-	if found_exif && (latitudeRaw < -90 || latitudeRaw > 90 || longitudeRaw < -90 || longitudeRaw > 90) {
-		returnErr = errors.New(fmt.Sprintf("Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'", media_path, longitudeRaw, latitudeRaw))
-		newExif.GPSLatitude = nil
-		newExif.GPSLongitude = nil
-	}
+	// Get GPS data
+	newExif.GPSLatitude, newExif.GPSLongitude, returnErr := extractValidGpsData(fileInfo)
 
 	if !found_exif {
 		return nil, nil
