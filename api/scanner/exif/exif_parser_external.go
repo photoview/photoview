@@ -65,8 +65,10 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
-func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (GPSLat *float64, GPSLong *float64, returnErr error) {
+func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*float64, *float64, error) {
   var found_exif bool
+  var GPSLat, GPSLong *float64
+  var returnErr error
 
   // GPS coordinates - longitude
 	longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
