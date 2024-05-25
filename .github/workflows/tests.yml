@@ -185,13 +185,3 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_UI }}
         with:
           projectBaseDir: ui/
-
-      - name: Run Coverity Scan
-        uses: vapier/coverity-scan-action@v1
-        if: always() && github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
-        with:
-          email: ${{ secrets.COVERITY_SCAN_EMAIL }}
-          token: ${{ secrets.COVERITY_SCAN_TOKEN }}
-          build_language: "javascript"
-          working-directory: 'ui'
-          command: '--no-command --fs-capture-search ./src/'

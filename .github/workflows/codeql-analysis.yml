@@ -242,3 +242,174 @@ jobs:
                 });
               }
             }
+
+  coverity:
+    name: Coverity Scan
+    runs-on: ubuntu-latest
+    if: github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
+    env:
+      COV_PROJECT: kkovaletp%2Fphotoview
+    steps:
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.16
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Fetch branches
+        shell: bash
+        run: git fetch --all
+
+      - name: Cache Go dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Get C dependencies
+        shell: bash
+        run: |
+          sudo add-apt-repository ppa:strukturag/libheif
+          sudo add-apt-repository ppa:strukturag/libde265
+          sudo apt-get update
+          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+
+      - name: Get GO dependencies
+        shell: bash
+        working-directory: api
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+        # Coverity steps are based on the https://github.com/vapier/coverity-scan-action/blob/main/action.yml
+        # and the https://github.com/vapier/coverity-scan-action/pull/3/files
+
+        # The Coverity site says the tool is usually updated twice yearly, so the
+        # md5 of download can be used to determine whether there's been an update.
+      - name: Lookup Coverity Build Tool hash
+        id: coverity-cache-lookup
+        shell: bash
+        run: |
+          echo "hash=$(curl https://scan.coverity.com/download/other/linux64 \
+            --data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ env.COV_PROJECT }}&md5=1")" >> $GITHUB_OUTPUT
+        
+      # Try to cache the tool to avoid downloading 1GB+ archive on every run.
+      # Cache miss will add ~30s to create, but cache hit will save minutes.
+      - name: Cache Coverity Analysis Tool
+        id: cov-analysis-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/cov-analysis
+          key: cov-analysis-linux64-${{ steps.coverity-cache-lookup.outputs.hash }}
+
+      # Download and unpack the binaries, configure to use our GO compiler
+      - name: Install Coverity Analysis Tool
+        if: steps.cov-analysis-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl https://scan.coverity.com/download/other/linux64 \
+            --no-progress-meter \
+            --output cov-analysis.tar.gz \
+            --data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ env.COV_PROJECT }}"
+          mkdir ./cov-analysis
+          tar -xzf ./cov-analysis.tar.gz --strip 1 -C ./cov-analysis
+          rm ./cov-analysis.tar.gz
+          export PATH="${{ github.workspace }}/cov-analysis/bin:${PATH}"
+          cov-configure --comptype go --compiler $(which go)
+
+      # Register Coverity executables in system PATH
+      - name: Add Coverity Analysis Tool to PATH
+        shell: bash
+        run: |
+          echo "${{ github.workspace }}/cov-analysis/bin" >> $GITHUB_PATH
+
+      # Build and capture API code
+      - name: Build API with cov-build
+        shell: bash
+        working-directory: api
+        run: |
+          cov-build --dir ${{ github.workspace }}/cov-int \
+            --return-emit-failures \
+            --fs-capture-search ./ go build -v .
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI dependencies
+        shell: bash
+        working-directory: ui
+        run: npm ci --omit=dev --ignore-scripts
+
+      # Build and capture UI code
+      - name: Build UI with cov-build
+        shell: bash
+        working-directory: ui
+        run: |
+          cov-build --dir ${{ github.workspace }}/cov-int \
+            --return-emit-failures \
+            --fs-capture-search ./ npm run build -- --base=/
+
+      # Run FS capture for the rest of the files in the project
+      - name: Scan whole project with fs-capture
+        shell: bash
+        run: |
+          cov-build --dir ${{ github.workspace }}/cov-int \
+            --return-emit-failures --no-command \
+            --fs-capture-search ./
+
+      # Remove unnecessary captures from the Coverity results before sending them for analysis
+      # Extract 'git blame' info for captured files
+      - name: Prepare collected results
+        shell: bash
+        run: |
+          cov-manage-emit --dir ${{ github.workspace }}/cov-int \
+            --verbose 2 \
+            --tu-pattern "file('/.vscode/')" \
+            --tu-pattern "file('_test.go')" \
+            --tu-pattern "file('/node_modules/')" \
+            --tu-pattern "file('/testing/')" \
+            --tu-pattern "file('.test.tsx')" \
+            --tu-pattern "file('/cov-analysis/')" \
+            --tu-pattern "file('/cov-int/')" \
+            --tu-pattern "file('/home/runner/go/pkg/')" \
+            list
+          cov-manage-emit --dir ${{ github.workspace }}/cov-int \
+            --verbose 2 \
+            --tu-pattern "file('/.vscode/')" \
+            --tu-pattern "file('_test.go')" \
+            --tu-pattern "file('/node_modules/')" \
+            --tu-pattern "file('/testing/')" \
+            --tu-pattern "file('.test.tsx')" \
+            --tu-pattern "file('/cov-analysis/')" \
+            --tu-pattern "file('/cov-int/')" \
+            --tu-pattern "file('/home/runner/go/pkg/')" \
+            delete
+          cov-import-scm --scm git \
+            --dir ${{ github.workspace }}/cov-int \
+            --ms-delay 10 --verbose 0
+
+      # Archive and send all the results to the Coverity server
+      - name: Submit results to Coverity Scan
+        shell: bash
+        run: |
+          tar -czvf ./cov-int.tgz ./cov-int
+          curl \
+            --form token="${{ secrets.COVERITY_SCAN_TOKEN }}" \
+            --form email="${{ secrets.COVERITY_SCAN_EMAIL }}" \
+            --form file=@cov-int.tgz \
+            --form version="${{ github.sha }}" \
+            --form description="coverity-scan-action ${{ github.repository }} / ${{ github.ref }}" \
+            "https://scan.coverity.com/builds?project=${{ env.COV_PROJECT }}"
