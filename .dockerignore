@@ -1,12 +1,22 @@
+.dockerignore
 .git
+.github
 .gitignore
+.husky
 .prettierrc
 .eslintcache
 .vscode
 .env
+docker-compose example
+docker-compose.yml
+docker-compose-dev.yml
+Dockerfile
+Dockerfile-dev
 example.env
+Makefile
 photos_path
 screenshots
+storage
 
 ui/node_modules/
 ui/build/
