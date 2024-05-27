@@ -181,6 +181,7 @@ export interface ProtectedVideoProps_Media {
 
 export interface ProtectedVideoProps {
   media: ProtectedVideoProps_Media
+  setVideo?(): void
 }
 
 export const ProtectedVideo = ({ media, setVideo, ...props }: ProtectedVideoProps) => {
@@ -188,7 +189,7 @@ export const ProtectedVideo = ({ media, setVideo, ...props }: ProtectedVideoProp
 
   React.useEffect(() => {
     setVideo(videoRef.current);
-  }, [setVideo]);
+  }, []);
 
   if (isNil(media.videoWeb)) {
     console.error('ProetctedVideo called with media.videoWeb = null')
