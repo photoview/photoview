@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/big"
 	"os"
 	"time"
 
@@ -173,7 +174,7 @@ func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName,
 	return nil, errors.New("exif tag returned null")
 }
 
-func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, media_path string) (*math.big.Rat, error) {
+func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, media_path string) (*big.Rat, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read %s from EXIF: %s", name, media_path)
