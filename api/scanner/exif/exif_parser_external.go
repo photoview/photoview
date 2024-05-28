@@ -213,7 +213,7 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	}
 
 	// Get GPS data
-	newExif.GPSLatitude, newExif.GPSLongitude, returnErr := extractValidGpsData(fileInfo, media_path)
+	newExif.GPSLatitude, newExif.GPSLongitude, returnErr = extractValidGpsData(&fileInfo, media_path)
 
 	if !found_exif {
 		return nil, nil

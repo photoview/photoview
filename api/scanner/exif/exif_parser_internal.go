@@ -3,7 +3,7 @@ package exif
 import (
 	"fmt"
 	"log"
-	"math/big"
+	"math"
 	"os"
 	"time"
 
