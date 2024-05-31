@@ -2,7 +2,6 @@ package migrations_test
 
 import (
 	"os"
-	"fmt"
 	"math"
 	"bufio"
 	"strings"
@@ -18,8 +17,7 @@ import (
 func TestExifMigration(t *testing.T) {
   envFile, err := os.Open("/home/runner/work/photoview/photoview/api/testing.env")
 	if err != nil {
-	  fmt.Println("failed to open environment file: ", err)
-		return
+	  t.Fatalf("Failed to open environment file: %v", err)
 	}
 	defer envFile.Close()
 
@@ -28,10 +26,9 @@ func TestExifMigration(t *testing.T) {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-		  fmt.Println("invalid line in environment file: ", line)
-			return
+		  t.Fatalf("Invalid line in environment file: %s", line)
 		}
-		key, value := parts[0], parts[1]
+		key, value := parts[0], strings.Trim(parts[1], "'")
 		os.Setenv(key, value)
 	}
 
