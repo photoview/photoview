@@ -1,11 +1,7 @@
 package migrations_test
 
 import (
-	"os"
-	"fmt"
 	"math"
-	"bufio"
-	"strings"
 	"testing"
 
 	"gorm.io/gorm"
@@ -18,8 +14,7 @@ import (
 )
 
 func TestExifMigration(t *testing.T) {
-	test_utils.DatabaseTest(t)
-	db, err := setupDatabaseForTest()
+	db := test_utils.DatabaseTest(t)
 	assert.NoError(t, err)
 	//defer db.Exec("DELETE FROM media_exif") // Clean up after test
 
@@ -55,27 +50,6 @@ func TestExifMigration(t *testing.T) {
 			assert.LessOrEqual(t, math.Abs(*entry.GPSLongitude), 90.0, "GPSLongitude should be within [-90, 90]: %+v", entry)
 		}
 	}
-}
-
-func setupDatabaseForTest() (*gorm.DB, error) {
-  envFile, err := os.Open("testing.env")
-	if err != nil {
-		return nil, fmt.Errorf("failed to open environment file: %w", err)
-	}
-	defer envFile.Close()
-
-	scanner := bufio.NewScanner(envFile)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid line in environment file: %s", line)
-		}
-		key, value := parts[0], parts[1]
-		os.Setenv(key, value)
-	}
-
-	return database.SetupDatabase()
 }
 
 func floatPtr(f float64) *float64 {
