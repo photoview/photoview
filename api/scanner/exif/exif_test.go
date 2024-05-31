@@ -87,8 +87,8 @@ func TestExifParsers(t *testing.T) {
 			assert: func(t *testing.T, exif *models.MediaEXIF) {
 				assert.NotNil(t, exif.GPSLatitude)
 				assert.NotNil(t, exif.GPSLongitude)
-				assert.EqualValues(t, *exif.GPSLatitude, 44.4789972222222)
-				assert.EqualValues(t, *exif.GPSLongitude, 11.2979222222222)
+				assert.EqualValues(t, *exif.GPSLatitude, 44.478997222222226)
+				assert.EqualValues(t, *exif.GPSLongitude, 11.297922222222223)
 			},
 		},
 	}
