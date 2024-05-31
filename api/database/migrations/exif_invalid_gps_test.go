@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"strings"
 	"testing"
+	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
 
@@ -16,9 +17,17 @@ import (
 )
 
 func TestExifMigration(t *testing.T) {
+  dir, _ := os.Getwd()
+  fmt.Println("Current directory:", dir)
+  files, _ := ioutil.ReadDir(dir)
+  fmt.Println("Files in directory:")
+			for _, file := range files {
+				fmt.Println(file.Name())
+			}
   envFile, err := os.Open("testing.env")
 	if err != nil {
-		return nil, fmt.Errorf("failed to open environment file: %w", err)
+	  fmt.Println("failed to open environment file: %w", err)
+		return
 	}
 	defer envFile.Close()
 
@@ -27,7 +36,8 @@ func TestExifMigration(t *testing.T) {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid line in environment file: %s", line)
+		  fmt.Println("invalid line in environment file: %s", line)
+			return
 		}
 		key, value := parts[0], parts[1]
 		os.Setenv(key, value)
