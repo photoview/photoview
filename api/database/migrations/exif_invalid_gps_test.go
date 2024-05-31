@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"strings"
 	"testing"
-	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
 
@@ -17,13 +16,7 @@ import (
 )
 
 func TestExifMigration(t *testing.T) {
-  dir := "/home/runner/work/photoview/photoview/api"
-  files, _ := ioutil.ReadDir(dir)
-  fmt.Println("Files in directory:")
-			for _, file := range files {
-				fmt.Println(file.Name())
-			}
-  envFile, err := os.Open("/api/testing.env")
+  envFile, err := os.Open("/home/runner/work/photoview/photoview/api/testing.env")
 	if err != nil {
 	  fmt.Println("failed to open environment file: ", err)
 		return
