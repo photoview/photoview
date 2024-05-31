@@ -78,17 +78,17 @@ func TestExifParsers(t *testing.T) {
 		{
 			path: "./test_data/IncorrectGPS.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF) {
-				assert.Nil(t, exif.GPSLatitude)
-				assert.Nil(t, exif.GPSLongitude)
+				assert.Nil(t, exif.GPSLatitude, "GPSLatitude expected to be NULL for an incorrect input data: %+v", exif)
+				assert.Nil(t, exif.GPSLongitude, "GPSLongitude expected to be NULL for an incorrect input data: %+v", exif)
 			},
 		},
 		{
 			path: "./test_data/CorrectGPS.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF) {
-				assert.NotNil(t, exif.GPSLatitude)
-				assert.NotNil(t, exif.GPSLongitude)
-				assert.EqualValues(t, *exif.GPSLatitude, 44.478997222222226)
-				assert.EqualValues(t, *exif.GPSLongitude, 11.297922222222223)
+				assert.NotNil(t, exif.GPSLatitude, "GPSLatitude expected to be Not-NULL for a correct input data: %+v", exif)
+				assert.NotNil(t, exif.GPSLongitude, "GPSLongitude expected to be Not-NULL for a correct input data: %+v", exif)
+				assert.EqualValues(t, *exif.GPSLatitude, 44.478997222222226, "The exact value from input data is expected: %+v", exif)
+				assert.EqualValues(t, *exif.GPSLongitude, 11.297922222222223, "The exact value from input data is expected: %+v", exif)
 			},
 		},
 	}

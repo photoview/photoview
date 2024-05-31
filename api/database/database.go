@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/database/migrations"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -190,6 +191,11 @@ func MigrateDatabase(db *gorm.DB) error {
 	// from string values to decimal and int respectively
 	if err := migrate_exif_fields(db); err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
+	}
+
+  // Remove invalid GPS data from DB
+	if err := migrations.MigrateForExifGPSCorrection(db); err != nil {
+		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
 	}
 
 	return nil
