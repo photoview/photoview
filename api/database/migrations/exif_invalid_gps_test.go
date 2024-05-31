@@ -4,10 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"gorm.io/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/photoview/photoview/api/database"
 	"github.com/photoview/photoview/api/database/migrations"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
@@ -15,7 +13,6 @@ import (
 
 func TestExifMigration(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
-	assert.NoError(t, err)
 	//defer db.Exec("DELETE FROM media_exif") // Clean up after test
 
 	// Create test data
