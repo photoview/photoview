@@ -64,6 +64,8 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 	queryValues.Add("cache", "shared")
 	queryValues.Add("mode", "rwc")
 	// queryValues.Add("_busy_timeout", "60000") // 1 minute
+	queryValues.Add("_journal_mode", "WAL") // Write-Ahead Logging (WAL) mode
+	queryValues.Add("_locking_mode", "NORMAL") // allows concurrent reads and writes
 	address.RawQuery = queryValues.Encode()
 
 	// log.Panicf("%s", address.String())

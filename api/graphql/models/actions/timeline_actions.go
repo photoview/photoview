@@ -24,7 +24,7 @@ func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onl
 			Order("media.date_shot DESC")
 	case drivers.SQLITE:
 		query = query.
-			Order("strftime('%j', media.date_shot) DESC"). // convert to day of year 001-366
+			Order("strftime('%Y-%m-%d', media.date_shot) DESC"). // convert to YYYY-MM-DD
 			Order("albums.title ASC").
 			Order("TIME(media.date_shot) DESC")
 	default:
