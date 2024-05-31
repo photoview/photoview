@@ -18,15 +18,15 @@ import (
 
 func TestExifMigration(t *testing.T) {
   dir, _ := os.Getwd()
-  fmt.Println("Current directory:", dir)
+  fmt.Printf("Current directory:", dir)
   files, _ := ioutil.ReadDir(dir)
-  fmt.Println("Files in directory:")
+  fmt.Printf("Files in directory:")
 			for _, file := range files {
 				fmt.Println(file.Name())
 			}
   envFile, err := os.Open("testing.env")
 	if err != nil {
-	  fmt.Println("failed to open environment file: %w", err)
+	  fmt.Printf("failed to open environment file: %w", err)
 		return
 	}
 	defer envFile.Close()
