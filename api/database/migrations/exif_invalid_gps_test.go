@@ -18,15 +18,15 @@ import (
 
 func TestExifMigration(t *testing.T) {
   dir, _ := os.Getwd()
-  fmt.Printf("Current directory:", dir)
+  fmt.Println("Current directory: ", dir)
   files, _ := ioutil.ReadDir(dir)
-  fmt.Printf("Files in directory:")
+  fmt.Println("Files in directory:")
 			for _, file := range files {
 				fmt.Println(file.Name())
 			}
   envFile, err := os.Open("testing.env")
 	if err != nil {
-	  fmt.Printf("failed to open environment file: %w", err)
+	  fmt.Println("failed to open environment file: ", err)
 		return
 	}
 	defer envFile.Close()
@@ -36,7 +36,7 @@ func TestExifMigration(t *testing.T) {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-		  fmt.Println("invalid line in environment file: %s", line)
+		  fmt.Println("invalid line in environment file: ", line)
 			return
 		}
 		key, value := parts[0], parts[1]
