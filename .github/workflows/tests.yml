@@ -24,11 +24,12 @@ jobs:
           MYSQL_USER: photoview
           MYSQL_PASSWORD: photosecret
           MYSQL_RANDOM_ROOT_PASSWORD: yes
+        # https://github.com/MariaDB/mariadb-docker/issues/497
         options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
+          --health-cmd="mariadb-admin ping"
+          --health-interval=20s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
         ports:
           - 3306:3306
 
@@ -40,9 +41,9 @@ jobs:
           POSTGRES_DB: photoview_test
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 20s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
         ports:
           - 5432:5432
 
