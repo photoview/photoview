@@ -165,18 +165,8 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 }
 
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
-
-	if err := user.FillAlbums(db); err != nil {
-		return false, err
-	}
-
-	albumIDs := make([]int, 0)
-	for _, a := range user.Albums {
-		albumIDs = append(albumIDs, a.ID)
-	}
-
 	filter := func(query *gorm.DB) *gorm.DB {
-		return query.Where("id IN (?)", albumIDs)
+		return query.Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)", user.ID)
 	}
 
 	ownedParents, err := album.GetParents(db, filter)
