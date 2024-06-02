@@ -75,7 +75,7 @@ services:
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
       - "${HOST_PHOTOVIEW_LOCATION}/database/mariadb:/var/lib/mysql" ## DO NOT REMOVE
     healthcheck:
-      test: mysqladmin ping -s -h localhost -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      test: healthcheck.sh --connect --innodb_initialized
       interval: 1m
       timeout: 5s
       retries: 5
