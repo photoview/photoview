@@ -12,7 +12,7 @@ import (
 func TestAlbumPath(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	album := models.Album{
+	album := &models.Album{
 		Title: "Three",
 		Path:  "/one/two/three",
 		ParentAlbum: &models.Album{
@@ -30,9 +30,9 @@ func TestAlbumPath(t *testing.T) {
 	user, err := models.RegisterUser(db, "user", nil, false)
 	assert.NoError(t, err)
 
-	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum)
+	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum, album.ParentAlbum, album)
 
-	albumPath, err := actions.AlbumPath(db, user, &album)
+	albumPath, err := actions.AlbumPath(db, user, album)
 	assert.NoError(t, err)
 	assert.Len(t, albumPath, 2)
 	assert.Equal(t, "Two", albumPath[0].Title)
