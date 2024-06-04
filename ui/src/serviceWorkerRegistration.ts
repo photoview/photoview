@@ -48,8 +48,8 @@ export function register(config?: Config) {
         navigator.serviceWorker.ready
           .then(() => {
             console.log(
-              'This web app is being served cache-first by a service worker.' +
-                'worker. To learn more, visit https://cra.link/PWA'
+              'This web app is being served cache-first by a service worker. ' +
+                'To learn more, visit https://cra.link/PWA'
             )
           })
           .catch(() => {
