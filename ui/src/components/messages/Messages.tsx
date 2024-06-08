@@ -11,6 +11,8 @@ const Container = styled.div`
   bottom: 20px;
   right: 20px;
   width: 500px;
+  max-height: calc(100vh - 40px); // Ensures the container doesn't overflow the viewport height
+  overflow-y: auto; // Allows scrolling if there are multiple lines
 
   @media (max-width: 1000px) {
     display: none;
