@@ -4,7 +4,25 @@ import { NotificationType } from '../../__generated__/globalTypes'
 import { MessageState } from './Messages'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
-import SubscriptionsHook from './SubscriptionsHook'
+
+// Define the mock for SubscriptionsHook before using it
+const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
+  return (
+    <div>
+      <button
+        onClick={() => setMessages([...messages, ...messages])}
+        data-testid="trigger-messages"
+      >
+        Trigger Messages
+      </button>
+    </div>
+  )
+}
+
+vi.mock('./SubscriptionsHook', () => ({
+  __esModule: true,
+  default: MockSubscriptionsHook,
+}))
 
 const messages = [
   {
@@ -47,24 +65,6 @@ const messages = [
     },
   },
 ]
-
-const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
-  return (
-    <div>
-      <button
-        onClick={() => setMessages([...messages, ...messages])}
-        data-testid="trigger-messages"
-      >
-        Trigger Messages
-      </button>
-    </div>
-  )
-}
-
-vi.mock('./SubscriptionsHook', () => ({
-  __esModule: true,
-  default: MockSubscriptionsHook,
-}))
 
 describe('Messages Component', () => {
   test('renders different types of messages with correct background colors', () => {
