@@ -15,7 +15,7 @@ export const MessageState: MessageStateType = {
   get: [],
   add: message => {
     MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key !== message.key)
+      const newMessages = messages.filter(msg => msg.key != message.key)
       newMessages.push(message)
 
       return newMessages
@@ -23,7 +23,7 @@ export const MessageState: MessageStateType = {
   },
   removeKey: key => {
     MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key !== key)
+      const newMessages = messages.filter(msg => msg.key != key)
       return newMessages
     })
   },
