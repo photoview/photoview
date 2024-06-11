@@ -5,6 +5,7 @@ import MessageProgress from './MessageProgress'
 import MessagePlain from './Message'
 import SubscriptionsHook, { Message } from './SubscriptionsHook'
 import { NotificationType } from '../../__generated__/globalTypes'
+import { MessageState } from './MessageState'
 
 const Container = styled.div`
   position: fixed;
@@ -18,34 +19,6 @@ const Container = styled.div`
     display: none;
   }
 `
-
-type MessageStateType = {
-  set: React.Dispatch<React.SetStateAction<Message[]>>
-  get: Message[]
-  add(message: Message): void
-  removeKey(key: string): void
-}
-
-export const MessageState: MessageStateType = {
-  set: fn => {
-    console.warn('set function is not defined yet, called with', fn)
-  },
-  get: [],
-  add: message => {
-    MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key != message.key)
-      newMessages.push(message)
-
-      return newMessages
-    })
-  },
-  removeKey: key => {
-    MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key != key)
-      return newMessages
-    })
-  },
-}
 
 const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([])

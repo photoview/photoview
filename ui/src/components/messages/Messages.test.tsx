@@ -1,11 +1,11 @@
-import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
+import React from 'react'
 import { NotificationType } from '../../__generated__/globalTypes'
-import { MessageState } from './Messages'
+import { MessageState } from './MessageState'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
 
-// Define the mock for SubscriptionsHook before importing it
+// Define the mock for SubscriptionsHook before using it
 const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
   return (
     <div>
