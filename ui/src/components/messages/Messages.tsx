@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
 import MessageProgress from './MessageProgress'
 import MessagePlain from './Message'
-import SubscriptionsHook, { Message } from './SubscriptionsHook'
+import { SubscriptionsHook, Message } from './SubscriptionsHook'
 import { NotificationType } from '../../__generated__/globalTypes'
 import MessageState from './MessageState'
 

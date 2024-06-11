@@ -21,7 +21,7 @@ const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
 
 vi.mock('./SubscriptionsHook', () => ({
   __esModule: true,
-  default: MockSubscriptionsHook,
+  SubscriptionsHook: MockSubscriptionsHook,
 }))
 
 const messages = [
