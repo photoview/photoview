@@ -17,7 +17,6 @@ export const MessageState: MessageStateType = {
     MessageState.set(messages => {
       const newMessages = messages.filter(msg => msg.key != message.key)
       newMessages.push(message)
-
       return newMessages
     })
   },
@@ -28,3 +27,5 @@ export const MessageState: MessageStateType = {
     })
   },
 }
+
+export default MessageState

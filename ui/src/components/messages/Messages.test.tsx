@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { NotificationType } from '../../__generated__/globalTypes'
-import { MessageState } from './MessageState'
+import MessageState from './MessageState'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
 
