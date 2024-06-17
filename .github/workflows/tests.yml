@@ -68,12 +68,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Get C dependencies
+      - name: Get C dependencies and 3rd-party tools
         run: |
           sudo add-apt-repository ppa:strukturag/libheif
           sudo add-apt-repository ppa:strukturag/libde265
           sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool
 
       - name: Get GO dependencies
         run: |
