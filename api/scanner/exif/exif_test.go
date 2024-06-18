@@ -71,9 +71,22 @@ func TestExifParsers(t *testing.T) {
 				if exif == nil {
 					assert.Nil(t, exif)
 				} else {
-					expectedExif := &models.MediaEXIF{}
-					expectedExif.DateShot = nil
-					assert.Equal(t, exif, expectedExif)
+					assert.Equal(t, 0, exif.ID)
+					assert.True(t, exif.CreatedAt.IsZero())
+					assert.True(t, exif.UpdatedAt.IsZero())
+					assert.Nil(t, exif.Description)
+					assert.Nil(t, exif.Camera)
+					assert.Nil(t, exif.Maker)
+					assert.Nil(t, exif.Lens)
+					assert.Nil(t, exif.Exposure)
+					assert.Nil(t, exif.Aperture)
+					assert.Nil(t, exif.Iso)
+					assert.Nil(t, exif.FocalLength)
+					assert.Nil(t, exif.Flash)
+					assert.Nil(t, exif.Orientation)
+					assert.Nil(t, exif.ExposureProgram)
+					assert.Nil(t, exif.GPSLatitude)
+					assert.Nil(t, exif.GPSLongitude)
 				}
 			},
 		},
