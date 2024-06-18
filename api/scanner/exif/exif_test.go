@@ -43,11 +43,12 @@ func TestExifParsers(t *testing.T) {
 
 	images := []struct {
 		path   string
-		assert func(t *testing.T, exif *models.MediaEXIF)
+		assert func(t *testing.T, exif *models.MediaEXIF, err error)
 	}{
 		{
 			path: "./test_data/bird.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF) {
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
+				assert.NoError(t, err)
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
 				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
@@ -65,37 +66,42 @@ func TestExifParsers(t *testing.T) {
 		},
 		{
 			path: "./test_data/stripped.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF) {
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
+				assert.NoError(t, err)
 				assert.Empty(t, *exif)
 			},
 		},
 		{
 			path: "./test_data/bad-exif.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF) {
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
+				assert.NoError(t, err)
 				assert.Nil(t, exif.Exposure)
 			},
 		},
 		{
 			path: "./test_data/IncorrectGPS.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF) {
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
+				assert.Error(t, err,
+					"Incorrect GPS data in the ./test_data/IncorrectGPS.jpg Exif data: 17056881.666667, 17056881.666667, while expected values between '-90' and '90'")
 				assert.Nil(t, exif.GPSLatitude,
-				  "GPSLatitude expected to be NULL for an incorrect input data: %+v", exif.GPSLatitude)
+					"GPSLatitude expected to be NULL for an incorrect input data: %+v", exif.GPSLatitude)
 				assert.Nil(t, exif.GPSLongitude,
-				  "GPSLongitude expected to be NULL for an incorrect input data: %+v", exif.GPSLongitude)
+					"GPSLongitude expected to be NULL for an incorrect input data: %+v", exif.GPSLongitude)
 			},
 		},
 		{
 			path: "./test_data/CorrectGPS.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF) {
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				const precision = 1e-7
+				assert.NoError(t, err)
 				assert.NotNil(t, exif.GPSLatitude,
-				  "GPSLatitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLatitude)
+					"GPSLatitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLatitude)
 				assert.NotNil(t, exif.GPSLongitude,
-				  "GPSLongitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLongitude)
+					"GPSLongitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLongitude)
 				assert.InDelta(t, *exif.GPSLatitude, 44.478997222222226, precision,
-				  "The exact value from input data is expected: %+v", exif.GPSLatitude)
+					"The exact value from input data is expected: %+v", exif.GPSLatitude)
 				assert.InDelta(t, *exif.GPSLongitude, 11.297922222222223, precision,
-				  "The exact value from input data is expected: %+v", exif.GPSLongitude)
+					"The exact value from input data is expected: %+v", exif.GPSLongitude)
 			},
 		},
 	}
@@ -113,9 +119,7 @@ func TestExifParsers(t *testing.T) {
 
 				exif, err := p.parser.ParseExif(img.path)
 
-				if assert.NoError(t, err) {
-					img.assert(t, exif)
-				}
+				img.assert(t, exif, err)
 			})
 		}
 	}
