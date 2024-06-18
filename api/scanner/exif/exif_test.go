@@ -68,7 +68,11 @@ func TestExifParsers(t *testing.T) {
 			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
-				assert.Empty(t, *exif)
+				if exif == nil {
+					assert.Nil(t, *exif)
+				} else {
+					assert.Empty(t, *exif)
+				}
 			},
 		},
 		{
