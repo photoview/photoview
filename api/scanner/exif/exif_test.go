@@ -71,7 +71,7 @@ func TestExifParsers(t *testing.T) {
 				if exif == nil {
 					assert.Nil(t, exif)
 				} else {
-					assert.Empty(t, *exif)
+					assert.Empty(t, exif)
 				}
 			},
 		},

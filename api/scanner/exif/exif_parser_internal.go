@@ -144,7 +144,11 @@ func (p internalExifParser) ParseExif(media_path string) (returnExif *models.Med
 	lat, long, err := exifTags.LatLong()
 	if err == nil {
 		if math.Abs(lat) > 90 || math.Abs(long) > 90 {
-			return &newExif, errors.New(fmt.Sprintf("Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'", media_path, long, lat))
+			returnExif = &newExif
+			returnErr = errors.New(fmt.Sprintf(
+				"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'",
+				media_path, long, lat))
+			return
 		} else {
 			newExif.GPSLatitude = &lat
 			newExif.GPSLongitude = &long
