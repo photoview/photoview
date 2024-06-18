@@ -69,7 +69,7 @@ func TestExifParsers(t *testing.T) {
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				if exif == nil {
-					assert.Nil(t, *exif)
+					assert.Nil(t, exif)
 				} else {
 					assert.Empty(t, *exif)
 				}
