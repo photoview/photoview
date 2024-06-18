@@ -65,7 +65,7 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
-func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*float64, *float64, error) {
+func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*float64, *float64) {
 	var GPSLat, GPSLong *float64
 
   // GPS coordinates - longitude
@@ -82,11 +82,12 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*f
 
 	// GPS data validation
 	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 90) {
-		return nil, nil, errors.New(
-			fmt.Sprintf("Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'",
-				media_path, *GPSLat, *GPSLong))
+		log.Printf(
+			"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
+			media_path, *GPSLat, *GPSLong)
+		return nil, nil
 	}
-	return GPSLat, GPSLong, nil
+	return GPSLat, GPSLong
 }
 
 func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
@@ -209,7 +210,7 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	}
 
 	// Get GPS data
-	newExif.GPSLatitude, newExif.GPSLongitude, returnErr = extractValidGpsData(&fileInfo, media_path)
+	newExif.GPSLatitude, newExif.GPSLongitude = extractValidGpsData(&fileInfo, media_path)
 
 	if !found_exif {
 		return nil, nil
