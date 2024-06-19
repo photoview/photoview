@@ -13,6 +13,7 @@ import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
 import PhotoIcon from './icons/Photo'
 import VideoIcon from './icons/Video'
+import RepeatIcon from './icons/Repeat'
 import PhotoVideoIcon from './icons/PhotoVideo'
 
 const StyledOverlayContainer = styled.div`
@@ -42,6 +43,7 @@ const OverlayIconContainer = styled.button`
     overflow: visible !important;
     transition-property: stroke, filter;
     transition-duration: 140ms;
+    filter: drop-shadow( 4px 4px 4px rgba(0, 0, 0, 1));
   }
 
   &:hover h1 {
@@ -71,6 +73,7 @@ const OverlayButton = styled.button`
     width: 32px;
     height: 32px;
     overflow: visible !important;
+    filter: drop-shadow( 4px 4px 4px rgba(0, 0, 0, 1));
   }
 
   & svg path {
@@ -141,6 +144,7 @@ const PresentNavigationOverlay = ({
   const [slideInterval, setSlideInterval] = useState<integer>(3)
   const [slideMode, setSlideMode] = useState<integer>(2)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
+  const smref = React.useRef(slideMode)
 
   useEffect(() => {
     onMouseMove.current = debounce(
@@ -155,8 +159,6 @@ const PresentNavigationOverlay = ({
       onMouseMove.current?.cancel()
     }
   }, [])
-
-
 
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
@@ -190,7 +192,6 @@ const PresentNavigationOverlay = ({
   useEffect(() => {
     const interval = setInterval(() => {
       if (slide && activeMedia.type === MediaType.Photo) { 
-        //dispatchMedia({ type: 'nextImage'})
         nextSlide()
       }
     }, slideInterval*1000)
@@ -199,32 +200,35 @@ const PresentNavigationOverlay = ({
       videoRef.current.play();
     }
 
-    // Continue after Video played
-    const playEnd = () => {
-      if (slide) {
-        setAux( (a) => !a )
-        nextSlide()
-      }
-    }
-
     // if video, register playEnd at 'ended'
-    if ( videoRef.current != null ) {
-      videoRef.current.addEventListener('ended', playEnd);
+    if ( videoRef != null ) {
+      if ( videoRef.current != null ) 
+        videoRef.current.addEventListener('ended', playEnd);
     }
 
     return () => {
       clearInterval(interval);
-      if ( videoRef.current != null )
-        videoRef.current.removeEventListener('ended', playEnd);
+      if ( videoRef != null )
+        if ( videoRef.current != null ) 
+          videoRef.current.removeEventListener('ended', playEnd);
     }
 
-  }, [slide,slideInterval,activeMedia,aux])
+  }, [slide,slideInterval,activeMedia,aux,videoRef])
   
+
+  // Continue after Video played
+  const playEnd = () => {
+    console.log("triggered with slideMode: " + slideMode + " smrefnya_: " + smref.current);
+    if (slide && smref.current < 3) {
+      setAux( (a) => !a );
+      nextSlide();
+    } else if (smref.current == 3 && activeMedia.type === MediaType.Video) {
+      videoRef.current.play();
+    }
+  }
+
   const toggle = () => {
     setSlide( (s) => !s );
-    if (activeMedia.type === MediaType.Video){ //and not playing
-      videoRef.current.play()  
-    }
   }
   const toggleSlideInterval = () => {
     setSlideInterval( (s) => (s+1) % 10 == 0 ? 1 : (s+1) % 10  ) 
@@ -241,12 +245,25 @@ const PresentNavigationOverlay = ({
       case 2:
         dispatchMedia({ type: 'nextImage'})  
         return;
+      case 3:  
+        setAux( (a) => !a );
+        return;
     }
   }
 
   const toggleSlideMode = () => {
-    setSlideMode( (s) => (s+1) % 3 );
+    setSlideMode( (s) => {
+      smref.current = (s+1) % 4;
+      return (s+1) % 4;
+    });
   }
+
+  useEffect(() => {
+    if (activeMedia.type === MediaType.Video) {
+      videoRef.current.removeEventListener('ended', playEnd);
+      videoRef.current.addEventListener('ended', playEnd);
+    }
+  }, [slideMode])
 
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
@@ -307,7 +324,7 @@ const PresentNavigationOverlay = ({
 	      time={slideInterval}
         onClick={toggleSlideInterval}
       >
-        <h1
+        <h1 
           className={hide ? 'hide' : undefined}
 	      > {slideInterval}s </h1>
       </IntervalButton>
@@ -316,7 +333,9 @@ const PresentNavigationOverlay = ({
         className={hide ? 'hide' : undefined}
 	      onClick={toggleSlideMode}
       >
-        {slideMode > 1 ? <PhotoVideoIcon /> : (slideMode > 0 ? <VideoIcon /> : <PhotoIcon />) }
+        { slideMode > 2 ? <RepeatIcon /> : 
+          (slideMode > 1 ? <PhotoVideoIcon /> :
+           (slideMode > 0 ? <VideoIcon /> : <PhotoIcon />)) }
       </SlideModeButton>
     </div>
     </StyledOverlayContainer>

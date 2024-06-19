@@ -42,7 +42,6 @@ const PresentView = ({
 
   const setVideo = (ref) => {
     videoRef.current = ref;
-    console.log("passed");
   };
 
   useEffect(() => {
