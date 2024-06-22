@@ -56,6 +56,8 @@ start:
 	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database
 	@## The next line is for PostgreSQL
 	@# mkdir -p ${HOST_PHOTOVIEW_LOCATION}/database/postgres
+	@# If you don't want to give 777 permissions to this folder, create a group with GID=999 (or user with UID=999 and group
+	@# with GID=999 and that user) and make the folder being owned by it, so you can give the 570 or 750 permissions correspondingly.
 	mkdir -p ${HOST_PHOTOVIEW_LOCATION}/storage
 	chmod 777 ${HOST_PHOTOVIEW_LOCATION}/storage
 	$(DOCKER_COMPOSE) up -d --remove-orphans

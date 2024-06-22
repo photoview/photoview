@@ -1,6 +1,6 @@
 services:
   photoview:
-    image: viktorstrate/photoview:2
+    image: viktorstrate/photoview:master
     hostname: photoview
     container_name: photoview
     restart: unless-stopped
