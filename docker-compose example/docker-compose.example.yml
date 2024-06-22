@@ -1,6 +1,6 @@
 services:
   photoview:
-    image: viktorstrate/photoview:master
+    image: viktorstrate/photoview:2
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     hostname: photoview
