@@ -71,9 +71,10 @@ export function mediaGalleryReducer(
       }
     case 'nextSlidePhoto':
       if (state.videoMedia.length != state.media.length){
-        let a = (state.activeIndex + 1) % state.media.length;
-        while (state.media[a].type !== MediaType.Photo)
+        let a: number = (state.activeIndex + 1) % state.media.length;
+        while (state.media[a].type !== MediaType.Photo) {
           a = (a + 1) % state.media.length;
+        }
         return {
           ...state,
           activeIndex: a,
@@ -85,9 +86,10 @@ export function mediaGalleryReducer(
       }
     case 'nextSlideVideo':
       if (state.videoMedia.length > 0) {
-        let b = (state.activeIndex + 1) % state.media.length;
-        while (state.media[b].type !== MediaType.Video)
+        let b: number = (state.activeIndex + 1) % state.media.length;
+        while (state.media[b].type !== MediaType.Video) {
           b = (b + 1) % state.media.length;
+        }
         return {
           ...state,
           activeIndex: b, 

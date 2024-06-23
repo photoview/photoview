@@ -48,12 +48,14 @@ const OverlayIconContainer = styled.button`
 
   &:hover h1 {
     visibility: unset;
+    opacity: 100%;
     filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.6));
   }
 
   &.hide h1 {
     visibility: hidden;
     transition: stroke 300ms;
+    transition: fill 300ms;
   }
 `
 
@@ -84,12 +86,14 @@ const OverlayButton = styled.button`
 
   &:hover svg path {
     stroke: rgba(255, 255, 255, 1);
+    fill-opacity: .8;
     filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.6));
   }
 
   &.hide svg path {
     stroke: rgba(255, 255, 255, 0);
     transition: stroke 300ms;
+    fill-opacity: 0;
   }
 `
 
@@ -192,6 +196,7 @@ const PresentNavigationOverlay = ({
   useEffect(() => {
     const interval = setInterval(() => {
       if (slide && activeMedia.type === MediaType.Photo) { 
+        //dispatchMedia({ type: 'nextImage'})
         nextSlide()
       }
     }, slideInterval*1000)
@@ -218,9 +223,8 @@ const PresentNavigationOverlay = ({
 
   // Continue after Video played
   const playEnd = () => {
-    console.log("triggered with slideMode: " + slideMode + " smrefnya_: " + smref.current);
     if (slide && smref.current < 3) {
-      setAux( (a) => !a );
+      setAux( (a) => !a );// single repeat might destroy basic repeat
       nextSlide();
     } else if (smref.current == 3 && activeMedia.type === MediaType.Video) {
       videoRef.current.play();
@@ -235,19 +239,19 @@ const PresentNavigationOverlay = ({
   }
 
   const nextSlide = () => {
-    switch (slideMode) {
+    switch (smref.current) {
       case 0:
         dispatchMedia({ type: 'nextSlidePhoto'})
-        return;
+        break;
       case 1:
         dispatchMedia({ type: 'nextSlideVideo'})
-        return;
+        break;
       case 2:
         dispatchMedia({ type: 'nextImage'})  
-        return;
+        break;
       case 3:  
         setAux( (a) => !a );
-        return;
+        break;
     }
   }
 
@@ -257,13 +261,6 @@ const PresentNavigationOverlay = ({
       return (s+1) % 4;
     });
   }
-
-  useEffect(() => {
-    if (activeMedia.type === MediaType.Video) {
-      videoRef.current.removeEventListener('ended', playEnd);
-      videoRef.current.addEventListener('ended', playEnd);
-    }
-  }, [slideMode])
 
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
