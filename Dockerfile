@@ -62,7 +62,8 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Create a user to run Photoview server
-RUN useradd -r -U -m photoview \
+RUN groupadd -g 999 photoview \
+  && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
   && apt-get update \
   && apt-get install -y curl gnupg gpg libdlib19.1 ffmpeg exiftool libheif1 sqlite3 \
