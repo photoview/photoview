@@ -40,7 +40,7 @@ type SubscriptionHookProps = {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 }
 
-const SubscriptionsHook = ({
+export const SubscriptionsHook = ({
   messages,
   setMessages,
 }: SubscriptionHookProps) => {

@@ -13,7 +13,7 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 
 import urlJoin from 'url-join'
 import { clearTokenCookie } from './helpers/authentication'
-import { MessageState } from './components/messages/Messages'
+import MessageState from './components/messages/MessageState'
 import { Message } from './components/messages/SubscriptionsHook'
 import { NotificationType } from './__generated__/globalTypes'
 
