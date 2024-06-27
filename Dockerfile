@@ -1,6 +1,9 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
@@ -31,6 +34,9 @@ RUN npm ci --omit=dev --ignore-scripts \
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
 ARG TARGETPLATFORM
 
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 COPY scripts /tmp/scripts
 COPY api /app
 WORKDIR /app
@@ -42,7 +48,7 @@ ENV CGO_ENABLED=1
 # Download dependencies
 RUN chmod +x /tmp/scripts/*.sh \
   && /tmp/scripts/install_build_dependencies.sh \
-  && . /tmp/scripts/set_go_env.sh \
+  && source /tmp/scripts/set_go_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -60,6 +66,7 @@ ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Create a user to run Photoview server
 RUN groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
