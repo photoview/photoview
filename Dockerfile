@@ -1,5 +1,5 @@
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 as ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
@@ -38,7 +38,7 @@ WORKDIR /app
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
-ENV CGO_ENABLED 1
+ENV CGO_ENABLED=1
 
 # Download dependencies
 RUN chmod +x /tmp/install_build_dependencies.sh \
@@ -87,13 +87,13 @@ COPY api/data /app/data
 COPY --from=ui /app/dist /app/ui
 COPY --from=api /app/photoview /app/photoview
 
-ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
-ENV PHOTOVIEW_LISTEN_PORT 80
+ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
+ENV PHOTOVIEW_LISTEN_PORT=80
 
-ENV PHOTOVIEW_SERVE_UI 1
-ENV PHOTOVIEW_UI_PATH /app/ui
-ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH /app/data/models
-ENV PHOTOVIEW_MEDIA_CACHE /home/photoview/media-cache
+ENV PHOTOVIEW_SERVE_UI=1
+ENV PHOTOVIEW_UI_PATH=/app/ui
+ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH=/app/data/models
+ENV PHOTOVIEW_MEDIA_CACHE=/home/photoview/media-cache
 
 EXPOSE ${PHOTOVIEW_LISTEN_PORT}
 

@@ -15,6 +15,11 @@
 
 set -eu
 
+REAL_GOBIN=/usr/bin/go # Default go binary from the release
+if [ ! -e "$REAL_GOBIN" ]; then
+  REAL_GOBIN=/usr/local/go/bin/go #go binary from image `golang`
+fi
+
 if [ ! -z "$TARGETPLATFORM" ]; then
   os="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
   arch="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
@@ -98,4 +103,4 @@ if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; th
   export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
 fi
 
-exec /usr/bin/go "$@"
+exec "$REAL_GOBIN" "$@"
