@@ -31,8 +31,7 @@ RUN npm ci --omit=dev --ignore-scripts \
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
 ARG TARGETPLATFORM
 
-COPY docker/install_build_dependencies.sh /tmp/
-COPY docker/go_wrapper.sh /go/bin/go
+COPY scripts /tmp/scripts
 COPY api /app
 WORKDIR /app
 
@@ -41,9 +40,9 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /tmp/install_build_dependencies.sh \
-  && chmod +x /go/bin/go \
-  && /tmp/install_build_dependencies.sh \
+RUN chmod +x /tmp/scripts/*.sh \
+  && /tmp/scripts/install_build_dependencies.sh \
+  && . /tmp/scripts/set_go_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
