@@ -28,7 +28,7 @@ RUN npm ci --omit=dev --ignore-scripts \
   && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
 ARG TARGETPLATFORM
 
 COPY docker/install_build_dependencies.sh /tmp/

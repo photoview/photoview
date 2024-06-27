@@ -29,9 +29,6 @@ else
     libc6-dev-amd64-cross
 fi
 
-# Install Golang
-apt-get install -y ca-certificates golang
-
 # Install go-face dependencies and libheif for HEIF media decoding
 apt-get install -y \
   libdlib-dev:${DEBIAN_ARCH} \
