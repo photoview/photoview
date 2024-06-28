@@ -19,8 +19,8 @@ func TestMain(m *testing.M) {
 
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
-	db := test_utils.DatabaseTest(t)
-
+	db := test_utils.DatabaseTestDB(t)
+	defer test_utils.ScannerCleanup(t, db)
 	// Sqlite doesn't seem to support foreign key cascading
 	if drivers.SQLITE.MatchDatabase(db) {
 		t.SkipNow()
@@ -50,12 +50,12 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	pass := "1234"
-	user1, err := models.RegisterUser(db, "user1", &pass, true)
+	user1, err := models.RegisterUser(db, "user1", &pass, 1)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	user2, err := models.RegisterUser(db, "user2", &pass, true)
+	user2, err := models.RegisterUser(db, "user2", &pass, 1)
 	if !assert.NoError(t, err) {
 		return
 	}

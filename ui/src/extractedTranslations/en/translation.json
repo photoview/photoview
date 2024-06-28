@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Action",
-          "capabilities": "Capabilities",
+          "role": "Role",
           "photo_path": "Photo path",
           "username": "Username"
         },

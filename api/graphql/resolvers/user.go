@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -30,10 +31,12 @@ func (r *queryResolver) User(ctx context.Context, order *models.Ordering, pagina
 
 	var users []*models.User
 
-	if err := models.FormatSQL(r.DB(ctx).Model(models.User{}), order, paginate).Find(&users).Error; err != nil {
+	if err := models.FormatSQL(r.DB(ctx).Model(models.User{}), order, paginate).Preload("Role").Find(&users).Error; err != nil {
 		return nil, err
 	}
-
+	for _, user := range users {
+		user.Admin = user.Role.Name == "ADMIN"
+	}
 	return users, nil
 }
 
@@ -62,6 +65,19 @@ func (r *userResolver) RootAlbums(ctx context.Context, user *models.User) (album
 	return
 }
 
+func (r *queryResolver) Roles(ctx context.Context) ([]*models.Role, error) {
+	db := r.DB(ctx)
+	results := make([]*models.Role, 0)
+	db.Preload("Permissions").Find(&results)
+	return results, nil
+}
+func (r *queryResolver) Permissions(ctx context.Context) ([]*models.PermissionModel, error) {
+	db := r.DB(ctx)
+	results := make([]*models.PermissionModel, 0)
+	db.Find(&results)
+	return results, nil
+}
+
 func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 
 	user := auth.UserFromContext(ctx)
@@ -70,6 +86,49 @@ func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 	}
 
 	return user, nil
+}
+
+func (r *mutationResolver) CreateRole(ctx context.Context, role *models.NewRoleInput) (*models.Role, error) {
+	db := r.DB(ctx)
+	permissions := make([]*models.PermissionModel, 0, len(role.Permissions))
+	db.Find(&permissions, role.Permissions)
+
+	newRole := &models.Role{
+		Name:        role.Name,
+		Description: role.Description,
+		Permissions: permissions,
+	}
+	db.Save(newRole)
+	return newRole, nil
+}
+
+func (r *mutationResolver) UpdateRole(ctx context.Context, role *models.UpdateRoleInput) (*models.Role, error) {
+	db := r.DB(ctx)
+	currentRole := &models.Role{}
+	db.Find(currentRole, role.ID)
+	if !currentRole.Editable {
+		return nil, fmt.Errorf("The role cannot be edited")
+	}
+	if role.Name != nil && !currentRole.SystemRole {
+		currentRole.Name = *role.Name
+	} else if currentRole.SystemRole {
+		return nil, fmt.Errorf("Cannoy update the name of a system role")
+	}
+	if role.Description != nil {
+		currentRole.Description = *role.Description
+	}
+	if role.Permissions != nil {
+		if len(role.Permissions) == 0 {
+			currentRole.Permissions = make([]*models.PermissionModel, 0)
+		} else {
+			permissions := make([]*models.PermissionModel, 0, len(role.Permissions))
+			db.Find(&permissions, role.Permissions)
+			currentRole.Permissions = permissions
+		}
+	}
+
+	db.Session(&gorm.Session{FullSaveAssociations: true}).Save(currentRole)
+	return currentRole, nil
 }
 
 func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error) {
@@ -123,8 +182,11 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 		if err := tx.Exec("UPDATE site_info SET initial_setup = false").Error; err != nil {
 			return err
 		}
+		ids := make([]int, 0)
 
-		user, err := models.RegisterUser(tx, username, &password, true)
+		r.DB(ctx).Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
+		// TODO init roles here. then pass saved role to user.
+		user, err := models.RegisterUser(tx, username, &password, ids[0])
 		if err != nil {
 			return err
 		}
@@ -201,16 +263,29 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 }
 
 // Admin queries
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, roleID *int, admin *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
-	if username == nil && password == nil && admin == nil {
+	if username == nil && password == nil && admin == nil && roleID == nil {
 		return nil, errors.New("no updates requested")
+	}
+
+	if admin != nil && roleID != nil {
+		return nil, errors.New("Cannot use roleId and admin properties together")
+
 	}
 
 	var user models.User
 	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
+	}
+
+	if admin != nil || roleID != nil {
+		realRoleId, err := resolveRealRoleId(ctx, roleID, admin, r)
+		if err != nil {
+			return nil, errors.New("unable to identify role change id")
+		}
+		user.RoleID = &realRoleId
 	}
 
 	if username != nil {
@@ -227,10 +302,6 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 		user.Password = &hashedPass
 	}
 
-	if admin != nil {
-		user.Admin = *admin
-	}
-
 	if err := db.Save(&user).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to update user")
 	}
@@ -238,13 +309,15 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	return &user, nil
 }
 
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error) {
-
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, roleId *int, admin *bool) (*models.User, error) {
 	var user *models.User
-
+	realRoleId, err := resolveRealRoleId(ctx, roleId, admin, r)
+	if err != nil {
+		return nil, err
+	}
 	transactionError := r.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		var err error
-		user, err = models.RegisterUser(tx, username, password, admin)
+		user, err = models.RegisterUser(tx, username, password, realRoleId)
 		if err != nil {
 			return err
 		}
@@ -257,6 +330,29 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 	}
 
 	return user, nil
+}
+
+func resolveRealRoleId(ctx context.Context, roleId *int, admin *bool, r *mutationResolver) (int, error) {
+	var realRoleId = -1
+	if roleId == nil && admin == nil {
+		return 0, fmt.Errorf("expecting one of roleId || admin to be defined")
+	}
+	if roleId != nil {
+		realRoleId = *roleId
+	} else {
+		var ids []int
+		if *admin {
+			r.DB(ctx).Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
+		} else {
+			r.DB(ctx).Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+		}
+
+		if len(ids) != 1 {
+			return 0, fmt.Errorf("expecting 1 role id to be returned recieved %d", len(ids))
+		}
+		realRoleId = ids[0]
+	}
+	return realRoleId, nil
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {

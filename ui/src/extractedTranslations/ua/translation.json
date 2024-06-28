@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Дія",
-          "capabilities": "Можливості",
+
           "photo_path": "Шлях до медіафайлів",
           "username": "Імʼя користувача"
         },

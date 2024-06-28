@@ -26,8 +26,9 @@ func TestAlbumPath(t *testing.T) {
 	}
 
 	assert.NoError(t, db.Save(&album).Error)
-
-	user, err := models.RegisterUser(db, "user", nil, false)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "user", nil, ids[0])
 	assert.NoError(t, err)
 
 	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum)
@@ -141,7 +142,9 @@ func TestAlbumCover(t *testing.T) {
 	}
 
 	user_pass := "password"
-	regularUser, err := models.RegisterUser(db, "user1", &user_pass, false)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+	regularUser, err := models.RegisterUser(db, "user1", &user_pass, ids[0])
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -219,7 +222,9 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 	err := db.Create(&unrelatedAlbum).Error
 	assert.NoError(t, err)
 
-	user, err := models.RegisterUser(db, "user", nil, false)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "user", nil, ids[0])
 	assert.NoError(t, err)
 
 	rootAlbum := models.Album{

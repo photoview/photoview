@@ -1,7 +1,6 @@
 import { gql, useMutation } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Checkbox from '../../../primitives/form/Checkbox'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
 import { createUser, createUserVariables } from './__generated__/createUser'
@@ -9,13 +8,17 @@ import {
   userAddRootPath,
   userAddRootPathVariables,
 } from './__generated__/userAddRootPath'
+import { RoleSelector } from './RoleSelector'
 
 export const CREATE_USER_MUTATION = gql`
-  mutation createUser($username: String!, $admin: Boolean!) {
-    createUser(username: $username, admin: $admin) {
+  mutation createUser($username: String!, $roleId: ID!) {
+    createUser(username: $username, roleId: $roleId) {
       id
       username
-      admin
+      role {
+        id
+        name
+      }
       __typename
     }
   }
@@ -32,7 +35,7 @@ export const USER_ADD_ROOT_PATH_MUTATION = gql`
 const initialState = {
   username: '',
   rootPath: '',
-  admin: false,
+  roleId: '',
   userAdded: false,
 }
 
@@ -117,15 +120,14 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
         />
       </TableCell>
       <TableCell>
-        <Checkbox
-          label="Admin"
-          checked={state.admin}
-          onChange={e => {
-            setState({
+        <RoleSelector
+          onRoleSelected={i => {
+            setState(state => ({
               ...state,
-              admin: e.target.checked || false,
-            })
+              roleId: i,
+            }))
           }}
+          selected={state.roleId}
         />
       </TableCell>
       <TableCell>
@@ -141,7 +143,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
               createUser({
                 variables: {
                   username: state.username,
-                  admin: state.admin,
+                  roleId: state.roleId,
                 },
               })
             }}

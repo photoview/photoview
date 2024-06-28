@@ -7,14 +7,18 @@
 // GraphQL mutation operation: updateUser
 // ====================================================
 
+export interface updateUser_updateUser_role {
+  __typename: 'Role'
+  id: string
+  name: string
+}
+
 export interface updateUser_updateUser {
   __typename: 'User'
   id: string
   username: string
-  /**
-   * Whether or not the user has admin privileges
-   */
   admin: boolean
+  role: updateUser_updateUser_role
 }
 
 export interface updateUser {
@@ -27,5 +31,5 @@ export interface updateUser {
 export interface updateUserVariables {
   id: string
   username?: string | null
-  admin?: boolean | null
+  roleId: string
 }

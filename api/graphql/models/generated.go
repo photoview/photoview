@@ -33,6 +33,12 @@ type MediaDownload struct {
 type Mutation struct {
 }
 
+type NewRoleInput struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Permissions []int  `json:"permissions"`
+}
+
 type Notification struct {
 	// A key used to identify the notification, new notification updates with the same key, should replace the old notifications
 	Key  string           `json:"key"`
@@ -104,6 +110,13 @@ type TimelineGroup struct {
 	MediaTotal int `json:"mediaTotal"`
 	// The day shared for all media in this timeline group
 	Date time.Time `json:"date"`
+}
+
+type UpdateRoleInput struct {
+	ID          int     `json:"id"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Permissions []int   `json:"permissions,omitempty"`
 }
 
 // Supported language translations of the user interface
@@ -262,6 +275,49 @@ func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
 }
 
 func (e OrderDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Permission string
+
+const (
+	// Gives the user the ability to manage users & roles
+	PermissionUserManagement Permission = "USER_MANAGEMENT"
+	// Gives the user the ability to control system configuration options
+	PermissionSystemConfig Permission = "SYSTEM_CONFIG"
+)
+
+var AllPermission = []Permission{
+	PermissionUserManagement,
+	PermissionSystemConfig,
+}
+
+func (e Permission) IsValid() bool {
+	switch e {
+	case PermissionUserManagement, PermissionSystemConfig:
+		return true
+	}
+	return false
+}
+
+func (e Permission) String() string {
+	return string(e)
+}
+
+func (e *Permission) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Permission(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Permission", str)
+	}
+	return nil
+}
+
+func (e Permission) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

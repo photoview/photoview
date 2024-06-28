@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Aktion",
-          "capabilities": "Berechtigung",
+
           "photo_path": "Speicherort der Medien",
           "username": "Benutzername"
         },

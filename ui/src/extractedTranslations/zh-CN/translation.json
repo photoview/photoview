@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "操作",
-          "capabilities": "权限",
+
           "photo_path": "相册路径",
           "username": "用户名"
         },

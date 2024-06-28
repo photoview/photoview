@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Handling",
-          "capabilities": "Rettigheder",
+
           "photo_path": "Billedesti",
           "username": "Brugernavn"
         },

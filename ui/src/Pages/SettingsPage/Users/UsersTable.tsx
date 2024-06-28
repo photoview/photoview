@@ -27,6 +27,10 @@ export const USERS_QUERY = gql`
         id
         filePath
       }
+      role {
+        id
+        name
+      }
     }
   }
 `
@@ -67,10 +71,7 @@ const UsersTable = () => {
                 )}
               </TableHeaderCell>
               <TableHeaderCell>
-                {t(
-                  'settings.users.table.column_names.capabilities',
-                  'Capabilities'
-                )}
+                {t('settings.users.table.column_names.role', 'Role')}
               </TableHeaderCell>
               <TableHeaderCell className="w-0 whitespace-nowrap">
                 {t('settings.users.table.column_names.action', 'Action')}

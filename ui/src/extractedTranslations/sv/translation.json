@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Åtgärd",
-          "capabilities": "",
+
           "photo_path": "Sökväg till bild",
           "username": "Användarnamn"
         },

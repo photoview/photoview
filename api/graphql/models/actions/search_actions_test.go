@@ -13,7 +13,9 @@ import (
 func TestSearch(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	user, err := models.RegisterUser(db, "user", nil, true)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "user", nil, ids[0])
 	assert.NoError(t, err)
 
 	rootAlbum := models.Album{

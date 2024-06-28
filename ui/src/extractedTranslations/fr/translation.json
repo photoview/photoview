@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Action",
-          "capabilities": "Permissions",
+
           "photo_path": "Chemin des photos",
           "username": "Nom d'utilisateur"
         },

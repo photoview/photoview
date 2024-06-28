@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Eylem",
-          "capabilities": "Özellikler",
+
           "photo_path": "Fotoğraf yolu",
           "username": "Kullanıcı adı"
         },

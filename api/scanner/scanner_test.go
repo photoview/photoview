@@ -17,10 +17,13 @@ func TestMain(m *testing.M) {
 
 func TestFullScan(t *testing.T) {
 	test_utils.FilesystemTest(t)
-	db := test_utils.DatabaseTest(t)
+	db := test_utils.DatabaseTestDB(t)
+	defer test_utils.ScannerCleanup(t, db)
 
 	pass := "1234"
-	user, err := models.RegisterUser(db, "test_user", &pass, true)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "test_user", &pass, ids[0])
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -77,5 +80,4 @@ func TestFullScan(t *testing.T) {
 
 		return len(all_image_faces) == 6
 	}, time.Second*5, time.Millisecond*500)
-
 }

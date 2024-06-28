@@ -2,6 +2,7 @@ package actions
 
 import (
 	"errors"
+	"github.com/photoview/photoview/api/database/drivers"
 	"os"
 	"path"
 	"strconv"
@@ -15,7 +16,17 @@ func DeleteUser(db *gorm.DB, userID int) (*models.User, error) {
 
 	// make sure the last admin user is not deleted
 	var adminUsers []*models.User
-	db.Model(&models.User{}).Where("admin = true").Limit(2).Find(&adminUsers)
+	var query string
+	if drivers.POSTGRES.MatchDatabase(db) {
+		query = "\"Role\".name = 'ADMIN'"
+	} else {
+		query = "Role.Name = 'ADMIN'"
+	}
+	db.Debug().Joins("Role").Model(&models.User{}).
+		Where(query).
+		Limit(2).
+		Find(&adminUsers)
+
 	if len(adminUsers) == 1 && adminUsers[0].ID == userID {
 		return nil, errors.New("deleting sole admin user is not allowed")
 	}

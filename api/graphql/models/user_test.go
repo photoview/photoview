@@ -15,7 +15,9 @@ func TestUserRegistrationAuthorization(t *testing.T) {
 
 	t.Run("Register user", func(t *testing.T) {
 		password := "1234"
-		user, err := models.RegisterUser(db, "admin", &password, true)
+		ids := make([]int, 0)
+		db.Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &ids)
+		user, err := models.RegisterUser(db, "admin", &password, ids[0])
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -24,7 +26,6 @@ func TestUserRegistrationAuthorization(t *testing.T) {
 		assert.EqualValues(t, "admin", user.Username)
 		assert.NotNil(t, user.Password)
 		assert.NotEqualValues(t, "1234", user.Password) // should be hashed
-		assert.True(t, user.Admin)
 	})
 
 	t.Run("Authorize user", func(t *testing.T) {
@@ -188,7 +189,9 @@ func TestUserOwnsAlbum(t *testing.T) {
 func TestUserFavoriteMedia(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	user, err := models.RegisterUser(db, "user1", nil, false)
+	ids := make([]int, 0)
+	db.Model(&models.Role{}).Where("name = ?", "USER").Pluck("id", &ids)
+	user, err := models.RegisterUser(db, "user1", nil, ids[0])
 	assert.NoError(t, err)
 
 	rootAlbum := models.Album{

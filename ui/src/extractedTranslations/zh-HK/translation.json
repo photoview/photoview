@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "動作",
-          "capabilities": "能力",
+
           "photo_path": "相簿路徑",
           "username": "使用者名稱"
         },

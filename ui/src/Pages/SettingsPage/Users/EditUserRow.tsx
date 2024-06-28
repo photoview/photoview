@@ -5,7 +5,7 @@ import { UserRowChildProps } from './UserRow'
 import { TableRow, TableCell } from '../../../primitives/Table'
 import { TextField } from '../../../primitives/form/Input'
 import { Button, ButtonGroup } from '../../../primitives/form/Input'
-import Checkbox from '../../../primitives/form/Checkbox'
+import { RoleSelector } from './RoleSelector'
 
 const EditUserRow = ({
   user,
@@ -40,15 +40,17 @@ const EditUserRow = ({
         <EditRootPaths user={user} />
       </TableCell>
       <TableCell>
-        <Checkbox
-          label="Admin"
-          checked={state.admin}
-          onChange={e => {
+        <RoleSelector
+          onRoleSelected={i => {
             setState(state => ({
               ...state,
-              admin: e.target.checked || false,
+              role: {
+                ...state.role,
+                id: i,
+              },
             }))
           }}
+          selected={state.role.id}
         />
       </TableCell>
       <TableCell>
@@ -72,7 +74,7 @@ const EditUserRow = ({
                 variables: {
                   id: user.id,
                   username: state.username,
-                  admin: state.admin,
+                  roleId: state.role.id,
                 },
               })
             }

@@ -37,10 +37,12 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 			if len(userIDs) > 0 {
 
 				var users []*models.User
-				if err := db.Where("id IN (?)", userIDs).Find(&users).Error; err != nil {
+				if err := db.Where("id IN (?)", userIDs).Preload("Role").Preload("Role.Permissions").Find(&users).Error; err != nil {
 					return nil, []error{err}
 				}
-
+				for _, user := range users {
+					user.Admin = user.Role.Name == "ADMIN"
+				}
 				userMap = make(map[int]*models.User, len(users))
 				for _, user := range users {
 					userMap[user.ID] = user

@@ -191,7 +191,7 @@
       "table": {
         "column_names": {
           "action": "Действие",
-          "capabilities": "",
+
           "photo_path": "Путь к фото",
           "username": "Имя пользователя"
         },

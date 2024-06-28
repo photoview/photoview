@@ -11,13 +11,29 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type PermissionModel struct {
+	Model
+	Name Permission `gorm:"unique;not null"`
+}
+
+type Role struct {
+	Model
+	Name        string `gorm:"unique;not null"` // Unique name for the role
+	Description string // Optional description for the role
+	SystemRole  bool
+	Editable    bool
+	Permissions []*PermissionModel `gorm:"many2many:role_permissions;"` // Permissions associated with the role
+}
+
 type User struct {
 	Model
 	Username string  `gorm:"unique;size:128"`
 	Password *string `gorm:"size:256"`
 	// RootPath string  `gorm:"size:512`
 	Albums []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
-	Admin  bool    `gorm:"default:false"`
+	RoleID *int
+	Role   Role `gorm:"foreignKey:RoleID"`
+	Admin  bool `gorm:"-" `
 }
 
 type UserMediaData struct {
@@ -99,10 +115,10 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 	return &user, nil
 }
 
-func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*User, error) {
+func RegisterUser(db *gorm.DB, username string, password *string, roleId int) (*User, error) {
 	user := User{
 		Username: username,
-		Admin:    admin,
+		RoleID:   &roleId,
 	}
 
 	if password != nil {

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/photoview/photoview/api/database/migrations"
 	"log"
 	"net/url"
 	"time"
@@ -154,8 +155,10 @@ func SetupDatabase() (*gorm.DB, error) {
 	return db, nil
 }
 
-var database_models []interface{} = []interface{}{
+var database_models = []interface{}{
 	&models.User{},
+	&models.Role{},
+	&models.PermissionModel{},
 	&models.AccessToken{},
 	&models.SiteInfo{},
 	&models.Media{},
@@ -180,7 +183,7 @@ func MigrateDatabase(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(database_models...); err != nil {
-		log.Printf("Auto migration failed: %v\n", err)
+		log.Printf("Auto migration failed on 2: %v\n", err)
 	}
 
 	// v2.1.0 - Replaced by Media.CreatedAt
@@ -194,52 +197,9 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
 	}
 
-	return nil
-}
-
-func ClearDatabase(db *gorm.DB) error {
-	err := db.Transaction(func(tx *gorm.DB) error {
-
-		db_driver := drivers.DatabaseDriverFromEnv()
-
-		if db_driver == drivers.MYSQL {
-			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
-				return err
-			}
-		}
-
-		dry_run := tx.Session(&gorm.Session{DryRun: true})
-		for _, model := range database_models {
-			// get table name of model structure
-			table := dry_run.Find(model).Statement.Table
-
-			switch db_driver {
-			case drivers.POSTGRES:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-					return err
-				}
-			case drivers.MYSQL:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
-					return err
-				}
-			case drivers.SQLITE:
-				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
-					return err
-				}
-			}
-
-		}
-
-		if db_driver == drivers.MYSQL {
-			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
+	// vx.x.x - Added permissions system removing need for admin role.
+	// Then, iterate over each permission in the AllPermission array
+	if err := migrations.MigrateForPermissions(db); err != nil {
 		return err
 	}
 

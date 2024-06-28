@@ -1,6 +1,5 @@
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import Checkbox from '../../../primitives/form/Checkbox'
 import { Button } from '../../../primitives/form/Input'
 import Modal from '../../../primitives/Modal'
 import { TableCell, TableRow } from '../../../primitives/Table'
@@ -32,9 +31,7 @@ const ViewUserRow = ({
     <TableRow>
       <TableCell>{user.username}</TableCell>
       <TableCell>{paths}</TableCell>
-      <TableCell>
-        <Checkbox label="Admin" disabled checked={user.admin} />
-      </TableCell>
+      <TableCell>{user.role.name}</TableCell>
       <TableCell>
         <div className="flex gap-1">
           <Button
