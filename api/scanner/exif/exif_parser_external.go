@@ -66,7 +66,7 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*float64, *float64) {
 	var GPSLat, GPSLong *float64
 
-  // GPS coordinates - longitude
+	// GPS coordinates - longitude
 	longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
 	if err == nil {
 		GPSLong = &longitudeRaw

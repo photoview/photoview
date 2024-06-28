@@ -1,9 +1,9 @@
 package migrations_test
 
 import (
-	"os"
-	"math"
 	"bufio"
+	"math"
+	"os"
 	"strings"
 	"testing"
 
@@ -15,9 +15,9 @@ import (
 )
 
 func TestExifMigration(t *testing.T) {
-  envFile, err := os.Open("/home/runner/work/photoview/photoview/api/testing.env")
+	envFile, err := os.Open("/home/runner/work/photoview/photoview/api/testing.env")
 	if err != nil {
-	  t.Fatalf("Failed to open environment file: %v", err)
+		t.Fatalf("Failed to open environment file: %v", err)
 	}
 	defer envFile.Close()
 
@@ -26,7 +26,7 @@ func TestExifMigration(t *testing.T) {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-		  t.Fatalf("Invalid line in environment file: %s", line)
+			t.Fatalf("Invalid line in environment file: %s", line)
 		}
 		key, value := parts[0], strings.Trim(parts[1], "'")
 		os.Setenv(key, value)
@@ -37,14 +37,14 @@ func TestExifMigration(t *testing.T) {
 
 	// Create test data
 	exifEntries := []models.MediaEXIF{
-		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.0)},  // Invalid GPSLatitude
-		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.0)},  // Invalid GPSLatitude
-		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(90.1)},  // Invalid GPSLongitude
-		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.1)},  // Invalid GPSLongitude
+		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.0)},   // Invalid GPSLatitude
+		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.0)}, // Invalid GPSLatitude
+		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(90.1)},   // Invalid GPSLongitude
+		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.1)}, // Invalid GPSLongitude
 		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(90.0)},   // Valid GPS data
-		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.0)},   // Valid GPS data
-		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.1)},  // Invalid GPSLatitude and GPSLongitude
-		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.1)},  // Invalid GPSLatitude and GPSLongitude
+		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.0)}, // Valid GPS data
+		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.1)},   // Invalid GPSLatitude and GPSLongitude
+		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.1)}, // Invalid GPSLatitude and GPSLongitude
 	}
 
 	// Insert test data
