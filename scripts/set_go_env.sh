@@ -97,5 +97,3 @@ export PKG_CONFIG_PATH="/usr/lib/${COMPILER_ARCH}/pkgconfig/"
 if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; then
   export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
 fi
-
-exec /usr/bin/go "$@"
