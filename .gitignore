@@ -13,8 +13,9 @@ testing.env
 # docker
 docker-compose.yml
 /Makefile
-storage
-database
+/storage
+/database
+/tmp
 
 # dependencies
 node_modules/

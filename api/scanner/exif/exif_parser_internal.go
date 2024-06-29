@@ -3,6 +3,7 @@ package exif
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/big"
 	"os"
 	"time"
@@ -142,8 +143,16 @@ func (p internalExifParser) ParseExif(media_path string) (returnExif *models.Med
 
 	lat, long, err := exifTags.LatLong()
 	if err == nil {
-		newExif.GPSLatitude = &lat
-		newExif.GPSLongitude = &long
+		if math.Abs(lat) > 90 || math.Abs(long) > 90 {
+			returnExif = &newExif
+			log.Printf(
+				"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
+				media_path, long, lat)
+			return
+		} else {
+			newExif.GPSLatitude = &lat
+			newExif.GPSLongitude = &long
+		}
 	}
 
 	returnExif = &newExif
