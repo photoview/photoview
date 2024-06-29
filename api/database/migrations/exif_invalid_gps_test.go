@@ -33,7 +33,7 @@ func TestExifMigration(t *testing.T) {
 	}
 
 	db := test_utils.DatabaseTest(t)
-	//defer db.Exec("DELETE FROM media_exif") // Clean up after test
+	defer db.Exec("DELETE FROM media_exif") // Clean up after test
 
 	// Create test data
 	exifEntries := []models.MediaEXIF{
