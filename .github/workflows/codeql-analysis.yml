@@ -9,6 +9,22 @@ on:
   schedule:
     - cron: '0 1 * * 4'
 
+permissions:
+  actions: read
+  attestations: write
+  checks: read
+  contents: write
+  deployments: read
+  discussions: none
+  id-token: write
+  issues: none
+  packages: none
+  pages: none
+  pull-requests: write
+  repository-projects: none
+  security-events: write
+  statuses: write
+
 jobs:
   create-matrix:
     runs-on: ubuntu-latest
