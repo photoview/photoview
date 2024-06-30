@@ -5,21 +5,13 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/pkg/errors"
-
-	"gorm.io/gorm"
 )
 
-func makeMediaURLLoader(db *gorm.DB, filter func(query *gorm.DB) *gorm.DB) func(keys []int) ([]*models.MediaURL, []error) {
+func makeMediaURLLoader(repo MediaRepository, filter func(query *gorm.DB) *gorm.DB) func(keys []int) ([]*models.MediaURL, []error) {
 	return func(mediaIDs []int) ([]*models.MediaURL, []error) {
-
-		var urls []*models.MediaURL
-		query := db.Where("media_id IN (?)", mediaIDs)
-
-		filter(query)
-
-		if err := query.Find(&urls).Error; err != nil {
-			return nil, []error{errors.Wrap(err, "media url loader database query")}
+		urls, err := repo.FindMediaURLs(filter, mediaIDs)
+		if err != nil {
+			return nil, []error{err}
 		}
 
 		resultMap := make(map[int]*models.MediaURL, len(mediaIDs))
@@ -41,31 +33,31 @@ func makeMediaURLLoader(db *gorm.DB, filter func(query *gorm.DB) *gorm.DB) func(
 	}
 }
 
-func NewThumbnailMediaURLLoader(db *gorm.DB) *MediaURLLoader {
+func NewThumbnailMediaURLLoader(repo MediaRepository) *MediaURLLoader {
 	return &MediaURLLoader{
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
-		fetch: makeMediaURLLoader(db, func(query *gorm.DB) *gorm.DB {
+		fetch: makeMediaURLLoader(repo, func(query *gorm.DB) *gorm.DB {
 			return query.Where("purpose = ? OR purpose = ?", models.PhotoThumbnail, models.VideoThumbnail)
 		}),
 	}
 }
 
-func NewHighresMediaURLLoader(db *gorm.DB) *MediaURLLoader {
+func NewHighresMediaURLLoader(repo MediaRepository) *MediaURLLoader {
 	return &MediaURLLoader{
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
-		fetch: makeMediaURLLoader(db, func(query *gorm.DB) *gorm.DB {
+		fetch: makeMediaURLLoader(repo, func(query *gorm.DB) *gorm.DB {
 			return query.Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, media_type.WebMimetypes)
 		}),
 	}
 }
 
-func NewVideoWebMediaURLLoader(db *gorm.DB) *MediaURLLoader {
+func NewVideoWebMediaURLLoader(repo MediaRepository) *MediaURLLoader {
 	return &MediaURLLoader{
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
-		fetch: makeMediaURLLoader(db, func(query *gorm.DB) *gorm.DB {
+		fetch: makeMediaURLLoader(repo, func(query *gorm.DB) *gorm.DB {
 			return query.Where("purpose = ? OR purpose = ?", models.VideoWeb, models.MediaOriginal)
 		}),
 	}
