@@ -1,10 +1,7 @@
 package migrations_test
 
 import (
-	"bufio"
 	"math"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,23 +12,6 @@ import (
 )
 
 func TestExifMigration(t *testing.T) {
-	envFile, err := os.Open("/home/runner/work/photoview/photoview/api/testing.env")
-	if err != nil {
-		t.Fatalf("Failed to open environment file: %v", err)
-	}
-	defer envFile.Close()
-
-	scanner := bufio.NewScanner(envFile)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			t.Fatalf("Invalid line in environment file: %s", line)
-		}
-		key, value := parts[0], strings.Trim(parts[1], "'")
-		os.Setenv(key, value)
-	}
-
 	db := test_utils.DatabaseTest(t)
 	defer db.Exec("DELETE FROM media_exif") // Clean up after test
 
