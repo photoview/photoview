@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/graphql/models"
 )
 
 type MediaRepository interface {
