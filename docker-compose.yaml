@@ -43,5 +43,19 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
+    command: 
+    - /bin/bash
+    - -c
+    - "source /app/scripts/set_go_env.sh; go run ."
+    volumes:
+    - .:/app:rw
+
+  ui:
+    image: photoview/photoview-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ui
+    command: "npm ci --omit=dev --ignore-scripts && npm run build -- --base=$UI_PUBLIC_URL"
     volumes:
     - .:/app:rw
