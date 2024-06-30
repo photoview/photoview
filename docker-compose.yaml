@@ -1,8 +1,12 @@
 name: photoview
 
+volumes:
+  mariadb:
+  postgres:
+
 services:
   mariadb:
-    image: mariadb:lts
+    image: mariadb:11.4
     environment:
       MYSQL_DATABASE: photoview_test
       MYSQL_USER: photoview
@@ -18,15 +22,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+    - mariadb:/var/lib/mysql:rw
     ports:
-      - 3306:3306
+    - 3306:3306
 
   postgres:
-    image: postgres:latest
+    image: postgres:16.3
     environment:
+      POSTGRES_DB: photoview_test
       POSTGRES_USER: photoview
       POSTGRES_PASSWORD: photosecret
-      POSTGRES_DB: photoview_test
     healthcheck:
       test:
       - CMD
@@ -34,8 +40,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+    - postgres:/var/lib/postgresql/data:rw
     ports:
-      - 5432:5432
+    - 5432:5432
 
   api:
     image: photoview/photoview-api
@@ -43,10 +51,14 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
+    env_file: scripts/env.api
     command: 
     - /bin/bash
     - -c
-    - "source /app/scripts/set_go_env.sh; go run ."
+    - |
+      git config --global --add safe.directory /app
+      source /app/scripts/set_go_env.sh
+      go run .
     volumes:
     - .:/app:rw
 
@@ -56,6 +68,11 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
-    command: "npm ci --omit=dev --ignore-scripts && npm run build -- --base=$UI_PUBLIC_URL"
+    command:
+    - /bin/bash
+    - -c
+    - |
+      npm ci --omit=dev --ignore-scripts
+      npm run build -- --base=$UI_PUBLIC_URL
     volumes:
     - .:/app:rw
