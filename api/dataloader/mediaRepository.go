@@ -3,6 +3,8 @@ package dataloader
 import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/photoview/photoview/api/scanner/media_type"
 )
 
 type MediaRepository interface {
