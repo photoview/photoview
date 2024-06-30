@@ -24,8 +24,8 @@ ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 # Download dependencies
-COPY ui /app
-WORKDIR /app
+COPY . /app
+WORKDIR /app/ui
 RUN npm ci --omit=dev --ignore-scripts \
   # Build frontend
   && npm run build -- --base=$UI_PUBLIC_URL
@@ -37,18 +37,17 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts /tmp/scripts
-COPY api /app
-WORKDIR /app
+COPY . /app
+WORKDIR /app/api
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /tmp/scripts/*.sh \
-  && /tmp/scripts/install_build_dependencies.sh \
-  && source /tmp/scripts/set_go_env.sh \
+RUN chmod +x /app/scripts/*.sh \
+  && /app/scripts/install_build_dependencies.sh \
+  && source /app/scripts/set_go_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -90,8 +89,8 @@ RUN groupadd -g 999 photoview \
 
 WORKDIR /home/photoview
 COPY api/data /app/data
-COPY --from=ui /app/dist /app/ui
-COPY --from=api /app/photoview /app/photoview
+COPY --from=ui /app/ui/dist /app/ui
+COPY --from=api /app/api/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80

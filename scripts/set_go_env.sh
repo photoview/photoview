@@ -7,11 +7,12 @@
 : ${TARGETOS=}
 : ${TARGETARCH=}
 : ${TARGETVARIANT=}
-: ${CGO_ENABLED=}
-: ${GOARCH=}
-: ${GOOS=}
-: ${GOARM=}
-: ${GOBIN=}
+
+CGO_ENABLED=`go env CGO_ENABLED`
+GOARCH=`go env GOARCH`
+GOOS=`go env GOOS`
+GOARM=`go env GOARM`
+GOBIN=`go env GOBIN`
 
 set -eu
 

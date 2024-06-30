@@ -1,0 +1,47 @@
+name: photoview
+
+services:
+  mariadb:
+    image: mariadb:lts
+    environment:
+      MYSQL_DATABASE: photoview_test
+      MYSQL_USER: photoview
+      MYSQL_PASSWORD: photosecret
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+    healthcheck:
+      test:
+      - CMD
+      - mariadb-admin
+      - --user=photoview
+      - --password=photosecret
+      - ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 3306:3306
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: photoview
+      POSTGRES_PASSWORD: photosecret
+      POSTGRES_DB: photoview_test
+    healthcheck:
+      test:
+      - CMD
+      - pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+
+  api:
+    image: photoview/photoview-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    volumes:
+    - .:/app:rw
