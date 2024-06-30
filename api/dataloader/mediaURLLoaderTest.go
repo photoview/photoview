@@ -6,7 +6,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/photoview/photoview/api/dataloader"
 	"gorm.io/gorm"
 )
 
