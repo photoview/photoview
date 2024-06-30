@@ -1,4 +1,4 @@
-package dataloader_test
+package dataloader
 
 import (
 	"testing"
