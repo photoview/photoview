@@ -5,7 +5,7 @@ volumes:
   postgres:
 
 services:
-  mariadb:
+  mysql:
     image: mariadb:11.4
     environment:
       MYSQL_DATABASE: photoview_test

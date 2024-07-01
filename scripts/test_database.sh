@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 declare -A DBS
 declare -A DEPS
 
@@ -45,7 +43,7 @@ if [ "${#DEPS[@]}" -ne "0" ]; then
 fi
 
 for db in ${!DBS[@]}; do
-  docker compose run -e PHOTOVIEW_DATABASE_DRIVER=${db} api go test ./... --database -v
+  docker compose run -e PHOTOVIEW_DATABASE_DRIVER=${db} api go test ./... -filesystem -database -p 1 -v
 done
 
 if [ "${#DEPS[@]}" -ne "0" ]; then
