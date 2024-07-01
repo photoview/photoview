@@ -1,30 +1,53 @@
-#!/bin/sh
+#!/bin/bash
 
-case "$1" in
-  "" | sqlite)
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=sqlite   api go test ./... --database -v
-    ;;
+set -x
 
-  mysql)
-    docker compose up -d --wait mariadb
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=mysql    api go test ./... --database -v
-    ;;
+declare -A DBS
+declare -A DEPS
 
-  postgres)
-    docker compose up -d --wait postgres
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=postgres api go test ./... --database -v
-    ;;
+for var in "$@"; do
+  case "$var" in
+    sqlite)
+      DBS["sqlite"]="true"
+      ;;
 
-  all)
-    docker compose up -d --wait mariadb postgres
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=sqlite   api go test ./... --database -v
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=mysql    api go test ./... --database -v
-    docker compose run -e PHOTOVIEW_DATABASE_DRIVER=postgres api go test ./... --database -v
-    ;;
+    mysql)
+      DEPS["mysql"]="true"
+      DBS["mysql"]="true"
+      ;;
 
-  *)
-    echo "$0 <all | sqlite | mysql | postgres>"
-    ;;
-esac
+    postgres)
+      DEPS["postgres"]="true"
+      DBS["postgres"]="true"
+      ;;
 
-docker compose down mariadb postgres
+    all)
+      DBS["sqlite"]="true"
+      DEPS["mysql"]="true"
+      DBS["mysql"]="true"
+      DEPS["postgres"]="true"
+      DBS["postgres"]="true"
+      ;;
+
+    *)
+      echo "$0 <all | sqlite | mysql | postgres>"
+      exit -1
+      ;;
+  esac
+done
+
+if [ "$#" = "0" ]; then
+  DBS["sqlite"]="true"
+fi
+
+if [ "${#DEPS[@]}" -ne "0" ]; then
+  docker compose up -d --wait ${!DEPS[@]}
+fi
+
+for db in ${!DBS[@]}; do
+  docker compose run -e PHOTOVIEW_DATABASE_DRIVER=${db} api go test ./... --database -v
+done
+
+if [ "${#DEPS[@]}" -ne "0" ]; then
+  docker compose down ${!DEPS[@]}
+fi
