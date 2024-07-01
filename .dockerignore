@@ -1,5 +1,4 @@
 .dockerignore
-.git
 .github
 .gitignore
 .husky
