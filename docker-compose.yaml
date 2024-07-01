@@ -6,7 +6,7 @@ volumes:
 
 services:
   mysql:
-    image: mariadb:11.4
+    image: mariadb:lts
     environment:
       MYSQL_DATABASE: photoview_test
       MYSQL_USER: photoview
@@ -28,7 +28,7 @@ services:
     - 3306:3306
 
   postgres:
-    image: postgres:16.3
+    image: postgres:16-apline
     environment:
       POSTGRES_DB: photoview_test
       POSTGRES_USER: photoview
