@@ -72,7 +72,7 @@ services:
     - /bin/bash
     - -c
     - |
-      npm ci --omit=dev --ignore-scripts
+      npm ci --ignore-scripts
       npm run build -- --base=$UI_PUBLIC_URL
     volumes:
     - .:/app:rw
