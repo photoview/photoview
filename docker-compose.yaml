@@ -19,9 +19,9 @@ services:
       - --user=photoview
       - --password=photosecret
       - ping
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
     volumes:
     - mariadb:/var/lib/mysql:rw
     ports:
@@ -37,9 +37,9 @@ services:
       test:
       - CMD
       - pg_isready
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
     volumes:
     - postgres:/var/lib/postgresql/data:rw
     ports:
