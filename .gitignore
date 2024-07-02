@@ -27,6 +27,7 @@ node_modules/
 
 # building
 .cache/
+dev/
 dist/
 build/
 *.tsbuildinfo
