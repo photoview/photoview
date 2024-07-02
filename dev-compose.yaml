@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile
       target: api-env
     env_file: scripts/env.api
-    command: 
+    command:
     - /bin/bash
     - -c
     - |

@@ -48,8 +48,7 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /app/scripts/*.sh \
-  && /app/scripts/install_build_dependencies.sh \
+RUN /app/scripts/install_build_dependencies.sh \
   && source /app/scripts/set_go_env.sh \
   && go env \
   && go mod download \
@@ -62,10 +61,11 @@ RUN chmod +x /app/scripts/*.sh \
 
 FROM api-env AS api
 # Build api source
-RUN go build -v -o photoview .
+RUN source /app/scripts/set_go_env.sh \
+  && go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm-slim AS final
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS final
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
