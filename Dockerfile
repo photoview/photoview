@@ -48,9 +48,9 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /tmp/scripts/*.sh \
-  && /tmp/scripts/install_build_dependencies.sh \
-  && source /tmp/scripts/set_go_env.sh \
+RUN chmod +x ./scripts/*.sh \
+  && ./scripts/install_build_dependencies.sh \
+  && source ./scripts/set_go_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
