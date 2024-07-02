@@ -52,7 +52,7 @@ services:
     - /bin/bash
     - -c
     - |
-      source /app/scripts/set_go_env.sh
+      source /app/scripts/set_compiler_env.sh
       go run .
     volumes:
     - .:/app:rw

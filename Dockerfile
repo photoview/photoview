@@ -49,7 +49,7 @@ ENV CGO_ENABLED=1
 
 # Download dependencies
 RUN /app/scripts/install_build_dependencies.sh \
-  && source /app/scripts/set_go_env.sh \
+  && source /app/scripts/set_compiler_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -61,7 +61,7 @@ RUN /app/scripts/install_build_dependencies.sh \
 
 FROM api-env AS api
 # Build api source
-RUN source /app/scripts/set_go_env.sh \
+RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
