@@ -1,0 +1,73 @@
+name: photoview
+
+services:
+  mysql:
+    image: mariadb:lts
+    environment:
+      MYSQL_DATABASE: photoview_test
+      MYSQL_USER: photoview
+      MYSQL_PASSWORD: photosecret
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+    healthcheck:
+      test:
+      - CMD
+      - mariadb-admin
+      - --user=photoview
+      - --password=photosecret
+      - ping
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    volumes:
+    - ./dev/mysql:/var/lib/mysql:rw
+    ports:
+    - 3306:3306
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: photoview_test
+      POSTGRES_USER: photoview
+      POSTGRES_PASSWORD: photosecret
+    healthcheck:
+      test:
+      - CMD
+      - pg_isready
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    volumes:
+    - ./dev/postgres:/var/lib/postgresql/data:rw
+    ports:
+    - 5432:5432
+
+  api:
+    image: photoview/photoview-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-env
+    env_file: scripts/env.api
+    command:
+    - /bin/bash
+    - -c
+    - |
+      source /app/scripts/set_compiler_env.sh
+      go run .
+    volumes:
+    - .:/app:rw
+
+  ui:
+    image: photoview/photoview-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ui-env
+    command:
+    - /bin/bash
+    - -c
+    - |
+      npm ci --ignore-scripts
+      npm run build -- --base=$UI_PUBLIC_URL
+    volumes:
+    - .:/app:rw

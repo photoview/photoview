@@ -31,6 +31,7 @@ fi
 
 # Install go-face dependencies and libheif for HEIF media decoding
 apt-get install -y \
+  git \
   libdlib-dev:${DEBIAN_ARCH} \
   libblas-dev:${DEBIAN_ARCH} \
   libatlas-base-dev:${DEBIAN_ARCH} \

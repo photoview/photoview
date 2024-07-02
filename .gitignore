@@ -5,7 +5,7 @@ cache/
 /api/media_cache/
 /photos_path
 photoview.db
-photoview.db-journal
+photoview.db-*
 
 .env
 testing.env
@@ -23,6 +23,7 @@ node_modules/
 # testing
 /ui/coverage
 /api/coverage.txt
+/api/coverage.*.txt
 
 # building
 .cache/

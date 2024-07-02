@@ -1,5 +1,5 @@
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui-env
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -24,31 +24,32 @@ ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 # Download dependencies
-COPY ui /app
-WORKDIR /app
+COPY . /app
+WORKDIR /app/ui
+
+FROM ui-env AS ui
+# Build frontend
 RUN npm ci --omit=dev --ignore-scripts \
   # Build frontend
   && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api-env
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts /tmp/scripts
-COPY api /app
-WORKDIR /app
+COPY . /app
+WORKDIR /app/api
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /tmp/scripts/*.sh \
-  && /tmp/scripts/install_build_dependencies.sh \
-  && source /tmp/scripts/set_go_env.sh \
+RUN /app/scripts/install_build_dependencies.sh \
+  && source /app/scripts/set_compiler_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -56,12 +57,15 @@ RUN chmod +x /tmp/scripts/*.sh \
   # Build dependencies that use CGO
   && go install \
     github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face \
-  # Build api source
+    github.com/Kagami/go-face
+
+FROM api-env AS api
+# Build api source
+RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm-slim
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS final
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -90,8 +94,8 @@ RUN groupadd -g 999 photoview \
 
 WORKDIR /home/photoview
 COPY api/data /app/data
-COPY --from=ui /app/dist /app/ui
-COPY --from=api /app/photoview /app/photoview
+COPY --from=ui /app/ui/dist /app/ui
+COPY --from=api /app/api/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80
