@@ -19,13 +19,15 @@ type Loaders struct {
 }
 
 func Middleware(db *gorm.DB) mux.MiddlewareFunc {
+	repo := &GormMediaRepository{db: db}
+
 	return mux.MiddlewareFunc(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			ctx := context.WithValue(r.Context(), loadersKey, &Loaders{
-				MediaThumbnail:      NewThumbnailMediaURLLoader(db),
-				MediaHighres:        NewHighresMediaURLLoader(db),
-				MediaVideoWeb:       NewVideoWebMediaURLLoader(db),
+				MediaThumbnail:      NewThumbnailMediaURLLoader(repo),
+				MediaHighres:        NewHighresMediaURLLoader(repo),
+				MediaVideoWeb:       NewVideoWebMediaURLLoader(repo),
 				UserFromAccessToken: NewUserLoaderByToken(db),
 				UserMediaFavorite:   NewUserFavoriteLoader(db),
 			})
