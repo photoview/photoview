@@ -29,8 +29,9 @@ WORKDIR /app/ui
 
 FROM ui-env AS ui
 # Build frontend
-RUN npm ci --ignore-scripts && \
-    npm run build -- --base=$UI_PUBLIC_URL
+RUN npm ci --omit=dev --ignore-scripts \
+  # Build frontend
+  && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api-env
@@ -47,17 +48,17 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN /app/scripts/install_build_dependencies.sh && \
-    git config --global --add safe.directory /app && \
-    source /app/scripts/set_go_env.sh && \
-    go env && \
-    go mod download &&\
-    # Patch go-face
-    sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go && \
-    # Build dependencies that use CGO
-    go install \
-      github.com/mattn/go-sqlite3 \
-      github.com/Kagami/go-face
+RUN chmod +x /tmp/scripts/*.sh \
+  && /tmp/scripts/install_build_dependencies.sh \
+  && source /tmp/scripts/set_go_env.sh \
+  && go env \
+  && go mod download \
+  # Patch go-face
+  && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
+  # Build dependencies that use CGO
+  && go install \
+    github.com/mattn/go-sqlite3 \
+    github.com/Kagami/go-face
 
 FROM api-env AS api
 # Build api source
