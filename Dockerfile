@@ -61,7 +61,7 @@ RUN /app/scripts/install_build_dependencies.sh && \
 
 FROM api-env AS api
 # Build api source
-RUN go build -v --buildvcs=true -o photoview .
+RUN go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
 FROM debian:bookworm-slim AS final
