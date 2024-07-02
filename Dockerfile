@@ -24,11 +24,12 @@ ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 # Download dependencies
+COPY . /app
 WORKDIR /app/ui
-COPY ./ui /app/ui
-RUN npm ci --ignore-scripts \
-  # Build frontend
-  && npm run build -- --base=$UI_PUBLIC_URL
+RUN npm ci --ignore-scripts
+
+# Build frontend
+RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
@@ -37,10 +38,8 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY . /app
 WORKDIR /app/api
-COPY ./api /app/api
-COPY ./.git /app/.git
-COPY ./scripts /app/scripts
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
@@ -57,9 +56,10 @@ RUN chmod +x /app/scripts/*.sh \
   # Build dependencies that use CGO
   && go install \
     github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face \
-  # Build api source
-  && go build -v -o photoview .
+    github.com/Kagami/go-face
+
+# Build api source
+RUN go build -v --buildvcs=true -o photoview .
 
 ### Copy api and ui to production environment ###
 FROM debian:bookworm-slim
