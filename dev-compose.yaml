@@ -1,9 +1,5 @@
 name: photoview
 
-volumes:
-  mariadb:
-  postgres:
-
 services:
   mysql:
     image: mariadb:lts
@@ -23,12 +19,12 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-    - mariadb:/var/lib/mysql:rw
+    - ./dev/mysql:/var/lib/mysql:rw
     ports:
     - 3306:3306
 
   postgres:
-    image: postgres:16-apline
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: photoview_test
       POSTGRES_USER: photoview
@@ -41,7 +37,7 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-    - postgres:/var/lib/postgresql/data:rw
+    - ./dev/postgres:/var/lib/postgresql/data:rw
     ports:
     - 5432:5432
 
@@ -50,13 +46,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
+      target: api-env
     env_file: scripts/env.api
     command: 
     - /bin/bash
     - -c
     - |
-      git config --global --add safe.directory /app
       source /app/scripts/set_go_env.sh
       go run .
     volumes:
@@ -67,7 +62,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: ui
+      target: ui-env
     command:
     - /bin/bash
     - -c
