@@ -2,8 +2,8 @@
 
 declare -A DBS
 
-for var in "$@"; do
-  case "$var" in
+while (( "$#" )); do
+  case "$1" in
     sqlite)
       DBS["sqlite"]="true"
       ;;
@@ -22,17 +22,26 @@ for var in "$@"; do
       DBS["postgres"]="true"
       ;;
 
+    --)
+      shift
+      break;
+      ;;
+
     *)
-      echo "$0 <all | sqlite | mysql | postgres>"
+      echo "$0 <all | sqlite | mysql | postgres> [-- <test arguments>]"
       exit -1
       ;;
   esac
+
+  shift
 done
 
-if [ "$#" = "0" ]; then
+if [ "${#DBS[@]}" = "0" ]; then
   DBS["sqlite"]="true"
 fi
 
 for db in ${!DBS[@]}; do
-  ./scripts/compose.sh run -e PHOTOVIEW_DATABASE_DRIVER=${db} api go test ./... -filesystem -database -p 1 -v
+  echo testing ${db} with args: $@
+  ./scripts/compose.sh run -e PHOTOVIEW_DATABASE_DRIVER=${db} api \
+    go test ./... -filesystem -database -p 1 -v $@
 done

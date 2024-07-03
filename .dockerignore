@@ -16,6 +16,7 @@ Makefile
 photos_path
 screenshots
 storage
+dev
 
 ui/node_modules/
 ui/build/
