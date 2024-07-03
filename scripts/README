@@ -6,13 +6,16 @@ xxxxx/photoview
 $ ./scripts/up_database.sh
 $ ./scripts/compose.sh run -it api /bin/bash
 ...
-$ ./scripts/test_with_coverage.sh
-$ ./scripts/clean.sh
+$ ./scripts/test_database.sh
+$ ./scripts/down_database.sh
 ```
 
-- compose.sh: run `docker compose -f dev-compose.sh`. It accepts parameters after `docker compose`.
-- up_database.sh: launch mysql and postgres in the background.
-- clean.sh: clean files under `./dev`, and stop databases.
-- install_build_dependencies.sh: install API dependencies for building.
-- set_compiler_env.sh: setup the compiler variables for building API.
-- test_database.sh: test API against database.
+- For developing:
+  - compose.sh: run `docker compose -f dev-compose.sh`. It accepts parameters after `docker compose`.
+  - up_database.sh: launch mysql and postgres in the background.
+  - down_database.sh: stop databases and clean files under `./dev`.
+- For building:
+  - install_build_dependencies.sh: install API dependencies for building.
+  - set_compiler_env.sh: setup the compiler variables for building API.
+- For testing:
+  - test_database.sh: test API against database.

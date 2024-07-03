@@ -23,7 +23,6 @@ node_modules/
 # testing
 /ui/coverage
 /api/coverage.txt
-/api/coverage.*.txt
 
 # building
 .cache/
