@@ -16,4 +16,3 @@ $ ./scripts/clean.sh
 - install_build_dependencies.sh: install API dependencies for building.
 - set_compiler_env.sh: setup the compiler variables for building API.
 - test_database.sh: test API against database.
-- test_with_coverage.sh: test API against all database and create coverage reports.
