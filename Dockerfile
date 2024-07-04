@@ -23,11 +23,13 @@ ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
-# Download dependencies
-COPY . /app
 WORKDIR /app/ui
 
 FROM ui-env AS ui
+
+# Download dependencies
+COPY . /app
+
 # Build frontend
 RUN npm ci --omit=dev --ignore-scripts \
   # Build frontend
@@ -40,10 +42,10 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+WORKDIR /app/api
 COPY ./scripts /app/scripts
 COPY ./api/go.mod /app/api/go.mod
 COPY ./api/go.sum /app/api/go.sum
-WORKDIR /app/api
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
