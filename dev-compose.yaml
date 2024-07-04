@@ -69,5 +69,6 @@ services:
     - |
       npm ci --ignore-scripts
       npm run build -- --base=$UI_PUBLIC_URL
+      npm start
     volumes:
     - .:/app:rw
