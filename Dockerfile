@@ -40,7 +40,9 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY . /app
+COPY ./scripts /app/scripts
+COPY ./api/go.mod /app/api/go.mod
+COPY ./api/go.sum /app/api/go.sum
 WORKDIR /app/api
 
 ENV GOPATH="/go"
@@ -60,6 +62,9 @@ RUN /app/scripts/install_build_dependencies.sh \
     github.com/Kagami/go-face
 
 FROM api-env AS api
+
+COPY . /app
+
 # Build api source
 RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
