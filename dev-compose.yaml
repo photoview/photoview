@@ -41,13 +41,27 @@ services:
     ports:
     - 5432:5432
 
+  api-test:
+    image: photoview/photoview-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-env
+    env_file: scripts/env.test
+    volumes:
+    - .:/app:rw
+
   api:
     image: photoview/photoview-api
     build:
       context: .
       dockerfile: Dockerfile
       target: api-env
-    env_file: scripts/env.api
+    env_file: scripts/env.dev
+    expose:
+    - "4001"
+    ports:
+    - "4001:4001"
     command:
     - /bin/bash
     - -c
@@ -63,12 +77,17 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui-env
+    env_file: scripts/env.dev
+    expose:
+    - "1234"
+    ports:
+    - "1234:1234"
     command:
     - /bin/bash
     - -c
     - |
       npm ci --ignore-scripts
-      npm run build -- --base=$UI_PUBLIC_URL
+      npm run build -- --base=/
       npm start
     volumes:
     - .:/app:rw

@@ -10,6 +10,15 @@ $ ./scripts/test_database.sh
 $ ./scripts/down_database.sh
 ```
 
+To develop, run `api` and `ui` server first:
+
+```
+$ ./scripts/compose.sh run api
+$ ./scripts/compose.sh run ui
+```
+
+Change codes and rerun commands above.
+
 - For developing:
   - compose.sh: run `docker compose -f dev-compose.sh`. It accepts parameters after `docker compose`.
   - up_database.sh: launch mysql and postgres in the background.
