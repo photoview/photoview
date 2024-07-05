@@ -44,8 +44,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /app/api
 COPY ./scripts /app/scripts
-COPY ./api/go.mod /app/api/go.mod
-COPY ./api/go.sum /app/api/go.sum
+COPY ./api/go.mod ./api/go.sum /app/api/
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
