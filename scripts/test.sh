@@ -43,5 +43,5 @@ fi
 for db in ${!DBS[@]}; do
   echo testing ${db} with args: $@
   ./scripts/compose.sh run -e PHOTOVIEW_DATABASE_DRIVER=${db} api-test \
-    go test ./... -filesystem -database -p 1 -v $@
+    go test ./... $@
 done

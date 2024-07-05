@@ -6,7 +6,7 @@ xxxxx/photoview
 $ ./scripts/up_database.sh
 $ ./scripts/compose.sh run -it api /bin/bash
 ...
-$ ./scripts/test_database.sh
+$ ./scripts/test.sh mysql -- [-v] [-database -p 1] [-filesystem]
 $ ./scripts/down_database.sh
 ```
 
@@ -24,7 +24,7 @@ Change codes and rerun commands above.
   - up_database.sh: launch mysql and postgres in the background.
   - down_database.sh: stop databases and clean files under `./dev`.
 - For building:
-  - install_build_dependencies.sh: install API dependencies for building.
   - set_compiler_env.sh: setup the compiler variables for building API.
+  - install_build_dependencies.sh: install API dependencies for building.
 - For testing:
-  - test_database.sh: test API against database.
+  - test.sh: test API with proper database environment.
