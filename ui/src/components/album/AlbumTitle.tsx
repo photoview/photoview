@@ -103,18 +103,18 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
         </nav>
         <h1 className="text-2xl truncate min-w-0">{title}</h1>
       </div>
-      {authToken() && (
-        <button
-          title="Album options"
-          aria-label="Album options"
-          className={tailwindClassNames(buttonStyles({}), 'px-2 py-2 ml-2')}
-          onClick={() => {
-            updateSidebar(<AlbumSidebar albumId={album.id} />)
-          }}
-        >
-          <GearIcon />
-        </button>
-      )}
+      <button
+        title="Album options"
+        aria-label="Album options"
+        className={tailwindClassNames(buttonStyles({}), 'px-2 py-2 ml-2')}
+        onClick={() => {
+          updateSidebar(
+            <AlbumSidebar albumId={album.id} albumTitle={album.title} />
+          )
+        }}
+      >
+        <GearIcon />
+      </button>
     </div>
   )
 }
