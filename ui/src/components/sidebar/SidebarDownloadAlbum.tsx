@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { API_ENDPOINT } from '../../apolloClient'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
+import { authToken } from '../../helpers/authentication'
 
 type SidebarAlbumDownladProps = {
   albumID: string
@@ -52,9 +53,17 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   const downloadRows = downloads.map(x => (
     <SidebarTable.Row
       key={x.purpose}
-      onClick={() =>
-        (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
-      }
+      onClick={() => {
+        let url = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`
+        if (authToken() == null) {
+          // Get share token if not authorized
+          const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+          if (token) {
+            url += `?token=${token[1]}`
+          }
+        }
+        return (location.href = url)
+      }}
       tabIndex={0}
     >
       <td className="pl-4 py-2">{`${x.title}`}</td>
