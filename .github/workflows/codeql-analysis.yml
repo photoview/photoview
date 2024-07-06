@@ -28,8 +28,6 @@ permissions:
 jobs:
   create-matrix:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.languages }}
     steps:
       - name: Get languages from repo
         id: set-matrix
@@ -37,6 +35,8 @@ jobs:
         with:
           access-token: ${{ github.token }}
           endpoint: ${{ github.event.repository.languages_url }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.languages }}
 
   analyze:
     name: Analyze
@@ -153,7 +153,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Anchore'));
 
             output += '#### Anchore Grype scan results:\n';
@@ -219,19 +219,19 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             const botComment = comments.data.find(
               comment => comment.user.login === 'github-actions[bot]'
               && comment.body.includes('Hadolint (photoview) issues:')
             );
 
             if (hadolintResults) {
-  
+
               output += '#### Hadolint (photoview) issues:\n';
               output += 'Hadolint detected issues for the `photoview` image during execution.\n';
               output += '\n```\n' + hadolintResults + '\n```\n';
               output += '\nFind more info about detected issues and recommendations for fixes in the [Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
-  
+
               if (botComment) {
                 await github.rest.issues.updateComment({
                   comment_id: botComment.id,
@@ -247,7 +247,7 @@ jobs:
                   body: output
                 });
               }
-            
+
             } else {
 
               if (botComment) {
@@ -258,6 +258,7 @@ jobs:
                 });
               }
             }
+
       - name: Generate report
         uses: hadolint/hadolint-action@v3.1.0
         if: always()
