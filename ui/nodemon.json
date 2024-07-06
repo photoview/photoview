@@ -1,0 +1,9 @@
+{
+  "watch": ["./**"],
+  "exec": "npm start",
+  "ext": "ts,json,tsx,js,html,css",
+  "ignore": ["./dist/"],
+  "execMap": {
+    "ts": "ts-node-esm"
+  }
+}

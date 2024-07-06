@@ -19,19 +19,6 @@
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
   },
-  "nodemonConfig": {
-    "watch": [
-      "./**"
-    ],
-    "ext": "ts,json,tsx,js,html,css",
-    "exec": "npm start",
-    "ignore": [
-      "./dist/"
-    ],
-    "execMap": {
-      "ts": "ts-node-esm"
-    }
-  },
   "dependencies": {
     "@apollo/client": "^3.6.9",
     "@babel/preset-typescript": "^7.18.6",
