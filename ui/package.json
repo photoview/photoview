@@ -10,7 +10,7 @@
   "description": "UI app for Photoview",
   "scripts": {
     "start": "vite",
-    "mon": "nodemon --watch './**' --ext 'ts,json,tsx,js,html,css' --ignore './dist/' --exec 'npm start'",
+    "mon": "nodemon",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "test": "vitest",
@@ -18,6 +18,19 @@
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars && prettier --write */**/__generated__/*.ts",
     "extractTranslations": "i18next -c i18next-parser.config.js",
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "./**"
+    ],
+    "ext": "ts,json,tsx,js,html,css",
+    "exec": "npm start",
+    "ignore": [
+      "./dist/"
+    ],
+    "execMap": {
+      "ts": "ts-node-esm"
+    }
   },
   "dependencies": {
     "@apollo/client": "^3.6.9",
