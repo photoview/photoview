@@ -10,6 +10,7 @@
   "description": "UI app for Photoview",
   "scripts": {
     "start": "vite",
+    "mon": "nodemon --watch './**' --ext 'ts,json,tsx,js,html,css' --ignore './dist/' --exec 'npm run build -- --base=/ && npm start'",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "test": "vitest",
@@ -74,6 +75,7 @@
     "husky": "^8.0.1",
     "i18next-parser": "^8.13.0",
     "lint-staged": "^13.0.3",
+    "nodemon": "^3.1.4",
     "vitest": "^0.17.1"
   },
   "overrides": {
