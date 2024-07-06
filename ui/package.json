@@ -10,7 +10,7 @@
   "description": "UI app for Photoview",
   "scripts": {
     "start": "vite",
-    "mon": "nodemon --watch './**' --ext 'ts,json,tsx,js,html,css' --ignore './dist/' --exec 'npm run build -- --base=/ && npm start'",
+    "mon": "nodemon --watch './**' --ext 'ts,json,tsx,js,html,css' --ignore './dist/' --exec 'npm start'",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "test": "vitest",
@@ -55,7 +55,6 @@
     "subscriptions-transport-ws": "^0.11.0",
     "tailwind-override": "^0.6.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",
-    "typescript": "^4.7.4",
     "url-join": "^5.0.0",
     "vite": "^2.9.13",
     "vite-plugin-svgr": "^2.2.0"
@@ -64,6 +63,7 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.2.1",
+    "@types/node": "^20.14.10",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
     "@vitest/ui": "^0.17.1",
@@ -76,6 +76,8 @@
     "i18next-parser": "^8.13.0",
     "lint-staged": "^13.0.3",
     "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
     "vitest": "^0.17.1"
   },
   "overrides": {
