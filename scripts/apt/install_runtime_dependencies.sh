@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # Install Darktable if building for a supported architecture
-if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
   apt-get update
-  apt-get install -y curl gnupg gpg
+  apt-get install -y curl gnupg2 gpg
 
   echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
     | tee /etc/apt/sources.list.d/graphics:darktable.list
@@ -13,7 +13,7 @@ if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm
   apt-get update
   apt-get install -y darktable
 
-  apt-get purge -y curl gnupg gpg
+  apt-get purge -y curl gnupg2 gpg
   apt-get autoremove -y
 fi
 
