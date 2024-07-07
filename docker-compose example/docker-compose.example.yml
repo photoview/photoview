@@ -119,7 +119,6 @@ services:
     user: "999:999"
     ## Optimized MariaDB startup command for better performance and compatibility
     command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
-
     ## Security options for some restricted systems
     cap_drop:
       - ALL
