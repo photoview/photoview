@@ -24,8 +24,8 @@ ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 # Download dependencies
-COPY ui /app
-WORKDIR /app
+COPY ui /app/ui
+WORKDIR /app/ui
 RUN npm ci --omit=dev --ignore-scripts \
   # Build frontend
   && npm run build -- --base=$UI_PUBLIC_URL
@@ -37,18 +37,17 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts /tmp/scripts
-COPY api /app
-WORKDIR /app
+COPY scripts /app/scripts
+COPY api /app/api
+WORKDIR /app/api
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /tmp/scripts/*.sh \
-  && /tmp/scripts/install_build_dependencies.sh \
-  && source /tmp/scripts/set_go_env.sh \
+RUN source /app/scripts/apt/set_compiler_env.sh \
+  && /app/scripts/apt/install_build_dependencies.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -61,37 +60,24 @@ RUN chmod +x /tmp/scripts/*.sh \
   && go build -v -o photoview .
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm-slim
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS final
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY scripts/apt/install_runtime_dependencies.sh /app/scripts/apt/
+
 # Create a user to run Photoview server
 RUN groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
-  && apt-get update \
-  && apt-get install -y curl gnupg gpg libdlib19.1 ffmpeg exiftool libheif1 sqlite3 \
-  # Install Darktable if building for a supported architecture
-  && if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-    echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
-      | tee /etc/apt/sources.list.d/graphics:darktable.list; \
-    curl -fsSL https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/Release.key \
-      | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null; \
-    apt-get update; \
-    apt-get install -y darktable; \
-  fi \
-  # Remove build dependencies and cleanup
-  && apt-get purge -y gnupg gpg \
-  && apt-get autoremove -y \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && /app/scripts/apt/install_runtime_dependencies.sh
 
 WORKDIR /home/photoview
 COPY api/data /app/data
-COPY --from=ui /app/dist /app/ui
-COPY --from=api /app/photoview /app/photoview
+COPY --from=ui /app/ui/dist /app/ui
+COPY --from=api /app/api/photoview /app/photoview
 
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80
