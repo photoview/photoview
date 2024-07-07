@@ -1,10 +1,13 @@
-#!/bin/sh
+#!/bin/bash
+
+BUILD_DEPENDS=(curl gnupg2 gpg)
+
+apt-get update
+apt-get install -y ${BUILD_DEPENDS[@]} libdlib19.1 ffmpeg exiftool libheif1
+
 
 # Install Darktable if building for a supported architecture
 if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
-  apt-get update
-  apt-get install -y curl gnupg2 gpg
-
   echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
     | tee /etc/apt/sources.list.d/graphics:darktable.list
   curl -fsSL https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/Release.key \
@@ -12,14 +15,10 @@ if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm
 
   apt-get update
   apt-get install -y darktable
-
-  apt-get purge -y curl gnupg2 gpg
-  apt-get autoremove -y
 fi
 
-apt-get update
-apt-get install -y libdlib19.1 ffmpeg exiftool libheif1 sqlite3
-
 # Remove build dependencies and cleanup
+apt-get purge -y ${BUILD_DEPENDS[@]}
+apt-get autoremove -y
 apt-get clean
 rm -rf /var/lib/apt/lists/*
