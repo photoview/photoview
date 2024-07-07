@@ -1,8 +1,11 @@
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
+import { render, waitFor, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MockedProvider } from '@apollo/client/testing'
 import AlbumTitle, { ALBUM_PATH_QUERY } from './AlbumTitle'
 import { MemoryRouter } from 'react-router'
+import { SidebarContext } from '../sidebar/Sidebar'
 
 import * as authentication from '../../helpers/authentication'
 
@@ -94,10 +97,22 @@ describe('AlbumTitle', () => {
       },
     }
 
+    const updateSidebarMock = vi.fn()
+    const setPinnedMock = vi.fn()
+
+    const sidebarContextProvider = {
+      updateSidebar: updateSidebarMock,
+      setPinned: setPinnedMock,
+      content: <div>Hello, world!</div>,
+      pinned: false,
+    }
+
     render(
       <MockedProvider mocks={[subfolderAlbumMock]}>
         <MemoryRouter>
-          <AlbumTitle album={album} disableLink={true} />
+          <SidebarContext.Provider value={sidebarContextProvider}>
+            <AlbumTitle album={album} disableLink={true} />
+          </SidebarContext.Provider>
         </MemoryRouter>
       </MockedProvider>
     )
@@ -119,5 +134,9 @@ describe('AlbumTitle', () => {
       const breadcrumb = document.querySelector('nav > ol > li > a')
       expect(breadcrumb?.textContent).toMatch(/demoAlbum/)
     })
+
+    await userEvent.click(screen.getByTitle('Album options'))
+
+    expect(updateSidebarMock).toHaveBeenCalled()
   })
 })

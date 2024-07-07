@@ -1,5 +1,6 @@
 import React from 'react'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import SidebarDownloadAlbum, {
   generateDownloadUrl,
 } from './SidebarDownloadAlbum'
@@ -51,5 +52,14 @@ describe('SidebarDownloadAlbum', () => {
     })
 
     expect(url).toContain('/download/album/30/original')
+  })
+
+  test('render downloadAlbum and click the original "button", authorized', async () => {
+    authToken.mockImplementation(() => 'token-here')
+
+    render(<SidebarDownloadAlbum albumID="30" />)
+
+    await userEvent.click(screen.getByText('Originals'))
+    expect(window.location.href).toContain('/download/album/30/original')
   })
 })
