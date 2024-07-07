@@ -9,6 +9,26 @@ type SidebarAlbumDownladProps = {
   albumID: string
 }
 
+export const generateDownloadUrl = (
+  albumID: string,
+  downloadType: {
+    title: string
+    description: string
+    purpose: string
+  }
+) => {
+  let url = `${API_ENDPOINT}/download/album/${albumID}/${downloadType.purpose}`
+  if (authToken() == null) {
+    // Try to get share token if not authorized
+    const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+    if (token) {
+      // add token if found previously
+      url += `?token=${token[1]}`
+    }
+  }
+  return url
+}
+
 const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   const { t } = useTranslation()
 
@@ -54,14 +74,7 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
     <SidebarTable.Row
       key={x.purpose}
       onClick={() => {
-        let url = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`
-        if (authToken() == null) {
-          // Get share token if not authorized
-          const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-          if (token) {
-            url += `?token=${token[1]}`
-          }
-        }
+        const url = generateDownloadUrl(albumID, x)
         return (location.href = url)
       }}
       tabIndex={0}
