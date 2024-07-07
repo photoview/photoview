@@ -26,7 +26,7 @@ export const BreadcrumbList = styled.ol<{ hideLastArrow?: boolean }>`
   }
 `
 
-const ALBUM_PATH_QUERY = gql`
+export const ALBUM_PATH_QUERY = gql`
   query albumPathQuery($id: ID!) {
     album(id: $id) {
       id
