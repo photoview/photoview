@@ -17,9 +17,21 @@ services:
       mariadb:
         condition: service_healthy
     ## Security options for some restricted systems
+    read_only: true
+    cap_drop:
+      - ALL
     security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
+      - no-new-privileges:true
+      # not necessary since Docker Engine v20
+      #   - seccomp:unconfined
+      #   - apparmor:unconfined
+    ## Uncomment to enforce resource usage limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "4"
+    #       memory: 4g
+    #       pids: 1024
     environment:
       PHOTOVIEW_DATABASE_DRIVER: ${PHOTOVIEW_DATABASE_DRIVER}
       ## Comment out the next variable in the case PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` or `postgres` in the .env
@@ -104,11 +116,26 @@ services:
     container_name: photoview-mariadb
     restart: unless-stopped
     stop_grace_period: 5s
+    user: "999:999"
     ## Optimized MariaDB startup command for better performance and compatibility
     command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
-    security_opt: ## see https://github.com/MariaDB/mariadb-docker/issues/434#issuecomment-1136151239
-      - seccomp:unconfined
-      - apparmor:unconfined
+
+    ## Security options for some restricted systems
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+     # not necessary since Docker Engine v20 see https://github.com/MariaDB/mariadb-docker/issues/434#issuecomment-1136151239
+      #   - seccomp:unconfined
+      #   - apparmor:unconfined
+
+    ## Uncomment to enforce resource usage limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "4"
+    #       memory: 1g
+    #       pids: 1024
     ## Uncomment next 2 lines if you want to access the database directly
     # ports:
       # - "3306:3306"
@@ -141,9 +168,9 @@ services:
 #    restart: unless-stopped
 #    stop_grace_period: 5s
 #    ## Security options for some restricted systems
-#    security_opt:
-#      - seccomp:unconfined
-#      - apparmor:unconfined
+#    # security_opt: # not necessary since Docker Engine v20
+#     # - seccomp:unconfined
+#     # - apparmor:unconfined
 #    ## Uncomment next 2 lines if you want to access the database directly
 #    # ports:
 #      # - 5432:5432
