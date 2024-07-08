@@ -1,4 +1,4 @@
 #!/bin/sh
 
 brew update
-brew install libheif dlib jpeg reflex
+brew install libheif dlib jpeg
