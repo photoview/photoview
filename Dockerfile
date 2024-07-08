@@ -46,7 +46,8 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN source /app/scripts/apt/set_compiler_env.sh \
+RUN chmod +x /app/scripts/apt/*.sh \
+  && source /app/scripts/apt/set_compiler_env.sh \
   && /app/scripts/apt/install_build_dependencies.sh \
   && go env \
   && go mod download \
@@ -72,6 +73,7 @@ COPY scripts/apt/install_runtime_dependencies.sh /app/scripts/apt/
 RUN groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
+  && chmod +x /app/scripts/apt/*.sh \
   && /app/scripts/apt/install_runtime_dependencies.sh
 
 WORKDIR /home/photoview
