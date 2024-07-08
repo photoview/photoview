@@ -1,10 +1,9 @@
 #!/bin/bash
 
-BUILD_DEPENDS=(curl gnupg2 gpg)
+BUILD_DEPENDS=(gnupg2 gpg)
 
 apt-get update
-apt-get install -y ${BUILD_DEPENDS[@]} libdlib19.1 ffmpeg exiftool libheif1
-
+apt-get install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
