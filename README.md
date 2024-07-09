@@ -218,6 +218,8 @@ Please follow the package manager guidance if you don't use `apt` or `homebrew`.
 Then run the following commands:
 
 ```bash
+$ source ./scripts/apt/set_compiler_env.sh # in Debian/Ubuntu
+$ source ./scripts/homebrew/set_compiler_env.sh # in macOS
 $ cd ./api
 $ go run .
 ```
