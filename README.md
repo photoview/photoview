@@ -171,49 +171,79 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 
 ## Set up development environment
 
-### Local setup
+### Developing dependencies
 
-1. Install a local mysql server, and make a new database
-2. Rename `/api/example.env` to `.env` and update the `MYSQL_URL` field
-3. Rename `/ui/example.env` to `.env`
+- API
+  - Required:
+    - `golang` >= 1.22
+    - `libexif` >= 1.15.1
+    - `dlib`
+    - `libjpeg`
+    - `libblas` 
+    - `libcblas`, recommending using `libatlas-base`
+    - `liblapack`
+  - Optional:
+    - `reflex`
+    - `sqlite`
+- UI
+  - Required:
+    - `node` >= 18
 
-### Start API server
-
-Make sure [golang](https://golang.org/) is installed.
-
-Some C libraries are needed to compile the API, see [go-face requirements](https://github.com/Kagami/go-face#requirements) for more details.
-They can be installed as shown below:
+In Debian/Ubuntu, install dependencies:
 
 ```sh
-# Ubuntu
-sudo add-apt-repository ppa:strukturag/libheif
-sudo add-apt-repository ppa:strukturag/libde265
-sudo apt-get update
-sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
-# Debian
-sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
-# macOS
-brew install dlib libheif
-
+$ sudo apt install golang libexif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev libdlib-dev # For API requirement
+$ sudo apt install reflex sqlite3 # For API optional
+$ sudo apt install node # For UI
 ```
+
+In macOS, install dependencies:
+
+```sh
+$ brew install golang libheif dlib jpeg # For API
+$ brew install reflex sqlite3 # For API optional
+$ brew install node # For UI
+```
+
+Please follow the package manager guidance if you don't use `apt` or `homebrew`.
+
+### Local setup
+
+1. Rename `/api/example.env` to `.env`
+  - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
+2. Rename `/ui/example.env` to `.env`
+
+### Start API server
 
 Then run the following commands:
 
 ```bash
-cd ./api
-go install
-go run server.go
+$ cd ./api
+$ go run .
+```
+
+If you want to recompile the server automatically when code changes:
+
+```sh
+$ cd ./api
+$ reflex -g '*.go' -s -- go run .
 ```
 
 ### Start UI server
 
-Make sure [node](https://nodejs.org/en/) is installed.
 In a new terminal window run the following commands:
 
 ```bash
 cd ./ui
 npm install
 npm start
+```
+
+If you want to recompile the server automatically when code changes:
+
+```sh
+$ cd ./ui
+$ npm mon
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
