@@ -195,7 +195,7 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 In Debian/Ubuntu, install dependencies:
 
 ```sh
-$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev libdlib-dev # For API requirement
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
 
