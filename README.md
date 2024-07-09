@@ -174,7 +174,7 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 ### Developing dependencies
 
 - API
-  - Required:
+  - Required packages:
     - `golang` >= 1.22
     - `libexif` >= 1.15.1
     - `dlib`
@@ -182,18 +182,18 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
     - `libblas` 
     - `libcblas`, recommending using `libatlas-base`
     - `liblapack`
-  - Optional:
+  - Optional tools during developing:
     - `reflex`
     - `sqlite`
 - UI
-  - Required:
+  - Required packages:
     - `node` >= 18
 
 In Debian/Ubuntu, install dependencies:
 
 ```sh
 $ sudo apt install golang libexif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev libdlib-dev # For API requirement
-$ sudo apt install reflex sqlite3 # For API optional
+$ sudo apt install reflex sqlite3 # For API optional tools
 $ sudo apt install node # For UI
 ```
 
@@ -201,7 +201,7 @@ In macOS, install dependencies:
 
 ```sh
 $ brew install golang libheif dlib jpeg # For API
-$ brew install reflex sqlite3 # For API optional
+$ brew install reflex sqlite3 # For API optional tools
 $ brew install node # For UI
 ```
 
