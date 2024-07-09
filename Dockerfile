@@ -37,7 +37,7 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts/apt /app/scripts/apt
+COPY scripts /app/scripts
 COPY api /app/api
 WORKDIR /app/api
 
@@ -46,9 +46,9 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-RUN chmod +x /app/scripts/apt/*.sh \
-  && source /app/scripts/apt/set_compiler_env.sh \
-  && /app/scripts/apt/install_build_dependencies.sh \
+RUN chmod +x /app/scripts/*.sh \
+  && source /app/scripts/set_compiler_env.sh \
+  && /app/scripts/install_build_dependencies.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -67,14 +67,14 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts/apt/install_runtime_dependencies.sh /app/scripts/apt/
+COPY scripts/install_runtime_dependencies.sh /app/scripts/
 
 # Create a user to run Photoview server
 RUN groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
-  && chmod +x /app/scripts/apt/*.sh \
-  && /app/scripts/apt/install_runtime_dependencies.sh
+  && chmod +x /app/scripts/*.sh \
+  && /app/scripts/install_runtime_dependencies.sh
 
 WORKDIR /home/photoview
 COPY api/data /app/data

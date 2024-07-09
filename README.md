@@ -232,8 +232,8 @@ You can install `node` with other package manager if you like.
 Then run the following commands:
 
 ```bash
-$ source ./scripts/apt/set_compiler_env.sh # in Debian/Ubuntu
-$ source ./scripts/homebrew/set_compiler_env.sh # in macOS
+$ source ./scripts/set_compiler_env.sh # in Debian/Ubuntu
+$ source ./scripts/set_compiler_env_homebrew.sh # in macOS
 $ cd ./api
 $ go run .
 ```
