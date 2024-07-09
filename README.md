@@ -178,12 +178,13 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
     - `golang` >= 1.22
     - `g++`
     - `libc-dev`
-    - `libexif` >= 1.15.1
-    - `dlib`
-    - `libjpeg`
-    - `libblas` 
-    - `libcblas`, recommending using `libatlas-base`
-    - `liblapack`
+    - `libheif` >= 1.15.1
+    - [go-face Requirements](https://github.com/Kagami/go-face#requirements) 
+        - `dlib`
+        - `libjpeg`
+        - `libblas` 
+        - `libcblas`, recommending using `libatlas-base`
+        - `liblapack`
   - Optional tools during developing:
     - `reflex`
     - `sqlite`
@@ -220,6 +221,10 @@ You can install `node` with other package manager if you like.
 
 1. Rename `/api/example.env` to `.env`
   - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
+  - To set a different DBMS driver
+    - Comment the SQLite path variable
+    - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
+    - Uncommenting the corresponding connection string variable for the new driver
 2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
