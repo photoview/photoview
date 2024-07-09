@@ -7,34 +7,19 @@
 : ${TARGETOS=}
 : ${TARGETARCH=}
 : ${TARGETVARIANT=}
-: ${CGO_ENABLED=}
-: ${GOARCH=}
-: ${GOOS=}
-: ${GOARM=}
-: ${GOBIN=}
+
+CGO_ENABLED="$(go env CGO_ENABLED)"
+GOARCH="$(go env GOARCH)"
+GOOS="$(go env GOOS)"
+GOARM="$(go env GOARM)"
+GOBIN="$(go env GOBIN)"
 
 set -eu
 
 if [ ! -z "$TARGETPLATFORM" ]; then
-  os="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
-  arch="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
-  if [ ! -z "$os" ] && [ ! -z "$arch" ]; then
-    export GOOS="$os"
-    export GOARCH="$arch"
-    if [ "$arch" = "arm" ]; then
-      case "$(echo $TARGETPLATFORM | cut -d"/" -f3)" in
-      "v5")
-        export GOARM="5"
-        ;;
-      "v6")
-        export GOARM="6"
-        ;;
-      *)
-        export GOARM="7"
-        ;;
-      esac
-    fi
-  fi
+  TARGETOS="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
+  TARGETARCH="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
+  TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
 fi
 
 if [ ! -z "$TARGETOS" ]; then
