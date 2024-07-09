@@ -202,7 +202,7 @@ $ sudo apt install reflex sqlite3 # For API optional tools
 In macOS, install dependencies:
 
 ```sh
-$ brew install golang libheif dlib jpeg # For API
+$ brew install golang gcc libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
