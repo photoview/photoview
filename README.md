@@ -176,6 +176,8 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 - API
   - Required packages:
     - `golang` >= 1.22
+    - `g++`
+    - `libc-dev`
     - `libexif` >= 1.15.1
     - `dlib`
     - `libjpeg`
@@ -187,14 +189,13 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
     - `sqlite`
 - UI
   - Required packages:
-    - `node` >= 18
+    - `node` = 18
 
 In Debian/Ubuntu, install dependencies:
 
 ```sh
-$ sudo apt install golang libexif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev libdlib-dev # For API requirement
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev libdlib-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
-$ sudo apt install node # For UI
 ```
 
 In macOS, install dependencies:
@@ -202,10 +203,18 @@ In macOS, install dependencies:
 ```sh
 $ brew install golang libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
-$ brew install node # For UI
 ```
 
 Please follow the package manager guidance if you don't use `apt` or `homebrew`.
+
+For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
+
+```sh
+$ nvm install 18
+$ nvm use 18
+```
+
+You can install `node` with other package manager if you like.
 
 ### Local setup
 
