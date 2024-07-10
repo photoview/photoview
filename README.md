@@ -320,6 +320,19 @@ $ npm run mon
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
 
+### Unit tests
+
+It depends on [Docker Compose](https://docs.docker.com/compose/). See [the instruction](https://docs.docker.com/compose/install/) to install `Docker Compose`.
+
+To run unit tests:
+
+```sh
+$ ./scripts/test/ui.sh
+$ ./scripts/test/api.sh # Test with sqlite
+$ ./scripts/test/api.sh mysql # Test with MySQL
+$ ./scripts/test/api.sh postgres # Test with PostgreSQL
+```
+
 ## Sponsors
 
 <table>
