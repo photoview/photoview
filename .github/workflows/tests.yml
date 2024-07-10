@@ -2,153 +2,53 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: ['*']
   pull_request:
     branches: [master]
 
 jobs:
   test-api:
     name: Test API
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
         database: ['mysql', 'postgres', 'sqlite']
 
-    services:
-      mariadb:
-        image: mariadb:10.5
-        env:
-          MYSQL_DATABASE: photoview_test
-          MYSQL_USER: photoview
-          MYSQL_PASSWORD: photosecret
-          MYSQL_RANDOM_ROOT_PASSWORD: yes
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-        ports:
-          - 3306:3306
-
-      postgres:
-        image: postgres:13.2
-        env:
-          POSTGRES_USER: photoview
-          POSTGRES_PASSWORD: photosecret
-          POSTGRES_DB: photoview_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    defaults:
-      run:
-        working-directory: api
-
     steps:
-      - name: Check out code into the Go module directory
+      - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Fetch branches
-        run: git fetch --all
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        id: go
-        with:
-          go-version-file: ${{ github.workspace }}/api/go.mod
-          cache: false
-
-      - name: Cache Go dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Get C dependencies and 3rd-party tools
-        run: |
-          sudo add-apt-repository ppa:strukturag/libheif
-          sudo add-apt-repository ppa:strukturag/libde265
-          sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool
-
-      - name: Get GO dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-
-      - name: Build
-        run: go build -v .
-
-      - name: Configure MySQL
-        if: ${{ matrix.database == 'mysql' }}
-        run: |
-          cp ../.github/mysql.testing.env testing.env
-
-      - name: Configure Postgres
-        if: ${{ matrix.database == 'postgres' }}
-        run: |
-          cp ../.github/postgres.testing.env testing.env
-
-      - name: Configure Sqlite
-        if: ${{ matrix.database == 'sqlite' }}
-        run: |
-          touch photoview_test.db
-          cp ../.github/sqlite.testing.env testing.env
-
       - name: Test
-        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+        run: './scripts/test/api.sh ${{ matrix.database }}'
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           flags: api
+
+      - name: Cleanup
+        run: './scripts/test/cleanup.sh'
 
   test-ui:
     name: Test UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ui
-
     strategy:
-      matrix:
-        node-version: [18.x]
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache NPM dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: npm clean-install
+      - name: Check out code
+        uses: actions/checkout@v4
 
       - name: Test
-        run: npm run test:ci
+        run: './scripts/test/ui.sh'
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           flags: ui
+
+      - name: Cleanup
+        run: './scripts/test/cleanup.sh'
