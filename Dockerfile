@@ -68,8 +68,9 @@ CMD npm start
 FROM api AS dev-api
 RUN source /app/scripts/set_compiler_env.sh \
   && /app/scripts/install_runtime_dependencies.sh \
+  ## Install dev tools
   && apt update \
-  && apt install -y reflex
+  && apt install -y reflex sqlite3
 
 CMD go run .
 
