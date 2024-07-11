@@ -183,7 +183,7 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
         - `dlib`
         - `libjpeg`
         - `libblas` 
-        - `libcblas`, recommending using `libatlas-base`
+        - `libcblas`, recommended using `libatlas-base`
         - `liblapack`
   - Optional tools during developing:
     - `reflex`
@@ -224,7 +224,7 @@ You can install `node` with other package manager if you like.
   - To set a different DBMS driver
     - Comment the SQLite path variable
     - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
-    - Uncommenting the corresponding connection string variable for the new driver
+    - Uncomment the corresponding connection string variable for the new driver
 2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
