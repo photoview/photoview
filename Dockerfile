@@ -60,8 +60,21 @@ RUN chmod +x /app/scripts/*.sh \
   # Build api source
   && go build -v -o photoview .
 
-### Copy api and ui to production environment ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS final
+### Build dev image for UI ###
+FROM ui AS dev-ui
+CMD npm start
+
+### Build dev image for API ###
+FROM api AS dev-api
+RUN source /app/scripts/set_compiler_env.sh \
+  && /app/scripts/install_runtime_dependencies.sh \
+  && apt update \
+  && apt install -y reflex
+
+CMD go run .
+
+### Build release image ###
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
