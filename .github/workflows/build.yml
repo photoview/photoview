@@ -31,7 +31,7 @@ jobs:
           dockerfile: Dockerfile
           output-file: hadolint.json
           format: json
-          failure-threshold: ignore
+          no-fail: true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

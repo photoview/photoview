@@ -72,6 +72,7 @@ Glory to Ukraine! 🇺🇦
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
 - [Advanced setup](#advanced-setup)
+- [Contributing](#contributing)
 - [Set up development environment](#set-up-development-environment)
 
 ## Main features
@@ -196,6 +197,18 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 8. Set up an **Intrusion Detection/Prevention System** to monitor network traffic for suspicious activity and issue alerts when such activity is discovered.
 
 Setting up and configuring of all these protections depends on and requires a lot of info about your local network and self-hosted services. Based on this info, the configuration flow and resulting services architecture might differ a lot between cases. That is why in the scope of this project, we can only provide you with this high-level list of possible ways of webservice protection. You'll need to investigate them, find the best combination and configuration for your case, and take responsibility to configure everything in the correct and consistent way. We cannot provide you support for such highly secured setups, as a lot of things might work differently because of security limitations.
+
+## Contributing
+
+🎉 First off, thanks for your interest in contribution! 🎉
+
+This project is a result of hard work, and it's great to see you interested in contributing. 
+Contributions are not just about code — you can help in many ways!
+
+Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md). 
+It includes information on our code of conduct, the process for submitting pull requests, and more.
+
+Remember, every contribution counts. Let's make this project better together! 💪
 
 ## Set up development environment
 

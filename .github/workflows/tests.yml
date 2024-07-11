@@ -52,17 +52,18 @@ jobs:
         working-directory: api
 
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.16
-        id: go
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
 
       - name: Fetch branches
         run: git fetch --all
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        id: go
+        with:
+          go-version-file: ${{ github.workspace }}/api/go.mod
+          cache: false
 
       - name: Cache Go dependencies
         uses: actions/cache@v4
@@ -72,12 +73,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Get C dependencies
+      - name: Get C dependencies and 3rd-party tools
         run: |
           sudo add-apt-repository ppa:strukturag/libheif
           sudo add-apt-repository ppa:strukturag/libde265
           sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool
 
       - name: Get GO dependencies
         run: |

@@ -250,19 +250,19 @@ jobs:
     env:
       COV_PROJECT: kkovaletp%2Fphotoview
     steps:
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.16
-        id: go
-
       - name: Check out code
         uses: actions/checkout@v4
 
       - name: Fetch branches
         shell: bash
         run: git fetch --all
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        id: go
+        with:
+          go-version-file: ${{ github.workspace }}/api/go.mod
+          cache: false
 
       - name: Cache Go dependencies
         uses: actions/cache@v4
@@ -333,13 +333,17 @@ jobs:
           echo "${{ github.workspace }}/cov-analysis/bin" >> $GITHUB_PATH
 
       # Build and capture API code
+      # At this moment Coverity doesn't support GO 1.22, so ignoring build failures
       - name: Build API with cov-build
         shell: bash
         working-directory: api
         run: |
           cov-build --dir ${{ github.workspace }}/cov-int \
             --return-emit-failures \
-            --fs-capture-search ./ go build -v .
+            --fs-capture-search ./ go build -v . || (\
+              cat ${{ github.workspace }}/cov-int/build-log.txt && \
+              exit 0 \
+            )
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
@@ -360,7 +364,10 @@ jobs:
         run: |
           cov-build --dir ${{ github.workspace }}/cov-int \
             --return-emit-failures \
-            --fs-capture-search ./ npm run build -- --base=/
+            --fs-capture-search ./ npm run build -- --base=/ || (\
+              cat ${{ github.workspace }}/cov-int/build-log.txt && \
+              exit 1 \
+            )
 
       # Run FS capture for the rest of the files in the project
       - name: Scan whole project with fs-capture
@@ -368,7 +375,10 @@ jobs:
         run: |
           cov-build --dir ${{ github.workspace }}/cov-int \
             --return-emit-failures --no-command \
-            --fs-capture-search ./
+            --fs-capture-search ./ || (\
+              cat ${{ github.workspace }}/cov-int/build-log.txt && \
+              exit 1 \
+            )
 
       # Remove unnecessary captures from the Coverity results before sending them for analysis
       # Extract 'git blame' info for captured files

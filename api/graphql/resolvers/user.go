@@ -56,7 +56,7 @@ func (r *userResolver) RootAlbums(ctx context.Context, user *models.User) (album
 			db.Table("user_albums").
 				Select("albums.id").
 				Joins("JOIN albums ON albums.id = user_albums.album_id AND user_albums.user_id = ?", user.ID),
-		).Or("albums.parent_album_id IS NULL").
+		).Or("albums.parent_album_id IS NULL").Order("path ASC").
 		Association("Albums").Find(&albums)
 
 	return
