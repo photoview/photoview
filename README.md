@@ -169,9 +169,46 @@ It includes information on our code of conduct, the process for submitting pull 
 
 Remember, every contribution counts. Let's make this project better together! 💪
 
+## Set up Docker development environment
+
+Docker development environment is easy to set up. It only requires [Docker](https://docs.docker.com/engine/install/) locally. All dependencies are installed in a container but not in the host.
+
+It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs notification doesn't work well in this case. You can't use `reflex` or `nodemon` to relaunch servers when code changes. The compiler runs pretty slow too.
+
+We recommend to use Docker development environment. If Docker environment doesn't work well, like on macOS, please use [local development environment](#set-up-local-development-environment).
+
+### Build images for development
+
+```sh
+$ docker build --target dev-ui -t photoview-ui .
+$ docker build --target dev-api -t photoview-api .
+```
+
+### Start API server with Docker
+
+```sh
+$ cp ./api/example.env ./api/.env
+$ docker run --rm -it -v `pwd`:/app -p 4001:4001 photoview-api /bin/bash
+container> $ go run . # Launch API server
+container> $ reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
+
+### Start UI server with Docker
+
+```sh
+$ cp ./ui/example.env ./ui/.env
+$ docker run --rm -it -v `pwd`:/app -p 1234:1234 photoview-ui /bin/bash
+container> $ npm start # Launch UI server
+container> $ npm run mon # Monitor source code and (re)launch UI server
+```
+
+The site can now be accessed at [localhost:1234](http://localhost:1234).
+
 ## Set up local development environment
 
-### Developing dependencies
+### Install dependencies
 
 - API
   - Required packages:
@@ -271,41 +308,6 @@ If you want to recompile the server automatically when code changes:
 ```sh
 $ cd ./ui
 $ npm run mon
-```
-
-The site can now be accessed at [localhost:1234](http://localhost:1234).
-
-## Set up Docker development environment
-
-Comparing to local development environment, Docker development environment is easy to set up. It only requires [installing Docker](https://docs.docker.com/engine/install/) locally. All dependencies are installed in a container but not in the host. If you use Linux to develop, we recommend to use Docker development environment.
-
-It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs notification doesn't work well in this case. You can't use `reflex` or `nodemon` to relaunch servers when code changes. The compiler runs pretty slow too. We recommend to use local development environment to develop in macOS.
-
-### Build images for development
-
-```sh
-$ docker build --target dev-ui -t photoview-ui .
-$ docker build --target dev-api -t photoview-api .
-```
-
-### Start API server with Docker
-
-```sh
-$ cp ./api/example.env ./api/.env
-$ docker run --rm -it -v `pwd`:/app -p 4001:4001 photoview-api /bin/bash
-container> $ go run . # Launch API server
-container> $ reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
-```
-
-The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
-
-### Start UI server with Docker
-
-```sh
-$ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app -p 1234:1234 photoview-ui /bin/bash
-container> $ npm start # Launch UI server
-container> $ npm run mon # Monitor source code and (re)launch UI server
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
