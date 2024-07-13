@@ -186,8 +186,8 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
         - `libcblas`, recommended using `libatlas-base`
         - `liblapack`
   - Optional tools during developing:
-    - `reflex`
-    - `sqlite`
+    - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
+    - `sqlite`: the SQLite DBMS, useful to interact with Photoview's SQLite DB directly if you use it in your development environment.
 - UI
   - Required packages:
     - `node` = 18
@@ -195,6 +195,7 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 In Debian/Ubuntu, install dependencies:
 
 ```sh
+$ sudo apt update # Update the package list
 $ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
@@ -202,6 +203,7 @@ $ sudo apt install reflex sqlite3 # For API optional tools
 In macOS, install dependencies:
 
 ```sh
+$ brew update # Update the package list
 $ brew install golang gcc libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
@@ -225,6 +227,7 @@ You can install `node` with other package manager if you like.
     - Comment the SQLite path variable
     - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
     - Uncomment the corresponding connection string variable for the new driver
+  - Optional: modify other variables if needed according to the inline comments
 2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
