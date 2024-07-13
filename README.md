@@ -235,8 +235,13 @@ You can install `node` with other package manager if you like.
 Then run the following commands:
 
 ```bash
-$ source ./scripts/set_compiler_env.sh # in Debian/Ubuntu
-$ source ./scripts/set_compiler_env_homebrew.sh # in macOS
+# Optional: Set the compiler environment in Debian/Ubuntu
+$ source ./scripts/set_compiler_env.sh
+# Set the compiler environment with `homebrew`
+$ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
+$ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
+$ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
+# Start API server
 $ cd ./api
 $ go run .
 ```
@@ -244,9 +249,12 @@ $ go run .
 If you want to recompile the server automatically when code changes:
 
 ```sh
+# Start API server
 $ cd ./api
 $ reflex -g '*.go' -s -- go run .
 ```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
 
 ### Start UI server
 
@@ -266,7 +274,6 @@ $ npm mon
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
-And the graphql playground at [localhost:4001](http://localhost:4001)
 
 ## Sponsors
 
