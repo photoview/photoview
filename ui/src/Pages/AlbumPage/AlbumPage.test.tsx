@@ -19,6 +19,4 @@ test('AlbumPage renders', () => {
 
   expect(screen.getByText('Sort')).toBeInTheDocument()
   expect(screen.getByLabelText('Sort direction')).toBeInTheDocument()
-
-  screen.debug()
 })

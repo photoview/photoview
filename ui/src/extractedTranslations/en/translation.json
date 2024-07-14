@@ -11,6 +11,7 @@
     }
   },
   "general": {
+    "please_select": "Please Select",
     "action": {
       "add": "Add",
       "cancel": "Cancel",

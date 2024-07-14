@@ -137,7 +137,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           </Button>
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || !state.roleId}
             variant="positive"
             onClick={() => {
               createUser({

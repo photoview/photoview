@@ -79,7 +79,5 @@ describe('MediaSidebar', () => {
 
     expect(screen.getByText('Set as album cover photo')).toBeInTheDocument()
     expect(screen.getByText('Album path')).toBeInTheDocument()
-
-    screen.debug()
   })
 })
