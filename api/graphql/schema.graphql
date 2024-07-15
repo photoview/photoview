@@ -127,8 +127,11 @@ type Query {
 type Mutation {
   "Authorizes a user and returns a token used to identify the new session"
   authorizeUser(username: String!, password: String!): AuthorizeResult!
-  createRole(role: NewRoleInput): Role!
-  updateRole(role: UpdateRoleInput): Role!
+
+  createRole(role: NewRoleInput): Role! @hasPermission(permission: USER_MANAGEMENT)
+  updateRole(role: UpdateRoleInput): Role! @hasPermission(permission: USER_MANAGEMENT)
+  deleteRole(id: ID!): Role! @hasPermission(permission: USER_MANAGEMENT)
+
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!

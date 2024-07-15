@@ -102,6 +102,24 @@ func (r *mutationResolver) CreateRole(ctx context.Context, role *models.NewRoleI
 	return newRole, nil
 }
 
+func (r *mutationResolver) DeleteRole(ctx context.Context, id int) (*models.Role, error) {
+	db := r.DB(ctx)
+	role := &models.Role{}
+	db.Find(role, id)
+	if role.SystemRole {
+		return nil, errors.New("Unable to delete system roles")
+	}
+
+	idsUsingRole := make([]int, 0)
+	db.Model(&models.User{}).Where("roleId = ?", id).Pluck("id", &idsUsingRole)
+
+	if len(idsUsingRole) != 0 {
+		return nil, errors.New("There are still users assigned this role")
+	}
+	db.Delete(role)
+	return role, nil
+}
+
 func (r *mutationResolver) UpdateRole(ctx context.Context, role *models.UpdateRoleInput) (*models.Role, error) {
 	db := r.DB(ctx)
 	currentRole := &models.Role{}
@@ -262,7 +280,6 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 	return &userPref, nil
 }
 
-// Admin queries
 func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, roleID *int, admin *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
@@ -280,10 +297,17 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 		return nil, err
 	}
 
+	// TODO it's currently possible to remove the last admin this way we need a check in place
+
 	if admin != nil || roleID != nil {
 		realRoleId, err := resolveRealRoleId(ctx, roleID, admin, r)
 		if err != nil {
 			return nil, errors.New("unable to identify role change id")
+		}
+		adminIds := make([]int, 0)
+		db.Model(&models.Role{}).Where("name = ?", "ADMIN").Pluck("id", &adminIds)
+		if len(adminIds) == 1 && adminIds[0] == user.ID && *user.RoleID != realRoleId {
+			return nil, errors.New("Cannot remove the last admin")
 		}
 		user.RoleID = &realRoleId
 	}
