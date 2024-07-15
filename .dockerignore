@@ -5,6 +5,7 @@
 .vscode
 .env
 example.env
+*.db
 photos_path
 screenshots
 

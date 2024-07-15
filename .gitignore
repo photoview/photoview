@@ -19,6 +19,7 @@ node_modules/
 # testing
 /ui/coverage
 /api/coverage.txt
+*.db
 
 # building
 .cache/
