@@ -67,7 +67,7 @@ const EditUserRow = ({
             {t('general.action.cancel', 'Cancel')}
           </Button>
           <Button
-            disabled={updateUserLoading}
+            disabled={updateUserLoading || !state.role.id}
             variant="positive"
             onClick={() =>
               updateUser({

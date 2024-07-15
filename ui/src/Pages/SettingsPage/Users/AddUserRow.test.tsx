@@ -67,8 +67,8 @@ test('Add user with username and path', async () => {
   )
   const usernameInput = screen.getByPlaceholderText('Username')
   const pathInput = screen.getByPlaceholderText('/path/to/photos')
-  const addUserBtn = screen.getByText('Add user') 
-  const userRoleSelect = await screen.findByPlaceholderText('Please Select')
+  const addUserBtn = screen.getByText('Add user')
+  const userRoleSelect = await screen.findByText('Please Select')
 
   expect(
     addUserBtn.disabled,
@@ -106,7 +106,7 @@ test('Add user with only username', async () => {
 
   const usernameInput = screen.getByPlaceholderText('Username')
   const addUserBtn = screen.getByText('Add user')
-  const userRoleSelect = await screen.findByPlaceholderText('Please Select')
+  const userRoleSelect = await screen.findByText('Please Select')
 
   fireEvent.change(usernameInput, { target: { value: 'testuser' } })
   fireEvent.change(userRoleSelect, { target: { value: '1' } })

@@ -27,6 +27,10 @@ export const RoleSelector = (props: RoleSelectorProps) => {
   if (error) {
     return <div> Error</div>
   }
+  const placeholder = loading
+    ? t('general.loading.default', 'Loading...')
+    : t('general.please_select', 'Please Select')
+  items.push({ value: '', label: placeholder })
 
   if (!loading) {
     items.push(
@@ -40,14 +44,9 @@ export const RoleSelector = (props: RoleSelectorProps) => {
     props.onRoleSelected(selected)
   }
 
-  const placeholder = loading
-    ? t('general.loading.default', 'Loading...')
-    : t('general.please_select', 'Please Select')
-
   return (
     <Dropdown
       selected={props.selected}
-      placeholder={placeholder}
       items={items}
       setSelected={onSelected}
     />
