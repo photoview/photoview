@@ -8,6 +8,20 @@ import { MockedProvider } from '@apollo/client/testing'
 import { ROLE_QUERY } from './RoleSelector'
 import { expect } from 'vitest'
 
+vi.mock('react-i18next', () => ({
+  /*
+   * This is a bit of a hack, but for some reason on the testing library a label of `Please Select` will always
+   * assign a value of 1 irrespective of the actual value this DOES NOT happen in the frontend. I think spending the time
+   * investigating this is not worth it as it's going to be some weird inner workings of the testing library and hopefully
+   * the migration to the latest vitest will fix this issue (When I raise the PR I will add a reference to here so it
+   * should get fixed)
+   */
+  useTranslation: () => {
+    const t = (key: string) => key
+    return { t }
+  },
+}))
+
 const gqlMock = [
   {
     request: {
@@ -65,15 +79,20 @@ test('Add user with username and path', async () => {
       </table>
     </MockedProvider>
   )
-  const usernameInput = screen.getByPlaceholderText('Username')
-  const pathInput = screen.getByPlaceholderText('/path/to/photos')
-  const addUserBtn = screen.getByText('Add user')
-  const userRoleSelect = await screen.findByText('Please Select')
-
+  const usernameInput = screen.getByPlaceholderText('login_page.field.username')
+  const pathInput = screen.getByPlaceholderText(
+    'login_page.initial_setup.field.photo_path.placeholder'
+  )
+  const addUserBtn = screen.getByText('settings.users.add_user.submit')
+  // Await for role selector to have it's elements loaded from gql
+  await screen.findByText('general.please_select')
+  const userRoleSelect = screen.getByRole('combobox')
   expect(
     addUserBtn.disabled,
     'User button should be disabled until loaded and role selected'
   ).toBeTruthy()
+  console.log('Role select debug')
+  screen.debug(userRoleSelect)
   fireEvent.change(userRoleSelect, { target: { value: '1' } })
   expect(
     addUserBtn.disabled,
@@ -104,9 +123,11 @@ test('Add user with only username', async () => {
     </MockedProvider>
   )
 
-  const usernameInput = screen.getByPlaceholderText('Username')
-  const addUserBtn = screen.getByText('Add user')
-  const userRoleSelect = await screen.findByText('Please Select')
+  const usernameInput = screen.getByPlaceholderText('login_page.field.username')
+  const addUserBtn = screen.getByText('settings.users.add_user.submit')
+  // Await for role selector to have it's elements loaded from gql
+  await screen.findByText('general.please_select')
+  const userRoleSelect = screen.getByRole('combobox')
 
   fireEvent.change(usernameInput, { target: { value: 'testuser' } })
   fireEvent.change(userRoleSelect, { target: { value: '1' } })
