@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 BUILD_DEPENDS=(gnupg2 gpg)
 
