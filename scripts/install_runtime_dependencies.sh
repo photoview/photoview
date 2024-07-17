@@ -2,8 +2,8 @@
 
 BUILD_DEPENDS=(gnupg2 gpg)
 
-apt-get update
-apt-get install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
+apt update
+apt install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
@@ -14,6 +14,28 @@ if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm
 
   apt-get update
   apt-get install -y darktable
+fi
+
+if [ ! -z "$TARGETPLATFORM" ]; then
+  TARGETOS="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
+  TARGETARCH="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
+  TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
+fi
+
+if [ "$TARGETARCH" = "arm" ]; then
+  TARGETARCH="armhf"
+fi
+
+JELLYFIN_FFMPEG_URL=$(curl https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest -s | grep "browser_download_url.*jellyfin-ffmpeg.*-bookworm_${TARGETARCH}\.deb" | cut -d '"' -f 4)
+if [ "$JELLYFIN_FFMPEG_URL" != "" ]; then
+  echo Install jellyfin-ffmpeg from \"${JELLYFIN_FFMPEG_URL}\" for arch \"${TARGETARCH}\"
+  curl -L -o /tmp/jellyfin-ffmpeg.deb "${JELLYFIN_FFMPEG_URL}"
+  apt install -y /tmp/jellyfin-ffmpeg.deb
+  rm /tmp/jellyfin-ffmpeg.deb
+  ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin/ffmpeg
+else
+  echo Install ffmpeg from Debian repo for arch \"${TARGETARCH|}\"
+  apt install -y ffmpeg
 fi
 
 # Remove build dependencies and cleanup
