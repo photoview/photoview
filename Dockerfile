@@ -37,7 +37,7 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts /app/scripts
+COPY scripts/*.sh /app/scripts/
 COPY api /app/api
 WORKDIR /app/api
 
