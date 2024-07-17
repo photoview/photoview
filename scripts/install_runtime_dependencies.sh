@@ -1,18 +1,12 @@
 #!/bin/bash
 set -e
 
-if [ "$TARGETPLATFORM" == "linux/arm64" ]; then
-  DEBIAN_ARCH='arm64'
-elif [ "$TARGETPLATFORM" == "linux/arm/v6" ] || [ "$TARGETPLATFORM" == "linux/arm/v7" ]; then
-  DEBIAN_ARCH='armhf'
-else
-  DEBIAN_ARCH='amd64'
-fi
+DEBIAN_ARCH=$(dpkg --print-architecture)
 
 BUILD_DEPENDS=(gnupg2 gpg)
 
 apt update
-apt install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 exiftool libheif1:${DEBIAN_ARCH}
+apt install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 if [ "${DEBIAN_ARCH}" = "amd64" ] || [ "${DEBIAN_ARCH}" = "arm64" ] ; then
