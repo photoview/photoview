@@ -2,16 +2,13 @@ name: Docker builds
 
 on:
   pull_request:
-    branches: [master]
+    branches: ['*']
   push:
-    branches: [master]
-    tags:
-      - v*
+    branches: ['*']
 
 env:
-  DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: viktorstrate/photoview
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_USERNAME: googollee
+  DOCKER_IMAGE: ghcr.io/googollee/photoview
 
 jobs:
   build:
@@ -20,35 +17,27 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        id: cache
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ secrets.CACHE_KEY }}-${{ matrix.target_platform }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ secrets.CACHE_KEY }}-${{ matrix.target_platform }}-
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
         with:
-          platforms: ${{ matrix.target_platform }}
+          platforms: amd64,arm64,arm
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker Login
-        if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
-        uses: docker/login-action@v2
+        if: success() && github.event_name != 'pull_request' && github.repository == 'googollee/photoview'
+        uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
           images: ${{ env.DOCKER_IMAGE }}
@@ -63,10 +52,10 @@ jobs:
             type=sha
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          push: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+          push: ${{ github.event_name != 'pull_request' && github.repository == 'googollee/photoview' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
