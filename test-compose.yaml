@@ -30,7 +30,7 @@ services:
     - /bin/bash
     - -c
     - |
-      source /app/scripts/apt/set_compiler_env.sh
+      source /app/scripts/set_compiler_env.sh
       go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
   api-mysql:
@@ -50,7 +50,7 @@ services:
     - /bin/bash
     - -c
     - |
-      source /app/scripts/apt/set_compiler_env.sh
+      source /app/scripts/set_compiler_env.sh
       go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
   api-postgres:
@@ -70,7 +70,7 @@ services:
     - /bin/bash
     - -c
     - |
-      source /app/scripts/apt/set_compiler_env.sh
+      source /app/scripts/set_compiler_env.sh
       go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
   mysql:
