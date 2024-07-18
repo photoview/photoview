@@ -186,11 +186,10 @@ $ docker build --target dev-api -t photoview-api .
 
 ### Start API server with Docker
 
+It may take a long time to build dependencies when launching a API server first time.
 ```sh
 $ cp ./api/example.env ./api/.env
-$ docker run --rm -it -v `pwd`:/app -p 4001:4001 photoview-api /bin/bash
-container> $ go run . # Launch API server
-container> $ reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
+$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
@@ -199,9 +198,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 ```sh
 $ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app -p 1234:1234 photoview-ui /bin/bash
-container> $ npm start # Launch UI server
-container> $ npm run mon # Monitor source code and (re)launch UI server
+$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
