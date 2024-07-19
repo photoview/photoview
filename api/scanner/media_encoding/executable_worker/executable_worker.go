@@ -30,8 +30,8 @@ type DarktableWorker struct {
 }
 
 type FfmpegWorker struct {
-	encoder string
 	path    string
+	encoder string
 }
 
 func newDarktableWorker() *DarktableWorker {
@@ -43,21 +43,20 @@ func newDarktableWorker() *DarktableWorker {
 	path, err := exec.LookPath("darktable-cli")
 	if err != nil {
 		log.Println("Executable worker not found: darktable")
-	} else {
-		version, err := exec.Command(path, "--version").Output()
-		if err != nil {
-			log.Printf("Error getting version of darktable: %s\n", err)
-			return nil
-		}
-
-		log.Printf("Found executable worker: darktable (%s)\n", strings.Split(string(version), "\n")[0])
-
-		return &DarktableWorker{
-			path: path,
-		}
+		return nil
 	}
 
-	return nil
+	version, err := exec.Command(path, "--version").Output()
+	if err != nil {
+		log.Printf("Error getting version of darktable: %s\n", err)
+		return nil
+	}
+
+	log.Printf("Found executable worker: darktable (%s)\n", strings.Split(string(version), "\n")[0])
+
+	return &DarktableWorker{
+		path: path,
+	}
 }
 
 func newFfmpegWorker() *FfmpegWorker {
@@ -86,8 +85,8 @@ func newFfmpegWorker() *FfmpegWorker {
 	log.Printf("Found executable worker: ffmpeg (%s), with encoder: %q\n", strings.Split(string(version), "\n")[0], encoder)
 
 	return &FfmpegWorker{
-		encoder: encoder,
 		path:    path,
+		encoder: encoder,
 	}
 }
 
@@ -139,7 +138,7 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+		return fmt.Errorf("encoding video with ffmpeg %q encoder %q error: %w", worker.path, worker.encoder, err)
 	}
 
 	return nil
