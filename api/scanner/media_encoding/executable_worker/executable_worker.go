@@ -83,7 +83,7 @@ func newFfmpegWorker() *FfmpegWorker {
 		return nil
 	}
 
-	log.Printf("Found executable worker: ffmpeg (%s)\n", strings.Split(string(version), "\n")[0])
+	log.Printf("Found executable worker: ffmpeg (%s), with encoder: %q\n", strings.Split(string(version), "\n")[0], encoder)
 
 	return &FfmpegWorker{
 		encoder: encoder,
