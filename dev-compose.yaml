@@ -1,0 +1,38 @@
+name: photoview
+
+services:
+  dev-ui:
+    image: photoview/photoview-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-ui
+    env_file: ui/example.env
+    volumes:
+    - .:/app:rw
+    ports:
+    - 1234:1234
+    command:
+    - /bin/bash
+    - -c
+    - |
+      npm ci
+      npm run mon
+
+  dev-api:
+    image: photoview/photoview-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-api
+    env_file: api/example.env
+    volumes:
+    - .:/app:rw
+    ports:
+    - 4001:4001
+    command:
+    - /bin/bash
+    - -c
+    - |
+      source /app/scripts/set_compiler_env.sh 
+      reflex -g '*.go' -s -- go run .

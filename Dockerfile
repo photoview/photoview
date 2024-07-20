@@ -4,6 +4,9 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+ARG REACT_APP_API_ENDPOINT
+ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
+
 # Set environment variable UI_PUBLIC_URL from build args, uses "/" as default
 ARG UI_PUBLIC_URL
 ENV UI_PUBLIC_URL=${UI_PUBLIC_URL:-/}
@@ -59,7 +62,6 @@ RUN chmod +x /app/scripts/*.sh \
 
 ### Build dev image for UI ###
 FROM ui AS dev-ui
-CMD npm ci && npm run mon
 
 ### Build dev image for API ###
 FROM api AS dev-api
@@ -68,8 +70,6 @@ RUN source /app/scripts/set_compiler_env.sh \
   ## Install dev tools
   && apt update \
   && apt install -y reflex sqlite3
-
-CMD reflex -g '*.go' -s -- go run .
 
 ### Build release image ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release

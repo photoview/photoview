@@ -171,7 +171,7 @@ Remember, every contribution counts. Let's make this project better together! ðŸ
 
 ## Set up Docker development environment
 
-Docker development environment is easy to set up. It only requires [Docker](https://docs.docker.com/engine/install/) locally. All dependencies are installed in a container but not in the host.
+Docker development environment is easy to set up. It only requires [Docker](https://docs.docker.com/engine/install/) and [Docker Compose Plugin](https://docs.docker.com/compose/install/) locally. All dependencies are installed in a container but not in the host.
 
 It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs notification doesn't work well in this case. You can't use `reflex` or `nodemon` to relaunch servers when code changes. The compiler runs pretty slow too.
 
@@ -180,28 +180,18 @@ We recommend to use Docker development environment. If Docker environment doesn'
 ### Build images for development
 
 ```sh
-$ docker build --target dev-ui -t photoview-ui .
-$ docker build --target dev-api -t photoview-api .
+$ docker compose -f dev-compose.yaml build dev-ui dev-api
 ```
 
-### Start API server with Docker
+### Start API and UI server with Docker Compose
 
-It may take a long time to build dependencies when launching a API server first time.
-```sh
-$ cp ./api/example.env ./api/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
-```
-
-The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
-
-### Start UI server with Docker
+It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
+$ docker compose -f dev-compose.yaml up dev-api dev-ui
 ```
 
-The site can now be accessed at [localhost:1234](http://localhost:1234).
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
 
 ## Set up local development environment
 
