@@ -177,21 +177,42 @@ It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs
 
 We recommend to use Docker development environment. If Docker environment doesn't work well, like on macOS, please use [local development environment](#set-up-local-development-environment).
 
-### Build images for development
-
-```sh
-$ docker compose -f dev-compose.yaml build dev-ui dev-api
-```
-
 ### Start API and UI server with Docker Compose
 
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker compose -f dev-compose.yaml up dev-api dev-ui
+$ docker compose -f dev-compose.yaml build dev-ui dev-api # Build images for development
+$ docker compose -f dev-compose.yaml up dev-api dev-ui # Run API and UI servers
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
+
+### Start API server with Docker
+
+If you don't want to depend on Docker Compose but only Docker, you can launch server as below.
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target dev-api -t photoview-api . # Build image for development
+$ cp api/example.env api/.env
+$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
+
+### Start UI server with Docker
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target dev-ui -t photoview-ui .
+$ cp ./ui/example.env ./ui/.env
+$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
+```
+
+The site can now be accessed at [localhost:1234](http://localhost:1234).
 
 ## Set up local development environment
 
