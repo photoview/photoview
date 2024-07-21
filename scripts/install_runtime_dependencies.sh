@@ -26,6 +26,7 @@ if [ "${JELLYFIN_FFMPEG_URL}" != "" ]; then
   apt install -y /tmp/jellyfin-ffmpeg.deb
   rm /tmp/jellyfin-ffmpeg.deb
   ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin/ffmpeg
+  ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin/ffprobe
 else
   echo Install ffmpeg from Debian repo for arch \"${DEBIAN_ARCH}\"
   apt install -y ffmpeg
