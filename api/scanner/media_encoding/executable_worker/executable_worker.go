@@ -60,6 +60,17 @@ func newDarktableWorker() *DarktableWorker {
 }
 
 func newFfmpegWorker() *FfmpegWorker {
+	if path, err := exec.LookPath("ffprobe"); err == nil {
+		if version, err := exec.Command(path, "-version").Output(); err == nil {
+			log.Println("Found ffprobe:", path, "version:", strings.Split(string(version), "\n")[0])
+			ffprobe.SetFFProbeBinPath(path)
+		} else {
+			log.Println("Executable ffprobe not executable:", path)
+		}
+	} else {
+		log.Println("Executable ffprobe not found")
+	}
+
 	if utils.EnvDisableVideoEncoding.GetBool() {
 		log.Printf("Executable worker disabled (%s=1): ffmpeg\n", utils.EnvDisableVideoEncoding.GetName())
 		return nil
