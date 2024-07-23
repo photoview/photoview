@@ -169,9 +169,54 @@ It includes information on our code of conduct, the process for submitting pull 
 
 Remember, every contribution counts. Let's make this project better together! 💪
 
-## Set up development environment
+## Set up Docker development environment
 
-### Developing dependencies
+Docker development environment is easy to set up. It only requires [Docker](https://docs.docker.com/engine/install/) and [Docker Compose Plugin](https://docs.docker.com/compose/install/) locally. All dependencies are installed in a container but not in the host.
+
+It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs notification doesn't work well in this case. You can't use `reflex` or `nodemon` to relaunch servers when code changes. The compiler runs pretty slow too.
+
+We recommend to use Docker development environment. If Docker environment doesn't work well, like on macOS, please use [local development environment](#set-up-local-development-environment).
+
+### Start API and UI server with Docker Compose
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker compose -f dev-compose.yaml build dev-ui dev-api # Build images for development
+$ docker compose -f dev-compose.yaml up dev-api dev-ui # Run API and UI servers
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
+
+### Start API server with Docker
+
+If you don't want to depend on Docker Compose but only Docker, you can launch server as below.
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target dev-api -t photoview-api . # Build image for development
+$ cp api/example.env api/.env
+$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
+
+### Start UI server with Docker
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target dev-ui -t photoview-ui .
+$ cp ./ui/example.env ./ui/.env
+$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
+```
+
+The site can now be accessed at [localhost:1234](http://localhost:1234).
+
+## Set up local development environment
+
+### Install dependencies
 
 - API
   - Required packages:
@@ -270,7 +315,7 @@ If you want to recompile the server automatically when code changes:
 
 ```sh
 $ cd ./ui
-$ npm mon
+$ npm run mon
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
