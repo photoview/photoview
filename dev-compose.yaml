@@ -38,8 +38,6 @@ services:
       reflex -g '*.go' -s -- go run .
 
   test-ui:
-    profiles:
-    - test
     image: photoview/photoview-ui
     build:
       context: .
@@ -56,8 +54,6 @@ services:
       npm run test:ci
 
   test-api-sqlite:
-    profiles:
-    - test
     image: photoview/photoview-api
     build:
       context: .
@@ -74,8 +70,6 @@ services:
       go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
   test-api-mysql:
-    profiles:
-    - test
     image: photoview/photoview-api
     build:
       context: .
@@ -96,8 +90,6 @@ services:
       go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
   test-api-postgres:
-    profiles:
-    - test
     image: photoview/photoview-api
     build:
       context: .
