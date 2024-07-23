@@ -5,4 +5,4 @@ if [ "$DB" = "" ]; then
   DB=sqlite
 fi
 
-docker compose -f "$(dirname $0)/../../test-compose.yaml" run api-$DB
+docker compose -f "$(dirname $0)/../../dev-compose.yaml" run test-api-$DB

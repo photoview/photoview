@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker compose -f "$(dirname $0)/../../test-compose.yaml" run ui
+docker compose -f "$(dirname $0)/../../dev-compose.yaml" run test-ui
