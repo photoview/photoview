@@ -72,7 +72,7 @@
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
-    "i18next-parser": "^8.13.0",
+    "i18next-parser": "^9.0.0",
     "lint-staged": "^13.0.3",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
