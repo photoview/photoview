@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: ui
+      target: dev-ui
     env_file: scripts/test/env
     volumes:
     - .:/app:rw
@@ -58,7 +58,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
+      target: dev-api
     env_file: scripts/test/env
     volumes:
     - .:/app:rw
@@ -74,7 +74,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
+      target: dev-api
     depends_on:
     - mysql
     environment:
@@ -94,7 +94,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
+      target: dev-api
     depends_on:
     - postgres
     environment:
