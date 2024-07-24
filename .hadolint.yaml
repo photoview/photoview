@@ -1,0 +1,4 @@
+ignored:
+  - DL3008 # Pin versions in apt get install. Instead of `apt-get install <package>` use `apt-get install <package>=<version>`
+  - DL3015 # Avoid additional packages by specifying `--no-install-recommends`.
+  - SC1091 # Not following: File not included in mock.

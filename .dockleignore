@@ -1,0 +1,5 @@
+# Allow the `latest` tag
+DKL-DI-0006
+
+# Don't care about signatures
+CIS-DI-0005
