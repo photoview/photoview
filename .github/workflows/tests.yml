@@ -20,6 +20,30 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Cache bulid image
+        id: cache-image
+        uses: actions/cache@v4
+        with:
+          path: ./photoview-api.tar.gz
+          key: |
+            photoview-api-${{ runner.os }}-${{ hashFiles('Dockerfile', 'scripts/*', 'api/go.mod', 'api/go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            photoview-api-${{ runner.os }}-${{ hashFiles('Dockerfile', 'scripts/*', 'api/go.mod', 'api/go.sum') }}-
+            photoview-api-${{ runner.os }}-
+
+      - name: Load cache image
+        run: |
+          if test -f ./photoview-api.tar.gz; then
+            docker load -i ./photoview-api.tar.gz
+          fi
+
+      - name: Build test image
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        run: |
+          docker pull golang:1.22-bookworm
+          docker build --target dev-api -t photoview/photoview-api .
+          docker save -o ./photoview-api.tar.gz photoview/photoview-api golang:1.22-bookworm
+
       - name: Test
         run: './scripts/test/api.sh ${{ matrix.database }}'
 
@@ -41,6 +65,30 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: Cache bulid image
+        id: cache-image
+        uses: actions/cache@v4
+        with:
+          path: ./photoview-ui.tar.gz
+          key: |
+            photoview-ui-${{ runner.os }}-${{ hashFiles('Dockerfile', 'scripts/*', 'ui/package.json', 'ui/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            photoview-ui-${{ runner.os }}-${{ hashFiles('Dockerfile', 'scripts/*', 'ui/package.json', 'ui/package-lock.json') }}-
+            photoview-ui-${{ runner.os }}-
+
+      - name: Load cache image
+        run: |
+          if test -f ./photoview-ui.tar.gz; then
+            docker load -i ./photoview-ui.tar.gz
+          fi
+
+      - name: Build test image
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        run: |
+          docker pull node:18
+          docker build --target dev-ui -t photoview/photoview-ui .
+          docker save -o ./photoview-ui.tar.gz photoview/photoview-ui node:18
 
       - name: Test
         run: './scripts/test/ui.sh'

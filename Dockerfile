@@ -23,12 +23,15 @@ ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA:-}
 ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
-# Download dependencies
-COPY ui /app/ui
 WORKDIR /app/ui
-RUN npm ci --omit=dev --ignore-scripts \
-  # Build frontend
-  && npm run build -- --base=$UI_PUBLIC_URL
+
+# Download dependencies
+COPY ui/package.json ui/package-lock.json /app/ui
+RUN npm ci --omit=dev --ignore-scripts
+
+# Build frontend
+COPY ui/ /app/ui
+RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
@@ -37,8 +40,6 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY scripts/*.sh /app/scripts/
-COPY api /app/api
 WORKDIR /app/api
 
 ENV GOPATH="/go"
@@ -46,6 +47,8 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
+COPY api/go.mod api/go.sum /app/api/
+COPY scripts/*.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && source /app/scripts/set_compiler_env.sh \
   && /app/scripts/install_build_dependencies.sh \
@@ -56,8 +59,11 @@ RUN chmod +x /app/scripts/*.sh \
   # Build dependencies that use CGO
   && go install \
     github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face \
-  # Build api source
+    github.com/Kagami/go-face
+
+# Build backend
+COPY api /app/api
+RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
 ### Build dev image for UI ###
