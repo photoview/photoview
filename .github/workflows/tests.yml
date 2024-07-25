@@ -83,23 +83,12 @@ jobs:
       - name: Build
         run: go build -v .
 
-      - name: Configure MySQL
-        if: ${{ matrix.database == 'mysql' }}
-        run: |
-          cp ../.github/mysql.testing.env testing.env
-
-      - name: Configure Postgres
-        if: ${{ matrix.database == 'postgres' }}
-        run: |
-          cp ../.github/postgres.testing.env testing.env
-
-      - name: Configure Sqlite
-        if: ${{ matrix.database == 'sqlite' }}
-        run: |
-          touch photoview_test.db
-          cp ../.github/sqlite.testing.env testing.env
-
       - name: Test
+        env:
+          PHOTOVIEW_DATABASE_DRIVER: ${{ matrix.database }}
+          PHOTOVIEW_SQLITE_PATH: photoview_test.db
+          PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(127.0.0.1)/photoview_test
+          PHOTOVIEW_POSTGRES_URL: postgres://photoview:photosecret@127.0.0.1/photoview_test
         run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload coverage
