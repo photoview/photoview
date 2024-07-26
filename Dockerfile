@@ -1,8 +1,10 @@
-### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
+###############################
+###  Build UI dependencies  ###
+###############################
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS dep-ui
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
@@ -29,16 +31,14 @@ WORKDIR /app/ui
 COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci --omit=dev --ignore-scripts
 
-# Build frontend
-COPY ui/ /app/ui
-RUN npm run build -- --base=$UI_PUBLIC_URL
-
-### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
+###############################
+### Build API dependencies  ###
+###############################
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS dep-api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 WORKDIR /app/api
 
@@ -61,42 +61,48 @@ RUN chmod +x /app/scripts/*.sh \
     github.com/mattn/go-sqlite3 \
     github.com/Kagami/go-face
 
-# Build backend
+###############################
+###        Build UI         ###
+###############################
+FROM dep-ui AS build-ui
+
+COPY ui/ /app/ui
+RUN npm run build -- --base=$UI_PUBLIC_URL
+
+###############################
+###        BUILD API        ###
+###############################
+FROM dep-api AS build-api
+
 COPY api /app/api
 RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
-### Build dev image for UI ###
-FROM ui AS dev-ui
+###############################
+### Build dev image for UI  ###
+###############################
+FROM dep-ui AS dev-ui
 
+###############################
 ### Build dev image for API ###
-FROM api AS dev-api
+###############################
+FROM dep-api AS dev-api
+
+ADD scripts/install_runtime_dependencies.sh /app/scripts/
+
 RUN source /app/scripts/set_compiler_env.sh \
   && /app/scripts/install_runtime_dependencies.sh \
-  ## Install dev tools
   && apt update \
   && apt install -y reflex sqlite3
 
+###########################
 ### Build release image ###
+###########################
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
-
-# Create a user to run Photoview server
-RUN groupadd -g 999 photoview \
-  && useradd -r -u 999 -g photoview -m photoview \
-  # Required dependencies
-  && chmod +x /app/scripts/*.sh \
-  && /app/scripts/install_runtime_dependencies.sh
-
-WORKDIR /home/photoview
-COPY api/data /app/data
-COPY --from=ui /app/ui/dist /app/ui
-COPY --from=api /app/api/photoview /app/photoview
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80
@@ -114,5 +120,19 @@ HEALTHCHECK --interval=60s --timeout=10s \
     --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
     || exit 1
 
+# Required dependencies
+COPY scripts/install_runtime_dependencies.sh /app/scripts/
+RUN chmod +x /app/scripts/*.sh \
+  # Create a user to run Photoview server
+  && groupadd -g 999 photoview \
+  && useradd -r -u 999 -g photoview -m photoview \
+  # Required dependencies
+  && /app/scripts/install_runtime_dependencies.sh
+
 USER photoview
 ENTRYPOINT ["/app/photoview"]
+WORKDIR /home/photoview
+
+COPY api/data /app/data
+COPY --from=build-ui /app/ui/dist /app/ui
+COPY --from=build-api /app/api/photoview /app/photoview

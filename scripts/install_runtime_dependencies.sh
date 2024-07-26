@@ -1,23 +1,27 @@
 #!/bin/bash
 
-BUILD_DEPENDS=(gnupg2 gpg)
+BUILD_DEPENDS=(gpg)
 
-apt-get update
-apt-get install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
+apt update
+apt install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
-  echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' \
-    | tee /etc/apt/sources.list.d/graphics:darktable.list
+  set -x
+  echo 'deb https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' > /etc/apt/sources.list.d/darktable.list
   curl -fsSL https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/Release.key \
-    | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
+    | gpg --dearmor -o /etc/apt/trusted.gpg.d/darktable.gpg
+  gpg --show-keys --with-fingerprint --dry-run /etc/apt/trusted.gpg.d/darktable.gpg
 
-  apt-get update
-  apt-get install -y darktable
+  apt apt -o "Acquire::https::Verify-Peer=false" update
+  apt install -y darktable
+
+  rm /etc/apt/sources.list.d/darktable.list /etc/apt/trusted.gpg.d/darktable.gpg
+  set +x
 fi
 
 # Remove build dependencies and cleanup
-apt-get purge -y ${BUILD_DEPENDS[@]}
-apt-get autoremove -y
-apt-get clean
+apt purge -y ${BUILD_DEPENDS[@]}
+apt autoremove -y
+apt clean
 rm -rf /var/lib/apt/lists/*
