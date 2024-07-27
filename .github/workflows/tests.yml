@@ -40,7 +40,7 @@ jobs:
         with:
           pull: true
           push: true
-          target: dev-${{ matrix.image }}
+          target: build-${{ matrix.image }}
           tags: ${{ env.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,7 +1,7 @@
 ###############################
-###  Build UI dependencies  ###
+###         Build UI        ###
 ###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS dep-ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS build-ui
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -31,10 +31,14 @@ WORKDIR /app/ui
 COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci --omit=dev --ignore-scripts
 
+# Build UI
+COPY ui/ /app/ui
+RUN npm run build -- --base=$UI_PUBLIC_URL
+
 ###############################
-### Build API dependencies  ###
+###         Build API       ###
 ###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS dep-api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS build-api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -47,11 +51,13 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY api/go.mod api/go.sum /app/api/
 COPY scripts/*.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
-  && source /app/scripts/set_compiler_env.sh \
   && /app/scripts/install_build_dependencies.sh \
+  && /app/scripts/install_runtime_dependencies.sh
+
+COPY api/go.mod api/go.sum /app/api/
+RUN source /app/scripts/set_compiler_env.sh \
   && go env \
   && go mod download \
   # Patch go-face
@@ -61,39 +67,12 @@ RUN chmod +x /app/scripts/*.sh \
     github.com/mattn/go-sqlite3 \
     github.com/Kagami/go-face
 
-###############################
-###        Build UI         ###
-###############################
-FROM dep-ui AS build-ui
-
-COPY ui/ /app/ui
-RUN npm run build -- --base=$UI_PUBLIC_URL
-
-###############################
-###        BUILD API        ###
-###############################
-FROM dep-api AS build-api
-
+# Build API server
 COPY api /app/api
 RUN source /app/scripts/set_compiler_env.sh \
-  && go build -v -o photoview .
-
-###############################
-### Build dev image for UI  ###
-###############################
-FROM dep-ui AS dev-ui
-
-###############################
-### Build dev image for API ###
-###############################
-FROM dep-api AS dev-api
-
-ADD scripts/install_runtime_dependencies.sh /app/scripts/
-
-RUN source /app/scripts/set_compiler_env.sh \
-  && /app/scripts/install_runtime_dependencies.sh \
   && apt update \
-  && apt install -y reflex sqlite3
+  && apt install -y reflex sqlite3 \
+  && go build -v -o photoview .
 
 ###########################
 ### Build release image ###

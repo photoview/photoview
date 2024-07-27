@@ -37,7 +37,3 @@ apt install -y \
   liblapack-dev:${DEBIAN_ARCH} \
   libjpeg-dev:${DEBIAN_ARCH} \
   libheif-dev:${DEBIAN_ARCH}
-
-# Cleanup
-apt clean
-rm -rf /var/lib/apt/lists/*
