@@ -18,6 +18,7 @@ const MessageProgress = forwardRef(
       <MessagePlain header={header} content={content} {...props} ref={ref}>
         <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b overflow-hidden">
           <div
+            role="progressbar"
             className="h-full transition-all duration-200"
             style={{ width: `${percent}%`, backgroundColor: color }}
           ></div>

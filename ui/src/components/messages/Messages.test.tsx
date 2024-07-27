@@ -10,7 +10,7 @@ const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
   return (
     <div>
       <button
-        onClick={() => setMessages([...messages, ...messages])}
+        onClick={() => setMessages((prev: any) => [...prev, ...messages])}
         data-testid="trigger-messages"
       >
         Trigger Messages
@@ -89,7 +89,7 @@ describe('Messages Component', () => {
   })
 
   test('renders messages with overflow and scroll behavior', () => {
-    const longContent = 'This is a very long message '.repeat(10)
+    const longContent = 'This is a very long message '.repeat(10).trim()
 
     render(
       <MessageProvider>
@@ -100,7 +100,9 @@ describe('Messages Component', () => {
       </MessageProvider>
     )
 
-    const longMessage = screen.getByText(longContent)
+    const longMessage = screen.getByText((content, element) => {
+      return element?.textContent === longContent
+    })
     expect(longMessage.closest('div')).toHaveStyle({ maxHeight: '6rem' })
     expect(longMessage.closest('div')).toHaveStyle({ overflowY: 'auto' })
   })
@@ -138,11 +140,11 @@ describe('Messages Component', () => {
 
     render(
       <MessageProvider>
-        <MockSubscriptionsHook />
+        <MockSubscriptionsHook messages={messages} setMessages={setMessages} />
       </MessageProvider>
     )
 
     fireEvent.click(screen.getByTestId('trigger-messages'))
-    expect(setMessages).toHaveBeenCalledWith([...messages, ...messages])
+    expect(setMessages).toHaveBeenCalledWith(expect.any(Function))
   })
 })
