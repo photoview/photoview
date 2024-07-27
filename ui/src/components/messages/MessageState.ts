@@ -2,6 +2,7 @@ import React from 'react'
 import { Message } from './SubscriptionsHook'
 
 export type MessageStateType = {
+  [x: string]: any
   set: React.Dispatch<React.SetStateAction<Message[]>>
   get: Message[]
   add(message: Message): void
@@ -22,8 +23,7 @@ export const MessageState: MessageStateType = {
   },
   removeKey: key => {
     MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key != key)
-      return newMessages
+      return messages.filter(msg => msg.key != key)
     })
   },
 }
