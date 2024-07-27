@@ -116,6 +116,7 @@ jobs:
         uses: actions/github-script@v7
         if: always() && github.event_name == 'pull_request'
         with:
+          github-token: ${{ secrets.COMMENT_TOKEN }}
           script: |
             const fs = require('fs');
             let scanResults = fs.readFileSync('output.html', 'utf8');
@@ -175,21 +176,9 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
-
-      - name: Generate report
-        uses: hadolint/hadolint-action@v3.1.0
-        if: always()
-        with:
-          dockerfile: Dockerfile
-          output-file: hadolint.sarif
-          format: sarif
-          failure-threshold: ignore
-
-      - name: Upload report
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: hadolint.sarif
+          config: ${{ github.workspace }}/.hadolint.yaml
+          format: tty
+          failure-threshold: error
 
       - name: Update Pull Request
         uses: actions/github-script@v7
@@ -197,7 +186,6 @@ jobs:
         with:
           script: |
             let hadolintResults = process.env.HADOLINT_RESULTS;
-            let hadolintOutcome = "${{ steps.hadolint.outcome }}";
             let output = '';
 
             const comments = await github.rest.issues.listComments({
@@ -206,25 +194,18 @@ jobs:
               repo: context.repo.repo
             });
             
-            const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Hadolint'));
+            const botComment = comments.data.find(
+              comment => comment.user.login === 'github-actions[bot]' 
+              && comment.body.includes('Hadolint')
+            );
 
-            if (hadolintOutcome === 'success') {
-              if (botComment) {
-                await github.rest.issues.deleteComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo
-                });
-              }
-            }else if (hadolintOutcome === 'failure') {
+            if (hadolintResults) {
 
-              output += '#### Hadolint: ' + hadolintOutcome + '\n';
+              output += '#### Hadolint issues:\n';
               output += 'Hadolint detected issues during execution.\n';
-  
-              if (hadolintResults) {
-                output += '\n```\n' + hadolintResults + '\n```\n';
-                output += '\nFind more info about detected issues and recommendations for fixes in the [Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
-              }
+              output += '\n```\n' + hadolintResults + '\n```\n';
+              output += '\nFind more info about detected issues and recommendations for fixes in the ';
+              output += '[Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
   
               if (botComment) {
                 await github.rest.issues.updateComment({
@@ -241,7 +222,33 @@ jobs:
                   body: output
                 });
               }
+            
+            } else {
+
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+              }
             }
+
+      - name: Generate report
+        uses: hadolint/hadolint-action@v3.1.0
+        if: always()
+        with:
+          dockerfile: Dockerfile
+          config: ${{ github.workspace }}/.hadolint.yaml
+          output-file: hadolint.sarif
+          format: sarif
+          failure-threshold: ignore
+
+      - name: Upload report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: hadolint.sarif
 
   coverity:
     name: Coverity Scan

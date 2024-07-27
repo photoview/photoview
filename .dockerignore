@@ -1,15 +1,15 @@
 .dockerignore
 .dockleignore
-.git
-.github
+.git/
+.github/
 .gitignore
-.husky
+.husky/
 .prettierrc
 .eslintcache
 .hadolint.yaml
-.vscode
+.vscode/
 .env
-docker-compose example
+docker-compose example/
 docker-compose.yml
 docker-compose-dev.yml
 Dockerfile
@@ -17,16 +17,17 @@ Dockerfile-dev
 example.env
 Makefile
 photos_path
-screenshots
-systemd
-storage
+screenshots/
+systemd/
+storage/
 
 ui/node_modules/
 ui/build/
 ui/.cache/
 ui/.nvmrc
 
-sonar-project.properties
+**/.sonarlint/
+**/sonar-project.properties
 ui/sonar-project.properties
 api/sonar-project.properties
 

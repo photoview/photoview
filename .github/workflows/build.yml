@@ -25,14 +25,6 @@ jobs:
       - name: Fetch branches
         run: git fetch --all
 
-      - name: Hadolint report
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
-          output-file: hadolint.json
-          format: json
-          no-fail: true
-
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         if: github.repository == 'kkovaletp/photoview'
@@ -43,7 +35,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: ${{ matrix.target_platform }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -88,7 +80,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' && github.repository == 'kkovaletp/photoview' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          annotations: ${{ steps.docker_meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

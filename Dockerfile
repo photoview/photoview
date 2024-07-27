@@ -97,5 +97,6 @@ HEALTHCHECK --interval=60s --timeout=10s \
     --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
     || exit 1
 
+LABEL org.opencontainers.image.source=https://github.com/kkovaletp/photoview/
 USER photoview
 ENTRYPOINT ["/app/photoview"]

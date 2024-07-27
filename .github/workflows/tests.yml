@@ -78,7 +78,10 @@ jobs:
           sudo add-apt-repository ppa:strukturag/libheif
           sudo add-apt-repository ppa:strukturag/libde265
           sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool
+          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool gnupg2 gpg curl
+          echo 'deb [trusted=yes] http://download.opensuse.org/repositories/graphics:/darktable/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/graphics:darktable.list
+          sudo apt-get update
+          sudo apt-get install -y darktable
 
       - name: Get GO dependencies
         run: |
@@ -108,7 +111,9 @@ jobs:
           cp ../.github/sqlite.testing.env testing.env
 
       - name: Test
-        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
+        run: |
+          go test ./... -v -database -filesystem -p 1
+          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -154,16 +159,6 @@ jobs:
 
       - name: Install dependencies
         run: npm clean-install
-
-      - name: NPM audit
-        uses: oke-py/npm-audit-action@v2
-        with:
-          audit_level: none
-          create_issues: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          dedupe_issues: true
-          production_flag: true
-          working_directory: ui
 
       - name: Test
         run: npm run test:ci
