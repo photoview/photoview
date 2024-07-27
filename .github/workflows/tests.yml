@@ -28,15 +28,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check images with current sha
-        id: check-image
-        continue-on-error: true
-        run: |
-          docker manifest inspect ${{ env.image }}
-
       - name: Build images
         uses: docker/build-push-action@v6
-        if: ${{ steps.check-image.outcome != 'success' }}
         with:
           pull: true
           push: true
@@ -44,6 +37,42 @@ jobs:
           tags: ${{ env.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  test-ui:
+    name: Test UI
+    needs:
+    - build-dep
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    container:
+      image: ghcr.io/${{ github.repository }}/test:ui-${{ github.sha }}
+    defaults:
+      run:
+        working-directory: ./ui
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Cache NPM dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package.json', '**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: npm clean-install
+
+    - name: Test
+      run: npm run test:ci
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        flags: ui
 
   test-api:
     name: Test API
@@ -117,42 +146,6 @@ jobs:
         PHOTOVIEW_DATABASE_DRIVER: ${{ matrix.database }}
       run: |
         go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
-      with:
-        flags: ui
-
-  test-ui:
-    name: Test UI
-    needs:
-    - build-dep
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-    container:
-      image: ghcr.io/${{ github.repository }}/test:ui-${{ github.sha }}
-    defaults:
-      run:
-        working-directory: ./ui
-
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-
-    - name: Cache NPM dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package.json', '**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Install dependencies
-      run: npm clean-install
-
-    - name: Test
-      run: npm run test:ci
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
