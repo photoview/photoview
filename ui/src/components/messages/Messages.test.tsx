@@ -21,7 +21,7 @@ const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
 
 vi.mock('./SubscriptionsHook', () => ({
   __esModule: true,
-  SubscriptionsHook: MockSubscriptionsHook,
+  default: MockSubscriptionsHook,
 }))
 
 const messages = [
@@ -76,16 +76,16 @@ describe('Messages Component', () => {
       </MessageProvider>
     )
 
-    const neutralMessage = screen.getByText('This is a neutral message.')
-    const positiveMessage = screen.getByText('This is a positive message.')
-    const negativeMessage = screen.getByText('This is a negative message.')
+    const neutralMessage = screen.getByText('This is a neutral message.').closest('div')
+    const positiveMessage = screen.getByText('This is a positive message.').closest('div')
+    const negativeMessage = screen.getByText('This is a negative message.').closest('div')
 
-    expect(neutralMessage.closest('div')).toHaveClass('bg-white')
-    expect(neutralMessage.closest('div')).toHaveClass('dark:bg-dark-bg2')
-    expect(positiveMessage.closest('div')).toHaveClass('bg-green-100')
-    expect(positiveMessage.closest('div')).toHaveClass('dark:bg-green-900')
-    expect(negativeMessage.closest('div')).toHaveClass('bg-red-100')
-    expect(negativeMessage.closest('div')).toHaveClass('dark:bg-red-900')
+    expect(neutralMessage?.parentElement).toHaveClass('bg-white')
+    expect(neutralMessage?.parentElement).toHaveClass('dark:bg-dark-bg2')
+    expect(positiveMessage?.parentElement).toHaveClass('bg-green-100')
+    expect(positiveMessage?.parentElement).toHaveClass('dark:bg-green-900')
+    expect(negativeMessage?.parentElement).toHaveClass('bg-red-100')
+    expect(negativeMessage?.parentElement).toHaveClass('dark:bg-red-900')
   })
 
   test('renders messages with overflow and scroll behavior', () => {
@@ -114,7 +114,7 @@ describe('Messages Component', () => {
       </MessageProvider>
     )
 
-    const progressBar = container.querySelector('div[style*="width: 50%"]')
+    const progressBar = container.querySelector('div[role="progressbar"][style*="width: 50%"]')
     expect(progressBar).toBeInTheDocument()
     expect(progressBar).toHaveStyle('background-color: #fbbf24')
   })
