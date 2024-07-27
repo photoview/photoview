@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { NotificationType } from '../../__generated__/globalTypes'
-import MessageState from './MessageState'
+import { MessageProvider } from './MessageState'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
 
@@ -69,11 +69,11 @@ const messages = [
 describe('Messages Component', () => {
   test('renders different types of messages with correct background colors', () => {
     render(
-      <MessageState.Provider value={{ messages, setMessages: () => {} }}>
+      <MessageProvider>
         <MessagePlain {...messages[0].props} />
         <MessagePlain {...messages[1].props} />
         <MessagePlain {...messages[2].props} />
-      </MessageState.Provider>
+      </MessageProvider>
     )
 
     const neutralMessage = screen.getByText('This is a neutral message.')
@@ -92,12 +92,12 @@ describe('Messages Component', () => {
     const longContent = 'This is a very long message '.repeat(10)
 
     render(
-      <MessageState.Provider value={{ messages, setMessages: () => {} }}>
+      <MessageProvider>
         <MessagePlain
           {...messages[0].props}
           content={longContent}
         />
-      </MessageState.Provider>
+      </MessageProvider>
     )
 
     const longMessage = screen.getByText(longContent)
@@ -107,9 +107,9 @@ describe('Messages Component', () => {
 
   test('renders progress messages with correct progress bar color and width', () => {
     const { container } = render(
-      <MessageState.Provider value={{ messages, setMessages: () => {} }}>
+      <MessageProvider>
         <MessageProgress {...messages[3].props} />
-      </MessageState.Provider>
+      </MessageProvider>
     )
 
     const progressBar = container.querySelector('div[style*="width: 50%"]')
@@ -119,11 +119,11 @@ describe('Messages Component', () => {
 
   test('renders progress bar with correct colors based on percent value', () => {
     render(
-      <MessageState.Provider value={{ messages, setMessages: () => {} }}>
+      <MessageProvider>
         <MessageProgress {...messages[3].props} percent={20} />
         <MessageProgress {...messages[3].props} percent={50} />
         <MessageProgress {...messages[3].props} percent={80} />
-      </MessageState.Provider>
+      </MessageProvider>
     )
 
     const progressBars = screen.getAllByRole('progressbar')
@@ -137,9 +137,9 @@ describe('Messages Component', () => {
     const setMessages = vi.fn()
 
     render(
-      <MessageState.Provider value={{ messages: [], setMessages }}>
+      <MessageProvider>
         <MockSubscriptionsHook />
-      </MessageState.Provider>
+      </MessageProvider>
     )
 
     fireEvent.click(screen.getByTestId('trigger-messages'))

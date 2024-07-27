@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { NotificationType } from '../../__generated__/globalTypes'
 import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
-import MessageState from '../messages/MessageState'
+import { useMessageState } from '../messages/MessageState'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
 import React from 'react'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
@@ -113,7 +113,9 @@ const downloadMediaShowProgress =
     }
 
     const notifyKey = Math.random().toString(26)
-    MessageState.add({
+    const { add, removeKey } = useMessageState()
+
+    add({
       key: notifyKey,
       type: NotificationType.Progress,
       onDismiss,
@@ -135,7 +137,7 @@ const downloadMediaShowProgress =
 
       receivedBytes += result.value ? result.value.length : 0
 
-      MessageState.add({
+      add({
         key: notifyKey,
         type: NotificationType.Progress,
         onDismiss,
@@ -153,7 +155,7 @@ const downloadMediaShowProgress =
       return
     }
 
-    MessageState.add({
+    add({
       key: notifyKey,
       type: NotificationType.Progress,
       props: {
@@ -165,14 +167,12 @@ const downloadMediaShowProgress =
     })
 
     setTimeout(() => {
-      MessageState.removeKey(notifyKey)
+      removeKey(notifyKey)
     }, 2000)
 
-    const content = new Blob([data.buffer], {
+    return new Blob([data.buffer], {
       type: response.headers.get('content-type') || undefined,
     })
-
-    return content
   }
 
 const downloadBlob = (blob: Blob, filename: string) => {

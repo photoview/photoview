@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
 import MessageProgress from './MessageProgress'
 import MessagePlain from './Message'
 import { SubscriptionsHook, Message } from './SubscriptionsHook'
 import { NotificationType } from '../../__generated__/globalTypes'
-import MessageState from './MessageState'
+import { useMessageState, MessageProvider } from './MessageState'
 
 const Container = styled.div`
   position: fixed;
@@ -21,14 +21,12 @@ const Container = styled.div`
 `
 
 const Messages = () => {
-  const [messages, setMessages] = useState<Message[]>([])
-  MessageState.set = setMessages
-  MessageState.get = messages
+  const { messages, setMessages } = useMessageState()
 
   const getMessageElement = (message: Message): React.FunctionComponent => {
     const dismissMessage = (message: Message) => {
       message.onDismiss && message.onDismiss()
-      setMessages(messages => messages.filter(msg => msg.key != message.key))
+      setMessages(prevMessages => prevMessages.filter(msg => msg.key != message.key))
     }
 
     switch (message.type) {
@@ -88,4 +86,10 @@ const Messages = () => {
   )
 }
 
-export default Messages
+const MessagesWithProvider = () => (
+  <MessageProvider>
+    <Messages />
+  </MessageProvider>
+)
+
+export default MessagesWithProvider
