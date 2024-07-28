@@ -12,32 +12,28 @@ else
   DEBIAN_ARCH='amd64'
 fi
 
-apt-get update
+apt update
 
 # Install G++/GCC cross compilers
 if [ "$DEBIAN_ARCH" == "arm64" ]; then
-  apt-get install -y \
+  apt install -y \
     g++-aarch64-linux-gnu \
     libc6-dev-arm64-cross
 elif [ "$DEBIAN_ARCH" == "armhf" ]; then
-  apt-get install -y \
+  apt install -y \
     g++-arm-linux-gnueabihf \
     libc6-dev-armhf-cross
 else
-  apt-get install -y \
+  apt install -y \
     g++-x86-64-linux-gnu \
     libc6-dev-amd64-cross
 fi
 
 # Install go-face dependencies and libheif for HEIF media decoding
-apt-get install -y \
+apt install -y \
   libdlib-dev:${DEBIAN_ARCH} \
   libblas-dev:${DEBIAN_ARCH} \
   libatlas-base-dev:${DEBIAN_ARCH} \
   liblapack-dev:${DEBIAN_ARCH} \
   libjpeg-dev:${DEBIAN_ARCH} \
   libheif-dev:${DEBIAN_ARCH}
-
-# Cleanup
-apt-get clean
-rm -rf /var/lib/apt/lists/*
