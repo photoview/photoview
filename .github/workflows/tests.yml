@@ -7,15 +7,31 @@ on:
     branches: [master]
 
 jobs:
+  cleanup:
+    name: Clean up images
+    needs:
+    - test-ui
+    - test-api
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cleanup
+      uses: actions/delete-package-versions@v5
+      with:
+        owner: '${{ github.repository_owner }}'
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        package-type: 'container'
+        package-name: photoview/test
+        min-versions-to-keep: 5
+
   build-dep:
     name: Build dep images
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         image: ['ui', 'api']
     env:
-      image: ghcr.io/${{ github.repository }}/test:${{ matrix.image }}-${{ github.sha }}
+      image: ghcr.io/${{ github.repository }}/test:${{ matrix.image }}-${{ github.run_id }}
 
     steps:
       - name: Set up Docker Buildx
@@ -43,10 +59,8 @@ jobs:
     needs:
     - build-dep
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
     container:
-      image: ghcr.io/${{ github.repository }}/test:ui-${{ github.sha }}
+      image: ghcr.io/${{ github.repository }}/test:ui-${{ github.run_id }}
     defaults:
       run:
         working-directory: ./ui
@@ -55,11 +69,15 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
+    - name: Get npm cache directory
+      id: npm-cache-dir
+      run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
     - name: Cache NPM dependencies
       uses: actions/cache@v4
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package.json', '**/package-lock.json') }}
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
@@ -80,11 +98,11 @@ jobs:
     - build-dep
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         database: ['sqlite', 'mysql', 'postgres']
     container:
-      image: ghcr.io/${{ github.repository }}/test:api-${{ github.sha }}
+      image: ghcr.io/${{ github.repository }}/test:api-${{ github.run_id }}
       env:
         PHOTOVIEW_SQLITE_PATH: photoview_test.db
         PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(mysql)/photoview_test
@@ -145,9 +163,10 @@ jobs:
       env:
         PHOTOVIEW_DATABASE_DRIVER: ${{ matrix.database }}
       run: |
-        go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+        go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-${{ matrix.database }}.txt -covermode=atomic
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
+        files: coverage-${{ matrix.database }}.txt
         flags: ui
