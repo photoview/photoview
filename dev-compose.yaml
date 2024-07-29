@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-ui
+      target: prepare-ui
     env_file: ui/example.env
     volumes:
     - .:/app:rw
@@ -24,7 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-api
+      target: prepare-api
     env_file: api/example.env
     volumes:
     - .:/app:rw
@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-ui
+      target: prepare-ui
     env_file: scripts/test/env
     volumes:
     - .:/app:rw
@@ -58,7 +58,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-api
+      target: prepare-api
     env_file: scripts/test/env
     volumes:
     - .:/app:rw
@@ -74,7 +74,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-api
+      target: prepare-api
     depends_on:
     - mysql
     environment:
@@ -94,7 +94,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build-api
+      target: prepare-api
     depends_on:
     - postgres
     environment:

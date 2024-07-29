@@ -1,7 +1,7 @@
 ###############################
-###         Build UI        ###
+###        Prepare UI       ###
 ###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS build-ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS prepare-ui
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -27,18 +27,20 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 WORKDIR /app/ui
 
-# Download dependencies
 COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci --omit=dev --ignore-scripts
 
-# Build UI
+###############################
+###         Build UI        ###
+###############################
+FROM prepare-ui AS build-ui
 COPY ui/ /app/ui
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ###############################
-###         Build API       ###
+###        Prepare API      ###
 ###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS build-api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS prepare-api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -67,7 +69,10 @@ RUN source /app/scripts/set_compiler_env.sh \
     github.com/mattn/go-sqlite3 \
     github.com/Kagami/go-face
 
-# Build API server
+###############################
+###         Build API       ###
+###############################
+FROM prepare-api AS build-api
 COPY api /app/api
 RUN source /app/scripts/set_compiler_env.sh \
   && apt update \
