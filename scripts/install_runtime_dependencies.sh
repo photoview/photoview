@@ -2,8 +2,8 @@
 
 BUILD_DEPENDS=(gpg)
 
-apt update
-apt install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
+apt-get update
+apt-get install -y ${BUILD_DEPENDS[@]} curl libdlib19.1 ffmpeg exiftool libheif1
 
 # Install Darktable if building for a supported architecture
 if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
@@ -12,14 +12,14 @@ if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm
     | gpg --dearmor -o /etc/apt/trusted.gpg.d/darktable.gpg
   gpg --show-keys --with-fingerprint --dry-run /etc/apt/trusted.gpg.d/darktable.gpg
 
-  apt update
-  apt install -y darktable
+  apt-get update
+  apt-get install -y darktable
 
   rm /etc/apt/sources.list.d/darktable.list /etc/apt/trusted.gpg.d/darktable.gpg
 fi
 
 # Remove build dependencies and cleanup
-apt purge -y ${BUILD_DEPENDS[@]}
-apt autoremove -y
-apt clean
+apt-get purge -y ${BUILD_DEPENDS[@]}
+apt-get autoremove -y
+apt-get clean
 rm -rf /var/lib/apt/lists/*

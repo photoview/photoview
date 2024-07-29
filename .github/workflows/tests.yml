@@ -7,22 +7,6 @@ on:
     branches: [master]
 
 jobs:
-  cleanup:
-    name: Clean test images
-    needs:
-    - test-ui
-    - test-api
-    runs-on: ubuntu-latest
-    steps:
-    - name: Cleanup
-      uses: actions/delete-package-versions@v5
-      with:
-        owner: '${{ github.repository_owner }}'
-        token: '${{ secrets.GITHUB_TOKEN }}'
-        package-type: 'container'
-        package-name: photoview/test
-        min-versions-to-keep: 5
-
   build-dep:
     name: Build test images
     runs-on: ubuntu-latest
@@ -145,19 +129,23 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
+    - name: Get Go cache directory
+      id: go-cache-dir
+      run: |
+        go env
+        echo "dir=$(go env GOPATH)/pkg" >> ${GITHUB_OUTPUT}
+
     - name: Cache go build
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
-        path: /go/pkg
+        path: ${{ steps.go-cache-dir.outputs.dir }}
         key: ${{ runner.os }}-api-${{ hashFiles('**/go.mod', '**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-api-
 
-    - name: Build API
+    - name: Install dependencies
       run: |
-        go env
         go get -t -v ./...
-        go build -v  -buildvcs=false ./...
 
     - name: Test API
       env:
@@ -170,3 +158,21 @@ jobs:
       with:
         files: coverage-${{ matrix.database }}.txt
         flags: ui
+
+  cleanup:
+    name: Clean test images
+    needs:
+    - build-dep
+    - test-ui
+    - test-api
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cleanup
+      uses: actions/delete-package-versions@v5
+      with:
+        owner: '${{ github.repository_owner }}'
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        package-type: 'container'
+        package-name: photoview/test
+        min-versions-to-keep: 5
