@@ -67,7 +67,7 @@ services:
     - -c
     - |
       source /app/scripts/set_compiler_env.sh
-      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-sqlite.txt -covermode=atomic
 
   test-api-mysql:
     image: photoview/photoview-api
@@ -87,7 +87,7 @@ services:
     - -c
     - |
       source /app/scripts/set_compiler_env.sh
-      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-mysql.txt -covermode=atomic
 
   test-api-postgres:
     image: photoview/photoview-api
@@ -107,7 +107,7 @@ services:
     - -c
     - |
       source /app/scripts/set_compiler_env.sh
-      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+      go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-postgres.txt -covermode=atomic
 
   mysql:
     image: mariadb:lts
