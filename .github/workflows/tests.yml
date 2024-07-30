@@ -168,11 +168,20 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-    - name: Cleanup
+    - name: Cleanup old images
       uses: actions/delete-package-versions@v5
       with:
         owner: '${{ github.repository_owner }}'
         token: '${{ secrets.GITHUB_TOKEN }}'
         package-type: 'container'
         package-name: photoview/test
-        min-versions-to-keep: 5
+        min-versions-to-keep: 20
+
+    - name: Cleanup untagged images
+      uses: actions/delete-package-versions@v5
+      with:
+        owner: '${{ github.repository_owner }}'
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        package-type: 'container'
+        package-name: photoview/test
+        delete-only-untagged-versions: true
