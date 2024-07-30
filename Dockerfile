@@ -75,8 +75,8 @@ RUN source /app/scripts/set_compiler_env.sh \
 FROM prepare-api AS build-api
 COPY api /app/api
 RUN source /app/scripts/set_compiler_env.sh \
-  && apt update \
-  && apt install -y reflex sqlite3 \
+  && apt-get update \
+  && apt-get install -y reflex sqlite3 \
   && go build -v -o photoview .
 
 ###########################

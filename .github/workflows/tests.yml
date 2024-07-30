@@ -33,7 +33,7 @@ jobs:
         with:
           pull: true
           push: true
-          target: build-${{ matrix.image }}
+          target: prepare-${{ matrix.image }}
           tags: ${{ env.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
