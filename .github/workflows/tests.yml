@@ -40,6 +40,9 @@ jobs:
     - name: Test
       run: ./scripts/test/ui.sh
 
+    - name: Cleanup
+      run: ./scripts/test/cleanup.sh
+
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
@@ -73,8 +76,11 @@ jobs:
     - name: Test
       run: ./scripts/test/api.sh ${{ matrix.database }}
 
+    - name: Cleanup
+      run: ./scripts/test/cleanup.sh
+
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
         files: coverage-${{ matrix.database }}.txt
-        flags: ui
+        flags: api-${{ matrix.database }}

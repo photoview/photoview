@@ -37,3 +37,6 @@ apt-get install -y \
   liblapack-dev:${DEBIAN_ARCH} \
   libjpeg-dev:${DEBIAN_ARCH} \
   libheif-dev:${DEBIAN_ARCH}
+
+# Install tools for development
+apt-get install -y reflex sqlite3
