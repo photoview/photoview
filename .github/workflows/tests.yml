@@ -38,7 +38,7 @@ jobs:
           ${{ runner.os }}-node-
 
     - name: Test
-      run: docker compose -f dev-compose.yaml run test-ui
+      run: ./scripts/test/ui.sh
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
@@ -70,19 +70,8 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Cache go build
-      uses: actions/cache@v4
-      with:
-        path: ./go.pkg
-        key: ${{ runner.os }}-api-${{ hashFiles('**/go.mod', '**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-api-
-
     - name: Test
-      env:
-        PHOTOVIEW_DATABASE_DRIVER: ${{ matrix.database }}
-      run: |
-        docker compose -f dev-compose.yaml run -v `pwd`/go.pkg:/go/pkg test-api-${{ matrix.database }}
+      run: ./scripts/test/api.sh ${{ matrix.database }}
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
