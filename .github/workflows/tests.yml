@@ -7,47 +7,6 @@ on:
     branches: [master]
 
 jobs:
-  test-ui:
-    name: Test UI
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Checkout repo
-      uses: actions/checkout@v4
-
-    - name: Build test image
-      uses: docker/build-push-action@v6
-      with:
-        pull: true
-        push: false
-        load: true
-        target: prepare-ui
-        tags: photoview/ui
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Cache NPM dependencies
-      uses: actions/cache@v4
-      with:
-        path: ./ui/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Test
-      run: |
-        docker run -v $(pwd):/app --workdir /app/ui \
-          photoview/ui \
-          /bin/bash -c "npm ci; npm run test:ci"
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
-      with:
-        flags: ui
-
   test-api:
     name: Test API
     runs-on: ubuntu-latest
@@ -110,10 +69,54 @@ jobs:
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
-          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-${{ matrix.database }}.txt -covermode=atomic
+          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
-        files: api/coverage-${{ matrix.database }}.txt
         flags: api-${{ matrix.database }}
+
+  test-ui:
+    name: Test UI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: prepare-ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Cache NPM dependencies
+      uses: actions/cache@v4
+      with:
+        path: ./ui/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Test
+      run: |
+        docker run -v $(pwd):/app --workdir /app/ui \
+          photoview/ui \
+          /bin/bash -euo pipefail -c "
+        npm ci
+        npm run test:ci
+        chmod -R +r ./coverage
+        "
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        flags: ui
