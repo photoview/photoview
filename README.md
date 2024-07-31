@@ -197,9 +197,9 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target dev-api -t photoview-api . # Build image for development
+$ docker build --target prepare-api -t photoview-api . # Build image for development
 $ cp api/example.env api/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
+$ docker run --rm -it -v `pwd`:/app --network host photoview-api reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
@@ -209,9 +209,9 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target dev-ui -t photoview-ui .
+$ docker build --target prepare-ui -t photoview-ui . # Build image for development
 $ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
+$ docker run --rm -it -v `pwd`:/app --network host photoview-ui npm run mon # Monitor source code and (re)launch UI server
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).

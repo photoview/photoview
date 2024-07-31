@@ -7,69 +7,41 @@ on:
     branches: [master]
 
 jobs:
-  build-dep:
-    name: Build test images
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ['ui', 'api']
-    env:
-      image: ghcr.io/${{ github.repository }}/test:${{ matrix.image }}-${{ github.run_id }}
-
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build images
-        uses: docker/build-push-action@v6
-        with:
-          pull: true
-          push: true
-          target: prepare-${{ matrix.image }}
-          tags: ${{ env.image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   test-ui:
     name: Test UI
-    needs:
-    - build-dep
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository }}/test:ui-${{ github.run_id }}
-    defaults:
-      run:
-        working-directory: ./ui
 
     steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Get npm cache directory
-      id: npm-cache-dir
-      run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: prepare-ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Cache NPM dependencies
       uses: actions/cache@v4
       with:
-        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        path: ./ui/node_modules
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
-    - name: Install dependencies
-      run: npm clean-install
-
     - name: Test
-      run: npm run test:ci
+      run: |
+        docker run -v $(pwd):/app --workdir /app/ui \
+          photoview/ui \
+          /bin/bash -c "npm ci; npm run test:ci"
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
@@ -78,22 +50,10 @@ jobs:
 
   test-api:
     name: Test API
-    needs:
-    - build-dep
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         database: ['sqlite', 'mysql', 'postgres']
-    container:
-      image: ghcr.io/${{ github.repository }}/test:api-${{ github.run_id }}
-      env:
-        PHOTOVIEW_SQLITE_PATH: photoview_test.db
-        PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(mysql)/photoview_test
-        PHOTOVIEW_POSTGRES_URL: postgres://photoview:photosecret@postgres/photoview_test
-    defaults:
-      run:
-        working-directory: ./api
 
     services:
       mysql:
@@ -110,7 +70,6 @@ jobs:
           --health-retries=5
         ports:
           - 3306:3306
-
       postgres:
         image: postgres:13.2
         env:
@@ -126,62 +85,35 @@ jobs:
           - 5432:5432
 
     steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Get Go cache directory
-      id: go-cache-dir
-      run: |
-        go env
-        echo "dir=$(go env GOPATH)/pkg" >> ${GITHUB_OUTPUT}
-
-    - name: Cache go build
-      uses: actions/cache@v4
+    - name: Build test image
+      uses: docker/build-push-action@v6
       with:
-        path: ${{ steps.go-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-api-${{ hashFiles('**/go.mod', '**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-api-
+        pull: true
+        push: false
+        load: true
+        target: prepare-api
+        tags: photoview/api
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-    - name: Install dependencies
+    - name: Test
       run: |
-        go get -t -v ./...
-
-    - name: Test API
-      env:
-        PHOTOVIEW_DATABASE_DRIVER: ${{ matrix.database }}
-      run: |
-        go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-${{ matrix.database }}.txt -covermode=atomic
+        docker run -v $(pwd):/app --workdir /app/api --network host \
+            -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
+            -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
+            -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
+            -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
+          photoview/api \
+          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage-${{ matrix.database }}.txt -covermode=atomic
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
-        files: coverage-${{ matrix.database }}.txt
-        flags: ui
-
-  cleanup:
-    name: Clean test images
-    needs:
-    - build-dep
-    - test-ui
-    - test-api
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-    - name: Cleanup old images
-      uses: actions/delete-package-versions@v5
-      with:
-        owner: '${{ github.repository_owner }}'
-        token: '${{ secrets.GITHUB_TOKEN }}'
-        package-type: 'container'
-        package-name: photoview/test
-        min-versions-to-keep: 20
-
-    - name: Cleanup untagged images
-      uses: actions/delete-package-versions@v5
-      with:
-        owner: '${{ github.repository_owner }}'
-        token: '${{ secrets.GITHUB_TOKEN }}'
-        package-type: 'container'
-        package-name: photoview/test
-        delete-only-untagged-versions: true
+        files: api/coverage-${{ matrix.database }}.txt
+        flags: api-${{ matrix.database }}
