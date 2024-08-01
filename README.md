@@ -165,7 +165,6 @@ Setting up and configuring of all these protections depends on and requires a lo
 
 This project is a result of hard work, and it's great to see you interested in contributing. 
 Contributions are not just about code — you can help in many ways!
-
 Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md). 
 It includes information on our code of conduct, the process for submitting pull requests, and more.
 
@@ -184,8 +183,8 @@ We recommend to use Docker development environment. If Docker environment doesn'
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker compose -f dev-compose.yaml build dev-ui dev-api # Build images for development
-$ docker compose -f dev-compose.yaml up dev-api dev-ui # Run API and UI servers
+$ docker compose -f dev-compose.yaml --profile dev build # Build images for development
+$ docker compose -f dev-compose.yaml --profile dev up # Launch API and UI servers
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
@@ -197,9 +196,9 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target prepare-api -t photoview-api . # Build image for development
-$ cp api/example.env api/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-api reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
+$ docker build --target prepare-api -t photoview/api . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
+    reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
@@ -209,9 +208,9 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target prepare-ui -t photoview-ui . # Build image for development
-$ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-ui npm run mon # Monitor source code and (re)launch UI server
+$ docker build --target prepare-ui -t photoview/ui . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm run mon # Monitor source code and (re)launch UI server
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).

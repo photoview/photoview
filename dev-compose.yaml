@@ -2,7 +2,9 @@ name: photoview
 
 services:
   dev-ui:
-    image: photoview/photoview-ui
+    image: photoview/ui
+    profiles:
+    - dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,7 +22,9 @@ services:
       npm run mon
 
   dev-api:
-    image: photoview/photoview-api
+    image: photoview/api
+    profiles:
+    - dev
     build:
       context: .
       dockerfile: Dockerfile
