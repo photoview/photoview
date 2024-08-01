@@ -112,7 +112,6 @@ jobs:
           photoview/ui \
           /bin/bash -euo pipefail -c "
         npm ci
-        npm cache verify
         npm run test:ci
         chmod -R +r ./coverage
         "

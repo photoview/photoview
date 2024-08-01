@@ -27,13 +27,14 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 WORKDIR /app/ui
 
-COPY ui/package.json ui/package-lock.json /app/ui
-RUN npm ci --omit=dev --ignore-scripts
-
 ###############################
 ###         Build UI        ###
 ###############################
 FROM prepare-ui AS build-ui
+
+COPY ui/package.json ui/package-lock.json /app/ui
+RUN npm ci --omit=dev --ignore-scripts
+
 COPY ui/ /app/ui
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
