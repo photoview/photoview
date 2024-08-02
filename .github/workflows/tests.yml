@@ -11,11 +11,12 @@ jobs:
     name: Test API
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         database: ['sqlite', 'mysql', 'postgres']
 
     services:
-      mysql:
+      mariadb:
         image: mariadb:10.5
         env:
           MYSQL_DATABASE: photoview_test
@@ -29,6 +30,7 @@ jobs:
           --health-retries=5
         ports:
           - 3306:3306
+
       postgres:
         image: postgres:13.2
         env:
