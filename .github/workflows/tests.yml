@@ -63,13 +63,14 @@ jobs:
 
     - name: Test
       run: |
-        docker run -v $(pwd):/app --workdir /app/api --network host \
+        docker run --name test --network host \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
             -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
           go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+        docker cp test:/app/api/coverage.txt .
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
@@ -98,23 +99,10 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Cache NPM dependencies
-      uses: actions/cache@v4
-      with:
-        path: ./ui/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
     - name: Test
       run: |
-        docker run -v $(pwd):/app --workdir /app/ui \
-          photoview/ui \
-          /bin/bash -euo pipefail -c "
-        npm ci
-        npm run test:ci
-        chmod -R +r ./coverage
-        "
+        docker run --name test photoview/ui npm run test:ci
+        docker cp test:/app/ui/coverage .
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4

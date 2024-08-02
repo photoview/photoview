@@ -27,15 +27,15 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 WORKDIR /app/ui
 
+COPY ui/package.json ui/package-lock.json /app/ui
+RUN npm ci
+
+COPY ui/ /app/ui
+
 ###############################
 ###         Build UI        ###
 ###############################
 FROM prepare-ui AS build-ui
-
-COPY ui/package.json ui/package-lock.json /app/ui
-RUN npm ci --omit=dev --ignore-scripts
-
-COPY ui/ /app/ui
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ###############################
@@ -70,11 +70,12 @@ RUN source /app/scripts/set_compiler_env.sh \
     github.com/mattn/go-sqlite3 \
     github.com/Kagami/go-face
 
+COPY api /app/api
+
 ###############################
 ###         Build API       ###
 ###############################
 FROM prepare-api AS build-api
-COPY api /app/api
 RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
