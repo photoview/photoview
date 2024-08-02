@@ -1,7 +1,5 @@
-###############################
-###        Prepare UI       ###
-###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS prepare-ui
+### Build UI ###
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -31,17 +29,10 @@ COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci
 
 COPY ui/ /app/ui
-
-###############################
-###         Build UI        ###
-###############################
-FROM prepare-ui AS build-ui
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
-###############################
-###        Prepare API      ###
-###############################
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS prepare-api
+### Build API ###
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -71,17 +62,10 @@ RUN source /app/scripts/set_compiler_env.sh \
     github.com/Kagami/go-face
 
 COPY api /app/api
-
-###############################
-###         Build API       ###
-###############################
-FROM prepare-api AS build-api
 RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
-###########################
 ### Build release image ###
-###########################
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
@@ -106,7 +90,7 @@ HEALTHCHECK --interval=60s --timeout=10s \
 
 # Required dependencies
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
+RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
   && groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
@@ -118,5 +102,5 @@ ENTRYPOINT ["/app/photoview"]
 WORKDIR /home/photoview
 
 COPY api/data /app/data
-COPY --from=build-ui /app/ui/dist /app/ui
-COPY --from=build-api /app/api/photoview /app/photoview
+COPY --from=ui /app/ui/dist /app/ui
+COPY --from=api /app/api/photoview /app/photoview

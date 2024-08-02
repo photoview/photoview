@@ -35,7 +35,6 @@ Password: **demo**
 - [Contributing](#contributing)
 - [Set up Docker development environment](#set-up-docker-development-environment)
 - [Set up local development environment](#set-up-local-development-environment)
-- [Unit tests](#unit-tests)
 - [Sponsors](#sponsors)
 
 ## Main features
@@ -165,6 +164,7 @@ Setting up and configuring of all these protections depends on and requires a lo
 
 This project is a result of hard work, and it's great to see you interested in contributing. 
 Contributions are not just about code — you can help in many ways!
+
 Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md). 
 It includes information on our code of conduct, the process for submitting pull requests, and more.
 
@@ -196,7 +196,7 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target prepare-api -t photoview/api . # Build image for development
+$ docker build --target api -t photoview/api . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
     reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
 ```
@@ -208,7 +208,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target prepare-ui -t photoview/ui . # Build image for development
+$ docker build --target ui -t photoview/ui . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
     npm run mon # Monitor source code and (re)launch UI server
 ```
