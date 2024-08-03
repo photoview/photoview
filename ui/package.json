@@ -67,7 +67,8 @@
     "@testing-library/user-event": "^14.2.1",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
-    "@vitest/ui": "^0.17.1",
+    "@vitest/coverage-c8": "^0.33.0",
+    "@vitest/ui": "^0.30.1",
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",
     "c8": "^7.11.3",
@@ -81,7 +82,7 @@
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3",
-    "vitest": "^0.17.1"
+    "vitest": "^0.30.1"
   },
   "overrides": {
     "graphql": "^15.5.0"
