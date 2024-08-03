@@ -183,11 +183,19 @@ We recommend to use Docker development environment. If Docker environment doesn'
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker compose -f dev-compose.yaml --profile dev build # Build images for development
-$ docker compose -f dev-compose.yaml --profile dev up # Launch API and UI servers
+$ docker compose -f dev-compose.yaml build # Build images for development
+$ docker compose -f dev-compose.yaml up # Launch API and UI servers
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
+
+By default, it uses sqlite3 as database. To run servers with other database, please update `PHOTOVIEW_DATABASE_DRIVER` value in `dev-compose.yaml` file and run:
+
+```sh
+$ docker compose -f dev-compose.yaml --profile mysql up # Run with mysql database
+or
+$ docker compose -f dev-compose.yaml --profile postgres up # Run with postgresql database
+```
 
 ### Start API server with Docker
 
