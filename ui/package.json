@@ -30,7 +30,7 @@
     "@types/mapbox-gl": "^2.7.3",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
-    "@types/react-helmet": "^6.1.5",
+    "@types/react-helmet": "^6.1.11",
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.25",
     "@types/url-join": "^4.0.1",
