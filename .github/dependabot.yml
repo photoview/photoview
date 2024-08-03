@@ -23,17 +23,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-
-  # Maintain dependencies for Docker Compose files
-  - package-ecosystem: "docker"
-    directory: "/docker-compose example"
-    schedule:
-      interval: "weekly"
-    allow:
-      - dependency-type: "direct"
-      - dependency-type: "indirect"
-    # Optional: Specify the Docker Compose files explicitly if needed
-    # This is not necessary if the directory contains all the files.
-    # file-patterns:
-    #   - "docker-compose.example.yml"
-    #   - "docker-compose.minimal.example.yml"
