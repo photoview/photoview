@@ -74,11 +74,11 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
-  # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
   && groupadd -g 999 photoview \
-  && useradd -r -u 999 -g photoview -m photoview
+  && useradd -r -u 999 -g photoview -m photoview \
+  # Required dependencies
+  && /app/scripts/install_runtime_dependencies.sh \
 
 WORKDIR /home/photoview
 
