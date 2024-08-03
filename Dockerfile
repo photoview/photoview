@@ -72,6 +72,20 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+COPY scripts/install_runtime_dependencies.sh /app/scripts/
+RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
+  # Required dependencies
+  && /app/scripts/install_runtime_dependencies.sh \
+  # Create a user to run Photoview server
+  && groupadd -g 999 photoview \
+  && useradd -r -u 999 -g photoview -m photoview
+
+WORKDIR /home/photoview
+
+COPY api/data /app/data
+COPY --from=ui /app/ui/dist /app/ui
+COPY --from=api /app/api/photoview /app/photoview
+
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80
 
@@ -88,19 +102,5 @@ HEALTHCHECK --interval=60s --timeout=10s \
     --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
     || exit 1
 
-# Required dependencies
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
-RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
-  # Create a user to run Photoview server
-  && groupadd -g 999 photoview \
-  && useradd -r -u 999 -g photoview -m photoview \
-  # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh
-
 USER photoview
 ENTRYPOINT ["/app/photoview"]
-WORKDIR /home/photoview
-
-COPY api/data /app/data
-COPY --from=ui /app/ui/dist /app/ui
-COPY --from=api /app/api/photoview /app/photoview
