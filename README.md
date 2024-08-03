@@ -211,6 +211,9 @@ $ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env ph
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
 
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
+
 ### Start UI server with Docker
 
 It may take a long time to build dependencies when launching servers first time.
@@ -222,6 +225,9 @@ $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env pho
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
+
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
 
 ## Set up local development environment
 
