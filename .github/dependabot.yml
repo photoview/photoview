@@ -2,6 +2,38 @@ version: 2
 updates:
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
+    directory: "/.github/workflows"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for Go modules
+  - package-ecosystem: "gomod"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for npm (TypeScript/JavaScript)
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for Dockerfile
+  - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+
+  # Maintain dependencies for Docker Compose files
+  - package-ecosystem: "docker"
+    directory: "/docker-compose example"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Optional: Specify the Docker Compose files explicitly if needed
+    # This is not necessary if the directory contains all the files.
+    # file-patterns:
+    #   - "docker-compose.example.yml"
+    #   - "docker-compose.minimal.example.yml"
