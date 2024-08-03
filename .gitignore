@@ -4,8 +4,7 @@ cache/
 /media_cache/
 /api/media_cache/
 /photos_path
-photoview.db
-photoview.db-*
+photoview.db*
 
 .env
 testing.env

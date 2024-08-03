@@ -9,12 +9,11 @@ on:
 jobs:
   test-api:
     name: Test API
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        database: ['mysql', 'postgres', 'sqlite']
+        database: ['sqlite', 'mysql', 'postgres']
 
     services:
       mariadb:
@@ -46,109 +45,68 @@ jobs:
         ports:
           - 5432:5432
 
-    defaults:
-      run:
-        working-directory: api
-
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Fetch branches
-        run: git fetch --all
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        id: go
-        with:
-          go-version-file: ${{ github.workspace }}/api/go.mod
-          cache: false
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: api
+        tags: photoview/api
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Cache Go dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+    - name: Test
+      run: |
+        docker run --name test --network host \
+            -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
+            -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
+            -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
+            -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
+          photoview/api \
+          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+        docker cp test:/app/api/coverage.txt ./api/
 
-      - name: Get C dependencies and 3rd-party tools
-        run: |
-          sudo add-apt-repository ppa:strukturag/libheif
-          sudo add-apt-repository ppa:strukturag/libde265
-          sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool
-
-      - name: Get GO dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-
-      - name: Build
-        run: go build -v .
-
-      - name: Configure MySQL
-        if: ${{ matrix.database == 'mysql' }}
-        run: |
-          cp ../.github/mysql.testing.env testing.env
-
-      - name: Configure Postgres
-        if: ${{ matrix.database == 'postgres' }}
-        run: |
-          cp ../.github/postgres.testing.env testing.env
-
-      - name: Configure Sqlite
-        if: ${{ matrix.database == 'sqlite' }}
-        run: |
-          touch photoview_test.db
-          cp ../.github/sqlite.testing.env testing.env
-
-      - name: Test
-        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          flags: api
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        flags: api-${{ matrix.database }}
 
   test-ui:
     name: Test UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ui
-
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
-      - uses: actions/checkout@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Install dependencies
-        run: npm clean-install
+    - name: Test
+      run: |
+        docker run --name test photoview/ui npm run test:ci
+        docker cp test:/app/ui/coverage ./ui/
 
-      - name: Test
-        run: npm run test:ci
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          flags: ui
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        flags: ui

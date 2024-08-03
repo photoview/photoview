@@ -38,6 +38,5 @@ apt-get install -y \
   libjpeg-dev:${DEBIAN_ARCH} \
   libheif-dev:${DEBIAN_ARCH}
 
-# Cleanup
-apt-get clean
-rm -rf /var/lib/apt/lists/*
+# Install tools for development
+apt-get install -y reflex sqlite3

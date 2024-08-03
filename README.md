@@ -33,7 +33,8 @@ Password: **demo**
 - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
 - [Advanced setup](#advanced-setup)
 - [Contributing](#contributing)
-- [Set up development environment](#set-up-development-environment)
+- [Set up Docker development environment](#set-up-docker-development-environment)
+- [Set up local development environment](#set-up-local-development-environment)
 - [Sponsors](#sponsors)
 
 ## Main features
@@ -182,11 +183,19 @@ We recommend to use Docker development environment. If Docker environment doesn'
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker compose -f dev-compose.yaml build dev-ui dev-api # Build images for development
-$ docker compose -f dev-compose.yaml up dev-api dev-ui # Run API and UI servers
+$ docker compose -f dev-compose.yaml build # Build images for development
+$ docker compose -f dev-compose.yaml up # Launch API and UI servers
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
+
+By default, it uses sqlite3 as database. To run servers with other database, please update `PHOTOVIEW_DATABASE_DRIVER` value in `dev-compose.yaml` file and run:
+
+```sh
+$ docker compose -f dev-compose.yaml --profile mysql up # Run with mysql database
+or
+$ docker compose -f dev-compose.yaml --profile postgres up # Run with postgresql database
+```
 
 ### Start API server with Docker
 
@@ -195,24 +204,30 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target dev-api -t photoview-api . # Build image for development
-$ cp api/example.env api/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-api # Monitor source code and (re)launch API server
+$ docker build --target api -t photoview/api . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
+    reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
 ```
 
 The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
+
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
 
 ### Start UI server with Docker
 
 It may take a long time to build dependencies when launching servers first time.
 
 ```sh
-$ docker build --target dev-ui -t photoview-ui .
-$ cp ./ui/example.env ./ui/.env
-$ docker run --rm -it -v `pwd`:/app --network host photoview-ui # Monitor source code and (re)launch UI server
+$ docker build --target ui -t photoview/ui . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm run mon # Monitor source code and (re)launch UI server
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).
+
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
 
 ## Set up local development environment
 
