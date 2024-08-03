@@ -78,7 +78,7 @@ RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   && groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh \
+  && /app/scripts/install_runtime_dependencies.sh
 
 WORKDIR /home/photoview
 
