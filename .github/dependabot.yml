@@ -11,12 +11,14 @@ updates:
     directory: "/api"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 999
 
   # Maintain dependencies for npm (TypeScript/JavaScript)
   - package-ecosystem: "npm"
     directory: "/ui"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 999
 
   # Maintain dependencies for Dockerfile
   - package-ecosystem: "docker"
