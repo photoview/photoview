@@ -48,7 +48,7 @@
     "react-blurhash": "^0.1.3",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
-    "react-hook-form": "^7.33.1",
+    "react-hook-form": "^7.52.2",
     "react-i18next": "^11.18.0",
     "react-router-dom": "^6.3.0",
     "react-swipeable": "^7.0.0",
