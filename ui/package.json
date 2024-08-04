@@ -73,7 +73,7 @@
     "apollo-language-server": "1.26.9",
     "c8": "^7.11.3",
     "eslint": "^8.19.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "husky": "^9.1.4",
