@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, forwardRef } from 'react'
 import { gql, useQuery } from '@apollo/client'
 import type mapboxgl from 'mapbox-gl'
 import styled from 'styled-components'
@@ -19,6 +19,10 @@ const MapContainer = styled.div`
   width: 100%;
   height: 100%;
 `
+
+const ForwardedMapContainer = forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>((props, ref) => (
+  <MapContainer {...props} ref={ref} />
+))
 
 type MapboxMapProps = {
   configureMapbox(map: mapboxgl.Map, mapboxLibrary: typeof mapboxgl): void
@@ -76,10 +80,10 @@ const useMapboxMap = ({
   map.current?.resize()
 
   return {
-    mapContainer: <MapContainer ref={mapContainer}></MapContainer>,
+    mapContainer: <ForwardedMapContainer ref={mapContainer} />,
     mapboxMap: map.current,
     mapboxLibrary,
-    mapboxToken: mapboxData?.mapboxToken || null,
+    mapboxToken: mapboxData?.mapboxToken ?? null,
   }
 }
 
