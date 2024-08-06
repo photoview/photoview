@@ -42,7 +42,7 @@
     "copy-to-clipboard": "^3.3.3",
     "i18next": "^21.8.13",
     "mapbox-gl": "^2.9.1",
-    "postcss": "^8.4.40",
+    "postcss": "^8.4.41",
     "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-blurhash": "^0.1.3",
