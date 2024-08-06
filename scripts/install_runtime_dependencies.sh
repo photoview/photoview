@@ -15,6 +15,13 @@ if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm
   apt-get install -y darktable
 fi
 
+apt-get install -y libfontconfig libx11-6 libharfbuzz-bin libfribidi-bin
+curl -o ./magick https://imagemagick.org/archive/binaries/magick
+chmod +x ./magick
+./magick --appimage-extract
+cp -r ./squashfs-root/usr/* /usr/
+rm -Rf ./squashfs-root ./magick
+
 # Remove build dependencies and cleanup
 apt-get purge -y ${BUILD_DEPENDS[@]}
 apt-get autoremove -y
