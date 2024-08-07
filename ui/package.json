@@ -40,7 +40,7 @@
     "classnames": "^2.5.1",
     "connect-history-api-fallback": "^2.0.0",
     "copy-to-clipboard": "^3.3.3",
-    "i18next": "^21.8.13",
+    "i18next": "^21.10.0",
     "mapbox-gl": "^2.9.1",
     "postcss": "^8.4.41",
     "prettier": "^2.8.8",
