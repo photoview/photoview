@@ -21,7 +21,7 @@
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
   },
   "dependencies": {
-    "@apollo/client": "^3.6.9",
+    "@apollo/client": "^3.6.10",
     "@babel/preset-typescript": "^7.24.7",
     "@headlessui/react": "^2.1.2",
     "@mapbox/mapbox-gl-language": "^1.0.0",
