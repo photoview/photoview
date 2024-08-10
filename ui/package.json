@@ -68,7 +68,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.1",
     "@typescript-eslint/parser": "^8.0.1",
     "@vitest/coverage-c8": "^0.33.0",
-    "@vitest/ui": "^0.30.1",
+    "@vitest/ui": "^0.34.7",
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",
     "c8": "^10.1.2",
