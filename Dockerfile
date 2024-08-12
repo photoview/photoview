@@ -49,7 +49,11 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/*.sh /app/scripts/
+COPY scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
+COPY scripts/apt/default.pref /etc/apt/preferences.d/
+COPY scripts/set_compiler_env.sh /app/scripts/
+COPY scripts/install_build_dependencies.sh /app/scripts/
+COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
@@ -70,14 +74,12 @@ RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
 ### Build release image ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:testing-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-COPY scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
-COPY scripts/apt/default.pref /etc/apt/preferences.d/
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server

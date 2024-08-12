@@ -1,14 +1,14 @@
 #!/bin/bash
+set -euo pipefail
 
 apt-get update
-apt-get -t testing install -y imagemagick
-apt-get install -y curl libdlib19.1 ffmpeg exiftool libheif1
+apt-get full-upgrade -y
 
-convert -list format
+apt-get -t testing install -y imagemagick curl libdlib19.2 ffmpeg exiftool libheif1
+
 convert -version
 
 # Remove build dependencies and cleanup
-apt-get purge -y ${BUILD_DEPENDS[@]}
 apt-get autoremove -y
 apt-get clean
 rm -rf /var/lib/apt/lists/*
