@@ -2,7 +2,6 @@
 set -euo pipefail
 
 apt-get update
-apt-get full-upgrade -y
 
 apt-get -t testing install -y imagemagick curl libdlib19.2 ffmpeg exiftool libheif1
 
