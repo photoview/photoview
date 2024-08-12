@@ -76,6 +76,8 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+COPY scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
+COPY scripts/apt/default.pref /etc/apt/preferences.d/
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
