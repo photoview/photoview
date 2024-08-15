@@ -1,59 +1,32 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { authToken } from '../../helpers/authentication'
 import MessageProgress from './MessageProgress'
 import MessagePlain from './Message'
-import SubscriptionsHook, { Message } from './SubscriptionsHook'
+import { SubscriptionsHook, Message } from './SubscriptionsHook'
 import { NotificationType } from '../../__generated__/globalTypes'
+import { useMessageState, MessageProvider } from './MessageState'
 
 const Container = styled.div`
   position: fixed;
   bottom: 20px;
   right: 20px;
   width: 500px;
+  max-height: calc(100vh - 40px); // Ensures the container doesn't overflow the viewport height
+  overflow-y: auto; // Allows scrolling if there are multiple lines
 
   @media (max-width: 1000px) {
     display: none;
   }
 `
 
-type MessageStateType = {
-  set: React.Dispatch<React.SetStateAction<Message[]>>
-  get: Message[]
-  add(message: Message): void
-  removeKey(key: string): void
-}
-
-export const MessageState: MessageStateType = {
-  set: fn => {
-    console.warn('set function is not defined yet, called with', fn)
-  },
-  get: [],
-  add: message => {
-    MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key != message.key)
-      newMessages.push(message)
-
-      return newMessages
-    })
-  },
-  removeKey: key => {
-    MessageState.set(messages => {
-      const newMessages = messages.filter(msg => msg.key != key)
-      return newMessages
-    })
-  },
-}
-
 const Messages = () => {
-  const [messages, setMessages] = useState<Message[]>([])
-  MessageState.set = setMessages
-  MessageState.get = messages
+  const { messages, setMessages } = useMessageState()
 
   const getMessageElement = (message: Message): React.FunctionComponent => {
     const dismissMessage = (message: Message) => {
       message.onDismiss && message.onDismiss()
-      setMessages(messages => messages.filter(msg => msg.key != message.key))
+      setMessages(prevMessages => prevMessages.filter(msg => msg.key != message.key))
     }
 
     switch (message.type) {
@@ -113,4 +86,10 @@ const Messages = () => {
   )
 }
 
-export default Messages
+const MessagesWithProvider = () => (
+  <MessageProvider>
+    <Messages />
+  </MessageProvider>
+)
+
+export default MessagesWithProvider
