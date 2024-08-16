@@ -139,10 +139,6 @@ jobs:
       run:
         working-directory: ui
 
-    strategy:
-      matrix:
-        node-version: [18]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -150,10 +146,10 @@ jobs:
       - name: Fetch branches
         run: git fetch --all
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 18
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: 'npm'
           cache-dependency-path: ui/package-lock.json
 
@@ -171,8 +167,79 @@ jobs:
 
       - name: Run ESLint
         run: |
-          npm clean-install --include dev
           npm run lint:ci || true
+          echo "--------------------------"
+          echo "ESLint execution results :"
+          echo "--------------------------"
+          cat ./eslint-report.txt || echo "ESLint report file not found."
+
+      - name: ESLint artifact
+        id: eslint-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ESLint-report
+          path: ./ui/eslint-report.txt
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
+
+      - name: Publish ESlint report in PR comment
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.COMMENT_TOKEN }}
+          script: |
+            let ESLintResults = "${{ steps.eslint-artifact.outputs.artifact-url }}";
+            let output = '';
+
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const botComment = comments.data.find(
+              comment => comment.user.login === 'github-actions[bot]'
+              && comment.body.includes('ESLint')
+            );
+
+            if (ESLintResults) {
+
+              output += '#### UI: ESLint issues:\n';
+              output += 'ESLint detected issues in the UI code.\n';
+              output += '\n[ESLint execution report](' + ESLintResults + ')\n';
+              output += '\nMake sure that you are logged in to be able to access the report.';
+              output += '\nThe report is accessible by this link within 90 days after the last ';
+              output += 'UI testing workflow execution time.';
+              output += '\nAfter that time you need to go to the ESLint execution step in the ';
+              output += 'Actions tab to see the same results.';
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                });
+              }
+
+            } else {
+
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  comment_id: botComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+              }
+            }
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
