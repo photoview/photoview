@@ -33,21 +33,21 @@ type FfmpegWorker struct {
 
 func newMagickWorker() *MagickWorker {
 	if utils.EnvDisableRawProcessing.GetBool() {
-		log.Printf("Executable worker disabled (%s=1): magick\n", utils.EnvDisableRawProcessing.GetName())
+		log.Printf("Executable worker disabled (%s=1): ImageMagick\n", utils.EnvDisableRawProcessing.GetName())
 		return nil
 	}
 
 	path, err := exec.LookPath("convert")
 	if err != nil {
-		log.Println("Executable worker not found: convert")
+		log.Println("Executable worker not found: ImageMagick convert")
 	} else {
 		version, err := exec.Command(path, "--version").Output()
 		if err != nil {
-			log.Printf("Error getting version of convert: %s\n", err)
+			log.Printf("Error getting version of ImageMagick convert: %s\n", err)
 			return nil
 		}
 
-		log.Printf("Found executable worker: convert (%s)\n", strings.Split(string(version), "\n")[0])
+		log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
 
 		return &MagickWorker{
 			path: path,
@@ -94,12 +94,10 @@ func (worker *FfmpegWorker) IsInstalled() bool {
 func (worker *MagickWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
 	args := []string{
 		inputPath,
-		"-quality",
-		fmt.Sprintf("%d", jpegQuality),
+		"-quality", fmt.Sprintf("%d", jpegQuality),
 		outputPath,
 	}
 
-	log.Println("convert command: convert", args)
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
