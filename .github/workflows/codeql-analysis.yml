@@ -127,7 +127,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Anchore'));
 
             output += '#### Anchore Grype scan results:\n';
@@ -193,9 +193,9 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             const botComment = comments.data.find(
-              comment => comment.user.login === 'github-actions[bot]' 
+              comment => comment.user.login === 'github-actions[bot]'
               && comment.body.includes('Hadolint')
             );
 
@@ -206,7 +206,7 @@ jobs:
               output += '\n```\n' + hadolintResults + '\n```\n';
               output += '\nFind more info about detected issues and recommendations for fixes in the ';
               output += '[Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
-  
+
               if (botComment) {
                 await github.rest.issues.updateComment({
                   comment_id: botComment.id,
@@ -222,7 +222,7 @@ jobs:
                   body: output
                 });
               }
-            
+
             } else {
 
               if (botComment) {
@@ -268,8 +268,13 @@ jobs:
         uses: actions/setup-go@v5
         id: go
         with:
-          go-version-file: ${{ github.workspace }}/api/go.mod
+          go-version: '~1.21.13' # Temporary hardcode Go version, as Coverity doesn't support latest Go
           cache: false
+
+      # Temporary w/a until newer GO version is not supported by Coverity
+      - name: Modify go.mod for CI
+        run: |
+          sed -i 's/^go [0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?/go 1.21/' api/go.mod
 
       - name: Cache Go dependencies
         uses: actions/cache@v4
@@ -308,7 +313,7 @@ jobs:
         run: |
           echo "hash=$(curl https://scan.coverity.com/download/other/linux64 \
             --data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ env.COV_PROJECT }}&md5=1")" >> $GITHUB_OUTPUT
-        
+
       # Try to cache the tool to avoid downloading 1GB+ archive on every run.
       # Cache miss will add ~30s to create, but cache hit will save minutes.
       - name: Cache Coverity Analysis Tool
@@ -349,7 +354,7 @@ jobs:
             --return-emit-failures \
             --fs-capture-search ./ go build -v . || (\
               cat ${{ github.workspace }}/cov-int/build-log.txt && \
-              exit 0 \
+              exit 1 \
             )
 
       - name: Setup Node.js 18
