@@ -16,21 +16,21 @@ apt-get update
 
 # Install G++/GCC cross compilers
 if [ "$DEBIAN_ARCH" == "arm64" ]; then
-  apt-get -t testing install -y \
+  apt-get install -y \
     g++-aarch64-linux-gnu \
     libc6-dev-arm64-cross
 elif [ "$DEBIAN_ARCH" == "armhf" ]; then
-  apt-get -t testing install -y \
+  apt-get install -y \
     g++-arm-linux-gnueabihf \
     libc6-dev-armhf-cross
 else
-  apt-get -t testing install -y \
+  apt-get install -y \
     g++-x86-64-linux-gnu \
     libc6-dev-amd64-cross
 fi
 
 # Install go-face dependencies and libheif for HEIF media decoding
-apt-get -t testing install -y \
+apt-get install -y \
   libdlib-dev:${DEBIAN_ARCH} \
   libblas-dev:${DEBIAN_ARCH} \
   libatlas-base-dev:${DEBIAN_ARCH} \
@@ -39,4 +39,4 @@ apt-get -t testing install -y \
   libheif-dev:${DEBIAN_ARCH}
 
 # Install tools for development
-apt-get -t testing install -y reflex sqlite3
+apt-get install -y reflex sqlite3

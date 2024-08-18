@@ -50,7 +50,6 @@ ENV CGO_ENABLED=1
 
 # Download dependencies
 COPY scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
-COPY scripts/apt/default.pref /etc/apt/preferences.d/
 COPY scripts/set_compiler_env.sh /app/scripts/
 COPY scripts/install_build_dependencies.sh /app/scripts/
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
