@@ -27,11 +27,12 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
 
       - name: Docker Login
         if: success() && github.event_name != 'pull_request' && github.repository == 'photoview/photoview'
@@ -45,7 +46,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
-          images: ghcr.io/googollee/photoview
+          images: ${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -54,6 +55,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=sha
 
       - name: Build and push
         uses: docker/build-push-action@v6
