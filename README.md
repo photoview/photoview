@@ -266,7 +266,7 @@ In macOS, install dependencies:
 
 ```sh
 $ brew update # Update the package list
-$ brew install golang gcc libheif dlib jpeg # For API
+$ brew install golang gcc pkg-config libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
