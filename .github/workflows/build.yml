@@ -97,7 +97,7 @@ jobs:
     needs: build
     if: github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
     steps:
-       # Makes sure your .dockleignore file is available to the next step
+      # Makes sure your .dockleignore file is available to the next step
       - name: Checkout repository
         uses: actions/checkout@v4
 
