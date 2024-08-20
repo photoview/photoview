@@ -12,6 +12,7 @@ env:
   DOCKER_USERNAME: viktorstrate
   DOCKER_IMAGE: viktorstrate/photoview
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
 
 jobs:
   build:
@@ -28,7 +29,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: ${{ env.PLATFORMS }}
 
 
       - name: Set up Docker Buildx
@@ -61,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: ${{ env.PLATFORMS }}
           pull: true
           push: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
