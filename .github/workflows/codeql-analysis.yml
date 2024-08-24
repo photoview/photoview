@@ -12,8 +12,6 @@ on:
 jobs:
   create-matrix:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.languages }}
     steps:
       - name: Get languages from repo
         id: set-matrix
@@ -21,6 +19,8 @@ jobs:
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
           endpoint: ${{ github.event.repository.languages_url }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.languages }}
 
   analyze:
     name: Analyze
@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload report
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: ${{ steps.scan.conclusion == 'success' || steps.scan.conclusion == 'failure' }}
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
@@ -90,7 +90,7 @@ jobs:
           only-fixed: true
 
       - name: Prepare JSON
-        if: always() && github.event_name == 'pull_request'
+        if: ${{ ( steps.scan-fixed.conclusion == 'success' || steps.scan-fixed.conclusion == 'failure' ) && github.event_name == 'pull_request' }}
         run: |
           jq '{
             "|": .matches | map({
@@ -108,13 +108,13 @@ jobs:
 
       - name: JSON to Table
         uses: Teebra/JSON-to-HTML-table@v2.0.0
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         with:
           json-file: vulns.json
 
       - name: Update Pull Request
         uses: actions/github-script@v7
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         with:
           github-token: ${{ secrets.COMMENT_TOKEN }}
           script: |
@@ -182,7 +182,7 @@ jobs:
 
       - name: Update Pull Request
         uses: actions/github-script@v7
-        if: always() && github.event_name == 'pull_request'
+        if: ${{ ( steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' ) && github.event_name == 'pull_request' }}
         with:
           script: |
             let hadolintResults = process.env.HADOLINT_RESULTS;
@@ -236,6 +236,7 @@ jobs:
 
       - name: Generate report
         uses: hadolint/hadolint-action@v3.1.0
+        id: hadolint-report
         if: always()
         with:
           dockerfile: Dockerfile
@@ -246,7 +247,7 @@ jobs:
 
       - name: Upload report
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: ${{ steps.hadolint-report.conclusion == 'success' || steps.hadolint-report.conclusion == 'failure' }}
         with:
           sarif_file: hadolint.sarif
 

@@ -111,20 +111,21 @@ jobs:
           cp ../.github/sqlite.testing.env testing.env
 
       - name: Test
+        id: test
         run: |
           go test ./... -v -database -filesystem -p 1
           go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
-        if: always()
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
-          flags: api
+          flags: api-${{ matrix.database }}
           token: ${{ secrets.CODECOV_TKN }}
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
-        if: always() && github.repository == 'kkovaletp/photoview'
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_API }}
@@ -157,6 +158,7 @@ jobs:
         run: npm clean-install
 
       - name: Test
+        id: test
         run: npm run test:ci
 
       - name: Upload coverage
@@ -243,7 +245,7 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
-        if: always() && github.repository == 'kkovaletp/photoview'
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_UI }}
