@@ -65,13 +65,12 @@ jobs:
       - name: Prepare args
         id: args
         run: |
-          VERSION=edge
+          VERSION=master
           if [[ $GITHUB_REF == 'refs/tags/*' ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           fi
 
           echo VERSION=${VERSION} >> $GITHUB_OUTPUT
-          echo COMMIT_SHA=${GITHUB_SHA} >> $GITHUB_OUTPUT
           echo BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') >> $GITHUB_OUTPUT
 
       - name: Build and push
@@ -85,4 +84,4 @@ jobs:
           build-args: |
             BUILD_DATE=${{ steps.args.outputs.BUILD_DATE }}
             VERSION=${{ steps.args.outputs.VERSION }}
-            COMMIT_SHA=${{ steps.args.outputs.COMMIT_SHA }}
+            COMMIT_SHA=${{ github.sha }}
