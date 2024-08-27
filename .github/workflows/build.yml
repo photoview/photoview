@@ -70,3 +70,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            COMMIT_SHA=${{ github.sha }}

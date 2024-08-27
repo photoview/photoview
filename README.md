@@ -221,6 +221,8 @@ It may take a long time to build dependencies when launching servers first time.
 ```sh
 $ docker build --target ui -t photoview/ui . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm install # Install dependencies
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
     npm run mon # Monitor source code and (re)launch UI server
 ```
 

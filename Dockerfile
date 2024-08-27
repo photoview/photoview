@@ -29,7 +29,11 @@ COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci
 
 COPY ui/ /app/ui
-RUN npm run build -- --base=$UI_PUBLIC_URL
+RUN if [ "$BUILD_DATE" = "" ]; then \
+    export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
+    export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
+  fi; \
+  npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
