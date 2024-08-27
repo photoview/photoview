@@ -62,15 +62,9 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
-      - name: Prepare args
-        id: args
+      - name: Prepare build date
+        id: date
         run: |
-          VERSION=master
-          if [[ $GITHUB_REF == 'refs/tags/*' ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-
-          echo VERSION=${VERSION} >> $GITHUB_OUTPUT
           echo BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') >> $GITHUB_OUTPUT
 
       - name: Build and push
@@ -82,6 +76,6 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           build-args: |
-            BUILD_DATE=${{ steps.args.outputs.BUILD_DATE }}
-            VERSION=${{ steps.args.outputs.VERSION }}
+            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
+            VERSION=${{ github.ref_name }}
             COMMIT_SHA=${{ github.sha }}
