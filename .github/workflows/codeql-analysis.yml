@@ -39,7 +39,6 @@ jobs:
         if: ${{ matrix.language == 'go' }}
         run: |
           chmod +x ./scripts/*.sh
-          cp ./scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
           ./scripts/install_build_dependencies.sh
           source ./scripts/set_compiler_env.sh
 
