@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 if [ "$TARGETPLATFORM" == "linux/arm64" ]; then
   dpkg --add-architecture arm64
