@@ -29,7 +29,7 @@ COPY ui/package.json ui/package-lock.json /app/ui
 RUN npm ci
 
 COPY ui/ /app/ui
-RUN if [ "$BUILD_DATE" = "" ]; then \
+RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
     export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
     export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
   fi; \
