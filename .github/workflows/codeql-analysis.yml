@@ -73,6 +73,35 @@ jobs:
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
+      - name: Scan PR source code
+        id: scan-fixed
+        uses: anchore/scan-action@v4
+        if: always() && github.event_name == 'pull_request'
+        with:
+          path: "."
+          fail-build: false
+          add-cpes-if-none: true
+          output-format: json
+          severity-cutoff: high
+          only-fixed: true
+
+      - name: Prepare JSON
+        if: ${{ ( steps.scan-fixed.conclusion == 'success' || steps.scan-fixed.conclusion == 'failure' ) && github.event_name == 'pull_request' }}
+        run: |
+          jq '{
+            "|": .matches | map({
+              "language": .artifact.language,
+              "id": .vulnerability.id,
+              "severity": .vulnerability.severity,
+              "name": .artifact.name,
+              "version": .artifact.version,
+              "fix-versions": .vulnerability.fix.versions[0],
+              "path": .artifact.locations[0].path,
+              "description": .vulnerability.description
+            })
+          }' ${{ steps.scan-fixed.outputs.json }} > vulns.json
+          cat vulns.json | jq
+
   hadolint:
     name: Hadolint Dockerfile
     runs-on: ubuntu-latest
@@ -81,6 +110,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Lint Dockerfile
+        id: hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          config: ${{ github.workspace }}/.hadolint.yaml
+          output-file: hadolint.txt
+          format: tty
+          failure-threshold: error
+
+      - name: Output results
+        if: ${{ steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' }}
+        run: |
+          cat ./hadolint.txt || echo ${HADOLINT_RESULTS}
+
+      - name: Lint Dockerfile (sarif)
         uses: hadolint/hadolint-action@v3.1.0
         id: hadolint-report
         with:
