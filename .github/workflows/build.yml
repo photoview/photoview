@@ -150,6 +150,7 @@ jobs:
       - name: Run Dockle for '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
         id: dockle
         if: ${{ matrix.tags.tag != '' }}
+        continue-on-error: true
         uses: erzz/dockle-action@v1
         with:
           image: '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
@@ -160,7 +161,7 @@ jobs:
           timeout: 5m
 
       - name: Upload SARIF file
-        if: ${{ steps.dockle.conclusion == 'success' || steps.dockle.conclusion == 'failure' }}
+        if: ${{ steps.dockle.conclusion == 'success' }}
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: dockle-results-${{ matrix.tags.tag }}.sarif

@@ -62,6 +62,7 @@ jobs:
       - name: Generate report
         id: scan
         uses: anchore/scan-action@v4
+        continue-on-error: true
         with:
           path: "."
           fail-build: false
@@ -69,7 +70,7 @@ jobs:
 
       - name: Upload report
         uses: github/codeql-action/upload-sarif@v3
-        if: ${{ steps.scan.conclusion == 'success' || steps.scan.conclusion == 'failure' }}
+        if: ${{ steps.scan.conclusion == 'success' }}
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
@@ -77,6 +78,7 @@ jobs:
         id: scan-fixed
         uses: anchore/scan-action@v4
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         with:
           path: "."
           fail-build: false
@@ -86,7 +88,7 @@ jobs:
           only-fixed: true
 
       - name: Prepare JSON
-        if: ${{ ( steps.scan-fixed.conclusion == 'success' || steps.scan-fixed.conclusion == 'failure' ) && github.event_name == 'pull_request' }}
+        if: ${{ steps.scan-fixed.conclusion == 'success' && github.event_name == 'pull_request' }}
         run: |
           jq '{
             "|": .matches | map({
@@ -120,19 +122,15 @@ jobs:
           format: tty
           failure-threshold: error
 
-      - if: always()
-        run: |
-          echo "steps.hadolint.conclusion = ${{ steps.lint.conclusion }}"
-          echo "steps.hadolint.conclusion is 'success' or 'failure' : ${{ steps.lint.conclusion == 'success' || steps.lint.conclusion == 'failure' }}"
-
       - name: Output results
-        if: ${{ steps.lint.conclusion == 'success' || steps.lint.conclusion == 'failure' }}
+        if: ${{ steps.lint.conclusion == 'success' }}
         run: |
           cat ./hadolint.txt || echo ${HADOLINT_RESULTS}
 
       - name: Lint Dockerfile (sarif)
         uses: hadolint/hadolint-action@v3.1.0
         id: lint-report
+        continue-on-error: true
         with:
           dockerfile: Dockerfile
           config: ${{ github.workspace }}/.hadolint.yaml
@@ -142,6 +140,6 @@ jobs:
 
       - name: Upload report
         uses: github/codeql-action/upload-sarif@v3
-        if: ${{ steps.lint-report.conclusion == 'success' || steps.lint-report.conclusion == 'failure' }}
+        if: ${{ steps.lint-report.conclusion == 'success' }}
         with:
           sarif_file: hadolint.sarif

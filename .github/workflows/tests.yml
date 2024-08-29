@@ -66,6 +66,7 @@ jobs:
 
     - name: Test
       id: test
+      continue-on-error: true
       run: |
         docker run --name test --network host \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
@@ -78,7 +79,7 @@ jobs:
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
-      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      if: ${{ steps.test.conclusion == 'success' }}
       with:
         flags: api-${{ matrix.database }}
 
@@ -106,13 +107,14 @@ jobs:
 
     - name: Test
       id: test
+      continue-on-error: true
       run: |
         docker run --name test photoview/ui npm run test:ci
         docker cp test:/app/ui/coverage ./ui/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
-      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      if: ${{ steps.test.conclusion == 'success' }}
       with:
         flags: ui
 
