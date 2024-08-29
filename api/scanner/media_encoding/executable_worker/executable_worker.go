@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
@@ -137,7 +136,7 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("encoding video with ffmpeg %q encoder %q error: %w", worker.path, worker.encoder, err)
+		return fmt.Errorf("encoding video with %q %v encoder %q error: %w", worker.path, args, worker.encoder, err)
 	}
 
 	return nil
@@ -160,7 +159,7 @@ func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath st
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", worker.path, args, err)
 	}
 
 	return nil
