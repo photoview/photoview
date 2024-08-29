@@ -41,18 +41,20 @@ func newMagickWorker() *MagickWorker {
 	path, err := exec.LookPath("convert")
 	if err != nil {
 		log.Println("Executable worker not found: ImageMagick convert")
-	} else {
-		version, err := exec.Command(path, "--version").Output()
-		if err != nil {
-			log.Printf("Error getting version of ImageMagick convert: %s\n", err)
-			return nil
-		}
+		return nil
+	}
 
-		log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
+	version, err := exec.Command(path, "--version").Output()
+	if err != nil {
+		log.Printf("Error getting version of ImageMagick convert: %s\n", err)
+		return nil
+	}
 
-		return &MagickWorker{
-			path: path,
-		}
+	log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
+
+	return &MagickWorker{
+		path: path,
+	}
 }
 
 func newFfmpegWorker() *FfmpegWorker {
