@@ -122,8 +122,7 @@ jobs:
       - if: always()
         run: |
           echo "steps.hadolint.conclusion = ${{ steps.hadolint.conclusion }}"
-          echo "steps.hadolint.outcome = ${{ steps.hadolint.outcome }}"
-          echo "steps.hadolint.outputs = ${{ steps.hadolint.outputs }}"
+          echo "steps.hadolint.conclusion is 'success' or 'failure' : ${{ steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' }}"
 
       - name: Output results
         if: ${{ steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' }}
