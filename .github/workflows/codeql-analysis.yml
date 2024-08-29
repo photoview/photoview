@@ -38,6 +38,16 @@ jobs:
       - name: Install GO build dependencies
         if: ${{ matrix.language == 'go' }}
         run: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m)
+          case "$ARCH" in
+            x86_64) ARCH="amd64" ;;
+            aarch64) ARCH="arm64" ;;
+            armv6l) ARCH="arm/v6" ;;
+            armv7l) ARCH="arm/v7" ;;
+            *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+          esac
+          export TARGETPLATFORM="$OS/$ARCH"
           chmod +x ./scripts/*.sh
           ./scripts/install_build_dependencies.sh
           source ./scripts/set_compiler_env.sh
