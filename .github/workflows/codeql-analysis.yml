@@ -41,7 +41,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y g++-x86-64-linux-gnu libc6-dev-amd64-cross libdlib-dev libblas-dev \
             libatlas-base-dev liblapack-dev libjpeg-dev libheif-dev
-          source ./scripts/set_compiler_env.sh
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
