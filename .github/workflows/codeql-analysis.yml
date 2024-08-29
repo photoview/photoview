@@ -119,6 +119,12 @@ jobs:
           format: tty
           failure-threshold: error
 
+      - if: always()
+        run: |
+          echo "steps.hadolint.conclusion = ${{ steps.hadolint.conclusion }}"
+          echo "steps.hadolint.outcome = ${{ steps.hadolint.outcome }}"
+          echo "steps.hadolint.outputs = ${{ steps.hadolint.outputs }}"
+
       - name: Output results
         if: ${{ steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' }}
         run: |
