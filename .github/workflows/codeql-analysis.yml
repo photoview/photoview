@@ -46,6 +46,8 @@ jobs:
       # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
+        with:
+          working-directory: ${{ ( matrix.language == 'go' && './api' ) || ( matrix.language == 'javascript' && './ui' ) || '.' }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
