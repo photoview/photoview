@@ -29,7 +29,7 @@ jobs:
     if: ${{ needs.create-matrix.outputs.matrix != '[]' && github.repository == 'photoview/photoview' }}
     runs-on: ubuntu-latest
     container:
-      image: ${{ ( matrix.language == 'go' && 'golang:1.22-bookworm' ) || ( matrix.language == 'javascript' && 'node:18' ) || 'null' }}
+      image: ${{ ( matrix.language == 'go' && 'debian:testing' ) || ( matrix.language == 'javascript' && 'node:18' ) || 'null' }}
     strategy:
       fail-fast: false
       matrix:
@@ -55,11 +55,10 @@ jobs:
           export GOPATH="/go"
           export PATH="${GOPATH}/bin:${PATH}"
           export CGO_ENABLED=1
-          cp ../scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
+          # Comment out the last line with 'apt-get install -y reflex sqlite3'
+          sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
-          apt-get update
-          apt-get install -y g++-x86-64-linux-gnu libc6-dev-amd64-cross libdlib-dev libblas-dev \
-            libatlas-base-dev liblapack-dev libjpeg-dev libheif-dev
+          ../scripts/install_build_dependencies.sh
           source ../scripts/set_compiler_env.sh
           #go env
           #go mod download
