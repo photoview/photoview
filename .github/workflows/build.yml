@@ -8,6 +8,7 @@ on:
     tags:
       - v*
   schedule:
+    # At 01:18 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
     - cron: '18 1 * * 4'
 
 env:
@@ -46,7 +47,7 @@ jobs:
               ;;
             *)
               echo "Run for '${{ github.event_name }}' is not expected"
-              echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
               ;;
           esac
 

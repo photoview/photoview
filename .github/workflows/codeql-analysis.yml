@@ -7,6 +7,7 @@ on:
     # The branches below must be a subset of the branches above
     branches: [master]
   schedule:
+    # At 01:37 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
     - cron: '37 1 * * 4'
 
 jobs:
