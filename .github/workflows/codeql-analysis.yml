@@ -55,6 +55,7 @@ jobs:
           export GOPATH="/go"
           export PATH="${GOPATH}/bin:${PATH}"
           export CGO_ENABLED=1
+          cp ../scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
           # Comment out the last line with 'apt-get install -y reflex sqlite3'
           sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
