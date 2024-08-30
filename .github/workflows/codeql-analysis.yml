@@ -50,6 +50,7 @@ jobs:
           languages: ${{ matrix.language }}
           # Run further tests
           queries: security-extended, security-and-quality
+          debug: true
 
       # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
       - name: Autobuild
