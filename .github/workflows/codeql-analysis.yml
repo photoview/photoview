@@ -61,12 +61,12 @@ jobs:
           apt-get install -y g++-x86-64-linux-gnu libc6-dev-amd64-cross libdlib-dev libblas-dev \
             libatlas-base-dev liblapack-dev libjpeg-dev libheif-dev
           source ../scripts/set_compiler_env.sh
-          go env
-          go mod download
+          #go env
+          #go mod download
           # Patch go-face
-          sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
+          #sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
           # Build dependencies that use CGO
-          go install github.com/mattn/go-sqlite3 github.com/Kagami/go-face
+          #go install github.com/mattn/go-sqlite3 github.com/Kagami/go-face
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
