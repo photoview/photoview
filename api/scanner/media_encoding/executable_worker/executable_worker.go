@@ -116,7 +116,7 @@ func (worker *MagickWorker) EncodeJpeg(inputPath string, outputPath string, jpeg
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("encoding image with \"%s %v\" error: %w", worker.path, args, err)
+		return fmt.Errorf("encoding image with %q %v error: %w", worker.path, args, err)
 	}
 
 	return nil

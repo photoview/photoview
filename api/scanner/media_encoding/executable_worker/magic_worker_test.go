@@ -23,9 +23,10 @@ func TestMagickWorkerIgnore(t *testing.T) {
 	done := setPathWithCurrent("./testdata/bin")
 	defer done()
 
-	org := os.Getenv("PHOTOVIEW_DISABLE_RAW_PROCESSING")
-	os.Setenv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
-	defer os.Setenv("PHOTOVIEW_DISABLE_RAW_PROCESSING", org)
+	envKey := "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+	org := os.Getenv(envKey)
+	os.Setenv(envKey, "true")
+	defer os.Setenv(envKey, org)
 
 	executable_worker.InitializeExecutableWorkers()
 
@@ -49,7 +50,7 @@ func TestMagickWorker(t *testing.T) {
 		if err == nil {
 			t.Fatalf("MagickCli.EncodeJpeg(\"input\", \"output\", 0) = nil, should be an error.")
 		}
-		if got, want := err.Error(), "^encoding image with \".*?/testdata/bin/convert .*?\" error: .*$"; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding image with ".*?/testdata/bin/convert" .*? error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("MagickCli.EncodeJpeg(\"input\", \"output\", 0) = %q, should be as reg pattern %q", got, want)
 		}
 	})

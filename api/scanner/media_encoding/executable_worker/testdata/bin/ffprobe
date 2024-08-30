@@ -1,0 +1,9 @@
+#!/bin/sh
+
+case "$1" in
+  "--version")
+      echo ffprobe: version fake
+      ;;
+esac
+
+echo $@

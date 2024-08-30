@@ -1,0 +1,17 @@
+#!/bin/sh
+
+case "$1" in
+  "--version")
+      echo ffmpeg: version fake
+      ;;
+esac
+
+echo $@
+if [ "$2" = "input_fail" ] # input parameter for encoding mp4
+then
+  exit -1
+fi
+if [ "$4" = "input_fail" ] # input parameter for encoding thumbnail
+then
+  exit -1
+fi
