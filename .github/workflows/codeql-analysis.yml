@@ -42,6 +42,7 @@ jobs:
         if: ${{ matrix.language == 'go' }}
         working-directory: ./api
         run: |
+          rm -rf /opt/hostedtoolcache # free up some space
           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
           ARCH=$(uname -m)
           case "$ARCH" in
@@ -52,6 +53,7 @@ jobs:
             *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
           esac
           export TARGETPLATFORM="$OS/$ARCH"
+          echo ${TARGETPLATFORM}
           export GOPATH="/go"
           export PATH="${GOPATH}/bin:${PATH}"
           export CGO_ENABLED=1
@@ -60,6 +62,7 @@ jobs:
           sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
           ../scripts/install_build_dependencies.sh
+          echo "<<< Dependencies installed >>>"
           source ../scripts/set_compiler_env.sh
           #go env
           #go mod download
