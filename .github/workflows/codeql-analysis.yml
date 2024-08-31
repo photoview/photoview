@@ -44,7 +44,7 @@ jobs:
         if: ${{ matrix.language == 'go' }}
         working-directory: ./api
         run: |
-          rm -rf /opt/hostedtoolcache # free up some space
+          rm -rf /opt/hostedtoolcache/* # free up some space
           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
           ARCH=$(uname -m)
           case "$ARCH" in
