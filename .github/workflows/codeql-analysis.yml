@@ -29,7 +29,9 @@ jobs:
     if: ${{ needs.create-matrix.outputs.matrix != '[]' && github.repository == 'photoview/photoview' }}
     runs-on: ubuntu-latest
     container:
-      image: ${{ ( matrix.language == 'go' && 'debian:testing' ) || ( matrix.language == 'javascript' && 'node:18' ) || 'null' }}
+      image: ${{ ( matrix.language == 'go' && 'golang:1.22-bookworm' ) || ( matrix.language == 'javascript' && 'node:18' ) || 'null' }}
+      volumes:
+        - /opt/hostedtoolcache:/opt/hostedtoolcache
     strategy:
       fail-fast: false
       matrix:
