@@ -1,6 +1,9 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18-alpine AS ui
 
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
+
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
@@ -36,6 +39,9 @@ RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-alpine AS api
 ARG TARGETPLATFORM
 
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
+
 WORKDIR /app/api
 
 ENV GOPATH="/go"
@@ -64,6 +70,9 @@ RUN go build -v -o photoview .
 ### Build release image ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:latest AS release
 ARG TARGETPLATFORM
+
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
