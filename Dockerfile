@@ -68,8 +68,8 @@ ARG TARGETPLATFORM
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
-  && addgroup -g 9999 photoview \
-  && adduser -u 9999 -G photoview -D photoview \
+  && addgroup -g 999 photoview \
+  && adduser -u 999 -G photoview -D photoview \
   # Required dependencies
   && /app/scripts/install_runtime_dependencies.sh
 
