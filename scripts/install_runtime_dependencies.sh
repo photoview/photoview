@@ -1,10 +1,10 @@
-#!/bin/bash
-set -euo pipefail
+#!/bin/sh
 
-apt-get update
-apt-get install -y curl libdlib19.2 ffmpeg exiftool libheif1 imagemagick
+apk update
+
+apk add curl ffmpeg exiftool libheif imagemagick
+apk add dlib --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Remove build dependencies and cleanup
-apt-get autoremove -y
-apt-get clean
-rm -rf /var/lib/apt/lists/*
+apk cache clean
+rm -rf /var/cache/apk/*

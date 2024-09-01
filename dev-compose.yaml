@@ -13,7 +13,7 @@ services:
     ports:
     - 1234:1234
     command:
-    - /bin/bash
+    - /bin/sh
     - -c
     - |
       npm ci
@@ -36,10 +36,9 @@ services:
     ports:
     - 4001:4001
     command:
-    - /bin/bash
+    - /bin/sh
     - -c
     - |
-      source /app/scripts/set_compiler_env.sh 
       reflex -g '*.go' -s -- go run .
 
   mariadb:

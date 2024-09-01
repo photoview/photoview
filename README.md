@@ -254,13 +254,7 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
   - Required packages:
     - `node` = 18
 
-In Debian/Ubuntu, install dependencies:
-
-```sh
-$ sudo apt update # Update the package list
-$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
-$ sudo apt install reflex sqlite3 # For API optional tools
-```
+In Linux, please use [Docker Compose or Docker](https://github.com/googollee/photoview?tab=readme-ov-file#set-up-docker-development-environment).
 
 In macOS, install dependencies:
 
@@ -270,7 +264,7 @@ $ brew install golang gcc pkg-config libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
-Please follow the package manager guidance if you don't use `apt` or `homebrew`.
+Please follow the package manager guidance if you don't use `homebrew`.
 
 For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
 
@@ -297,8 +291,6 @@ You can install `node` with other package manager if you like.
 Then run the following commands:
 
 ```bash
-# Optional: Set the compiler environment in Debian/Ubuntu
-$ source ./scripts/set_compiler_env.sh
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
 $ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
