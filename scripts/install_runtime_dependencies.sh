@@ -2,7 +2,7 @@
 
 apk update
 
-apk add curl ffmpeg exiftool libheif imagemagick
+apk add curl ffmpeg exiftool libheif imagemagick lapack cblas
 apk add dlib --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 # Remove build dependencies and cleanup

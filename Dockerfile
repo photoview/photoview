@@ -53,10 +53,10 @@ RUN chmod +x /app/scripts/*.sh \
 COPY api/go.mod api/go.sum /app/api/
 RUN go env \
   && go mod download \
+  # Patch go-face
+  && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
   # Build dependencies that use CGO
-  && go install \
-    github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face
+  && go install github.com/mattn/go-sqlite3 github.com/Kagami/go-face
 
 COPY api /app/api
 RUN go build -v -o photoview .
