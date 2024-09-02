@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
@@ -28,7 +27,8 @@ type MagickWorker struct {
 }
 
 type FfmpegWorker struct {
-	path string
+	path    string
+	encoder string
 }
 
 func newMagickWorker() *MagickWorker {
@@ -40,24 +40,34 @@ func newMagickWorker() *MagickWorker {
 	path, err := exec.LookPath("convert")
 	if err != nil {
 		log.Println("Executable worker not found: ImageMagick convert")
-	} else {
-		version, err := exec.Command(path, "--version").Output()
-		if err != nil {
-			log.Printf("Error getting version of ImageMagick convert: %s\n", err)
-			return nil
-		}
-
-		log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
-
-		return &MagickWorker{
-			path: path,
-		}
+		return nil
 	}
 
-	return nil
+	version, err := exec.Command(path, "--version").Output()
+	if err != nil {
+		log.Printf("Error getting version of ImageMagick convert: %s\n", err)
+		return nil
+	}
+
+	log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
+
+	return &MagickWorker{
+		path: path,
+	}
 }
 
 func newFfmpegWorker() *FfmpegWorker {
+	if path, err := exec.LookPath("ffprobe"); err == nil {
+		if version, err := exec.Command(path, "-version").Output(); err == nil {
+			log.Println("Found ffprobe:", path, "version:", strings.Split(string(version), "\n")[0])
+			ffprobe.SetFFProbeBinPath(path)
+		} else {
+			log.Println("Executable ffprobe not executable:", path)
+		}
+	} else {
+		log.Println("Executable ffprobe not found")
+	}
+
 	if utils.EnvDisableVideoEncoding.GetBool() {
 		log.Printf("Executable worker disabled (%s=1): ffmpeg\n", utils.EnvDisableVideoEncoding.GetName())
 		return nil
@@ -66,21 +76,26 @@ func newFfmpegWorker() *FfmpegWorker {
 	path, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		log.Println("Executable worker not found: ffmpeg")
-	} else {
-		version, err := exec.Command(path, "-version").Output()
-		if err != nil {
-			log.Printf("Error getting version of ffmpeg: %s\n", err)
-			return nil
-		}
-
-		log.Printf("Found executable worker: ffmpeg (%s)\n", strings.Split(string(version), "\n")[0])
-
-		return &FfmpegWorker{
-			path: path,
-		}
+		return nil
 	}
 
-	return nil
+	encoder := "h264"
+	if e := utils.EnvVideoEncoder.GetValue(); e != "" {
+		encoder = e
+	}
+
+	version, err := exec.Command(path, "-version").Output()
+	if err != nil {
+		log.Printf("Error getting version of ffmpeg: %s\n", err)
+		return nil
+	}
+
+	log.Printf("Found executable worker: ffmpeg (%s), with encoder: %q\n", strings.Split(string(version), "\n")[0], encoder)
+
+	return &FfmpegWorker{
+		path:    path,
+		encoder: encoder,
+	}
 }
 
 func (worker *MagickWorker) IsInstalled() bool {
@@ -101,7 +116,7 @@ func (worker *MagickWorker) EncodeJpeg(inputPath string, outputPath string, jpeg
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("encoding image with \"%s %v\" error: %w", worker.path, args, err)
+		return fmt.Errorf("encoding image with %q %v error: %w", worker.path, args, err)
 	}
 
 	return nil
@@ -111,7 +126,7 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 	args := []string{
 		"-i",
 		inputPath,
-		"-vcodec", "h264",
+		"-vcodec", worker.encoder,
 		"-acodec", "aac",
 		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
 		"-movflags", "+faststart+use_metadata_tags",
@@ -121,7 +136,7 @@ func (worker *FfmpegWorker) EncodeMp4(inputPath string, outputPath string) error
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+		return fmt.Errorf("encoding video with %q %v encoder %q error: %w", worker.path, args, worker.encoder, err)
 	}
 
 	return nil
@@ -144,7 +159,7 @@ func (worker *FfmpegWorker) EncodeVideoThumbnail(inputPath string, outputPath st
 	cmd := exec.Command(worker.path, args...)
 
 	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "encoding video using: %s", worker.path)
+		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", worker.path, args, err)
 	}
 
 	return nil
