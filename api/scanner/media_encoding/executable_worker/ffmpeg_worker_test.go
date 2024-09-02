@@ -51,7 +51,7 @@ func TestFfmpegWorker(t *testing.T) {
 		if err == nil {
 			t.Fatalf("FfmpegCli.EncodeMp4(\"input_fail\", \"output\") = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" .* error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" .* encoder "h264" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("FfmpegCli.EncodeMp4(\"input_fail\", \"output\") = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -82,6 +82,32 @@ func TestFfmpegWorker(t *testing.T) {
 		err := executable_worker.FfmpegCli.EncodeVideoThumbnail("input", "output", probeData)
 		if err != nil {
 			t.Fatalf("FfmpegCli.EncodeVideoThumbnail(\"input\", \"output\") = %v, should be nil.", err)
+		}
+	})
+}
+
+func TestFfmpegWorkerWithCodec(t *testing.T) {
+	done := setPathWithCurrent("./testdata/bin")
+	defer done()
+
+	envKey := "PHOTOVIEW_VIDEO_ENCODER"
+	org := os.Getenv(envKey)
+	os.Setenv(envKey, "new_codec")
+	defer os.Setenv(envKey, org)
+
+	executable_worker.InitializeExecutableWorkers()
+
+	if !executable_worker.FfmpegCli.IsInstalled() {
+		t.Error("FfmpegCli should be installed")
+	}
+
+	t.Run("EncodeMp4Failed", func(t *testing.T) {
+		err := executable_worker.FfmpegCli.EncodeMp4("input_fail", "output")
+		if err == nil {
+			t.Fatalf("FfmpegCli.EncodeMp4(\"input_fail\", \"output\") = nil, should be an error.")
+		}
+		if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" .* encoder "new_codec" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+			t.Errorf("FfmpegCli.EncodeMp4(\"input_fail\", \"output\") = %q, should be as reg pattern %q", got, want)
 		}
 	})
 }
