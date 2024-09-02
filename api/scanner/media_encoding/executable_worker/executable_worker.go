@@ -37,17 +37,17 @@ func newMagickWorker() *MagickWorker {
 		return nil
 	}
 
-	path, err := exec.LookPath("convert")
+	path, err := exec.LookPath("magick")
 	if err != nil {
-		log.Println("Executable worker not found: ImageMagick convert")
+		log.Println("Executable worker not found: magick")
 	} else {
-		version, err := exec.Command(path, "--version").Output()
+		version, err := exec.Command(path, "-version").Output()
 		if err != nil {
-			log.Printf("Error getting version of ImageMagick convert: %s\n", err)
+			log.Printf("Error getting version of magick: %s\n", err)
 			return nil
 		}
 
-		log.Printf("Found executable worker: ImageMagick convert (%s)\n", strings.Split(string(version), "\n")[0])
+		log.Printf("Found executable worker: magick (%s)\n", strings.Split(string(version), "\n")[0])
 
 		return &MagickWorker{
 			path: path,
@@ -93,6 +93,7 @@ func (worker *FfmpegWorker) IsInstalled() bool {
 
 func (worker *MagickWorker) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
 	args := []string{
+		"convert",
 		inputPath,
 		"-quality", fmt.Sprintf("%d", jpegQuality),
 		outputPath,
