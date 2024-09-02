@@ -233,7 +233,12 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
 
 ## Set up local development environment
 
+In Linux, we recommend to use [Docker Compose or Docker](https://github.com/googollee/photoview?tab=readme-ov-file#set-up-docker-development-environment) as a local development environment.
+
+We can't keep verifying below commands on each environment. People may need to solve dependencies by their own.
+
 ### Install dependencies
+
 
 - API
   - Required packages:
@@ -245,7 +250,7 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
         - `dlib`
         - `libjpeg`
         - `libblas` 
-        - `libcblas`, recommended using `libatlas-base`
+        - `libcblas`, recommended using `libatlas-base` in Debian.
         - `liblapack`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
@@ -254,7 +259,13 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
   - Required packages:
     - `node` = 18
 
-In Linux, please use [Docker Compose or Docker](https://github.com/googollee/photoview?tab=readme-ov-file#set-up-docker-development-environment).
+In Debian/Ubuntu, install dependencies:
+
+```sh
+$ sudo apt update # Update the package list
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
+$ sudo apt install reflex sqlite3 # For API optional tools
+```
 
 In macOS, install dependencies:
 
@@ -264,7 +275,7 @@ $ brew install golang gcc pkg-config libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
-Please follow the package manager guidance if you don't use `homebrew`.
+Please follow the package manager guidance if you don't use `apt` or `homebrew`.
 
 For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
 
