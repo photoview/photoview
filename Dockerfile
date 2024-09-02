@@ -80,7 +80,10 @@ RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   && addgroup -g 9999 photoview \
   && adduser -u 9999 -G photoview -D photoview \
   # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh
+  && /app/scripts/install_runtime_dependencies.sh \
+  # Remove build dependencies and cleanup
+  && apk cache clean \
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /home/photoview
 
