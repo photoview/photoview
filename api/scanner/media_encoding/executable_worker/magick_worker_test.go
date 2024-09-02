@@ -49,7 +49,7 @@ func TestMagickWorker(t *testing.T) {
 		if err == nil {
 			t.Fatalf("MagickCli.EncodeJpeg(\"input\", \"output\", 0) = nil, should be an error.")
 		}
-		if got, want := err.Error(), "^encoding image with \".*?/testdata/bin/convert .*?\" error: .*$"; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), "^encoding image with \".*?/testdata/bin/magick .*?\" error: .*$"; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("MagickCli.EncodeJpeg(\"input\", \"output\", 0) = %q, should be as reg pattern %q", got, want)
 		}
 	})
