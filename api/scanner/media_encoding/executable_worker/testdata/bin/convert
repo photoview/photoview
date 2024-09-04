@@ -1,13 +1,13 @@
 #!/bin/sh
 
 case "$1" in
-  "-version")
+  "--version")
       echo convert: version fake
       ;;
 esac
 
 echo $@
-if [ "$4" = "0" ] # quality parameter
+if [ "$3" = "0" ] # quality parameter
 then
   exit -1
 fi
