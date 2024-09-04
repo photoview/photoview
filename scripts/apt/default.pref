@@ -1,0 +1,11 @@
+Package: *
+Pin: release n=bookworm
+Pin-Priority: 700
+
+Package: *
+Pin: release n=bookworm-updates
+Pin-Priority: 700
+
+Package: *
+Pin: release n=bookworm-security
+Pin-Priority: 700
