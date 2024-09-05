@@ -56,10 +56,8 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
 }
 
 const downloadMedia = (t: TranslationFn) => async (url: string) => {
-  const imgUrl = new URL(
-    `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
-    location.origin
-  )
+  const publicUrl = new URL(import.meta.env.BASE_URL, location.origin)
+  const imgUrl = new URL(url, publicUrl)
 
   if (authToken() == null) {
     // Get share token if not authorized
