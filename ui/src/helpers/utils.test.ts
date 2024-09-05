@@ -1,19 +1,55 @@
-import { getPublicUrl } from "./utils";
+import { getProtectedUrl, getPublicUrl } from "./utils";
 
-describe('getPublicUrl', () => {
+describe('Url helper', () => {
     const mockOrigin = 'http://localhost:9876';
-    Object.defineProperty(window, 'location', {
-        get() {
-            return { origin: mockOrigin };
-        }
+    const mockBaseUrl = '/base_url/';
+    const mockShareToken = 'nm42';
+    const mockSharePath = `/share/${mockShareToken}`;
+
+    beforeEach(()=>{        
+        import.meta.env.BASE_URL = mockBaseUrl;
+        Object.defineProperties(window,
+            {
+                location: {
+                    get() {
+                        return { origin: mockOrigin, pathname: mockSharePath };
+                    }
+                },
+                document: {
+                    get() {
+                        return { cookie: 'auth-token=abc' };
+                    }
+                }
+            }
+        );
     });
 
     test.each([
-        {label:'relative', baseUrl: '/my_public/', expected: `${mockOrigin}/my_public/`},
-        {label:'absolute', baseUrl: 'http://my_origin', expected: 'http://my_origin/'}
-    ])('returns currect url for $label base', ({baseUrl, expected}) => {
+        {url:'', baseUrl: '', expected: `${mockOrigin}/`},
+        {url:'', baseUrl: '/public_path/', expected: `${mockOrigin}/public_path/`},
+        {url:'/image.jpg', baseUrl: '/public_path/', expected: `${mockOrigin}/public_path/image.jpg`},
+        {url:'/image.jpg', baseUrl: 'http://other_host/', expected: 'http://other_host/image.jpg'},
+        {url:'http://other_host2/image.jpg', baseUrl: 'http://other_host/', expected: 'http://other_host2/image.jpg'}
+    ])('returns currect public url for base $baseUrl and url $url', ({url, baseUrl, expected}) => {
         import.meta.env.BASE_URL = baseUrl;
-        const url = getPublicUrl();
-        expect(url.href).toBe(expected);
+        const publicUrl = getPublicUrl(url);
+        expect(publicUrl.href).toBe(expected);
+    })
+
+    test('returns undefined protected url', () => {
+       expect(getProtectedUrl(undefined)).toBeUndefined();
+    })
+
+    test('returns protected url without token', () => {
+        expect(getProtectedUrl('image.jpg')).toBe(`${mockOrigin}${mockBaseUrl}image.jpg`);
+    })
+
+    test('returns protected url with token', () => {
+        Object.defineProperty(window, 'document', {
+            get() {
+                return { cookie: '' };
+            }
+        });
+        expect(getProtectedUrl('image.jpg')).toBe(`${mockOrigin}${mockBaseUrl}image.jpg?token=${mockShareToken}`);
     })
 })

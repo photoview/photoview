@@ -1,7 +1,6 @@
 import { gql, useLazyQuery } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 import { NotificationType } from '../../__generated__/globalTypes'
-import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
 import { MessageState } from '../messages/Messages'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
@@ -13,7 +12,7 @@ import {
   sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
-import { getPublicUrl } from '../../helpers/utils'
+import { getProtectedUrl } from '../../helpers/utils'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -57,17 +56,9 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
 }
 
 const downloadMedia = (t: TranslationFn) => async (url: string) => {
-  const imgUrl = new URL(url, getPublicUrl())
+  const imgUrl = getProtectedUrl(url);
 
-  if (authToken() == null) {
-    // Get share token if not authorized
-    const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-    if (token) {
-      imgUrl.searchParams.set('token', token[1])
-    }
-  }
-
-  const response = await fetch(imgUrl.href, {
+  const response = await fetch(imgUrl, {
     credentials: 'include',
   })
 

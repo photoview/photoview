@@ -1,5 +1,6 @@
 import classNames, { Argument as ClassNamesArg } from 'classnames'
 import { overrideTailwindClasses } from 'tailwind-override'
+import { authToken } from './authentication'
 
 export interface DebouncedFn<F extends (...args: unknown[]) => unknown> {
   (...args: Parameters<F>): void
@@ -49,6 +50,29 @@ export function tailwindClassNames(...args: ClassNamesArg[]) {
   // return classNames(args)
 }
 
-export function getPublicUrl() {
-  return new URL(import.meta.env.BASE_URL, location.origin);
+export function getPublicUrl(url: string = '') {
+  try {
+    try {
+      return new URL(url);
+    } catch {
+      return new URL(url, import.meta.env.BASE_URL);
+    } 
+  } catch {
+      return new URL(`${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'), location.origin);
+  }
+}
+
+export function getProtectedUrl<S extends string | undefined>(url: S) {
+  if (url == undefined) return undefined as S
+
+  const publicUrl = getPublicUrl(url);
+
+  if (authToken() == null) {
+    const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+    if (tokenRegex) {
+      publicUrl.searchParams.set('token', tokenRegex[1])
+    }
+  }
+
+  return publicUrl.href
 }
