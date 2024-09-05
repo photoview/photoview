@@ -225,7 +225,7 @@ func ReadVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
 
 	stream := data.FirstVideoStream()
 	if stream == nil {
-		return nil, errors.Wrapf(err, "could not get stream from file metadata (%s)", path.Base(videoPath))
+		return nil, errors.New(fmt.Sprintf("could not get stream from file metadata (%s)", path.Base(videoPath)))
 	}
 
 	return stream, nil
