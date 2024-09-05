@@ -99,6 +99,7 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    When downloading files, you need to choose only one of them.
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
+> If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
 4. Make sure that your media library's root folder and all the files and subfolders are readable and searchable by other users: run the next command (or corresponding sequence of commands from the `Makefile`):
 
    ```bash
@@ -296,6 +297,7 @@ You can install `node` with other package manager if you like.
     - Comment the SQLite path variable
     - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
     - Uncomment the corresponding connection string variable for the new driver
+    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
   - Optional: modify other variables if needed according to the inline comments
 2. Rename `/ui/example.env` to `.env`
 

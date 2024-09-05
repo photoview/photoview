@@ -27,7 +27,6 @@ services:
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
-      ## Note: If your `PGSQL_PASSWORD` contains special characters (e.g. `@`), make sure to URL-encode them.
       # PHOTOVIEW_POSTGRES_URL: postgres://${PGSQL_USER}:${PGSQL_PASSWORD}@photoview-pgsql:5432/${PGSQL_DATABASE}?sslmode=${PGSQL_SSL_MODE}
       PHOTOVIEW_LISTEN_IP: "photoview"
       ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
