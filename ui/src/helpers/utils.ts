@@ -48,3 +48,7 @@ export function tailwindClassNames(...args: ClassNamesArg[]) {
   return overrideTailwindClasses(classNames(args))
   // return classNames(args)
 }
+
+export function getPublicUrl() {
+  return new URL(import.meta.env.BASE_URL, location.origin);
+}

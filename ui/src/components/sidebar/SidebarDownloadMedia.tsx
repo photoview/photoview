@@ -13,6 +13,7 @@ import {
   sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
+import { getPublicUrl } from '../../helpers/utils'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -56,8 +57,7 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
 }
 
 const downloadMedia = (t: TranslationFn) => async (url: string) => {
-  const publicUrl = new URL(import.meta.env.BASE_URL, location.origin)
-  const imgUrl = new URL(url, publicUrl)
+  const imgUrl = new URL(url, getPublicUrl())
 
   if (authToken() == null) {
     // Get share token if not authorized

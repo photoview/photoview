@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { BlurhashCanvas } from 'react-blurhash'
-import { isNil } from '../../helpers/utils'
+import { getPublicUrl, isNil } from '../../helpers/utils'
 
 const isNativeLazyLoadSupported = 'loading' in document.createElement('img')
 const placeholder =
@@ -13,8 +13,7 @@ const placeholder =
 const getProtectedUrl = (url?: string) => {
   if (url == undefined) return undefined
 
-  const publicUrl = new URL(import.meta.env.BASE_URL, location.origin)
-  const imgUrl = new URL(url, publicUrl)
+  const imgUrl = new URL(url, getPublicUrl())
 
   const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
   if (tokenRegex) {
