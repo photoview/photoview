@@ -1,8 +1,8 @@
 ### Build UI ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18-alpine AS ui
+FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
@@ -36,11 +36,11 @@ RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
   npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-alpine AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 WORKDIR /app/api
 
@@ -49,41 +49,40 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/install_build_dependencies.sh /app/scripts/
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
+COPY scripts/*.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && /app/scripts/install_build_dependencies.sh \
-  && mv $(go env GOPATH)/bin/reflex /usr/bin/ \
   && /app/scripts/install_runtime_dependencies.sh
 
 COPY api/go.mod api/go.sum /app/api/
-RUN go env \
+RUN source /app/scripts/set_compiler_env.sh \
+  && go env \
   && go mod download \
   # Patch go-face
   && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
   # Build dependencies that use CGO
-  && go install github.com/mattn/go-sqlite3 github.com/Kagami/go-face
+  && go install \
+    github.com/mattn/go-sqlite3 \
+    github.com/Kagami/go-face
 
 COPY api /app/api
-RUN go build -v -o photoview .
+RUN source /app/scripts/set_compiler_env.sh \
+  && go build -v -o photoview .
 
 ### Build release image ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:latest AS release
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
-SHELL ["/bin/sh", "-euo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
-  && addgroup -g 9999 photoview \
-  && adduser -u 9999 -G photoview -D photoview \
+  && groupadd -g 999 photoview \
+  && useradd -r -u 999 -g photoview -m photoview \
   # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh \
-  # Remove build dependencies and cleanup
-  && apk cache clean \
-  && rm -rf /var/cache/apk/*
+  && /app/scripts/install_runtime_dependencies.sh
 
 WORKDIR /home/photoview
 

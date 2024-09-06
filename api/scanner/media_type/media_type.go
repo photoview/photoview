@@ -260,7 +260,7 @@ func (imgType *MediaType) IsSupported() bool {
 		return true
 	}
 
-	if executable_worker.MagickCli.IsInstalled() && imgType.IsRaw() {
+	if executable_worker.DarktableCli.IsInstalled() && imgType.IsRaw() {
 		return true
 	}
 

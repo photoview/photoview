@@ -241,7 +241,6 @@ We can't keep verifying below commands on each environment. People may need to s
 
 ### Install dependencies
 
-
 - API
   - Required packages:
     - `golang` >= 1.22
@@ -304,6 +303,8 @@ You can install `node` with other package manager if you like.
 Then run the following commands:
 
 ```bash
+# Optional: Set the compiler environment in Debian/Ubuntu
+$ source ./scripts/set_compiler_env.sh
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
 $ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
