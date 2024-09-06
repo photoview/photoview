@@ -107,12 +107,10 @@ All the photo galleries can do a lot of what I need, but no single one can do it
 
    If command(s) return `Permission denied` error, run them under the user, owning corresponding files and folders. Alternatively, run them adding `sudo ` before the command: this will switch the execution context to `root` user and ask for the root password. You have to have permission to run `sudo` in the system.
 
-   NOTE: GID and UID was changed to 9999. If it's different from your local files, please update your files.
-
    If you don't want to give required permissions to `others` group for your files, alternatively, you can:
 
-   - create a group on your host with GID=9999 and make all the files and folders inside volumes of the `photoview` service being owned by this group; then set the appropriate permissions to the `group` section.
-   - create on your host a group with GID=9999 and a user in this group with UID=9999; then change the ownership of all the files and folders inside volumes of the `photoview` service to this user; then set the appropriate permissions to the `user` section.
+   - create a group on your host with GID=999 and make all the files and folders inside volumes of the `photoview` service being owned by this group; then set the appropriate permissions to the `group` section.
+   - create on your host a group with GID=999 and a user in this group with UID=999; then change the ownership of all the files and folders inside volumes of the `photoview` service to this user; then set the appropriate permissions to the `user` section.
 
    If you configured other mounts with media files from other locations on the host (like HOST_PHOTOVIEW_MEDIA_FAMILY or anything else), you need to run the same commands, as in the `Makefile` `readable` target, for each media root folder on your host manually: copy each command to your shell and replace the variable with the absolute path to an additional media root folder without the trailing `/`. Run both commands for each additional root folder.
 5. In case, you don't have `make` installed in your system or don't want to use it for the Photoview management activities, you could use the same commands from the `Makefile` and run them in your shell directly, or create your own scripts. Make sure to apply or replace the variables from your `.env` first in this case. `Makefile` is provided just for your convenience and simplicity, but is optional.
