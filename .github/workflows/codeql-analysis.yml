@@ -61,13 +61,13 @@ jobs:
           export GOPATH="/go"
           export PATH="${GOPATH}/bin:${PATH}"
           export CGO_ENABLED=1
+          . ../scripts/set_compiler_env.sh
           # Comment out the last line with 'apt-get install -y reflex sqlite3'
           sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
           ../scripts/install_build_dependencies.sh
           apt-get install -y file
           echo "<<< Dependencies installed >>>"
-          . ../scripts/set_compiler_env.sh
           go env
           go mod download
           # Patch go-face
