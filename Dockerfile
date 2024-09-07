@@ -36,7 +36,7 @@ RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
   npm run build -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -49,10 +49,7 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/apt/debian-testing.sources /etc/apt/sources.list.d/
-COPY scripts/set_compiler_env.sh /app/scripts/
-COPY scripts/install_build_dependencies.sh /app/scripts/
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
+COPY scripts/*.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
@@ -73,7 +70,7 @@ RUN source /app/scripts/set_compiler_env.sh \
   && go build -v -o photoview .
 
 ### Build release image ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:testing-slim AS release
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
