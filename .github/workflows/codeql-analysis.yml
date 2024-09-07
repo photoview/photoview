@@ -46,6 +46,7 @@ jobs:
         shell: bash
         run: |
           rm -rf /opt/hostedtoolcache/* # free up some space
+          git config --global --add safe.directory /__w/photoview/photoview
           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
           ARCH=$(uname -m)
           case "$ARCH" in
@@ -56,7 +57,7 @@ jobs:
             *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
           esac
           export TARGETPLATFORM="$OS/$ARCH"
-          echo ${TARGETPLATFORM}
+          echo "Platform is ${TARGETPLATFORM}"
           export GOPATH="/go"
           export PATH="${GOPATH}/bin:${PATH}"
           export CGO_ENABLED=1
@@ -64,6 +65,7 @@ jobs:
           sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
           ../scripts/install_build_dependencies.sh
+          apt-get install -y file
           echo "<<< Dependencies installed >>>"
           . ../scripts/set_compiler_env.sh
           go env
