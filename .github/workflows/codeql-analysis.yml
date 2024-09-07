@@ -43,6 +43,7 @@ jobs:
       - name: Install GO build dependencies
         if: ${{ matrix.language == 'go' }}
         working-directory: ./api
+        shell: bash
         run: |
           rm -rf /opt/hostedtoolcache/* # free up some space
           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -61,11 +62,10 @@ jobs:
           export CGO_ENABLED=1
           # Comment out the last line with 'apt-get install -y reflex sqlite3'
           sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
-          tail -n 5 ../scripts/install_build_dependencies.sh
           chmod +x ../scripts/*.sh
           ../scripts/install_build_dependencies.sh
           echo "<<< Dependencies installed >>>"
-          source ../scripts/set_compiler_env.sh
+          . ../scripts/set_compiler_env.sh
           go env
           go mod download
           # Patch go-face
