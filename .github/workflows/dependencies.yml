@@ -1,4 +1,4 @@
-name: Worker builds
+name: Dependencies builds
 
 on:
   push:
@@ -18,7 +18,7 @@ env:
 
 jobs:
   build:
-    name: Build Worker Image
+    name: Build Dependencies Image
     runs-on: ubuntu-latest
 
     steps:
@@ -53,14 +53,14 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./workers
+          context: ./dependencies
           platforms: ${{ env.PLATFORMS }}
           pull: true
           push: ${{ env.IS_PUSHING_IMAGES }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: ${{ ( github.event_name == 'pull_request' && 'type=gha' ) || 'type=local' }}
+          cache-to: ${{ ( github.event_name == 'pull_request' && 'type=gha,mode=max' ) || 'type=local' }}
           sbom: true
           provenance: mode=max
           annotations: ${{ steps.docker_meta.outputs.annotations }}
