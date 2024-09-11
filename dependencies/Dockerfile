@@ -22,5 +22,5 @@ RUN export $(cat /env) && ./download_jellyfin-ffmpeg.sh
 COPY output.sh /
 RUN /output.sh
 
-FROM scratch AS release
+FROM debian:bookworm-slim AS release
 COPY --from=build /artifacts.tar.gz /
