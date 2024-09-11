@@ -16,7 +16,8 @@ make
 make install
 cd ..
 
-mkdir -p /output/lib /output/include
+mkdir -p /output/lib /output/include /output/pkgconfig
 cp -a /usr/local/lib/libraw_r* /output/lib/
+cp -a /usr/local/lib/pkgconfig/libraw* /output/pkgconfig/
 cp -a /usr/local/include/libraw /output/include/
 file /usr/local/lib/libraw_r.so*

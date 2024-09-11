@@ -15,7 +15,8 @@ make
 make install
 cd ..
 
-mkdir -p /output/lib /output/include
+mkdir -p /output/lib /output/include /output/pkgconfig
 cp -a /usr/local/lib/libheif* /output/lib/
+cp -a /usr/local/lib/pkgconfig/libheif* /output/pkgconfig/
 cp -a /usr/local/include/libheif /output/include/
 file /usr/local/lib/libheif.so*

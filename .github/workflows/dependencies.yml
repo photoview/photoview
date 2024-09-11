@@ -12,7 +12,7 @@ on:
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: viktorstrate/workers
+  DOCKER_IMAGE: viktorstrate/dependencies
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
 
