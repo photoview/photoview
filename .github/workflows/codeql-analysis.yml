@@ -10,6 +10,13 @@ on:
     # At 01:37 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
     - cron: '37 1 * * 4'
 
+permissions:
+  # Optional: allow write access to checks to allow the action to annotate code in the PR.
+  checks: write
+
+env:
+  GO_VERSION: stable
+
 jobs:
   create-matrix:
     runs-on: ubuntu-latest
@@ -23,15 +30,11 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.languages }}
 
-  analyze:
-    name: Analyze
+  code-ql:
+    name: CodeQL
     needs: create-matrix
     if: ${{ needs.create-matrix.outputs.matrix != '[]' && github.repository == 'photoview/photoview' }}
     runs-on: ubuntu-latest
-    container:
-      image: ${{ ( matrix.language == 'go' && 'golang:1.23-bookworm' ) || ( matrix.language == 'javascript' && 'node:18' ) || 'null' }}
-      volumes:
-        - /opt/hostedtoolcache:/opt/hostedtoolcache
     strategy:
       fail-fast: false
       matrix:
@@ -39,41 +42,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install GO build dependencies
-        if: ${{ matrix.language == 'go' }}
-        working-directory: ./api
-        shell: bash
-        run: |
-          rm -rf /opt/hostedtoolcache/* # free up some space
-          git config --global --add safe.directory /__w/photoview/photoview
-          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m)
-          case "$ARCH" in
-            x86_64) ARCH="amd64" ;;
-            aarch64) ARCH="arm64" ;;
-            armv6l) ARCH="arm/v6" ;;
-            armv7l) ARCH="arm/v7" ;;
-            *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
-          esac
-          export TARGETPLATFORM="$OS/$ARCH"
-          echo "Platform is ${TARGETPLATFORM}"
-          export GOPATH="/go"
-          export PATH="${GOPATH}/bin:${PATH}"
-          export CGO_ENABLED=1
-          . ../scripts/set_compiler_env.sh
-          # Comment out the last line with 'apt-get install -y reflex sqlite3'
-          sed -i '$ s/^/#/' ../scripts/install_build_dependencies.sh
-          chmod +x ../scripts/*.sh
-          ../scripts/install_build_dependencies.sh
-          apt-get install -y file
-          echo "<<< Dependencies installed >>>"
-          go env
-          go mod download
-          # Patch go-face
-          sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-          # Build dependencies that use CGO
-          go install github.com/mattn/go-sqlite3 github.com/Kagami/go-face
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -94,6 +62,28 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+
+  golang-lint:
+    name: GOlangCI Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get GO version from `go.mod`
+        run: |
+          echo "GO_VERSION=$(grep '^go ' ./api/go.mod | awk '{print $2}')" >> "$GITHUB_ENV"
+
+      - name: Setup GO
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: ./api
 
   anchore:
     name: Anchore scan code dependencies
