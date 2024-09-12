@@ -19,7 +19,7 @@ fi
 
 dpkg --add-architecture $DEBIAN_ARCH
 apt-get update
-apt-get install -y git curl wget build-essential  crossbuild-essential-${DEBIAN_ARCH} libc-dev:${DEBIAN_ARCH} autoconf automake libtool m4 pkg-config cmake
+apt-get install -y curl crossbuild-essential-${DEBIAN_ARCH} libc-dev:${DEBIAN_ARCH} autoconf automake libtool m4 pkg-config cmake
 
 dpkg-architecture -a $DEBIAN_ARCH >/env
 cat /env
