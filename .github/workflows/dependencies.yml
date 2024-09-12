@@ -59,8 +59,8 @@ jobs:
           push: ${{ env.IS_PUSHING_IMAGES }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: ${{ ( github.event_name == 'pull_request' && 'type=gha' ) || 'type=local' }}
-          cache-to: ${{ ( github.event_name == 'pull_request' && 'type=gha,mode=max' ) || 'type=local' }}
+          cache-from: ${{ ( github.event_name == 'pull_request' && 'type=gha' ) || '' }}
+          cache-to: ${{ ( github.event_name == 'pull_request' && 'type=gha,mode=max' ) || '' }}
           sbom: true
           provenance: mode=max
           annotations: ${{ steps.docker_meta.outputs.annotations }}
