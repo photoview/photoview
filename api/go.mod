@@ -18,7 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/stretchr/testify v1.9.0
-	github.com/strukturag/libheif v1.15.1
+	github.com/strukturag/libheif v1.18.2
 	github.com/vektah/gqlparser/v2 v2.5.16
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
@@ -41,12 +41,12 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.6.0 // indirect
-	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/jackc/pgx/v5 v5.7.1 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/text v0.1.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/mattn/go-sqlite3 v1.14.23 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
