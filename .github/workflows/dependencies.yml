@@ -62,7 +62,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: ${{ env.IS_CACHING == 'true' && 'type=gha' }}
           cache-to: ${{ env.IS_CACHING == 'true' && 'type=gha,mode=max' }}
-          no-cache: ${{ ! env.IS_CACHING }}
+          no-cache: ${{ env.IS_CACHING != 'true' }}
           sbom: true
           provenance: mode=max
           annotations: ${{ steps.docker_meta.outputs.annotations }}
