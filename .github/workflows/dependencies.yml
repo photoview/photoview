@@ -49,6 +49,7 @@ jobs:
           images: ${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
+            type=raw,value=latest
             type=sha
 
       - name: Build and push
