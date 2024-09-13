@@ -61,8 +61,8 @@ jobs:
           push: ${{ env.IS_PUSHING_IMAGES }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: ${{ ( env.IS_CACHING == 'true' && 'type=gha' ) || '' }}
-          cache-to: ${{ ( env.IS_CACHING == 'true' && 'type=gha,mode=max' ) || '' }}
+          cache-from: ${{ env.IS_CACHING == 'true' && 'type=gha' }}
+          cache-to: ${{ env.IS_CACHING == 'true' && 'type=gha,mode=max' }}
           no-cache: ${{ env.IS_CACHING != 'true' }}
           sbom: true
           provenance: mode=max
