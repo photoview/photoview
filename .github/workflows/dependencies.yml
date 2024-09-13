@@ -11,6 +11,7 @@ on:
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+  IS_CACHING: ${{ github.event_name == 'pull_request' }}
   DOCKER_USERNAME: viktorstrate
   DOCKER_IMAGE: viktorstrate/dependencies
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
@@ -59,8 +60,9 @@ jobs:
           push: ${{ env.IS_PUSHING_IMAGES }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: ${{ ( github.event_name == 'pull_request' && 'type=gha' ) || '' }}
-          cache-to: ${{ ( github.event_name == 'pull_request' && 'type=gha,mode=max' ) || '' }}
+          cache-from: ${{ env.IS_CACHING == 'true' && 'type=gha' }}
+          cache-to: ${{ env.IS_CACHING == 'true' && 'type=gha,mode=max' }}
+          no-cache: ${{ ! env.IS_CACHING }}
           sbom: true
           provenance: mode=max
           annotations: ${{ steps.docker_meta.outputs.annotations }}
