@@ -49,6 +49,7 @@ jobs:
           images: ${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
+            type=raw,value=latest
             type=sha
 
       - name: Build and push
@@ -62,7 +63,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: ${{ env.IS_CACHING == 'true' && 'type=gha' }}
           cache-to: ${{ env.IS_CACHING == 'true' && 'type=gha,mode=max' }}
-          no-cache: ${{ ! env.IS_CACHING }}
+          no-cache: ${{ env.IS_CACHING != 'true' }}
           sbom: true
           provenance: mode=max
           annotations: ${{ steps.docker_meta.outputs.annotations }}
