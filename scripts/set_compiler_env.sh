@@ -13,7 +13,7 @@ DEBIAN_ARCH=$TARGETARCH
 if [ "$TARGETARCH" = "arm" ]
 then
   DEBIAN_ARCH=armhf
-  if [ "$TARGETVARIANT" = "v5" ]
+  if [ "$TARGETVARIANT" = "v5" || "$TARGETVARIANT" = "v6" ]
   then
     DEBIAN_ARCH=armel
   fi
