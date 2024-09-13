@@ -1,84 +1,54 @@
 #!/bin/sh
-
-# Script to configure environment variables for Go compiler
-# to allow cross compilation
-
-: ${TARGETPLATFORM=}
-: ${TARGETOS=}
-: ${TARGETARCH=}
-: ${TARGETVARIANT=}
-
-CGO_ENABLED="$(go env CGO_ENABLED)"
-GOARCH="$(go env GOARCH)"
-GOOS="$(go env GOOS)"
-GOARM="$(go env GOARM)"
-GOBIN="$(go env GOBIN)"
-
 set -eu
 
-if [ ! -z "$TARGETPLATFORM" ]; then
-  TARGETOS="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
-  TARGETARCH="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
-  TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
-fi
+# Script to configure environment variables for  compiler to cross compilation
 
-if [ ! -z "$TARGETOS" ]; then
-  export GOOS="$TARGETOS"
-fi
+: ${TARGETPLATFORM=linux/`dpkg --print-architecture`}
 
-if [ ! -z "$TARGETARCH" ]; then
-  export GOARCH="$TARGETARCH"
-fi
+TARGETOS="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
+TARGETARCH="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
+TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
 
-if [ "$TARGETARCH" = "arm" ]; then
-  if [ ! -z "$TARGETVARIANT" ]; then
-    case "$TARGETVARIANT" in
-    "v5")
-      export GOARM="5"
-      ;;
-    "v6")
-      export GOARM="6"
-      ;;
-    *)
-      export GOARM="7"
-      ;;
-    esac
-  else
-    export GOARM="7"
+DEBIAN_ARCH=$TARGETARCH
+if [ "$TARGETARCH" = "arm" ]
+then
+  DEBIAN_ARCH=armhf
+  if [ "$TARGETVARIANT" = "v5" ]
+  then
+    DEBIAN_ARCH=armel
   fi
 fi
 
-if [ "$CGO_ENABLED" = "1" ]; then
-  case "$GOARCH" in
-  "amd64")
-    export COMPILER_ARCH="x86_64-linux-gnu"
+dpkg --add-architecture $DEBIAN_ARCH
+apt-get update
+apt-get install -y git curl crossbuild-essential-${DEBIAN_ARCH} libc-dev:${DEBIAN_ARCH} autoconf automake libtool m4 pkg-config cmake
+
+dpkg-architecture -a $DEBIAN_ARCH >/env
+export $(cat /env)
+
+CGO_ENABLED="1"
+GOOS="$TARGETOS"
+GOARCH="$TARGETARCH"
+
+GOARM="7"
+if [ "$TARGETARCH" = "arm" && ! -z "$TARGETVARIANT" ]; then
+  case "$TARGETVARIANT" in
+  "v5")
+    export GOARM="5"
     ;;
-  "ppc64le")
-    export COMPILER_ARCH="powerpc64le-linux-gnu"
-    ;;
-  "s390x")
-    export COMPILER_ARCH="s390x-linux-gnu"
-    ;;
-  "arm64")
-    export COMPILER_ARCH="aarch64-linux-gnu"
-    ;;
-  "arm")
-    case "$GOARM" in
-    "5")
-      export COMPILER_ARCH="arm-linux-gnueabi"
-      ;;
-    *)
-      export COMPILER_ARCH="arm-linux-gnueabihf"
-      ;;
-    esac
+  "v6")
+    export GOARM="6"
     ;;
   esac
 fi
 
-export CC="${COMPILER_ARCH}-gcc"
-export CXX="${COMPILER_ARCH}-g++"
-export PKG_CONFIG_PATH="/usr/lib/${COMPILER_ARCH}/pkgconfig/"
+echo CGO_ENABLED="${CGO_ENABLED}" >>/env
+echo GOOS="${GOOS}" >>/env
+echo GOARCH="${GOARCH}" >>/env
+echo GOARM="${GOARM}" >>/env
+echo AR="${DEB_HOST_MULTIARCH}-ar" >>/env
+echo CC="${DEB_HOST_MULTIARCH}-gcc" >>/env
+echo CXX="${DEB_HOST_MULTIARCH}-g++" >>/env
+echo PKG_CONFIG_PATH="/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/" >>/env
 
-if [ -z "$GOBIN" ] && [ -n "$GOPATH" ] && [ -n "$GOARCH" ] && [ -n "$GOOS" ]; then
-  export PATH=${GOPATH}/bin/${GOOS}_${GOARCH}:${PATH}
-fi
+cat /env
