@@ -15,7 +15,7 @@ type MagickCli struct {
 
 func newMagickCli() *MagickCli {
 	if utils.EnvDisableRawProcessing.GetBool() {
-		log.Printf("Executable worker disabled (%s=1): ImageMagick\n", utils.EnvDisableRawProcessing.GetName())
+		log.Printf("Executable worker disabled (%s=%q): ImageMagick\n", utils.EnvDisableRawProcessing.GetName(), utils.EnvDisableRawProcessing.GetValue())
 		return nil
 	}
 

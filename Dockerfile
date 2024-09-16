@@ -61,6 +61,7 @@ RUN export $(cat /env) \
   && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
   && cp -a lib/* /usr/local/lib/ \
   && cp -a bin/* /usr/local/bin/ \
+  && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
 
 COPY scripts/install_*.sh /app/scripts/
