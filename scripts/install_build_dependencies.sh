@@ -4,7 +4,7 @@ set -eu
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
 echo Arch: ${DEB_HOST_ARCH}
 
-# Install go-face dependencies and libheif for HEIF media decoding
+# Install go-face dependencies
 apt-get install -y \
   libdlib-dev:${DEB_HOST_ARCH} libblas-dev:${DEB_HOST_ARCH} libatlas-base-dev:${DEB_HOST_ARCH} liblapack-dev:${DEB_HOST_ARCH} libjpeg-dev:${DEB_HOST_ARCH}
 
