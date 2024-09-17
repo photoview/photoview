@@ -26,7 +26,7 @@
     "@headlessui/react": "^2.1.8",
     "@mapbox/mapbox-gl-language": "^1.0.0",
     "@types/geojson": "^7946.0.14",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.13",
     "@types/mapbox-gl": "^3.4.0",
     "@types/react": "^18.3.6",
     "@types/react-dom": "^18.3.0",
