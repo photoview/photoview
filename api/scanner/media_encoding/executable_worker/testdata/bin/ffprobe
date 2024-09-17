@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+: ${FAIL_WITH=""}
+
+case "$1" in
+  "--version")
+      echo ffprobe: version fake
+      ;;
+esac
+
+if [ "${FAIL_WITH}" != "" ]
+then
+  echo ${FAIL_WITH}
+  exit -1
+fi
+
+echo $@

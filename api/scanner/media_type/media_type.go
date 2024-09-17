@@ -264,7 +264,7 @@ func (imgType *MediaType) IsSupported() bool {
 		return true
 	}
 
-	if executable_worker.FfmpegCli.IsInstalled() && imgType.IsVideo() {
+	if executable_worker.Ffmpeg.IsInstalled() && imgType.IsVideo() {
 		return true
 	}
 
