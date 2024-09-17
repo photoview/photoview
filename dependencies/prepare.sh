@@ -10,10 +10,10 @@ TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
 DEBIAN_ARCH=$TARGETARCH
 if [ "$TARGETARCH" = "arm" ]
 then
-  DEBIAN_ARCH=armhf
-  if [ "$TARGETVARIANT" = "v5" ]
+  DEBIAN_ARCH=armel
+  if [ "$TARGETVARIANT" = "v7" ]
   then
-    DEBIAN_ARCH=armel
+    DEBIAN_ARCH=armhf
   fi
 fi
 

@@ -33,3 +33,11 @@ func setPathWithCurrent(paths ...string) func() {
 		os.Setenv("PATH", originalPath)
 	}
 }
+
+func setEnv(key, value string) func() {
+	org := os.Getenv(key)
+	os.Setenv(key, value)
+	return func() {
+		os.Setenv(key, org)
+	}
+}

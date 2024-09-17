@@ -39,7 +39,7 @@ services:
     - /bin/bash
     - -c
     - |
-      source /app/scripts/set_compiler_env.sh 
+      export $(cat /env)
       reflex -g '*.go' -s -- go run .
 
   mariadb:
