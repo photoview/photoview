@@ -16,17 +16,6 @@ type FfmpegCli struct {
 }
 
 func newFfmpegCli() *FfmpegCli {
-	if path, err := exec.LookPath("ffprobe"); err == nil {
-		if version, err := exec.Command(path, "-version").Output(); err == nil {
-			log.Println("Found ffprobe:", path, "version:", strings.Split(string(version), "\n")[0])
-			ffprobe.SetFFProbeBinPath(path)
-		} else {
-			log.Println("Executable ffprobe not executable:", path)
-		}
-	} else {
-		log.Println("Executable ffprobe not found")
-	}
-
 	if utils.EnvDisableVideoEncoding.GetBool() {
 		log.Printf("Executable worker disabled (%s=%q): ffmpeg\n", utils.EnvDisableVideoEncoding.GetName(), utils.EnvDisableVideoEncoding.GetValue())
 		return nil
@@ -45,6 +34,7 @@ func newFfmpegCli() *FfmpegCli {
 	}
 
 	codec := utils.EnvVideoCodec.GetValue()
+	fmt.Println("codec:", codec)
 	if codec == "" {
 		codec = "h264"
 	}
@@ -83,7 +73,7 @@ func (worker *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
 
 func (worker *FfmpegCli) EncodeVideoThumbnail(inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
 
-	thumbnailOffsetSeconds := fmt.Sprintf("%d", int(probeData.Format.DurationSeconds*0.25))
+	thumbnailOffsetSeconds := fmt.Sprintf("%.f", probeData.Format.DurationSeconds*0.25)
 
 	args := []string{
 		"-ss", thumbnailOffsetSeconds, // grab frame at time offset
