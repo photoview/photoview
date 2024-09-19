@@ -47,7 +47,7 @@ func setEnv(key, value string) func() {
 
 func TestInitFfprobePath(t *testing.T) {
 	t.Run("PathFail", func(t *testing.T) {
-		err := executable_worker.InitFfprobePath()
+		err := executable_worker.SetFfprobePath()
 		if err == nil {
 			t.Fatalf("InitFfprobePath() returns nil, want an error")
 		}
@@ -60,7 +60,7 @@ func TestInitFfprobePath(t *testing.T) {
 		doneEnv := setEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
-		err := executable_worker.InitFfprobePath()
+		err := executable_worker.SetFfprobePath()
 		if err == nil {
 			t.Fatalf("InitFfprobePath() returns nil, want an error")
 		}
@@ -70,7 +70,7 @@ func TestInitFfprobePath(t *testing.T) {
 		donePath := setPathWithCurrent("./testdata/bin")
 		defer donePath()
 
-		err := executable_worker.InitFfprobePath()
+		err := executable_worker.SetFfprobePath()
 		if err != nil {
 			t.Fatalf("InitFfprobePath() returns %v, want nil", err)
 		}
