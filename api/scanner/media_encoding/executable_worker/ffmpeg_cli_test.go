@@ -30,7 +30,7 @@ func TestFfmpegIgnore(t *testing.T) {
 	executable_worker.InitializeExecutableWorkers()
 
 	if executable_worker.Ffmpeg.IsInstalled() {
-		t.Error("Ffmpeg should not be installed, but is found:", executable_worker.Ffmpeg)
+		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", executable_worker.Ffmpeg)
 	}
 }
 

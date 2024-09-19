@@ -13,7 +13,7 @@ func InitializeExecutableWorkers() {
 	Magick = newMagickCli()
 	Ffmpeg = newFfmpegCli()
 
-	if err := InitFfprobePath(); err != nil {
+	if err := SetFfprobePath(); err != nil {
 		log.Println("ffprobe init fail:", err)
 	}
 }
@@ -25,7 +25,7 @@ type ExecutableWorker interface {
 	Path() string
 }
 
-func InitFfprobePath() error {
+func SetFfprobePath() error {
 	path, err := exec.LookPath("ffprobe")
 	if err != nil {
 		return fmt.Errorf("Executable ffprobe not found: %w", err)
