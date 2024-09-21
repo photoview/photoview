@@ -10,13 +10,6 @@ on:
     # At 01:37 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
     - cron: '37 1 * * 4'
 
-permissions:
-  # Optional: allow write access to checks to allow the action to annotate code in the PR.
-  checks: write
-
-env:
-  GO_VERSION: stable
-
 jobs:
   create-matrix:
     runs-on: ubuntu-latest
@@ -62,28 +55,6 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
-
-  golang-lint:
-    name: GOlangCI Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get GO version from `go.mod`
-        run: |
-          echo "GO_VERSION=$(grep '^go ' ./api/go.mod | awk '{print $2}')" >> "$GITHUB_ENV"
-
-      - name: Setup GO
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: ./api
 
   anchore:
     name: Anchore scan code dependencies
