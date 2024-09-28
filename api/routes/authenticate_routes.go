@@ -11,18 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
+const internalServerError = "internal server error"
+
 func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
 		var album models.Album
 		if err := db.First(&album, media.AlbumID).Error; err != nil {
-			return false, "internal server error", http.StatusInternalServerError, err
+			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		ownsAlbum, err := user.OwnsAlbum(db, &album)
 		if err != nil {
-			return false, "internal server error", http.StatusInternalServerError, err
+			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if !ownsAlbum {
@@ -44,7 +46,7 @@ func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (succe
 	if user != nil {
 		ownsAlbum, err := user.OwnsAlbum(db, album)
 		if err != nil {
-			return false, "internal server error", http.StatusInternalServerError, err
+			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if !ownsAlbum {
@@ -70,7 +72,7 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	var shareToken models.ShareToken
 
 	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
-		return false, "internal server error", http.StatusInternalServerError, err
+		return false, internalServerError, http.StatusInternalServerError, err
 	}
 
 	// Validate share token password, if set
@@ -86,7 +88,7 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 			if err == bcrypt.ErrMismatchedHashAndPassword {
 				return false, "unauthorized", http.StatusForbidden, errors.New("incorrect password for share token")
 			} else {
-				return false, "internal server error", http.StatusInternalServerError, err
+				return false, internalServerError, http.StatusInternalServerError, err
 			}
 		}
 	}
@@ -113,7 +115,7 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 			`, *shareToken.AlbumID, albumID).Find(&count).Error
 
 		if err != nil {
-			return false, "internal server error", http.StatusInternalServerError, err
+			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if count == 0 {

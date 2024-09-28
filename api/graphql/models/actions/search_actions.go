@@ -10,16 +10,16 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbums *int) (*models.SearchResult, error) {
-	limitMedia := 10
-	limitAlbums := 10
+func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums *int) (*models.SearchResult, error) {
+	limitMediaInternal := 10
+	limitAlbumsInternal := 10
 
-	if _limitMedia != nil {
-		limitMedia = *_limitMedia
+	if limitMedia != nil {
+		limitMediaInternal = *limitMedia
 	}
 
-	if _limitAlbums != nil {
-		limitAlbums = *_limitAlbums
+	if limitAlbums != nil {
+		limitAlbumsInternal = *limitAlbums
 	}
 
 	wildQuery := "%" + strings.ToLower(query) + "%"
@@ -42,7 +42,7 @@ func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbum
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
 		}).
-		Limit(limitMedia).Find(&media).Error
+		Limit(limitMediaInternal).Find(&media).Error
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "searching media")
@@ -59,7 +59,7 @@ func Search(db *gorm.DB, query string, userID int, _limitMedia *int, _limitAlbum
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
 		}).
-		Limit(limitAlbums).
+		Limit(limitAlbumsInternal).
 		Find(&albums).Error
 
 	if err != nil {

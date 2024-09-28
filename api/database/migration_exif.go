@@ -12,7 +12,7 @@ import (
 )
 
 // Migrate MediaExif fields "exposure" and "flash" from strings to integers
-func migrate_exif_fields(db *gorm.DB) error {
+func migrateExifFields(db *gorm.DB) error {
 	mediaExifColumns, err := db.Migrator().ColumnTypes(&models.MediaEXIF{})
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func migrate_exif_fields(db *gorm.DB) error {
 					// correct type, do nothing
 				default:
 					// do migration
-					if err := migrate_exif_fields_exposure(db); err != nil {
+					if err := migrateExifFieldsExposure(db); err != nil {
 						return err
 					}
 				}
@@ -38,7 +38,7 @@ func migrate_exif_fields(db *gorm.DB) error {
 					// correct type, do nothing
 				default:
 					// do migration
-					if err := migrate_exif_fields_flash(db); err != nil {
+					if err := migrateExifFieldsFlash(db); err != nil {
 						return err
 					}
 				}
@@ -59,7 +59,7 @@ func migrate_exif_fields(db *gorm.DB) error {
 	return nil
 }
 
-func migrate_exif_fields_exposure(db *gorm.DB) error {
+func migrateExifFieldsExposure(db *gorm.DB) error {
 	log.Println("Migrating `media_exif.exposure` from string to double")
 
 	err := db.Transaction(func(tx *gorm.DB) error {
@@ -113,17 +113,17 @@ func migrate_exif_fields_exposure(db *gorm.DB) error {
 	return nil
 }
 
-func migrate_exif_fields_flash(db *gorm.DB) error {
+func migrateExifFieldsFlash(db *gorm.DB) error {
 	log.Println("Migrating `media_exif.flash` from string to int")
 
 	err := db.Transaction(func(tx *gorm.DB) error {
 
-		var data_type string
-		if err := tx.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").Find(&data_type).Error; err != nil {
+		var dataType string
+		if err := tx.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").Find(&dataType).Error; err != nil {
 			return errors.Wrapf(err, "read data_type of column media_exif.flash")
 		}
 
-		if data_type == "bigint" {
+		if dataType == "bigint" {
 			return nil
 		}
 

@@ -7,6 +7,8 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 )
 
+const testdataBinPath = "./testdata/bin"
+
 func TestMagickCliNotExist(t *testing.T) {
 	done := setPathWithCurrent()
 	defer done()
@@ -18,7 +20,7 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	doneDisableRaw := setEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
@@ -31,7 +33,7 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -53,7 +55,7 @@ func TestMagickCliFail(t *testing.T) {
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()

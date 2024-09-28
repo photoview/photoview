@@ -191,7 +191,7 @@ func MigrateDatabase(db *gorm.DB) error {
 
 	// v2.3.0 - Changed type of MediaEXIF.Exposure and MediaEXIF.Flash
 	// from string values to decimal and int respectively
-	if err := migrate_exif_fields(db); err != nil {
+	if err := migrateExifFields(db); err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
 	}
 
@@ -206,20 +206,20 @@ func MigrateDatabase(db *gorm.DB) error {
 func ClearDatabase(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
 
-		db_driver := drivers.DatabaseDriverFromEnv()
+		dbDriver := drivers.DatabaseDriverFromEnv()
 
-		if db_driver == drivers.MYSQL {
+		if dbDriver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
 				return err
 			}
 		}
 
-		dry_run := tx.Session(&gorm.Session{DryRun: true})
+		dryRun := tx.Session(&gorm.Session{DryRun: true})
 		for _, model := range database_models {
 			// get table name of model structure
-			table := dry_run.Find(model).Statement.Table
+			table := dryRun.Find(model).Statement.Table
 
-			switch db_driver {
+			switch dbDriver {
 			case drivers.POSTGRES:
 				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
 					return err
@@ -236,7 +236,7 @@ func ClearDatabase(db *gorm.DB) error {
 
 		}
 
-		if db_driver == drivers.MYSQL {
+		if dbDriver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
 				return err
 			}

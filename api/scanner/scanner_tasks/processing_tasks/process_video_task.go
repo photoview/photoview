@@ -87,12 +87,12 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	}
 
 	if videoWebURL == nil && !videoType.IsWebCompatible() {
-		web_video_name := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
-		web_video_name = strings.ReplaceAll(web_video_name, ".", "_")
-		web_video_name = strings.ReplaceAll(web_video_name, " ", "_")
-		web_video_name = web_video_name + ".mp4"
+		webVideoName := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
+		webVideoName = strings.ReplaceAll(webVideoName, ".", "_")
+		webVideoName = strings.ReplaceAll(webVideoName, " ", "_")
+		webVideoName = webVideoName + ".mp4"
 
-		webVideoPath := path.Join(mediaCachePath, web_video_name)
+		webVideoPath := path.Join(mediaCachePath, webVideoName)
 
 		err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
 		if err != nil {
@@ -111,7 +111,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		mediaURL := models.MediaURL{
 			MediaID:     video.ID,
-			MediaName:   web_video_name,
+			MediaName:   webVideoName,
 			Width:       webMetadata.Width,
 			Height:      webMetadata.Height,
 			Purpose:     models.VideoWeb,
@@ -132,12 +132,12 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	}
 
 	if videoThumbnailURL == nil {
-		video_thumb_name := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
-		video_thumb_name = strings.ReplaceAll(video_thumb_name, ".", "_")
-		video_thumb_name = strings.ReplaceAll(video_thumb_name, " ", "_")
-		video_thumb_name = video_thumb_name + ".jpg"
+		videoThumbName := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
+		videoThumbName = strings.ReplaceAll(videoThumbName, ".", "_")
+		videoThumbName = strings.ReplaceAll(videoThumbName, " ", "_")
+		videoThumbName = videoThumbName + ".jpg"
 
-		thumbImagePath := path.Join(mediaCachePath, video_thumb_name)
+		thumbImagePath := path.Join(mediaCachePath, videoThumbName)
 
 		err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 		if err != nil {
@@ -156,7 +156,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		thumbMediaURL := models.MediaURL{
 			MediaID:     video.ID,
-			MediaName:   video_thumb_name,
+			MediaName:   videoThumbName,
 			Width:       thumbDimensions.Width,
 			Height:      thumbDimensions.Height,
 			Purpose:     models.VideoThumbnail,

@@ -3,7 +3,6 @@ package scanner
 import (
 	"bufio"
 	"container/list"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -43,7 +42,7 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
@@ -101,7 +100,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 		albumIgnore := albumInfo.ignore
 
 		// Read path
-		dirContent, err := ioutil.ReadDir(albumPath)
+		dirContent, err := os.ReadDir(albumPath)
 		if err != nil {
 			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
@@ -156,7 +155,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				}
 
 				// Store album ignore
-				album_cache.InsertAlbumIgnore(albumPath, albumIgnore)
+				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
 
 				if err := tx.Create(&album).Error; err != nil {
 					return errors.Wrap(err, "insert album into database")
@@ -182,7 +181,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				}
 
 				// Update album ignore
-				album_cache.InsertAlbumIgnore(albumPath, albumIgnore)
+				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
 			}
 
 			userAlbums = append(userAlbums, album)
@@ -210,7 +209,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				continue
 			}
 
-			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, album_cache, albumIgnore) {
+			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, albumCache, albumIgnore) {
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
@@ -228,21 +227,21 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 
 func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
 
-	if contains_image := cache.AlbumContainsPhotos(rootPath); contains_image != nil {
-		return *contains_image
+	if containsImage := cache.AlbumContainsPhotos(rootPath); containsImage != nil {
+		return *containsImage
 	}
 
 	scanQueue := list.New()
 	scanQueue.PushBack(rootPath)
 
-	scanned_directories := make([]string, 0)
+	scannedDirectories := make([]string, 0)
 
 	for scanQueue.Front() != nil {
 
 		dirPath := scanQueue.Front().Value.(string)
 		scanQueue.Remove(scanQueue.Front())
 
-		scanned_directories = append(scanned_directories, dirPath)
+		scannedDirectories = append(scannedDirectories, dirPath)
 
 		// Update ignore dir list
 		photoviewIgnore, err := getPhotoviewIgnore(dirPath)
@@ -253,7 +252,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 		}
 		ignoreEntries := ignore.CompileIgnoreLines(albumIgnore...)
 
-		dirContent, err := ioutil.ReadDir(dirPath)
+		dirContent, err := os.ReadDir(dirPath)
 		if err != nil {
 			scanner_utils.ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false
@@ -285,7 +284,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 
 	}
 
-	for _, scanned_path := range scanned_directories {
+	for _, scanned_path := range scannedDirectories {
 		log.Printf("Insert Album %s, contains photo is false", scanned_path)
 		cache.InsertAlbumPath(scanned_path, false)
 	}

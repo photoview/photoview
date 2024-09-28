@@ -11,6 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const faceDetectorNotInitialized = "face detector not initialized"
+const faceGroupIDisQuestion = "face_group_id = ?"
+const mediaAlbumIDinQuestion = "media.album_id IN (?)"
+const imageFacesIDinQuestion = "image_faces.id IN (?)"
+
 type imageFaceResolver struct {
 	*Resolver
 }
@@ -33,7 +38,7 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	var faceGroup models.FaceGroup
@@ -62,7 +67,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -76,7 +81,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 
 	query := db.
 		Joins("Media").
-		Where("face_group_id = ?", obj.ID).
+		Where(faceGroupIDisQuestion, obj.ID).
 		Where("album_id IN (?)", userAlbumIDs)
 
 	query = models.FormatSQL(query, nil, paginate)
@@ -97,7 +102,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return -1, errors.New("face detector not initialized")
+		return -1, errors.New(faceDetectorNotInitialized)
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -112,7 +117,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 	query := db.
 		Model(&models.ImageFace{}).
 		Joins("Media").
-		Where("face_group_id = ?", obj.ID).
+		Where(faceGroupIDisQuestion, obj.ID).
 		Where("album_id IN (?)", userAlbumIDs)
 
 	var count int64
@@ -131,7 +136,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -147,7 +152,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
 		Joins("LEFT JOIN media ON image_faces.media_id = media.id").
 		Where("face_groups.id = ?", id).
-		Where("media.album_id IN (?)", userAlbumIDs)
+		Where(mediaAlbumIDinQuestion, userAlbumIDs)
 
 	var faceGroup models.FaceGroup
 	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
@@ -165,7 +170,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -179,7 +184,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 
 	faceGroupQuery := db.
 		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Where("image_faces.media_id IN (?)", db.Select("media.id").Table("media").Where("media.album_id IN (?)", userAlbumIDs)).
+		Where("image_faces.media_id IN (?)", db.Select("media.id").Table("media").Where(mediaAlbumIDinQuestion, userAlbumIDs)).
 		Group("image_faces.face_group_id").
 		Group("face_groups.id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
@@ -203,7 +208,7 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	faceGroup, err := userOwnedFaceGroup(db, user, faceGroupID)
@@ -226,7 +231,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	destinationFaceGroup, err := userOwnedFaceGroup(db, user, destinationFaceGroupID)
@@ -240,7 +245,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	}
 
 	updateError := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
+		if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDisQuestion, sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
 			return err
 		}
 
@@ -268,7 +273,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	userOwnedImageFaceIDs := make([]int, 0)
@@ -294,7 +299,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 		var sourceFaceGroups []*models.FaceGroup
 		if err := tx.
 			Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-			Where("image_faces.id IN (?)", userOwnedImageFaceIDs).
+			Where(imageFacesIDinQuestion, userOwnedImageFaceIDs).
 			Find(&sourceFaceGroups).Error; err != nil {
 			return err
 		}
@@ -309,7 +314,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 		// delete face groups if they have become empty
 		for _, faceGroup := range sourceFaceGroups {
 			var count int64
-			if err := tx.Model(&models.ImageFace{}).Where("face_group_id = ?", faceGroup.ID).Count(&count).Error; err != nil {
+			if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDisQuestion, faceGroup.ID).Count(&count).Error; err != nil {
 				return err
 			}
 
@@ -340,7 +345,7 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	var updatedImageFaces []*models.ImageFace
@@ -367,7 +372,7 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New("face detector not initialized")
+		return nil, errors.New(faceDetectorNotInitialized)
 	}
 
 	userOwnedImageFaceIDs := make([]int, 0)
@@ -431,13 +436,13 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 		Select("image_faces.id").
 		Table("image_faces").
 		Joins("JOIN media ON media.id = image_faces.media_id").
-		Where("media.album_id IN (?)", userAlbumIDs)
+		Where(mediaAlbumIDinQuestion, userAlbumIDs)
 
 	faceGroupQuery := db.
 		Model(&models.FaceGroup{}).
 		Joins("JOIN image_faces ON face_groups.id = image_faces.face_group_id").
 		Where("face_groups.id = ?", faceGroupID).
-		Where("image_faces.id IN (?)", imageFaceQuery)
+		Where(imageFacesIDinQuestion, imageFaceQuery)
 
 	var faceGroup models.FaceGroup
 	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
@@ -463,8 +468,8 @@ func getUserOwnedImageFaces(tx *gorm.DB, user *models.User, imageFaceIDs []int) 
 	var userOwnedImageFaces []*models.ImageFace
 	if err := tx.
 		Joins("JOIN media ON media.id = image_faces.media_id").
-		Where("media.album_id IN (?)", userAlbumIDs).
-		Where("image_faces.id IN (?)", imageFaceIDs).
+		Where(mediaAlbumIDinQuestion, userAlbumIDs).
+		Where(imageFacesIDinQuestion, imageFaceIDs).
 		Find(&userOwnedImageFaces).Error; err != nil {
 		return nil, err
 	}

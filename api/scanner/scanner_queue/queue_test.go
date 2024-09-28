@@ -24,7 +24,7 @@ func makeScannerJob(albumID int) ScannerJob {
 	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache()))
 }
 
-func TestScannerQueue_AddJob(t *testing.T) {
+func TestScannerQueueAddJob(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(100),
@@ -72,7 +72,7 @@ func TestScannerQueue_AddJob(t *testing.T) {
 	})
 }
 
-func TestScannerQueue_JobOnQueue(t *testing.T) {
+func TestScannerQueueJobOnQueue(t *testing.T) {
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(100),
