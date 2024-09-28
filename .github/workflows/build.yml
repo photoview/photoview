@@ -70,6 +70,15 @@ jobs:
       - name: Fetch branches
         run: git fetch --all
 
+      - name: Hadolint report for Sonar
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          config: ${{ github.workspace }}/.hadolint.yaml
+          output-file: ${{ github.workspace }}/hadolint.json
+          format: json
+          failure-threshold: ignore
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         if: github.repository == 'kkovaletp/photoview'
