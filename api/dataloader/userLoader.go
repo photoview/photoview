@@ -33,8 +33,7 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 			}
 			rows.Close()
 
-			var userMap map[int]*models.User
-			userMap, err = mapUsers(userIDs, db, userMap)
+			userMap, err := mapUsers(userIDs, db)
 			if err != nil {
 				return nil, []error{err}
 			}
@@ -52,7 +51,9 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 	}
 }
 
-func mapUsers(userIDs []int, db *gorm.DB, userMap map[int]*models.User) (map[int]*models.User, error) {
+func mapUsers(userIDs []int, db *gorm.DB) (map[int]*models.User, error) {
+	var userMap map[int]*models.User
+
 	if len(userIDs) > 0 {
 
 		var users []*models.User
