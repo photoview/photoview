@@ -49,7 +49,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		if isError := addMediaToCache(cachedPath, db, media, w); isError {
+		if isError := addMediaToCache(cachedPath, db, media, "image", w); isError {
 			return
 		}
 
@@ -60,18 +60,18 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 	})
 }
 
-func addMediaToCache(cachedPath string, db *gorm.DB, media *models.Media, w http.ResponseWriter) bool {
+func addMediaToCache(cachedPath string, db *gorm.DB, media *models.Media, mediaType string, w http.ResponseWriter) bool {
 	if _, err := os.Stat(cachedPath); os.IsNotExist(err) {
 		// err := db.Transaction(func(tx *gorm.DB) error {
 		if err = scanner.ProcessSingleMedia(db, media); err != nil {
-			log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
+			log.Printf("ERROR: processing %s not found in cache (%s): %s\n", mediaType, cachedPath, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return true
 		}
 
 		if _, err = os.Stat(cachedPath); err != nil {
-			log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
+			log.Printf("ERROR: after reprocessing %s not found in cache (%s): %s\n", mediaType, cachedPath, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return true
