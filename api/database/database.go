@@ -204,7 +204,7 @@ func MigrateDatabase(db *gorm.DB) error {
 }
 
 func ClearDatabase(db *gorm.DB) error {
-	err := db.Transaction(func(tx *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 
 		dbDriver := drivers.DatabaseDriverFromEnv()
 
@@ -214,26 +214,8 @@ func ClearDatabase(db *gorm.DB) error {
 			}
 		}
 
-		dryRun := tx.Session(&gorm.Session{DryRun: true})
-		for _, model := range database_models {
-			// get table name of model structure
-			table := dryRun.Find(model).Statement.Table
-
-			switch dbDriver {
-			case drivers.POSTGRES:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-					return err
-				}
-			case drivers.MYSQL:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
-					return err
-				}
-			case drivers.SQLITE:
-				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
-					return err
-				}
-			}
-
+		if err := clearTables(tx, dbDriver); err != nil {
+			return err
 		}
 
 		if dbDriver == drivers.MYSQL {
@@ -244,10 +226,28 @@ func ClearDatabase(db *gorm.DB) error {
 
 		return nil
 	})
+}
 
-	if err != nil {
-		return err
+func clearTables(tx *gorm.DB, dbDriver drivers.DatabaseDriverType) error {
+	dryRun := tx.Session(&gorm.Session{DryRun: true})
+	for _, model := range database_models {
+		// get table name of model structure
+		table := dryRun.Find(model).Statement.Table
+
+		switch dbDriver {
+		case drivers.POSTGRES:
+			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
+				return err
+			}
+		case drivers.MYSQL:
+			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
+				return err
+			}
+		case drivers.SQLITE:
+			if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
+				return err
+			}
+		}
 	}
-
 	return nil
 }
