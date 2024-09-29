@@ -18,8 +18,13 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		mediaName := mux.Vars(r)["name"]
 
 		var mediaURL models.MediaURL
-		result := db.Model(&models.MediaURL{}).Joins("Media").Select("media_urls.*").Where("media_urls.media_name = ?", mediaName).Scan(&mediaURL)
-		if err := result.Error; err != nil {
+		result := db.
+			Model(&models.MediaURL{}).
+			Joins("Media").
+			Select("media_urls.*").
+			Where("media_urls.media_name = ?", mediaName).
+			Scan(&mediaURL)
+		if result.Error != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
 			return
@@ -44,21 +49,8 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
-			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMedia(db, media); err != nil {
-				log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			if _, err = os.Stat(cachedPath); err != nil {
-				log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
+		if isError := addMediaToCache(cachedPath, db, media, w); isError {
+			return
 		}
 
 		// Allow caching the resource for 1 day
@@ -66,4 +58,24 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		http.ServeFile(w, r, cachedPath)
 	})
+}
+
+func addMediaToCache(cachedPath string, db *gorm.DB, media *models.Media, w http.ResponseWriter) bool {
+	if _, err := os.Stat(cachedPath); os.IsNotExist(err) {
+		// err := db.Transaction(func(tx *gorm.DB) error {
+		if err = scanner.ProcessSingleMedia(db, media); err != nil {
+			log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+
+		if _, err = os.Stat(cachedPath); err != nil {
+			log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+	}
+	return false
 }
