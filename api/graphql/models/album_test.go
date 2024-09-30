@@ -8,11 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const photosPath = "/photos"
-const photosChild1Path = "/photos/child1"
-const photosChild1SubchildPath = "/photos/child1/subchild"
-
 func TestAlbumGetChildrenAndParents(t *testing.T) {
+	const photosPath = "/photos"
+	const photosChild1Path = "/photos/child1"
+	const photosChild1SubchildPath = "/photos/child1/subchild"
 	db := test_utils.DatabaseTest(t)
 
 	rootAlbum := models.Album{

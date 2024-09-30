@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const imageData = "IMAGE DATA"
-const albumData = "ALBUM DATA"
-
 func TestAuthenticateRoute(t *testing.T) {
+	const imageData = "IMAGE DATA"
+	const albumData = "ALBUM DATA"
+
 	db := test_utils.DatabaseTest(t)
 
 	user, err := models.RegisterUser(db, "username", nil, false)

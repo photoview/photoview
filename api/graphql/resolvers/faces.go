@@ -11,10 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
-const faceDetectorNotInitialized = "face detector not initialized"
 const faceGroupIDisQuestion = "face_group_id = ?"
 const mediaAlbumIDinQuestion = "media.album_id IN (?)"
 const imageFacesIDinQuestion = "image_faces.id IN (?)"
+
+var ErrFaceDetectorNotInitialized = errors.New("face detector not initialized")
 
 type imageFaceResolver struct {
 	*Resolver
@@ -38,7 +39,7 @@ func (r imageFaceResolver) FaceGroup(ctx context.Context, obj *models.ImageFace)
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	var faceGroup models.FaceGroup
@@ -68,7 +69,7 @@ func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -103,7 +104,7 @@ func (r faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.FaceG
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return -1, errors.New(faceDetectorNotInitialized)
+		return -1, ErrFaceDetectorNotInitialized
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -137,7 +138,7 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -171,7 +172,7 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	if err := user.FillAlbums(db); err != nil {
@@ -211,7 +212,7 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	faceGroup, err := userOwnedFaceGroup(db, user, faceGroupID)
@@ -235,7 +236,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	destinationFaceGroup, err := userOwnedFaceGroup(db, user, destinationFaceGroupID)
@@ -280,7 +281,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	userOwnedImageFaceIDs := make([]int, 0)
@@ -359,7 +360,7 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	var updatedImageFaces []*models.ImageFace
@@ -386,7 +387,7 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 	}
 
 	if face_detection.GlobalFaceDetector == nil {
-		return nil, errors.New(faceDetectorNotInitialized)
+		return nil, ErrFaceDetectorNotInitialized
 	}
 
 	userOwnedImageFaceIDs := make([]int, 0)
