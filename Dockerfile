@@ -105,6 +105,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   && cd /dependencies \
   && cp -a lib/* /usr/local/lib/ \
   && cp -a bin/* /usr/local/bin/ \
+  && cp -a etc/* /usr/local/etc/ \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
   && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
