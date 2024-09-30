@@ -5,6 +5,7 @@ apt-get update
 apt-get install -y curl exiftool
 
 # libheif dependencies: no dependency
+apt-get install -y libaom3 libdav1d6 libavcodec59 libjpeg62-turbo libde265-0 librav1e0 libsvtav1enc1 libx265-199
 # libraw dependencies
 apt-get install -y libjpeg62-turbo liblcms2-2
 # ImageMagick dependencies
