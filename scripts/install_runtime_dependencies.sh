@@ -4,7 +4,7 @@ set -eu
 apt-get update
 apt-get install -y curl exiftool
 
-# libheif dependencies: no dependency
+# libheif dependencies
 apt-get install -y libaom3 libdav1d6 libde265-0 libjpeg62-turbo libpng16-16 libx265-199
 # libraw dependencies
 apt-get install -y libjpeg62-turbo liblcms2-2
