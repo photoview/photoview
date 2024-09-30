@@ -5,7 +5,7 @@ set -eu
 echo Arch: ${DEB_HOST_ARCH}
 
 # Install go-heif dependencies
-apt-get install -y libaom-dev:${DEB_HOST_ARCH} libavcodec-dev:${DEB_HOST_ARCH} libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libjpeg-dev:${DEB_HOST_ARCH} libopenjp2-7-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} librav1e-dev:${DEB_HOST_ARCH} libsvtav1enc-dev:${DEB_HOST_ARCH} libx265-dev:${DEB_HOST_ARCH}
+apt-get install -y libaom-dev:${DEB_HOST_ARCH} libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH} libnuma-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} libx265-dev:${DEB_HOST_ARCH} zlib1g-dev:${DEB_HOST_ARCH}
 
 # Install go-face dependencies
 apt-get install -y \
