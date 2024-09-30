@@ -91,7 +91,7 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithCustomCodec(t *testing.T) {
-	doneCodec := setEnv(utils.EnvVideoCodec.GetName(), "codec_custom")
+	doneCodec := setEnv(utils.EnvVideoEncoder.GetName(), "codec_custom")
 	defer doneCodec()
 
 	donePath := setPathWithCurrent("./testdata/bin")

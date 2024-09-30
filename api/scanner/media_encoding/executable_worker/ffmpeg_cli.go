@@ -33,7 +33,7 @@ func newFfmpegCli() *FfmpegCli {
 		return nil
 	}
 
-	codec := utils.EnvVideoCodec.GetValue()
+	codec := utils.EnvVideoEncoder.GetValue()
 	fmt.Println("codec:", codec)
 	if codec == "" {
 		codec = "h264"
