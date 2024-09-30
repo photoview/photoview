@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const imageJpeg = "image/jpeg"
+const mimeJpeg = "image/jpeg"
 
 func TestSanitizeMediaName(t *testing.T) {
 	tests := [][2]string{
@@ -55,7 +55,7 @@ func TestMediaURLCachePath(t *testing.T) {
 func TestMediaURLGetURL(t *testing.T) {
 	photo := models.MediaURL{
 		MediaName:   "photo.jpg",
-		ContentType: imageJpeg,
+		ContentType: mimeJpeg,
 		Purpose:     models.PhotoHighRes,
 	}
 
@@ -78,12 +78,12 @@ func TestMediaGetThumbnail(t *testing.T) {
 		MediaURL: []models.MediaURL{
 			{
 				MediaName:   "photo.jpg",
-				ContentType: imageJpeg,
+				ContentType: mimeJpeg,
 				Purpose:     models.PhotoHighRes,
 			},
 			{
 				MediaName:   "thumbnail.jpg",
-				ContentType: imageJpeg,
+				ContentType: mimeJpeg,
 				Purpose:     models.PhotoThumbnail,
 			},
 			{

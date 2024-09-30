@@ -8,9 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const albumsTitleASC = "albums.title ASC"
-
 func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) ([]*models.Media, error) {
+	const albumsTitleASC = "albums.title ASC"
 
 	query := db.
 		Joins("JOIN albums ON media.album_id = albums.id").

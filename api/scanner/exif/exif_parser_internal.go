@@ -17,9 +17,10 @@ import (
 // internalExifParser is an exif parser that parses the media without the use of external tools
 type internalExifParser struct{}
 
-const exifTagReturnedNull = "exif tag returned null"
 const couldNotReadXfromEXIFy = "could not read %s from EXIF: %s"
 const warnEXIFtagXreturnedNully = "WARN: EXIF tag %s returned null: %s\n"
+
+var ErrNullExifTag = errors.New("exif tag returned null")
 
 func NewInternalExifParser() ExifParser {
 	return internalExifParser{}
@@ -175,7 +176,7 @@ func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName,
 	}
 
 	log.Printf(warnEXIFtagXreturnedNully, name, mediaPath)
-	return nil, errors.New(exifTagReturnedNull)
+	return nil, ErrNullExifTag
 }
 
 func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*big.Rat, error) {
@@ -194,7 +195,7 @@ func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldNam
 	}
 
 	log.Printf(warnEXIFtagXreturnedNully, name, mediaPath)
-	return nil, errors.New(exifTagReturnedNull)
+	return nil, ErrNullExifTag
 }
 
 func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*int, error) {
@@ -213,5 +214,5 @@ func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName
 	}
 
 	log.Printf(warnEXIFtagXreturnedNully, name, mediaPath)
-	return nil, errors.New(exifTagReturnedNull)
+	return nil, ErrNullExifTag
 }
