@@ -44,7 +44,8 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			Joins("Media").
 			Where(mediaWhereQuery, album.ID).
 			Where("media_urls.purpose IN (?)", mediaPurposeList).
-			Find(&mediaURLs).Error; err != nil {
+			Find(&mediaURLs).
+			Error; err != nil {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
