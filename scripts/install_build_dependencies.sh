@@ -4,6 +4,9 @@ set -eu
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
 echo Arch: ${DEB_HOST_ARCH}
 
+# Install go-heif dependencies
+apt-get install -y libaom-dev:${DEB_HOST_ARCH} libavcodec-dev:${DEB_HOST_ARCH} libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libjpeg-dev:${DEB_HOST_ARCH} libopenjp2-7-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} librav1e-dev:${DEB_HOST_ARCH} libsvtav1enc-dev:${DEB_HOST_ARCH} libx265-dev:${DEB_HOST_ARCH}
+
 # Install go-face dependencies
 apt-get install -y \
   libdlib-dev:${DEB_HOST_ARCH} libblas-dev:${DEB_HOST_ARCH} libatlas-base-dev:${DEB_HOST_ARCH} liblapack-dev:${DEB_HOST_ARCH} libjpeg-dev:${DEB_HOST_ARCH}
