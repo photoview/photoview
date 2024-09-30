@@ -27,25 +27,25 @@ func MakeAlbumCache() *AlbumScannerCache {
 }
 
 // Insert single album directory in cache
-func (c *AlbumScannerCache) InsertAlbumPath(path string, contains_photo bool) {
+func (c *AlbumScannerCache) InsertAlbumPath(path string, containsPhoto bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	c.path_contains_photos[path] = contains_photo
+	c.path_contains_photos[path] = containsPhoto
 }
 
 // Insert album path and all parent directories up to the given root directory in cache
-func (c *AlbumScannerCache) InsertAlbumPaths(end_path string, root string, contains_photo bool) {
-	curr_path := path.Clean(end_path)
-	root_path := path.Clean(root)
+func (c *AlbumScannerCache) InsertAlbumPaths(endPath string, root string, containsPhoto bool) {
+	currPath := path.Clean(endPath)
+	rootPath := path.Clean(root)
 
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for curr_path != root_path || curr_path == "." {
+	for currPath != rootPath || currPath == "." {
 
-		c.path_contains_photos[curr_path] = contains_photo
+		c.path_contains_photos[currPath] = containsPhoto
 
-		curr_path = path.Dir(curr_path)
+		currPath = path.Dir(currPath)
 	}
 }
 
@@ -103,11 +103,11 @@ func (c *AlbumScannerCache) GetAlbumIgnore(path string) *[]string {
 	return nil
 }
 
-func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignore_data []string) {
+func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.ignore_data[path] = ignore_data
+	c.ignore_data[path] = ignoreData
 }
 
 func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {

@@ -90,7 +90,7 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 }
 
 func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
-	var album_path []*models.Album
+	var albumPath []*models.Album
 
 	err := db.Raw(`
 		WITH recursive path_albums AS (
@@ -99,11 +99,11 @@ func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.A
 			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
 		SELECT * FROM path_albums WHERE id != ?
-	`, album.ID, album.ID).Scan(&album_path).Error
+	`, album.ID, album.ID).Scan(&albumPath).Error
 
 	// Make sure to only return albums this user owns
-	for i := len(album_path) - 1; i >= 0; i-- {
-		album := album_path[i]
+	for i := len(albumPath) - 1; i >= 0; i-- {
+		album := albumPath[i]
 
 		owns, err := user.OwnsAlbum(db, album)
 		if err != nil {
@@ -111,7 +111,7 @@ func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.A
 		}
 
 		if !owns {
-			album_path = album_path[i+1:]
+			albumPath = albumPath[i+1:]
 			break
 		}
 
@@ -121,7 +121,7 @@ func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.A
 		return nil, err
 	}
 
-	return album_path, nil
+	return albumPath, nil
 }
 
 func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, error) {

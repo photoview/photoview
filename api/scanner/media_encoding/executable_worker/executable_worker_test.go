@@ -17,7 +17,9 @@ func TestMain(m *testing.M) {
 func setPathWithCurrent(paths ...string) func() {
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
-		return func() {}
+		return func() {
+			// Return an empty function in case of error
+		}
 	}
 
 	base := filepath.Dir(file)

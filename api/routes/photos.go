@@ -40,7 +40,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		if err != nil {
 			log.Printf("ERROR: %s\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
+			w.Write([]byte(internalServerError))
 			return
 		}
 
@@ -49,14 +49,14 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			if err = scanner.ProcessSingleMedia(db, media); err != nil {
 				log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 
 			if _, err = os.Stat(cachedPath); err != nil {
 				log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 		}

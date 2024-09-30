@@ -9,6 +9,7 @@ import (
 )
 
 func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) ([]*models.Media, error) {
+	const albumsTitleASC = "albums.title ASC"
 
 	query := db.
 		Joins("JOIN albums ON media.album_id = albums.id").
@@ -20,19 +21,19 @@ func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onl
 			Order("DATE_TRUNC('year', date_shot) DESC").
 			Order("DATE_TRUNC('month', date_shot) DESC").
 			Order("DATE_TRUNC('day', date_shot) DESC").
-			Order("albums.title ASC").
+			Order(albumsTitleASC).
 			Order("media.date_shot DESC")
 	case drivers.SQLITE:
 		query = query.
 			Order("strftime('%Y-%m-%d', media.date_shot) DESC"). // convert to YYYY-MM-DD
-			Order("albums.title ASC").
+			Order(albumsTitleASC).
 			Order("TIME(media.date_shot) DESC")
 	default:
 		query = query.
 			Order("YEAR(media.date_shot) DESC").
 			Order("MONTH(media.date_shot) DESC").
 			Order("DAY(media.date_shot) DESC").
-			Order("albums.title ASC").
+			Order(albumsTitleASC).
 			Order("TIME(media.date_shot) DESC")
 	}
 
