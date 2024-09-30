@@ -21,6 +21,8 @@ cd ..
 mkdir -p /output/bin /output/lib /output/include /output/pkgconfig
 cp -a /usr/local/bin/heif-* /output/bin/
 cp -a /usr/local/lib/libheif* /output/lib/
+cp -a /usr/lib/${DEB_HOST_MULTIARCH}/libheif/plugins/libheif-*.so /output/lib
+cp -a /usr/local/lib/${DEB_HOST_MULTIARCH}/gdk-pixbuf-*/*/loaders/libpixbufloader-heif.so /output/lib
 cp -a /usr/local/lib/pkgconfig/libheif* /output/pkgconfig/
 cp -a /usr/local/include/libheif /output/include/
 file /usr/local/lib/libheif.so*
