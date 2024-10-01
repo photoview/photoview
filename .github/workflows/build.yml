@@ -1,12 +1,15 @@
 name: Docker builds
 
 on:
+  pull_request:
+    branches: [master]
   push:
     branches: [master]
     tags:
       - v*
-  pull_request:
-    branches: [master]
+  schedule:
+    # At 01:18 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    - cron: '18 1 * * 4'
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
@@ -16,13 +19,61 @@ env:
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
 jobs:
-  build:
-    name: Build Docker Image
+  prepare:
+    name: Prepare the Matrix
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare the Matrix
+        id: prepare_matrix
+        shell: bash
+        run: |
+          case ${{ github.event_name }} in
+            pull_request)
+              echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              ;;
+            push)
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              ;;
+            schedule)
+              git fetch --all
+              TAG=$(git describe --tags --abbrev=0 || exit 0)
+              if [ -z "$TAG" ]; then
+                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              else
+                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}, {"tag": "$TAG", "ref": "$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)"}]' >> $GITHUB_OUTPUT
+              fi
+              ;;
+            *)
+              echo "Run for '${{ github.event_name }}' is not expected"
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+    outputs:
+      tags: ${{ steps.prepare_matrix.outputs.tags }}
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        tags: ${{ fromJson(needs.prepare.outputs.tags) }}
+    steps:
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
+      - name: Checkout ${{ matrix.tags.ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.tags.ref }}
+
+      - name: Fetch branches
+        run: git fetch --all
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -60,16 +111,59 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          sbom: true
+          provenance: mode=max
           platforms: ${{ env.PLATFORMS }}
           pull: true
           push: ${{ env.IS_PUSHING_IMAGES }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+          annotations: ${{ steps.docker_meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          sbom: true
-          provenance: mode=max
-          annotations: ${{ steps.docker_meta.outputs.annotations }}
           build-args: |
             VERSION=${{ github.ref_name }}
             COMMIT_SHA=${{ github.sha }}
+
+  dockle:
+    name: Dockle Container Analysis
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        tags: ${{ fromJson(needs.prepare.outputs.tags) }}
+    if: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+    steps:
+      # Makes sure your .dockleignore file is available to the next step
+      - name: Checkout ${{ matrix.tags.ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.tags.ref }}
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Run Dockle for '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+        id: dockle
+        if: ${{ matrix.tags.tag != '' }}
+        continue-on-error: true
+        uses: erzz/dockle-action@v1
+        with:
+          image: '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+          report-name: dockle-results-${{ matrix.tags.tag }}
+          report-format: sarif
+          failure-threshold: fatal
+          exit-code: 1
+          timeout: 5m
+
+      - name: Upload SARIF file
+        if: ${{ steps.dockle.conclusion == 'success' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dockle-results-${{ matrix.tags.tag }}.sarif
