@@ -65,7 +65,7 @@
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.2",
-    "@typescript-eslint/eslint-plugin": "^8.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
     "@typescript-eslint/parser": "^8.6.0",
     "@vitest/coverage-c8": "^0.33.0",
     "@vitest/ui": "^0.34.7",
