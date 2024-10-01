@@ -10,6 +10,14 @@ import (
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
+const defaultCodec = "h264"
+
+var hwAccToCodec = map[string]string{
+	"qsv":   defaultCodec + "_qsv",
+	"vaapi": defaultCodec + "_vaapi",
+	"nvenc": defaultCodec + "_nvenc",
+}
+
 type FfmpegCli struct {
 	path       string
 	videoCodec string
@@ -33,10 +41,15 @@ func newFfmpegCli() *FfmpegCli {
 		return nil
 	}
 
-	codec := utils.EnvVideoEncoder.GetValue()
-	fmt.Println("codec:", codec)
-	if codec == "" {
-		codec = "h264"
+	hwAcc := utils.EnvVideoHardwareAcceleration.GetValue()
+	codec, ok := hwAccToCodec[hwAcc]
+	if !ok {
+		if strings.HasPrefix(hwAcc, "_") {
+			// A secret way to set the codec directly.
+			codec = hwAcc[1:]
+		} else {
+			codec = defaultCodec
+		}
 	}
 
 	log.Printf("Found executable worker: ffmpeg (%s) with codec %q\n", strings.Split(string(version), "\n")[0], codec)
