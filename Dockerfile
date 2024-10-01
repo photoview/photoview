@@ -56,6 +56,12 @@ COPY scripts/set_compiler_env.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && source /app/scripts/set_compiler_env.sh
 
+COPY scripts/install_*.sh /app/scripts/
+RUN chmod +x /app/scripts/*.sh \
+  && export $(cat /env) \
+  && /app/scripts/install_build_dependencies.sh \
+  && /app/scripts/install_runtime_dependencies.sh
+
 COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
 RUN export $(cat /env) \
   && cd /dependencies/ \
@@ -66,12 +72,6 @@ RUN export $(cat /env) \
   && cp -a bin/* /usr/local/bin/ \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
-
-COPY scripts/install_*.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-  && export $(cat /env) \
-  && /app/scripts/install_build_dependencies.sh \
-  && /app/scripts/install_runtime_dependencies.sh
 
 COPY api/go.mod api/go.sum /app/api/
 RUN export $(cat /env) \
