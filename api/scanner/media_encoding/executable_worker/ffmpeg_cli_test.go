@@ -90,8 +90,8 @@ func TestFfmpeg(t *testing.T) {
 	})
 }
 
-func TestFfmpegWithCustomCodec(t *testing.T) {
-	doneCodec := setEnv(utils.EnvVideoEncoder.GetName(), "codec_custom")
+func TestFfmpegWithHWAcc(t *testing.T) {
+	doneCodec := setEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 	defer doneCodec()
 
 	donePath := setPathWithCurrent("./testdata/bin")
@@ -106,7 +106,28 @@ func TestFfmpegWithCustomCodec(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec codec_custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
+	}
+}
+
+func TestFfmpegWithCustomCOdec(t *testing.T) {
+	doneCodec := setEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
+	defer doneCodec()
+
+	donePath := setPathWithCurrent("./testdata/bin")
+	defer donePath()
+
+	executable_worker.InitializeExecutableWorkers()
+
+	doneEnv := setEnv("FAIL_WITH", "expect failure")
+	defer doneEnv()
+
+	err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
+	if err == nil {
+		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
+	}
+	if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }
