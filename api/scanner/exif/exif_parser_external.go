@@ -63,7 +63,7 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
-func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*float64, *float64) {
+func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*float64, *float64) {
 	var GPSLat, GPSLong *float64
 
 	// GPS coordinates - longitude
@@ -82,13 +82,13 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, media_path string) (*f
 	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 90) {
 		log.Printf(
 			"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
-			media_path, *GPSLat, *GPSLong)
+			mediaPath, *GPSLat, *GPSLong)
 		return nil, nil
 	}
 	return GPSLat, GPSLong
 }
 
-func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.MediaEXIF, returnErr error) {
+func (p *externalExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, returnErr error) {
 	// ExifTool - No print conversion mode
 	if p.et == nil {
 		et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
@@ -100,39 +100,39 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 		}
 	}
 
-	fileInfo, err := p.dataLoader.Load(media_path)
+	fileInfo, err := p.dataLoader.Load(mediaPath)
 	if err != nil {
 		return nil, err
 	}
 
 	newExif := models.MediaEXIF{}
-	found_exif := false
+	foundExif := false
 
 	// Get description
 	description, err := fileInfo.GetString("ImageDescription")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Description = &description
 	}
 
 	// Get camera model
 	model, err := fileInfo.GetString("Model")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Camera = &model
 	}
 
 	// Get Camera make
 	make, err := fileInfo.GetString("Make")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Maker = &make
 	}
 
 	// Get lens
 	lens, err := fileInfo.GetString("LensModel")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Lens = &lens
 	}
 
@@ -144,13 +144,13 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 			layout := "2006:01:02 15:04:05"
 			dateTime, err := time.Parse(layout, date)
 			if err == nil {
-				found_exif = true
+				foundExif = true
 				newExif.DateShot = &dateTime
 			} else {
 				layoutWithOffset := "2006:01:02 15:04:05-07:00"
 				dateTime, err = time.Parse(layoutWithOffset, date)
 				if err == nil {
-					found_exif = true
+					foundExif = true
 					newExif.DateShot = &dateTime
 				}
 			}
@@ -161,59 +161,59 @@ func (p *externalExifParser) ParseExif(media_path string) (returnExif *models.Me
 	// Get exposure time
 	exposureTime, err := fileInfo.GetFloat("ExposureTime")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Exposure = &exposureTime
 	}
 
 	// Get aperture
 	aperture, err := fileInfo.GetFloat("Aperture")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Aperture = &aperture
 	}
 
 	// Get ISO
 	iso, err := fileInfo.GetInt("ISO")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Iso = &iso
 	}
 
 	// Get focal length
 	focalLen, err := fileInfo.GetFloat("FocalLength")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.FocalLength = &focalLen
 	}
 
 	// Get flash info
 	flash, err := fileInfo.GetInt("Flash")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Flash = &flash
 	}
 
 	// Get orientation
 	orientation, err := fileInfo.GetInt("Orientation")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.Orientation = &orientation
 	}
 
 	// Get exposure program
 	expProgram, err := fileInfo.GetInt("ExposureProgram")
 	if err == nil {
-		found_exif = true
+		foundExif = true
 		newExif.ExposureProgram = &expProgram
 	}
 
 	// Get GPS data
-	newExif.GPSLatitude, newExif.GPSLongitude = extractValidGpsData(&fileInfo, media_path)
+	newExif.GPSLatitude, newExif.GPSLongitude = extractValidGpsData(&fileInfo, mediaPath)
 	if (newExif.GPSLatitude != nil) && (newExif.GPSLongitude != nil) {
-		found_exif = true
+		foundExif = true
 	}
 
-	if !found_exif {
+	if !foundExif {
 		return nil, nil
 	}
 
