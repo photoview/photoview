@@ -108,6 +108,16 @@ jobs:
           }' ${{ steps.scan-fixed.outputs.json }} > vulns.json
           cat vulns.json | jq
 
+      - name: Anchore vulns artifact
+        id: anchore-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Anchore-vulns-report
+          path: ./vulns.json
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
+
   hadolint:
     name: Hadolint Dockerfile
     runs-on: ubuntu-latest
@@ -130,6 +140,16 @@ jobs:
         if: ${{ steps.lint.conclusion == 'success' }}
         run: |
           cat ./hadolint.txt || echo ${HADOLINT_RESULTS}
+
+      - name: Hadolint artifact
+        id: hadolint-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-report
+          path: ./hadolint.txt
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
 
       - name: Lint Dockerfile (sarif)
         uses: hadolint/hadolint-action@v3.1.0
