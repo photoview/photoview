@@ -40,7 +40,7 @@
     "copy-to-clipboard": "^3.3.1",
     "i18next": "^21.8.13",
     "mapbox-gl": "^2.9.1",
-    "postcss": "^8.4.39",
+    "postcss": "^8.4.40",
     "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-blurhash": "^0.1.3",
@@ -56,7 +56,7 @@
     "tailwind-override": "^0.6.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",
     "url-join": "^5.0.0",
-    "vite": "^2.9.13",
+    "vite": "^5.4.8",
     "vite-plugin-svgr": "^2.2.0"
   },
   "devDependencies": {
@@ -72,7 +72,7 @@
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
-    "i18next-parser": "^8.13.0",
+    "i18next-parser": "^9.0.2",
     "lint-staged": "^13.0.3",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
