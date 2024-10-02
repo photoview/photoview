@@ -57,12 +57,16 @@ RUN chmod +x /app/scripts/*.sh \
   && source /app/scripts/set_compiler_env.sh
 
 COPY scripts/install_*.sh /app/scripts/
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN chmod +x /app/scripts/*.sh \
   && export $(cat /env) \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
 
 COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && cd /dependencies/ \
   && tar xfv artifacts.tar.gz \
@@ -74,6 +78,8 @@ RUN export $(cat /env) \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
 
 COPY api/go.mod api/go.sum /app/api/
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && go env \
   && go mod download \
@@ -85,6 +91,8 @@ RUN export $(cat /env) \
     github.com/Kagami/go-face
 
 COPY api /app/api
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && go env \
   && go build -v -o photoview .
