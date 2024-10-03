@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -44,7 +45,13 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		album := matchedAlbums[0]
 
 		var matchedUserAlbumCount int64
-		if err := db.Table("user_albums").Where("user_id = ?", owner.ID).Where("album_id = ?", album.ID).Count(&matchedUserAlbumCount).Error; err != nil {
+		if err := db.
+			Table("user_albums").
+			Where("user_id = ?", owner.ID).
+			Where("album_id = ?", album.ID).
+			Count(&matchedUserAlbumCount).
+			Error; err != nil {
+
 			return nil, err
 		}
 
@@ -102,7 +109,8 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
-			scanner_utils.ScannerError("Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
+			scanner_utils.ScannerError("Error scanning media for album (%d) file (%s): %s\n",
+				ctx.GetAlbum().ID, media.Path, err)
 		}
 	}
 
@@ -122,6 +130,12 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		return nil, err
 	}
 
+	albumMedia = iterateDir(dirContent, ctx, albumMedia)
+
+	return albumMedia, nil
+}
+
+func iterateDir(dirContent []fs.DirEntry, ctx scanner_task.TaskContext, albumMedia []*models.Media) []*models.Media {
 	for _, item := range dirContent {
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 
@@ -132,33 +146,16 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		}
 
 		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			itemInfo, err := item.Info()
+			skip, err := isMediaScanned(item, ctx, mediaPath)
 			if err != nil {
-				return nil, err
-			}
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
-			if err != nil {
-				return nil, err
+				scanner_utils.ScannerError("Error getting media info for album (%d): %s\n", ctx.GetAlbum().ID, err)
+				continue
 			}
 			if skip {
 				continue
 			}
 
-			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
-				if err != nil {
-					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
-				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
-					return err
-				}
-
-				albumMedia = append(albumMedia, media)
-
-				return nil
-			})
-
+			albumMedia, err = processMediaFile(ctx, mediaPath, albumMedia)
 			if err != nil {
 				scanner_utils.ScannerError("Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
@@ -166,7 +163,38 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		}
 
 	}
+	return albumMedia
+}
 
+func isMediaScanned(item fs.DirEntry, ctx scanner_task.TaskContext, mediaPath string) (bool, error) {
+	itemInfo, err := item.Info()
+	if err != nil {
+		return true, err
+	}
+	skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
+	if err != nil {
+		return true, err
+	}
+	return skip, nil
+}
+
+func processMediaFile(ctx scanner_task.TaskContext, mediaPath string, albumMedia []*models.Media) ([]*models.Media, error) {
+	err := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+		media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+		if err != nil {
+			return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
+		}
+
+		if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+			return err
+		}
+
+		albumMedia = append(albumMedia, media)
+		return nil
+	})
+	if err != nil {
+		return albumMedia, err
+	}
 	return albumMedia, nil
 }
 
