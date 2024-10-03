@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const loadersKey = "dataloaders"
+type contextKey string
+
+const loadersKey contextKey = "dataloaders"
 
 type Loaders struct {
 	MediaThumbnail      *MediaURLLoader

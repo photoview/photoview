@@ -19,7 +19,6 @@ func NewUserFavoriteLoader(db *gorm.DB) *UserFavoritesLoader {
 				userIDMap[key.UserID] = struct{}{}
 				mediaIDMap[key.MediaID] = struct{}{}
 			}
-			
 
 			uniqueUserIDs := make([]int, len(userIDMap))
 			uniqueMediaIDs := make([]int, len(mediaIDMap))
@@ -37,24 +36,33 @@ func NewUserFavoriteLoader(db *gorm.DB) *UserFavoritesLoader {
 			}
 
 			var userMediaFavorites []*models.UserMediaData
-			err := db.Where("user_id IN (?)", uniqueUserIDs).Where("media_id IN (?)", uniqueMediaIDs).Where("favorite = TRUE").Find(&userMediaFavorites).Error
+			err := db.
+				Where("user_id IN (?)", uniqueUserIDs).
+				Where("media_id IN (?)", uniqueMediaIDs).
+				Where("favorite = TRUE").
+				Find(&userMediaFavorites).Error
 			if err != nil {
 				return nil, []error{err}
 			}
 
 			result := make([]bool, len(keys))
-			for i, key := range keys {
-				favorite := false
-				for _, fav := range userMediaFavorites {
-					if fav.UserID == key.UserID && fav.MediaID == key.MediaID {
-						favorite = true
-						break
-					}
-				}
-				result[i] = favorite
-			}
+			result = iterateFavorites(keys, userMediaFavorites, result)
 
 			return result, nil
 		},
 	}
+}
+
+func iterateFavorites(keys []*models.UserMediaData, userMediaFavorites []*models.UserMediaData, result []bool) []bool {
+	for i, key := range keys {
+		favorite := false
+		for _, fav := range userMediaFavorites {
+			if fav.UserID == key.UserID && fav.MediaID == key.MediaID {
+				favorite = true
+				break
+			}
+		}
+		result[i] = favorite
+	}
+	return result
 }
