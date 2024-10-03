@@ -29,7 +29,9 @@ type scannerTasks struct {
 
 var Tasks scannerTasks = scannerTasks{}
 
-func simpleCombinedTasks(ctx scanner_task.TaskContext, doTask func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error) error {
+func simpleCombinedTasks(ctx scanner_task.TaskContext, doTask func(ctx scanner_task.TaskContext,
+	task scanner_task.ScannerTask) error) error {
+
 	for _, task := range allTasks {
 		select {
 		case <-ctx.Done():
@@ -85,7 +87,9 @@ func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileI
 	return false, nil
 }
 
-func (t scannerTasks) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error {
+func (t scannerTasks) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media,
+	albumMedia []*models.Media) error {
+
 	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
 		return task.AfterScanAlbum(ctx, changedMedia, albumMedia)
 	})
@@ -97,7 +101,9 @@ func (t scannerTasks) AfterMediaFound(ctx scanner_task.TaskContext, media *model
 	})
 }
 
-func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
+func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext,
+	mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
+
 	for _, task := range allTasks {
 		select {
 		case <-ctx.Done():
@@ -115,7 +121,9 @@ func (t scannerTasks) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData
 	return ctx, nil
 }
 
-func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	mediaCachePath string) ([]*models.MediaURL, error) {
+
 	allNewMedia := make([]*models.MediaURL, 0)
 
 	for _, task := range allTasks {
@@ -136,7 +144,9 @@ func (t scannerTasks) ProcessMedia(ctx scanner_task.TaskContext, mediaData *medi
 	return allNewMedia, nil
 }
 
-func (t scannerTasks) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+func (t scannerTasks) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+
 	return simpleCombinedTasks(ctx, func(ctx scanner_task.TaskContext, task scanner_task.ScannerTask) error {
 		return task.AfterProcessMedia(ctx, mediaData, updatedURLs, mediaIndex, mediaTotal)
 	})
