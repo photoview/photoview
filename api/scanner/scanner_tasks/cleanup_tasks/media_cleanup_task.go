@@ -10,7 +10,8 @@ type MediaCleanupTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t MediaCleanupTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error {
+func (t MediaCleanupTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media,
+	albumMedia []*models.Media) error {
 
 	cleanupErrors := CleanupMedia(ctx.GetDB(), ctx.GetAlbum().ID, albumMedia)
 	for _, err := range cleanupErrors {

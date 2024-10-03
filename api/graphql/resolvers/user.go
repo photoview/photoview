@@ -342,7 +342,9 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 
 func cleanup(tx *gorm.DB, albumID int, deletedAlbumIDs []int, childAlbumIDs []int) ([]int, error) {
 	var userAlbumCount int
-	if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&userAlbumCount).Error; err != nil {
+	if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?",
+		albumID).Scan(&userAlbumCount).Error; err != nil {
+
 		return nil, err
 	}
 

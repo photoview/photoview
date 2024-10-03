@@ -19,7 +19,10 @@ func NewUserLoaderByToken(db *gorm.DB) *UserLoader {
 				return nil, []error{err}
 			}
 
-			rows, err := db.Table("access_tokens").Select("distinct user_id").Where("expire > ?", time.Now()).Where("value IN (?)", tokens).Rows()
+			rows, err := db.Table("access_tokens").
+				Select("distinct user_id").
+				Where("expire > ?", time.Now()).Where("value IN (?)", tokens).
+				Rows()
 			if err != nil {
 				return nil, []error{err}
 			}

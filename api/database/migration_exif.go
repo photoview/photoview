@@ -164,7 +164,10 @@ func migrateExifFieldsFlash(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
 
 		var dataType string
-		if err := tx.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").Find(&dataType).Error; err != nil {
+		if err := tx.Raw(
+			"SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").
+			Find(&dataType).Error; err != nil {
+
 			return errors.Wrapf(err, "read data_type of column media_exif.flash")
 		}
 
