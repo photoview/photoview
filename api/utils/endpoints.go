@@ -56,7 +56,8 @@ func ApiEndpointUrl() *url.URL {
 
 	apiEndpointURL, err := url.Parse(apiEndpointStr)
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue())
+		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)",
+			EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue())
 	}
 
 	if shouldServeUI {
@@ -74,7 +75,8 @@ func UiEndpointUrl() *url.URL {
 
 	uiEndpointURL, err := url.Parse(EnvUIEndpoint.GetValue())
 	if err != nil {
-		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)", EnvUIEndpoint.GetName(), EnvUIEndpoint.GetValue())
+		log.Fatalf("ERROR: Environment variable %s is not a proper url (%s)",
+			EnvUIEndpoint.GetName(), EnvUIEndpoint.GetValue())
 	}
 
 	return uiEndpointURL
