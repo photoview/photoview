@@ -21,7 +21,8 @@ func makeAlbumWithID(id int) *models.Album {
 }
 
 func makeScannerJob(albumID int) ScannerJob {
-	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache()))
+	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, makeAlbumWithID(albumID),
+		scanner_cache.MakeAlbumCache()))
 }
 
 func TestScannerQueueAddJob(t *testing.T) {
@@ -66,7 +67,8 @@ func TestScannerQueueAddJob(t *testing.T) {
 		}
 
 		if len(mockScannerQueue.up_next) != startingJobs {
-			t.Errorf("Expected scanner queue length not to change: start length %d, new length %d", startingJobs, len(mockScannerQueue.up_next))
+			t.Errorf("Expected scanner queue length not to change: start length %d, new length %d",
+				startingJobs, len(mockScannerQueue.up_next))
 		}
 
 	})

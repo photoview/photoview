@@ -265,6 +265,18 @@ func (fd *faceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 
 	updatedImageFaces := make([]*models.ImageFace, 0)
 
+	updatedImageFaces, err = iterateUnrecognizedDescriptors(unrecognizedDescriptors, unrecognizedFaceGroupIDs,
+		unrecognizedImageFaceIDs, fd, tx, updatedImageFaces)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedImageFaces, nil
+}
+
+func iterateUnrecognizedDescriptors(unrecognizedDescriptors []face.Descriptor, unrecognizedFaceGroupIDs []int32,
+	unrecognizedImageFaceIDs []int, fd *faceDetector, tx *gorm.DB,
+	updatedImageFaces []*models.ImageFace) ([]*models.ImageFace, error) {
 	for i := range unrecognizedDescriptors {
 		descriptor := unrecognizedDescriptors[i]
 		faceGroupID := unrecognizedFaceGroupIDs[i]
@@ -273,7 +285,7 @@ func (fd *faceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		match := fd.classifyDescriptor(descriptor)
 
 		if match < 0 {
-			// still no match, we can readd it to the list
+			// still no match, we can re-add it to the list
 			fd.faceGroupIDs = append(fd.faceGroupIDs, faceGroupID)
 			fd.faceDescriptors = append(fd.faceDescriptors, descriptor)
 			fd.imageFaceIDs = append(fd.imageFaceIDs, imageFaceID)
@@ -295,6 +307,5 @@ func (fd *faceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 			fd.imageFaceIDs = append(fd.imageFaceIDs, imageFaceID)
 		}
 	}
-
 	return updatedImageFaces, nil
 }
