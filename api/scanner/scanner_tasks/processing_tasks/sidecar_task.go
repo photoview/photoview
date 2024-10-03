@@ -52,7 +52,9 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	return nil
 }
 
-func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+
 	mediaType, err := mediaData.ContentType()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
@@ -97,7 +99,8 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
 	os.Rename(baseImagePath, tempHighResPath)
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName,
+		baseImagePath, highResURL)
 	if err != nil {
 		os.Rename(tempHighResPath, baseImagePath)
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
@@ -108,7 +111,8 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
 	os.Rename(thumbPath, tempThumbPath)
-	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
+	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath,
+		baseImagePath, thumbURL)
 	if err != nil {
 		os.Rename(tempThumbPath, thumbPath)
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
