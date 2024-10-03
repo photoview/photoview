@@ -81,6 +81,7 @@ jobs:
       uses: codecov/codecov-action@v4
       if: ${{ steps.test.conclusion == 'success' }}
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
 
   test-ui:
@@ -116,6 +117,7 @@ jobs:
       uses: codecov/codecov-action@v4
       if: ${{ steps.test.conclusion == 'success' }}
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
 
     - name: Run ESLint
