@@ -9,7 +9,9 @@ import (
 	"github.com/photoview/photoview/api/graphql/models/actions"
 )
 
-func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) ([]*models.Media, error) {
+func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool,
+	fromDate *time.Time) ([]*models.Media, error) {
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

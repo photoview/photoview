@@ -49,7 +49,12 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 		return 0, errors.New("interval must be 0 or above")
 	}
 
-	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("periodic_scan_interval", interval).Error; err != nil {
+	if err := db.
+		Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Model(&models.SiteInfo{}).
+		Update("periodic_scan_interval", interval).
+		Error; err != nil {
+
 		return 0, err
 	}
 
@@ -73,7 +78,12 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, errors.New("multiple workers not supported for SQLite databases")
 	}
 
-	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("concurrent_workers", workers).Error; err != nil {
+	if err := db.
+		Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Model(&models.SiteInfo{}).
+		Update("concurrent_workers", workers).
+		Error; err != nil {
+
 		return 0, err
 	}
 
