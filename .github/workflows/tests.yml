@@ -124,6 +124,7 @@ jobs:
       working-directory: ui
       run: |
         docker run --name eslint photoview/ui npm run lint:ci || true
+        docker cp eslint:/app/ui/eslint-report.txt ./
         echo "--------------------------"
         echo "ESLint execution results :"
         echo "--------------------------"
