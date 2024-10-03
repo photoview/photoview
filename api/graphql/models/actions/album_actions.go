@@ -6,7 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *models.Pagination,
+	onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+
 	if err := user.FillAlbums(db); err != nil {
 		return nil, err
 	}
@@ -24,17 +26,7 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 
 	if onlyRoot != nil && *onlyRoot {
 
-		var singleRootAlbumID int = -1
-		for _, album := range user.Albums {
-			if album.ParentAlbumID == nil {
-				if singleRootAlbumID == -1 {
-					singleRootAlbumID = album.ID
-				} else {
-					singleRootAlbumID = -1
-					break
-				}
-			}
-		}
+		singleRootAlbumID := getSingleRootAlbumID(user)
 
 		if singleRootAlbumID != -1 && len(user.Albums) > 1 {
 			query = query.Where("parent_album_id = ?", singleRootAlbumID)
@@ -43,6 +35,34 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 		}
 	}
 
+	query = favoritesQuery(showEmpty, db, onlyWithFavorites, user, query)
+
+	query = models.FormatSQL(query, order, paginate)
+
+	var albums []*models.Album
+	if err := query.Find(&albums).Error; err != nil {
+		return nil, err
+	}
+
+	return albums, nil
+}
+
+func getSingleRootAlbumID(user *models.User) int {
+	var singleRootAlbumID int = -1
+	for _, album := range user.Albums {
+		if album.ParentAlbumID == nil {
+			if singleRootAlbumID == -1 {
+				singleRootAlbumID = album.ID
+			} else {
+				singleRootAlbumID = -1
+				break
+			}
+		}
+	}
+	return singleRootAlbumID
+}
+
+func favoritesQuery(showEmpty *bool, db *gorm.DB, onlyWithFavorites *bool, user *models.User, query *gorm.DB) *gorm.DB {
 	if showEmpty == nil || !*showEmpty {
 		subQuery := db.Model(&models.Media{}).Where("album_id = albums.id")
 
@@ -57,15 +77,7 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 
 		query = query.Where("EXISTS (?)", subQuery)
 	}
-
-	query = models.FormatSQL(query, order, paginate)
-
-	var albums []*models.Album
-	if err := query.Find(&albums).Error; err != nil {
-		return nil, err
-	}
-
-	return albums, nil
+	return query
 }
 
 func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
