@@ -28,12 +28,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		if success, response, status, err := authenticateAlbum(&album, db, r); !success {
-			if err != nil {
-				log.Printf("WARN: error authenticating album for download: %v\n", err)
-			}
-			w.WriteHeader(status)
-			w.Write([]byte(response))
+		if isError := authAlbum(album, db, r, w); isError {
 			return
 		}
 
@@ -45,7 +40,13 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 		}
 
 		var mediaURLs []*models.MediaURL
-		if err := db.Joins("Media").Where(mediaWhereQuery, album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
+		if err := db.
+			Joins("Media").
+			Where(mediaWhereQuery, album.ID).
+			Where("media_urls.purpose IN (?)", mediaPurposeList).
+			Find(&mediaURLs).
+			Error; err != nil {
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return
@@ -62,48 +63,67 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 
 		zipWriter := zip.NewWriter(w)
 
-		for _, media := range mediaURLs {
-			zipFile, err := zipWriter.Create(fmt.Sprintf("%s/%s", album.Title, media.MediaName))
-			if err != nil {
-				log.Printf("ERROR: Failed to create a file in zip, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			filePath, err := media.CachedPath()
-			if err != nil {
-				log.Printf("ERROR: Failed to get mediaURL cache path, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			fileData, err := os.Open(filePath)
-			if err != nil {
-				log.Printf("ERROR: Failed to open file to include in zip, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			_, err = io.Copy(zipFile, fileData)
-			if err != nil {
-				log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			if err := fileData.Close(); err != nil {
-				log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
+		if isError := iterateMedia(mediaURLs, zipWriter, album, w); isError {
+			return
 		}
 
 		// close the zip Writer to flush the contents to the ResponseWriter
 		zipWriter.Close()
 	})
+}
+
+func authAlbum(album models.Album, db *gorm.DB, r *http.Request, w http.ResponseWriter) bool {
+	if success, response, status, err := authenticateAlbum(&album, db, r); !success {
+		if err != nil {
+			log.Printf("WARN: error authenticating album for download: %v\n", err)
+		}
+		w.WriteHeader(status)
+		w.Write([]byte(response))
+		return true
+	}
+	return false
+}
+
+func iterateMedia(mediaURLs []*models.MediaURL, zipWriter *zip.Writer, album models.Album, w http.ResponseWriter) bool {
+	for _, media := range mediaURLs {
+		zipFile, err := zipWriter.Create(fmt.Sprintf("%s/%s", album.Title, media.MediaName))
+		if err != nil {
+			log.Printf("ERROR: Failed to create a file in zip, when downloading album (%d): %v\n", album.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+
+		filePath, err := media.CachedPath()
+		if err != nil {
+			log.Printf("ERROR: Failed to get mediaURL cache path, when downloading album (%d): %v\n", album.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+
+		fileData, err := os.Open(filePath)
+		if err != nil {
+			log.Printf("ERROR: Failed to open file to include in zip, when downloading album (%d): %v\n", album.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+
+		_, err = io.Copy(zipFile, fileData)
+		if err != nil {
+			log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+
+		if err := fileData.Close(); err != nil {
+			log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return true
+		}
+	}
+	return false
 }
