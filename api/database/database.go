@@ -11,7 +11,6 @@ import (
 	"github.com/photoview/photoview/api/database/migrations"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 
 	"github.com/go-sql-driver/mysql"
 	gorm_mysql "gorm.io/driver/mysql"
@@ -23,12 +22,12 @@ import (
 
 func GetMysqlAddress(addressString string) (string, error) {
 	if addressString == "" {
-		return "", errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
+		return "", fmt.Errorf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName())
 	}
 
 	config, err := mysql.ParseDSN(addressString)
 	if err != nil {
-		return "", errors.Wrap(err, "Could not parse mysql url")
+		return "", fmt.Errorf("could not parse mysql url: %w", err)
 	}
 
 	config.MultiStatements = true
@@ -39,12 +38,12 @@ func GetMysqlAddress(addressString string) (string, error) {
 
 func GetPostgresAddress(addressString string) (*url.URL, error) {
 	if addressString == "" {
-		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName()))
+		return nil, fmt.Errorf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName())
 	}
 
 	address, err := url.Parse(addressString)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse postgres url")
+		return nil, fmt.Errorf("could not parse postgres url: %w", err)
 	}
 
 	return address, nil
@@ -57,7 +56,7 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 
 	address, err := url.Parse(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Could not parse sqlite url (%s)", path)
+		return nil, fmt.Errorf("could not parse sqlite url (%s): %w", path, err)
 	}
 
 	queryValues := address.Query()
