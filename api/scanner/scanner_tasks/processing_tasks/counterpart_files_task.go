@@ -17,7 +17,8 @@ type CounterpartFilesTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
+func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool,
+	err error) {
 
 	// Skip the JPEGs that are compressed version of raw files
 	counterpartFile := scanForRawCounterpartFile(mediaPath)
@@ -28,7 +29,8 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 	return false, nil
 }
 
-func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
+func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext,
+	mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
 
 	mediaType, err := ctx.GetCache().GetMediaType(mediaData.Media.Path)
 	if err != nil {

@@ -30,13 +30,18 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 					return false
 				}
 
-				if uiEndpoint.Host == originURL.Host {
-					return true
-				} else {
-					log.Printf("Not allowing websocket request from %s because it doesn't match PHOTOVIEW_UI_ENDPOINT %s", originURL.Host, uiEndpoint.Host)
-					return false
-				}
+				return isUIonSameHost(uiEndpoint, originURL)
 			}
 		},
+	}
+}
+
+func isUIonSameHost(uiEndpoint *url.URL, originURL *url.URL) bool {
+	if uiEndpoint.Host == originURL.Host {
+		return true
+	} else {
+		log.Printf("Not allowing websocket request from %s because it doesn't match PHOTOVIEW_UI_ENDPOINT %s",
+			originURL.Host, uiEndpoint.Host)
+		return false
 	}
 }

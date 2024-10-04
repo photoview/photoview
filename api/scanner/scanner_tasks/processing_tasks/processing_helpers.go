@@ -51,7 +51,9 @@ func generateUniqueMediaName(mediaPath string) string {
 	return mediaName
 }
 
-func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions *media_utils.PhotoDimensions) (*models.MediaURL, error) {
+func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_encoding.EncodeMediaData,
+	photoDimensions *media_utils.PhotoDimensions) (*models.MediaURL, error) {
+
 	originalImageName := generateUniqueMediaName(photo.Path)
 
 	contentType, err := imageData.ContentType()

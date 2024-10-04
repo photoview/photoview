@@ -78,10 +78,10 @@ func (r *queryResolver) MyMediaGeoJSON(ctx context.Context) (interface{}, error)
 	var media []*geoMedia
 
 	err := r.DB(ctx).Table("media").
-		Select(
-			"media.id AS media_id, media.title AS media_title, "+
-				"media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, media_urls.height AS thumbnail_height, "+
-				"media_exif.gps_latitude AS latitude, media_exif.gps_longitude AS longitude").
+		Select("media.id AS media_id, media.title AS media_title, "+
+			"media_urls.media_name AS thumbnail_name, media_urls.width AS thumbnail_width, "+
+			"media_urls.height AS thumbnail_height, media_exif.gps_latitude AS latitude, "+
+			"media_exif.gps_longitude AS longitude").
 		Joins("INNER JOIN media_exif ON media.exif_id = media_exif.id").
 		Joins("INNER JOIN media_urls ON media.id = media_urls.media_id").
 		Joins("INNER JOIN user_albums ON media.album_id = user_albums.album_id").

@@ -81,7 +81,8 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*fl
 	// GPS data validation
 	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 90) {
 		log.Printf(
-			"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
+			"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. "+
+				"Ignoring GPS data.",
 			mediaPath, *GPSLat, *GPSLong)
 		return nil, nil
 	}
@@ -89,15 +90,8 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*fl
 }
 
 func (p *externalExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, returnErr error) {
-	// ExifTool - No print conversion mode
-	if p.et == nil {
-		et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
-		p.et = et
-
-		if err != nil {
-			log.Printf("Error initializing ExifTool: %s\n", err)
-			return nil, err
-		}
+	if err := initExifTool(p); err != nil {
+		return nil, err
 	}
 
 	fileInfo, err := p.dataLoader.Load(mediaPath)
@@ -137,25 +131,8 @@ func (p *externalExifParser) ParseExif(mediaPath string) (returnExif *models.Med
 	}
 
 	//Get time of photo
-	createDateKeys := []string{"CreationDate", "DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate", "FileCreateDate", "ModifyDate", "TrackModifyDate", "MediaModifyDate", "FileModifyDate"}
-	for _, createDateKey := range createDateKeys {
-		date, err := fileInfo.GetString(createDateKey)
-		if err == nil {
-			layout := "2006:01:02 15:04:05"
-			dateTime, err := time.Parse(layout, date)
-			if err == nil {
-				foundExif = true
-				newExif.DateShot = &dateTime
-			} else {
-				layoutWithOffset := "2006:01:02 15:04:05-07:00"
-				dateTime, err = time.Parse(layoutWithOffset, date)
-				if err == nil {
-					foundExif = true
-					newExif.DateShot = &dateTime
-				}
-			}
-			break
-		}
+	if newExif.DateShot = getTime(fileInfo); newExif.DateShot != nil {
+		foundExif = true
 	}
 
 	// Get exposure time
@@ -220,4 +197,51 @@ func (p *externalExifParser) ParseExif(mediaPath string) (returnExif *models.Med
 	returnExif = &newExif
 	sanitizeEXIF(returnExif)
 	return
+}
+
+func initExifTool(p *externalExifParser) error {
+	if p.et == nil {
+		// ExifTool - No print conversion mode
+		et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
+		p.et = et
+
+		if err != nil {
+			log.Printf("Error initializing ExifTool: %s\n", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func getTime(fileInfo exiftool.FileMetadata) *time.Time {
+	createDateKeys := []string{
+		"CreationDate",
+		"DateTimeOriginal",
+		"CreateDate",
+		"TrackCreateDate",
+		"MediaCreateDate",
+		"FileCreateDate",
+		"ModifyDate",
+		"TrackModifyDate",
+		"MediaModifyDate",
+		"FileModifyDate",
+	}
+	for _, createDateKey := range createDateKeys {
+		date, err := fileInfo.GetString(createDateKey)
+		if err == nil {
+			layout := "2006:01:02 15:04:05"
+			dateTime, err := time.Parse(layout, date)
+			if err == nil {
+				return &dateTime
+			} else {
+				layoutWithOffset := "2006:01:02 15:04:05-07:00"
+				dateTime, err = time.Parse(layoutWithOffset, date)
+				if err == nil {
+					return &dateTime
+				}
+			}
+			break
+		}
+	}
+	return nil
 }

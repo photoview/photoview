@@ -25,7 +25,9 @@ type ProcessPhotoTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	mediaCachePath string) ([]*models.MediaURL, error) {
+
 	if mediaData.Media.Type != models.MediaTypePhoto {
 		return []*models.MediaURL{}, nil
 	}
@@ -55,14 +57,35 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error processing photo highres")
 	}
 
+	baseImagePath, updatedURLs, err := generateHighResJPEG(highResURL, mediaData, photo, mediaCachePath, ctx, updatedURLs)
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	updatedURLs, err = processOriginalPhoto(origURL, baseImagePath, ctx, photo, mediaData, updatedURLs)
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	updatedURLs, err = saveThumbnailToCache(thumbURL, photo, ctx, mediaCachePath, baseImagePath, updatedURLs)
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	return updatedURLs, nil
+}
+
+func generateHighResJPEG(highResURL *models.MediaURL, mediaData *media_encoding.EncodeMediaData, photo *models.Media,
+	mediaCachePath string, ctx scanner_task.TaskContext, updatedURLs []*models.MediaURL) (string, []*models.MediaURL,
+	error) {
+
 	var baseImagePath string = photo.Path
 
-	// Generate high res jpeg
 	if highResURL == nil {
 
 		contentType, err := mediaData.ContentType()
 		if err != nil {
-			return []*models.MediaURL{}, err
+			return "", []*models.MediaURL{}, err
 		}
 
 		if !contentType.IsWebCompatible() {
@@ -71,7 +94,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 			highRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highresName, baseImagePath, nil)
 			if err != nil {
-				return []*models.MediaURL{}, err
+				return "", []*models.MediaURL{}, err
 			}
 
 			updatedURLs = append(updatedURLs, highRes)
@@ -81,22 +104,26 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		baseImagePath = path.Join(mediaCachePath, highResURL.MediaName)
 
 		if _, err := os.Stat(baseImagePath); os.IsNotExist(err) {
-			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n", highResURL.MediaName)
+			fmt.Printf("High-res photo found in database but not in cache, re-encoding photo to cache: %s\n",
+				highResURL.MediaName)
 			updatedURLs = append(updatedURLs, highResURL)
 
 			err = mediaData.EncodeHighRes(baseImagePath)
 			if err != nil {
-				return []*models.MediaURL{}, errors.Wrap(err, "creating high-res cached image")
+				return "", []*models.MediaURL{}, errors.Wrap(err, "creating high-res cached image")
 			}
 		}
 	}
+	return baseImagePath, updatedURLs, nil
+}
 
-	var photoDimensions *media_utils.PhotoDimensions
-	// Save original photo to database
+func processOriginalPhoto(origURL *models.MediaURL, baseImagePath string, ctx scanner_task.TaskContext,
+	photo *models.Media, mediaData *media_encoding.EncodeMediaData,
+	updatedURLs []*models.MediaURL) ([]*models.MediaURL, error) {
+
 	if origURL == nil {
-
 		// Make sure photo dimensions is set
-		photoDimensions, err = media_utils.GetPhotoDimensions(baseImagePath)
+		photoDimensions, err := media_utils.GetPhotoDimensions(baseImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}
@@ -108,8 +135,11 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		updatedURLs = append(updatedURLs, original)
 	}
+	return updatedURLs, nil
+}
 
-	// Save thumbnail to cache
+func saveThumbnailToCache(thumbURL *models.MediaURL, photo *models.Media, ctx scanner_task.TaskContext,
+	mediaCachePath string, baseImagePath string, updatedURLs []*models.MediaURL) ([]*models.MediaURL, error) {
 	if thumbURL == nil {
 		thumbnailName := generateUniqueMediaNamePrefixed("thumbnail", photo.Path, ".jpg")
 		thumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbnailName, mediaCachePath, baseImagePath, nil)
@@ -124,7 +154,8 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			updatedURLs = append(updatedURLs, thumbURL)
-			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n", thumbURL.MediaName)
+			fmt.Printf("Thumbnail photo found in database but not in cache, re-encoding photo to cache: %s\n",
+				thumbURL.MediaName)
 
 			_, err := media_encoding.EncodeThumbnail(ctx.GetDB(), baseImagePath, thumbPath)
 			if err != nil {
@@ -132,6 +163,5 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			}
 		}
 	}
-
 	return updatedURLs, nil
 }

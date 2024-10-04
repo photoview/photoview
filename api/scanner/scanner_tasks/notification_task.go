@@ -42,7 +42,9 @@ func (t NotificationTask) AfterMediaFound(ctx scanner_task.TaskContext, media *m
 	return nil
 }
 
-func (t NotificationTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+func (t NotificationTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+
 	if len(updatedURLs) > 0 {
 		progress := float64(mediaIndex) / float64(mediaTotal) * 100.0
 		notification.BroadcastNotification(&models.Notification{
@@ -57,7 +59,9 @@ func (t NotificationTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaD
 	return nil
 }
 
-func (t NotificationTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media, albumMedia []*models.Media) error {
+func (t NotificationTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMedia []*models.Media,
+	albumMedia []*models.Media) error {
+
 	if len(changedMedia) > 0 {
 		timeoutDelay := 2000
 		notification.BroadcastNotification(&models.Notification{

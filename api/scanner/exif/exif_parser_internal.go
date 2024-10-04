@@ -70,21 +70,9 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 		newExif.Lens = lens
 	}
 
-	date, err := exifTags.DateTime()
-	if err == nil {
-		_, tz := date.Zone()
-		dateUTC := date.Add(time.Duration(tz) * time.Second).UTC()
-		newExif.DateShot = &dateUTC
-	}
+	newExif = getDate(exifTags, newExif)
 
-	exposureTag, err := exifTags.Get(exif.ExposureTime)
-	if err == nil {
-		exposureRat, err := exposureTag.Rat(0)
-		if err == nil {
-			exposure, _ := exposureRat.Float64()
-			newExif.Exposure = &exposure
-		}
-	}
+	newExif = getExposure(exifTags, newExif)
 
 	apertureRat, err := p.readRationalTag(exifTags, exif.FNumber, mediaPath)
 	if err == nil {
@@ -92,37 +80,9 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 		newExif.Aperture = &aperture
 	}
 
-	isoTag, err := exifTags.Get(exif.ISOSpeedRatings)
-	if err != nil {
-		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %v\n", mediaPath)
-	} else {
-		iso, err := isoTag.Int(0)
-		if err != nil {
-			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %v\n", mediaPath)
-		} else {
-			iso64 := int64(iso)
-			newExif.Iso = &iso64
-		}
-	}
+	newExif = getISO(exifTags, mediaPath, newExif)
 
-	focalLengthTag, err := exifTags.Get(exif.FocalLength)
-	if err == nil {
-		focalLengthRat, err := focalLengthTag.Rat(0)
-		if err == nil {
-			focalLength, _ := focalLengthRat.Float64()
-			newExif.FocalLength = &focalLength
-		} else {
-			// For some photos, the focal length cannot be read as a rational value,
-			// but is instead the second value read as an integer
-			focalLength, err := focalLengthTag.Int(1)
-			if err != nil {
-				log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %v\n%s\n", mediaPath, err)
-			} else {
-				focalLenFloat := float64(focalLength)
-				newExif.FocalLength = &focalLenFloat
-			}
-		}
-	}
+	newExif = getFocalLength(exifTags, newExif, mediaPath)
 
 	flash, err := p.readIntegerTag(exifTags, exif.Flash, mediaPath)
 	if err == nil {
@@ -142,22 +102,86 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 		newExif.ExposureProgram = &exposureProgram64
 	}
 
+	newExif = getGPS(exifTags, mediaPath, newExif)
+
+	returnExif = &newExif
+	return
+}
+
+func getDate(exifTags *exif.Exif, newExif models.MediaEXIF) models.MediaEXIF {
+	date, err := exifTags.DateTime()
+	if err == nil {
+		_, tz := date.Zone()
+		dateUTC := date.Add(time.Duration(tz) * time.Second).UTC()
+		newExif.DateShot = &dateUTC
+	}
+	return newExif
+}
+
+func getExposure(exifTags *exif.Exif, newExif models.MediaEXIF) models.MediaEXIF {
+	exposureTag, err := exifTags.Get(exif.ExposureTime)
+	if err == nil {
+		exposureRat, err := exposureTag.Rat(0)
+		if err == nil {
+			exposure, _ := exposureRat.Float64()
+			newExif.Exposure = &exposure
+		}
+	}
+	return newExif
+}
+
+func getISO(exifTags *exif.Exif, mediaPath string, newExif models.MediaEXIF) models.MediaEXIF {
+	isoTag, err := exifTags.Get(exif.ISOSpeedRatings)
+	if err != nil {
+		log.Printf("WARN: Could not read ISOSpeedRatings from EXIF: %v\n", mediaPath)
+	} else {
+		iso, err := isoTag.Int(0)
+		if err != nil {
+			log.Printf("WARN: Could not parse EXIF ISOSpeedRatings as integer: %v\n", mediaPath)
+		} else {
+			iso64 := int64(iso)
+			newExif.Iso = &iso64
+		}
+	}
+	return newExif
+}
+
+func getFocalLength(exifTags *exif.Exif, newExif models.MediaEXIF, mediaPath string) models.MediaEXIF {
+	focalLengthTag, err := exifTags.Get(exif.FocalLength)
+	if err == nil {
+		focalLengthRat, err := focalLengthTag.Rat(0)
+		if err == nil {
+			focalLength, _ := focalLengthRat.Float64()
+			newExif.FocalLength = &focalLength
+		} else {
+			// For some photos, the focal length cannot be read as a rational value,
+			// but is instead the second value read as an integer
+			focalLength, err := focalLengthTag.Int(1)
+			if err != nil {
+				log.Printf("WARN: Could not parse EXIF FocalLength as rational or integer: %v\n%s\n", mediaPath, err)
+			} else {
+				focalLenFloat := float64(focalLength)
+				newExif.FocalLength = &focalLenFloat
+			}
+		}
+	}
+	return newExif
+}
+
+func getGPS(exifTags *exif.Exif, mediaPath string, newExif models.MediaEXIF) models.MediaEXIF {
 	lat, long, err := exifTags.LatLong()
 	if err == nil {
 		if math.Abs(lat) > 90 || math.Abs(long) > 90 {
-			returnExif = &newExif
 			log.Printf(
-				"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
+				"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. "+
+					"Ignoring GPS data.",
 				mediaPath, long, lat)
-			return
 		} else {
 			newExif.GPSLatitude = &lat
 			newExif.GPSLongitude = &long
 		}
 	}
-
-	returnExif = &newExif
-	return
+	return newExif
 }
 
 func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*string, error) {

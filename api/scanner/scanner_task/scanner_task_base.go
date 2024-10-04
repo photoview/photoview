@@ -26,14 +26,20 @@ func (t ScannerTaskBase) AfterMediaFound(ctx TaskContext, media *models.Media, n
 	return nil
 }
 
-func (t ScannerTaskBase) BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error) {
+func (t ScannerTaskBase) BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext,
+	error) {
+
 	return ctx, nil
 }
 
-func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+func (t ScannerTaskBase) ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData,
+	mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+
 	return []*models.MediaURL{}, nil
 }
 
-func (t ScannerTaskBase) AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+func (t ScannerTaskBase) AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData,
+	updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+
 	return nil
 }
