@@ -105,6 +105,8 @@ jobs:
         tags: photoview/ui
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=testing
 
     - name: Test
       id: test
