@@ -14,7 +14,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -63,7 +62,7 @@ func InitializeScannerQueue(db *gorm.DB) error {
 	{
 		site_info, err := models.GetSiteInfo(db)
 		if err != nil {
-			return errors.Wrap(err, "get current workers from database")
+			return fmt.Errorf("get current workers from database: %w", err)
 		}
 		concurrentWorkers = site_info.ConcurrentWorkers
 	}
@@ -216,12 +215,12 @@ func AddAllToQueue() error {
 	var users []*models.User
 	result := global_scanner_queue.db.Find(&users)
 	if result.Error != nil {
-		return errors.Wrap(result.Error, "get all users from database")
+		return fmt.Errorf("get all users from database: %w", result.Error)
 	}
 
 	for _, user := range users {
 		if err := AddUserToQueue(user); err != nil {
-			return errors.Wrapf(err, "failed to add user for scanning (%d)", user.ID)
+			return fmt.Errorf("failed to add user for scanning (%d): %w", user.ID, err)
 		}
 	}
 
@@ -234,7 +233,7 @@ func AddUserToQueue(user *models.User) error {
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, albumCache)
 	for _, err := range album_errors {
-		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
+		return fmt.Errorf("find albums for user (user_id: %d): %w", user.ID, err)
 	}
 
 	global_scanner_queue.mutex.Lock()

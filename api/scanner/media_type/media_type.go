@@ -1,6 +1,7 @@
 package media_type
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -10,7 +11,6 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type MediaType string
@@ -292,7 +292,7 @@ func GetMediaType(path string) (*MediaType, error) {
 	// If extension was not recognized try to read file header
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not open file to determine content-type %s", path)
+		return nil, fmt.Errorf("could not open file to determine content-type (%s): %w", path, err)
 	}
 	defer file.Close()
 
@@ -302,7 +302,7 @@ func GetMediaType(path string) (*MediaType, error) {
 			return nil, nil
 		}
 
-		return nil, errors.Wrapf(err, "could not read file to determine content-type: %s", path)
+		return nil, fmt.Errorf("could not read file to determine content-type: (%s): %w", path, err)
 	}
 
 	_imgType, err := filetype.Image(head)

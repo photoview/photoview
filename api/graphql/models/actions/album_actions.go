@@ -1,8 +1,10 @@
 package actions
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -72,7 +74,7 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 	var album models.Album
 	if err := db.First(&album, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("album not found")
+			return nil, fmt.Errorf("album not found")
 		}
 		return nil, err
 	}
@@ -83,7 +85,7 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 	}
 
 	if !ownsAlbum {
-		return nil, errors.New("forbidden")
+		return nil, fmt.Errorf("forbidden")
 	}
 
 	return &album, nil
@@ -143,7 +145,7 @@ func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, 
 	}
 
 	if !ownsAlbum {
-		return nil, errors.New("forbidden")
+		return nil, fmt.Errorf("forbidden")
 	}
 
 	if err := db.Model(&album).Update("cover_id", mediaID).Error; err != nil {
@@ -165,7 +167,7 @@ func ResetAlbumCover(db *gorm.DB, user *models.User, albumID int) (*models.Album
 	}
 
 	if !ownsAlbum {
-		return nil, errors.New("forbidden")
+		return nil, fmt.Errorf("forbidden")
 	}
 
 	if err := db.Model(&album).Update("cover_id", nil).Error; err != nil {

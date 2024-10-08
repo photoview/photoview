@@ -6,7 +6,6 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -66,7 +65,7 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	// Check if photo is authorized with a share token
 	token := r.URL.Query().Get("token")
 	if token == "" {
-		return false, "unauthorized", http.StatusForbidden, errors.New("share token not provided")
+		return false, "unauthorized", http.StatusForbidden, fmt.Errorf("share token not provided")
 	}
 
 	var shareToken models.ShareToken
@@ -79,14 +78,14 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	if shareToken.Password != nil {
 		tokenPasswordCookie, err := r.Cookie(fmt.Sprintf("share-token-pw-%s", shareToken.Value))
 		if err != nil {
-			return false, "unauthorized", http.StatusForbidden, errors.Wrap(err, "get share token password cookie")
+			return false, "unauthorized", http.StatusForbidden, fmt.Errorf("get share token password cookie: %w", err)
 		}
 		// tokenPassword := r.Header.Get("TokenPassword")
 		tokenPassword := tokenPasswordCookie.Value
 
 		if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
-				return false, "unauthorized", http.StatusForbidden, errors.New("incorrect password for share token")
+				return false, "unauthorized", http.StatusForbidden, fmt.Errorf("incorrect password for share token")
 			} else {
 				return false, internalServerError, http.StatusInternalServerError, err
 			}
@@ -94,11 +93,13 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	}
 
 	if shareToken.AlbumID != nil && albumID == nil {
-		return false, "unauthorized", http.StatusForbidden, errors.New("share token is of type album, but no albumID was provided to function")
+		return false, "unauthorized", http.StatusForbidden,
+			fmt.Errorf("share token is of type album, but no albumID was provided to function")
 	}
 
 	if shareToken.MediaID != nil && mediaID == nil {
-		return false, "unauthorized", http.StatusForbidden, errors.New("share token is of type media, but no mediaID was provided to function")
+		return false, "unauthorized", http.StatusForbidden,
+			fmt.Errorf("share token is of type media, but no mediaID was provided to function")
 	}
 
 	if shareToken.AlbumID != nil && *albumID != *shareToken.AlbumID {
@@ -119,12 +120,12 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 		}
 
 		if count == 0 {
-			return false, "unauthorized", http.StatusForbidden, errors.New("no child albums found for share token")
+			return false, "unauthorized", http.StatusForbidden, fmt.Errorf("no child albums found for share token")
 		}
 	}
 
 	if shareToken.MediaID != nil && *mediaID != *shareToken.MediaID {
-		return false, "unauthorized", http.StatusForbidden, errors.New("media share token does not match mediaID")
+		return false, "unauthorized", http.StatusForbidden, fmt.Errorf("media share token does not match mediaID")
 	}
 
 	return true, "", 0, nil

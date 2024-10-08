@@ -1,9 +1,9 @@
 package exif
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -37,7 +37,7 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 
 			var exif models.MediaEXIF
 			if err := tx.First(&exif, media.ExifID).Error; err != nil {
-				return nil, errors.Wrap(err, "get EXIF for media from database")
+				return nil, fmt.Errorf("get EXIF for media from database: %w", err)
 			}
 
 			return &exif, nil
@@ -45,12 +45,12 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 	}
 
 	if globalExifParser == nil {
-		return nil, errors.New("No exif parser initialized")
+		return nil, fmt.Errorf("no exif parser initialized")
 	}
 
 	exif, err := globalExifParser.ParseExif(media.Path)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse exif data")
+		return nil, fmt.Errorf("failed to parse exif data: %w", err)
 	}
 
 	if exif == nil {
@@ -59,13 +59,13 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) (*models.MediaEXIF, error) {
 
 	// Add EXIF to database and link to media
 	if err := tx.Model(&media).Association("Exif").Replace(exif); err != nil {
-		return nil, errors.Wrap(err, "save media exif to database")
+		return nil, fmt.Errorf("save media exif to database: %w", err)
 	}
 
 	if exif.DateShot != nil && !exif.DateShot.Equal(media.DateShot) {
 		media.DateShot = *exif.DateShot
 		if err := tx.Save(media).Error; err != nil {
-			return nil, errors.Wrap(err, "update media date_shot")
+			return nil, fmt.Errorf("update media date_shot: %w", err)
 		}
 	}
 

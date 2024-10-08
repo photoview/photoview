@@ -1,6 +1,7 @@
 package cleanup_tasks
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -9,7 +10,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -31,7 +31,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	}
 
 	if err := query.Find(&mediaList).Error; err != nil {
-		return []error{errors.Wrap(err, "get media files to be deleted from database")}
+		return []error{fmt.Errorf("get media files to be deleted from database: %w", err)}
 	}
 
 	deleteErrors := make([]error, 0)
@@ -43,20 +43,20 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
+			deleteErrors = append(deleteErrors, fmt.Errorf("delete unused cache folder (%s): %w", cachePath, err))
 		}
 
 	}
 
 	if len(mediaIDs) > 0 {
 		if err := db.Where("id IN (?)", mediaIDs).Delete(models.Media{}).Error; err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrap(err, "delete old media from database"))
+			deleteErrors = append(deleteErrors, fmt.Errorf("delete old media from database: %w", err))
 		}
 
 		// Reload faces after deleting media
 		if face_detection.GlobalFaceDetector != nil {
 			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-				deleteErrors = append(deleteErrors, errors.Wrap(err, "reload faces from database"))
+				deleteErrors = append(deleteErrors, fmt.Errorf("reload faces from database: %w", err))
 			}
 		}
 	}
@@ -87,7 +87,7 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		Where("album_id NOT IN (?)", scannedAlbumIDs)
 
 	if err := query.Find(&deleteAlbums).Error; err != nil {
-		return []error{errors.Wrap(err, "get albums to be deleted from database")}
+		return []error{fmt.Errorf("get albums to be deleted from database: %w", err)}
 	}
 
 	if len(deleteAlbums) == 0 {
@@ -103,7 +103,7 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
 		err := os.RemoveAll(cachePath)
 		if err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
+			deleteErrors = append(deleteErrors, fmt.Errorf("delete unused cache folder (%s): %w", cachePath, err))
 		}
 	}
 

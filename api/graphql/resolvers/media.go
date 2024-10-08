@@ -2,7 +2,7 @@ package resolvers
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/photoview/photoview/api/dataloader"
 	api "github.com/photoview/photoview/api/graphql"
@@ -10,13 +10,14 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner/face_detection"
-	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
-		return nil, errors.New("unauthorized")
+		return nil, fmt.Errorf("unauthorized")
 	}
 
 	return actions.MyMedia(r.DB(ctx), user, order, paginate)
@@ -51,7 +52,7 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 		First(&media).Error
 
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get media by media_id and user_id from database")
+		return nil, fmt.Errorf("could not get media by media_id and user_id from database: %w", err)
 	}
 
 	return &media, nil
@@ -65,7 +66,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 	}
 
 	if len(ids) == 0 {
-		return nil, errors.New("no ids provided")
+		return nil, fmt.Errorf("no ids provided")
 	}
 
 	var media []*models.Media
@@ -76,7 +77,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 		Find(&media).Error
 
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get media list by media_id and user_id from database")
+		return nil, fmt.Errorf("could not get media list by media_id and user_id from database: %w", err)
 	}
 
 	return media, nil
@@ -91,7 +92,7 @@ func (r *Resolver) Media() api.MediaResolver {
 }
 
 func (r *mediaResolver) Type(ctx context.Context, media *models.Media) (models.MediaType, error) {
-	formattedType := models.MediaType(strings.Title(string(media.Type)))
+	formattedType := models.MediaType(cases.Title(language.Und).String(string(media.Type)))
 	return formattedType, nil
 }
 
@@ -107,7 +108,7 @@ func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.A
 func (r *mediaResolver) Shares(ctx context.Context, media *models.Media) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken
 	if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
-		return nil, errors.Wrapf(err, "get shares for media (%s)", media.Path)
+		return nil, fmt.Errorf("get shares for media (%s): %w", media.Path, err)
 	}
 
 	return shareTokens, nil
@@ -117,7 +118,7 @@ func (r *mediaResolver) Downloads(ctx context.Context, media *models.Media) ([]*
 
 	var mediaUrls []*models.MediaURL
 	if err := r.DB(ctx).Where("media_id = ?", media.ID).Find(&mediaUrls).Error; err != nil {
-		return nil, errors.Wrapf(err, "get downloads for media (%s)", media.Path)
+		return nil, fmt.Errorf("get downloads for media (%s): %w", media.Path, err)
 	}
 
 	downloads := make([]*models.MediaDownload, 0)

@@ -2,9 +2,10 @@ package resolvers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -45,18 +46,18 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 	var token models.ShareToken
 	if err := r.DB(ctx).Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("share not found")
+			return nil, fmt.Errorf("share not found")
 		} else {
-			return nil, errors.Wrap(err, "failed to get share token from database")
+			return nil, fmt.Errorf("failed to get share token from database: %w", err)
 		}
 	}
 
 	if token.Password != nil {
 		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
-				return nil, errors.New("unauthorized")
+				return nil, fmt.Errorf("unauthorized")
 			} else {
-				return nil, errors.Wrap(err, "failed to compare token password hashes")
+				return nil, fmt.Errorf("failed to compare token password hashes: %w", err)
 			}
 		}
 	}
@@ -68,9 +69,9 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credenti
 	var token models.ShareToken
 	if err := r.DB(ctx).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, errors.New("share not found")
+			return false, fmt.Errorf("share not found")
 		} else {
-			return false, errors.Wrap(err, "failed to get share token from database")
+			return false, fmt.Errorf("failed to get share token from database: %w", err)
 		}
 	}
 
@@ -86,7 +87,7 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credenti
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil
 		} else {
-			return false, errors.Wrap(err, "could not compare token password hashes")
+			return false, fmt.Errorf("could not compare token password hashes: %w", err)
 		}
 	}
 

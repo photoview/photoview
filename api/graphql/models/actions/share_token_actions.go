@@ -1,13 +1,14 @@
 package actions
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -31,7 +32,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, auth.ErrUnauthorized
 		} else {
-			return nil, errors.Wrap(err, "failed to validate media owner with database")
+			return nil, fmt.Errorf("failed to validate media owner with database: %w", err)
 		}
 	}
 
@@ -50,7 +51,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 	}
 
 	if err := db.Create(&shareToken).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to insert new share token into database")
+		return nil, fmt.Errorf("failed to insert new share token into database: %w", err)
 	}
 
 	return &shareToken, nil
@@ -60,11 +61,12 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 	var count int64
 	err := db.
 		Model(&models.Album{}).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)",
+			user.ID).
 		Count(&count).Error
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to validate album owner with database")
+		return nil, fmt.Errorf("failed to validate album owner with database: %w", err)
 	}
 
 	if count == 0 {
@@ -75,7 +77,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to hash token password")
+			return nil, fmt.Errorf("failed to hash token password: %w", err)
 		}
 		hashedStr := string(hashedPassBytes)
 		hashedPassword = &hashedStr
@@ -91,7 +93,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 	}
 
 	if err := db.Create(&shareToken).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to insert new share token into database")
+		return nil, fmt.Errorf("failed to insert new share token into database: %w", err)
 	}
 
 	return &shareToken, nil
@@ -104,7 +106,7 @@ func DeleteShareToken(db *gorm.DB, userID int, tokenValue string) (*models.Share
 	}
 
 	if err := db.Delete(&token).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed to delete share token (%s) from database", tokenValue)
+		return nil, fmt.Errorf("failed to delete share token (%s) from database: %w", tokenValue, err)
 	}
 
 	return token, nil
@@ -124,7 +126,7 @@ func ProtectShareToken(db *gorm.DB, userID int, tokenValue string, password *str
 	token.Password = hashedPassword
 
 	if err := db.Save(&token).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to update password for share token")
+		return nil, fmt.Errorf("failed to update password for share token: %w", err)
 	}
 
 	return token, nil
@@ -135,7 +137,7 @@ func hashSharePassword(password *string) (*string, error) {
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate hash for share password")
+			return nil, fmt.Errorf("failed to generate hash for share password: %w", err)
 		}
 		hashedStr := string(hashedPassBytes)
 		hashedPassword = &hashedStr
@@ -157,7 +159,7 @@ func getUserToken(db *gorm.DB, userID int, tokenValue string) (*models.ShareToke
 	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where(query, userID).First(&token).Error
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user share token from database")
+		return nil, fmt.Errorf("failed to get user share token from database: %w", err)
 	}
 
 	return &token, nil

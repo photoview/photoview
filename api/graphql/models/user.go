@@ -2,10 +2,10 @@ package models
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -64,14 +64,14 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 		}
 
 		if !foundMatch {
-			return errors.New("invalid language value")
+			return fmt.Errorf("invalid language value")
 		}
 	}
 
 	return nil
 }
 
-var ErrorInvalidUserCredentials = errors.New("invalid credentials")
+var ErrorInvalidUserCredentials = fmt.Errorf("invalid credentials")
 
 func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error) {
 	var user User
@@ -81,18 +81,18 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, ErrorInvalidUserCredentials
 		}
-		return nil, errors.Wrap(result.Error, "failed to get user by username when authorizing")
+		return nil, fmt.Errorf("failed to get user by username when authorizing: %w", result.Error)
 	}
 
 	if user.Password == nil {
-		return nil, errors.New("user does not have a password")
+		return nil, fmt.Errorf("user does not have a password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return nil, ErrorInvalidUserCredentials
 		} else {
-			return nil, errors.Wrap(err, "compare user password hash")
+			return nil, fmt.Errorf("compare user password hash: %w", err)
 		}
 	}
 
@@ -108,7 +108,7 @@ func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to hash password")
+			return nil, fmt.Errorf("failed to hash password: %w", err)
 		}
 		hashedPass := string(hashedPassBytes)
 
@@ -117,7 +117,7 @@ func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*
 
 	result := db.Create(&user)
 	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "insert new user with password into database")
+		return nil, fmt.Errorf("insert new user with password into database: %w", result.Error)
 	}
 
 	return &user, nil
@@ -126,7 +126,7 @@ func RegisterUser(db *gorm.DB, username string, password *string, admin bool) (*
 func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 	bytes := make([]byte, 24)
 	if _, err := rand.Read(bytes); err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not generate token: %s\n", err.Error()))
+		return nil, fmt.Errorf("could not generate token: %w", err)
 	}
 	const CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	for i, b := range bytes {
@@ -144,7 +144,7 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 
 	result := db.Create(&token)
 	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "saving access token to database")
+		return nil, fmt.Errorf("saving access token to database: %w", result.Error)
 	}
 
 	return &token, nil
@@ -158,7 +158,7 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 	}
 
 	if err := db.Model(&user).Association("Albums").Find(&user.Albums); err != nil {
-		return errors.Wrap(err, "fill user albums")
+		return fmt.Errorf("fill user albums: %w", err)
 	}
 
 	return nil
@@ -166,7 +166,9 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	filter := func(query *gorm.DB) *gorm.DB {
-		return query.Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)", user.ID)
+		return query.
+			Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)",
+				user.ID)
 	}
 
 	ownedParents, err := album.GetParents(db, filter)
@@ -186,12 +188,12 @@ func (user *User) FavoriteMedia(db *gorm.DB, mediaID int, favorite bool) (*Media
 	}
 
 	if err := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
-		return nil, errors.Wrapf(err, "update user favorite media in database")
+		return nil, fmt.Errorf("update user favorite media in database: %w", err)
 	}
 
 	var media Media
 	if err := db.First(&media, mediaID).Error; err != nil {
-		return nil, errors.Wrap(err, "get media from database after favorite update")
+		return nil, fmt.Errorf("get media from database after favorite update: %w", err)
 	}
 
 	return &media, nil

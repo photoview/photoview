@@ -1,6 +1,7 @@
 package scanner_cache
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type AlbumScannerCache struct {
@@ -81,7 +81,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) (*media_type.MediaType, er
 
 	mediaType, err := media_type.GetMediaType(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get media type (%s)", path)
+		return nil, fmt.Errorf("get media type (%s): %w", path, err)
 	}
 
 	if mediaType != nil {

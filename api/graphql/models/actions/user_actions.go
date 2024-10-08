@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -17,7 +17,7 @@ func DeleteUser(db *gorm.DB, userID int) (*models.User, error) {
 	var adminUsers []*models.User
 	db.Model(&models.User{}).Where("admin = true").Limit(2).Find(&adminUsers)
 	if len(adminUsers) == 1 && adminUsers[0].ID == userID {
-		return nil, errors.New("deleting sole admin user is not allowed")
+		return nil, fmt.Errorf("deleting sole admin user is not allowed")
 	}
 
 	var user models.User

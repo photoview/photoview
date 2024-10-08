@@ -9,7 +9,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/processing_tasks"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -35,12 +34,12 @@ func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 
 	data, err := processing_tasks.ReadVideoMetadata(video.Path)
 	if err != nil {
-		return errors.Wrapf(err, "scan video metadata failed (%s)", video.Title)
+		return fmt.Errorf("scan video metadata failed (%s): %w", video.Title, err)
 	}
 
 	stream := data.FirstVideoStream()
 	if stream == nil {
-		return errors.New(fmt.Sprintf("could not get video stream from metadata (%s)", video.Path))
+		return fmt.Errorf("could not get video stream from metadata (%s)", video.Path)
 	}
 
 	audio := data.FirstAudioStream()
@@ -87,7 +86,7 @@ func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 	video.VideoMetadata = &videoMetadata
 
 	if err := tx.Save(video).Error; err != nil {
-		return errors.Wrapf(err, "failed to add video metadata to database (%s)", video.Title)
+		return fmt.Errorf("failed to add video metadata to database (%s): %w", video.Title, err)
 	}
 
 	return nil

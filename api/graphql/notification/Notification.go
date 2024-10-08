@@ -1,7 +1,7 @@
 package notification
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"sync"
 
@@ -64,7 +64,7 @@ func DeregisterListener(listenerID int) error {
 		}
 	}
 
-	return errors.New("ListenerID not found, while trying to deregister it")
+	return fmt.Errorf("listenerID not found, while trying to deregister it")
 }
 
 func BroadcastNotification(notification *models.Notification) {

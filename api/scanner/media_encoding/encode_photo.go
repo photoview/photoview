@@ -2,6 +2,7 @@ package media_encoding
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	_ "github.com/strukturag/libheif/go/heif"
@@ -56,7 +56,7 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_u
 func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
 	photo_file, err := os.Create(outputPath)
 	if err != nil {
-		return errors.Wrapf(err, "could not create file: %s", outputPath)
+		return fmt.Errorf("could not create file: %s %w", outputPath, err)
 	}
 	defer photo_file.Close()
 
@@ -105,7 +105,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 	}
 
 	if !contentType.IsSupported() {
-		return errors.New("could not convert photo as file format is not supported")
+		return fmt.Errorf("could not convert photo as file format is not supported")
 	}
 
 	// Use magick if there is no counterpart JPEG file to use instead
@@ -116,7 +116,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 				return err
 			}
 		} else {
-			return errors.New("could not convert photo as no RAW converter was found")
+			return fmt.Errorf("could not convert photo as no RAW converter was found")
 		}
 	} else {
 		image, err := img.photoImage()
@@ -155,13 +155,13 @@ func (img *EncodeMediaData) photoImage() (image.Image, error) {
 func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
 	file, err := os.Open(imagePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open file to decode image (%s)", imagePath)
+		return nil, fmt.Errorf("failed to open file to decode image (%s): %w", imagePath, err)
 	}
 	defer file.Close()
 
 	mediaType, err := img.ContentType()
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get media content type needed to decode it (%s)", imagePath)
+		return nil, fmt.Errorf("failed to get media content type needed to decode it (%s): %w", imagePath, err)
 	}
 
 	var decodedImage image.Image
@@ -169,12 +169,12 @@ func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
 	if *mediaType == media_type.TypeHeic {
 		decodedImage, _, err = image.Decode(file)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to decode HEIF image (%s)", imagePath)
+			return nil, fmt.Errorf("failed to decode HEIF image (%s): %w", imagePath, err)
 		}
 	} else {
 		decodedImage, err = imaging.Decode(file, imaging.AutoOrientation(true))
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to decode image (%s)", imagePath)
+			return nil, fmt.Errorf("failed to decode image (%s): %w", imagePath, err)
 		}
 	}
 
@@ -191,7 +191,7 @@ func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
 	defer cancelFn()
 	data, err := ffprobe.ProbeURL(ctx, enc.Media.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.Media.Title)
+		return nil, fmt.Errorf("could not read video metadata (%s): %w", enc.Media.Title, err)
 	}
 
 	enc._videoMetadata = data

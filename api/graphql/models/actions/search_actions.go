@@ -1,11 +1,11 @@
 package actions
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -45,7 +45,7 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 		Limit(limitMediaInternal).Find(&media).Error
 
 	if err != nil {
-		return nil, errors.Wrapf(err, "searching media")
+		return nil, fmt.Errorf("searching media: %w", err)
 	}
 
 	var albums []*models.Album
@@ -63,7 +63,7 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 		Find(&albums).Error
 
 	if err != nil {
-		return nil, errors.Wrapf(err, "searching albums")
+		return nil, fmt.Errorf("searching albums: %w", err)
 	}
 
 	result := models.SearchResult{

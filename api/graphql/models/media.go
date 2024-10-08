@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -49,7 +48,7 @@ func (m *Media) Date() time.Time {
 
 func (m *Media) GetThumbnail() (*MediaURL, error) {
 	if len(m.MediaURL) == 0 {
-		return nil, errors.New("media.MediaURL is empty")
+		return nil, fmt.Errorf("media.MediaURL is empty")
 	}
 
 	for _, url := range m.MediaURL {
@@ -64,7 +63,7 @@ func (m *Media) GetThumbnail() (*MediaURL, error) {
 
 func (m *Media) GetHighRes() (*MediaURL, error) {
 	if len(m.MediaURL) == 0 {
-		return nil, errors.New("media.MediaURL is empty")
+		return nil, fmt.Errorf("media.MediaURL is empty")
 	}
 
 	for _, url := range m.MediaURL {
@@ -131,7 +130,7 @@ func (p *MediaURL) CachedPath() (string, error) {
 	var cachedPath string
 
 	if p.Media == nil {
-		return "", errors.New("mediaURL.Media is nil")
+		return "", fmt.Errorf("mediaURL.Media is nil")
 	}
 
 	if p.Purpose == PhotoThumbnail || p.Purpose == PhotoHighRes || p.Purpose == VideoThumbnail || p.Purpose == VideoWeb {
@@ -139,7 +138,7 @@ func (p *MediaURL) CachedPath() (string, error) {
 	} else if p.Purpose == MediaOriginal {
 		cachedPath = p.Media.Path
 	} else {
-		return "", errors.New(fmt.Sprintf("cannot determine cache path for purpose (%s)", p.Purpose))
+		return "", fmt.Errorf("cannot determine cache path for purpose (%s)", p.Purpose)
 	}
 
 	return cachedPath, nil

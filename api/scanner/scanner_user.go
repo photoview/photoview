@@ -3,6 +3,7 @@ package scanner
 import (
 	"bufio"
 	"container/list"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -12,7 +13,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
@@ -76,9 +76,11 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		// Check if user album directory exists on the file system
 		if _, err := os.Stat(album.Path); err != nil {
 			if os.IsNotExist(err) {
-				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
+				scanErrors = append(scanErrors, fmt.Errorf("Album directory for user '%s' does not exist '%s'\n",
+					user.Username, album.Path))
 			} else {
-				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
+				scanErrors = append(scanErrors, fmt.Errorf("Could not read album directory for user '%s': %s\n",
+					user.Username, album.Path))
 			}
 		} else {
 			scanQueue.PushBack(scanInfo{
@@ -102,7 +104,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		// Read path
 		dirContent, err := os.ReadDir(albumPath)
 		if err != nil {
-			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
+			scanErrors = append(scanErrors, fmt.Errorf("read directory (%s): %w", albumPath, err))
 			continue
 		}
 
@@ -158,18 +160,20 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
 
 				if err := tx.Create(&album).Error; err != nil {
-					return errors.Wrap(err, "insert album into database")
+					return fmt.Errorf("insert album into database: %w", err)
 				}
 
 				if err := tx.Model(&album).Association("Owners").Append(parentOwners); err != nil {
-					return errors.Wrap(err, "add owners to album")
+					return fmt.Errorf("add owners to album: %w", err)
 				}
 			} else {
 				album = &albumResult[0]
 
 				// Add user as an owner of the album if not already
 				var userAlbumOwner []models.User
-				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
+				if err := tx.Model(&album).
+					Association("Owners").
+					Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
 					return err
 				}
 				if len(userAlbumOwner) == 0 {
@@ -190,7 +194,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		})
 
 		if transErr != nil {
-			scanErrors = append(scanErrors, errors.Wrap(transErr, "begin database transaction"))
+			scanErrors = append(scanErrors, fmt.Errorf("begin database transaction: %w", transErr))
 			continue
 		}
 
@@ -205,7 +209,8 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 
 			isDirSymlink, err := utils.IsDirSymlink(subalbumPath)
 			if err != nil {
-				scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
+				scanErrors = append(scanErrors, fmt.Errorf("could not check for symlink target of %s: %w",
+					subalbumPath, err))
 				continue
 			}
 
