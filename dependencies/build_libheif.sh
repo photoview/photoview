@@ -6,7 +6,7 @@ set -eu
 
 echo Compiler: ${DEB_HOST_MULTIARCH} Arch: ${DEB_HOST_ARCH}
 
-apt-get install -y libaom-dev:${DEB_HOST_ARCH} libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH} libnuma-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} libx265-dev:${DEB_HOST_ARCH} zlib1g-dev:${DEB_HOST_ARCH}
+apt-get install -y libdav1d-dev:${DEB_HOST_ARCH} librav1e-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libx265-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} libnuma-dev:${DEB_HOST_ARCH} zlib1g-dev:${DEB_HOST_ARCH}
 URL=$(curl -s https://api.github.com/repos/strukturag/libheif/releases/latest | grep "tarball_url" | cut -d : -f 2,3 | tr -d ' ,"')
 echo download libraw from $URL
 curl -L -o ./libheif.tar.gz "$URL"
