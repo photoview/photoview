@@ -13,7 +13,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type SidecarTask struct {
@@ -27,7 +26,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 
 	mediaType, err := ctx.GetCache().GetMediaType(media.Path)
 	if err != nil {
-		return errors.Wrap(err, "scan for sidecar file")
+		return fmt.Errorf("scan for sidecar file: %w", err)
 	}
 
 	if !mediaType.IsRaw() {
@@ -46,7 +45,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	media.SideCarPath = sideCarPath
 	media.SideCarHash = sideCarHash
 	if err := ctx.GetDB().Save(media).Error; err != nil {
-		return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
+		return fmt.Errorf("update media sidecar info (%s): %w", *sideCarPath, err)
 	}
 
 	return nil
@@ -55,7 +54,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
 	mediaType, err := mediaData.ContentType()
 	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
+		return []*models.MediaURL{}, fmt.Errorf("sidecar task, process media: %w", err)
 	}
 
 	if !mediaType.IsRaw() {
@@ -85,22 +84,23 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	highResURL, err := photo.GetHighRes()
 	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, get high-res media_url")
+		return []*models.MediaURL{}, fmt.Errorf("sidecar task, get high-res media_url: %w", err)
 	}
 
 	thumbURL, err := photo.GetThumbnail()
 	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, get high-res media_url")
+		return []*models.MediaURL{}, fmt.Errorf("sidecar task, get high-res media_url: %w", err)
 	}
 
 	// update high res image may be cropped so dimentions and file size can change
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
 	os.Rename(baseImagePath, tempHighResPath)
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName,
+		baseImagePath, highResURL)
 	if err != nil {
 		os.Rename(tempHighResPath, baseImagePath)
-		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
+		return []*models.MediaURL{}, fmt.Errorf("sidecar task, recreating high-res cached image: %w", err)
 	}
 	os.Remove(tempHighResPath)
 
@@ -108,10 +108,11 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
 	os.Rename(thumbPath, tempThumbPath)
-	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
+	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath,
+		baseImagePath, thumbURL)
 	if err != nil {
 		os.Rename(tempThumbPath, thumbPath)
-		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
+		return []*models.MediaURL{}, fmt.Errorf("recreating thumbnail cached image: %w", err)
 	}
 	os.Remove(tempThumbPath)
 
@@ -120,7 +121,7 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	// save new side car hash
 	if err := ctx.GetDB().Save(&photo).Error; err != nil {
-		return []*models.MediaURL{}, errors.Wrapf(err, "could not update side car hash for media: %s", photo.Path)
+		return []*models.MediaURL{}, fmt.Errorf("could not update side car hash for media (%s): %w", photo.Path, err)
 	}
 
 	return []*models.MediaURL{

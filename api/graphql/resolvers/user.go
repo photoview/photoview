@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -112,7 +112,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	}
 
 	if !siteInfo.InitialSetup {
-		return nil, errors.New("not initial setup")
+		return nil, fmt.Errorf("not initial setup")
 	}
 
 	rootPath = path.Clean(rootPath)
@@ -205,7 +205,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	db := r.DB(ctx)
 
 	if username == nil && password == nil && admin == nil {
-		return nil, errors.New("no updates requested")
+		return nil, fmt.Errorf("no updates requested")
 	}
 
 	var user models.User
@@ -232,7 +232,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	}
 
 	if err := db.Save(&user).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to update user")
+		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
 	return &user, nil
@@ -312,12 +312,13 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		}
 
 		if result.RowsAffected == 0 {
-			return errors.New("No relation deleted")
+			return fmt.Errorf("no relation deleted")
 		}
 
 		// Cleanup if no user owns the album anymore
 		var userAlbumCount int
-		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&userAlbumCount).Error; err != nil {
+		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&userAlbumCount).
+			Error; err != nil {
 			return err
 		}
 

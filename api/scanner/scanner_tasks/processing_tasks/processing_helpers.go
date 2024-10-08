@@ -9,7 +9,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -61,7 +60,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 
 	fileStats, err := os.Stat(photo.Path)
 	if err != nil {
-		return nil, errors.Wrap(err, "reading file stats of original photo")
+		return nil, fmt.Errorf("reading file stats of original photo: %w", err)
 	}
 
 	mediaURL := models.MediaURL{
@@ -75,7 +74,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 	}
 
 	if err := tx.Create(&mediaURL).Error; err != nil {
-		return nil, errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photo.Title)
+		return nil, fmt.Errorf("inserting original photo url: (%d, %s): %w", photo.ID, photo.Title, err)
 	}
 
 	return &mediaURL, nil

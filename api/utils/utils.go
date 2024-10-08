@@ -8,8 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 func GenerateToken() string {
@@ -72,19 +70,20 @@ func IsDirSymlink(path string) (bool, error) {
 
 	fileInfo, err := os.Lstat(path)
 	if err != nil {
-		return false, errors.Wrapf(err, "could not stat %s", path)
+		return false, fmt.Errorf("could not stat %s: %w", path, err)
 	}
 
 	//Resolve symlinks
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		resolvedPath, err := filepath.EvalSymlinks(path)
 		if err != nil {
-			return false, errors.Wrapf(err, "Cannot resolve linktarget of %s, ignoring it", path)
+			return false, fmt.Errorf("cannot resolve linktarget of %s, ignoring it: %w", path, err)
 		}
 
 		resolvedFile, err := os.Stat(resolvedPath)
 		if err != nil {
-			return false, errors.Wrapf(err, "Cannot get fileinfo of linktarget %s of symlink %s, ignoring it", resolvedPath, path)
+			return false, fmt.Errorf("cannot get fileinfo of linktarget %s of symlink %s, ignoring it: %w",
+				resolvedPath, path, err)
 		}
 		isDirSymlink = resolvedFile.IsDir()
 

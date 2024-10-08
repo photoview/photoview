@@ -1,8 +1,9 @@
 package models
 
 import (
+	"fmt"
+
 	db_drivers "github.com/photoview/photoview/api/database/drivers"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -37,14 +38,14 @@ func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 	var siteInfo []*SiteInfo
 
 	if err := db.Limit(1).Find(&siteInfo).Error; err != nil {
-		return nil, errors.Wrap(err, "get site info from database")
+		return nil, fmt.Errorf("get site info from database: %w", err)
 	}
 
 	if len(siteInfo) == 0 {
 		newSiteInfo := DefaultSiteInfo(db)
 
 		if err := db.Create(&newSiteInfo).Error; err != nil {
-			return nil, errors.Wrap(err, "initialize site_info")
+			return nil, fmt.Errorf("initialize site_info: %w", err)
 		}
 
 		return &newSiteInfo, nil

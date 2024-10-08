@@ -1,6 +1,7 @@
 package processing_tasks
 
 import (
+	"fmt"
 	"io/fs"
 	"path"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type CounterpartFilesTask struct {
@@ -32,7 +32,7 @@ func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, m
 
 	mediaType, err := ctx.GetCache().GetMediaType(mediaData.Media.Path)
 	if err != nil {
-		return ctx, errors.Wrap(err, "scan for counterpart file")
+		return ctx, fmt.Errorf("scan for counterpart file: %w", err)
 	}
 
 	if !mediaType.IsRaw() {

@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -10,7 +11,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +24,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 		result := tx.Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&media)
 
 		if result.Error != nil {
-			return nil, false, errors.Wrap(result.Error, "scan media fetch from database")
+			return nil, false, fmt.Errorf("scan media fetch from database: %w", result.Error)
 		}
 
 		if result.RowsAffected > 0 {
@@ -37,7 +37,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 
 	mediaType, err := cache.GetMediaType(mediaPath)
 	if err != nil {
-		return nil, false, errors.Wrap(err, "could determine if media was photo or video")
+		return nil, false, fmt.Errorf("could determine if media was photo or video: %w", err)
 	}
 
 	var mediaTypeText models.MediaType
@@ -62,7 +62,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 	}
 
 	if err := tx.Create(&media).Error; err != nil {
-		return nil, false, errors.Wrap(err, "could not insert media into database")
+		return nil, false, fmt.Errorf("could not insert media into database: %w", err)
 	}
 
 	return &media, true, nil
@@ -82,7 +82,7 @@ func ProcessSingleMedia(db *gorm.DB, media *models.Media) error {
 
 	taskContext := scanner_task.NewTaskContext(context.Background(), db, &album, albumCache)
 	if err := scanMedia(taskContext, media, &mediaData, 0, 1); err != nil {
-		return errors.Wrap(err, "single media scan")
+		return fmt.Errorf("single media scan: %w", err)
 	}
 
 	return nil

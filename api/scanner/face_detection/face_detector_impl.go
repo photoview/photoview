@@ -3,13 +3,13 @@
 package face_detection
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -31,12 +31,12 @@ func InitializeFaceDetector(db *gorm.DB) error {
 
 	rec, err := face.NewRecognizer(utils.FaceRecognitionModelsPath())
 	if err != nil {
-		return errors.Wrap(err, "initialize facedetect recognizer")
+		return fmt.Errorf("initialize facedetect recognizer: %w", err)
 	}
 
 	faceDescriptors, faceGroupIDs, imageFaceIDs, err := getSamplesFromDatabase(db)
 	if err != nil {
-		return errors.Wrap(err, "get face detection samples from database")
+		return fmt.Errorf("get face detection samples from database: %w", err)
 	}
 
 	GlobalFaceDetector = &faceDetector{
@@ -103,7 +103,7 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	}
 
 	if thumbnailURL == nil {
-		return errors.New("thumbnail url is missing")
+		return fmt.Errorf("thumbnail url is missing")
 	}
 
 	thumbnailPath, err := thumbnailURL.CachedPath()
@@ -116,7 +116,7 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	fd.mutex.Unlock()
 
 	if err != nil {
-		return errors.Wrap(err, "error read faces")
+		return fmt.Errorf("error read faces: %w", err)
 	}
 
 	for _, face := range faces {

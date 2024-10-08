@@ -2,7 +2,6 @@ package server
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -92,7 +91,7 @@ func (w *statusResponseWriter) Write(b []byte) (int, error) {
 
 func (w *statusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if w.hijacker == nil {
-		return nil, nil, errors.New("http.Hijacker not implemented by underlying http.ResponseWriter")
+		return nil, nil, fmt.Errorf("http.Hijacker not implemented by underlying http.ResponseWriter")
 	}
 	return w.hijacker.Hijack()
 }

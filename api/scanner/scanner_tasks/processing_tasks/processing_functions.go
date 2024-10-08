@@ -1,13 +1,13 @@
 package processing_tasks
 
 import (
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +15,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 
 	err := imageData.EncodeHighRes(imagePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating high-res cached image")
+		return nil, fmt.Errorf("creating high-res cached image: %w", err)
 	}
 
 	photoDimensions, err := media_utils.GetPhotoDimensions(imagePath)
@@ -25,7 +25,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 
 	fileStats, err := os.Stat(imagePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "reading file stats of highres photo")
+		return nil, fmt.Errorf("reading file stats of highres photo: %w", err)
 	}
 
 	if mediaURL == nil {
@@ -41,7 +41,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		}
 
 		if err := tx.Create(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not insert highres media url (%d, %s)", media.ID, highResName)
+			return nil, fmt.Errorf("could not insert highres media url (%d, %s): %w", media.ID, highResName, err)
 		}
 	} else {
 		mediaURL.Width = photoDimensions.Width
@@ -49,7 +49,8 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		mediaURL.FileSize = fileStats.Size()
 
 		if err := tx.Save(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, highResName)
+			return nil,
+				fmt.Errorf("could not update media url after side car changes (%d, %s): %w", media.ID, highResName, err)
 		}
 	}
 
@@ -61,12 +62,12 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnailName s
 
 	thumbSize, err := media_encoding.EncodeThumbnail(tx, baseImagePath, thumbOutputPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create thumbnail cached image")
+		return nil, fmt.Errorf("could not create thumbnail cached image: %w", err)
 	}
 
 	fileStats, err := os.Stat(thumbOutputPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "reading file stats of thumbnail photo")
+		return nil, fmt.Errorf("reading file stats of thumbnail photo: %w", err)
 	}
 
 	if mediaURL == nil {
@@ -82,7 +83,7 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnailName s
 		}
 
 		if err := tx.Create(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not insert thumbnail media url (%d, %s)", media.ID, thumbnailName)
+			return nil, fmt.Errorf("could not insert thumbnail media url (%d, %s): %w", media.ID, thumbnailName, err)
 		}
 	} else {
 		mediaURL.Width = thumbSize.Width
@@ -90,7 +91,8 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnailName s
 		mediaURL.FileSize = fileStats.Size()
 
 		if err := tx.Save(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnailName)
+			return nil,
+				fmt.Errorf("could not update media url after side car changes (%d, %s): %w", media.ID, thumbnailName, err)
 		}
 	}
 

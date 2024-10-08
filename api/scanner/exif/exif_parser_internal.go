@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"github.com/xor-gate/goexif2/exif"
 	"github.com/xor-gate/goexif2/mknote"
 )
@@ -17,10 +16,10 @@ import (
 // internalExifParser is an exif parser that parses the media without the use of external tools
 type internalExifParser struct{}
 
-const couldNotReadXfromEXIFy = "could not read %s from EXIF: %s"
+const couldNotReadXfromEXIFy = "could not read %s from EXIF: %s %w"
 const warnEXIFtagXreturnedNully = "WARN: EXIF tag %s returned null: %s\n"
 
-var ErrNullExifTag = errors.New("exif tag returned null")
+var ErrNullExifTag = fmt.Errorf("exif tag returned null")
 
 func NewInternalExifParser() ExifParser {
 	return internalExifParser{}
@@ -38,14 +37,14 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Recovered from panic: Exif decoding: %s\n", err)
-			returnErr = errors.New(fmt.Sprintf("Exif decoding panicked: %s\n", err))
+			returnErr = fmt.Errorf("exif decoding panicked: %w", err)
 		}
 	}()
 
 	exifTags, err := exif.Decode(photoFile)
 	if err != nil {
 		return nil, nil
-		// return nil, errors.Wrap(err, "Could not decode EXIF")
+		// return nil, fmt.Errorf("could not decode EXIF: %w", err)
 	}
 
 	newExif := models.MediaEXIF{}
@@ -163,13 +162,13 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*string, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, couldNotReadXfromEXIFy, name, mediaPath)
+		return nil, fmt.Errorf(couldNotReadXfromEXIFy, name, mediaPath, err)
 	}
 
 	if tag != nil {
 		value, err := tag.StringVal()
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse %s from EXIF as string: %s", name, mediaPath)
+			return nil, fmt.Errorf("could not parse %s from EXIF as string: %s %w", name, mediaPath, err)
 		}
 
 		return &value, nil
@@ -182,13 +181,13 @@ func (p *internalExifParser) readStringTag(tags *exif.Exif, name exif.FieldName,
 func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*big.Rat, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, couldNotReadXfromEXIFy, name, mediaPath)
+		return nil, fmt.Errorf(couldNotReadXfromEXIFy, name, mediaPath, err)
 	}
 
 	if tag != nil {
 		value, err := tag.Rat(0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse %s from EXIF as rational: %s", name, mediaPath)
+			return nil, fmt.Errorf("could not parse %s from EXIF as rational: %s %w", name, mediaPath, err)
 		}
 
 		return value, nil
@@ -201,13 +200,13 @@ func (p *internalExifParser) readRationalTag(tags *exif.Exif, name exif.FieldNam
 func (p *internalExifParser) readIntegerTag(tags *exif.Exif, name exif.FieldName, mediaPath string) (*int, error) {
 	tag, err := tags.Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, couldNotReadXfromEXIFy, name, mediaPath)
+		return nil, fmt.Errorf(couldNotReadXfromEXIFy, name, mediaPath, err)
 	}
 
 	if tag != nil {
 		value, err := tag.Int(0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Could not parse %s from EXIF as integer: %s", name, mediaPath)
+			return nil, fmt.Errorf("could not parse %s from EXIF as integer: %s %w", name, mediaPath, err)
 		}
 
 		return &value, nil

@@ -1,11 +1,11 @@
 package dataloader
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/pkg/errors"
 
 	"gorm.io/gorm"
 )
@@ -19,7 +19,7 @@ func makeMediaURLLoader(db *gorm.DB, filter func(query *gorm.DB) *gorm.DB) func(
 		filter(query)
 
 		if err := query.Find(&urls).Error; err != nil {
-			return nil, []error{errors.Wrap(err, "media url loader database query")}
+			return nil, []error{fmt.Errorf("media url loader database query, %w", err)}
 		}
 
 		resultMap := make(map[int]*models.MediaURL, len(mediaIDs))
@@ -56,7 +56,8 @@ func NewHighresMediaURLLoader(db *gorm.DB) *MediaURLLoader {
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
 		fetch: makeMediaURLLoader(db, func(query *gorm.DB) *gorm.DB {
-			return query.Where("purpose = ? OR (purpose = ? AND content_type IN ?)", models.PhotoHighRes, models.MediaOriginal, media_type.WebMimetypes)
+			return query.Where("purpose = ? OR (purpose = ? AND content_type IN ?)",
+				models.PhotoHighRes, models.MediaOriginal, media_type.WebMimetypes)
 		}),
 	}
 }
