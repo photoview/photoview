@@ -7,9 +7,44 @@ import (
 	"strings"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
+
+type exifModel struct {
+	ID       int `gorm:"primarykey"`
+	Exposure *string
+	Flash    *string
+}
+
+var flashDescriptions = map[int]string{
+	0x0:  "No Flash",
+	0x1:  "Fired",
+	0x5:  "Fired, Return not detected",
+	0x7:  "Fired, Return detected",
+	0x8:  "On, Did not fire",
+	0x9:  "On, Fired",
+	0xD:  "On, Return not detected",
+	0xF:  "On, Return detected",
+	0x10: "Off, Did not fire",
+	0x14: "Off, Did not fire, Return not detected",
+	0x18: "Auto, Did not fire",
+	0x19: "Auto, Fired",
+	0x1D: "Auto, Fired, Return not detected",
+	0x1F: "Auto, Fired, Return detected",
+	0x20: "No flash function",
+	0x30: "Off, No flash function",
+	0x41: "Fired, Red-eye reduction",
+	0x45: "Fired, Red-eye reduction, Return not detected",
+	0x47: "Fired, Red-eye reduction, Return detected",
+	0x49: "On, Red-eye reduction",
+	0x4D: "On, Red-eye reduction, Return not detected",
+	0x4F: "On, Red-eye reduction, Return detected",
+	0x50: "Off, Red-eye reduction",
+	0x58: "Auto, Did not fire, Red-eye reduction",
+	0x59: "Auto, Fired, Red-eye reduction",
+	0x5D: "Auto, Fired, Red-eye reduction, Return not detected",
+	0x5F: "Auto, Fired, Red-eye reduction, Return detected",
+}
 
 // Migrate MediaExif fields "exposure" and "flash" from strings to integers
 func migrateExifFields(db *gorm.DB) error {
@@ -18,44 +53,52 @@ func migrateExifFields(db *gorm.DB) error {
 		return err
 	}
 
-	err = db.Transaction(func(tx *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 		for _, exifCol := range mediaExifColumns {
-			if exifCol.Name() == "exposure" {
-				switch exifCol.DatabaseTypeName() {
-				case "double", "numeric", "real", "bigint", "integer":
-					// correct type, do nothing
-				default:
-					// do migration
-					if err := migrateExifFieldsExposure(db); err != nil {
-						return err
-					}
-				}
+			if err := parseExposure(exifCol, db); err != nil {
+				return err
 			}
 
-			if exifCol.Name() == "flash" {
-				switch exifCol.DatabaseTypeName() {
-				case "double", "numeric", "real", "bigint", "integer":
-					// correct type, do nothing
-				default:
-					// do migration
-					if err := migrateExifFieldsFlash(db); err != nil {
-						return err
-					}
-				}
+			if err := parseFlash(exifCol, db); err != nil {
+				return err
 			}
 		}
 
 		if err := db.AutoMigrate(&models.MediaEXIF{}); err != nil {
-			return errors.Wrap(err, "failed to auto migrate media_exif after exposure conversion")
+			return fmt.Errorf("failed to auto migrate media_exif after exposure conversion: %w", err)
 		}
 
 		return nil
 	})
+}
 
-	if err != nil {
-		return err
+func parseFlash(exifCol gorm.ColumnType, db *gorm.DB) error {
+	if exifCol.Name() == "flash" {
+		switch exifCol.DatabaseTypeName() {
+		case "double", "numeric", "real", "bigint", "integer":
+			// correct type, do nothing
+		default:
+			// do migration
+			if err := migrateExifFieldsFlash(db); err != nil {
+				return err
+			}
+		}
 	}
+	return nil
+}
 
+func parseExposure(exifCol gorm.ColumnType, db *gorm.DB) error {
+	if exifCol.Name() == "exposure" {
+		switch exifCol.DatabaseTypeName() {
+		case "double", "numeric", "real", "bigint", "integer":
+			// correct type, do nothing
+		default:
+			// do migration
+			if err := migrateExifFieldsExposure(db); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -65,16 +108,24 @@ func migrateExifFieldsExposure(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Exec("UPDATE media_exif SET exposure = NULL WHERE exposure = ''").Error; err != nil {
-			return errors.Wrapf(err, "convert flash attribute empty values to NULL")
+			return fmt.Errorf("convert flash attribute empty values to NULL: %w", err)
 		}
 
-		type exifModel struct {
-			ID       int `gorm:"primarykey"`
-			Exposure *string
-		}
 		var results []exifModel
 
-		return tx.Model(&exifModel{}).Table("media_exif").Where("exposure LIKE '%/%'").FindInBatches(&results, 100, func(tx *gorm.DB, batch int) error {
+		return calculateExposure(tx, results)
+	})
+
+	if err != nil {
+		return fmt.Errorf("migrating `media_exif.exposure` failed: %w", err)
+	}
+
+	return nil
+}
+
+func calculateExposure(tx *gorm.DB, results []exifModel) error {
+	return tx.Model(&exifModel{}).Table("media_exif").Where("exposure LIKE '%/%'").FindInBatches(
+		&results, 100, func(tx *gorm.DB, batch int) error {
 			for _, result := range results {
 
 				if result.Exposure == nil {
@@ -83,7 +134,7 @@ func migrateExifFieldsExposure(db *gorm.DB) error {
 
 				frac := strings.Split(*result.Exposure, "/")
 				if len(frac) != 2 {
-					return errors.Errorf("failed to convert exposure value (%s) expected format x/y", frac)
+					return fmt.Errorf("failed to convert exposure value (%s) expected format x/y", frac)
 				}
 
 				numerator, err := strconv.ParseFloat(frac[0], 64)
@@ -104,13 +155,6 @@ func migrateExifFieldsExposure(db *gorm.DB) error {
 
 			return nil
 		}).Error
-	})
-
-	if err != nil {
-		return errors.Wrap(err, "migrating `media_exif.exposure` failed")
-	}
-
-	return nil
 }
 
 func migrateExifFieldsFlash(db *gorm.DB) error {
@@ -119,8 +163,11 @@ func migrateExifFieldsFlash(db *gorm.DB) error {
 	err := db.Transaction(func(tx *gorm.DB) error {
 
 		var dataType string
-		if err := tx.Raw("SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").Find(&dataType).Error; err != nil {
-			return errors.Wrapf(err, "read data_type of column media_exif.flash")
+		if err := tx.Raw(
+			"SELECT data_type FROM information_schema.columns WHERE table_name = 'media_exif' AND column_name = 'flash';").
+			Find(&dataType).Error; err != nil {
+
+			return fmt.Errorf("read data_type of column media_exif.flash: %w", err)
 		}
 
 		if dataType == "bigint" {
@@ -128,46 +175,24 @@ func migrateExifFieldsFlash(db *gorm.DB) error {
 		}
 
 		if err := tx.Exec("UPDATE media_exif SET flash = NULL WHERE flash = ''").Error; err != nil {
-			return errors.Wrapf(err, "convert flash attribute empty values to NULL")
+			return fmt.Errorf("convert flash attribute empty values to NULL: %w", err)
 		}
 
-		type exifModel struct {
-			ID    int `gorm:"primarykey"`
-			Flash *string
-		}
 		var results []exifModel
 
-		var flashDescriptions = map[int]string{
-			0x0:  "No Flash",
-			0x1:  "Fired",
-			0x5:  "Fired, Return not detected",
-			0x7:  "Fired, Return detected",
-			0x8:  "On, Did not fire",
-			0x9:  "On, Fired",
-			0xD:  "On, Return not detected",
-			0xF:  "On, Return detected",
-			0x10: "Off, Did not fire",
-			0x14: "Off, Did not fire, Return not detected",
-			0x18: "Auto, Did not fire",
-			0x19: "Auto, Fired",
-			0x1D: "Auto, Fired, Return not detected",
-			0x1F: "Auto, Fired, Return detected",
-			0x20: "No flash function",
-			0x30: "Off, No flash function",
-			0x41: "Fired, Red-eye reduction",
-			0x45: "Fired, Red-eye reduction, Return not detected",
-			0x47: "Fired, Red-eye reduction, Return detected",
-			0x49: "On, Red-eye reduction",
-			0x4D: "On, Red-eye reduction, Return not detected",
-			0x4F: "On, Red-eye reduction, Return detected",
-			0x50: "Off, Red-eye reduction",
-			0x58: "Auto, Did not fire, Red-eye reduction",
-			0x59: "Auto, Fired, Red-eye reduction",
-			0x5D: "Auto, Fired, Red-eye reduction, Return not detected",
-			0x5F: "Auto, Fired, Red-eye reduction, Return detected",
-		}
+		return replaceFlashValues(tx, results)
+	})
 
-		return tx.Model(&exifModel{}).Table("media_exif").Where("flash IS NOT NULL").FindInBatches(&results, 100, func(tx *gorm.DB, batch int) error {
+	if err != nil {
+		return fmt.Errorf("migrating `media_exif.flash` failed: %w", err)
+	}
+
+	return nil
+}
+
+func replaceFlashValues(tx *gorm.DB, results []exifModel) error {
+	return tx.Model(&exifModel{}).Table("media_exif").Where("flash IS NOT NULL").FindInBatches(
+		&results, 100, func(tx *gorm.DB, batch int) error {
 			for _, result := range results {
 
 				if result.Flash == nil {
@@ -186,11 +211,4 @@ func migrateExifFieldsFlash(db *gorm.DB) error {
 
 			return nil
 		}).Error
-	})
-
-	if err != nil {
-		return errors.Wrap(err, "migrating `media_exif.flash` failed")
-	}
-
-	return nil
 }

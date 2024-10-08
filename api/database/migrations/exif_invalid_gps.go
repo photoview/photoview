@@ -1,8 +1,9 @@
 package migrations
 
 import (
+	"fmt"
+
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ func MigrateForExifGPSCorrection(db *gorm.DB) error {
 				"gps_latitude":  nil,
 				"gps_longitude": nil,
 			}).Error; err != nil {
-			return errors.Wrap(err, "failed to remove invalid GPS data from media_exif table")
+			return fmt.Errorf("failed to remove invalid GPS data from media_exif table: %w", err)
 		}
 		return nil
 	})
