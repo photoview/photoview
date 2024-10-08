@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-tags: 'true'
 
       - name: Prepare the Matrix
         id: prepare_matrix
@@ -122,6 +124,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
+            NODE_ENV=production
             VERSION=${{ github.ref_name }}
             COMMIT_SHA=${{ github.sha }}
 

@@ -81,6 +81,7 @@ jobs:
       uses: codecov/codecov-action@v4
       if: ${{ steps.test.conclusion == 'success' }}
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
 
   test-ui:
@@ -104,6 +105,8 @@ jobs:
         tags: photoview/ui
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=testing
 
     - name: Test
       id: test
@@ -116,12 +119,14 @@ jobs:
       uses: codecov/codecov-action@v4
       if: ${{ steps.test.conclusion == 'success' }}
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
 
     - name: Run ESLint
       working-directory: ui
       run: |
-        npm run lint:ci || true
+        docker run --name eslint photoview/ui npm run lint:ci || true
+        docker cp eslint:/app/ui/eslint-report.txt ./
         echo "--------------------------"
         echo "ESLint execution results :"
         echo "--------------------------"

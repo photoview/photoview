@@ -4,6 +4,9 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV:-production}
+
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
