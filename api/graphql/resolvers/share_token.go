@@ -40,8 +40,7 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 	return hasPassword, nil
 }
 
-func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken,
-	error) {
+func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 
 	var token models.ShareToken
 	if err := r.DB(ctx).Preload(clause.Associations).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
@@ -65,8 +64,7 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 	return &token, nil
 }
 
-func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool,
-	error) {
+func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error) {
 
 	var token models.ShareToken
 	if err := r.DB(ctx).Where("value = ?", credentials.Token).First(&token).Error; err != nil {
@@ -127,8 +125,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, tokenValue stri
 	return actions.DeleteShareToken(r.DB(ctx), user.ID, tokenValue)
 }
 
-func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken,
-	error) {
+func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue string, password *string) (*models.ShareToken, error) {
 
 	user := auth.UserFromContext(ctx)
 	if user == nil {

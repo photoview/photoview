@@ -333,7 +333,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		return nil, transactionError
 	}
 
-	if err := clearCacheAndReloadFaces(deletedAlbumIDs, db); err != nil {
+	if err := clearCacheAndReloadFaces(db, deletedAlbumIDs); err != nil {
 		return nil, err
 	}
 
@@ -360,7 +360,7 @@ func cleanup(tx *gorm.DB, albumID int, deletedAlbumIDs []int, childAlbumIDs []in
 	return deletedAlbumIDs, nil
 }
 
-func clearCacheAndReloadFaces(deletedAlbumIDs []int, db *gorm.DB) error {
+func clearCacheAndReloadFaces(db *gorm.DB, deletedAlbumIDs []int) error {
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {

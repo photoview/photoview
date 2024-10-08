@@ -22,8 +22,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 	return actions.MyAlbums(r.DB(ctx), user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites)
 }
 
-func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album,
-	error) {
+func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error) {
 
 	db := r.DB(ctx)
 	if tokenCredentials != nil {

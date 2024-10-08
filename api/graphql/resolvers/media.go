@@ -13,8 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media,
-	error) {
+func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
 
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -24,8 +23,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 	return actions.MyMedia(r.DB(ctx), user, order, paginate)
 }
 
-func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media,
-	error) {
+func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
 
 	db := r.DB(ctx)
 	if tokenCredentials != nil {
