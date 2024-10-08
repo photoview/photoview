@@ -30,13 +30,13 @@ func WebsocketUpgrader(devMode bool) websocket.Upgrader {
 					return false
 				}
 
-				return isUIonSameHost(uiEndpoint, originURL)
+				return isUIOnSameHost(uiEndpoint, originURL)
 			}
 		},
 	}
 }
 
-func isUIonSameHost(uiEndpoint *url.URL, originURL *url.URL) bool {
+func isUIOnSameHost(uiEndpoint *url.URL, originURL *url.URL) bool {
 	if uiEndpoint.Host == originURL.Host {
 		return true
 	} else {
