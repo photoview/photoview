@@ -1,7 +1,7 @@
 name: photoview
 
 services:
-  dev-ui:
+  ui:
     image: photoview/ui
     build:
       context: .
@@ -21,7 +21,7 @@ services:
         npm ci
         npm run mon
 
-  dev-api:
+  api:
     image: photoview/api
     build:
       context: .
