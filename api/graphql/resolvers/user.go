@@ -295,7 +295,6 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 	}
 
 	var deletedAlbumIDs []int = nil
-
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
 			return err
@@ -321,7 +320,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		}
 
 		// Cleanup if no user owns the album anymore
-		deletedAlbumIDs, err = cleanup(tx, albumID, deletedAlbumIDs, childAlbumIDs)
+		deletedAlbumIDs, err = cleanup(tx, albumID, childAlbumIDs)
 		if err != nil {
 			return err
 		}
@@ -340,8 +339,10 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 	return &album, nil
 }
 
-func cleanup(tx *gorm.DB, albumID int, deletedAlbumIDs []int, childAlbumIDs []int) ([]int, error) {
+func cleanup(tx *gorm.DB, albumID int, childAlbumIDs []int) ([]int, error) {
 	var userAlbumCount int
+	var deletedAlbumIDs []int = nil
+
 	if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?",
 		albumID).Scan(&userAlbumCount).Error; err != nil {
 
