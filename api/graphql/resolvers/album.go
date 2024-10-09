@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool,
+	showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
@@ -21,6 +23,7 @@ func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, pa
 }
 
 func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error) {
+
 	db := r.DB(ctx)
 	if tokenCredentials != nil {
 
@@ -34,7 +37,9 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 				return shareToken.Album, nil
 			}
 
-			subAlbum, err := shareToken.Album.GetChildren(db, func(query *gorm.DB) *gorm.DB { return query.Where("sub_albums.id = ?", id) })
+			subAlbum, err := shareToken.Album.GetChildren(db, func(query *gorm.DB) *gorm.DB {
+				return query.Where("sub_albums.id = ?", id)
+			})
 			if err != nil {
 				return nil, errors.Wrapf(err, "find sub album of share token (%s)", tokenCredentials.Token)
 			}
@@ -59,12 +64,16 @@ func (r *Resolver) Album() api.AlbumResolver {
 
 type albumResolver struct{ *Resolver }
 
-func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error) {
+func (r *albumResolver) Media(ctx context.Context, album *models.Album, order *models.Ordering,
+	paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error) {
+
 	db := r.DB(ctx)
 
 	query := db.
 		Where("media.album_id = ?", album.ID).
-		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_urls.media_id").Where("media_urls.media_id = media.id"))
+		Where("media.id IN (?)", db.Model(&models.MediaURL{}).
+			Select("media_urls.media_id").
+			Where("media_urls.media_id = media.id"))
 
 	if onlyFavorites != nil && *onlyFavorites == true {
 		user := auth.UserFromContext(ctx)
@@ -93,7 +102,8 @@ func (r *albumResolver) Thumbnail(ctx context.Context, album *models.Album) (*mo
 	return album.Thumbnail(r.DB(ctx))
 }
 
-func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error) {
+func (r *albumResolver) SubAlbums(ctx context.Context, parent *models.Album, order *models.Ordering,
+	paginate *models.Pagination) ([]*models.Album, error) {
 
 	var albums []*models.Album
 

@@ -14,6 +14,7 @@ import (
 )
 
 func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, errors.New("unauthorized")
@@ -23,6 +24,7 @@ func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, pag
 }
 
 func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error) {
+
 	db := r.DB(ctx)
 	if tokenCredentials != nil {
 
@@ -46,7 +48,8 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 	err := db.
 		Joins("Album").
 		Where("media.id = ?", id).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)", user.ID).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
+			user.ID).
 		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
 		First(&media).Error
 
