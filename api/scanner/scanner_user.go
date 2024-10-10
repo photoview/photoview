@@ -3,6 +3,7 @@ package scanner
 import (
 	"bufio"
 	"container/list"
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -16,6 +17,12 @@ import (
 	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
 )
+
+type scanInfo struct {
+	path   string
+	parent *models.Album
+	ignore []string
+}
 
 func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	var photoviewIgnore []string
@@ -42,7 +49,8 @@ func getPhotoviewIgnore(ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album,
+	[]error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
@@ -64,30 +72,10 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 
 	scanErrors := make([]error, 0)
 
-	type scanInfo struct {
-		path   string
-		parent *models.Album
-		ignore []string
-	}
-
 	scanQueue := list.New()
 
-	for _, album := range userRootAlbums {
-		// Check if user album directory exists on the file system
-		if _, err := os.Stat(album.Path); err != nil {
-			if os.IsNotExist(err) {
-				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
-			} else {
-				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
-			}
-		} else {
-			scanQueue.PushBack(scanInfo{
-				path:   album.Path,
-				parent: nil,
-				ignore: nil,
-			})
-		}
-	}
+	// Check if user album directory exists on the file system
+	scanQueue, scanErrors = doesAlbumDirExistFS(userRootAlbums, scanErrors, user, scanQueue)
 
 	userAlbums := make([]*models.Album, 0)
 
@@ -121,108 +109,168 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 			albumIgnore = append(albumIgnore, photoviewIgnore...)
 		}
 
-		// Will become new album or album from db
 		var album *models.Album
-
-		transErr := db.Transaction(func(tx *gorm.DB) error {
-			log.Printf("Scanning directory: %s", albumPath)
-
-			// check if album already exists
-			var albumResult []models.Album
-			result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
-			if result.Error != nil {
-				return result.Error
-			}
-
-			// album does not exist, create new
-			if len(albumResult) == 0 {
-				albumTitle := path.Base(albumPath)
-
-				var albumParentID *int
-				parentOwners := make([]models.User, 0)
-				if albumParent != nil {
-					albumParentID = &albumParent.ID
-
-					if err := tx.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
-						return err
-					}
-				}
-
-				album = &models.Album{
-					Title:         albumTitle,
-					ParentAlbumID: albumParentID,
-					Path:          albumPath,
-				}
-
-				// Store album ignore
-				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
-
-				if err := tx.Create(&album).Error; err != nil {
-					return errors.Wrap(err, "insert album into database")
-				}
-
-				if err := tx.Model(&album).Association("Owners").Append(parentOwners); err != nil {
-					return errors.Wrap(err, "add owners to album")
-				}
-			} else {
-				album = &albumResult[0]
-
-				// Add user as an owner of the album if not already
-				var userAlbumOwner []models.User
-				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
-					return err
-				}
-				if len(userAlbumOwner) == 0 {
-					newUser := models.User{}
-					newUser.ID = user.ID
-					if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
-						return err
-					}
-				}
-
-				// Update album ignore
-				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
-			}
-
-			userAlbums = append(userAlbums, album)
-
-			return nil
-		})
-
-		if transErr != nil {
-			scanErrors = append(scanErrors, errors.Wrap(transErr, "begin database transaction"))
+		album, albumCache, userAlbums, err = scanDirectory(db, albumPath, albumParent, albumCache, albumIgnore,
+			user, userAlbums)
+		if err != nil {
+			scanErrors = append(scanErrors, errors.Wrap(err, "begin database transaction"))
 			continue
 		}
 
-		// Scan for sub-albums
-		for _, item := range dirContent {
-			subalbumPath := path.Join(albumPath, item.Name())
-
-			// Skip if directory is hidden
-			if path.Base(subalbumPath)[0:1] == "." {
-				continue
-			}
-
-			isDirSymlink, err := utils.IsDirSymlink(subalbumPath)
-			if err != nil {
-				scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
-				continue
-			}
-
-			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, albumCache, albumIgnore) {
-				scanQueue.PushBack(scanInfo{
-					path:   subalbumPath,
-					parent: album,
-					ignore: albumIgnore,
-				})
-			}
-		}
+		scanQueue, scanErrors = scanForSubAlbums(dirContent, albumPath, scanErrors, albumCache, albumIgnore,
+			scanQueue, album)
 	}
 
 	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
 	scanErrors = append(scanErrors, deleteErrors...)
 
 	return userAlbums, scanErrors
+}
+
+func doesAlbumDirExistFS(userRootAlbums []*models.Album, scanErrors []error, user *models.User,
+	scanQueue *list.List) (*list.List, []error) {
+
+	for _, album := range userRootAlbums {
+
+		if _, err := os.Stat(album.Path); err != nil {
+			if os.IsNotExist(err) {
+				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n",
+					user.Username, album.Path))
+			} else {
+				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n",
+					user.Username, album.Path))
+			}
+		} else {
+			scanQueue.PushBack(scanInfo{
+				path:   album.Path,
+				parent: nil,
+				ignore: nil,
+			})
+		}
+	}
+	return scanQueue, scanErrors
+}
+
+func scanDirectory(db *gorm.DB, albumPath string, albumParent *models.Album, albumCache *scanner_cache.AlbumScannerCache,
+	albumIgnore []string, user *models.User, userAlbums []*models.Album) (*models.Album, *scanner_cache.AlbumScannerCache,
+	[]*models.Album, error) {
+
+	// Will become new album or album from db
+	var album *models.Album
+
+	transErr := db.Transaction(func(tx *gorm.DB) error {
+		log.Printf("Scanning directory: %s", albumPath)
+
+		// check if album already exists
+		var albumResult []models.Album
+		result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
+		if result.Error != nil {
+			return result.Error
+		}
+
+		// album does not exist, create new
+		if len(albumResult) == 0 {
+			var err error
+			album, albumCache, err = createNewAlbum(albumPath, albumParent, tx, albumCache, albumIgnore)
+			if err != nil {
+				return err
+			}
+		} else {
+			album = &albumResult[0]
+
+			// Add user as an owner of the album if not already
+			err := setAlbumOwner(tx, album, user)
+			if err != nil {
+				return err
+			}
+
+			// Update album ignore
+			albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
+		}
+
+		userAlbums = append(userAlbums, album)
+
+		return nil
+	})
+	return album, albumCache, userAlbums, transErr
+}
+
+func createNewAlbum(albumPath string, albumParent *models.Album, tx *gorm.DB, albumCache *scanner_cache.AlbumScannerCache,
+	albumIgnore []string) (*models.Album, *scanner_cache.AlbumScannerCache, error) {
+	albumTitle := path.Base(albumPath)
+
+	var albumParentID *int
+	parentOwners := make([]models.User, 0)
+	if albumParent != nil {
+		albumParentID = &albumParent.ID
+
+		if err := tx.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	album := &models.Album{
+		Title:         albumTitle,
+		ParentAlbumID: albumParentID,
+		Path:          albumPath,
+	}
+
+	// Store album ignore
+	albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
+
+	if err := tx.Create(&album).Error; err != nil {
+		return nil, nil, errors.Wrap(err, "insert album into database")
+	}
+
+	if err := tx.Model(&album).Association("Owners").Append(parentOwners); err != nil {
+		return nil, nil, errors.Wrap(err, "add owners to album")
+	}
+	return album, albumCache, nil
+}
+
+func setAlbumOwner(tx *gorm.DB, album *models.Album, user *models.User) error {
+	var userAlbumOwner []models.User
+	if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?",
+		user.ID); err != nil {
+
+		return err
+	}
+	if len(userAlbumOwner) == 0 {
+		newUser := models.User{}
+		newUser.ID = user.ID
+		if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func scanForSubAlbums(dirContent []fs.DirEntry, albumPath string, scanErrors []error,
+	albumCache *scanner_cache.AlbumScannerCache, albumIgnore []string, scanQueue *list.List,
+	album *models.Album) (*list.List, []error) {
+
+	for _, item := range dirContent {
+		subalbumPath := path.Join(albumPath, item.Name())
+		// Skip if directory is hidden
+		if path.Base(subalbumPath)[0:1] == "." {
+			continue
+		}
+
+		isDirSymlink, err := utils.IsDirSymlink(subalbumPath)
+		if err != nil {
+			scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
+			continue
+		}
+
+		if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, albumCache, albumIgnore) {
+			scanQueue.PushBack(scanInfo{
+				path:   subalbumPath,
+				parent: album,
+				ignore: albumIgnore,
+			})
+		}
+	}
+	return scanQueue, scanErrors
 }
 
 func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
@@ -258,28 +306,10 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 			return false
 		}
 
-		for _, fileInfo := range dirContent {
-			filePath := path.Join(dirPath, fileInfo.Name())
-
-			isDirSymlink, err := utils.IsDirSymlink(filePath)
-			if err != nil {
-				log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", filePath)
-				isDirSymlink = false
-			}
-
-			if fileInfo.IsDir() || isDirSymlink {
-				scanQueue.PushBack(filePath)
-			} else {
-				if cache.IsPathMedia(filePath) {
-					if ignoreEntries.MatchesPath(fileInfo.Name()) {
-						log.Printf("Match found %s, continue search for media", fileInfo.Name())
-						continue
-					}
-					log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
-					cache.InsertAlbumPaths(dirPath, rootPath, true)
-					return true
-				}
-			}
+		shouldReturn := false
+		cache, shouldReturn = iterateDirContent(dirContent, dirPath, scanQueue, cache, ignoreEntries, rootPath)
+		if shouldReturn {
+			return true
 		}
 
 	}
@@ -289,4 +319,34 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 		cache.InsertAlbumPath(scanned_path, false)
 	}
 	return false
+}
+
+func iterateDirContent(dirContent []fs.DirEntry, dirPath string, scanQueue *list.List,
+	cache *scanner_cache.AlbumScannerCache, ignoreEntries *ignore.GitIgnore, rootPath string) (
+	*scanner_cache.AlbumScannerCache, bool) {
+
+	for _, fileInfo := range dirContent {
+		filePath := path.Join(dirPath, fileInfo.Name())
+
+		isDirSymlink, err := utils.IsDirSymlink(filePath)
+		if err != nil {
+			log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", filePath)
+			isDirSymlink = false
+		}
+
+		if fileInfo.IsDir() || isDirSymlink {
+			scanQueue.PushBack(filePath)
+		} else {
+			if cache.IsPathMedia(filePath) {
+				if ignoreEntries.MatchesPath(fileInfo.Name()) {
+					log.Printf("Match found %s, continue search for media", fileInfo.Name())
+					continue
+				}
+				log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
+				cache.InsertAlbumPaths(dirPath, rootPath, true)
+				return cache, true
+			}
+		}
+	}
+	return cache, false
 }

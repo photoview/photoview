@@ -8,7 +8,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func scanMedia(ctx scanner_task.TaskContext, media *models.Media, mediaData *media_encoding.EncodeMediaData, mediaIndex int, mediaTotal int) error {
+func scanMedia(ctx scanner_task.TaskContext, media *models.Media, mediaData *media_encoding.EncodeMediaData,
+	mediaIndex int, mediaTotal int) error {
+
 	newCtx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, mediaData)
 	if err != nil {
 		return errors.Wrapf(err, "before process media (%s)", media.Path)
