@@ -13,6 +13,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -23,7 +24,9 @@ type ProcessVideoTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
+func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	mediaCachePath string) ([]*models.MediaURL, error) {
+
 	if mediaData.Media.Type != models.MediaTypeVideo {
 		return []*models.MediaURL{}, nil
 	}
@@ -55,6 +58,42 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error getting video content type")
 	}
 
+	updatedURLs, err = processVideoMetadata(videoOriginalURL, videoType, video, ctx, updatedURLs)
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	updatedURLs, err = encodeNewVideo(videoWebURL, videoType, video, mediaCachePath, ctx, updatedURLs)
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	probeData, err := mediaData.VideoMetadata()
+	if err != nil {
+		return []*models.MediaURL{}, err
+	}
+
+	if videoThumbnailURL == nil {
+		updatedURLs, err = encodeNewVideoThumbnail(video, mediaCachePath, probeData, ctx, updatedURLs)
+		if err != nil {
+			return []*models.MediaURL{}, err
+		}
+	} else {
+		// Verify that video thumbnail still exists in cache
+		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
+
+		updatedURLs, err = reEncodeVideoThumbnail(thumbImagePath, videoThumbnailURL, updatedURLs, video, probeData, ctx)
+		if err != nil {
+			return []*models.MediaURL{}, err
+		}
+	}
+
+	return updatedURLs, nil
+}
+
+func processVideoMetadata(videoOriginalURL *models.MediaURL, videoType *media_type.MediaType, video *models.Media,
+	ctx scanner_task.TaskContext, updatedURLs []*models.MediaURL) ([]*models.MediaURL, error) {
+
 	if videoOriginalURL == nil && videoType.IsWebCompatible() {
 		origVideoPath := video.Path
 		videoMediaName := generateUniqueMediaName(video.Path)
@@ -85,6 +124,11 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		updatedURLs = append(updatedURLs, &mediaURL)
 	}
+	return updatedURLs, nil
+}
+
+func encodeNewVideo(videoWebURL *models.MediaURL, videoType *media_type.MediaType, video *models.Media,
+	mediaCachePath string, ctx scanner_task.TaskContext, updatedURLs []*models.MediaURL) ([]*models.MediaURL, error) {
 
 	if videoWebURL == nil && !videoType.IsWebCompatible() {
 		webVideoName := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
@@ -94,14 +138,15 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		webVideoPath := path.Join(mediaCachePath, webVideoName)
 
-		err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
+		err := executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
 
 		webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
 		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
+			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)",
+				video.Title)
 		}
 
 		fileStats, err := os.Stat(webVideoPath)
@@ -120,24 +165,65 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 
 		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
+			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)",
+				video.Title)
 		}
 
 		updatedURLs = append(updatedURLs, &mediaURL)
 	}
+	return updatedURLs, nil
+}
 
-	probeData, err := mediaData.VideoMetadata()
+func encodeNewVideoThumbnail(video *models.Media, mediaCachePath string, probeData *ffprobe.ProbeData,
+	ctx scanner_task.TaskContext, updatedURLs []*models.MediaURL) ([]*models.MediaURL, error) {
+
+	videoThumbName := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
+	videoThumbName = strings.ReplaceAll(videoThumbName, ".", "_")
+	videoThumbName = strings.ReplaceAll(videoThumbName, " ", "_")
+	videoThumbName = videoThumbName + ".jpg"
+
+	thumbImagePath := path.Join(mediaCachePath, videoThumbName)
+
+	err := executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 	if err != nil {
-		return []*models.MediaURL{}, err
+		return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 	}
 
-	if videoThumbnailURL == nil {
-		videoThumbName := fmt.Sprintf("video_thumb_%s_%s", path.Base(video.Path), utils.GenerateToken())
-		videoThumbName = strings.ReplaceAll(videoThumbName, ".", "_")
-		videoThumbName = strings.ReplaceAll(videoThumbName, " ", "_")
-		videoThumbName = videoThumbName + ".jpg"
+	thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
+	if err != nil {
+		return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
+	}
 
-		thumbImagePath := path.Join(mediaCachePath, videoThumbName)
+	fileStats, err := os.Stat(thumbImagePath)
+	if err != nil {
+		return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
+	}
+
+	thumbMediaURL := models.MediaURL{
+		MediaID:     video.ID,
+		MediaName:   videoThumbName,
+		Width:       thumbDimensions.Width,
+		Height:      thumbDimensions.Height,
+		Purpose:     models.VideoThumbnail,
+		ContentType: "image/jpeg",
+		FileSize:    fileStats.Size(),
+	}
+
+	if err := ctx.GetDB().Create(&thumbMediaURL).Error; err != nil {
+		return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)",
+			video.Title)
+	}
+
+	updatedURLs = append(updatedURLs, &thumbMediaURL)
+	return updatedURLs, nil
+}
+
+func reEncodeVideoThumbnail(thumbImagePath string, videoThumbnailURL *models.MediaURL, updatedURLs []*models.MediaURL,
+	video *models.Media, probeData *ffprobe.ProbeData, ctx scanner_task.TaskContext) ([]*models.MediaURL, error) {
+	if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
+		fmt.Printf("Video thumbnail found in database but not in cache, re-encoding video thumbnail to cache: %s\n",
+			videoThumbnailURL.MediaName)
+		updatedURLs = append(updatedURLs, videoThumbnailURL)
 
 		err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 		if err != nil {
@@ -154,54 +240,14 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
 		}
 
-		thumbMediaURL := models.MediaURL{
-			MediaID:     video.ID,
-			MediaName:   videoThumbName,
-			Width:       thumbDimensions.Width,
-			Height:      thumbDimensions.Height,
-			Purpose:     models.VideoThumbnail,
-			ContentType: "image/jpeg",
-			FileSize:    fileStats.Size(),
-		}
+		videoThumbnailURL.Width = thumbDimensions.Width
+		videoThumbnailURL.Height = thumbDimensions.Height
+		videoThumbnailURL.FileSize = fileStats.Size()
 
-		if err := ctx.GetDB().Create(&thumbMediaURL).Error; err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
-		}
-
-		updatedURLs = append(updatedURLs, &thumbMediaURL)
-	} else {
-		// Verify that video thumbnail still exists in cache
-		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
-
-		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
-			fmt.Printf("Video thumbnail found in database but not in cache, re-encoding photo to cache: %s\n", videoThumbnailURL.MediaName)
-			updatedURLs = append(updatedURLs, videoThumbnailURL)
-
-			err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
-			if err != nil {
-				return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
-			}
-
-			thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
-			if err != nil {
-				return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
-			}
-
-			fileStats, err := os.Stat(thumbImagePath)
-			if err != nil {
-				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
-			}
-
-			videoThumbnailURL.Width = thumbDimensions.Width
-			videoThumbnailURL.Height = thumbDimensions.Height
-			videoThumbnailURL.FileSize = fileStats.Size()
-
-			if err := ctx.GetDB().Save(videoThumbnailURL).Error; err != nil {
-				return []*models.MediaURL{}, errors.Wrap(err, "updating video thumbnail url in database after re-encoding")
-			}
+		if err := ctx.GetDB().Save(videoThumbnailURL).Error; err != nil {
+			return []*models.MediaURL{}, errors.Wrap(err, "updating video thumbnail url in database after re-encoding")
 		}
 	}
-
 	return updatedURLs, nil
 }
 
