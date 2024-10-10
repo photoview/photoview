@@ -31,15 +31,19 @@ type ScannerTask interface {
 	AfterMediaFound(ctx TaskContext, media *models.Media, newMedia bool) error
 
 	BeforeProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData) (TaskContext, error)
-	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
-	AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error
+	ProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData,
+		mediaCachePath string) (updatedURLs []*models.MediaURL, err error)
+	AfterProcessMedia(ctx TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL,
+		mediaIndex int, mediaTotal int) error
 }
 
 type TaskContext struct {
 	ctx context.Context
 }
 
-func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album,
+	cache *scanner_cache.AlbumScannerCache) TaskContext {
+
 	ctx := TaskContext{ctx: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
