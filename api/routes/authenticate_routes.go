@@ -13,7 +13,8 @@ import (
 
 const internalServerError = "internal server error"
 
-func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
+func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (success bool,
+	responseMessage string, responseStatus int, errorMessage error) {
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
@@ -40,7 +41,8 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 	return true, "success", http.StatusAccepted, nil
 }
 
-func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (success bool, responseMessage string, responseStatus int, errorMessage error) {
+func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (success bool,
+	responseMessage string, responseStatus int, errorMessage error) {
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
@@ -62,7 +64,8 @@ func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (succe
 	return true, "success", http.StatusAccepted, nil
 }
 
-func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *int) (success bool, responseMessage string, responseStatus int, errorMessage error) {
+func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *int) (success bool,
+	responseMessage string, responseStatus int, errorMessage error) {
 	// Check if photo is authorized with a share token
 	token := r.URL.Query().Get("token")
 	if token == "" {
@@ -76,33 +79,56 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	}
 
 	// Validate share token password, if set
+	statusStr, httpStatus, err := validateTokenPass(shareToken, r)
+	if err != nil {
+		return false, statusStr, httpStatus, err
+	}
+
+	if shareToken.AlbumID != nil && albumID == nil {
+		return false, "unauthorized", http.StatusForbidden,
+			errors.New("share token is of type album, but no albumID was provided to function")
+	}
+
+	if shareToken.MediaID != nil && mediaID == nil {
+		return false, "unauthorized", http.StatusForbidden,
+			errors.New("share token is of type media, but no mediaID was provided to function")
+	}
+
+	// Check child albums
+	statusStr, httpStatus, err = checkChildAlbums(shareToken, albumID, db)
+	if err != nil {
+		return false, statusStr, httpStatus, err
+	}
+
+	if shareToken.MediaID != nil && *mediaID != *shareToken.MediaID {
+		return false, "unauthorized", http.StatusForbidden, errors.New("media share token does not match mediaID")
+	}
+
+	return true, "", 0, nil
+}
+
+func validateTokenPass(shareToken models.ShareToken, r *http.Request) (string, int, error) {
 	if shareToken.Password != nil {
 		tokenPasswordCookie, err := r.Cookie(fmt.Sprintf("share-token-pw-%s", shareToken.Value))
 		if err != nil {
-			return false, "unauthorized", http.StatusForbidden, errors.Wrap(err, "get share token password cookie")
+			return "unauthorized", http.StatusForbidden, errors.Wrap(err, "get share token password cookie")
 		}
 		// tokenPassword := r.Header.Get("TokenPassword")
 		tokenPassword := tokenPasswordCookie.Value
 
 		if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
-				return false, "unauthorized", http.StatusForbidden, errors.New("incorrect password for share token")
+				return "unauthorized", http.StatusForbidden, errors.New("incorrect password for share token")
 			} else {
-				return false, internalServerError, http.StatusInternalServerError, err
+				return internalServerError, http.StatusInternalServerError, err
 			}
 		}
 	}
+	return "", 0, nil
+}
 
-	if shareToken.AlbumID != nil && albumID == nil {
-		return false, "unauthorized", http.StatusForbidden, errors.New("share token is of type album, but no albumID was provided to function")
-	}
-
-	if shareToken.MediaID != nil && mediaID == nil {
-		return false, "unauthorized", http.StatusForbidden, errors.New("share token is of type media, but no mediaID was provided to function")
-	}
-
+func checkChildAlbums(shareToken models.ShareToken, albumID *int, db *gorm.DB) (string, int, error) {
 	if shareToken.AlbumID != nil && *albumID != *shareToken.AlbumID {
-		// Check child albums
 
 		var count int
 		err := db.Raw(`
@@ -115,17 +141,12 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 			`, *shareToken.AlbumID, albumID).Find(&count).Error
 
 		if err != nil {
-			return false, internalServerError, http.StatusInternalServerError, err
+			return internalServerError, http.StatusInternalServerError, err
 		}
 
 		if count == 0 {
-			return false, "unauthorized", http.StatusForbidden, errors.New("no child albums found for share token")
+			return "unauthorized", http.StatusForbidden, errors.New("no child albums found for share token")
 		}
 	}
-
-	if shareToken.MediaID != nil && *mediaID != *shareToken.MediaID {
-		return false, "unauthorized", http.StatusForbidden, errors.New("media share token does not match mediaID")
-	}
-
-	return true, "", 0, nil
+	return "", 0, nil
 }
