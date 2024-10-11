@@ -10,6 +10,7 @@ import (
 )
 
 func (r *Resolver) Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error) {
+
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized

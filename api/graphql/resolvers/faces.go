@@ -60,7 +60,8 @@ func (r imageFaceResolver) Media(ctx context.Context, obj *models.ImageFace) (*m
 	return &obj.Media, nil
 }
 
-func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup, paginate *models.Pagination) ([]*models.ImageFace, error) {
+func (r faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGroup,
+	paginate *models.Pagination) ([]*models.ImageFace, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -185,7 +186,8 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 
 	faceGroupQuery := db.
 		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Where("image_faces.media_id IN (?)", db.Select("media.id").Table("media").Where(mediaAlbumIDinQuestion, userAlbumIDs)).
+		Where("image_faces.media_id IN (?)",
+			db.Select("media.id").Table("media").Where(mediaAlbumIDinQuestion, userAlbumIDs)).
 		Group("image_faces.face_group_id").
 		Group("face_groups.id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
@@ -201,7 +203,8 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 	return faceGroups, nil
 }
 
-func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error) {
+func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID int,
+	label *string) (*models.FaceGroup, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -224,7 +227,8 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 	return faceGroup, nil
 }
 
-func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error) {
+func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int,
+	sourceFaceGroupID int) (*models.FaceGroup, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -246,7 +250,9 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	}
 
 	updateError := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDisQuestion, sourceFaceGroup.ID).Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
+		if err := tx.Model(&models.ImageFace{}).
+			Where(faceGroupIDisQuestion, sourceFaceGroup.ID).
+			Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
 			return err
 		}
 
@@ -266,7 +272,8 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	return destinationFaceGroup, nil
 }
 
-func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error) {
+func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []int,
+	destinationFaceGroupID int) (*models.FaceGroup, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -313,17 +320,8 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 		}
 
 		// delete face groups if they have become empty
-		for _, faceGroup := range sourceFaceGroups {
-			var count int64
-			if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDisQuestion, faceGroup.ID).Count(&count).Error; err != nil {
-				return err
-			}
-
-			if count == 0 {
-				if err := tx.Delete(&faceGroup).Error; err != nil {
-					return err
-				}
-			}
+		if err := deleteEmptyFaceGroups(sourceFaceGroups, tx); err != nil {
+			return err
 		}
 
 		return nil
@@ -336,6 +334,22 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 	face_detection.GlobalFaceDetector.MergeImageFaces(userOwnedImageFaceIDs, int32(destFaceGroup.ID))
 
 	return destFaceGroup, nil
+}
+
+func deleteEmptyFaceGroups(sourceFaceGroups []*models.FaceGroup, tx *gorm.DB) error {
+	for _, faceGroup := range sourceFaceGroups {
+		var count int64
+		if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDisQuestion, faceGroup.ID).Count(&count).Error; err != nil {
+			return err
+		}
+
+		if count == 0 {
+			if err := tx.Delete(&faceGroup).Error; err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error) {
