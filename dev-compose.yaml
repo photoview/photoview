@@ -7,17 +7,19 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
+      args:
+        - NODE_ENV=development
     env_file: ui/example.env
     volumes:
-    - .:/app:rw
+      - .:/app:rw
     ports:
-    - 1234:1234
+      - 1234:1234
     command:
-    - /bin/bash
-    - -c
-    - |
-      npm ci
-      npm run mon
+      - /bin/bash
+      - -c
+      - |
+        npm ci
+        npm run mon
 
   dev-api:
     image: photoview/api
@@ -32,20 +34,20 @@ services:
       PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(mysql)/photoview_test
       PHOTOVIEW_POSTGRES_URL: postgres://photoview:photosecret@postgres:5432/photoview_test
     volumes:
-    - .:/app:rw
+      - .:/app:rw
     ports:
-    - 4001:4001
+      - 4001:4001
     command:
-    - /bin/bash
-    - -c
-    - |
-      source /app/scripts/set_compiler_env.sh 
-      reflex -g '*.go' -s -- go run .
+      - /bin/bash
+      - -c
+      - |
+        export $(cat /env)
+        reflex -g '*.go' -s -- go run .
 
   mariadb:
     image: mariadb:lts
     profiles:
-    - mysql
+      - mysql
     environment:
       MYSQL_DATABASE: photoview_test
       MYSQL_USER: photoview
@@ -53,31 +55,31 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: yes
     healthcheck:
       test:
-      - CMD
-      - mariadb-admin
-      - --user=photoview
-      - --password=photosecret
-      - ping
+        - CMD
+        - mariadb-admin
+        - --user=photoview
+        - --password=photosecret
+        - ping
       interval: 20s
       timeout: 5s
       retries: 10
     expose:
-    - "3306"
+      - "3306"
 
   postgres:
     image: postgres:16-alpine
     profiles:
-    - postgres
+      - postgres
     environment:
       POSTGRES_DB: photoview_test
       POSTGRES_USER: photoview
       POSTGRES_PASSWORD: photosecret
     healthcheck:
       test:
-      - CMD
-      - pg_isready
+        - CMD
+        - pg_isready
       interval: 20s
       timeout: 5s
       retries: 10
     expose:
-    - "5432"
+      - "5432"

@@ -47,7 +47,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 		var mediaURLs []*models.MediaURL
 		if err := db.Joins("Media").Where(mediaWhereQuery, album.ID).Where("media_urls.purpose IN (?)", mediaPurposeList).Find(&mediaURLs).Error; err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
+			w.Write([]byte(internalServerError))
 			return
 		}
 
@@ -67,7 +67,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			if err != nil {
 				log.Printf("ERROR: Failed to create a file in zip, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 
@@ -75,7 +75,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			if err != nil {
 				log.Printf("ERROR: Failed to get mediaURL cache path, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 
@@ -83,7 +83,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			if err != nil {
 				log.Printf("ERROR: Failed to open file to include in zip, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 
@@ -91,14 +91,14 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 			if err != nil {
 				log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 
 			if err := fileData.Close(); err != nil {
 				log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("internal server error"))
+				w.Write([]byte(internalServerError))
 				return
 			}
 		}

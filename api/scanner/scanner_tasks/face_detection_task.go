@@ -12,7 +12,9 @@ type FaceDetectionTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
+	updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+
 	didProcess := len(updatedURLs) > 0
 
 	if didProcess && mediaData.Media.Type == models.MediaTypePhoto {

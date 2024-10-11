@@ -25,16 +25,16 @@ func TestFullScan(t *testing.T) {
 		return
 	}
 
-	root_album := models.Album{
+	rootAlbum := models.Album{
 		Title: "root album",
 		Path:  "./test_data",
 	}
 
-	if !assert.NoError(t, db.Save(&root_album).Error) {
+	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
 		return
 	}
 
-	err = db.Model(user).Association("Albums").Append(&root_album)
+	err = db.Model(user).Association("Albums").Append(&rootAlbum)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -45,37 +45,37 @@ func TestFullScan(t *testing.T) {
 
 	test_utils.RunScannerOnUser(t, db, user)
 
-	var all_media []*models.Media
-	if !assert.NoError(t, db.Find(&all_media).Error) {
+	var allMedia []*models.Media
+	if !assert.NoError(t, db.Find(&allMedia).Error) {
 		return
 	}
 
-	assert.Equal(t, 9, len(all_media))
+	assert.Equal(t, 9, len(allMedia))
 
-	var all_media_url []*models.MediaURL
-	if !assert.NoError(t, db.Find(&all_media_url).Error) {
+	var allMediaURL []*models.MediaURL
+	if !assert.NoError(t, db.Find(&allMediaURL).Error) {
 		return
 	}
 
-	assert.Equal(t, 18, len(all_media_url))
+	assert.Equal(t, 18, len(allMediaURL))
 
 	// Verify that faces was recognized
 	assert.Eventually(t, func() bool {
-		var all_face_groups []*models.FaceGroup
-		if !assert.NoError(t, db.Find(&all_face_groups).Error) {
+		var allFaceGroups []*models.FaceGroup
+		if !assert.NoError(t, db.Find(&allFaceGroups).Error) {
 			return false
 		}
 
-		return len(all_face_groups) == 3
+		return len(allFaceGroups) == 3
 	}, time.Second*5, time.Millisecond*500)
 
 	assert.Eventually(t, func() bool {
-		var all_image_faces []*models.ImageFace
-		if !assert.NoError(t, db.Find(&all_image_faces).Error) {
+		var allImageFaces []*models.ImageFace
+		if !assert.NoError(t, db.Find(&allImageFaces).Error) {
 			return false
 		}
 
-		return len(all_image_faces) == 6
+		return len(allImageFaces) == 6
 	}, time.Second*5, time.Millisecond*500)
 
 }

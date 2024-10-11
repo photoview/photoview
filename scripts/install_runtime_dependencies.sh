@@ -1,22 +1,14 @@
-#!/bin/bash
+#!/bin/sh
+set -eu
 
 apt-get update
-apt-get install -y curl libdlib19.1 ffmpeg exiftool libheif1
+apt-get install -y curl exiftool
 
-# Install Darktable if building for a supported architecture
-if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then
-  echo 'deb [trusted=true] https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/ /' > /etc/apt/sources.list.d/darktable.list
-  # Release key is invalid, just trust the repo
-  curl -fsSL https://download.opensuse.org/repositories/graphics:/darktable/Debian_12/Release.key \
-    | gpg --dearmor -o /etc/apt/trusted.gpg.d/darktable.gpg
-  gpg --show-keys --with-fingerprint --dry-run /etc/apt/trusted.gpg.d/darktable.gpg
-
-  apt-get update
-  apt-get install -y darktable
-fi
-
-# Remove build dependencies and cleanup
-apt-get purge -y ${BUILD_DEPENDS[@]}
-apt-get autoremove -y
-apt-get clean
-rm -rf /var/lib/apt/lists/*
+# libheif dependencies
+apt-get install -y libaom3 libdav1d6 libde265-0 libjpeg62-turbo libpng16-16 libx265-199
+# libraw dependencies
+apt-get install -y libjpeg62-turbo liblcms2-2
+# ImageMagick dependencies
+apt-get install -y libjxl0.7 liblcms2-2 liblqr-1-0 libdjvulibre21 libjpeg62-turbo libopenjp2-7 libopenexr-3-1-30 libpng16-16 libtiff6 libwebpmux3 libwebpdemux2 libwebp7 libxml2 libfreetype6 libgomp1
+# go-face dependencies
+apt-get install -y libdlib19.1 libblas3 liblapack3 libjpeg62-turbo

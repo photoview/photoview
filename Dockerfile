@@ -4,6 +4,9 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV:-production}
+
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
@@ -25,14 +28,18 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 WORKDIR /app/ui
 
-COPY ui/package.json ui/package-lock.json /app/ui
+COPY ui/package.json ui/package-lock.json /app/ui/
 RUN npm ci
 
 COPY ui/ /app/ui
-RUN npm run build -- --base=$UI_PUBLIC_URL
+RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
+    export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
+    export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
+  fi; \
+  npm run build -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -45,13 +52,29 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/*.sh /app/scripts/
+COPY scripts/set_compiler_env.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
+  && source /app/scripts/set_compiler_env.sh
+
+COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
+RUN export $(cat /env) \
+  && cd /dependencies/ \
+  && tar xfv artifacts.tar.gz \
+  && cp -a include/* /usr/local/include/ \
+  && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
+  && cp -a lib/* /usr/local/lib/ \
+  && cp -a bin/* /usr/local/bin/ \
+  && ldconfig \
+  && apt-get install -y ./deb/jellyfin-ffmpeg.deb
+
+COPY scripts/install_*.sh /app/scripts/
+RUN chmod +x /app/scripts/*.sh \
+  && export $(cat /env) \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
 
 COPY api/go.mod api/go.sum /app/api/
-RUN source /app/scripts/set_compiler_env.sh \
+RUN export $(cat /env) \
   && go env \
   && go mod download \
   # Patch go-face
@@ -62,29 +85,44 @@ RUN source /app/scripts/set_compiler_env.sh \
     github.com/Kagami/go-face
 
 COPY api /app/api
-RUN source /app/scripts/set_compiler_env.sh \
+RUN export $(cat /env) \
+  && go env \
   && go build -v -o photoview .
 
 ### Build release image ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS release
+FROM debian:bookworm-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
-RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
+RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
+  chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
   && groupadd -g 999 photoview \
   && useradd -r -u 999 -g photoview -m photoview \
-  # Required dependencies
-  && /app/scripts/install_runtime_dependencies.sh
-
-WORKDIR /home/photoview
+  # Install required dependencies
+  && /app/scripts/install_runtime_dependencies.sh \
+  # Install self-building libs
+  && cd /dependencies \
+  && cp -a lib/* /usr/local/lib/ \
+  && cp -a bin/* /usr/local/bin/ \
+  && cp -a etc/* /usr/local/etc/ \
+  && ldconfig \
+  && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+  && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
+  && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
+  # Cleanup
+  && apt-get autoremove -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY api/data /app/data
 COPY --from=ui /app/ui/dist /app/ui
 COPY --from=api /app/api/photoview /app/photoview
+
+WORKDIR /home/photoview
 
 ENV PHOTOVIEW_LISTEN_IP=127.0.0.1
 ENV PHOTOVIEW_LISTEN_PORT=80

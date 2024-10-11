@@ -13,7 +13,7 @@
     "mon": "nodemon",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
-    "lint:ci": "eslint ./src --config .eslintrc.js -f json > eslint-report.json",
+    "lint:ci": "eslint ./src --config .eslintrc.js --no-color --fix-dry-run > eslint-report.txt",
     "test": "vitest",
     "test:ci": "CI=true vitest --reporter verbose --run --coverage",
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars && prettier --write */**/__generated__/*.ts",
@@ -59,7 +59,8 @@
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",
     "url-join": "^5.0.0",
     "vite": "^2.9.18",
-    "vite-plugin-svgr": "^2.4.0"
+    "vite-plugin-svgr": "^2.4.0",
+    "husky": "^8.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.5.0",
@@ -76,7 +77,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.1",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "husky": "^9.1.6",
     "i18next-parser": "^9.0.2",
     "lint-staged": "^15.2.10",
     "nodemon": "^3.1.7",

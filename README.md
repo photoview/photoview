@@ -91,14 +91,15 @@ All the photo galleries can do a lot of what I need, but no single one can do it
 > `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located on top of the `backup` section for more details.
 
 1. Download the content of the `docker-compose example` folder to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
-   
+
    Please note that this folder contains 2 versions of the docker-compose file:
    - `docker-compose.example.yml` - the fully-functional and recommended for the most cases config
    - `docker-compose.minimal.example.yml` - the minimal and simple config for those, who find the previous one too complex and difficult to understand and manage
-   
+
    When downloading files, you need to choose only one of them.
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
+> If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
 4. Make sure that your media library's root folder and all the files and subfolders are readable and searchable by other users: run the next command (or corresponding sequence of commands from the `Makefile`):
 
    ```bash
@@ -221,6 +222,8 @@ It may take a long time to build dependencies when launching servers first time.
 ```sh
 $ docker build --target ui -t photoview/ui . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm install # Install dependencies
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
     npm run mon # Monitor source code and (re)launch UI server
 ```
 
@@ -230,6 +233,10 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
 > The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
 
 ## Set up local development environment
+
+In Linux, we recommend to use [Docker Compose or Docker](https://github.com/googollee/photoview?tab=readme-ov-file#set-up-docker-development-environment) as a local development environment.
+
+We can't keep verifying below commands on each environment. People may need to solve dependencies by their own.
 
 ### Install dependencies
 
@@ -243,7 +250,7 @@ The site can now be accessed at [localhost:1234](http://localhost:1234).
         - `dlib`
         - `libjpeg`
         - `libblas` 
-        - `libcblas`, recommended using `libatlas-base`
+        - `libcblas`, recommended using `libatlas-base` in Debian.
         - `liblapack`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
@@ -264,7 +271,7 @@ In macOS, install dependencies:
 
 ```sh
 $ brew update # Update the package list
-$ brew install golang gcc libheif dlib jpeg # For API
+$ brew install golang gcc pkg-config libheif dlib jpeg # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
@@ -287,6 +294,7 @@ You can install `node` with other package manager if you like.
     - Comment the SQLite path variable
     - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
     - Uncomment the corresponding connection string variable for the new driver
+    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
   - Optional: modify other variables if needed according to the inline comments
 2. Rename `/ui/example.env` to `.env`
 

@@ -54,16 +54,16 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 	}
 
 	if u.Language != nil {
-		lang_str := string(*u.Language)
-		found_match := false
+		langStr := string(*u.Language)
+		foundMatch := false
 		for _, lang := range AllLanguageTranslation {
-			if string(lang) == lang_str {
-				found_match = true
+			if string(lang) == langStr {
+				foundMatch = true
 				break
 			}
 		}
 
-		if !found_match {
+		if !foundMatch {
 			return errors.New("invalid language value")
 		}
 	}
@@ -133,12 +133,12 @@ func (user *User) GenerateAccessToken(db *gorm.DB) (*AccessToken, error) {
 		bytes[i] = CHARACTERS[b%byte(len(CHARACTERS))]
 	}
 
-	token_value := string(bytes)
+	tokenValue := string(bytes)
 	expire := time.Now().Add(14 * 24 * time.Hour)
 
 	token := AccessToken{
 		UserID: user.ID,
-		Value:  token_value,
+		Value:  tokenValue,
 		Expire: expire,
 	}
 
@@ -166,7 +166,9 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	filter := func(query *gorm.DB) *gorm.DB {
-		return query.Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)", user.ID)
+		return query.Where(
+			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)",
+			user.ID)
 	}
 
 	ownedParents, err := album.GetParents(db, filter)

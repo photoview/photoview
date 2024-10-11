@@ -12,7 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Time, password *string) (*models.ShareToken,
+	error) {
+
 	var media models.Media
 
 	var query string
@@ -56,11 +58,14 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 	return &shareToken, nil
 }
 
-func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string) (*models.ShareToken,
+	error) {
+
 	var count int64
 	err := db.
 		Model(&models.Album{}).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)", user.ID).
+		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)",
+			user.ID).
 		Count(&count).Error
 
 	if err != nil {
