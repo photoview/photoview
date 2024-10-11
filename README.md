@@ -159,6 +159,14 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 
 Setting up and configuring of all these protections depends on and requires a lot of info about your local network and self-hosted services. Based on this info, the configuration flow and resulting services architecture might differ a lot between cases. That is why in the scope of this project, we can only provide you with this high-level list of possible ways of webservice protection. You'll need to investigate them, find the best combination and configuration for your case, and take responsibility to configure everything in the correct and consistent way. We cannot provide you support for such highly secured setups, as a lot of things might work differently because of security limitations.
 
+### Hardware Acceleration
+
+It is possible to run the FFmpeg with a codec supproting the hardware acceleration, by defining `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION`. The value should be one of `qsv`, `vaapi`, `nvenc`.
+
+We only verified the hardware acceleration with `qsv` on an Intel chip. To let it work, it must map `/dev/dri` devices and set a ENV `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv`. See [docker-compose.example.yml](./docker-compose example/docker-compose.example.yml).
+
+If you verify other hardware accelerations working well, let us know.
+
 ## Contributing
 
 🎉 First off, thanks for your interest in contribution! 🎉
