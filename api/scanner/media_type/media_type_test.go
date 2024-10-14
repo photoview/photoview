@@ -14,9 +14,17 @@ func TestMain(m *testing.M) {
 }
 
 func TestMediaTypeIsFunctions(t *testing.T) {
+	const (
+		TypeText media_type.MediaType = "text/plain"
+		TypeMP3  media_type.MediaType = "audio/mpeg"
+	)
+
 	rawType := media_type.TypeCR2
 	pngType := media_type.TypePng
 	mp4Type := media_type.TypeMP4
+
+	txtType := TypeText
+	mp3Type := TypeMP3
 
 	assert.True(t, rawType.IsRaw())
 	assert.False(t, pngType.IsRaw())
@@ -28,6 +36,11 @@ func TestMediaTypeIsFunctions(t *testing.T) {
 	assert.False(t, pngType.IsVideo())
 
 	assert.True(t, pngType.IsBasicTypeSupported())
+
+	assert.True(t, rawType.IsSupported())
+	assert.True(t, pngType.IsSupported())
+	assert.False(t, txtType.IsSupported())
+	assert.False(t, mp3Type.IsSupported())
 }
 
 func TestMediaTypeFromExtension(t *testing.T) {
