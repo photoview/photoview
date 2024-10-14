@@ -10,6 +10,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 )
 
@@ -18,6 +19,10 @@ type CounterpartFilesTask struct {
 }
 
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
+	// Don't skip the JPEGs if raw processing is disabled. Treat them as standalone files.
+	if utils.EnvDisableRawProcessing.GetBool() {
+		return false, nil
+	}
 
 	// Skip the JPEGs that are compressed version of raw files
 	counterpartFile := scanForRawCounterpartFile(mediaPath)
