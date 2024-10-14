@@ -65,7 +65,7 @@ jobs:
 
       - name: Generate report
         id: scan
-        uses: anchore/scan-action@v4
+        uses: anchore/scan-action@v5
         with:
           path: "."
           fail-build: false
@@ -79,7 +79,7 @@ jobs:
 
       - name: Scan PR source code
         id: scan-fixed
-        uses: anchore/scan-action@v4
+        uses: anchore/scan-action@v5
         if: always() && github.event_name == 'pull_request'
         with:
           path: "."
