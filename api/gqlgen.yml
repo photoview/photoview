@@ -1,10 +1,7 @@
-# .gqlgen.yml example
-#
 # Refer to https://gqlgen.com/config/
-# for detailed .gqlgen.yml documentation.
 
 schema:
-  - graphql/schema.graphql
+  - graphql/resolvers/*.graphql
 
 exec:
   filename: graphql/generated.go
@@ -14,8 +11,10 @@ model:
   package: models
 
 resolver:
-  filename: graphql/resolvers/root.go
-  type: Resolver
+  layout: follow-schema
+  dir: graphql/resolvers
+  package: resolvers
+  filename_template: "{name}.generated.go"
 
 autobind: []
 
