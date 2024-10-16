@@ -15,6 +15,10 @@ export interface sidebarGetAlbumShares_album_shares {
    * Whether or not a password is needed to access the share
    */
   hasPassword: boolean
+  /**
+   * Whether to allow downloading this share
+   */
+  allowDownload: boolean
 }
 
 export interface sidebarGetAlbumShares_album {
