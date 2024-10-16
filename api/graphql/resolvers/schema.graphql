@@ -44,23 +44,6 @@ type Query {
   "User preferences for the logged in user"
   myUserPreferences: UserPreferences! @isAuthorized
 
-  "List of albums owned by the logged in user."
-  myAlbums(
-    order: Ordering,
-    paginate: Pagination
-    "Return only albums from the root directory of the user"
-    onlyRoot: Boolean
-    "Return also albums with no media directly in them"
-    showEmpty: Boolean
-    "Show only albums having favorites"
-    onlyWithFavorites: Boolean
-  ): [Album!]! @isAuthorized
-  """
-  Get album by id, user must own the album or be admin
-  If valid tokenCredentials are provided, the album may be retrived without further authentication
-  """
-  album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
-
   "List of media owned by the logged in user"
   myMedia(order: Ordering, paginate: Pagination): [Media!]! @isAuthorized
   """
@@ -168,11 +151,6 @@ type Mutation {
 
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
-
-  "Reset the assigned cover photo for an album"
-  resetAlbumCover(albumID: ID!): Album! @isAuthorized
-  "Assign a cover photo to an album"
-  setAlbumCover(coverID: ID!): Album! @isAuthorized
 
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
@@ -308,39 +286,6 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
-}
-
-type Album {
-  id: ID!
-  title: String!
-
-  "The media inside this album"
-  media(
-    order: Ordering,
-    paginate: Pagination
-    "Return only the favorited media"
-    onlyFavorites: Boolean
-  ): [Media!]!
-
-  "The albums contained in this album"
-  subAlbums(
-    order: Ordering,
-    paginate: Pagination
-  ): [Album!]!
-
-  "The album which contains this album"
-  parentAlbum: Album
-  "The user who owns this album"
-  owner: User!
-  "The path on the filesystem of the server, where this album is located"
-  filePath: String!
-  "An image in this album used for previewing this album"
-  thumbnail: Media
-  "A breadcrumb list of all parent albums down to this one"
-  path: [Album!]!
-
-  "A list of share tokens pointing to this album, owned by the logged in user"
-  shares: [ShareToken!]!
 }
 
 type MediaURL {
