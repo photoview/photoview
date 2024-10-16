@@ -77,11 +77,6 @@ type Query {
 
   "Perform a search query on the contents of the media library"
   search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
-
-  "Get a list of `FaceGroup`s for the logged in user"
-  myFaceGroups(paginate: Pagination): [FaceGroup!]! @isAuthorized
-  "Get a particular `FaceGroup` specified by its ID"
-  faceGroup(id: ID!): FaceGroup! @isAuthorized
 }
 
 type Mutation {
@@ -152,16 +147,6 @@ type Mutation {
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 
-  "Assign a label to a face group, set label to null to remove the current one"
-  setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
-  "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
-  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup! @isAuthorized
-  "Move a list of ImageFaces to another face group"
-  moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup! @isAuthorized
-  "Check all unlabeled faces to see if they match a labeled FaceGroup, and move them if they match"
-  recognizeUnlabeledFaces: [ImageFace!]! @isAuthorized
-  "Move a list of ImageFaces to a new face group"
-  detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup! @isAuthorized
 }
 
 type Subscription {
@@ -410,33 +395,4 @@ type TimelineGroup {
   mediaTotal: Int!
   "The day shared for all media in this timeline group"
   date: Time!
-}
-
-"A collection of faces of a particular person"
-type FaceGroup {
-  id: ID!
-  "The name of the person"
-  label: String
-  imageFaces(paginate: Pagination): [ImageFace!]!
-  "The total number of images in this collection"
-  imageFaceCount: Int!
-}
-
-"A single face on a particular image"
-type ImageFace {
-  id: ID!
-  "A reference to the image the face appears on"
-  media: Media!
-  "A bounding box of where on the image the face is present"
-  rectangle: FaceRectangle!
-  "The `FaceGroup` that contains this `ImageFace`"
-  faceGroup: FaceGroup!
-}
-
-"A bounding box of where a face is present on an image. The values map from 0 to 1 as a fraction of the image width/height"
-type FaceRectangle {
-  minX: Float!
-  maxX: Float!
-  minY: Float!
-  maxY: Float!
 }
