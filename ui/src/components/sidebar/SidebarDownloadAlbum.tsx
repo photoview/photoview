@@ -6,10 +6,15 @@ import SidebarTable from './SidebarTable'
 
 type SidebarAlbumDownladProps = {
   albumID: string
+  shareToken?: string
 }
 
-const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
+const SidebarAlbumDownload = ({
+  albumID,
+  shareToken,
+}: SidebarAlbumDownladProps) => {
   const { t } = useTranslation()
+  const token = shareToken ? `?token=${shareToken}` : ''
 
   const downloads = [
     {
@@ -53,7 +58,7 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
     <SidebarTable.Row
       key={x.purpose}
       onClick={() =>
-        (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
+        (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}${token}`)
       }
       tabIndex={0}
     >

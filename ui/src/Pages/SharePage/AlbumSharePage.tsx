@@ -148,6 +148,7 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
           showFilter
           setOrdering={orderParams.setOrdering}
           ordering={orderParams}
+          token={token}
         />
         <PaginateLoader
           active={!finishedLoadingMore && !loading}

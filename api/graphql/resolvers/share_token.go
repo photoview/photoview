@@ -40,6 +40,10 @@ func (r *shareTokenResolver) HasPassword(ctx context.Context, obj *models.ShareT
 	return hasPassword, nil
 }
 
+func (r *shareTokenResolver) AllowDownload(ctx context.Context, obj *models.ShareToken) (bool, error) {
+	return obj.AllowDownload, nil
+}
+
 func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 
 	var token models.ShareToken
@@ -133,4 +137,13 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, tokenValue str
 	}
 
 	return actions.ProtectShareToken(r.DB(ctx), user.ID, tokenValue, password)
+}
+
+func (r *mutationResolver) ToggleShareDownload(ctx context.Context, tokenValue string, allowDownload bool) (*models.ShareToken, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return actions.ToggleShareDownload(r.DB(ctx), user.ID, tokenValue, allowDownload)
 }
