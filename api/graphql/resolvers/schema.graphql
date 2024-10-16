@@ -44,17 +44,6 @@ type Query {
   "User preferences for the logged in user"
   myUserPreferences: UserPreferences! @isAuthorized
 
-  "List of media owned by the logged in user"
-  myMedia(order: Ordering, paginate: Pagination): [Media!]! @isAuthorized
-  """
-  Get media by id, user must own the media or be admin.
-  If valid tokenCredentials are provided, the media may be retrived without further authentication
-  """
-  media(id: ID!, tokenCredentials: ShareTokenCredentials): Media!
-
-  "Get a list of media by their ids, user must own the media or be admin"
-  mediaList(ids: [ID!]!): [Media!]!
-
   """
   Get a list of media, ordered first by day, then by album if multiple media was found for the same day.
   """
@@ -98,9 +87,6 @@ type Mutation {
   deleteShareToken(token: String!): ShareToken! @isAuthorized
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken! @isAuthorized
-
-  "Mark or unmark a media as being a favorite"
-  favoriteMedia(mediaId: ID!, favorite: Boolean!): Media! @isAuthorized
 
   "Update a user, fields left as `null` will not be changed"
   updateUser(
@@ -265,88 +251,6 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
-}
-
-type MediaURL {
-  "URL for previewing the image"
-  url: String!
-  "Width of the image in pixels"
-  width: Int!
-  "Height of the image in pixels"
-  height: Int!
-  "The file size of the resource in bytes"
-  fileSize: Int!
-}
-
-type MediaDownload {
-  "A description of the role of the media file"
-  title: String!
-  mediaUrl: MediaURL!
-}
-
-enum MediaType {
-  Photo
-  Video
-}
-
-type Media {
-  id: ID!
-  title: String!
-  "Local filepath for the media"
-  path: String!
-  "URL to display the media in a smaller resolution"
-  thumbnail: MediaURL
-  "URL to display the photo in full resolution, will be null for videos"
-  highRes: MediaURL
-  "URL to get the video in a web format that can be played in the browser, will be null for photos"
-  videoWeb: MediaURL
-  "The album that holds the media"
-  album: Album!
-  exif: MediaEXIF
-  videoMetadata: VideoMetadata
-  favorite: Boolean!
-  type: MediaType!
-  "The date the image was shot or the date it was imported as a fallback"
-  date: Time!
-  "A short string that can be used to generate a blured version of the media, to show while the original is loading"
-  blurhash: String
-
-  "A list of share tokens pointing to this media, owned byt the logged in user"
-  shares: [ShareToken!]!
-  "A list of different versions of files for this media that can be downloaded by the user"
-  downloads: [MediaDownload!]!
-
-  "A list of faces present on the image"
-  faces: [ImageFace!]!
-}
-
-"EXIF metadata from the camera"
-type MediaEXIF {
-  id: ID!
-  media: Media!
-  "The description of the image"
-  description: String
-  "The model name of the camera"
-  camera: String
-  "The maker of the camera"
-  maker: String
-  "The name of the lens"
-  lens: String
-  dateShot: Time
-  "The exposure time of the image"
-  exposure: Float
-  "The aperature stops of the image"
-  aperture: Float
-  "The ISO setting of the image"
-  iso: Int
-  "The focal length of the lens, when the image was taken"
-  focalLength: Float
-  "A formatted description of the flash settings, when the image was taken"
-  flash: Int
-  "An index describing the mode for adjusting the exposure of the image"
-  exposureProgram: Int
-  "GPS coordinates of where the image was taken"
-  coordinates: Coordinates
 }
 
 type Coordinates {
