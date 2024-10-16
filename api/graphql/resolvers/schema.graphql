@@ -65,11 +65,6 @@ type Query {
     fromDate: Time
   ): [Media!]! @isAuthorized
 
-  "Get media owned by the logged in user, returned in GeoJson format"
-  myMediaGeoJson: Any! @isAuthorized
-  "Get the mapbox api token, returns null if mapbox is not enabled"
-  mapboxToken: String
-
   "Fetch a share token containing an `Album` or `Media`"
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   "Check if the `ShareToken` credentials are valid"
@@ -146,7 +141,6 @@ type Mutation {
 
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
-
 }
 
 type Subscription {
