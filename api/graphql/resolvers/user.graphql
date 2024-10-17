@@ -1,0 +1,32 @@
+type User {
+  id: ID!
+  username: String!
+  "All albums owned by this user"
+  albums: [Album!]! @isAdmin
+  "Top level albums owned by this user"
+  rootAlbums: [Album!]! @isAdmin
+  "Whether or not the user has admin privileges"
+  admin: Boolean!
+}
+
+"Preferences for regular users"
+type UserPreferences {
+  id: ID!
+  language: LanguageTranslation
+}
+
+extend type Query {
+  "List of registered users, must be admin to call"
+  user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
+
+  "Information about the currently logged in user"
+  myUser: User! @isAuthorized
+
+  "User preferences for the logged in user"
+  myUserPreferences: UserPreferences! @isAuthorized
+}
+
+extend type Mutation {
+  "Change user preferences for the logged in user"
+  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+}
