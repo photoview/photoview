@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	done := setPathWithCurrent()
+	done := setPathWithTestdataBin()
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -21,10 +22,10 @@ func TestFfmpegNotExist(t *testing.T) {
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithTestdataBin()
 	defer donePath()
 
-	doneEnv := setEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
+	doneEnv := test_utils.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 	defer doneEnv()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -35,7 +36,7 @@ func TestFfmpegIgnore(t *testing.T) {
 }
 
 func TestFfmpeg(t *testing.T) {
-	done := setPathWithCurrent("./testdata/bin")
+	done := setPathWithTestdataBin()
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -45,7 +46,7 @@ func TestFfmpeg(t *testing.T) {
 	}
 
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
-		doneEnv := setEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
 		err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
@@ -70,7 +71,7 @@ func TestFfmpeg(t *testing.T) {
 		},
 	}
 	t.Run("EncodeVideoThumbnailMp4Failed", func(t *testing.T) {
-		doneEnv := setEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
 		err := executable_worker.Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
@@ -91,15 +92,15 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
-	doneCodec := setEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
+	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 	defer doneCodec()
 
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithTestdataBin()
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
 
-	doneEnv := setEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
 	err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
@@ -112,15 +113,15 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 }
 
 func TestFfmpegWithCustomCOdec(t *testing.T) {
-	doneCodec := setEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
+	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 	defer doneCodec()
 
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := setPathWithTestdataBin()
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
 
-	doneEnv := setEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
 	err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
