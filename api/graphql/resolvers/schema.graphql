@@ -83,9 +83,6 @@ type Mutation {
   """
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
-  "Set the filter to be used when generating thumbnails"
-  setThumbnailDownsampleMethod(method: ThumbnailFilter!): ThumbnailFilter! @isAdmin
-
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 }
@@ -103,16 +100,6 @@ type ScannerResult {
   success: Boolean!
   progress: Float
   message: String
-}
-
-"Supported downsampling filters for thumbnail generation"
-enum ThumbnailFilter {
-  NearestNeighbor,
-  Box,
-	Linear,
-	MitchellNetravali,
-	CatmullRom,
-	Lanczos,
 }
 
 type User {
