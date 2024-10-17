@@ -27,6 +27,14 @@ input Ordering {
   order_direction: OrderDirection
 }
 
+type AuthorizeResult {
+  success: Boolean!
+  "A textual status message describing the result, can be used to show an error message when `success` is false"
+  status: String!
+  "An access token used to authenticate new API requests as the newly authorized user. Is present when success is true"
+  token: String
+}
+
 type Query
 
 type Mutation {
@@ -64,61 +72,6 @@ type Mutation {
   A list of root paths for a particular user can be retrived from the `User.rootAlbums` path.
   """
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
-}
-
-type AuthorizeResult {
-  success: Boolean!
-  "A textual status message describing the result, can be used to show an error message when `success` is false"
-  status: String!
-  "An access token used to authenticate new API requests as the newly authorized user. Is present when success is true"
-  token: String
-}
-
-type ScannerResult {
-  finished: Boolean!
-  success: Boolean!
-  progress: Float
-  message: String
-}
-
-"Supported language translations of the user interface"
-enum LanguageTranslation {
-  English,
-  French,
-  Italian,
-  Swedish,
-  Danish,
-  Spanish,
-  Polish,
-  Ukrainian,
-  German,
-  Russian,
-  TraditionalChinese,
-  SimplifiedChinese,
-  Portuguese,
-  Basque,
-  Turkish
-}
-
-type Coordinates {
-  "GPS latitude in degrees"
-  latitude: Float!
-  "GPS longitude in degrees"
-  longitude: Float!
-}
-
-"Metadata specific to video media"
-type VideoMetadata {
-  id: ID!
-  media: Media!
-  width: Int!
-  height: Int!
-  duration: Float!
-  codec: String
-  framerate: Float
-  bitrate: String
-  colorProfile: String
-  audio: String
 }
 
 "A group of media from the same album and the same day, that is grouped together in a timeline view"
