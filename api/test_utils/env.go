@@ -36,3 +36,14 @@ func SetEnv(key, value string) func() {
 		os.Setenv(key, org)
 	}
 }
+
+func PathFromAPIRoot(rootRelatedPath string) string {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("Can't get the path of current function. It should not happen.")
+	}
+
+	base := filepath.Dir(file)
+
+	return filepath.Join(base, "..", rootRelatedPath)
+}
