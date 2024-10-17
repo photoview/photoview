@@ -27,14 +27,6 @@ input Ordering {
   order_direction: OrderDirection
 }
 
-type AuthorizeResult {
-  success: Boolean!
-  "A textual status message describing the result, can be used to show an error message when `success` is false"
-  status: String!
-  "An access token used to authenticate new API requests as the newly authorized user. Is present when success is true"
-  token: String
-}
-
 type Query
 
 type Mutation
