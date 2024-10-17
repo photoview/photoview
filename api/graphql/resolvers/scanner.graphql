@@ -1,0 +1,16 @@
+extend type Mutation {
+  "Scan all users for new media"
+  scanAll: ScannerResult! @isAdmin
+
+  "Scan a single user for new media"
+  scanUser(userId: ID!): ScannerResult! @isAdmin
+
+  """
+  Set how often, in seconds, the server should automatically scan for new media,
+  a value of 0 will disable periodic scans
+  """
+  setPeriodicScanInterval(interval: Int!): Int! @isAdmin
+
+  "Set max number of concurrent scanner jobs running at once"
+  setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
+}
