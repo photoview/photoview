@@ -348,7 +348,6 @@ type QueryResolver interface {
 	MyTimeline(ctx context.Context, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) ([]*models.Media, error)
 	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error)
-	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
 	Album(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Album, error)
 	MyFaceGroups(ctx context.Context, paginate *models.Pagination) ([]*models.FaceGroup, error)
@@ -358,6 +357,7 @@ type QueryResolver interface {
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (any, error)
 	MapboxToken(ctx context.Context) (*string, error)
+	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 }
 type ShareTokenResolver interface {
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
@@ -1784,7 +1784,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/scanner.graphql" "resolvers/schema.graphql"
+//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/scanner.graphql" "resolvers/schema.graphql" "resolvers/search.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1803,6 +1803,7 @@ var sources = []*ast.Source{
 	{Name: "resolvers/notification.graphql", Input: sourceData("resolvers/notification.graphql"), BuiltIn: false},
 	{Name: "resolvers/scanner.graphql", Input: sourceData("resolvers/scanner.graphql"), BuiltIn: false},
 	{Name: "resolvers/schema.graphql", Input: sourceData("resolvers/schema.graphql"), BuiltIn: false},
+	{Name: "resolvers/search.graphql", Input: sourceData("resolvers/search.graphql"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -10241,69 +10242,6 @@ func (ec *executionContext) fieldContext_Query_shareTokenValidatePassword(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_search(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Search(rctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.SearchResult)
-	fc.Result = res
-	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "query":
-				return ec.fieldContext_SearchResult_query(ctx, field)
-			case "albums":
-				return ec.fieldContext_SearchResult_albums(ctx, field)
-			case "media":
-				return ec.fieldContext_SearchResult_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchResult", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_myAlbums(ctx, field)
 	if err != nil {
@@ -11046,6 +10984,69 @@ func (ec *executionContext) fieldContext_Query_mapboxToken(_ context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Search(rctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.SearchResult)
+	fc.Result = res
+	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "query":
+				return ec.fieldContext_SearchResult_query(ctx, field)
+			case "albums":
+				return ec.fieldContext_SearchResult_albums(ctx, field)
+			case "media":
+				return ec.fieldContext_SearchResult_media(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -16891,28 +16892,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "search":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_search(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "myAlbums":
 			field := field
 
@@ -17099,6 +17078,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_mapboxToken(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "search":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
