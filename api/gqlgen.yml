@@ -14,7 +14,7 @@ resolver:
   layout: follow-schema
   dir: graphql/resolvers
   package: resolvers
-  filename_template: "{name}.generated.go"
+  filename_template: "{name}.go"
 
 autobind: []
 
