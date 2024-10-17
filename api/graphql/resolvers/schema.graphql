@@ -58,9 +58,6 @@ type Query {
   shareToken(credentials: ShareTokenCredentials!): ShareToken!
   "Check if the `ShareToken` credentials are valid"
   shareTokenValidatePassword(credentials: ShareTokenCredentials!): Boolean!
-
-  "Perform a search query on the contents of the media library"
-  search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
 }
 
 type Mutation {
@@ -226,15 +223,6 @@ type VideoMetadata {
   bitrate: String
   colorProfile: String
   audio: String
-}
-
-type SearchResult {
-  "The string that was searched for"
-  query: String!
-  "A list of albums that matched the query"
-  albums: [Album!]!
-  "A list of media that matched the query"
-  media: [Media!]!
 }
 
 "A group of media from the same album and the same day, that is grouped together in a timeline view"
