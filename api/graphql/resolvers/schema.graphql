@@ -28,8 +28,6 @@ input Ordering {
 }
 
 type Query {
-  siteInfo: SiteInfo!
-
   "List of registered users, must be admin to call"
   user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
   "Information about the currently logged in user"
@@ -115,20 +113,6 @@ enum ThumbnailFilter {
 	MitchellNetravali,
 	CatmullRom,
 	Lanczos,
-}
-
-"General information about the site"
-type SiteInfo {
-  "Whether or not the initial setup wizard should be shown"
-  initialSetup: Boolean!
-  "Whether or not face detection is enabled and working"
-  faceDetectionEnabled: Boolean!
-  "How often automatic scans should be initiated in seconds"
-  periodicScanInterval: Int! @isAdmin
-  "How many max concurrent scanner jobs that should run at once"
-  concurrentWorkers: Int! @isAdmin
-  "The filter to use when generating thumbnails"
-  thumbnailMethod: ThumbnailFilter! @isAdmin
 }
 
 type User {
