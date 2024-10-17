@@ -2,6 +2,7 @@ package routes
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -73,6 +74,11 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 
 	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
 		return false, internalServerError, http.StatusInternalServerError, err
+	}
+
+	log.Println("Media id ", mediaID, " album id ", albumID, " share token ", shareToken.Value, " allow download ", shareToken.AllowDownload)
+	if shareToken.AllowDownload == false && mediaID == nil {
+		return false, "unauthorized", http.StatusForbidden, errors.New("share token does not allow download")
 	}
 
 	// Validate share token password, if set

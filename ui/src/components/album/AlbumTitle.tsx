@@ -9,8 +9,10 @@ import { albumPathQuery } from './__generated__/albumPathQuery'
 import useDelay from '../../hooks/useDelay'
 
 import { ReactComponent as GearIcon } from './icons/gear.svg'
+import { ReactComponent as DownloadIcon } from './icons/download.svg'
 import { tailwindClassNames } from '../../helpers/utils'
 import { buttonStyles } from '../../primitives/form/Input'
+import AlbumShareSidebar from '../sidebar/AlbumShareSidebar'
 
 export const BreadcrumbList = styled.ol<{ hideLastArrow?: boolean }>`
   &
@@ -44,9 +46,14 @@ type AlbumTitleProps = {
     title: string
   }
   disableLink: boolean
+  shareToken?: string
 }
 
-const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
+const AlbumTitle = ({
+  album,
+  disableLink = false,
+  shareToken,
+}: AlbumTitleProps) => {
   const [fetchPath, { data: pathData }] =
     useLazyQuery<albumPathQuery>(ALBUM_PATH_QUERY)
   const { updateSidebar } = useContext(SidebarContext)
@@ -113,6 +120,20 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
           }}
         >
           <GearIcon />
+        </button>
+      )}
+      {!authToken() && (
+        <button
+          title="Download album"
+          aria-label="Download album"
+          className={tailwindClassNames(buttonStyles({}), 'px-1 ml-2')}
+          onClick={() => {
+            updateSidebar(
+              <AlbumShareSidebar albumId={album.id} shareToken={shareToken} />
+            )
+          }}
+        >
+          <DownloadIcon className="w-6 h-6" />
         </button>
       )}
     </div>

@@ -135,6 +135,21 @@ func ProtectShareToken(db *gorm.DB, userID int, tokenValue string, password *str
 	return token, nil
 }
 
+func ToggleShareDownload(db *gorm.DB, userID int, tokenValue string, allowDownload bool) (*models.ShareToken, error) {
+	token, err := getUserToken(db, userID, tokenValue)
+	if err != nil {
+		return nil, err
+	}
+
+	token.AllowDownload = allowDownload
+
+	if err := db.Save(&token).Error; err != nil {
+		return nil, errors.Wrap(err, "failed to update allowed downloaded for share token")
+	}
+
+	return token, nil
+}
+
 func hashSharePassword(password *string) (*string, error) {
 	var hashedPassword *string = nil
 	if password != nil {

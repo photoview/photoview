@@ -44,6 +44,8 @@ func main() {
 	// Migrate database
 	if err := database.MigrateDatabase(db); err != nil {
 		log.Panicf("Could not migrate database: %s\n", err)
+	} else {
+		log.Printf("Migrated database\n")
 	}
 
 	if err := scanner_queue.InitializeScannerQueue(db); err != nil {

@@ -46,6 +46,10 @@ import {
   sidebarProtectShare,
   sidebarProtectShareVariables,
 } from './__generated__/sidebarProtectShare'
+import {
+  sidebarToggleShareDownload,
+  sidebarToggleShareDownloadVariables,
+} from './__generated__/sidebarToggleShareDownload'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -55,6 +59,7 @@ const SHARE_PHOTO_QUERY = gql`
         id
         token
         hasPassword
+        allowDownload
       }
     }
   }
@@ -68,6 +73,7 @@ const SHARE_ALBUM_QUERY = gql`
         id
         token
         hasPassword
+        allowDownload
       }
     }
   }
@@ -97,6 +103,25 @@ const PROTECT_SHARE_MUTATION = gql`
     }
   }
 `
+
+const TOGGLE_DOWNLOAD_MUTATION = gql`
+  mutation sidebarToggleShareDownload(
+    $token: String!
+    $allowDownload: Boolean!
+  ) {
+    toggleShareDownload(token: $token, allowDownload: $allowDownload) {
+      token
+      allowDownload
+    }
+  }
+`
+
+export const useToggleAllowShareDownloadMutation = () => {
+  return useMutation<
+    sidebarToggleShareDownload,
+    sidebarToggleShareDownloadVariables
+  >(TOGGLE_DOWNLOAD_MUTATION)
+}
 
 const DELETE_SHARE_MUTATION = gql`
   mutation sidebareDeleteShare($token: String!) {
@@ -248,6 +273,46 @@ const MorePopoverSectionPassword = ({
   )
 }
 
+type MorePopoverSectionAllowDownloadProps = {
+  share: sidebarGetAlbumShares_album_shares
+  query: DocumentNode
+  id: string
+}
+
+const MorePopoverSectionAllowDownload = ({
+  share,
+  query,
+  id,
+}: MorePopoverSectionAllowDownloadProps) => {
+  const [allowDownload, setAllowDownload] = useState(share.allowDownload)
+  const [toggleDownload] = useToggleAllowShareDownloadMutation()
+  console.log('Current share state:', share) // Debug log
+
+  const checkboxChange = () => {
+    const enable = !allowDownload
+    console.log(`change ${enable.toString()}`)
+    setAllowDownload(enable)
+    console.log(`Attempting to change allowDownload to: ${enable.toString()}`)
+    toggleDownload({
+      variables: {
+        token: share.token,
+        allowDownload: enable,
+      },
+      refetchQueries: [{ query: query, variables: { id } }],
+    })
+  }
+
+  return (
+    <div className="px-4 py-2">
+      <Checkbox
+        label="Allow downloading"
+        checked={allowDownload}
+        onChange={checkboxChange}
+      />
+    </div>
+  )
+}
+
 type MorePopoverProps = {
   id: string
   query: DocumentNode
@@ -273,6 +338,11 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
             <Checkbox label="Expiration date" />
             <TextField className="mt-2 w-full" />
           </div>
+          <MorePopoverSectionAllowDownload
+            share={share}
+            query={query}
+            id={id}
+          />
         </ArrowPopoverPanel>
       </Popover.Panel>
     </Popover>
