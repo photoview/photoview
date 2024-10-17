@@ -74,11 +74,6 @@ type Mutation {
     rootPath: String!
   ): AuthorizeResult
 
-  "Scan all users for new media"
-  scanAll: ScannerResult! @isAdmin
-  "Scan a single user for new media"
-  scanUser(userId: ID!): ScannerResult! @isAdmin
-
   "Generate share token for album"
   shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken! @isAuthorized
   "Generate share token for media"
@@ -112,15 +107,6 @@ type Mutation {
   A list of root paths for a particular user can be retrived from the `User.rootAlbums` path.
   """
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
-
-  """
-  Set how often, in seconds, the server should automatically scan for new media,
-  a value of 0 will disable periodic scans
-  """
-  setPeriodicScanInterval(interval: Int!): Int! @isAdmin
-
-  "Set max number of concurrent scanner jobs running at once"
-  setScannerConcurrentWorkers(workers: Int!): Int! @isAdmin
 
   "Set the filter to be used when generating thumbnails"
   setThumbnailDownsampleMethod(method: ThumbnailFilter!): ThumbnailFilter! @isAdmin
