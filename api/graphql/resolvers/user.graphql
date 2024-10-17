@@ -46,6 +46,42 @@ extend type Query {
 }
 
 extend type Mutation {
+  "Authorizes a user and returns a token used to identify the new session"
+  authorizeUser(username: String!, password: String!): AuthorizeResult!
+
+  "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
+  initialSetupWizard(
+    username: String!
+    password: String!
+    rootPath: String!
+  ): AuthorizeResult
+
+  "Update a user, fields left as `null` will not be changed"
+  updateUser(
+    id: ID!
+    username: String
+    password: String
+    admin: Boolean
+  ): User! @isAdmin
+  "Create a new user"
+  createUser(
+    username: String!
+    password: String
+    admin: Boolean!
+  ): User! @isAdmin
+  "Delete an existing user"
+  deleteUser(id: ID!): User! @isAdmin
+
+  "Add a root path from where to look for media for the given user, specified by their user id."
+  userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+
+  """
+  Remove a root path from a user, specified by the id of the user and the top album representing the root path.
+  This album was returned when creating the path using `userAddRootPath`.
+  A list of root paths for a particular user can be retrived from the `User.rootAlbums` path.
+  """
+  userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
+
   "Change user preferences for the logged in user"
   changeUserPreferences(language: String): UserPreferences! @isAuthorized
 }

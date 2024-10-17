@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
 
 type AuthorizeResult struct {
@@ -91,6 +92,18 @@ type ShareTokenCredentials struct {
 }
 
 type Subscription struct {
+}
+
+// A group of media from the same album and the same day, that is grouped together in a timeline view
+type TimelineGroup struct {
+	// The full album containing the media in this timeline group
+	Album *Album `json:"album"`
+	// The media contained in this timeline group
+	Media []*Media `json:"media"`
+	// The total amount of media in this timeline group
+	MediaTotal int `json:"mediaTotal"`
+	// The day shared for all media in this timeline group
+	Date time.Time `json:"date"`
 }
 
 // Supported language translations of the user interface
