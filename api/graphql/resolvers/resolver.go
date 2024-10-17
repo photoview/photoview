@@ -3,7 +3,6 @@ package resolvers
 import (
 	"context"
 
-	api "github.com/photoview/photoview/api/graphql"
 	"gorm.io/gorm"
 )
 
@@ -23,15 +22,3 @@ func NewRootResolver(db *gorm.DB) Resolver {
 func (r *Resolver) DB(ctx context.Context) *gorm.DB {
 	return r.database.WithContext(ctx)
 }
-
-func (r *Resolver) Mutation() api.MutationResolver {
-	return &mutationResolver{r}
-}
-
-func (r *Resolver) Query() api.QueryResolver {
-	return &queryResolver{r}
-}
-
-type mutationResolver struct{ *Resolver }
-
-type queryResolver struct{ *Resolver }

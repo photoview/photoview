@@ -27,15 +27,7 @@ input Ordering {
   order_direction: OrderDirection
 }
 
-type Query {
-  "List of registered users, must be admin to call"
-  user(order: Ordering, paginate: Pagination): [User!]! @isAdmin
-  "Information about the currently logged in user"
-  myUser: User! @isAuthorized
-
-  "User preferences for the logged in user"
-  myUserPreferences: UserPreferences! @isAuthorized
-}
+type Query
 
 type Mutation {
   "Authorizes a user and returns a token used to identify the new session"
@@ -72,9 +64,6 @@ type Mutation {
   A list of root paths for a particular user can be retrived from the `User.rootAlbums` path.
   """
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
-
-  "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
 }
 
 type AuthorizeResult {
@@ -90,17 +79,6 @@ type ScannerResult {
   success: Boolean!
   progress: Float
   message: String
-}
-
-type User {
-  id: ID!
-  username: String!
-  "All albums owned by this user"
-  albums: [Album!]! @isAdmin
-  "Top level albums owned by this user"
-  rootAlbums: [Album!]! @isAdmin
-  "Whether or not the user has admin privileges"
-  admin: Boolean!
 }
 
 "Supported language translations of the user interface"
@@ -120,12 +98,6 @@ enum LanguageTranslation {
   Portuguese,
   Basque,
   Turkish
-}
-
-"Preferences for regular users"
-type UserPreferences {
-  id: ID!
-  language: LanguageTranslation
 }
 
 type Coordinates {
