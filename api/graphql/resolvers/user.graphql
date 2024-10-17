@@ -9,6 +9,25 @@ type User {
   admin: Boolean!
 }
 
+"Supported language translations of the user interface"
+enum LanguageTranslation {
+  English,
+  French,
+  Italian,
+  Swedish,
+  Danish,
+  Spanish,
+  Polish,
+  Ukrainian,
+  German,
+  Russian,
+  TraditionalChinese,
+  SimplifiedChinese,
+  Portuguese,
+  Basque,
+  Turkish
+}
+
 "Preferences for regular users"
 type UserPreferences {
   id: ID!

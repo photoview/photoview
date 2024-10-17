@@ -1,3 +1,10 @@
+type ScannerResult {
+  finished: Boolean!
+  success: Boolean!
+  progress: Float
+  message: String
+}
+
 extend type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
