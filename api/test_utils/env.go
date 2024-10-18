@@ -8,7 +8,7 @@ import (
 )
 
 func SetPathWithCurrent(paths ...string) func() {
-	_, file, _, ok := runtime.Caller(0)
+	_, file, _, ok := runtime.Caller(1)
 	if !ok {
 		return func() {
 			// Return an empty function in case of error

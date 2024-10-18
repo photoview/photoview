@@ -9,7 +9,7 @@ import (
 )
 
 func TestMagickCliNotExist(t *testing.T) {
-	done := setPathWithTestdataBin()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -19,7 +19,7 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	doneDisableRaw := test_utils.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
@@ -32,7 +32,7 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -54,7 +54,7 @@ func TestMagickCliFail(t *testing.T) {
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()

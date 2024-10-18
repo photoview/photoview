@@ -11,7 +11,7 @@ import (
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	done := setPathWithTestdataBin()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -22,7 +22,7 @@ func TestFfmpegNotExist(t *testing.T) {
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	doneEnv := test_utils.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
@@ -36,13 +36,13 @@ func TestFfmpegIgnore(t *testing.T) {
 }
 
 func TestFfmpeg(t *testing.T) {
-	done := setPathWithTestdataBin()
+	done := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
 
 	if !executable_worker.Ffmpeg.IsInstalled() {
-		t.Error("Ffmpeg should be installed")
+		t.Fatal("Ffmpeg should be installed")
 	}
 
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 	defer doneCodec()
 
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -116,7 +116,7 @@ func TestFfmpegWithCustomCOdec(t *testing.T) {
 	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 	defer doneCodec()
 
-	donePath := setPathWithTestdataBin()
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()

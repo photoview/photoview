@@ -19,14 +19,27 @@ type CounterpartFilesTask struct {
 }
 
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
-	// Don't skip the JPEGs if raw processing is disabled. Treat them as standalone files.
+	ext := filepath.Ext(mediaPath)
+	fileExtType, found := media_type.GetExtensionMediaType(ext)
+	if !found {
+		return true, nil
+	}
+
 	if utils.EnvDisableRawProcessing.GetBool() {
+		if fileExtType.IsRaw() {
+			return true, nil
+		}
+
+		// Don't skip the JPEGs if raw processing is disabled. Treat them as standalone files.
 		return false, nil
 	}
 
-	// Skip the JPEGs that are compressed version of raw files
-	counterpartFile := scanForRawCounterpartFile(mediaPath)
-	if counterpartFile != nil {
+	if !fileExtType.IsBasicTypeSupported() {
+		return false, nil
+	}
+
+	rawPath := media_type.RawCounterpart(mediaPath)
+	if rawPath != nil {
 		return true, nil
 	}
 
@@ -68,24 +81,6 @@ func scanForCompressedCounterpartFile(imagePath string) *string {
 		if scanner_utils.FileExists(testPath) {
 			return &testPath
 		}
-	}
-
-	return nil
-}
-
-func scanForRawCounterpartFile(imagePath string) *string {
-	ext := filepath.Ext(imagePath)
-	fileExtType, found := media_type.GetExtensionMediaType(ext)
-
-	if found {
-		if !fileExtType.IsBasicTypeSupported() {
-			return nil
-		}
-	}
-
-	rawPath := media_type.RawCounterpart(imagePath)
-	if rawPath != nil {
-		return rawPath
 	}
 
 	return nil

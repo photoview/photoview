@@ -14,10 +14,6 @@ func TestMain(m *testing.M) {
 
 const testdataBinPath = "./testdata/bin"
 
-func setPathWithTestdataBin() func() {
-	return test_utils.SetPathWithCurrent(testdataBinPath)
-}
-
 func TestInitFfprobePath(t *testing.T) {
 	t.Run("PathFail", func(t *testing.T) {
 		err := executable_worker.SetFfprobePath()
@@ -27,7 +23,7 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("VersionFail", func(t *testing.T) {
-		donePath := setPathWithTestdataBin()
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 		defer donePath()
 
 		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
@@ -40,7 +36,7 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("Succeed", func(t *testing.T) {
-		donePath := setPathWithTestdataBin()
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 		defer donePath()
 
 		err := executable_worker.SetFfprobePath()
