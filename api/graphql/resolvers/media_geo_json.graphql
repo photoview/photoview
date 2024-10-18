@@ -1,0 +1,7 @@
+extend type Query {
+  "Get media owned by the logged in user, returned in GeoJson format"
+  myMediaGeoJson: Any! @isAuthorized
+
+  "Get the mapbox api token, returns null if mapbox is not enabled"
+  mapboxToken: String
+}

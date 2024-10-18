@@ -1,0 +1,47 @@
+directive @isAuthorized on FIELD_DEFINITION
+directive @isAdmin on FIELD_DEFINITION
+
+scalar Time
+scalar Any
+
+"Used to specify which order to sort items in"
+enum OrderDirection {
+  "Sort accending A-Z"
+  ASC
+  "Sort decending Z-A"
+  DESC
+}
+
+"Used to specify pagination on a list of items"
+input Pagination {
+  "How many items to maximally fetch"
+  limit: Int
+  "How many items to skip from the beginning of the query, specified by the `Ordering`"
+  offset: Int
+}
+
+"Used to specify how to sort items"
+input Ordering {
+  "A column in the database to order by"
+  order_by: String
+  order_direction: OrderDirection
+}
+
+type Query
+
+type Mutation
+
+"""
+A group of media from the same album and the same day, that is grouped together in a timeline view
+NOTE: It isn't used. Just copy from the old schema.graphql.
+"""
+type TimelineGroup {
+  "The full album containing the media in this timeline group"
+  album: Album!
+  "The media contained in this timeline group"
+  media: [Media!]!
+  "The total amount of media in this timeline group"
+  mediaTotal: Int!
+  "The day shared for all media in this timeline group"
+  date: Time!
+}
