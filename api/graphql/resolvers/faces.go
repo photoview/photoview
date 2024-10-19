@@ -2,7 +2,7 @@ package resolvers
 
 import (
 	"context"
-
+	"fmt"
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -405,6 +405,43 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 	face_detection.GlobalFaceDetector.MergeImageFaces(userOwnedImageFaceIDs, int32(newFaceGroup.ID))
 
 	return &newFaceGroup, nil
+}
+
+func (r *mutationResolver) ReDetectFaces(ctx context.Context, mediaId int) (bool, error) {
+	db := r.DB(ctx)
+	fmt.Printf("Redetecting faces for media %d\n", mediaId)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, errors.New("unauthorized")
+	}
+
+	if face_detection.GlobalFaceDetector == nil {
+		return false, errors.New("face detector not initialized")
+	}
+
+	var media models.Media
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&media).
+			Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
+			Where("media.id = ?", mediaId).
+			Where("user_albums.user_id = ?", user.ID).
+			First(&media).Error; err != nil {
+			return err
+		}
+
+		if err := face_detection.GlobalFaceDetector.ReDetectFaces(tx, &media); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if transactionError != nil {
+		return false, transactionError
+	}
+
+	return true, nil
 }
 
 func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {

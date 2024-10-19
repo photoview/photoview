@@ -10,6 +10,7 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 
 import './index.css'
 import { SidebarProvider } from './components/sidebar/Sidebar'
+import { ReDetectModalProvider } from './components/sidebar/ReDetection/ReDetectFacesContext'
 
 updateTheme()
 setupLocalization()
@@ -18,7 +19,9 @@ const Main = () => (
   <ApolloProvider client={client}>
     <Router basename={import.meta.env.BASE_URL}>
       <SidebarProvider>
-        <App />
+        <ReDetectModalProvider>
+          <App />
+        </ReDetectModalProvider>
       </SidebarProvider>
     </Router>
   </ApolloProvider>

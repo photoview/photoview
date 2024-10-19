@@ -104,6 +104,15 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 	}, nil
 }
 
+func (r *mutationResolver) ReenterPassword(ctx context.Context, password string) (*models.AuthorizeResult, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return r.AuthorizeUser(ctx, user.Username, password)
+}
+
 func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
 	db := r.DB(ctx)
 	siteInfo, err := models.GetSiteInfo(db)

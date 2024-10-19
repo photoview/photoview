@@ -5,6 +5,8 @@ import Header from '../header/Header'
 import { Authorized } from '../routes/AuthorizedRoute'
 import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
 import MainMenu from './MainMenu'
+import { useModal } from '../sidebar/ReDetection/ReDetectFacesContext'
+import ReDetectFacesModal from '../sidebar/ReDetection/ReDetectFacesModal'
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -21,6 +23,7 @@ type LayoutProps = {
 
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
   const { pinned, content: sidebarContent } = useContext(SidebarContext)
+  const { isModalOpen, closeModal } = useModal()
 
   return (
     <>
@@ -43,6 +46,11 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
           </div>
         </div>
         <Sidebar />
+        <ReDetectFacesModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onConfirm={closeModal}
+        />
       </div>
     </>
   )

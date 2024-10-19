@@ -179,14 +179,12 @@ export const Submit = ({
   />
 )
 
-export const Button = ({
-  children,
-  variant,
-  background,
-  className,
-  ...props
-}: ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+export const Button = forwardRef<
+  HTMLButtonElement,
+  ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ children, variant, background, className, ...props }, ref) => (
   <button
+    ref={ref}
     className={tailwindClassNames(
       buttonStyles({ variant, background }),
       className
@@ -195,6 +193,6 @@ export const Button = ({
   >
     {children}
   </button>
-)
+))
 
 export const ButtonGroup = styled.div.attrs({ className: 'flex gap-1' })``

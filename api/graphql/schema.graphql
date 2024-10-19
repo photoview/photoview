@@ -104,7 +104,8 @@ type Query {
 type Mutation {
   "Authorizes a user and returns a token used to identify the new session"
   authorizeUser(username: String!, password: String!): AuthorizeResult!
-
+  "Re-enter the current user password to confirm his identity and regenerate an access token."
+  reenterPassword(password: String!): AuthorizeResult!
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!
@@ -184,6 +185,8 @@ type Mutation {
   recognizeUnlabeledFaces: [ImageFace!]! @isAuthorized
   "Move a list of ImageFaces to a new face group"
   detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup! @isAuthorized
+  "Re-detect faces on a media"
+  reDetectFaces(mediaId: ID!): Boolean! @isAuthorized
 }
 
 type Subscription {

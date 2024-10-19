@@ -1,5 +1,5 @@
 import { gql, useLazyQuery } from '@apollo/client'
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -31,6 +31,7 @@ import {
   sidebarMediaQuery_media_videoMetadata,
 } from './__generated__/sidebarMediaQuery'
 import { BreadcrumbList } from '../../album/AlbumTitle'
+import { SidebarReDetection } from '../ReDetection/SidebarRedetection'
 
 export const SIDEBAR_MEDIA_QUERY = gql`
   query sidebarMediaQuery($id: ID!) {
@@ -160,10 +161,17 @@ const PreviewMedia = ({ media, previewImage }: PreviewMediaProps) => {
 type SidebarContentProps = {
   media: MediaSidebarMedia
   hidePreview?: boolean
+  alwaysShowFaces: boolean
+  setAlwaysShowFaces: (value: boolean) => void
 }
 
-const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
-	const { updateSidebar } = useContext(SidebarContext)
+const SidebarContent = ({
+  media,
+  hidePreview,
+  alwaysShowFaces,
+  setAlwaysShowFaces,
+}: SidebarContentProps) => {
+  const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
@@ -192,7 +200,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         <Link
           className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
-					onClick={() => updateSidebar(null)}
+          onClick={() => updateSidebar(null)}
         >
           {album.title}
         </Link>
@@ -222,13 +230,20 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
               previewImage={previewImage || undefined}
               media={media}
             />
-            <SidebarFacesOverlay media={media} />
+            <SidebarFacesOverlay
+              media={media}
+              alwaysShowFaces={alwaysShowFaces}
+            />
           </div>
         )}
       </div>
       <ExifDetails media={media} />
       {albumPath}
       <MediaSidebarPeople media={media} />
+      <SidebarReDetection
+        mediaId={media.id}
+        setAlwaysShowFaces={setAlwaysShowFaces}
+      />
       {sidebarMap}
       <SidebarMediaDownload media={media} />
       <SidebarPhotoShare id={media.id} />
@@ -279,6 +294,7 @@ const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
     sidebarMediaQuery,
     sidebarMediaQueryVariables
   >(SIDEBAR_MEDIA_QUERY)
+  const [alwaysShowFaces, setAlwaysShowFaces] = useState(false)
 
   useEffect(() => {
     if (media != null && authToken()) {
@@ -293,16 +309,37 @@ const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
   if (!media) return null
 
   if (!authToken()) {
-    return <SidebarContent media={media} hidePreview={hidePreview} />
+    return (
+      <SidebarContent
+        media={media}
+        hidePreview={hidePreview}
+        alwaysShowFaces={alwaysShowFaces}
+        setAlwaysShowFaces={setAlwaysShowFaces}
+      />
+    )
   }
 
   if (error) return <div>{error.message}</div>
 
   if (loading || data == null) {
-    return <SidebarContent media={media} hidePreview={hidePreview} />
+    return (
+      <SidebarContent
+        media={media}
+        hidePreview={hidePreview}
+        alwaysShowFaces={alwaysShowFaces}
+        setAlwaysShowFaces={setAlwaysShowFaces}
+      />
+    )
   }
 
-  return <SidebarContent media={data.media} hidePreview={hidePreview} />
+  return (
+    <SidebarContent
+      media={data.media}
+      hidePreview={hidePreview}
+      alwaysShowFaces={alwaysShowFaces}
+      setAlwaysShowFaces={setAlwaysShowFaces}
+    />
+  )
 }
 
 export default MediaSidebar
