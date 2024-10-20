@@ -12,7 +12,7 @@ on:
     - cron: '18 1 * * 4'
 
 env:
-  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'viktorstrate/photoview' }}
+  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
   DOCKER_USERNAME: viktorstrate
   DOCKER_IMAGE: viktorstrate/photoview
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
