@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [master]
   push:
-    branches: ['*']
+    branches: [master]
     tags:
       - v*
   schedule:
@@ -12,9 +12,9 @@ on:
     - cron: '18 1 * * 4'
 
 env:
-  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'googollee/photoview' }}
+  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'viktorstrate/photoview' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: ghcr.io/googollee/photoview
+  DOCKER_IMAGE: viktorstrate/photoview
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
@@ -90,11 +90,8 @@ jobs:
         if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          # username: ${{ env.DOCKER_USERNAME }}
-          # password: ${{ env.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
