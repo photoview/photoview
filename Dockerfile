@@ -68,6 +68,7 @@ COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
 # Split values in `/env`
 # hadolint ignore=SC2046
 RUN export $(cat /env) \
+  && git config --global --add safe.directory '*' \
   && cd /dependencies/ \
   && tar xfv artifacts.tar.gz \
   && cp -a include/* /usr/local/include/ \
