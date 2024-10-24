@@ -74,7 +74,10 @@ jobs:
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
-          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+          sh -eu -c "
+            ./scripts/test_generation.sh
+            go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+          "
         docker cp test:/app/api/coverage.txt ./api/
 
     - name: Upload coverage
