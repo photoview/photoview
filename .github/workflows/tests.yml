@@ -69,15 +69,13 @@ jobs:
       continue-on-error: true
       run: |
         docker run --name test --network host \
+            -v `pwd`:/app \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
             -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
-          sh -eu -c "
-            ./scripts/test_generation.sh
-            go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
-          "
+          /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
 
     - name: Upload coverage
