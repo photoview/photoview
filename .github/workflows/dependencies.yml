@@ -10,10 +10,11 @@ on:
     - cron: '18 23 * * 3'
 
 env:
-  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+  #IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+  IS_PUSHING_IMAGES: true
   IS_CACHING: ${{ github.event_name == 'pull_request' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: viktorstrate/dependencies
+  DOCKER_IMAGE: photoview/dependencies
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
