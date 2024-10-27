@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/test_utils"
 )
 
 func TestMagickCliNotExist(t *testing.T) {
-	done := setPathWithCurrent()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -18,10 +19,10 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneDisableRaw := setEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
+	doneDisableRaw := test_utils.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 	defer doneDisableRaw()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -31,7 +32,7 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()
@@ -39,7 +40,7 @@ func TestMagickCliFail(t *testing.T) {
 		t.Fatal("MagickCli should be installed")
 	}
 
-	done := setEnv("FAIL_WITH", "failure")
+	done := test_utils.SetEnv("FAIL_WITH", "failure")
 	defer done()
 
 	err := executable_worker.Magick.EncodeJpeg("input", "output", 70)
@@ -53,7 +54,7 @@ func TestMagickCliFail(t *testing.T) {
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := setPathWithCurrent("./testdata/bin")
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	executable_worker.InitializeExecutableWorkers()

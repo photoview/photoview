@@ -26,7 +26,8 @@ func (r *Resolver) User() api.UserResolver {
 	return &userResolver{r}
 }
 
-func (r *queryResolver) User(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.User, error) {
+func (r *queryResolver) User(ctx context.Context, order *models.Ordering,
+	paginate *models.Pagination) ([]*models.User, error) {
 
 	var users []*models.User
 
@@ -72,7 +73,8 @@ func (r *queryResolver) MyUser(ctx context.Context) (*models.User, error) {
 	return user, nil
 }
 
-func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error) {
+func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string,
+	password string) (*models.AuthorizeResult, error) {
 	db := r.DB(ctx)
 	user, err := models.AuthorizeUser(db, username, password)
 	if err != nil {
@@ -113,7 +115,8 @@ func (r *mutationResolver) ReenterPassword(ctx context.Context, password string)
 	return r.AuthorizeUser(ctx, user.Username, password)
 }
 
-func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
+func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string,
+	rootPath string) (*models.AuthorizeResult, error) {
 	db := r.DB(ctx)
 	siteInfo, err := models.GetSiteInfo(db)
 	if err != nil {
@@ -210,7 +213,8 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 }
 
 // Admin queries
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string,
+	admin *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
 	if username == nil && password == nil && admin == nil {
@@ -247,7 +251,8 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 	return &user, nil
 }
 
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string,
+	admin bool) (*models.User, error) {
 
 	var user *models.User
 
@@ -299,7 +304,6 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 	}
 
 	var deletedAlbumIDs []int = nil
-
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Raw("DELETE FROM user_albums WHERE user_id = ? AND album_id = ?", userID, albumID).Error; err != nil {
 			return err
@@ -325,20 +329,9 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		}
 
 		// Cleanup if no user owns the album anymore
-		var userAlbumCount int
-		if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?", albumID).Scan(&userAlbumCount).Error; err != nil {
+		deletedAlbumIDs, err = cleanup(tx, albumID, childAlbumIDs)
+		if err != nil {
 			return err
-		}
-
-		if userAlbumCount == 0 {
-			deletedAlbumIDs = append(childAlbumIDs, albumID)
-			childAlbumIDs = nil
-
-			// Delete albums from database
-			if err := tx.Delete(&models.Album{}, "id IN (?)", deletedAlbumIDs).Error; err != nil {
-				deletedAlbumIDs = nil
-				return err
-			}
 		}
 
 		return nil
@@ -348,23 +341,51 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		return nil, transactionError
 	}
 
+	if err := clearCacheAndReloadFaces(db, deletedAlbumIDs); err != nil {
+		return nil, err
+	}
+
+	return &album, nil
+}
+
+func cleanup(tx *gorm.DB, albumID int, childAlbumIDs []int) ([]int, error) {
+	var userAlbumCount int
+	var deletedAlbumIDs []int = nil
+
+	if err := tx.Raw("SELECT COUNT(user_id) FROM user_albums WHERE album_id = ?",
+		albumID).Scan(&userAlbumCount).Error; err != nil {
+
+		return nil, err
+	}
+
+	if userAlbumCount == 0 {
+		deletedAlbumIDs = append(childAlbumIDs, albumID)
+		childAlbumIDs = nil
+		// Delete albums from database
+		if err := tx.Delete(&models.Album{}, "id IN (?)", deletedAlbumIDs).Error; err != nil {
+			deletedAlbumIDs = nil
+			return nil, err
+		}
+	}
+	return deletedAlbumIDs, nil
+}
+
+func clearCacheAndReloadFaces(db *gorm.DB, deletedAlbumIDs []int) error {
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {
 			cacheAlbumPath := path.Join(utils.MediaCachePath(), strconv.Itoa(id))
 
 			if err := os.RemoveAll(cacheAlbumPath); err != nil {
-				return nil, err
+				return err
 			}
 		}
-
 		// Reload faces as media might have been deleted
 		if face_detection.GlobalFaceDetector != nil {
 			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
-
-	return &album, nil
+	return nil
 }

@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -118,7 +117,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
 	albumMedia := make([]*models.Media, 0)
 
-	dirContent, err := ioutil.ReadDir(ctx.GetAlbum().Path)
+	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +132,11 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		}
 
 		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
+			itemInfo, err := item.Info()
+			if err != nil {
+				return nil, err
+			}
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
 			if err != nil {
 				return nil, err
 			}

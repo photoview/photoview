@@ -7,34 +7,163 @@ on:
     # The branches below must be a subset of the branches above
     branches: [master]
   schedule:
-    - cron: '0 1 * * 4'
+    # At 01:37 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    - cron: '37 1 * * 4'
 
 jobs:
-  analyze:
-    name: Analyze
-    if: github.repository == 'photoview/photoview'
-    runs-on: ubuntu-20.04
+  create-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get languages from repo
+        id: set-matrix
+        uses: advanced-security/set-codeql-language-matrix@v1
+        with:
+          access-token: ${{ github.token }}
+          endpoint: ${{ github.event.repository.languages_url }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.languages }}
 
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-        # Override automatic language detection by changing the below list
-        # Supported options are ['csharp', 'cpp', 'go', 'java', 'javascript', 'python']
-        # language: ['go', 'javascript']
-        # Learn more...
-        # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
-
+  code-ql:
+    name: CodeQL
+    needs: create-matrix
+    if: ${{ needs.create-matrix.outputs.matrix != '[]' && github.repository == 'photoview/photoview' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(needs.create-matrix.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@v3
         with:
-          languages: go, javascript
+          languages: ${{ matrix.language }}
           # Run further tests
           queries: security-extended, security-and-quality
+          debug: true
+
+      # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        with:
+          working-directory: ${{ ( matrix.language == 'go' && './api' ) || ( matrix.language == 'javascript' && './ui' ) || '.' }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  anchore:
+    name: Anchore scan code dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate report
+        id: scan
+        uses: anchore/scan-action@v5
+        continue-on-error: true
+        with:
+          path: "."
+          fail-build: false
+          add-cpes-if-none: true
+
+      - name: Upload report
+        uses: github/codeql-action/upload-sarif@v3
+        if: ${{ steps.scan.conclusion == 'success' }}
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
+      - name: Scan PR source code
+        id: scan-fixed
+        uses: anchore/scan-action@v5
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          path: "."
+          fail-build: false
+          add-cpes-if-none: true
+          output-format: json
+          severity-cutoff: high
+          only-fixed: true
+
+      - name: Prepare JSON
+        if: ${{ steps.scan-fixed.conclusion == 'success' && github.event_name == 'pull_request' }}
+        run: |
+          jq '{
+            "|": .matches | map({
+              "language": .artifact.language,
+              "id": .vulnerability.id,
+              "severity": .vulnerability.severity,
+              "name": .artifact.name,
+              "version": .artifact.version,
+              "fix-versions": .vulnerability.fix.versions[0],
+              "path": .artifact.locations[0].path,
+              "description": .vulnerability.description
+            })
+          }' ${{ steps.scan-fixed.outputs.json }} > vulns.json
+          cat vulns.json | jq
+
+      - name: Anchore vulns artifact
+        id: anchore-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Anchore-vulns-report
+          path: ./vulns.json
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
+
+  hadolint:
+    name: Hadolint Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        id: lint
+        uses: hadolint/hadolint-action@v3.1.0
+        continue-on-error: true
+        with:
+          dockerfile: Dockerfile
+          config: ${{ github.workspace }}/.hadolint.yaml
+          output-file: hadolint.txt
+          format: tty
+          failure-threshold: error
+
+      - name: Output results
+        if: ${{ steps.lint.conclusion == 'success' }}
+        run: |
+          cat ./hadolint.txt || echo ${HADOLINT_RESULTS}
+
+      - name: Hadolint artifact
+        id: hadolint-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-report
+          path: ./hadolint.txt
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
+
+      - name: Lint Dockerfile (sarif)
+        uses: hadolint/hadolint-action@v3.1.0
+        id: lint-report
+        continue-on-error: true
+        with:
+          dockerfile: Dockerfile
+          config: ${{ github.workspace }}/.hadolint.yaml
+          output-file: hadolint.sarif
+          format: sarif
+          failure-threshold: ignore
+
+      - name: Upload report
+        uses: github/codeql-action/upload-sarif@v3
+        if: ${{ steps.lint-report.conclusion == 'success' }}
+        with:
+          sarif_file: hadolint.sarif

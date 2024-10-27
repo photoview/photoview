@@ -4,6 +4,9 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV:-production}
+
 ARG REACT_APP_API_ENDPOINT
 ENV REACT_APP_API_ENDPOINT=${REACT_APP_API_ENDPOINT}
 
@@ -25,7 +28,7 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 
 WORKDIR /app/ui
 
-COPY ui/package.json ui/package-lock.json /app/ui
+COPY ui/package.json ui/package-lock.json /app/ui/
 RUN npm ci
 
 COPY ui/ /app/ui
@@ -33,7 +36,7 @@ RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
     export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
     export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
   fi; \
-  npm run build -- --base=$UI_PUBLIC_URL
+  npm run build -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm AS api
@@ -53,7 +56,17 @@ COPY scripts/set_compiler_env.sh /app/scripts/
 RUN chmod +x /app/scripts/*.sh \
   && source /app/scripts/set_compiler_env.sh
 
+COPY scripts/install_*.sh /app/scripts/
+# Split values in `/env`
+# hadolint ignore=SC2046
+RUN chmod +x /app/scripts/*.sh \
+  && export $(cat /env) \
+  && /app/scripts/install_build_dependencies.sh \
+  && /app/scripts/install_runtime_dependencies.sh
+
 COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && cd /dependencies/ \
   && tar xfv artifacts.tar.gz \
@@ -64,13 +77,9 @@ RUN export $(cat /env) \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
 
-COPY scripts/install_*.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-  && export $(cat /env) \
-  && /app/scripts/install_build_dependencies.sh \
-  && /app/scripts/install_runtime_dependencies.sh
-
 COPY api/go.mod api/go.sum /app/api/
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && go env \
   && go mod download \
@@ -82,6 +91,8 @@ RUN export $(cat /env) \
     github.com/Kagami/go-face
 
 COPY api /app/api
+# Split values in `/env`
+# hadolint ignore=SC2046
 RUN export $(cat /env) \
   && go env \
   && go build -v -o photoview .
@@ -105,6 +116,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   && cd /dependencies \
   && cp -a lib/* /usr/local/lib/ \
   && cp -a bin/* /usr/local/bin/ \
+  && cp -a etc/* /usr/local/etc/ \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
   && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \

@@ -2,11 +2,9 @@ package executable_worker_test
 
 import (
 	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 	"testing"
 
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/test_utils"
 )
 
@@ -14,30 +12,36 @@ func TestMain(m *testing.M) {
 	os.Exit(test_utils.IntegrationTestRun(m))
 }
 
-func setPathWithCurrent(paths ...string) func() {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		return func() {}
-	}
+const testdataBinPath = "./testdata/bin"
 
-	base := filepath.Dir(file)
+func TestInitFfprobePath(t *testing.T) {
+	t.Run("PathFail", func(t *testing.T) {
+		err := executable_worker.SetFfprobePath()
+		if err == nil {
+			t.Fatalf("InitFfprobePath() returns nil, want an error")
+		}
+	})
 
-	for i, path := range paths {
-		paths[i] = filepath.Join(base, path)
-	}
+	t.Run("VersionFail", func(t *testing.T) {
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+		defer donePath()
 
-	originalPath := os.Getenv("PATH")
-	os.Setenv("PATH", strings.Join(paths, ":"))
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
+		defer doneEnv()
 
-	return func() {
-		os.Setenv("PATH", originalPath)
-	}
-}
+		err := executable_worker.SetFfprobePath()
+		if err == nil {
+			t.Fatalf("InitFfprobePath() returns nil, want an error")
+		}
+	})
 
-func setEnv(key, value string) func() {
-	org := os.Getenv(key)
-	os.Setenv(key, value)
-	return func() {
-		os.Setenv(key, org)
-	}
+	t.Run("Succeed", func(t *testing.T) {
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+		defer donePath()
+
+		err := executable_worker.SetFfprobePath()
+		if err != nil {
+			t.Fatalf("InitFfprobePath() returns %v, want nil", err)
+		}
+	})
 }

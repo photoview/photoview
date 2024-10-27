@@ -9,11 +9,14 @@ import (
 )
 
 func TestAlbumGetChildrenAndParents(t *testing.T) {
+	const photosPath = "/photos"
+	const photosChild1Path = "/photos/child1"
+	const photosChild1SubchildPath = "/photos/child1/subchild"
 	db := test_utils.DatabaseTest(t)
 
 	rootAlbum := models.Album{
 		Title: "root",
-		Path:  "/photos",
+		Path:  photosPath,
 	}
 
 	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
@@ -23,7 +26,7 @@ func TestAlbumGetChildrenAndParents(t *testing.T) {
 	children := []models.Album{
 		{
 			Title:         "child1",
-			Path:          "/photos/child1",
+			Path:          photosChild1Path,
 			ParentAlbumID: &rootAlbum.ID,
 		},
 		{
@@ -41,47 +44,47 @@ func TestAlbumGetChildrenAndParents(t *testing.T) {
 		return
 	}
 
-	sub_child := models.Album{
+	subChild := models.Album{
 		Title:         "subchild",
-		Path:          "/photos/child1/subchild",
+		Path:          photosChild1SubchildPath,
 		ParentAlbumID: &children[0].ID,
 	}
 
-	if !assert.NoError(t, db.Save(&sub_child).Error) {
+	if !assert.NoError(t, db.Save(&subChild).Error) {
 		return
 	}
 
-	verifyResult := func(t *testing.T, expected_albums []*models.Album, result []*models.Album) {
-		assert.Equal(t, len(expected_albums), len(result))
+	verifyResult := func(t *testing.T, expectedAlbums []*models.Album, result []*models.Album) {
+		assert.Equal(t, len(expectedAlbums), len(result))
 
-		for _, expected := range expected_albums {
-			found_expected := false
+		for _, expected := range expectedAlbums {
+			foundExpected := false
 			for _, item := range result {
 				if item.Title == expected.Title && item.Path == expected.Path {
-					found_expected = true
+					foundExpected = true
 					break
 				}
 			}
-			if !found_expected {
+			if !foundExpected {
 				assert.Failf(t, "albums did not match", "expected to find item: %v", expected)
 			}
 		}
 	}
 
 	t.Run("Album get children", func(t *testing.T) {
-		root_children, err := rootAlbum.GetChildren(db, nil)
+		rootChildren, err := rootAlbum.GetChildren(db, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
 
-		expected_children := []*models.Album{
+		expectedChildren := []*models.Album{
 			{
 				Title: "root",
-				Path:  "/photos",
+				Path:  photosPath,
 			},
 			{
 				Title: "child1",
-				Path:  "/photos/child1",
+				Path:  photosChild1Path,
 			},
 			{
 				Title: "child2",
@@ -89,35 +92,35 @@ func TestAlbumGetChildrenAndParents(t *testing.T) {
 			},
 			{
 				Title: "subchild",
-				Path:  "/photos/child1/subchild",
+				Path:  photosChild1SubchildPath,
 			},
 		}
 
-		verifyResult(t, expected_children, root_children)
+		verifyResult(t, expectedChildren, rootChildren)
 	})
 
 	t.Run("Album get parents", func(t *testing.T) {
-		parents, err := sub_child.GetParents(db, nil)
+		parents, err := subChild.GetParents(db, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
 
-		expected_parents := []*models.Album{
+		expectedParents := []*models.Album{
 			{
 				Title: "root",
-				Path:  "/photos",
+				Path:  photosPath,
 			},
 			{
 				Title: "child1",
-				Path:  "/photos/child1",
+				Path:  photosChild1Path,
 			},
 			{
 				Title: "subchild",
-				Path:  "/photos/child1/subchild",
+				Path:  photosChild1SubchildPath,
 			},
 		}
 
-		verifyResult(t, expected_parents, parents)
+		verifyResult(t, expectedParents, parents)
 	})
 
 }
