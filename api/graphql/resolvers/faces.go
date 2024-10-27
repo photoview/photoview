@@ -1,9 +1,12 @@
 package resolvers
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"gorm.io/gorm"
 )
 
