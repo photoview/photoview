@@ -15,7 +15,7 @@ env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository != 'photoview/photoview' }}
   DOCKER_REGISTRY: ${{ (github.repository == 'photoview/photoview' && '') || 'ghcr.io/' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: ${{ github.env.DOCKER_REGISTRY }}${{ (github.repository == 'photoview/photoview' && 'viktorstrate/photoview') || github.repository }}
+  DOCKER_IMAGE: ${{ (github.repository == 'photoview/photoview' && 'viktorstrate/photoview') || github.repository }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
@@ -99,7 +99,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
-          images: ${{ env.DOCKER_IMAGE }}
+          images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -153,13 +153,13 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Run Dockle for '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+      - name: Run Dockle for '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
         id: dockle
         if: ${{ matrix.tags.tag != '' }}
         continue-on-error: true
         uses: erzz/dockle-action@v1
         with:
-          image: '${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+          image: '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
           report-name: dockle-results-${{ matrix.tags.tag }}
           report-format: sarif
           failure-threshold: fatal
