@@ -69,7 +69,7 @@ jobs:
       continue-on-error: true
       run: |
         docker run --name test --network host \
-            -v `pwd`:/app \
+            -v "${{ github.workspace }}:/app" \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
             -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \

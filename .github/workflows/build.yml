@@ -13,8 +13,9 @@ on:
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' }}
+  DOCKER_REGISTRY: ${{ (github.repository == 'photoview/photoview' && '') || 'ghcr.io/' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: ${{ (github.repository == 'photoview/photoview' && 'viktorstrate/photoview') || format('ghcr.io/{0}', github.repository) }}
+  DOCKER_IMAGE: ${{ github.env.DOCKER_REGISTRY }}${{ (github.repository == 'photoview/photoview' && 'viktorstrate/photoview') || github.repository }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
@@ -86,19 +87,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Docker Login
-        if: ${{ env.IS_PUSHING_IMAGES == 'true' && !startsWith(env.DOCKER_IMAGE, 'ghcr.io/')}}
+        if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
-
-      - name: GitHub Container Repo Login
-        if: ${{ env.IS_PUSHING_IMAGES == 'true' && startsWith(env.DOCKER_IMAGE, 'ghcr.io/')}}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' }}
+          username: ${{ ( env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor ) || env.DOCKER_USERNAME }}
+          password: ${{ ( env.DOCKER_REGISTRY == 'ghcr.io/' && github.token ) || env.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
