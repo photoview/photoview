@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-for test in "$(dirname $0)/test_*"
+for test in $(dirname $0)/test_*
 do
   if [ "${test}" != "${test%%/scripts/test_all.sh}" ]
   then
