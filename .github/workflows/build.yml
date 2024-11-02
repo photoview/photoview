@@ -14,8 +14,9 @@ on:
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
   # IS_PUSHING_IMAGES: true # Switch on when pushing images with forked repos.
-  DOCKER_REGISTRY: ${{ ( github.repository == 'photoview/photoview' && '' ) || ( github.repository != 'photoview/photoview' && 'ghcr.io/' ) }}
+  DOCKER_REGISTRY: ${{ github.repository != 'photoview/photoview' && 'ghcr.io/' || '' }}
   DOCKER_USERNAME: viktorstrate
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_IMAGE: ${{ github.repository }}
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
@@ -90,9 +91,9 @@ jobs:
         if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' }}
-          username: ${{ ( env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor ) || env.DOCKER_USERNAME }}
-          password: ${{ ( env.DOCKER_REGISTRY == 'ghcr.io/' && github.token ) || secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' || '' }}
+          username: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor || env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.token || env.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
@@ -113,17 +114,17 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          sbom: true
-          provenance: mode=max
-          platforms: ${{ env.PLATFORMS }}
-          pull: true
-          push: ${{ env.IS_PUSHING_IMAGES }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          context:     .
+          sbom:        true
+          provenance:  mode=max
+          platforms:   ${{ env.PLATFORMS }}
+          pull:        true
+          push:        ${{ env.IS_PUSHING_IMAGES }}
+          tags:        ${{ steps.docker_meta.outputs.tags }}
+          labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from:  type=gha
+          cache-to:    type=gha,mode=max
           build-args: |
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
@@ -139,6 +140,7 @@ jobs:
       fail-fast: false
       matrix:
         tags: ${{ fromJson(needs.prepare.outputs.tags) }}
+    # Comment out when pushing images with forked repos.
     if: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
     steps:
       # Makes sure your .dockleignore file is available to the next step
@@ -150,8 +152,9 @@ jobs:
       - name: Docker Login
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' || '' }}
+          username: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor || env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.token || env.DOCKER_PASSWORD }}
 
       - name: Run Dockle for '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
         id: dockle
@@ -159,12 +162,12 @@ jobs:
         continue-on-error: true
         uses: erzz/dockle-action@v1
         with:
-          image: '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
-          report-name: dockle-results-${{ matrix.tags.tag }}
-          report-format: sarif
+          image:             '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+          report-name:       dockle-results-${{ matrix.tags.tag }}
+          report-format:     sarif
           failure-threshold: fatal
-          exit-code: 1
-          timeout: 5m
+          exit-code:         1
+          timeout:           5m
 
       - name: Upload SARIF file
         if: ${{ steps.dockle.conclusion == 'success' }}
