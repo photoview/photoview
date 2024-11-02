@@ -20,6 +20,14 @@ enum MediaType {
   Video
 }
 
+type Coordinates {
+  "GPS latitude in degrees"
+  latitude: Float!
+  "GPS longitude in degrees"
+  longitude: Float!
+}
+
+
 "EXIF metadata from the camera"
 type MediaEXIF {
   id: ID!
@@ -47,6 +55,20 @@ type MediaEXIF {
   exposureProgram: Int
   "GPS coordinates of where the image was taken"
   coordinates: Coordinates
+}
+
+"Metadata specific to video media"
+type VideoMetadata {
+  id: ID!
+  media: Media!
+  width: Int!
+  height: Int!
+  duration: Float!
+  codec: String
+  framerate: Float
+  bitrate: String
+  colorProfile: String
+  audio: String
 }
 
 type Media {
