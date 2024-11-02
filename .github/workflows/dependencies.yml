@@ -38,8 +38,10 @@ jobs:
         if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: kkoval
+          password: dckr_pat_cqK5D6f9c2FylKI0Xhcp9LKoWlE
+          #username: ${{ env.DOCKER_USERNAME }}
+          #password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
