@@ -1,0 +1,31 @@
+type Notification {
+  "A key used to identify the notification, new notification updates with the same key, should replace the old notifications"
+  key: String!
+  type: NotificationType!
+  "The text for the title of the notification"
+  header: String!
+  "The text for the body of the notification"
+  content: String!
+  "A value between 0 and 1 when the notification type is `Progress`"
+  progress: Float
+  "Whether or not the message of the notification is positive, the UI might reflect this with a green color"
+  positive: Boolean!
+  "Whether or not the message of the notification is negative, the UI might reflect this with a red color"
+  negative: Boolean!
+  "Time in milliseconds before the notification should close"
+  timeout: Int
+}
+
+type Subscription {
+  notification: Notification!
+}
+
+"Specified the type a particular notification is of"
+enum NotificationType {
+  "A regular message with no special additions"
+  Message
+  "A notification with an attached progress indicator"
+  Progress
+  "Close a notification with a given key"
+  Close
+}
