@@ -1,3 +1,4 @@
 ignore:
+  - "api/**/*.generated.go"
   - "api/**/generated.go"
   - "ui/src/**/__generated__"
