@@ -13,8 +13,7 @@ env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
   IS_CACHING: ${{ github.event_name == 'pull_request' }}
   DOCKER_USERNAME: viktorstrate
-  DOCKER_IMAGE: viktorstrate/dependencies
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_IMAGE: photoview/dependencies
   PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
 jobs:
@@ -39,7 +38,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
@@ -55,15 +54,15 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./dependencies
-          platforms: ${{ env.PLATFORMS }}
-          pull: true
-          push: ${{ env.IS_PUSHING_IMAGES }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          context:     ./dependencies
+          platforms:   ${{ env.PLATFORMS }}
+          pull:        true
+          push:        ${{ env.IS_PUSHING_IMAGES }}
+          tags:        ${{ steps.docker_meta.outputs.tags }}
+          labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from: ${{ ( env.IS_CACHING == 'true' && 'type=gha' ) || '' }}
-          cache-to: ${{ ( env.IS_CACHING == 'true' && 'type=gha,mode=max' ) || '' }}
-          no-cache: ${{ env.IS_CACHING != 'true' }}
-          sbom: true
-          provenance: mode=max
+          cache-from:  ${{ ( env.IS_CACHING == 'true' && 'type=gha' ) || '' }}
+          cache-to:    ${{ ( env.IS_CACHING == 'true' && 'type=gha,mode=max' ) || '' }}
+          no-cache:    ${{ env.IS_CACHING != 'true' }}
+          sbom:        true
+          provenance:  mode=max
