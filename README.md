@@ -17,25 +17,43 @@ When your media has been scanned, they show up on the website, organised in the 
 > If you have questions regarding setup or development,
 feel free to join the Discord server https://discord.gg/jQ392948u9
 
+# ATTENTION to Docker users !!!
+
+We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photoview> and all new images for the `master` tag, as well as future releases are going to be published there instead of the previously used registry. Old images will be still accessible in the old registry <https://hub.docker.com/r/viktorstrate/photoview>, so if you want to use 1 of those old images, you need to revert back to the old registry.
+
+Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
+
 ## Demo site
 
 Visit https://photos.qpqp.dk/
 
 Username: **demo**
+
 Password: **demo**
 
 ## Contents
 
-- [Demo site](#demo-site)
-- [Main features](#main-features)
-- [Supported Platforms](#supported-platforms)
-- [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
-- [Getting started — Setup with Docker](#getting-started--setup-with-docker)
-- [Advanced setup](#advanced-setup)
-- [Contributing](#contributing)
-- [Set up Docker development environment](#set-up-docker-development-environment)
-- [Set up local development environment](#set-up-local-development-environment)
-- [Sponsors](#sponsors)
+- [ATTENTION to Docker users !!!](#attention-to-docker-users-)
+  - [Demo site](#demo-site)
+  - [Contents](#contents)
+  - [Main features](#main-features)
+  - [Supported platforms](#supported-platforms)
+  - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
+  - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
+    - [Initial Setup](#initial-setup)
+  - [Advanced setup](#advanced-setup)
+    - [Hardware Acceleration](#hardware-acceleration)
+  - [Contributing](#contributing)
+  - [Set up Docker development environment](#set-up-docker-development-environment)
+    - [Start API and UI server with Docker Compose](#start-api-and-ui-server-with-docker-compose)
+    - [Start API server with Docker](#start-api-server-with-docker)
+    - [Start UI server with Docker](#start-ui-server-with-docker)
+  - [Set up local development environment](#set-up-local-development-environment)
+    - [Install dependencies](#install-dependencies)
+    - [Local setup](#local-setup)
+    - [Start API server](#start-api-server)
+    - [Start UI server](#start-ui-server)
+  - [Sponsors](#sponsors)
 
 ## Main features
 
@@ -171,10 +189,10 @@ If you verify other hardware accelerations working well, let us know.
 
 🎉 First off, thanks for your interest in contribution! 🎉
 
-This project is a result of hard work, and it's great to see you interested in contributing. 
+This project is a result of hard work, and it's great to see you interested in contributing.
 Contributions are not just about code — you can help in many ways!
 
-Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md). 
+Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md).
 It includes information on our code of conduct, the process for submitting pull requests, and more.
 
 Remember, every contribution counts. Let's make this project better together! 💪
@@ -254,10 +272,10 @@ We can't keep verifying below commands on each environment. People may need to s
     - `g++`
     - `libc-dev`
     - `libheif` >= 1.15.1
-    - [go-face Requirements](https://github.com/Kagami/go-face#requirements) 
+    - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
         - `dlib`
         - `libjpeg`
-        - `libblas` 
+        - `libblas`
         - `libcblas`, recommended using `libatlas-base` in Debian.
         - `liblapack`
   - Optional tools during developing:

@@ -64,7 +64,7 @@ RUN chmod +x /app/scripts/*.sh \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
 
-COPY --from=viktorstrate/dependencies /artifacts.tar.gz /dependencies/
+COPY --from=photoview/dependencies /artifacts.tar.gz /dependencies/
 # Split values in `/env`
 # hadolint ignore=SC2046
 RUN export $(cat /env) \
