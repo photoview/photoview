@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: 'true'
+          fetch-depth: 0
 
       - name: Prepare the Matrix
         id: prepare_matrix
@@ -43,7 +44,7 @@ jobs:
               ;;
             schedule)
               git fetch --all
-              TAG=$(git describe --tags --abbrev=0 || exit 0)
+              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
               if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
               else
