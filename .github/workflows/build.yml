@@ -38,10 +38,13 @@ jobs:
           case ${{ github.event_name }} in
             pull_request)
               echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
-              echo ***
+              echo "Fetching all"
               git fetch --all
-              echo ***
-              git describe --tags --abbrev=0 --always
+              echo "Get the latest tag"
+              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
+              echo $TAG
+              echo "Getting the ref for this tag"
+              git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2
               ;;
             push)
               echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
