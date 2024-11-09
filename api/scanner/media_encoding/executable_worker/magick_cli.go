@@ -44,8 +44,8 @@ func (cli *MagickCli) IsInstalled() bool {
 
 func (cli *MagickCli) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
 	args := []string{
-		"convert",
 		inputPath,
+		"-auto-orient",
 		"-quality", fmt.Sprintf("%d", jpegQuality),
 		outputPath,
 	}
