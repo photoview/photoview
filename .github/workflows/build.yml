@@ -35,25 +35,27 @@ jobs:
         id: prepare_matrix
         shell: bash
         run: |
+          echo Event is '${{ github.event_name }}'
           case ${{ github.event_name }} in
             pull_request)
-              echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             push)
-              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             schedule)
               git fetch --all
               TAG=$(git describe --tags --abbrev=0 --always || exit 0)
+              echo TAG is $TAG
               if [ -z "$TAG" ]; then
-                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               else
-                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}, {"tag": "$TAG", "ref": "$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)"}]' >> $GITHUB_OUTPUT
+                echo tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}, {"tag": "$TAG", "ref": "$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)"}] | tee -a $GITHUB_OUTPUT
               fi
               ;;
             *)
               echo "Run for '${{ github.event_name }}' is not expected"
-              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' >> $GITHUB_OUTPUT
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
           esac
 
