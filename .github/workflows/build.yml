@@ -35,20 +35,18 @@ jobs:
         id: prepare_matrix
         shell: bash
         run: |
+          echo Event is '${{ github.event_name }}'
           case ${{ github.event_name }} in
             pull_request)
-              echo Event is '${{ github.event_name }}'
               echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             push)
-              echo Event is '${{ github.event_name }}'
               echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             schedule)
-              echo Event is '${{ github.event_name }}'
               git fetch --all
               TAG=$(git describe --tags --abbrev=0 --always || exit 0)
-              echo TAG = $TAG
+              echo TAG is $TAG
               if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               else
