@@ -117,7 +117,7 @@ jobs:
           go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
           flags: api-${{ matrix.database }}
@@ -162,7 +162,7 @@ jobs:
         run: npm run test:ci
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           flags: ui
           token: ${{ secrets.CODECOV_TKN }}
