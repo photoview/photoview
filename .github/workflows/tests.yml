@@ -79,7 +79,7 @@ jobs:
         docker cp test:/app/api/coverage.txt ./api/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -117,7 +117,7 @@ jobs:
         docker cp test:/app/ui/coverage ./ui/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
