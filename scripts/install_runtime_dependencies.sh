@@ -5,7 +5,7 @@ apt-get update
 apt-get install -y curl exiftool
 
 # libheif dependencies
-apt-get install -y libdav1d6 librav1e0 libde265-0 libx265-199 libjpeg62-turbo libpng16-16 libnuma1 zlib1g
+apt-get install -y libdav1d6 librav1e0 libde265-0 libx265-199 libjpeg62-turbo libopenh264-7 libpng16-16 libnuma1 zlib1g
 # libraw dependencies
 apt-get install -y libjpeg62-turbo liblcms2-2 zlib1g libgomp1
 # ImageMagick dependencies
