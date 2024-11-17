@@ -164,7 +164,9 @@ type ComplexityRoot struct {
 		InitialSetupWizard           func(childComplexity int, username string, password string, rootPath string) int
 		MoveImageFaces               func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
 		ProtectShareToken            func(childComplexity int, token string, password *string) int
+		ReDetectFaces                func(childComplexity int, mediaID int) int
 		RecognizeUnlabeledFaces      func(childComplexity int) int
+		ReenterPassword              func(childComplexity int, password string) int
 		ResetAlbumCover              func(childComplexity int, albumID int) int
 		ScanAll                      func(childComplexity int) int
 		ScanUser                     func(childComplexity int, userID int) int
@@ -321,6 +323,7 @@ type MutationResolver interface {
 	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
 	RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error)
 	DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error)
+	ReDetectFaces(ctx context.Context, mediaID int) (bool, error)
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
@@ -332,6 +335,7 @@ type MutationResolver interface {
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	SetThumbnailDownsampleMethod(ctx context.Context, method models.ThumbnailFilter) (models.ThumbnailFilter, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
+	ReenterPassword(ctx context.Context, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error)
@@ -980,12 +984,36 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 
+	case "Mutation.reDetectFaces":
+		if e.complexity.Mutation.ReDetectFaces == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reDetectFaces_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReDetectFaces(childComplexity, args["mediaId"].(int)), true
+
 	case "Mutation.recognizeUnlabeledFaces":
 		if e.complexity.Mutation.RecognizeUnlabeledFaces == nil {
 			break
 		}
 
 		return e.complexity.Mutation.RecognizeUnlabeledFaces(childComplexity), true
+
+	case "Mutation.reenterPassword":
+		if e.complexity.Mutation.ReenterPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reenterPassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReenterPassword(childComplexity, args["password"].(string)), true
 
 	case "Mutation.resetAlbumCover":
 		if e.complexity.Mutation.ResetAlbumCover == nil {
@@ -1665,8 +1693,8 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 }
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
-	rc := graphql.GetOperationContext(ctx)
-	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
+	opCtx := graphql.GetOperationContext(ctx)
+	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputOrdering,
 		ec.unmarshalInputPagination,
@@ -1674,7 +1702,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	)
 	first := true
 
-	switch rc.Operation.Operation {
+	switch opCtx.Operation.Operation {
 	case ast.Query:
 		return func(ctx context.Context) *graphql.Response {
 			var response graphql.Response
@@ -1682,7 +1710,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			if first {
 				first = false
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-				data = ec._Query(ctx, rc.Operation.SelectionSet)
+				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
 				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
 					result := <-ec.deferredResults
@@ -1712,7 +1740,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			data := ec._Mutation(ctx, opCtx.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -1721,7 +1749,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 		}
 	case ast.Subscription:
-		next := ec._Subscription(ctx, rc.Operation.SelectionSet)
+		next := ec._Subscription(ctx, opCtx.Operation.SelectionSet)
 
 		var buf bytes.Buffer
 		return func(ctx context.Context) *graphql.Response {
@@ -1784,7 +1812,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/thumbnails.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
+//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/schema.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/thumbnails.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1803,6 +1831,7 @@ var sources = []*ast.Source{
 	{Name: "resolvers/notification.graphql", Input: sourceData("resolvers/notification.graphql"), BuiltIn: false},
 	{Name: "resolvers/root.graphql", Input: sourceData("resolvers/root.graphql"), BuiltIn: false},
 	{Name: "resolvers/scanner.graphql", Input: sourceData("resolvers/scanner.graphql"), BuiltIn: false},
+	{Name: "resolvers/schema.graphql", Input: sourceData("resolvers/schema.graphql"), BuiltIn: false},
 	{Name: "resolvers/search.graphql", Input: sourceData("resolvers/search.graphql"), BuiltIn: false},
 	{Name: "resolvers/share_token.graphql", Input: sourceData("resolvers/share_token.graphql"), BuiltIn: false},
 	{Name: "resolvers/site_info.graphql", Input: sourceData("resolvers/site_info.graphql"), BuiltIn: false},
@@ -2585,6 +2614,70 @@ func (ec *executionContext) field_Mutation_protectShareToken_argsPassword(
 	}
 
 	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_reDetectFaces_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_reDetectFaces_argsMediaID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_reDetectFaces_argsMediaID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (int, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["mediaId"]
+	if !ok {
+		var zeroVal int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mediaId"))
+	if tmp, ok := rawArgs["mediaId"]; ok {
+		return ec.unmarshalNID2int(ctx, tmp)
+	}
+
+	var zeroVal int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_reenterPassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Mutation_reenterPassword_argsPassword(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_reenterPassword_argsPassword(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["password"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+	if tmp, ok := rawArgs["password"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -7827,6 +7920,83 @@ func (ec *executionContext) fieldContext_Mutation_detachImageFaces(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_reDetectFaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_reDetectFaces(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ReDetectFaces(rctx, fc.Args["mediaId"].(int))
+		}
+
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthorized == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive isAuthorized is not implemented")
+			}
+			return ec.directives.IsAuthorized(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reDetectFaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reDetectFaces_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_favoriteMedia(ctx, field)
 	if err != nil {
@@ -8761,6 +8931,69 @@ func (ec *executionContext) fieldContext_Mutation_authorizeUser(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_authorizeUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reenterPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_reenterPassword(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ReenterPassword(rctx, fc.Args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.AuthorizeResult)
+	fc.Result = res
+	return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reenterPassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_AuthorizeResult_success(ctx, field)
+			case "status":
+				return ec.fieldContext_AuthorizeResult_status(ctx, field)
+			case "token":
+				return ec.fieldContext_AuthorizeResult_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthorizeResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reenterPassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -16516,6 +16749,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "reDetectFaces":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reDetectFaces(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "favoriteMedia":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_favoriteMedia(ctx, field)
@@ -16589,6 +16829,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "authorizeUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_authorizeUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reenterPassword":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reenterPassword(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

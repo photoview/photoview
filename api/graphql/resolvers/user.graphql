@@ -59,6 +59,9 @@ extend type Mutation {
   "Authorizes a user and returns a token used to identify the new session"
   authorizeUser(username: String!, password: String!): AuthorizeResult!
 
+  "Re-enter the current user password to confirm his identity and regenerate an access token."
+  reenterPassword(password: String!): AuthorizeResult!
+
   "Registers the initial user, can only be called if initialSetup from SiteInfo is true"
   initialSetupWizard(
     username: String!

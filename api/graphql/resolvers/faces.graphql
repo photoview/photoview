@@ -50,4 +50,7 @@ extend type Mutation {
 
   "Move a list of ImageFaces to a new face group"
   detachImageFaces(imageFaceIDs: [ID!]!): FaceGroup! @isAuthorized
+
+  "Re-detect faces on a media"
+  reDetectFaces(mediaId: ID!): Boolean! @isAuthorized
 }
