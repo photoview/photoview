@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: ['*']
   pull_request:
     branches: [master]
 
@@ -69,16 +69,17 @@ jobs:
       continue-on-error: true
       run: |
         docker run --name test --network host \
+            -v "${{ github.workspace }}:/app" \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
             -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
-          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+          /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -116,7 +117,7 @@ jobs:
         docker cp test:/app/ui/coverage ./ui/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
