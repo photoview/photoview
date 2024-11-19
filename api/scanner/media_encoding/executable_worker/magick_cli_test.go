@@ -48,7 +48,7 @@ func TestMagickCliFail(t *testing.T) {
 		t.Fatalf(`MagickCli.EncodeJpeg(...) = nil, should be an error.`)
 	}
 
-	if got, want := err.Error(), `^encoding image with ".*/testdata/bin/magick \[convert input -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding image with ".*/testdata/bin/magick \[input -auto-orient -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf(`MagickCli.EncodeJpeg(...) = %q, should be matched with reg pattern %q`, got, want)
 	}
 }
