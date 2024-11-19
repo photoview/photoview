@@ -24,3 +24,7 @@ func TestSetPathWithCurrent(t *testing.T) {
 		t.Errorf("path = %q, want a suffix: %q", got, want)
 	}
 }
+
+func TestAlwaysFail(t *testing.T) {
+	t.Fatal("always fail")
+}
