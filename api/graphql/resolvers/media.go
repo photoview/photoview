@@ -6,9 +6,7 @@ package resolvers
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/photoview/photoview/api/dataloader"
 	api "github.com/photoview/photoview/api/graphql"
@@ -16,6 +14,8 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Thumbnail is the resolver for the thumbnail field.
@@ -80,7 +80,7 @@ func (r *mediaResolver) Favorite(ctx context.Context, obj *models.Media) (bool, 
 
 // Type is the resolver for the type field.
 func (r *mediaResolver) Type(ctx context.Context, obj *models.Media) (models.MediaType, error) {
-	formattedType := models.MediaType(strings.Title(string(obj.Type)))
+	formattedType := models.MediaType(cases.Title(language.Und).String(string(obj.Type)))
 	return formattedType, nil
 }
 
@@ -160,7 +160,7 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 func (r *queryResolver) MyMedia(ctx context.Context, order *models.Ordering, paginate *models.Pagination) ([]*models.Media, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
-		return nil, errors.New("unauthorized")
+		return nil, fmt.Errorf("unauthorized")
 	}
 
 	return actions.MyMedia(r.DB(ctx), user, order, paginate)
@@ -212,7 +212,7 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 	}
 
 	if len(ids) == 0 {
-		return nil, errors.New("no ids provided")
+		return nil, fmt.Errorf("no ids provided")
 	}
 
 	var media []*models.Media
