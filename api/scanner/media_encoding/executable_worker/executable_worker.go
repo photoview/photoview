@@ -13,7 +13,7 @@ import (
 var ErrNoDependency = errors.New("dependency not found")
 var ErrDisabledFunction = errors.New("function disabled")
 
-func InitializeExecutableWorkers() {
+func init() {
 	Magick = newMagickCli()
 	Ffmpeg = newFfmpegCli()
 

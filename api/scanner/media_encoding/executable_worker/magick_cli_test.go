@@ -12,7 +12,8 @@ func TestMagickCliNotExist(t *testing.T) {
 	done := test_env.SetPathWithCurrent()
 	defer done()
 
-	InitializeExecutableWorkers()
+	Magick = newMagickCli()
+
 	if Magick.IsInstalled() {
 		t.Error("MagickCli should not be installed, but is found:", Magick)
 	}
@@ -29,7 +30,8 @@ func TestMagickCliIgnore(t *testing.T) {
 	doneDisableRaw := test_env.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 	defer doneDisableRaw()
 
-	InitializeExecutableWorkers()
+	Magick = newMagickCli()
+
 	if Magick.IsInstalled() {
 		t.Error("MagickCli should not be installed, but is found:", Magick)
 	}
@@ -43,7 +45,8 @@ func TestMagickCliFail(t *testing.T) {
 	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	InitializeExecutableWorkers()
+	Magick = newMagickCli()
+
 	if !Magick.IsInstalled() {
 		t.Fatal("MagickCli should be installed")
 	}
@@ -65,7 +68,8 @@ func TestMagickCliSucceed(t *testing.T) {
 	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	InitializeExecutableWorkers()
+	Magick = newMagickCli()
+
 	if !Magick.IsInstalled() {
 		t.Fatal("MagickCli should be installed")
 	}

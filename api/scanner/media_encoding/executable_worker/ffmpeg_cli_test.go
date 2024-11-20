@@ -14,7 +14,7 @@ func TestFfmpegNotExist(t *testing.T) {
 	done := test_env.SetPathWithCurrent()
 	defer done()
 
-	InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
 	if Ffmpeg.IsInstalled() {
 		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
@@ -36,7 +36,7 @@ func TestFfmpegIgnore(t *testing.T) {
 	doneEnv := test_env.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 	defer doneEnv()
 
-	InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
 	if Ffmpeg.IsInstalled() {
 		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", Ffmpeg)
@@ -55,7 +55,7 @@ func TestFfmpeg(t *testing.T) {
 	done := test_env.SetPathWithCurrent(testdataBinPath)
 	defer done()
 
-	InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
 	if !Ffmpeg.IsInstalled() {
 		t.Fatal("Ffmpeg should be installed")
@@ -114,7 +114,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
 	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
@@ -135,7 +135,7 @@ func TestFfmpegWithCustomCOdec(t *testing.T) {
 	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
 	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
