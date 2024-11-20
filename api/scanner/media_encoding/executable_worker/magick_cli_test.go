@@ -14,6 +14,10 @@ func TestMagickCliNotExist(t *testing.T) {
 
 	Magick = newMagickCli()
 
+	if got, want := Magick.err, ErrNoDependency; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
 	if Magick.IsInstalled() {
 		t.Error("MagickCli should not be installed, but is found:", Magick)
 	}
@@ -32,11 +36,37 @@ func TestMagickCliIgnore(t *testing.T) {
 
 	Magick = newMagickCli()
 
+	if got, want := Magick.err, ErrDisabledFunction; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
 	if Magick.IsInstalled() {
 		t.Error("MagickCli should not be installed, but is found:", Magick)
 	}
 
 	if got, want := Magick.EncodeJpeg("input", "output", 70), ErrDisabledFunction; !errors.Is(got, want) {
+		t.Errorf("Magick.EncodeJpeg() = %v, want: %v", got, want)
+	}
+}
+
+func TestMagickCliVersionFail(t *testing.T) {
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	defer donePath()
+
+	done := test_env.SetEnv("FAIL_WITH", "failure")
+	defer done()
+
+	Magick = newMagickCli()
+
+	if got, want := Magick.err, ErrNoDependency; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
+	if Magick.IsInstalled() {
+		t.Error("MagickCli should not be installed, but is found:", Magick)
+	}
+
+	if got, want := Magick.EncodeJpeg("input", "output", 70), ErrNoDependency; !errors.Is(got, want) {
 		t.Errorf("Magick.EncodeJpeg() = %v, want: %v", got, want)
 	}
 }

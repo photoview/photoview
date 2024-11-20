@@ -16,6 +16,36 @@ func TestFfmpegNotExist(t *testing.T) {
 
 	Ffmpeg = newFfmpegCli()
 
+	if got, want := Ffmpeg.err, ErrNoDependency; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
+
+	if Ffmpeg.IsInstalled() {
+		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
+	}
+
+	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+
+	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+}
+
+func TestFfmpegVersionFail(t *testing.T) {
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	defer donePath()
+
+	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+	defer doneEnv()
+
+	Ffmpeg = newFfmpegCli()
+
+	if got, want := Ffmpeg.err, ErrNoDependency; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
+
 	if Ffmpeg.IsInstalled() {
 		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
 	}
@@ -37,6 +67,10 @@ func TestFfmpegIgnore(t *testing.T) {
 	defer doneEnv()
 
 	Ffmpeg = newFfmpegCli()
+
+	if got, want := Ffmpeg.err, ErrDisabledFunction; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
 
 	if Ffmpeg.IsInstalled() {
 		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", Ffmpeg)
