@@ -1,20 +1,24 @@
 package executable_worker
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
+	"github.com/photoview/photoview/api/log"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
+
+var ErrNoDependency = errors.New("dependency not found")
+var ErrDisabledFunction = errors.New("function disabled")
 
 func InitializeExecutableWorkers() {
 	Magick = newMagickCli()
 	Ffmpeg = newFfmpegCli()
 
 	if err := SetFfprobePath(); err != nil {
-		log.Println("ffprobe init fail:", err)
+		log.Error("ffprobe init fail.", "error", err)
 	}
 }
 
@@ -36,7 +40,7 @@ func SetFfprobePath() error {
 		return fmt.Errorf("Executable ffprobe(%q) not executable: %w", path, err)
 	}
 
-	log.Println("Found ffprobe:", path, "version:", strings.Split(string(version), "\n")[0])
+	log.Info("found ffprobe", "path", path, "version", strings.Split(string(version), "\n")[0])
 	ffprobe.SetFFProbeBinPath(path)
 
 	return nil

@@ -1,4 +1,4 @@
-package test_utils
+package test_env
 
 import (
 	"os"
@@ -20,7 +20,7 @@ func TestSetPathWithCurrent(t *testing.T) {
 	defer testDone()
 
 	path := os.Getenv("PATH")
-	if got, want := path, "api/test_utils/test"; !strings.HasSuffix(got, want) {
+	if got, want := path, "api/test_utils/test_env/test"; !strings.HasSuffix(got, want) {
 		t.Errorf("path = %q, want a suffix: %q", got, want)
 	}
 }

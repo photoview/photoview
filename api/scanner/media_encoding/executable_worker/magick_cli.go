@@ -2,10 +2,10 @@ package executable_worker
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
 )
 
@@ -15,23 +15,23 @@ type MagickCli struct {
 
 func newMagickCli() *MagickCli {
 	if utils.EnvDisableRawProcessing.GetBool() {
-		log.Printf("Executable worker disabled (%s=%q): ImageMagick\n", utils.EnvDisableRawProcessing.GetName(), utils.EnvDisableRawProcessing.GetValue())
+		log.Warn("Executable magick worker disabled", utils.EnvDisableRawProcessing.GetName(), utils.EnvDisableRawProcessing.GetValue())
 		return nil
 	}
 
 	path, err := exec.LookPath("magick")
 	if err != nil {
-		log.Println("Executable worker not found: magick")
+		log.Error("Executable magick worker not found")
 		return nil
 	}
 
 	version, err := exec.Command(path, "-version").Output()
 	if err != nil {
-		log.Printf("Error getting version of magick: %s\n", err)
+		log.Error("Executable magick worker get version error", "error", err)
 		return nil
 	}
 
-	log.Printf("Found executable worker: magick (%s)\n", strings.Split(string(version), "\n")[0])
+	log.Info("Found magick executable worker", "version", strings.Split(string(version), "\n")[0])
 
 	return &MagickCli{
 		path: path,
@@ -43,6 +43,14 @@ func (cli *MagickCli) IsInstalled() bool {
 }
 
 func (cli *MagickCli) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+	if cli == nil {
+		err := ErrNoDependency
+		if utils.EnvDisableRawProcessing.GetBool() {
+			err = ErrDisabledFunction
+		}
+		return fmt.Errorf("encoding jpeg %q error: magick: %w", inputPath, err)
+	}
+
 	args := []string{
 		inputPath,
 		"-auto-orient",
