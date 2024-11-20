@@ -18,7 +18,7 @@ func InitializeExecutableWorkers() {
 	Ffmpeg = newFfmpegCli()
 
 	if err := SetFfprobePath(); err != nil {
-		log.Error("ffprobe init fail.", "error", err)
+		log.Error("Init ffprobe fail.", "error", err)
 	}
 }
 
@@ -40,7 +40,7 @@ func SetFfprobePath() error {
 		return fmt.Errorf("Executable ffprobe(%q) not executable: %w", path, err)
 	}
 
-	log.Info("found ffprobe", "path", path, "version", strings.Split(string(version), "\n")[0])
+	log.Info("Found ffprobe", "path", path, "version", strings.Split(string(version), "\n")[0])
 	ffprobe.SetFFProbeBinPath(path)
 
 	return nil

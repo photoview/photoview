@@ -21,24 +21,31 @@ var hwAccToCodec = map[string]string{
 type FfmpegCli struct {
 	path       string
 	videoCodec string
+	err        error
 }
 
 func newFfmpegCli() *FfmpegCli {
 	if utils.EnvDisableVideoEncoding.GetBool() {
 		log.Warn("Executable ffmpeg worker disabled", utils.EnvDisableVideoEncoding.GetName(), utils.EnvDisableVideoEncoding.GetValue())
-		return nil
+		return &FfmpegCli{
+			err: ErrDisabledFunction,
+		}
 	}
 
 	path, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		log.Error("Executable ffmpeg worker not found")
-		return nil
+		return &FfmpegCli{
+			err: ErrNoDependency,
+		}
 	}
 
 	version, err := exec.Command(path, "-version").Output()
 	if err != nil {
 		log.Error("Executable ffmpeg worker getting version error", "error", err)
-		return nil
+		return &FfmpegCli{
+			err: ErrNoDependency,
+		}
 	}
 
 	hwAcc := utils.EnvVideoHardwareAcceleration.GetValue()
@@ -61,16 +68,12 @@ func newFfmpegCli() *FfmpegCli {
 }
 
 func (cli *FfmpegCli) IsInstalled() bool {
-	return cli != nil
+	return cli.err == nil
 }
 
 func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
-	if cli == nil {
-		err := ErrNoDependency
-		if utils.EnvDisableVideoEncoding.GetBool() {
-			err = ErrDisabledFunction
-		}
-		return fmt.Errorf("encoding video %q error: ffmpeg: %w", inputPath, err)
+	if cli.err != nil {
+		return fmt.Errorf("encoding video %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
 	args := []string{
@@ -93,12 +96,8 @@ func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
 }
 
 func (cli *FfmpegCli) EncodeVideoThumbnail(inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
-	if cli == nil {
-		err := ErrNoDependency
-		if utils.EnvDisableVideoEncoding.GetBool() {
-			err = ErrDisabledFunction
-		}
-		return fmt.Errorf("encoding video thumbnail %q error: ffmpeg: %w", inputPath, err)
+	if cli.err != nil {
+		return fmt.Errorf("encoding video thumbnail %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
 	thumbnailOffsetSeconds := fmt.Sprintf("%.f", probeData.Format.DurationSeconds*0.25)
