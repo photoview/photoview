@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testDataPath = "./test_data"
+const testDataPath = "./test_data/scanner"
 
 func TestNewRootPath(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
