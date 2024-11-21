@@ -50,7 +50,7 @@ jobs:
               if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               else
-                echo tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}, {"tag": "$TAG", "ref": "$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)"}] | tee -a $GITHUB_OUTPUT
+                echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'$TAG'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
               fi
               ;;
             *)
