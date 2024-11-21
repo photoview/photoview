@@ -1,55 +1,105 @@
-package executable_worker_test
+package executable_worker
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 
-	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/test_utils"
+	"github.com/photoview/photoview/api/test_utils/test_env"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	done := test_utils.SetPathWithCurrent()
+	done := test_env.SetPathWithCurrent()
 	defer done()
 
-	executable_worker.InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
-	if executable_worker.Ffmpeg.IsInstalled() {
-		t.Error("Ffmpeg should not be installed, but is found:", executable_worker.Ffmpeg)
+	if got, want := Ffmpeg.err, ErrNoDependency; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
+
+	if Ffmpeg.IsInstalled() {
+		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
+	}
+
+	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+
+	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+}
+
+func TestFfmpegVersionFail(t *testing.T) {
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	defer donePath()
+
+	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+	defer doneEnv()
+
+	Ffmpeg = newFfmpegCli()
+
+	if got, want := Ffmpeg.err, ErrNoDependency; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
+
+	if Ffmpeg.IsInstalled() {
+		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
+	}
+
+	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+
+	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneEnv := test_utils.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
+	doneEnv := test_env.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 	defer doneEnv()
 
-	executable_worker.InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
-	if executable_worker.Ffmpeg.IsInstalled() {
-		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", executable_worker.Ffmpeg)
+	if got, want := Ffmpeg.err, ErrDisabledFunction; got != want {
+		t.Errorf("Ffmpeg.err = %v, want: %v", got, want)
+	}
+
+	if Ffmpeg.IsInstalled() {
+		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", Ffmpeg)
+	}
+
+	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrDisabledFunction; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
+	}
+
+	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrDisabledFunction; !errors.Is(got, want) {
+		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 }
 
 func TestFfmpeg(t *testing.T) {
-	done := test_utils.SetPathWithCurrent(testdataBinPath)
+	done := test_env.SetPathWithCurrent(testdataBinPath)
 	defer done()
 
-	executable_worker.InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
-	if !executable_worker.Ffmpeg.IsInstalled() {
+	if !Ffmpeg.IsInstalled() {
 		t.Fatal("Ffmpeg should be installed")
 	}
 
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
-		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
-		err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
+		err := Ffmpeg.EncodeMp4("input", "output")
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 		}
@@ -59,7 +109,7 @@ func TestFfmpeg(t *testing.T) {
 	})
 
 	t.Run("EncodeMp4Succeeded", func(t *testing.T) {
-		err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
+		err := Ffmpeg.EncodeMp4("input", "output")
 		if err != nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = %v, should be nil.", err)
 		}
@@ -71,10 +121,10 @@ func TestFfmpeg(t *testing.T) {
 		},
 	}
 	t.Run("EncodeVideoThumbnailMp4Failed", func(t *testing.T) {
-		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
-		err := executable_worker.Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
+		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = nil, should be an error.")
 		}
@@ -84,7 +134,7 @@ func TestFfmpeg(t *testing.T) {
 	})
 
 	t.Run("EncodeVideoThumbnailSucceeded", func(t *testing.T) {
-		err := executable_worker.Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
+		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
 		if err != nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = %v, should be nil.", err)
 		}
@@ -92,18 +142,18 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
-	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
+	doneCodec := test_env.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 	defer doneCodec()
 
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	executable_worker.InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
-	err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
+	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
@@ -113,18 +163,18 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 }
 
 func TestFfmpegWithCustomCOdec(t *testing.T) {
-	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
+	doneCodec := test_env.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 	defer doneCodec()
 
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+	donePath := test_env.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	executable_worker.InitializeExecutableWorkers()
+	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
-	err := executable_worker.Ffmpeg.EncodeMp4("input", "output")
+	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}

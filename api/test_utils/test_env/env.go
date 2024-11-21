@@ -1,11 +1,23 @@
-package test_utils
+package test_env
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
+
+type integration_options struct {
+	Database   *bool
+	Filesystem *bool
+}
+
+// Fake flags to be compatible with current test command.
+var integration_flags integration_options = integration_options{
+	Database:   flag.Bool("database", false, "run database integration tests"),
+	Filesystem: flag.Bool("filesystem", false, "run filesystem integration tests"),
+}
 
 func SetPathWithCurrent(paths ...string) func() {
 	_, file, _, ok := runtime.Caller(1)
@@ -45,5 +57,5 @@ func PathFromAPIRoot(rootRelatedPath string) string {
 
 	base := filepath.Dir(file)
 
-	return filepath.Join(base, "..", rootRelatedPath)
+	return filepath.Join(base, "../..", rootRelatedPath)
 }

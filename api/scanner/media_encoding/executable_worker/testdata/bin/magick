@@ -6,7 +6,6 @@ set -eu
 if [ "$1" = "-version" ]
 then
   echo magick: version fake
-  exit 0
 fi
 
 if [ "${FAIL_WITH}" != "" ]
