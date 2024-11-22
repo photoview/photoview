@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testDataPath = "./test_data/library"
+const testDataPath = "./test_media/library"
 
 func TestNewRootPath(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
@@ -29,7 +29,7 @@ func TestNewRootPath(t *testing.T) {
 		}
 
 		assert.NotNil(t, album)
-		assert.Contains(t, album.Path, "/api/scanner/test_data")
+		assert.Contains(t, album.Path, "/api/scanner/test_media")
 		assert.NotEmpty(t, album.Owners)
 	})
 
@@ -65,7 +65,7 @@ func TestNewRootPath(t *testing.T) {
 		}
 
 		assert.NotNil(t, album)
-		assert.Contains(t, album.Path, "/api/scanner/test_data")
+		assert.Contains(t, album.Path, "/api/scanner/test_media")
 
 		ownerCount := db.Model(&album).Association("Owners").Count()
 		assert.EqualValues(t, 2, ownerCount)

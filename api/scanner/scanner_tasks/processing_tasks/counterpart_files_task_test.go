@@ -69,7 +69,7 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 		},
 	}
 
-	mediaPath := test_utils.PathFromAPIRoot("scanner/test_data/fake_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner/test_media/fake_media")
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

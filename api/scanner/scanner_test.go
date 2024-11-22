@@ -28,7 +28,7 @@ func TestFullScan(t *testing.T) {
 
 	rootAlbum := models.Album{
 		Title: "root album",
-		Path:  "./test_data/library",
+		Path:  "./test_media/library",
 	}
 
 	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
