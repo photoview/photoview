@@ -6,7 +6,7 @@ import (
 	"github.com/photoview/photoview/api/test_utils"
 )
 
-const testdataBinPath = "./test_data/bin"
+const testdataBinPath = "./test_data/mock_bin"
 
 func TestInitFfprobePath(t *testing.T) {
 	t.Run("PathFail", func(t *testing.T) {
