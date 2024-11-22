@@ -103,7 +103,7 @@ func TestFfmpeg(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video with ".*/test_data/bin/ffmpeg" \[-i input -vcodec h264 .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264 .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -128,7 +128,7 @@ func TestFfmpeg(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video thumbnail with ".*/test_data/bin/ffmpeg" \[-ss 2 -i input .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video thumbnail with ".*/test_data/mock_bin/ffmpeg" \[-ss 2 -i input .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeVideoThumbnail(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -157,7 +157,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/test_data/bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }
@@ -178,7 +178,7 @@ func TestFfmpegWithCustomCOdec(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/test_data/bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }
