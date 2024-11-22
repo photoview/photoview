@@ -31,7 +31,7 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	testDir := t.TempDir()
-	assert.NoError(t, copy.Copy("../../test_data/scanner", testDir))
+	assert.NoError(t, copy.Copy("../../test_data/library", testDir))
 
 	countAllMedia := func() int {
 		var allMedia []*models.Media
