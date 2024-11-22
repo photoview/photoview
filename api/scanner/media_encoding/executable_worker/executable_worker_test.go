@@ -3,7 +3,7 @@ package executable_worker
 import (
 	"testing"
 
-	"github.com/photoview/photoview/api/test_utils/test_env"
+	"github.com/photoview/photoview/api/test_utils"
 )
 
 const testdataBinPath = "./test_data/bin"
@@ -17,10 +17,10 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("VersionFail", func(t *testing.T) {
-		donePath := test_env.SetPathWithCurrent(testdataBinPath)
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 		defer donePath()
 
-		doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
 		err := SetFfprobePath()
@@ -30,7 +30,7 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("Succeed", func(t *testing.T) {
-		donePath := test_env.SetPathWithCurrent(testdataBinPath)
+		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 		defer donePath()
 
 		err := SetFfprobePath()
