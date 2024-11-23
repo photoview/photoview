@@ -47,17 +47,17 @@ var webVideoMimetypes = arrayToSet([]MediaType{
 })
 
 // Legacy function. Should be removed.
-var WebMimetypes = []MediaType{
-	TypeJPEG,
-	TypePNG,
-	TypeWebP,
-	TypeBMP,
-	TypeGIF,
+var WebMimetypes = []string{
+	TypeJPEG.String(),
+	TypePNG.String(),
+	TypeWebP.String(),
+	TypeBMP.String(),
+	TypeGIF.String(),
 
-	TypeMP4,
-	TypeMPEG,
-	TypeWEBM,
-	TypeOGG,
+	TypeMP4.String(),
+	TypeMPEG.String(),
+	TypeWEBM.String(),
+	TypeOGG.String(),
 }
 
 func arrayToSet[T comparable](array []T) map[T]struct{} {
