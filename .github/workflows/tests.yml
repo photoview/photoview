@@ -113,11 +113,18 @@ jobs:
       - name: Test
         id: test
         run: |
-          go test ./... -v -database -filesystem -p 1
-          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic -json > test-report.json
+          go install github.com/jstemmer/go-junit-report@latest
+          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic 2>&1 | tee >(go-junit-report > test-report.xml)
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+        with:
+          flags: api-${{ matrix.database }}
+          token: ${{ secrets.CODECOV_TKN }}
+
+      - name: Upload test execution results
+        uses: codecov/test-results-action@v1
         if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
           flags: api-${{ matrix.database }}
@@ -163,17 +170,24 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+        with:
+          flags: ui
+          token: ${{ secrets.CODECOV_TKN }}
+
+      - name: Upload test execution results
+        uses: codecov/test-results-action@v1
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
           flags: ui
           token: ${{ secrets.CODECOV_TKN }}
 
       - name: Run ESLint
         run: |
-          npm run lint:ci || true
           echo "--------------------------"
           echo "ESLint execution results :"
           echo "--------------------------"
-          cat ./eslint-report.txt || echo "ESLint report file not found."
+          npm run lint:ci || true
 
       - name: ESLint artifact
         id: eslint-artifact

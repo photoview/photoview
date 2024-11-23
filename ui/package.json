@@ -13,7 +13,7 @@
     "mon": "nodemon",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
-    "lint:ci": "eslint ./src --config .eslintrc.js --no-color --fix-dry-run > eslint-report.txt",
+    "lint:ci": "eslint ./src --config .eslintrc.js --no-color --fix-dry-run | tee eslint-report.txt; eslint ./src --config .eslintrc.js --no-color --format json > eslint-report.json",
     "test": "vitest",
     "test:ci": "CI=true vitest --reporter=junit --reporter=verbose --run --coverage",
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars && prettier --write */**/__generated__/*.ts",
