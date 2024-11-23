@@ -1,10 +1,10 @@
 #!/bin/sh
 set -eu
 
-for test in $(dirname $0)/test_*
-do
-  if [ "${test}" != "${test%%/scripts/test_all.sh}" ]
-  then
+go install github.com/jstemmer/go-junit-report@latest
+
+for test in $(dirname $0)/test_*; do
+  if [ "${test}" != "${test%%/scripts/test_all.sh}" ]; then
     continue
   fi
 

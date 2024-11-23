@@ -76,10 +76,18 @@ jobs:
           photoview/api \
           /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
+        docker cp test:/app/api/test-*-report.xml ./api/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
+
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
@@ -113,10 +121,18 @@ jobs:
       run: |
         docker run --name test photoview/ui npm run test:ci
         docker cp test:/app/ui/coverage ./ui/
+        docker cp test:/app/ui/junit-report.xml ./ui/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
+
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
