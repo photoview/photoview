@@ -8,6 +8,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
+	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +28,7 @@ func TestFullScan(t *testing.T) {
 
 	rootAlbum := models.Album{
 		Title: "root album",
-		Path:  "./test_data",
+		Path:  "./test_media/library",
 	}
 
 	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
@@ -43,7 +44,7 @@ func TestFullScan(t *testing.T) {
 		return
 	}
 
-	test_utils.RunScannerOnUser(t, db, user)
+	scanner_utils.RunScannerOnUser(t, db, user)
 
 	var allMedia []*models.Media
 	if !assert.NoError(t, db.Find(&allMedia).Error) {

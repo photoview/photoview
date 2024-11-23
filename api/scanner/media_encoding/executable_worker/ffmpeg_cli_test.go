@@ -5,13 +5,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/photoview/photoview/api/test_utils/test_env"
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	done := test_env.SetPathWithCurrent()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
 	Ffmpeg = newFfmpegCli()
@@ -34,10 +34,10 @@ func TestFfmpegNotExist(t *testing.T) {
 }
 
 func TestFfmpegVersionFail(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
 	Ffmpeg = newFfmpegCli()
@@ -60,10 +60,10 @@ func TestFfmpegVersionFail(t *testing.T) {
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneEnv := test_env.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
+	doneEnv := test_utils.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 	defer doneEnv()
 
 	Ffmpeg = newFfmpegCli()
@@ -86,7 +86,7 @@ func TestFfmpegIgnore(t *testing.T) {
 }
 
 func TestFfmpeg(t *testing.T) {
-	done := test_env.SetPathWithCurrent(testdataBinPath)
+	done := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer done()
 
 	Ffmpeg = newFfmpegCli()
@@ -96,14 +96,14 @@ func TestFfmpeg(t *testing.T) {
 	}
 
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
-		doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
 		err := Ffmpeg.EncodeMp4("input", "output")
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec h264 .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264 .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -121,14 +121,14 @@ func TestFfmpeg(t *testing.T) {
 		},
 	}
 	t.Run("EncodeVideoThumbnailMp4Failed", func(t *testing.T) {
-		doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 		defer doneEnv()
 
 		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video thumbnail with ".*/testdata/bin/ffmpeg" \[-ss 2 -i input .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video thumbnail with ".*/test_data/mock_bin/ffmpeg" \[-ss 2 -i input .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeVideoThumbnail(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -142,43 +142,43 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
-	doneCodec := test_env.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
+	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 	defer doneCodec()
 
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
 	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }
 
 func TestFfmpegWithCustomCOdec(t *testing.T) {
-	doneCodec := test_env.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
+	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 	defer doneCodec()
 
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_env.SetEnv("FAIL_WITH", "expect failure")
+	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
 	defer doneEnv()
 
 	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/testdata/bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }

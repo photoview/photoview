@@ -1,4 +1,4 @@
-package test_utils
+package scanner_utils
 
 import (
 	"testing"

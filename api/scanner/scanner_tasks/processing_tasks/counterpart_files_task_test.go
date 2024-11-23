@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/test_utils/test_env"
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 )
 
@@ -69,11 +69,11 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 		},
 	}
 
-	mediaPath := test_env.PathFromAPIRoot("scanner/test_data/fake_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner/test_media/fake_media")
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			done := test_env.SetEnv(string(utils.EnvDisableRawProcessing), fmt.Sprintf("%v", tc.disableRawProcessing))
+			done := test_utils.SetEnv(string(utils.EnvDisableRawProcessing), fmt.Sprintf("%v", tc.disableRawProcessing))
 			defer done()
 
 			ctx := scanner_task.NewTaskContext(context.Background(), nil, nil, nil)

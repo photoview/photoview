@@ -10,6 +10,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
+	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +32,7 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	testDir := t.TempDir()
-	assert.NoError(t, copy.Copy("../../test_data", testDir))
+	assert.NoError(t, copy.Copy("../../test_media/library", testDir))
 
 	countAllMedia := func() int {
 		var allMedia []*models.Media
@@ -79,31 +80,31 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	t.Run("Modify albums", func(t *testing.T) {
-		test_utils.RunScannerOnUser(t, db, user1)
+		scanner_utils.RunScannerOnUser(t, db, user1)
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
 		// move faces directory
 		assert.NoError(t, os.Rename(path.Join(testDir, "faces"), path.Join(testDir, "faces_moved")))
-		test_utils.RunScannerAll(t, db)
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
 		// remove faces_moved directory
 		assert.NoError(t, os.RemoveAll(path.Join(testDir, "faces_moved")))
-		test_utils.RunScannerAll(t, db)
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 3, countAllMedia())
 		assert.Equal(t, 6, countAllMediaURLs())
 	})
 
 	t.Run("Modify images", func(t *testing.T) {
 		assert.NoError(t, os.Rename(path.Join(testDir, "buttercup_close_summer_yellow.jpg"), path.Join(testDir, "yellow-flower.jpg")))
-		test_utils.RunScannerAll(t, db)
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 3, countAllMedia())
 		assert.Equal(t, 6, countAllMediaURLs())
 
 		assert.NoError(t, os.Remove(path.Join(testDir, "lilac_lilac_bush_lilac.jpg")))
-		test_utils.RunScannerAll(t, db)
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 2, countAllMedia())
 		assert.Equal(t, 4, countAllMediaURLs())
 	})

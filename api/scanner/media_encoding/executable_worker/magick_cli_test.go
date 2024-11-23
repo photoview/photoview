@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/photoview/photoview/api/test_utils/test_env"
+	"github.com/photoview/photoview/api/test_utils"
 )
 
 func TestMagickCliNotExist(t *testing.T) {
-	done := test_env.SetPathWithCurrent()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
 	Magick = newMagickCli()
@@ -28,10 +28,10 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneDisableRaw := test_env.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
+	doneDisableRaw := test_utils.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 	defer doneDisableRaw()
 
 	Magick = newMagickCli()
@@ -50,10 +50,10 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliVersionFail(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	done := test_env.SetEnv("FAIL_WITH", "failure")
+	done := test_utils.SetEnv("FAIL_WITH", "failure")
 	defer done()
 
 	Magick = newMagickCli()
@@ -72,7 +72,7 @@ func TestMagickCliVersionFail(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	Magick = newMagickCli()
@@ -81,7 +81,7 @@ func TestMagickCliFail(t *testing.T) {
 		t.Fatal("MagickCli should be installed")
 	}
 
-	done := test_env.SetEnv("FAIL_WITH", "failure")
+	done := test_utils.SetEnv("FAIL_WITH", "failure")
 	defer done()
 
 	err := Magick.EncodeJpeg("input", "output", 70)
@@ -89,13 +89,13 @@ func TestMagickCliFail(t *testing.T) {
 		t.Fatalf(`MagickCli.EncodeJpeg(...) = nil, should be an error.`)
 	}
 
-	if got, want := err.Error(), `^encoding image with ".*/testdata/bin/magick \[input -auto-orient -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding image with ".*/test_data/mock_bin/magick \[input -auto-orient -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf(`MagickCli.EncodeJpeg(...) = %q, should be matched with reg pattern %q`, got, want)
 	}
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := test_env.SetPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
 	Magick = newMagickCli()
