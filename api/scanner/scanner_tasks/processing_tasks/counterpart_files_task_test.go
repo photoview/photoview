@@ -13,6 +13,8 @@ import (
 )
 
 func TestCounterpartFilesTaskMediaFound(t *testing.T) {
+	mediaPath := test_utils.PathFromAPIRoot("scanner/test_media/real_media")
+
 	tests := []struct {
 		name                 string
 		file                 string
@@ -21,55 +23,53 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 	}{
 		{
 			name:                 "StandaloneProcessRaw",
-			file:                 "standalone.jpg",
+			file:                 "standalone_jpg.jpg",
 			disableRawProcessing: false,
 			wantSkip:             false,
 		},
 		{
 			name:                 "StandaloneNotProcessRaw",
-			file:                 "standalone.jpg",
+			file:                 "standalone_jpg.jpg",
 			disableRawProcessing: true,
 			wantSkip:             false,
 		},
 		{
 			name:                 "RawJpegProcessRaw",
-			file:                 "fujifilm_raw.jpg",
+			file:                 "raw_with_jpg.jpg",
 			disableRawProcessing: false,
 			wantSkip:             true,
 		},
 		{
 			name:                 "RawJpegNotProcessRaw",
-			file:                 "fujifilm_raw.jpg",
+			file:                 "raw_with_jpg.jpg",
 			disableRawProcessing: true,
 			wantSkip:             false,
 		},
 		{
 			name:                 "RawProcessRaw",
-			file:                 "fujifilm_raw.raf",
+			file:                 "raw_with_jpg.tiff",
 			disableRawProcessing: false,
 			wantSkip:             false,
 		},
 		{
 			name:                 "RawNotProcessRaw",
-			file:                 "fujifilm_raw.raf",
+			file:                 "raw_with_jpg.tiff",
 			disableRawProcessing: true,
 			wantSkip:             true,
 		},
 		{
 			name:                 "UnknownProcessRaw",
-			file:                 "file.unknown",
+			file:                 "file.pdf",
 			disableRawProcessing: false,
 			wantSkip:             true,
 		},
 		{
 			name:                 "UnknownNotProcessRaw",
-			file:                 "file.unknown",
+			file:                 "file.pdf",
 			disableRawProcessing: true,
 			wantSkip:             true,
 		},
 	}
-
-	mediaPath := test_utils.PathFromAPIRoot("scanner/test_media/fake_media")
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

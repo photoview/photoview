@@ -11,5 +11,8 @@ apt-get install -y libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} l
 apt-get install -y \
   libdlib-dev:${DEB_HOST_ARCH} libblas-dev:${DEB_HOST_ARCH} libatlas-base-dev:${DEB_HOST_ARCH} liblapack-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH}
 
+# Install gomagic dependencies
+apt-get install -y libmagic-dev:${DEB_HOST_ARCH}
+
 # Install tools for development
 apt-get install -y reflex sqlite3
