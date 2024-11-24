@@ -77,8 +77,6 @@ jobs:
           /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
         docker cp test:/app/api/test-api-coverage-report.xml ./api/
-        echo '---DEBUG---'
-        cat ./api/test-api-coverage-report.xml
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
@@ -87,16 +85,13 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
 
-    - name: DEBUG
-      run: cat ./api/test-api-coverage-report.xml
-
     - name: Upload test execution results
       uses: codecov/test-results-action@v1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
-        directory: ./api
+        files: ./api/test-api-coverage-report.xml
 
   test-ui:
     name: Test UI
