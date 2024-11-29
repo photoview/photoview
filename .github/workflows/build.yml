@@ -39,6 +39,10 @@ jobs:
           case ${{ github.event_name }} in
             pull_request)
               echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
+              git fetch --all
+              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
+              echo TAG is $TAG
+              echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
               ;;
             push)
               echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
@@ -50,7 +54,7 @@ jobs:
               if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               else
-                echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'$TAG'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
+                echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
               fi
               ;;
             *)
@@ -106,13 +110,20 @@ jobs:
           images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'latest' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=ref,event=branch' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=sha' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=branch' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=pr' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
+        env:
+          GITHUB_REF: ${{ github.event_name == 'schedule' && matrix.tags.ref || github.ref }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
