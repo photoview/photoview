@@ -110,10 +110,14 @@ jobs:
           images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
-            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
-            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
-            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
-            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'latest' || '' }}
+            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
+            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
+            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'latest' || '' }}
+            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ matrix.tags.tag == '2.4.0' && 'latest' || '' }}
             ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=ref,event=branch' || '' }}
             ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=sha' || '' }}
             ${{ github.event_name != 'schedule' && 'type=ref,event=branch' || '' }}
@@ -123,7 +127,8 @@ jobs:
             ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
             ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
         env:
-          GITHUB_REF: ${{ github.event_name == 'schedule' && matrix.tags.ref || github.ref }}
+          # GITHUB_REF: ${{ github.event_name == 'schedule' && matrix.tags.ref || github.ref }}
+          GITHUB_REF: ${{ matrix.tags.tag == '2.4.0' && matrix.tags.ref || github.ref }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
