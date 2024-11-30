@@ -39,10 +39,6 @@ jobs:
           case ${{ github.event_name }} in
             pull_request)
               echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
-              git fetch --all
-              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
-              echo TAG is $TAG
-              echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
               ;;
             push)
               echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
@@ -107,27 +103,19 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           context: "git"
-          # list of Docker images to use as base name for tags
           images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
-          # Docker tags based on the following events/attributes
           tags: |
-            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
-            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
-            # ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
-            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{version}}' || '' }}
-            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
-            ${{ matrix.tags.tag == '2.4.0' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
             ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=ref,event=branch' || '' }}
             ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=sha' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=ref,event=branch' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=ref,event=pr' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=semver,pattern={{version}}' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
-            # ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
-        # env:
-          # GITHUB_REF: ${{ github.event_name == 'schedule' && matrix.tags.ref || github.ref }}
-          # GITHUB_REF: ${{ matrix.tags.tag == '2.4.0' && matrix.tags.ref || github.ref }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=branch' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=pr' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -159,7 +147,7 @@ jobs:
       matrix:
         tags: ${{ fromJson(needs.prepare.outputs.tags) }}
     # Comment out when pushing images with forked repos.
-    # if: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
+    if: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
     steps:
       # Makes sure your .dockleignore file is available to the next step
       - name: Checkout ${{ matrix.tags.ref }}
