@@ -113,10 +113,6 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 
 	// Use magick if there is no counterpart JPEG file to use instead
 	if contentType.IsImage() && !contentType.IsWebCompatible() {
-		if !executable_worker.Magick.IsInstalled() {
-			return fmt.Errorf("covert RAW photo error: converter was not found")
-		}
-
 		imgPath := img.Media.Path
 		if img.CounterpartPath != nil {
 			imgPath = *img.CounterpartPath
@@ -124,7 +120,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 
 		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
 		if err != nil {
-			return fmt.Errorf("covert RAW photo error: %w", err)
+			return fmt.Errorf("convert RAW photo error: %w", err)
 		}
 	}
 
