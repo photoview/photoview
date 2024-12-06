@@ -1,7 +1,7 @@
 import type mapboxgl from 'mapbox-gl'
 import type geojson from 'geojson'
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import MapClusterMarker from '../../Pages/PlacesPage/MapClusterMarker'
 import { MediaMarker } from '../../Pages/PlacesPage/MapPresentMarker'
 import { PlacesAction } from '../../Pages/PlacesPage/placesReducer'
@@ -82,12 +82,12 @@ function createClusterPopupElement(
 ) {
   // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
   const el = document.createElement('div')
-  ReactDOM.render(
+  const root = createRoot(el)
+  root.render(
     <MapClusterMarker
       marker={geojsonProps}
       dispatchMarkerMedia={dispatchMarkerMedia}
-    />,
-    el
+    />
   )
   return el
 }
