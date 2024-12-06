@@ -56,15 +56,19 @@ const SidebarFacesOverlayWrapper = styled.div<{ width: number }>`
 
 type SidebarFaceOverlayProps = {
   media: MediaSidebarMedia
+  alwaysShowFaces?: boolean
 }
 
-export const SidebarFacesOverlay = ({ media }: SidebarFaceOverlayProps) => {
+export const SidebarFacesOverlay = ({
+  media,
+  alwaysShowFaces = false,
+}: SidebarFaceOverlayProps) => {
   if (media.type != MediaType.Photo) return null
   if (media.thumbnail == null) return null
 
-  const faceBoxes = media.faces?.map(face => (
-    <FaceBox key={face.id} face={face} />
-  ))
+  const faceBoxes = media.faces
+    ?.filter(face => !alwaysShowFaces || face.faceGroup.label === null)
+    .map(face => <FaceBox key={face.id} face={face} />)
 
   let wrapperWidth = 1
   if (media.thumbnail.width * 0.75 < media.thumbnail.height) {
@@ -72,7 +76,10 @@ export const SidebarFacesOverlay = ({ media }: SidebarFaceOverlayProps) => {
   }
 
   return (
-    <SidebarFacesOverlayWrapper width={wrapperWidth}>
+    <SidebarFacesOverlayWrapper
+      width={wrapperWidth}
+      style={{ opacity: alwaysShowFaces ? 1 : undefined }}
+    >
       {faceBoxes}
     </SidebarFacesOverlayWrapper>
   )

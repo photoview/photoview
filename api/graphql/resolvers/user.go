@@ -52,6 +52,16 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 	}, nil
 }
 
+// ReenterPassword is the resolver for the reenterPassword field.
+func (r *mutationResolver) ReenterPassword(ctx context.Context, password string) (*models.AuthorizeResult, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return r.AuthorizeUser(ctx, user.Username, password)
+}
+
 // InitialSetupWizard is the resolver for the initialSetupWizard field.
 func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
 	db := r.DB(ctx)

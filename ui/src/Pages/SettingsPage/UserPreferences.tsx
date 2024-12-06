@@ -103,7 +103,7 @@ const MY_USER_PREFERENCES = gql`
   }
 `
 
-const LogoutButton = () => {
+export const LogoutButton = () => {
   const { t } = useTranslation()
 
   return (
