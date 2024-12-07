@@ -89,6 +89,7 @@ jobs:
       uses: codecov/test-results-action@v1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
+        override_branch: ${{ github.ref }}
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
         files: ./api/test-api-coverage-report.xml
@@ -135,6 +136,7 @@ jobs:
       uses: codecov/test-results-action@v1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
+        override_branch: ${{ github.ref }}
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
         directory: ./ui
