@@ -86,10 +86,9 @@ jobs:
         flags: api-${{ matrix.database }}
 
     - name: Upload test execution results
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@v1.0.1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        override_branch: ${{ github.ref }}
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
         files: ./api/test-api-coverage-report.xml
@@ -133,10 +132,9 @@ jobs:
         flags: ui
 
     - name: Upload test execution results
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@v1.0.1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        override_branch: ${{ github.ref }}
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
         directory: ./ui
