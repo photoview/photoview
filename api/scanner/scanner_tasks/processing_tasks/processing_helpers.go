@@ -70,7 +70,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 		Width:       photoDimensions.Width,
 		Height:      photoDimensions.Height,
 		Purpose:     models.MediaOriginal,
-		ContentType: string(*contentType),
+		ContentType: contentType.String(),
 		FileSize:    fileStats.Size(),
 	}
 

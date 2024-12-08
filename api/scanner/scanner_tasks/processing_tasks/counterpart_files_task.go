@@ -1,17 +1,13 @@
 package processing_tasks
 
 import (
+	"fmt"
 	"io/fs"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 )
 
 type CounterpartFilesTask struct {
@@ -19,14 +15,14 @@ type CounterpartFilesTask struct {
 }
 
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
-	ext := filepath.Ext(mediaPath)
-	fileExtType, found := media_type.GetExtensionMediaType(ext)
-	if !found {
+	fileType := media_type.GetMediaType(mediaPath)
+
+	if !fileType.IsSupported() {
 		return true, nil
 	}
 
 	if utils.EnvDisableRawProcessing.GetBool() {
-		if fileExtType.IsRaw() {
+		if !fileType.IsWebCompatible() {
 			return true, nil
 		}
 
@@ -34,13 +30,11 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 		return false, nil
 	}
 
-	if !fileExtType.IsBasicTypeSupported() {
-		return false, nil
-	}
-
-	rawPath := media_type.RawCounterpart(mediaPath)
-	if rawPath != nil {
-		return true, nil
+	if fileType.IsWebCompatible() {
+		_, existed := media_type.FindRawCounterpart(mediaPath)
+		if existed {
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -50,38 +44,19 @@ func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, m
 
 	mediaType, err := ctx.GetCache().GetMediaType(mediaData.Media.Path)
 	if err != nil {
-		return ctx, errors.Wrap(err, "scan for counterpart file")
+		return ctx, fmt.Errorf("scan for counterpart file error: %w", err)
 	}
 
-	if !mediaType.IsRaw() {
+	if mediaType.IsWebCompatible() {
 		return ctx, nil
 	}
 
-	counterpartFile := scanForCompressedCounterpartFile(mediaData.Media.Path)
-	if counterpartFile != nil {
-		mediaData.CounterpartPath = counterpartFile
+	counterpartFile, ok := media_type.FindWebCounterpart(mediaData.Media.Path)
+	if !ok {
+		return ctx, nil
 	}
+
+	mediaData.CounterpartPath = &counterpartFile
 
 	return ctx, nil
-}
-
-func scanForCompressedCounterpartFile(imagePath string) *string {
-	ext := filepath.Ext(imagePath)
-	fileExtType, found := media_type.GetExtensionMediaType(ext)
-
-	if found {
-		if fileExtType.IsBasicTypeSupported() {
-			return nil
-		}
-	}
-
-	pathWithoutExt := strings.TrimSuffix(imagePath, path.Ext(imagePath))
-	for _, ext := range media_type.TypeJpeg.FileExtensions() {
-		testPath := pathWithoutExt + ext
-		if scanner_utils.FileExists(testPath) {
-			return &testPath
-		}
-	}
-
-	return nil
 }

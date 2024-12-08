@@ -52,7 +52,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 	videoType, err := mediaData.ContentType()
 	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "error getting video content type")
+		return []*models.MediaURL{}, fmt.Errorf("getting video content type error: %w", err)
 	}
 
 	if videoOriginalURL == nil && videoType.IsWebCompatible() {
@@ -75,7 +75,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			Width:       webMetadata.Width,
 			Height:      webMetadata.Height,
 			Purpose:     models.MediaOriginal,
-			ContentType: string(*videoType),
+			ContentType: videoType.String(),
 			FileSize:    fileStats.Size(),
 		}
 

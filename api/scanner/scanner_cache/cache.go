@@ -1,6 +1,7 @@
 package scanner_cache
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type AlbumScannerCache struct {
@@ -69,24 +69,21 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 // 	(c.photo_types)[path] = content_type
 // }
 
-func (c *AlbumScannerCache) GetMediaType(path string) (*media_type.MediaType, error) {
+func (c *AlbumScannerCache) GetMediaType(path string) (media_type.MediaType, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	result, found := c.photo_types[path]
 	if found {
-		// log.Printf("Image cache hit: %s\n", path)
-		return &result, nil
+		return result, nil
 	}
 
-	mediaType, err := media_type.GetMediaType(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get media type (%s)", path)
+	mediaType := media_type.GetMediaType(path)
+	if mediaType == media_type.TypeUnknown {
+		return mediaType, fmt.Errorf("unknown media type (%s)", path)
 	}
 
-	if mediaType != nil {
-		(c.photo_types)[path] = *mediaType
-	}
+	c.photo_types[path] = mediaType
 
 	return mediaType, nil
 }
@@ -122,16 +119,16 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 		return false
 	}
 
-	if mediaType != nil {
-		// Make sure file isn't empty
-		fileStats, err := os.Stat(mediaPath)
-		if err != nil || fileStats.Size() == 0 {
-			return false
-		}
-
-		return true
+	if !mediaType.IsSupported() {
+		log.Printf("File is not a supported media %s\n", mediaPath)
+		return false
 	}
 
-	log.Printf("File is not a supported media %s\n", mediaPath)
-	return false
+	// Make sure file isn't empty
+	fileStats, err := os.Stat(mediaPath)
+	if err != nil || fileStats.Size() == 0 {
+		return false
+	}
+
+	return true
 }

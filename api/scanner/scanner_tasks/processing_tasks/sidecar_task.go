@@ -30,7 +30,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 		return errors.Wrap(err, "scan for sidecar file")
 	}
 
-	if !mediaType.IsRaw() {
+	if mediaType.IsWebCompatible() {
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
 	}
 
-	if !mediaType.IsRaw() {
+	if mediaType.IsWebCompatible() {
 		return []*models.MediaURL{}, nil
 	}
 
