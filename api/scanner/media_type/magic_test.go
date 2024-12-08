@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	magic "github.com/hosom/gomagic"
 	"github.com/photoview/photoview/api/test_utils"
 )
 
@@ -74,5 +75,72 @@ func TestMagicNoInit(t *testing.T) {
 	got := GetMediaType(file)
 	if want := TypeUnknown; got != want {
 		t.Errorf("GetMediaType() = %v, want: %v", got, want)
+	}
+}
+
+func getMediaFiles() []string {
+	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
+	var files []string
+	for _, f := range []string{
+		"file.pdf",
+
+		"bmp.bmp",
+		"gif.gif",
+		"jpeg.jpg",
+		"png.png",
+		"webp.webp",
+
+		"heif.heif",
+		"jpeg2000.jp2",
+		"tiff.tiff",
+
+		"mp4.mp4",
+		"ogg.ogg",
+		"mpeg.mpg",
+		"webm.webm",
+
+		"avi.avi",
+		"mkv.mkv",
+		"quicktime.mov",
+		"wmv.wmv",
+	} {
+		files = append(files, filepath.Join(mediaPath, f))
+	}
+
+	return files
+}
+
+func BenchmarkMagicAll(b *testing.B) {
+	files := getMediaFiles()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		m, err := magic.Open(magic.MAGIC_SYMLINK | magic.MAGIC_MIME | magic.MAGIC_ERROR | magic.MAGIC_NO_CHECK_COMPRESS | magic.MAGIC_NO_CHECK_ENCODING)
+		if err != nil {
+			b.Fatalf("magic.Open() error: %v", err)
+		}
+
+		_, _ = m.File(files[i%len(files)])
+		m.Close()
+	}
+}
+
+func BenchmarkMagicType(b *testing.B) {
+	files := getMediaFiles()
+
+	m, err := magic.Open(magic.MAGIC_SYMLINK | magic.MAGIC_MIME | magic.MAGIC_ERROR | magic.MAGIC_NO_CHECK_COMPRESS | magic.MAGIC_NO_CHECK_ENCODING)
+	if err != nil {
+		b.Fatalf("magic.Open() error: %v", err)
+	}
+	defer m.Close()
+
+	var mu sync.Mutex
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		mu.Lock()
+		_, _ = m.File(files[i%len(files)])
+		mu.Unlock()
 	}
 }
