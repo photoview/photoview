@@ -253,7 +253,7 @@ jobs:
 
   coverity:
     name: Coverity Scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.repository == 'kkovaletp/photoview' && github.event_name != 'pull_request'
     env:
       COV_PROJECT: kkovaletp%2Fphotoview
