@@ -24,7 +24,7 @@ require (
 	github.com/xor-gate/goexif2 v1.1.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/image v0.23.0
-	gopkg.in/vansante/go-ffprobe.v2 v2.2.0
+	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/driver/sqlite v1.5.7
