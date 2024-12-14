@@ -127,30 +127,52 @@ const downloadMediaShowProgress =
       },
     })
 
+    const PROGRESS_THROTTLE_MS = 200;
+    let lastUpdate = 0;
     let receivedBytes = 0
     let result
-    do {
-      result = await reader.read()
+    try {
+      do {
+        result = await reader.read()
 
-      if (canceled) break
+        if (canceled) break
 
-      if (result.value) data.set(result.value, receivedBytes)
+        if (result.value) data.set(result.value, receivedBytes)
 
-      receivedBytes += result.value ? result.value.length : 0
+        receivedBytes += result.value ? result.value.length : 0
 
+        const now = Date.now();
+        if (now - lastUpdate >= PROGRESS_THROTTLE_MS) {
+          add({
+            key: notifyKey,
+            type: NotificationType.Progress,
+            onDismiss,
+            props: {
+              header: 'Downloading photo',
+              percent: (receivedBytes / totalBytes) * 100,
+              content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
+                totalBytes
+              )} bytes downloaded`,
+            },
+          });
+          lastUpdate = now;
+        }
+      } while (!result.done)
+    } catch (error) {
       add({
         key: notifyKey,
-        type: NotificationType.Progress,
-        onDismiss,
+        type: NotificationType.Close,
         props: {
-          header: 'Downloading photo',
-          percent: (receivedBytes / totalBytes) * 100,
-          content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
-            totalBytes
-          )} bytes downloaded`,
+          negative: true,
+          header: 'Downloading photo failed',
+          content: `The photo download task failed with the error: ${error instanceof Error
+            ? error.message
+            : 'Unknown error occurred'
+            }`,
         },
-      })
-    } while (!result.done)
+      });
+      return
+    }
 
     if (canceled) {
       return

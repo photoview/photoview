@@ -17,7 +17,7 @@ const MockSubscriptionsHook = ({ messages, setMessages }: MockSubscriptionsHookP
     <div>
       <button
         type="button"
-        onClick={() => setMessages((prev: any) => [...prev, ...messages])}
+        onClick={() => setMessages((prev: Message[]) => [...prev, ...messages])}
         data-testid="trigger-messages"
       >
         Trigger Messages
@@ -30,6 +30,12 @@ vi.mock('./SubscriptionsHook', () => ({
   __esModule: true,
   default: MockSubscriptionsHook,
 }))
+
+const PROGRESS_COLORS = {
+  LOW: '#dc2625',    // red for < 30%
+  MEDIUM: '#fbbf24', // yellow for 30-70%
+  HIGH: '#56e263'    // green for > 70%
+}
 
 const messages = [
   {
@@ -123,7 +129,7 @@ describe('Messages Component', () => {
 
     const progressBar = container.querySelector('div[role="progressbar"][style*="width: 50%"]')
     expect(progressBar).toBeInTheDocument()
-    expect(progressBar).toHaveStyle('background-color: #fbbf24')
+    expect(progressBar).toHaveStyle(`background-color: ${PROGRESS_COLORS.MEDIUM}`)
   })
 
   test('renders progress bar with correct colors based on percent value', () => {
@@ -137,9 +143,9 @@ describe('Messages Component', () => {
 
     const progressBars = screen.getAllByRole('progressbar')
 
-    expect(progressBars[0]).toHaveStyle('background-color: #dc2625') // red for 20%
-    expect(progressBars[1]).toHaveStyle('background-color: #fbbf24') // yellow for 50%
-    expect(progressBars[2]).toHaveStyle('background-color: #56e263') // green for 80%
+    expect(progressBars[0]).toHaveStyle(`background-color: ${PROGRESS_COLORS.LOW}`)    // red for 20%
+    expect(progressBars[1]).toHaveStyle(`background-color: ${PROGRESS_COLORS.MEDIUM}`) // yellow for 50%
+    expect(progressBars[2]).toHaveStyle(`background-color: ${PROGRESS_COLORS.HIGH}`)   // green for 80%
   })
 
   test('subscriptions hook triggers messages correctly', () => {

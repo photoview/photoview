@@ -11,8 +11,15 @@ const MessageProgress = forwardRef(
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
     let color = '#dc2625'
-    if (percent > 33) color = '#fbbf24'
-    if (percent > 66) color = '#56e263'
+    let state = 'low progress'
+    if (percent > 33) {
+      color = '#fbbf24'
+      state = 'medium progress'
+    }
+    if (percent > 66) {
+      color = '#56e263'
+      state = 'high progress'
+    }
 
     return (
       <MessagePlain header={header} content={content} {...props} ref={ref}>
@@ -22,9 +29,10 @@ const MessageProgress = forwardRef(
             aria-valuenow={percent}
             aria-valuemin={0}
             aria-valuemax={100}
+            aria-label={`${state}`}
             className="h-full transition-all duration-200"
             style={{ width: `${percent}%`, backgroundColor: color }}
-          ></div>
+          />
         </div>
       </MessagePlain>
     )
