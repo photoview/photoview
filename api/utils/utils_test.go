@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -18,7 +17,7 @@ func TestIsDirSymlink(t *testing.T) {
 	test_utils.FilesystemTest(t)
 
 	// Prepare a temporary directory for testing purposes
-	dir, err := ioutil.TempDir("", "testing")
+	dir, err := os.MkdirTemp("", "testing")
 	if err != nil {
 		t.Fatalf("unable to create temp directory for testing")
 	}

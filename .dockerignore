@@ -17,6 +17,7 @@ Makefile
 photos_path
 screenshots
 storage
+photoview.db*
 
 ui/node_modules/
 ui/build/

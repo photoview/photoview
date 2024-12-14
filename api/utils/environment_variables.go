@@ -35,9 +35,10 @@ const (
 
 // Feature related
 const (
-	EnvDisableFaceRecognition EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
-	EnvDisableVideoEncoding   EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
-	EnvDisableRawProcessing   EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+	EnvDisableFaceRecognition    EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
+	EnvDisableVideoEncoding      EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
+	EnvDisableRawProcessing      EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
+	EnvVideoHardwareAcceleration EnvironmentVariable = "PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION"
 )
 
 // GetName returns the name of the environment variable itself

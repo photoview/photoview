@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/database/migrations"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/pkg/errors"
 
 	"github.com/go-sql-driver/mysql"
 	gorm_mysql "gorm.io/driver/mysql"
@@ -22,12 +22,12 @@ import (
 
 func GetMysqlAddress(addressString string) (string, error) {
 	if addressString == "" {
-		return "", errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName()))
+		return "", fmt.Errorf("Environment variable %s missing, exiting", utils.EnvMysqlURL.GetName())
 	}
 
 	config, err := mysql.ParseDSN(addressString)
 	if err != nil {
-		return "", errors.Wrap(err, "Could not parse mysql url")
+		return "", fmt.Errorf("could not parse mysql url: %w", err)
 	}
 
 	config.MultiStatements = true
@@ -38,12 +38,12 @@ func GetMysqlAddress(addressString string) (string, error) {
 
 func GetPostgresAddress(addressString string) (*url.URL, error) {
 	if addressString == "" {
-		return nil, errors.New(fmt.Sprintf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName()))
+		return nil, fmt.Errorf("Environment variable %s missing, exiting", utils.EnvPostgresURL.GetName())
 	}
 
 	address, err := url.Parse(addressString)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse postgres url")
+		return nil, fmt.Errorf("could not parse postgres url: %w", err)
 	}
 
 	return address, nil
@@ -56,14 +56,14 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 
 	address, err := url.Parse(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Could not parse sqlite url (%s)", path)
+		return nil, fmt.Errorf("could not parse sqlite url (%s): %w", path, err)
 	}
 
 	queryValues := address.Query()
 	queryValues.Add("cache", "shared")
 	queryValues.Add("mode", "rwc")
 	// queryValues.Add("_busy_timeout", "60000") // 1 minute
-	queryValues.Add("_journal_mode", "WAL") // Write-Ahead Logging (WAL) mode
+	queryValues.Add("_journal_mode", "WAL")    // Write-Ahead Logging (WAL) mode
 	queryValues.Add("_locking_mode", "NORMAL") // allows concurrent reads and writes
 	address.RawQuery = queryValues.Encode()
 
@@ -190,47 +190,34 @@ func MigrateDatabase(db *gorm.DB) error {
 
 	// v2.3.0 - Changed type of MediaEXIF.Exposure and MediaEXIF.Flash
 	// from string values to decimal and int respectively
-	if err := migrate_exif_fields(db); err != nil {
+	if err := migrateExifFields(db); err != nil {
 		log.Printf("Failed to run exif fields migration: %v\n", err)
+	}
+
+	// Remove invalid GPS data from DB
+	if err := migrations.MigrateForExifGPSCorrection(db); err != nil {
+		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
 	}
 
 	return nil
 }
 
 func ClearDatabase(db *gorm.DB) error {
-	err := db.Transaction(func(tx *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 
-		db_driver := drivers.DatabaseDriverFromEnv()
+		dbDriver := drivers.DatabaseDriverFromEnv()
 
-		if db_driver == drivers.MYSQL {
+		if dbDriver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
 				return err
 			}
 		}
 
-		dry_run := tx.Session(&gorm.Session{DryRun: true})
-		for _, model := range database_models {
-			// get table name of model structure
-			table := dry_run.Find(model).Statement.Table
-
-			switch db_driver {
-			case drivers.POSTGRES:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-					return err
-				}
-			case drivers.MYSQL:
-				if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
-					return err
-				}
-			case drivers.SQLITE:
-				if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
-					return err
-				}
-			}
-
+		if err := clearTables(tx, dbDriver); err != nil {
+			return err
 		}
 
-		if db_driver == drivers.MYSQL {
+		if dbDriver == drivers.MYSQL {
 			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
 				return err
 			}
@@ -238,10 +225,28 @@ func ClearDatabase(db *gorm.DB) error {
 
 		return nil
 	})
+}
 
-	if err != nil {
-		return err
+func clearTables(tx *gorm.DB, dbDriver drivers.DatabaseDriverType) error {
+	dryRun := tx.Session(&gorm.Session{DryRun: true})
+	for _, model := range database_models {
+		// get table name of model structure
+		table := dryRun.Find(model).Statement.Table
+
+		switch dbDriver {
+		case drivers.POSTGRES:
+			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
+				return err
+			}
+		case drivers.MYSQL:
+			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
+				return err
+			}
+		case drivers.SQLITE:
+			if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
+				return err
+			}
+		}
 	}
-
 	return nil
 }

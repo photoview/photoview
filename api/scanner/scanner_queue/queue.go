@@ -18,6 +18,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const globalScannerProgress = "global-scanner-progress"
+
 // ScannerJob describes a job on the queue to be run by the scanner over a single album
 type ScannerJob struct {
 	ctx scanner_task.TaskContext
@@ -104,11 +106,11 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 		<-queue.idle_chan
 
 		queue.mutex.Lock()
-		should_stop := queue.close_chan != nil && len(queue.in_progress) == 0 && len(queue.up_next) == 0
+		shouldStop := queue.close_chan != nil && len(queue.in_progress) == 0 && len(queue.up_next) == 0
 		queue.running = false
 		queue.mutex.Unlock()
 
-		if should_stop {
+		if shouldStop {
 			*queue.close_chan <- true
 			break
 		}
@@ -121,14 +123,14 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 
 func (queue *ScannerQueue) CloseBackgroundWorker() {
 	queue.mutex.Lock()
-	close_chan := make(chan bool)
-	queue.close_chan = &close_chan
+	closeChan := make(chan bool)
+	queue.close_chan = &closeChan
 	queue.mutex.Unlock()
 
 	queue.notify()
 
 	log.Println("Waiting for scanner background worker to finish all jobs...")
-	<-close_chan
+	<-closeChan
 }
 
 func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
@@ -162,14 +164,14 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		}()
 	}
 
-	in_progress_length := len(global_scanner_queue.in_progress)
-	up_next_length := len(global_scanner_queue.up_next)
+	inProgressLength := len(global_scanner_queue.in_progress)
+	upNextLength := len(global_scanner_queue.up_next)
 
 	queue.mutex.Unlock()
 
-	if in_progress_length+up_next_length == 0 {
+	if inProgressLength+upNextLength == 0 {
 		notification.BroadcastNotification(&models.Notification{
-			Key:      "global-scanner-progress",
+			Key:      globalScannerProgress,
 			Type:     models.NotificationTypeMessage,
 			Header:   "Generating blurhashes",
 			Content:  "Generating blurhashes for newly scanned media",
@@ -181,7 +183,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		}
 
 		notification.BroadcastNotification(&models.Notification{
-			Key:      "global-scanner-progress",
+			Key:      globalScannerProgress,
 			Type:     models.NotificationTypeMessage,
 			Header:   "Scanner complete",
 			Content:  "All jobs have been scanned",
@@ -190,10 +192,10 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 	} else {
 		notifyThrottle.Trigger(func() {
 			notification.BroadcastNotification(&models.Notification{
-				Key:     "global-scanner-progress",
+				Key:     globalScannerProgress,
 				Type:    models.NotificationTypeMessage,
 				Header:  "Scanning media",
-				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", in_progress_length, up_next_length),
+				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", inProgressLength, upNextLength),
 			})
 		})
 	}
@@ -229,8 +231,8 @@ func AddAllToQueue() error {
 // AddUserToQueue finds all root albums owned by the given user and adds them to the scanner queue.
 // Function does not block.
 func AddUserToQueue(user *models.User) error {
-	album_cache := scanner_cache.MakeAlbumCache()
-	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, album_cache)
+	albumCache := scanner_cache.MakeAlbumCache()
+	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, albumCache)
 	for _, err := range album_errors {
 		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
 	}
@@ -238,7 +240,7 @@ func AddUserToQueue(user *models.User) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		global_scanner_queue.addJob(&ScannerJob{
-			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, album_cache),
+			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, albumCache),
 		})
 	}
 	global_scanner_queue.mutex.Unlock()

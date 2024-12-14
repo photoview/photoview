@@ -140,8 +140,8 @@ func TestAlbumCover(t *testing.T) {
 		return
 	}
 
-	user_pass := "password"
-	regularUser, err := models.RegisterUser(db, "user1", &user_pass, false)
+	userPass := "password"
+	regularUser, err := models.RegisterUser(db, "user1", &userPass, false)
 	if !assert.NoError(t, err) {
 		return
 	}

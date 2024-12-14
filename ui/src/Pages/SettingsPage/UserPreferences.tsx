@@ -25,7 +25,7 @@ const languagePreferences = [
   { key: 3, label: 'Svenska', flag: 'se', value: LanguageTranslation.Swedish },
   { key: 4, label: 'Dansk', flag: 'dk', value: LanguageTranslation.Danish },
   { key: 5, label: 'Español', flag: 'es', value: LanguageTranslation.Spanish },
-  { key: 6, label: 'polski', flag: 'pl', value: LanguageTranslation.Polish },
+  { key: 6, label: 'Polski', flag: 'pl', value: LanguageTranslation.Polish },
   { key: 7, label: 'Italiano', flag: 'it', value: LanguageTranslation.Italian },
   { key: 8, label: 'Deutsch', flag: 'de', value: LanguageTranslation.German },
   { key: 9, label: 'Русский', flag: 'ru', value: LanguageTranslation.Russian },

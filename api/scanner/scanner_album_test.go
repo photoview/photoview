@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testDataPath = "./test_media/library"
+
 func TestNewRootPath(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
@@ -21,19 +23,19 @@ func TestNewRootPath(t *testing.T) {
 	}
 
 	t.Run("Insert valid root album", func(t *testing.T) {
-		album, err := scanner.NewRootAlbum(db, "./test_data", &user)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user)
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		assert.NotNil(t, album)
-		assert.Contains(t, album.Path, "/api/scanner/test_data")
+		assert.Contains(t, album.Path, "/api/scanner/test_media")
 		assert.NotEmpty(t, album.Owners)
 	})
 
 	t.Run("Insert duplicate root album", func(t *testing.T) {
 
-		_, err := scanner.NewRootAlbum(db, "./test_data", &user)
+		_, err := scanner.NewRootAlbum(db, testDataPath, &user)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "user already owns a path containing this path:")
@@ -57,16 +59,16 @@ func TestNewRootPath(t *testing.T) {
 			return
 		}
 
-		album, err := scanner.NewRootAlbum(db, "./test_data", &user2)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user2)
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		assert.NotNil(t, album)
-		assert.Contains(t, album.Path, "/api/scanner/test_data")
+		assert.Contains(t, album.Path, "/api/scanner/test_media")
 
-		owner_count := db.Model(&album).Association("Owners").Count()
-		assert.EqualValues(t, 2, owner_count)
+		ownerCount := db.Model(&album).Association("Owners").Count()
+		assert.EqualValues(t, 2, ownerCount)
 	})
 
 }

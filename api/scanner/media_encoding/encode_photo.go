@@ -22,12 +22,12 @@ import (
 )
 
 var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
-	models.ThumbnailFilterNearestNeighbor:  imaging.NearestNeighbor,
-	models.ThumbnailFilterBox:  imaging.Box,
-	models.ThumbnailFilterLinear:	imaging.Linear,
-	models.ThumbnailFilterMitchellNetravali:	imaging.MitchellNetravali,
-	models.ThumbnailFilterCatmullRom:	imaging.CatmullRom,
-	models.ThumbnailFilterLanczos:	imaging.Lanczos,
+	models.ThumbnailFilterNearestNeighbor:   imaging.NearestNeighbor,
+	models.ThumbnailFilterBox:               imaging.Box,
+	models.ThumbnailFilterLinear:            imaging.Linear,
+	models.ThumbnailFilterMitchellNetravali: imaging.MitchellNetravali,
+	models.ThumbnailFilterCatmullRom:        imaging.CatmullRom,
+	models.ThumbnailFilterLanczos:           imaging.Lanczos,
 }
 
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
@@ -108,10 +108,10 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 		return errors.New("could not convert photo as file format is not supported")
 	}
 
-	// Use darktable if there is no counterpart JPEG file to use instead
+	// Use magick if there is no counterpart JPEG file to use instead
 	if contentType.IsRaw() && img.CounterpartPath == nil {
-		if executable_worker.DarktableCli.IsInstalled() {
-			err := executable_worker.DarktableCli.EncodeJpeg(img.Media.Path, outputPath, 70)
+		if executable_worker.Magick.IsInstalled() {
+			err := executable_worker.Magick.EncodeJpeg(img.Media.Path, outputPath, 70)
 			if err != nil {
 				return err
 			}
