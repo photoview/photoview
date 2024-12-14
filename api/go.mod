@@ -1,8 +1,6 @@
 module github.com/photoview/photoview/api
 
-go 1.22.5
-
-toolchain go1.23.1
+go 1.23.1
 
 require (
 	github.com/99designs/gqlgen v0.17.57
@@ -14,7 +12,7 @@ require (
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
-	github.com/h2non/filetype v1.1.3
+	github.com/hosom/gomagic v0.0.0-20160718182707-cbc00aac97a4
 	github.com/joho/godotenv v1.5.1
 	github.com/otiai10/copy v1.14.0
 	github.com/pkg/errors v0.9.1
