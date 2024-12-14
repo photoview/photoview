@@ -60,7 +60,7 @@ func TestFindRawCounterpart(t *testing.T) {
 		got := strings.TrimLeft(strings.TrimPrefix(file, mediaPath), "/")
 
 		if got != tc.wantFile || ok != tc.wantOk {
-			t.Errorf("FindWebCounterpart(%q) = (%q, %v), want: (%q, %v)", tc.input, got, ok, tc.wantFile, tc.wantOk)
+			t.Errorf("FindRawCounterpart(%q) = (%q, %v), want: (%q, %v)", tc.input, got, ok, tc.wantFile, tc.wantOk)
 		}
 	}
 }
