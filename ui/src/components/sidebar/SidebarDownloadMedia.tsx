@@ -101,6 +101,7 @@ const downloadMediaShowProgress =
     const totalBytes = Number(response.headers.get('content-length'))
     const reader = response.body?.getReader()
     const data = new Uint8Array(totalBytes)
+    const DOWNLOAD_COMPLETE_NOTIFICATION_DURATION = 2000
 
     if (reader == null) {
       throw new Error('Download reader is null')
@@ -112,7 +113,7 @@ const downloadMediaShowProgress =
       reader.cancel('Download canceled by user')
     }
 
-    const notifyKey = Math.random().toString(26)
+    const notifyKey = `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
     const { add, removeKey } = useMessageState()
 
     add({
@@ -168,7 +169,7 @@ const downloadMediaShowProgress =
 
     setTimeout(() => {
       removeKey(notifyKey)
-    }, 2000)
+    }, DOWNLOAD_COMPLETE_NOTIFICATION_DURATION)
 
     return new Blob([data.buffer], {
       type: response.headers.get('content-type') || 'application/octet-stream',

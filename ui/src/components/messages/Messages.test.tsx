@@ -4,9 +4,15 @@ import { NotificationType } from '../../__generated__/globalTypes'
 import { MessageProvider } from './MessageState'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
+import { Message } from './SubscriptionsHook'
+
+interface MockSubscriptionsHookProps {
+  messages: Message[]
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+}
 
 // Define the mock for SubscriptionsHook before using it
-const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
+const MockSubscriptionsHook = ({ messages, setMessages }: MockSubscriptionsHookProps) => {
   return (
     <div>
       <button

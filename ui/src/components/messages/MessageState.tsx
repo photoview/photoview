@@ -10,7 +10,7 @@ type MessageContextType = {
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined)
 
-export const useMessageState = () => {
+export const useMessageState = (): MessageContextType => {
   const context = useContext(MessageContext)
   if (context === undefined) {
     throw new Error('useMessageState must be used within a MessageProvider')
