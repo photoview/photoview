@@ -10,6 +10,7 @@ const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
   return (
     <div>
       <button
+        type="button"
         onClick={() => setMessages((prev: any) => [...prev, ...messages])}
         data-testid="trigger-messages"
       >

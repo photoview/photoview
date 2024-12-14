@@ -25,7 +25,7 @@ const Message = forwardRef(
         ref={ref}
         className={`${backgroundColor} shadow-md border rounded p-2 relative`}
       >
-        <button onClick={onDismiss} className="absolute top-3 right-2">
+        <button type="button" onClick={onDismiss} className="absolute top-3 right-2">
           <DismissIcon className="w-[10px] h-[10px] text-gray-700 dark:text-gray-200" />
         </button>
         <h1 className="font-semibold text-sm">{header}</h1>

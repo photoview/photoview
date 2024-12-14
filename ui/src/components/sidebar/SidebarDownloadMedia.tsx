@@ -171,7 +171,7 @@ const downloadMediaShowProgress =
     }, 2000)
 
     return new Blob([data.buffer], {
-      type: response.headers.get('content-type') || undefined,
+      type: response.headers.get('content-type') || 'application/octet-stream',
     })
   }
 
