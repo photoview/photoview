@@ -64,10 +64,10 @@ func TestMagicNoInit(t *testing.T) {
 	org := libmagic.libmagic
 	libmagic.libmagic = nil
 	libmagic.err = errors.New("error")
-	defer func() {
+	t.Cleanup(func() {
 		libmagic.libmagic = org
 		libmagic.err = nil
-	}()
+	})
 
 	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
 	file := filepath.Join(mediaPath, "file.pdf")

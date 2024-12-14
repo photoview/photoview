@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// FindWebCounterpart returns the filename if the file `imagePath` has a conterpart file competible with the browser.
+// FindWebCounterpart returns the filename if the file `imagePath` has a counterpart file competible with the browser.
 func FindWebCounterpart(imagePath string) (string, bool) {
 	return findCounterpart(imagePath, func(filename string) bool {
 		mt := GetMediaType(filename)
@@ -14,7 +14,7 @@ func FindWebCounterpart(imagePath string) (string, bool) {
 	})
 }
 
-// FindRawConterpart returns the filename if the file `imagePath` has a conterpart file which needs to be processed before showing in the browser.
+// FindRawCounterpart returns the filename if the file `imagePath` has a counterpart file which needs to be processed before showing in the browser.
 func FindRawCounterpart(imagePath string) (string, bool) {
 	return findCounterpart(imagePath, func(filename string) bool {
 		mt := GetMediaType(filename)

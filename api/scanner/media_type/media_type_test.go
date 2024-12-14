@@ -1,7 +1,6 @@
 package media_type
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -29,21 +28,26 @@ func TestMediaTypeNoDeps(t *testing.T) {
 		wantIsWebCompatible boolWebCompatible
 		wantIsSupport       boolSupport
 	}{
+		// Unknown and unsupported types
 		{TypeUnknown, !isImage, !isVideo, !isWebCompatible, !isSupport},
 		{mediaType("application/pdf"), !isImage, !isVideo, !isWebCompatible, !isSupport},
 
+		// Raw media types
 		{mediaType("image/some-raw-type"), isImage, !isVideo, !isWebCompatible, isSupport},
 		{mediaType("video/some-video-type"), !isImage, isVideo, !isWebCompatible, isSupport},
 
+		// Generic types
 		{TypeImage, isImage, !isVideo, !isWebCompatible, isSupport},
 		{TypeVideo, !isImage, isVideo, !isWebCompatible, isSupport},
 
+		// Web-compatible image types
 		{TypeJPEG, isImage, !isVideo, isWebCompatible, isSupport},
 		{TypePNG, isImage, !isVideo, isWebCompatible, isSupport},
 		{TypeWebP, isImage, !isVideo, isWebCompatible, isSupport},
 		{TypeBMP, isImage, !isVideo, isWebCompatible, isSupport},
 		{TypeGIF, isImage, !isVideo, isWebCompatible, isSupport},
 
+		// Web-compatible video types
 		{TypeMP4, !isImage, isVideo, isWebCompatible, isSupport},
 		{TypeMPEG, !isImage, isVideo, isWebCompatible, isSupport},
 		{TypeOGG, !isImage, isVideo, isWebCompatible, isSupport},
@@ -76,6 +80,6 @@ func TestMediaTypeNoDeps(t *testing.T) {
 func TestMediaTypeUnknown(t *testing.T) {
 	var got MediaType
 	if want := TypeUnknown; got != want {
-		fmt.Errorf("MediaType zero value should be TypeUnknown, which is not")
+		t.Errorf("MediaType zero value should be TypeUnknown, which is not")
 	}
 }

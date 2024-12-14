@@ -120,7 +120,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 
 		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
 		if err != nil {
-			return fmt.Errorf("convert RAW photo error: %w", err)
+			return fmt.Errorf("failed to convert RAW photo %q to JPEG: %w", imgPath, err)
 		}
 	}
 

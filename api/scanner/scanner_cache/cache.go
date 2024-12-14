@@ -120,7 +120,7 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 	}
 
 	if !mediaType.IsSupported() {
-		log.Printf("File is not a supported media %s\n", mediaPath)
+		log.Printf("Unsupported media type %q for file: %s\n", mediaType, mediaPath)
 		return false
 	}
 

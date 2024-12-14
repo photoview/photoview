@@ -51,6 +51,11 @@ type libMagic struct {
 
 // newLibMagic creates an instance of Magic..
 func newLibMagic() (*libMagic, error) {
+	// MAGIC_SYMLINK: Follow symlinks
+	// MAGIC_MIME: Return MIME type string
+	// MAGIC_ERROR: Handle errors in magic database
+	// MAGIC_NO_CHECK_COMPRESS: Don't check for compressed files
+	// MAGIC_NO_CHECK_ENCODING: Don't check for text encodings
 	m, err := magic.Open(magic.MAGIC_SYMLINK | magic.MAGIC_MIME | magic.MAGIC_ERROR | magic.MAGIC_NO_CHECK_COMPRESS | magic.MAGIC_NO_CHECK_ENCODING)
 	if err != nil {
 		return nil, err
