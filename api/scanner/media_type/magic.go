@@ -49,7 +49,7 @@ type libMagic struct {
 	magic *magic.Magic
 }
 
-// newLibMagic creates an instance of Magic..
+// newLibMagic creates an instance of Magic.
 func newLibMagic() (*libMagic, error) {
 	// MAGIC_SYMLINK: Follow symlinks
 	// MAGIC_MIME: Return MIME type string
