@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { Message } from './SubscriptionsHook'
 
 type MessageContextType = {
@@ -26,12 +26,25 @@ export const MessageProvider = ({ children }: MessageProviderProps) => {
   const [messages, setMessages] = useState<Message[]>([])
 
   const add = (message: Message) => {
-    setMessages((prevMessages) => [...prevMessages, message])
+    const timestampedMessage = { ...message, timestamp: Date.now() };
+    setMessages((prevMessages) => [...prevMessages, timestampedMessage])
   }
 
   const removeKey = (key: string) => {
     setMessages((prevMessages) => prevMessages.filter((msg) => msg.key !== key))
   }
+
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      setMessages((prevMessages) => {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        return prevMessages.filter((msg) => (msg.timestamp ?? 0) > cutoff);
+      });
+    }, 60 * 60 * 1000); // Runs every hour
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
 
   return (
     <MessageContext.Provider value={{ messages, setMessages, add, removeKey }}>

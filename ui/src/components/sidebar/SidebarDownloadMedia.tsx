@@ -55,7 +55,9 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn) => async (url: string) => {
+const { add, removeKey } = useMessageState()
+
+const downloadMedia = (t: TranslationFn, add: Function, removeKey: Function) => async (url: string) => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
     location.origin
@@ -75,7 +77,7 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
 
   let blob = null
   if (response.headers.has('content-length')) {
-    blob = await downloadMediaShowProgress(t)(response)
+    blob = await downloadMediaShowProgress(t, add, removeKey)(response)
   } else {
     blob = await response.blob()
   }
@@ -97,7 +99,8 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
 }
 
 const downloadMediaShowProgress =
-  (t: TranslationFn) => async (response: Response) => {
+  (t: TranslationFn, add: Function, removeKey: Function) => async (response: Response) => {
+    const notifyKey = `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
     const totalBytes = Number(response.headers.get('content-length'))
     const reader = response.body?.getReader()
     const data = new Uint8Array(totalBytes)
@@ -113,21 +116,32 @@ const downloadMediaShowProgress =
       reader.cancel('Download canceled by user')
     }
 
-    const notifyKey = `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-    const { add, removeKey } = useMessageState()
+    if (totalBytes === 0) {
+      add({
+        key: notifyKey,
+        type: NotificationType.Close,
+        props: {
+          negative: true,
+          header: 'Downloading media failed',
+          content: `The content length of the downloaded media is 0 bytes, which has no sense and usually
+          means that there is an unknown lower-level error.`,
+        },
+      });
+      throw new Error('Content length of the downloaded media is 0.')
+    }
 
     add({
       key: notifyKey,
       type: NotificationType.Progress,
       onDismiss,
       props: {
-        header: 'Downloading photo',
+        header: 'Downloading media',
         content: `Starting download`,
         percent: 0,
       },
     })
 
-    const PROGRESS_THROTTLE_MS = 200;
+    const PROGRESS_THROTTLE_MS = 500;
     let lastUpdate = 0;
     let receivedBytes = 0
     let result
@@ -137,9 +151,13 @@ const downloadMediaShowProgress =
 
         if (canceled) break
 
-        if (result.value) data.set(result.value, receivedBytes)
-
-        receivedBytes += result.value ? result.value.length : 0
+        if (result.value) {
+          if (receivedBytes + result.value.length > totalBytes) {
+            throw new Error('Received more data than expected');
+          }
+          data.set(result.value, receivedBytes)
+          receivedBytes += result.value.length
+        }
 
         const now = Date.now();
         if (now - lastUpdate >= PROGRESS_THROTTLE_MS) {
@@ -148,7 +166,7 @@ const downloadMediaShowProgress =
             type: NotificationType.Progress,
             onDismiss,
             props: {
-              header: 'Downloading photo',
+              header: 'Downloading media',
               percent: (receivedBytes / totalBytes) * 100,
               content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
                 totalBytes
@@ -164,8 +182,8 @@ const downloadMediaShowProgress =
         type: NotificationType.Close,
         props: {
           negative: true,
-          header: 'Downloading photo failed',
-          content: `The photo download task failed with the error: ${error instanceof Error
+          header: 'Downloading media failed',
+          content: `The media download task failed with the error: ${error instanceof Error
             ? error.message
             : 'Unknown error occurred'
             }`,
@@ -182,8 +200,8 @@ const downloadMediaShowProgress =
       key: notifyKey,
       type: NotificationType.Progress,
       props: {
-        header: 'Downloading photo completed',
-        content: `The photo has been downloaded`,
+        header: 'Downloading media completed',
+        content: `The media has been downloaded`,
         percent: 100,
         positive: true,
       },
@@ -235,7 +253,7 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
     return urlMatch[0].split('.').pop()?.trim().toLowerCase()
   }
 
-  const download = downloadMedia(t)
+  const download = downloadMedia(t, add, removeKey)
   const bytes = formatBytes(t)
   const downloadRows = rows.map(x => (
     <SidebarTable.Row key={x.url} onClick={() => download(x.url)} tabIndex={0}>

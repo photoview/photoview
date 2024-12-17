@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
+import { render, screen, fireEvent, renderHook } from '@testing-library/react'
+import React, { useState } from 'react'
 import { NotificationType } from '../../__generated__/globalTypes'
 import { MessageProvider } from './MessageState'
 import MessagePlain from './Message'
@@ -149,7 +149,8 @@ describe('Messages Component', () => {
   })
 
   test('subscriptions hook triggers messages correctly', () => {
-    const setMessages = vi.fn()
+    const { result } = renderHook(() => useState<Message[]>([]))
+    const [, setMessages] = result.current
 
     render(
       <MessageProvider>
@@ -158,6 +159,6 @@ describe('Messages Component', () => {
     )
 
     fireEvent.click(screen.getByTestId('trigger-messages'))
-    expect(setMessages).toHaveBeenCalledWith(expect.any(Function))
+    expect(result.current[0]).toEqual(expect.arrayContaining(messages))
   })
 })
