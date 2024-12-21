@@ -15,6 +15,10 @@ type registerMediaMarkersArgs = {
   dispatchMarkerMedia: React.Dispatch<PlacesAction>
 }
 
+type MarkerElement = HTMLDivElement & {
+  _root?: ReturnType<typeof createRoot>
+}
+
 /**
  * Add appropriate event handlers to the map, to render and update media markers
  * Expects the provided mapbox map to contain geojson source of media
@@ -68,8 +72,8 @@ const makeUpdateMarkers =
       // for every marker we've added previously, remove those that are no longer visible
       for (const id in markersOnScreen) {
         if (!newMarkers[id]) {
-          const el = markersOnScreen[id].getElement();
-          (el as any)._root?.unmount()
+          const el = markersOnScreen[id].getElement() as MarkerElement
+          el._root?.unmount()
           markersOnScreen[id].remove()
         }
       }
@@ -85,7 +89,7 @@ function createClusterPopupElement(
   }
 ) {
   // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
-  const el = document.createElement('div')
+  const el = document.createElement('div') as MarkerElement
   const root = createRoot(el)
   root.render(
     <MapClusterMarker
@@ -93,6 +97,6 @@ function createClusterPopupElement(
       dispatchMarkerMedia={dispatchMarkerMedia}
     />
   );
-  (el as any)._root = root
+  el._root = root
   return el
 }
