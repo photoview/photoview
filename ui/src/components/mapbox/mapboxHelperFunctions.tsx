@@ -48,7 +48,11 @@ const makeUpdateMarkers =
         const coords = point.coordinates as [number, number]
         const props = feature.properties as MediaMarker
         if (props == null) {
-          console.warn('WARN: geojson feature had no properties', feature)
+          console.warn('WARN: geojson feature had no properties', {
+            feature,
+            geometry: feature.geometry,
+            coordinates: (feature.geometry as geojson.Point)?.coordinates,
+          })
           continue
         }
 
@@ -89,14 +93,18 @@ function createClusterPopupElement(
   }
 ) {
   // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
-  const el = document.createElement('div') as MarkerElement
-  const root = createRoot(el)
-  root.render(
-    <MapClusterMarker
-      marker={geojsonProps}
-      dispatchMarkerMedia={dispatchMarkerMedia}
-    />
-  );
-  el._root = root
-  return el
+  try {
+    const el = document.createElement('div') as MarkerElement
+    const root = createRoot(el)
+    root.render(
+      <MapClusterMarker
+        marker={geojsonProps}
+        dispatchMarkerMedia={dispatchMarkerMedia}
+      />
+    );
+    el._root = root
+    return el
+  } catch (error) {
+    console.error('Failed to create cluster popup element:', error)
+  }
 }
