@@ -158,7 +158,7 @@ func (e LanguageTranslation) String() string {
 	return string(e)
 }
 
-func (e *LanguageTranslation) UnmarshalGQL(v interface{}) error {
+func (e *LanguageTranslation) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -205,7 +205,7 @@ func (e NotificationType) String() string {
 	return string(e)
 }
 
-func (e *NotificationType) UnmarshalGQL(v interface{}) error {
+func (e *NotificationType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -249,7 +249,7 @@ func (e OrderDirection) String() string {
 	return string(e)
 }
 
-func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
+func (e *OrderDirection) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -299,7 +299,7 @@ func (e ThumbnailFilter) String() string {
 	return string(e)
 }
 
-func (e *ThumbnailFilter) UnmarshalGQL(v interface{}) error {
+func (e *ThumbnailFilter) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
