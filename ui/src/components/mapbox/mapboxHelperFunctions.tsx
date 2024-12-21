@@ -65,9 +65,14 @@ const makeUpdateMarkers =
           const el = createClusterPopupElement(props, {
             dispatchMarkerMedia,
           })
-          marker = markers[id] = new mapboxLibrary.Marker({
-            element: el,
-          }).setLngLat(coords)
+          if (el) {
+            marker = markers[id] = new mapboxLibrary.Marker({
+              element: el,
+            }).setLngLat(coords)
+          } else {
+            console.error('Failed to create marker element for:', id)
+            continue
+          }
         }
         newMarkers[id] = marker
 
@@ -106,5 +111,6 @@ function createClusterPopupElement(
     return el
   } catch (error) {
     console.error('Failed to create cluster popup element:', error)
+    // throw error or return a fallback element to make error handling more consistent
   }
 }
