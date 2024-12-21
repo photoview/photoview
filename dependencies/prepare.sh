@@ -22,4 +22,6 @@ apt-get update
 apt-get install -y curl crossbuild-essential-${DEBIAN_ARCH} libc-dev:${DEBIAN_ARCH} autoconf automake libtool m4 pkg-config cmake
 
 dpkg-architecture -a $DEBIAN_ARCH >/env
+export $(cat /env)
+echo PKG_CONFIG_PATH=/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig >>/env
 cat /env

@@ -52,7 +52,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 	videoType, err := mediaData.ContentType()
 	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "error getting video content type")
+		return []*models.MediaURL{}, fmt.Errorf("getting video content type error: %w", err)
 	}
 
 	if videoOriginalURL == nil && videoType.IsWebCompatible() {
@@ -75,7 +75,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			Width:       webMetadata.Width,
 			Height:      webMetadata.Height,
 			Purpose:     models.MediaOriginal,
-			ContentType: string(*videoType),
+			ContentType: videoType.String(),
 			FileSize:    fileStats.Size(),
 		}
 
@@ -94,7 +94,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		webVideoPath := path.Join(mediaCachePath, webVideoName)
 
-		err = executable_worker.FfmpegCli.EncodeMp4(video.Path, webVideoPath)
+		err = executable_worker.Ffmpeg.EncodeMp4(video.Path, webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
@@ -139,7 +139,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		thumbImagePath := path.Join(mediaCachePath, videoThumbName)
 
-		err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
+		err = executable_worker.Ffmpeg.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
@@ -177,7 +177,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			fmt.Printf("Video thumbnail found in database but not in cache, re-encoding photo to cache: %s\n", videoThumbnailURL.MediaName)
 			updatedURLs = append(updatedURLs, videoThumbnailURL)
 
-			err = executable_worker.FfmpegCli.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
+			err = executable_worker.Ffmpeg.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
@@ -225,7 +225,7 @@ func ReadVideoStreamMetadata(videoPath string) (*ffprobe.Stream, error) {
 
 	stream := data.FirstVideoStream()
 	if stream == nil {
-		return nil, errors.Wrapf(err, "could not get stream from file metadata (%s)", path.Base(videoPath))
+		return nil, fmt.Errorf("could not get stream from file metadata (%s)", path.Base(videoPath))
 	}
 
 	return stream, nil

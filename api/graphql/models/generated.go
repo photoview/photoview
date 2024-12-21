@@ -95,6 +95,7 @@ type Subscription struct {
 }
 
 // A group of media from the same album and the same day, that is grouped together in a timeline view
+// NOTE: It isn't used. Just copy from the old schema.graphql.
 type TimelineGroup struct {
 	// The full album containing the media in this timeline group
 	Album *Album `json:"album"`

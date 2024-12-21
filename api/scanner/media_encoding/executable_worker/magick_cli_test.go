@@ -1,70 +1,111 @@
-package executable_worker_test
+package executable_worker
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 
-	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/test_utils"
 )
 
-const testdataBinPath = "./testdata/bin"
-
 func TestMagickCliNotExist(t *testing.T) {
-	done := setPathWithCurrent()
+	done := test_utils.SetPathWithCurrent()
 	defer done()
 
-	executable_worker.InitializeExecutableWorkers()
-	if executable_worker.Magick.IsInstalled() {
-		t.Error("MagickCli should not be installed, but is found:", executable_worker.Magick)
+	Magick = newMagickCli()
+
+	if got, want := Magick.err, ErrNoDependency; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
+	if Magick.IsInstalled() {
+		t.Error("MagickCli should not be installed, but is found:", Magick)
+	}
+
+	if got, want := Magick.EncodeJpeg("input", "output", 70), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Magick.EncodeJpeg() = %v, want: %v", got, want)
 	}
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := setPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	doneDisableRaw := setEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
+	doneDisableRaw := test_utils.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 	defer doneDisableRaw()
 
-	executable_worker.InitializeExecutableWorkers()
-	if executable_worker.Magick.IsInstalled() {
-		t.Error("MagickCli should not be installed, but is found:", executable_worker.Magick)
+	Magick = newMagickCli()
+
+	if got, want := Magick.err, ErrDisabledFunction; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
+	if Magick.IsInstalled() {
+		t.Error("MagickCli should not be installed, but is found:", Magick)
+	}
+
+	if got, want := Magick.EncodeJpeg("input", "output", 70), ErrDisabledFunction; !errors.Is(got, want) {
+		t.Errorf("Magick.EncodeJpeg() = %v, want: %v", got, want)
+	}
+}
+
+func TestMagickCliVersionFail(t *testing.T) {
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
+	defer donePath()
+
+	done := test_utils.SetEnv("FAIL_WITH", "failure")
+	defer done()
+
+	Magick = newMagickCli()
+
+	if got, want := Magick.err, ErrNoDependency; got != want {
+		t.Errorf("Magick.err = %v, want: %v", got, want)
+	}
+
+	if Magick.IsInstalled() {
+		t.Error("MagickCli should not be installed, but is found:", Magick)
+	}
+
+	if got, want := Magick.EncodeJpeg("input", "output", 70), ErrNoDependency; !errors.Is(got, want) {
+		t.Errorf("Magick.EncodeJpeg() = %v, want: %v", got, want)
 	}
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := setPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	executable_worker.InitializeExecutableWorkers()
-	if !executable_worker.Magick.IsInstalled() {
+	Magick = newMagickCli()
+
+	if !Magick.IsInstalled() {
 		t.Fatal("MagickCli should be installed")
 	}
 
-	done := setEnv("FAIL_WITH", "failure")
+	done := test_utils.SetEnv("FAIL_WITH", "failure")
 	defer done()
 
-	err := executable_worker.Magick.EncodeJpeg("input", "output", 70)
+	err := Magick.EncodeJpeg("input", "output", 70)
 	if err == nil {
 		t.Fatalf(`MagickCli.EncodeJpeg(...) = nil, should be an error.`)
 	}
 
-	if got, want := err.Error(), `^encoding image with ".*/testdata/bin/magick \[convert input -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding image with ".*/test_data/mock_bin/magick \[input -auto-orient -quality 70 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf(`MagickCli.EncodeJpeg(...) = %q, should be matched with reg pattern %q`, got, want)
 	}
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := setPathWithCurrent(testdataBinPath)
+	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
 	defer donePath()
 
-	executable_worker.InitializeExecutableWorkers()
-	if !executable_worker.Magick.IsInstalled() {
+	Magick = newMagickCli()
+
+	if !Magick.IsInstalled() {
 		t.Fatal("MagickCli should be installed")
 	}
 
 	t.Run("Succeeded", func(t *testing.T) {
-		err := executable_worker.Magick.EncodeJpeg("input", "output", 70)
+		err := Magick.EncodeJpeg("input", "output", 70)
 		if err != nil {
 			t.Fatalf("MagickCli.EncodeJpeg(...) = %v, should be nil.", err)
 		}

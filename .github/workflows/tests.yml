@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: ['*']
   pull_request:
     branches: [master]
 
@@ -66,23 +66,32 @@ jobs:
 
     - name: Test
       id: test
-      continue-on-error: true
       run: |
         docker run --name test --network host \
+            -v "${{ github.workspace }}:/app" \
             -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
             -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
             -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
-          go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
+          /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
+        docker cp test:/app/api/test-api-coverage-report.xml ./api/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
+
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
+        files: ./api/test-api-coverage-report.xml
 
   test-ui:
     name: Test UI
@@ -110,17 +119,25 @@ jobs:
 
     - name: Test
       id: test
-      continue-on-error: true
       run: |
         docker run --name test photoview/ui npm run test:ci
         docker cp test:/app/ui/coverage ./ui/
+        docker cp test:/app/ui/junit-report.xml ./ui/
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ui
+
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
+        directory: ./ui
 
     - name: Run ESLint
       working-directory: ui

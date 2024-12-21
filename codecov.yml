@@ -1,3 +1,21 @@
 ignore:
   - "api/**/generated.go"
   - "ui/src/**/__generated__"
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5
+      ui:
+        target: auto
+        threshold: 5
+        flags:
+          - ui
+      api:
+        target: auto
+        threshold: 5
+        flags:
+          - api-sqlite
+          - api-postgres
+          - api-mysql

@@ -65,7 +65,7 @@ jobs:
 
       - name: Generate report
         id: scan
-        uses: anchore/scan-action@v4
+        uses: anchore/scan-action@v6
         continue-on-error: true
         with:
           path: "."
@@ -80,7 +80,7 @@ jobs:
 
       - name: Scan PR source code
         id: scan-fixed
-        uses: anchore/scan-action@v4
+        uses: anchore/scan-action@v6
         if: always() && github.event_name == 'pull_request'
         continue-on-error: true
         with:

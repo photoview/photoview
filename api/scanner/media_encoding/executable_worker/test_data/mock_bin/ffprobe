@@ -3,11 +3,11 @@ set -eu
 
 : ${FAIL_WITH=""}
 
-if [ "$1" = "-version" ]
-then
-  echo magick: version fake
-  exit 0
-fi
+case "$1" in
+  "--version")
+      echo ffprobe: version fake
+      ;;
+esac
 
 if [ "${FAIL_WITH}" != "" ]
 then
