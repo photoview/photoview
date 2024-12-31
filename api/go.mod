@@ -1,11 +1,9 @@
 module github.com/photoview/photoview/api
 
-go 1.22.5
-
-toolchain go1.23.1
+go 1.23.1
 
 require (
-	github.com/99designs/gqlgen v0.17.57
+	github.com/99designs/gqlgen v0.17.61
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/barasher/go-exiftool v1.10.0
 	github.com/buckket/go-blurhash v1.1.0
@@ -14,7 +12,7 @@ require (
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
-	github.com/h2non/filetype v1.1.3
+	github.com/hosom/gomagic v0.0.0-20160718182707-cbc00aac97a4
 	github.com/joho/godotenv v1.5.1
 	github.com/otiai10/copy v1.14.0
 	github.com/pkg/errors v0.9.1
@@ -24,13 +22,13 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.20
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/image v0.23.0
 	golang.org/x/text v0.21.0
-	gopkg.in/vansante/go-ffprobe.v2 v2.2.0
+	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/postgres v1.5.11
-	gorm.io/driver/sqlite v1.5.6
+	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.25.12
 )
 
