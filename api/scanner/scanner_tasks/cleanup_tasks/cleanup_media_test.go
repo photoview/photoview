@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
-	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
@@ -21,11 +20,6 @@ func TestMain(m *testing.M) {
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
-
-	// Sqlite doesn't seem to support foreign key cascading
-	if drivers.SQLITE.MatchDatabase(db) {
-		t.SkipNow()
-	}
 
 	if !assert.NoError(t, face_detection.InitializeFaceDetector(db)) {
 		return

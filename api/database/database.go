@@ -65,6 +65,7 @@ func GetSqliteAddress(path string) (*url.URL, error) {
 	// queryValues.Add("_busy_timeout", "60000") // 1 minute
 	queryValues.Add("_journal_mode", "WAL")    // Write-Ahead Logging (WAL) mode
 	queryValues.Add("_locking_mode", "NORMAL") // allows concurrent reads and writes
+	queryValues.Add("_foreign_keys", "ON")     // Enforc foreign key constraints.
 	address.RawQuery = queryValues.Encode()
 
 	// log.Panicf("%s", address.String())
@@ -102,11 +103,6 @@ func ConfigureDatabase(config *gorm.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(databaseDialect, config)
 	if err != nil {
 		return nil, err
-	}
-
-	// Manually enable foreign keys for sqlite, as this isn't done by default
-	if drivers.SQLITE.MatchDatabase(db) {
-		db.Exec("PRAGMA foreign_keys = ON")
 	}
 
 	return db, nil
