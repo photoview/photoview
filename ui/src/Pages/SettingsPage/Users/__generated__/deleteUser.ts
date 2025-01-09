@@ -8,18 +8,18 @@
 // ====================================================
 
 export interface deleteUser_deleteUser {
-  __typename: 'User'
-  id: string
-  username: string
+  __typename: "User";
+  id: string;
+  username: string;
 }
 
 export interface deleteUser {
   /**
    * Delete an existing user
    */
-  deleteUser: deleteUser_deleteUser
+  deleteUser: deleteUser_deleteUser;
 }
 
 export interface deleteUserVariables {
-  id: string
+  id: string;
 }

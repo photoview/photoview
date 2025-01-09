@@ -8,24 +8,24 @@
 // ====================================================
 
 export interface moveImageFaces_moveImageFaces_imageFaces {
-  __typename: 'ImageFace'
-  id: string
+  __typename: "ImageFace";
+  id: string;
 }
 
 export interface moveImageFaces_moveImageFaces {
-  __typename: 'FaceGroup'
-  id: string
-  imageFaces: moveImageFaces_moveImageFaces_imageFaces[]
+  __typename: "FaceGroup";
+  id: string;
+  imageFaces: moveImageFaces_moveImageFaces_imageFaces[];
 }
 
 export interface moveImageFaces {
   /**
    * Move a list of ImageFaces to another face group
    */
-  moveImageFaces: moveImageFaces_moveImageFaces
+  moveImageFaces: moveImageFaces_moveImageFaces;
 }
 
 export interface moveImageFacesVariables {
-  faceIDs: string[]
-  destFaceGroupID: string
+  faceIDs: string[];
+  destFaceGroupID: string;
 }
