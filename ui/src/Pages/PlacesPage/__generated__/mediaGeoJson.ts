@@ -11,5 +11,5 @@ export interface mediaGeoJson {
   /**
    * Get media owned by the logged in user, returned in GeoJson format
    */
-  myMediaGeoJson: Any
+  myMediaGeoJson: Any;
 }

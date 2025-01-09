@@ -8,13 +8,13 @@
 // ====================================================
 
 export interface concurrentWorkersQuery_siteInfo {
-  __typename: 'SiteInfo'
+  __typename: "SiteInfo";
   /**
    * How many max concurrent scanner jobs that should run at once
    */
-  concurrentWorkers: number
+  concurrentWorkers: number;
 }
 
 export interface concurrentWorkersQuery {
-  siteInfo: concurrentWorkersQuery_siteInfo
+  siteInfo: concurrentWorkersQuery_siteInfo;
 }
