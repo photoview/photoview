@@ -1,19 +1,38 @@
 // apollo.config.js
-const { readdirSync, readFileSync, writeFileSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, mkdirSync } = require('node:fs');
+const path = require('node:path');
 
-const schemasFolder = __dirname + '/../api/graphql/resolvers';
-const completeSchema = readdirSync(schemasFolder)
-  .filter(x => x.endsWith('.graphql'))
-  .map(x => readFileSync(`${schemasFolder}/${x}`, 'utf-8'))
-  .join('\n\n');
+const schemasFolder = path.join(__dirname, '..', 'api', 'graphql', 'resolvers');
 
-writeFileSync('/tmp/schema.graphql', completeSchema);
+var completeSchema;
+try {
+   completeSchema = readdirSync(schemasFolder)
+    .filter(x => x.endsWith('.graphql'))
+    .map(x => {
+      const filePath = path.join(schemasFolder, x);
+      return readFileSync(filePath, 'utf-8');
+    })
+    .join('\n\n');
+} catch (error) {
+  console.error('Failed to generate schema:', error);
+  process.exit(1);
+}
+
+const outputPath = path.join(__dirname, '.cache', 'schema.graphql');
+
+try {
+  mkdirSync(path.dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, completeSchema, { mode: 0o644 });
+} catch (error) {
+  console.error('Failed to write schema file:', error);
+  process.exit(1);
+}
 
 module.exports = {
   client: {
     service: {
       name: 'photoview',
-      localSchemaFile: '/tmp/schema.graphql',
+      localSchemaFile: outputPath,
     },
   },
 }
