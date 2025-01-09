@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const schemasFolder = path.join(__dirname, '..', 'api', 'graphql', 'resolvers');
 
-var completeSchema;
+let completeSchema;
 try {
    completeSchema = readdirSync(schemasFolder)
     .filter(x => x.endsWith('.graphql'))
