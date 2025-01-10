@@ -3,7 +3,7 @@ module github.com/photoview/photoview/api
 go 1.23.1
 
 require (
-	github.com/99designs/gqlgen v0.17.61
+	github.com/99designs/gqlgen v0.17.63
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/barasher/go-exiftool v1.10.0
 	github.com/buckket/go-blurhash v1.1.0
@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hosom/gomagic v0.0.0-20160718182707-cbc00aac97a4
 	github.com/joho/godotenv v1.5.1
-	github.com/otiai10/copy v1.14.0
+	github.com/otiai10/copy v1.14.1
 	github.com/pkg/errors v0.9.1
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/stretchr/testify v1.10.0
@@ -22,7 +22,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.21
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.31.0
+	golang.org/x/crypto v0.32.0
 	golang.org/x/image v0.23.0
 	golang.org/x/text v0.21.0
 	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
@@ -49,6 +49,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/text v0.1.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.23 // indirect
+	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -57,7 +58,7 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
