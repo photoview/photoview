@@ -22,7 +22,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.21
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	github.com/xor-gate/goexif2 v1.1.0
-	golang.org/x/crypto v0.31.0
+	golang.org/x/crypto v0.32.0
 	golang.org/x/image v0.23.0
 	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
@@ -56,7 +56,7 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
