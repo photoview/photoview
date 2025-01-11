@@ -3,8 +3,10 @@ package models
 import (
 	"crypto/rand"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -82,6 +84,28 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 			return nil, ErrorInvalidUserCredentials
 		}
 		return nil, errors.Wrap(result.Error, "failed to get user by username when authorizing")
+	}
+
+	if endpoint := utils.EnvHTTPUserAuth.GetValue(); endpoint != "" {
+		req, err := http.NewRequest(http.MethodPost, endpoint, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create HTTP auth request")
+		}
+		req.SetBasicAuth(username, password)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to send HTTP auth request")
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusForbidden {
+			return nil, ErrorInvalidUserCredentials
+		} else if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("HTTP auth error: %v", resp.Status)
+		}
+
+		return &user, nil
 	}
 
 	if user.Password == nil {
