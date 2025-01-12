@@ -97,8 +97,8 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 			SELECT a.id FROM albums a
 			INNER JOIN sub_albums sa ON a.parent_album_id = sa.id
 		)
-		SELECT m.* FROM media m
-		INNER JOIN media_urls mu ON mu.media_id = m.id
+		SELECT m.* FROM media AS m
+		INNER JOIN media_urls AS mu ON mu.media_id = m.id
 		WHERE m.album_id IN (SELECT id FROM sub_albums)
 		LIMIT 1
 	`
