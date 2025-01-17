@@ -74,7 +74,7 @@
     "apollo-language-server": "1.26.9",
     "c8": "^10.1.3",
     "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-react": "^7.37.3",
     "eslint-plugin-react-hooks": "^5.1.0",
     "i18next-parser": "^9.1.0",
