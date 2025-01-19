@@ -1840,11 +1840,7 @@ func (ec *executionContext) field_Album_media_argsOrder(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Ordering, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["order"]
-	if !ok {
+	if _, ok := rawArgs["order"]; !ok {
 		var zeroVal *models.Ordering
 		return zeroVal, nil
 	}
@@ -1862,11 +1858,7 @@ func (ec *executionContext) field_Album_media_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -1884,11 +1876,7 @@ func (ec *executionContext) field_Album_media_argsOnlyFavorites(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["onlyFavorites"]
-	if !ok {
+	if _, ok := rawArgs["onlyFavorites"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -1921,11 +1909,7 @@ func (ec *executionContext) field_Album_subAlbums_argsOrder(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Ordering, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["order"]
-	if !ok {
+	if _, ok := rawArgs["order"]; !ok {
 		var zeroVal *models.Ordering
 		return zeroVal, nil
 	}
@@ -1943,11 +1927,7 @@ func (ec *executionContext) field_Album_subAlbums_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -1975,11 +1955,7 @@ func (ec *executionContext) field_FaceGroup_imageFaces_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -2012,11 +1988,7 @@ func (ec *executionContext) field_Mutation_authorizeUser_argsUsername(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["username"]
-	if !ok {
+	if _, ok := rawArgs["username"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2034,11 +2006,7 @@ func (ec *executionContext) field_Mutation_authorizeUser_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2066,11 +2034,7 @@ func (ec *executionContext) field_Mutation_changeUserPreferences_argsLanguage(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["language"]
-	if !ok {
+	if _, ok := rawArgs["language"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -2103,11 +2067,7 @@ func (ec *executionContext) field_Mutation_combineFaceGroups_argsDestinationFace
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["destinationFaceGroupID"]
-	if !ok {
+	if _, ok := rawArgs["destinationFaceGroupID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2125,11 +2085,7 @@ func (ec *executionContext) field_Mutation_combineFaceGroups_argsSourceFaceGroup
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["sourceFaceGroupID"]
-	if !ok {
+	if _, ok := rawArgs["sourceFaceGroupID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2167,11 +2123,7 @@ func (ec *executionContext) field_Mutation_createUser_argsUsername(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["username"]
-	if !ok {
+	if _, ok := rawArgs["username"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2189,11 +2141,7 @@ func (ec *executionContext) field_Mutation_createUser_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -2211,11 +2159,7 @@ func (ec *executionContext) field_Mutation_createUser_argsAdmin(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["admin"]
-	if !ok {
+	if _, ok := rawArgs["admin"]; !ok {
 		var zeroVal bool
 		return zeroVal, nil
 	}
@@ -2243,11 +2187,7 @@ func (ec *executionContext) field_Mutation_deleteShareToken_argsToken(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["token"]
-	if !ok {
+	if _, ok := rawArgs["token"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2275,11 +2215,7 @@ func (ec *executionContext) field_Mutation_deleteUser_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2307,11 +2243,7 @@ func (ec *executionContext) field_Mutation_detachImageFaces_argsImageFaceIDs(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) ([]int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["imageFaceIDs"]
-	if !ok {
+	if _, ok := rawArgs["imageFaceIDs"]; !ok {
 		var zeroVal []int
 		return zeroVal, nil
 	}
@@ -2344,11 +2276,7 @@ func (ec *executionContext) field_Mutation_favoriteMedia_argsMediaID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["mediaId"]
-	if !ok {
+	if _, ok := rawArgs["mediaId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2366,11 +2294,7 @@ func (ec *executionContext) field_Mutation_favoriteMedia_argsFavorite(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["favorite"]
-	if !ok {
+	if _, ok := rawArgs["favorite"]; !ok {
 		var zeroVal bool
 		return zeroVal, nil
 	}
@@ -2408,11 +2332,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_argsUsername(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["username"]
-	if !ok {
+	if _, ok := rawArgs["username"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2430,11 +2350,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2452,11 +2368,7 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_argsRootPath(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["rootPath"]
-	if !ok {
+	if _, ok := rawArgs["rootPath"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2489,11 +2401,7 @@ func (ec *executionContext) field_Mutation_moveImageFaces_argsImageFaceIDs(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) ([]int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["imageFaceIDs"]
-	if !ok {
+	if _, ok := rawArgs["imageFaceIDs"]; !ok {
 		var zeroVal []int
 		return zeroVal, nil
 	}
@@ -2511,11 +2419,7 @@ func (ec *executionContext) field_Mutation_moveImageFaces_argsDestinationFaceGro
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["destinationFaceGroupID"]
-	if !ok {
+	if _, ok := rawArgs["destinationFaceGroupID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2548,11 +2452,7 @@ func (ec *executionContext) field_Mutation_protectShareToken_argsToken(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["token"]
-	if !ok {
+	if _, ok := rawArgs["token"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -2570,11 +2470,7 @@ func (ec *executionContext) field_Mutation_protectShareToken_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -2602,11 +2498,7 @@ func (ec *executionContext) field_Mutation_resetAlbumCover_argsAlbumID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["albumID"]
-	if !ok {
+	if _, ok := rawArgs["albumID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2634,11 +2526,7 @@ func (ec *executionContext) field_Mutation_scanUser_argsUserID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["userId"]
-	if !ok {
+	if _, ok := rawArgs["userId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2666,11 +2554,7 @@ func (ec *executionContext) field_Mutation_setAlbumCover_argsCoverID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["coverID"]
-	if !ok {
+	if _, ok := rawArgs["coverID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2703,11 +2587,7 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_argsFaceGroupID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["faceGroupID"]
-	if !ok {
+	if _, ok := rawArgs["faceGroupID"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2725,11 +2605,7 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_argsLabel(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["label"]
-	if !ok {
+	if _, ok := rawArgs["label"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -2757,11 +2633,7 @@ func (ec *executionContext) field_Mutation_setPeriodicScanInterval_argsInterval(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["interval"]
-	if !ok {
+	if _, ok := rawArgs["interval"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2789,11 +2661,7 @@ func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_argsWorke
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["workers"]
-	if !ok {
+	if _, ok := rawArgs["workers"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2821,11 +2689,7 @@ func (ec *executionContext) field_Mutation_setThumbnailDownsampleMethod_argsMeth
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (models.ThumbnailFilter, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["method"]
-	if !ok {
+	if _, ok := rawArgs["method"]; !ok {
 		var zeroVal models.ThumbnailFilter
 		return zeroVal, nil
 	}
@@ -2863,11 +2727,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_argsAlbumID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["albumId"]
-	if !ok {
+	if _, ok := rawArgs["albumId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2885,11 +2745,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_argsExpire(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*time.Time, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["expire"]
-	if !ok {
+	if _, ok := rawArgs["expire"]; !ok {
 		var zeroVal *time.Time
 		return zeroVal, nil
 	}
@@ -2907,11 +2763,7 @@ func (ec *executionContext) field_Mutation_shareAlbum_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -2949,11 +2801,7 @@ func (ec *executionContext) field_Mutation_shareMedia_argsMediaID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["mediaId"]
-	if !ok {
+	if _, ok := rawArgs["mediaId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -2971,11 +2819,7 @@ func (ec *executionContext) field_Mutation_shareMedia_argsExpire(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*time.Time, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["expire"]
-	if !ok {
+	if _, ok := rawArgs["expire"]; !ok {
 		var zeroVal *time.Time
 		return zeroVal, nil
 	}
@@ -2993,11 +2837,7 @@ func (ec *executionContext) field_Mutation_shareMedia_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -3040,11 +2880,7 @@ func (ec *executionContext) field_Mutation_updateUser_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3062,11 +2898,7 @@ func (ec *executionContext) field_Mutation_updateUser_argsUsername(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["username"]
-	if !ok {
+	if _, ok := rawArgs["username"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -3084,11 +2916,7 @@ func (ec *executionContext) field_Mutation_updateUser_argsPassword(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["password"]
-	if !ok {
+	if _, ok := rawArgs["password"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
@@ -3106,11 +2934,7 @@ func (ec *executionContext) field_Mutation_updateUser_argsAdmin(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["admin"]
-	if !ok {
+	if _, ok := rawArgs["admin"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -3143,11 +2967,7 @@ func (ec *executionContext) field_Mutation_userAddRootPath_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3165,11 +2985,7 @@ func (ec *executionContext) field_Mutation_userAddRootPath_argsRootPath(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["rootPath"]
-	if !ok {
+	if _, ok := rawArgs["rootPath"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -3202,11 +3018,7 @@ func (ec *executionContext) field_Mutation_userRemoveRootAlbum_argsUserID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["userId"]
-	if !ok {
+	if _, ok := rawArgs["userId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3224,11 +3036,7 @@ func (ec *executionContext) field_Mutation_userRemoveRootAlbum_argsAlbumID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["albumId"]
-	if !ok {
+	if _, ok := rawArgs["albumId"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3256,11 +3064,7 @@ func (ec *executionContext) field_Query___type_argsName(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["name"]
-	if !ok {
+	if _, ok := rawArgs["name"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -3293,11 +3097,7 @@ func (ec *executionContext) field_Query_album_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3315,11 +3115,7 @@ func (ec *executionContext) field_Query_album_argsTokenCredentials(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.ShareTokenCredentials, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["tokenCredentials"]
-	if !ok {
+	if _, ok := rawArgs["tokenCredentials"]; !ok {
 		var zeroVal *models.ShareTokenCredentials
 		return zeroVal, nil
 	}
@@ -3347,11 +3143,7 @@ func (ec *executionContext) field_Query_faceGroup_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3379,11 +3171,7 @@ func (ec *executionContext) field_Query_mediaList_argsIds(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) ([]int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["ids"]
-	if !ok {
+	if _, ok := rawArgs["ids"]; !ok {
 		var zeroVal []int
 		return zeroVal, nil
 	}
@@ -3416,11 +3204,7 @@ func (ec *executionContext) field_Query_media_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["id"]
-	if !ok {
+	if _, ok := rawArgs["id"]; !ok {
 		var zeroVal int
 		return zeroVal, nil
 	}
@@ -3438,11 +3222,7 @@ func (ec *executionContext) field_Query_media_argsTokenCredentials(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.ShareTokenCredentials, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["tokenCredentials"]
-	if !ok {
+	if _, ok := rawArgs["tokenCredentials"]; !ok {
 		var zeroVal *models.ShareTokenCredentials
 		return zeroVal, nil
 	}
@@ -3490,11 +3270,7 @@ func (ec *executionContext) field_Query_myAlbums_argsOrder(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Ordering, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["order"]
-	if !ok {
+	if _, ok := rawArgs["order"]; !ok {
 		var zeroVal *models.Ordering
 		return zeroVal, nil
 	}
@@ -3512,11 +3288,7 @@ func (ec *executionContext) field_Query_myAlbums_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -3534,11 +3306,7 @@ func (ec *executionContext) field_Query_myAlbums_argsOnlyRoot(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["onlyRoot"]
-	if !ok {
+	if _, ok := rawArgs["onlyRoot"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -3556,11 +3324,7 @@ func (ec *executionContext) field_Query_myAlbums_argsShowEmpty(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["showEmpty"]
-	if !ok {
+	if _, ok := rawArgs["showEmpty"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -3578,11 +3342,7 @@ func (ec *executionContext) field_Query_myAlbums_argsOnlyWithFavorites(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["onlyWithFavorites"]
-	if !ok {
+	if _, ok := rawArgs["onlyWithFavorites"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -3610,11 +3370,7 @@ func (ec *executionContext) field_Query_myFaceGroups_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -3647,11 +3403,7 @@ func (ec *executionContext) field_Query_myMedia_argsOrder(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Ordering, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["order"]
-	if !ok {
+	if _, ok := rawArgs["order"]; !ok {
 		var zeroVal *models.Ordering
 		return zeroVal, nil
 	}
@@ -3669,11 +3421,7 @@ func (ec *executionContext) field_Query_myMedia_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -3711,11 +3459,7 @@ func (ec *executionContext) field_Query_myTimeline_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -3733,11 +3477,7 @@ func (ec *executionContext) field_Query_myTimeline_argsOnlyFavorites(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["onlyFavorites"]
-	if !ok {
+	if _, ok := rawArgs["onlyFavorites"]; !ok {
 		var zeroVal *bool
 		return zeroVal, nil
 	}
@@ -3755,11 +3495,7 @@ func (ec *executionContext) field_Query_myTimeline_argsFromDate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*time.Time, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["fromDate"]
-	if !ok {
+	if _, ok := rawArgs["fromDate"]; !ok {
 		var zeroVal *time.Time
 		return zeroVal, nil
 	}
@@ -3797,11 +3533,7 @@ func (ec *executionContext) field_Query_search_argsQuery(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["query"]
-	if !ok {
+	if _, ok := rawArgs["query"]; !ok {
 		var zeroVal string
 		return zeroVal, nil
 	}
@@ -3819,11 +3551,7 @@ func (ec *executionContext) field_Query_search_argsLimitMedia(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["limitMedia"]
-	if !ok {
+	if _, ok := rawArgs["limitMedia"]; !ok {
 		var zeroVal *int
 		return zeroVal, nil
 	}
@@ -3841,11 +3569,7 @@ func (ec *executionContext) field_Query_search_argsLimitAlbums(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["limitAlbums"]
-	if !ok {
+	if _, ok := rawArgs["limitAlbums"]; !ok {
 		var zeroVal *int
 		return zeroVal, nil
 	}
@@ -3873,11 +3597,7 @@ func (ec *executionContext) field_Query_shareTokenValidatePassword_argsCredentia
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (models.ShareTokenCredentials, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["credentials"]
-	if !ok {
+	if _, ok := rawArgs["credentials"]; !ok {
 		var zeroVal models.ShareTokenCredentials
 		return zeroVal, nil
 	}
@@ -3905,11 +3625,7 @@ func (ec *executionContext) field_Query_shareToken_argsCredentials(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (models.ShareTokenCredentials, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["credentials"]
-	if !ok {
+	if _, ok := rawArgs["credentials"]; !ok {
 		var zeroVal models.ShareTokenCredentials
 		return zeroVal, nil
 	}
@@ -3942,11 +3658,7 @@ func (ec *executionContext) field_Query_user_argsOrder(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Ordering, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["order"]
-	if !ok {
+	if _, ok := rawArgs["order"]; !ok {
 		var zeroVal *models.Ordering
 		return zeroVal, nil
 	}
@@ -3964,11 +3676,7 @@ func (ec *executionContext) field_Query_user_argsPaginate(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*models.Pagination, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["paginate"]
-	if !ok {
+	if _, ok := rawArgs["paginate"]; !ok {
 		var zeroVal *models.Pagination
 		return zeroVal, nil
 	}
@@ -3996,11 +3704,7 @@ func (ec *executionContext) field___Type_enumValues_argsIncludeDeprecated(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["includeDeprecated"]
-	if !ok {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
 		var zeroVal bool
 		return zeroVal, nil
 	}
@@ -4028,11 +3732,7 @@ func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (bool, error) {
-	// We won't call the directive if the argument is null.
-	// Set call_argument_directives_with_null to true to call directives
-	// even if the argument is null.
-	_, ok := rawArgs["includeDeprecated"]
-	if !ok {
+	if _, ok := rawArgs["includeDeprecated"]; !ok {
 		var zeroVal bool
 		return zeroVal, nil
 	}
