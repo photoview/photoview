@@ -25,7 +25,7 @@
     "@babel/preset-typescript": "^7.26.0",
     "@headlessui/react": "^2.2.0",
     "@mapbox/mapbox-gl-language": "^1.0.0",
-    "@types/geojson": "^7946.0.15",
+    "@types/geojson": "^7946.0.16",
     "@types/jest": "^29.5.14",
     "@types/mapbox-gl": "^3.4.0",
     "@types/react": "^18.3.12",
