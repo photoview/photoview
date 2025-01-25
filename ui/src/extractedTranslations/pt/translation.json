@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Juntar"
+        "merge": "Juntar",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Desanexar caras de imagens"
       },
       "merge_face_groups": {
-        "description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado.",
+        "destination_description": "",
         "destination_table": {
           "title": "Selecione a cara de destino"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Juntar grupos de cara"
       },
@@ -254,14 +260,19 @@
     "download": {
       "filesize": {
         "byte_one": "",
+        "byte_many": "",
         "byte_other": "",
         "giga_byte_one": "",
+        "giga_byte_many": "",
         "giga_byte_other": "",
         "kilo_byte_one": "",
+        "kilo_byte_many": "",
         "kilo_byte_other": "",
         "mega_byte_one": "",
+        "mega_byte_many": "",
         "mega_byte_other": "",
         "tera_byte_one": "",
+        "tera_byte_many": "",
         "tera_byte_other": ""
       },
       "table_columns": {
@@ -278,6 +289,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Programa de ação",
           "aperture_priority": "Prioridade da abertura",

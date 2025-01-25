@@ -21,5 +21,5 @@ export interface combineFaces {
 
 export interface combineFacesVariables {
   destID: string;
-  srcID: string;
+  srcIDs: string[];
 }

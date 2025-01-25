@@ -40,6 +40,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato"
+      },
       "merge_people_groups": {
         "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
         "destination_table": {
@@ -64,6 +67,21 @@
     }
   },
   "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
+    },
     "users": {
       "table": {
         "column_names": {

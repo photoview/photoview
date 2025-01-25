@@ -43,7 +43,7 @@
         "title": null
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
         "destination_table": {
           "title": null
         },
@@ -79,6 +79,21 @@
     }
   },
   "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
+    },
     "users": {
       "table": {
         "column_names": {
