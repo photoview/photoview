@@ -31,7 +31,7 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 		if singleRootAlbumID != -1 && len(user.Albums) > 1 {
 			query = query.Where("parent_album_id = ?", singleRootAlbumID)
 		} else {
-			query = query.Where("parent_album_id IS NULL")
+			query = query.Where("parent_album_id IS NULL OR parent_album_id NOT IN (?)", userAlbumIDs)
 		}
 	}
 
