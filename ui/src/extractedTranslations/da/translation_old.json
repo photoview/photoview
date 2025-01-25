@@ -36,6 +36,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe"
+      },
       "merge_people_groups": {
         "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
         "destination_table": {

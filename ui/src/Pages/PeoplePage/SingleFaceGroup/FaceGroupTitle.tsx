@@ -14,7 +14,9 @@ import {
   setGroupLabelVariables,
 } from '../__generated__/setGroupLabel'
 import DetachImageFacesModal from './DetachImageFacesModal'
-import MergeFaceGroupsModal from './MergeFaceGroupsModal'
+import MergeFaceGroupsModal, {
+  MergeFaceGroupsModalState,
+} from './MergeFaceGroupsModal'
 import MoveImageFacesModal from './MoveImageFacesModal'
 import { singleFaceGroup_faceGroup } from './__generated__/singleFaceGroup'
 
@@ -28,7 +30,9 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
   const [editLabel, setEditLabel] = useState(false)
   const [inputValue, setInputValue] = useState(faceGroup?.label ?? '')
   const inputRef = createRef<HTMLInputElement>()
-  const [mergeModalOpen, setMergeModalOpen] = useState(false)
+  const [mergeModalState, setMergeModalState] = useState(
+    MergeFaceGroupsModalState.Closed
+  )
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [detachModalOpen, setDetachModalOpen] = useState(false)
 
@@ -109,9 +113,9 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
     modals = (
       <>
         <MergeFaceGroupsModal
-          open={mergeModalOpen}
-          setOpen={setMergeModalOpen}
-          sourceFaceGroup={faceGroup}
+          state={mergeModalState}
+          setState={setMergeModalState}
+          preselectedDestinationFaceGroup={faceGroup}
           refetchQueries={[
             {
               query: MY_FACES_QUERY,
@@ -143,8 +147,12 @@ const FaceGroupTitle = ({ faceGroup }: FaceGroupTitleProps) => {
             </Button>
           </li>
           <li>
-            <Button onClick={() => setMergeModalOpen(true)}>
-              {t('people_page.action_label.merge_people', 'Merge people')}
+            <Button
+                onClick={() =>
+                  setMergeModalState(MergeFaceGroupsModalState.SelectDestination)
+                }
+              >
+              {t('people_page.action_label.merge_face', 'Merge face')}
             </Button>
           </li>
           <li>

@@ -40,7 +40,7 @@ extend type Mutation {
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup! @isAuthorized
 
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
-  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupID: ID!): FaceGroup! @isAuthorized
+  combineFaceGroups(destinationFaceGroupID: ID!, sourceFaceGroupIDs: [ID!]!): FaceGroup! @isAuthorized
 
   "Move a list of ImageFaces to another face group"
   moveImageFaces(imageFaceIDs: [ID!]!, destinationFaceGroupID: ID!): FaceGroup! @isAuthorized
