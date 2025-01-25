@@ -53,7 +53,7 @@
         "title": null
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Alle Bilder dieser nicht Zugeordneten Person werden mit folgender Person zusammengeführt",
         "destination_table": {
           "title": null
         },

@@ -53,7 +53,7 @@
         "title": null
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "",
         "destination_table": {
           "title": null
         },
