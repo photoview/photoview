@@ -285,17 +285,15 @@ export const PeoplePage = () => {
 
   let modals = null
   modals = (
-    <>
-      <MergeFaceGroupsModal
-        state={mergeModalState}
-        setState={setMergeModalState}
-        refetchQueries={[
-          {
-            query: MY_FACES_QUERY,
-          },
-        ]}
-      />
-    </>
+    <MergeFaceGroupsModal
+      state={mergeModalState}
+      setState={setMergeModalState}
+      refetchQueries={[
+        {
+          query: MY_FACES_QUERY,
+        },
+      ]}
+    />
   )
 
   return (
