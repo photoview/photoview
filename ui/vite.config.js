@@ -4,9 +4,22 @@
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react(), svgr()],
+  plugins: [
+    react(),
+    svgr(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.ts',
+      injectRegister: 'auto',
+      manifest: false,
+      injectManifest: {
+        injectionPoint: undefined
+      }
+    })],
   envPrefix: ['VITE_', 'REACT_APP_'],
   server: {
     port: 1234,
@@ -20,8 +33,8 @@ export default defineConfig({
     setupFiles: './testing/setupTests.ts',
     reporters: ['verbose', 'junit'],
     outputFile: {
-    junit: './junit-report.xml',
-  },
+      junit: './junit-report.xml',
+    },
     coverage: {
       reporter: ['text', 'lcov', 'json', 'html'],
     },
