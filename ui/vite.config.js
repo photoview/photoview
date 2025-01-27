@@ -4,9 +4,22 @@
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react(), svgr()],
+  plugins: [
+    react(),
+    svgr(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.ts',
+      injectRegister: 'auto',
+      manifest: false,
+      injectManifest: {
+        injectionPoint: undefined
+      }
+    })],
   envPrefix: ['VITE_', 'REACT_APP_'],
   server: {
     port: 1234,
