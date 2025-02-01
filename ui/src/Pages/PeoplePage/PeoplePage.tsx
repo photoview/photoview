@@ -301,6 +301,7 @@ export const PeoplePage = () => {
       <ul className="flex gap-2 flex-wrap mb-6">
         <li>
           <Button
+            aria-label='Recognize unlabled faces'
             disabled={recognizeUnlabeledLoading}
             onClick={() => {
               recognizeUnlabeled()
@@ -314,6 +315,7 @@ export const PeoplePage = () => {
         </li>
         <li>
           <Button
+            aria-label='Merge people'
             onClick={() => {
               setMergeModalState(MergeFaceGroupsModalState.SelectDestination)
             }}
