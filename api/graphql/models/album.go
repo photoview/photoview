@@ -94,8 +94,8 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 		WITH RECURSIVE sub_albums AS (
 			SELECT id FROM albums WHERE id = ?
 			UNION ALL
-			SELECT a.id FROM albums a
-			INNER JOIN sub_albums sa ON a.parent_album_id = sa.id
+			SELECT child.id FROM albums AS child
+			INNER JOIN sub_albums ON child.parent_album_id = sub_albums.id
 		)
 		SELECT m.* FROM media AS m
 		INNER JOIN media_urls AS mu ON mu.media_id = m.id
