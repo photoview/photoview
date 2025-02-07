@@ -35,13 +35,15 @@ export function renderWithProviders(
             defaultOptions={apolloOptions.defaultOptions}
         >
             <MemoryRouter initialEntries={initialEntries}>
-                {route && path ? (
-                    <Routes>
-                        <Route path={path} element={route} />
-                    </Routes>
-                ) : (
-                    <MessageProvider>{ui}</MessageProvider>
-                )}
+                <MessageProvider>
+                    {route && path ? (
+                        <Routes>
+                            <Route path={path} element={route} />
+                        </Routes>
+                    ) : (
+                        ui
+                    )}
+                </MessageProvider>
             </MemoryRouter>
         </MockedProvider>
     )
