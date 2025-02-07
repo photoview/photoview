@@ -14,6 +14,13 @@ import {
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
 
+interface MessageOptions {
+  key: string
+  type: NotificationType
+  props: any
+  onDismiss?: () => void
+}
+
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
     media(id: $mediaId) {
@@ -55,7 +62,11 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn, add: Function, removeKey: Function) => async (url: string) => {
+const downloadMedia = (
+  t: TranslationFn,
+  add: (message: MessageOptions) => void,
+  removeKey: (key: string) => void
+) => async (url: string) => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
     location.origin
@@ -97,7 +108,11 @@ const downloadMedia = (t: TranslationFn, add: Function, removeKey: Function) => 
 }
 
 const downloadMediaShowProgress =
-  (t: TranslationFn, add: Function, removeKey: Function) => async (response: Response) => {
+  (
+    t: TranslationFn,
+    add: (message: MessageOptions) => void,
+    removeKey: (key: string) => void
+  ) => async (response: Response) => {
     const notifyKey = `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
     const totalBytes = Number(response.headers.get('content-length'))
     const reader = response.body?.getReader()
@@ -239,8 +254,8 @@ type SidebarDownloadTableRow = {
 
 type SidebarDownloadTableProps = {
   rows: SidebarDownloadTableRow[]
-  add: Function
-  removeKey: Function
+  add: (message: MessageOptions) => void
+  removeKey: (key: string) => void
 }
 
 const SidebarDownloadTable = ({ rows, add, removeKey }: SidebarDownloadTableProps) => {

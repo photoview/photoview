@@ -25,7 +25,7 @@ export interface Message {
   key: string
   type: NotificationType
   timeout?: number
-  timestamp?: number
+  timestamp?: number /* milliseconds since epoch */
   onDismiss?: () => void
   props: {
     header: string
