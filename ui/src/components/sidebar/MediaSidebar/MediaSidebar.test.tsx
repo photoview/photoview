@@ -57,13 +57,7 @@ describe('MediaSidebar', () => {
   test('render sample image, authorized', () => {
     authToken.mockImplementation(() => 'token-here')
 
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <MemoryRouter>
-          <MediaSidebar media={media} />
-        </MemoryRouter>
-      </MockedProvider>
-    )
+    renderWithProviders(<MediaSidebar media={media} />)
 
     expect(screen.getByText('122A6069.jpg')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute(

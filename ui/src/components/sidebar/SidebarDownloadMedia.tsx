@@ -55,8 +55,6 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const { add, removeKey } = useMessageState()
-
 const downloadMedia = (t: TranslationFn, add: Function, removeKey: Function) => async (url: string) => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
@@ -241,9 +239,11 @@ type SidebarDownloadTableRow = {
 
 type SidebarDownloadTableProps = {
   rows: SidebarDownloadTableRow[]
+  add: Function
+  removeKey: Function
 }
 
-const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
+const SidebarDownloadTable = ({ rows, add, removeKey }: SidebarDownloadTableProps) => {
   const { t } = useTranslation()
 
   const extractExtension = (url: string) => {
@@ -293,6 +293,7 @@ type SidebarMediaDownladProps = {
 
 const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
   const { t } = useTranslation()
+  const { add, removeKey } = useMessageState()
   if (!media || !media.id) return null
 
   const [loadPhotoDownloads, { called, loading, data }] = useLazyQuery<
@@ -328,7 +329,11 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
         {t('sidebar.download.title', 'Download')}
       </SidebarSectionTitle>
 
-      <SidebarDownloadTable rows={downloadRows} />
+      <SidebarDownloadTable
+        rows={downloadRows}
+        add={add}
+        removeKey={removeKey}
+      />
     </SidebarSection>
   )
 }
