@@ -21,7 +21,7 @@
     "prepare": "(cd .. && ./ui/node_modules/.bin/husky install)"
   },
   "dependencies": {
-    "@apollo/client": "~3.12.8",
+    "@apollo/client": "~3.12.10",
     "@babel/preset-typescript": "^7.26.0",
     "@headlessui/react": "^2.2.0",
     "@mapbox/mapbox-gl-language": "^1.0.0",
@@ -72,8 +72,8 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
-    "@typescript-eslint/eslint-plugin": "^8.22.0",
-    "@typescript-eslint/parser": "^8.22.0",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
     "@vitest/coverage-v8": "^0.34.6",
     "@vitest/ui": "^0.34.7",
     "apollo": "2.34.0",
