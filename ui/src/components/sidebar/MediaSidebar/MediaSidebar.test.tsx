@@ -4,6 +4,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import MediaSidebar, { MediaSidebarMedia } from './MediaSidebar'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { MemoryRouter } from 'react-router'
+import { renderWithProviders } from '../../../helpers/testUtils'
 
 import * as authentication from '../../../helpers/authentication'
 
@@ -39,14 +40,7 @@ describe('MediaSidebar', () => {
 
   test('render sample image, unauthorized', () => {
     authToken.mockImplementation(() => null)
-
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <MemoryRouter>
-          <MediaSidebar media={media} />
-        </MemoryRouter>
-      </MockedProvider>
-    )
+    renderWithProviders(<MediaSidebar media={media} />)
 
     expect(screen.getByText('122A6069.jpg')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute(
