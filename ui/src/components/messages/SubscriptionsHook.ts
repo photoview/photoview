@@ -25,6 +25,7 @@ export interface Message {
   key: string
   type: NotificationType
   timeout?: number
+  timestamp?: number /* milliseconds since epoch */
   onDismiss?: () => void
   props: {
     header: string
@@ -57,7 +58,7 @@ export const SubscriptionsHook = ({
       setMessages(state => [
         ...state,
         {
-          key: Math.random().toString(26),
+          key: `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
           type: NotificationType.Message,
           props: {
             header: 'Network error',

@@ -1,7 +1,5 @@
-import React from 'react'
-import { MockedProvider } from '@apollo/client/testing'
-
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders } from '../../helpers/testUtils'
+import { screen } from '@testing-library/react'
 
 import {
   CONCURRENT_WORKERS_QUERY,
@@ -33,19 +31,16 @@ test('load ScannerConcurrentWorkers', () => {
       },
     },
   ]
-  render(
-    <MockedProvider
-      mocks={graphqlMocks}
-      addTypename={false}
-      defaultOptions={{
-        // disable cache, required to make fragments work
+  renderWithProviders(<ScannerConcurrentWorkers />, {
+    mocks: graphqlMocks,
+    apolloOptions: {
+      addTypename: false,
+      defaultOptions: {
         watchQuery: { fetchPolicy: 'no-cache' },
-        query: { fetchPolicy: 'no-cache' },
-      }}
-    >
-      <ScannerConcurrentWorkers />
-    </MockedProvider>
-  )
+        query: { fetchPolicy: 'no-cache' }
+      }
+    }
+  })
 
   expect(screen.getByText('Scanner concurrent workers')).toBeInTheDocument()
 })

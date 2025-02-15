@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 
 import React from 'react'
 import { MediaType } from '../../__generated__/globalTypes'
 import MediaGallery from './MediaGallery'
 import { MediaGalleryState } from './mediaGalleryReducer'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 vi.mock('./photoGalleryMutations', () => ({
   useMarkFavoriteMutation: () => [vi.fn()],
@@ -54,12 +55,13 @@ test('photo gallery with media', () => {
     presenting: false,
   }
 
-  render(
+  renderWithProviders(
     <MediaGallery
       dispatchMedia={dispatchMedia}
       mediaState={mediaState}
       loading={false}
-    />
+    />,
+    { mocks: [] }
   )
 
   expect(
@@ -77,12 +79,13 @@ describe('photo gallery presenting', () => {
       presenting: false,
     }
 
-    render(
+    renderWithProviders(
       <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStateNoPresent}
-      />
+      />,
+      { mocks: [] }
     )
 
     expect(screen.queryByTestId('present-overlay')).not.toBeInTheDocument()
@@ -111,12 +114,13 @@ describe('photo gallery presenting', () => {
       presenting: true,
     }
 
-    render(
+    renderWithProviders(
       <MediaGallery
         dispatchMedia={dispatchMedia}
         loading={false}
         mediaState={mediaStatePresent}
-      />
+      />,
+      { mocks: [] }
     )
 
     expect(screen.getByTestId('present-overlay')).toBeInTheDocument()

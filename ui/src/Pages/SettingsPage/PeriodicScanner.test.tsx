@@ -1,10 +1,9 @@
-import { MockedProvider } from '@apollo/client/testing'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import React from 'react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import PeriodicScanner, {
   SCAN_INTERVAL_MUTATION,
   SCAN_INTERVAL_QUERY,
 } from './PeriodicScanner'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 test('Enable periodic scanner', async () => {
   const graphqlMocks = [
@@ -34,11 +33,10 @@ test('Enable periodic scanner', async () => {
     },
   ]
 
-  render(
-    <MockedProvider mocks={graphqlMocks} addTypename={true}>
-      <PeriodicScanner />
-    </MockedProvider>
-  )
+  renderWithProviders(<PeriodicScanner />, {
+    mocks: graphqlMocks,
+    apolloOptions: { addTypename: true }
+  })
 
   const enableCheckbox = screen.getByLabelText('Enable periodic scanner')
   const inputField = screen.getByLabelText('Interval value')

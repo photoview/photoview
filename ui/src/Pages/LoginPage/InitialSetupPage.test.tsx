@@ -1,31 +1,29 @@
-import React from 'react'
-import { MockedProvider } from '@apollo/client/testing'
-import { render, screen, waitFor } from '@testing-library/react'
-import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom'
+import React from 'react' //React must be in scope when using JSX.
+import { screen, waitFor } from '@testing-library/react'
 import { createMemoryHistory } from 'history'
 import * as authentication from '../../helpers/authentication'
 import InitialSetupPage from './InitialSetupPage'
 import { mockInitialSetupGraphql } from './loginTestHelpers'
+import { renderWithProviders } from '../../helpers/testUtils'
+import { act } from '@testing-library/react'
 
 vi.mock('../../helpers/authentication.ts')
 
 const authToken = vi.mocked(authentication.authToken)
 
 describe('Initial setup page', () => {
-  test('Render initial setup form', () => {
+  test('Render initial setup form', async () => {
     authToken.mockImplementation(() => null)
 
-    const history = createMemoryHistory({
-      initialEntries: ['/initialSetup'],
-    })
+    const history = createMemoryHistory()
+    history.push('/initialSetup')
 
-    render(
-      <MockedProvider mocks={[mockInitialSetupGraphql(true)]}>
-        <HistoryRouter history={history}>
-          <InitialSetupPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<InitialSetupPage />, {
+        mocks: [mockInitialSetupGraphql(true)],
+        history,
+      })
+    })
 
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
@@ -36,17 +34,15 @@ describe('Initial setup page', () => {
   test('Redirect if auth token is present', async () => {
     authToken.mockImplementation(() => 'some-token')
 
-    const history = createMemoryHistory({
-      initialEntries: ['/initialSetup'],
-    })
+    const history = createMemoryHistory()
+    history.push('/initialSetup')
 
-    render(
-      <MockedProvider mocks={[mockInitialSetupGraphql(true)]}>
-        <HistoryRouter history={history}>
-          <InitialSetupPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<InitialSetupPage />, {
+        mocks: [mockInitialSetupGraphql(true)],
+        history,
+      })
+    })
 
     await waitFor(() => {
       expect(history.location.pathname).toBe('/')
@@ -56,17 +52,15 @@ describe('Initial setup page', () => {
   test('Redirect if not initial setup', async () => {
     authToken.mockImplementation(() => null)
 
-    const history = createMemoryHistory({
-      initialEntries: ['/initialSetup'],
-    })
+    const history = createMemoryHistory()
+    history.push('/initialSetup')
 
-    render(
-      <MockedProvider mocks={[mockInitialSetupGraphql(false)]}>
-        <HistoryRouter history={history}>
-          <InitialSetupPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<InitialSetupPage />, {
+        mocks: [mockInitialSetupGraphql(false)],
+        history,
+      })
+    })
 
     await waitFor(() => {
       expect(history.location.pathname).toBe('/')

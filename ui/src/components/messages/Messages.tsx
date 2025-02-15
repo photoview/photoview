@@ -25,7 +25,7 @@ const Messages = () => {
 
   const getMessageElement = (message: Message): React.FunctionComponent => {
     const dismissMessage = (message: Message) => {
-      message.onDismiss && message.onDismiss()
+      message.onDismiss?.()
       setMessages(prevMessages => prevMessages.filter(msg => msg.key != message.key))
     }
 

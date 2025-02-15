@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing'
 import SingleFaceGroup, { SINGLE_FACE_GROUP } from './SingleFaceGroup'
 import { MemoryRouter } from 'react-router-dom'
+import { renderWithProviders } from '../../../helpers/testUtils'
 
 vi.mock('../../../hooks/useScrollPagination')
 
@@ -83,13 +84,10 @@ test('single face group', async () => {
     },
   ]
 
-  render(
-    <MemoryRouter initialEntries={['/person/123']}>
-      <MockedProvider mocks={graphqlMocks}>
-        <SingleFaceGroup faceGroupID="123" />
-      </MockedProvider>
-    </MemoryRouter>
-  )
+  renderWithProviders(<SingleFaceGroup faceGroupID="123" />, {
+    mocks: graphqlMocks,
+    initialEntries: ['/person/123']
+  })
 
   await waitFor(() => {
     expect(screen.getAllByRole('img')).toHaveLength(2)

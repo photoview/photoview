@@ -1,16 +1,23 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
+import { render, screen, fireEvent, renderHook } from '@testing-library/react'
+import React, { useState } from 'react'
 import { NotificationType } from '../../__generated__/globalTypes'
 import { MessageProvider } from './MessageState'
 import MessagePlain from './Message'
 import MessageProgress from './MessageProgress'
+import { Message } from './SubscriptionsHook'
+
+interface MockSubscriptionsHookProps {
+  messages: Message[]
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+}
 
 // Define the mock for SubscriptionsHook before using it
-const MockSubscriptionsHook = ({ messages, setMessages }: any) => {
+const MockSubscriptionsHook = ({ messages, setMessages }: MockSubscriptionsHookProps) => {
   return (
     <div>
       <button
-        onClick={() => setMessages((prev: any) => [...prev, ...messages])}
+        type="button"
+        onClick={() => setMessages((prev: Message[]) => [...prev, ...messages])}
         data-testid="trigger-messages"
       >
         Trigger Messages
@@ -23,6 +30,12 @@ vi.mock('./SubscriptionsHook', () => ({
   __esModule: true,
   default: MockSubscriptionsHook,
 }))
+
+const PROGRESS_COLORS = {
+  LOW: '#dc2625',    // red for < 30%
+  MEDIUM: '#fbbf24', // yellow for 30-70%
+  HIGH: '#56e263'    // green for > 70%
+}
 
 const messages = [
   {
@@ -116,7 +129,7 @@ describe('Messages Component', () => {
 
     const progressBar = container.querySelector('div[role="progressbar"][style*="width: 50%"]')
     expect(progressBar).toBeInTheDocument()
-    expect(progressBar).toHaveStyle('background-color: #fbbf24')
+    expect(progressBar).toHaveStyle(`background-color: ${PROGRESS_COLORS.MEDIUM}`)
   })
 
   test('renders progress bar with correct colors based on percent value', () => {
@@ -130,13 +143,14 @@ describe('Messages Component', () => {
 
     const progressBars = screen.getAllByRole('progressbar')
 
-    expect(progressBars[0]).toHaveStyle('background-color: #dc2625') // red for 20%
-    expect(progressBars[1]).toHaveStyle('background-color: #fbbf24') // yellow for 50%
-    expect(progressBars[2]).toHaveStyle('background-color: #56e263') // green for 80%
+    expect(progressBars[0]).toHaveStyle(`background-color: ${PROGRESS_COLORS.LOW}`) // red for 20%
+    expect(progressBars[1]).toHaveStyle(`background-color: ${PROGRESS_COLORS.MEDIUM}`) // yellow for 50%
+    expect(progressBars[2]).toHaveStyle(`background-color: ${PROGRESS_COLORS.HIGH}`) // green for 80%
   })
 
   test('subscriptions hook triggers messages correctly', () => {
-    const setMessages = vi.fn()
+    const { result } = renderHook(() => useState<Message[]>([]))
+    const [, setMessages] = result.current
 
     render(
       <MessageProvider>
@@ -145,6 +159,6 @@ describe('Messages Component', () => {
     )
 
     fireEvent.click(screen.getByTestId('trigger-messages'))
-    expect(setMessages).toHaveBeenCalledWith(expect.any(Function))
+    expect(result.current[0]).toEqual(expect.arrayContaining(messages))
   })
 })

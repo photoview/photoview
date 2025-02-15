@@ -1,11 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import React from 'react'
+import React from 'react' //React must be in scope when using JSX.
+import { screen, waitFor } from '@testing-library/react'
 import LoginPage from './LoginPage'
 import * as authentication from '../../helpers/authentication'
-import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom'
 import { createMemoryHistory } from 'history'
-import { MockedProvider } from '@apollo/client/testing'
 import { mockInitialSetupGraphql } from './loginTestHelpers'
+import { renderWithProviders } from '../../helpers/testUtils'
+import { act } from '@testing-library/react'
 
 vi.mock('../../helpers/authentication.ts')
 
@@ -15,17 +15,15 @@ describe('Login page redirects', () => {
   test('Auth token redirect', async () => {
     authToken.mockImplementation(() => 'some-token')
 
-    const history = createMemoryHistory({
-      initialEntries: ['/login'],
-    })
+    const history = createMemoryHistory()
+    history.push('/login')
 
-    render(
-      <MockedProvider mocks={[]}>
-        <HistoryRouter history={history}>
-          <LoginPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<LoginPage />, {
+        mocks: [],
+        history,
+      })
+    })
 
     await waitFor(() => {
       expect(history.location.pathname).toBe('/')
@@ -35,17 +33,15 @@ describe('Login page redirects', () => {
   test('Initial setup redirect', async () => {
     authToken.mockImplementation(() => null)
 
-    const history = createMemoryHistory({
-      initialEntries: ['/login'],
-    })
+    const history = createMemoryHistory()
+    history.push('/login')
 
-    render(
-      <MockedProvider mocks={[mockInitialSetupGraphql(true)]}>
-        <HistoryRouter history={history}>
-          <LoginPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<LoginPage />, {
+        mocks: [mockInitialSetupGraphql(true)],
+        history,
+      })
+    })
 
     await waitFor(() => {
       expect(history.location.pathname).toBe('/initialSetup')
@@ -54,20 +50,18 @@ describe('Login page redirects', () => {
 })
 
 describe('Login page', () => {
-  test('Render login form', () => {
+  test('Render login form', async () => {
     authToken.mockImplementation(() => null)
 
-    const history = createMemoryHistory({
-      initialEntries: ['/login'],
-    })
+    const history = createMemoryHistory()
+    history.push('/login')
 
-    render(
-      <MockedProvider mocks={[mockInitialSetupGraphql(false)]}>
-        <HistoryRouter history={history}>
-          <LoginPage />
-        </HistoryRouter>
-      </MockedProvider>
-    )
+    await act(async () => {
+      await renderWithProviders(<LoginPage />, {
+        mocks: [mockInitialSetupGraphql(false)],
+        history,
+      })
+    })
 
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
