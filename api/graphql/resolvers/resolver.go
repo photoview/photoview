@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:generate go run github.com/99designs/gqlgen
+//go:generate go tool github.com/99designs/gqlgen
 
 type Resolver struct {
 	database *gorm.DB
