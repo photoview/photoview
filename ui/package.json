@@ -43,7 +43,7 @@
     "husky": "^9.1.7",
     "i18next": "^24.2.2",
     "mapbox-gl": "~3.4.0",
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.3",
     "prettier": "^2.8.8",
     "react": "^19.0.0",
     "react-blurhash": "^0.3.0",
