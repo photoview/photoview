@@ -31,7 +31,7 @@ RUN npm ci --omit=dev --ignore-scripts \
   && npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.24-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
