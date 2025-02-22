@@ -269,13 +269,14 @@ jobs:
         uses: actions/setup-go@v5
         id: go
         with:
-          go-version: '~1.21.13' # Temporary hardcode Go version, as Coverity doesn't support latest Go
+          #go-version: '~1.21.13' # Temporary hardcode Go version, as Coverity doesn't support latest Go
+          go-version-file: 'api/go.mod'
           cache: false
 
       # Temporary w/a until newer GO version is not supported by Coverity
-      - name: Modify go.mod for CI
-        run: |
-          sed -i 's/^go [0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?/go 1.21/' api/go.mod
+      #- name: Modify go.mod for CI
+      #  run: |
+      #    sed -i 's/^go [0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?/go 1.21/' api/go.mod
 
       - name: Cache Go dependencies
         uses: actions/cache@v4
