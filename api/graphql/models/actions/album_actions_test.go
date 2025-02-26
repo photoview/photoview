@@ -267,3 +267,78 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 	})
 
 }
+
+// Related to #658
+func TestNonRootAlbumPaths(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	boolTrue := true
+	boolFalse := false
+
+	rootAlbum := models.Album{
+		Title: "root",
+		Path:  "/root",
+	}
+
+	child1Album := models.Album{
+		Title:         "child1",
+		Path:          "/root/child1",
+		ParentAlbumID: &rootAlbum.ID,
+	}
+
+	child2Album := models.Album{
+		Title:         "child2",
+		Path:          "/root/child2",
+		ParentAlbumID: &rootAlbum.ID,
+	}
+
+	// Admin should have access to all albums
+	adminAlbums := []*models.Album{&rootAlbum, &child1Album, &child2Album}
+
+	assert.NoError(t, db.Create(&rootAlbum).Error)
+
+	// Register users
+	admin, err := models.RegisterUser(db, "admin", nil, false)
+	assert.NoError(t, err)
+
+	user1, err := models.RegisterUser(db, "user1", nil, false)
+	assert.NoError(t, err)
+
+	user2, err := models.RegisterUser(db, "user2", nil, false)
+	assert.NoError(t, err)
+
+	// Assign albums to users
+	err = db.Model(&admin).Association("Albums").Append(&adminAlbums)
+	assert.NoError(t, err)
+
+	err = db.Model(&user1).Association("Albums").Append(&child1Album)
+	assert.NoError(t, err)
+
+	err = db.Model(&user2).Association("Albums").Append(&child2Album)
+	assert.NoError(t, err)
+
+	t.Run("Admin should see all albums", func(t *testing.T) {
+		returnedAlbums, err := actions.MyAlbums(db, admin, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 2)
+		assert.Equal(t, "child1", returnedAlbums[0].Title)
+		assert.Equal(t, "child2", returnedAlbums[1].Title)
+	})
+
+	t.Run("User 1 should only see child1 album", func(t *testing.T) {
+		returnedAlbums, err := actions.MyAlbums(db, user1, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 1)
+		assert.Equal(t, "child1", returnedAlbums[0].Title)
+	})
+
+	t.Run("User 2 should only see child2 album", func(t *testing.T) {
+		returnedAlbums, err := actions.MyAlbums(db, user2, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 1)
+		assert.Equal(t, "child2", returnedAlbums[0].Title)
+	})
+}
