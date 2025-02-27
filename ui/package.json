@@ -79,7 +79,7 @@
     "apollo": "2.34.0",
     "apollo-language-server": "1.26.9",
     "eslint": "^8.57.1",
-    "eslint-config-prettier": "^10.0.1",
+    "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "i18next-parser": "^9.3.0",
