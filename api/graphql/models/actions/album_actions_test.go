@@ -269,7 +269,45 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 }
 
 // Related to #658
-func TestNonRootAlbumPaths(t *testing.T) {
+func TestNonRootAlbumPath(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	boolTrue := true
+	boolFalse := false
+
+	rootAlbum := models.Album{
+		Title: "root",
+		Path:  "/root",
+	}
+
+	childAlbum := models.Album{
+		Title:         "child",
+		Path:          "/root/child",
+		ParentAlbumID: &rootAlbum.ID,
+	}
+
+	assert.NoError(t, db.Create(&rootAlbum).Error)
+
+	// Register user
+	user, err := models.RegisterUser(db, "user", nil, false)
+	assert.NoError(t, err)
+
+	// Assign album to user
+	err = db.Model(&user).Association("Albums").Append(&childAlbum)
+	assert.NoError(t, err)
+
+	// The child album is a "local root album" for the user, as it does not have access to the root album
+	t.Run("User should only see child album", func(t *testing.T) {
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		assert.NoError(t, err)
+
+		assert.Len(t, returnedAlbums, 1)
+		assert.Equal(t, "child", returnedAlbums[0].Title)
+	})
+}
+
+// Related to #658
+func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	boolTrue := true
