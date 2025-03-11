@@ -117,132 +117,13 @@ linters:
   #disable-all: true
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
-  enable:
-    - asasalint
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - canonicalheader
-    - containedctx
-    - contextcheck
-    - copyloopvar
-    - cyclop
-    - decorder
-    - depguard
-    - dogsled
-    - dupl
-    - dupword
-    - durationcheck
-    - err113
-    - errcheck
-    - errchkjson
-    - errname
-    - errorlint
-    - execinquery
-    - exhaustive
-    - exhaustruct
-    - exportloopref
-    - fatcontext
-    - forbidigo
-    - forcetypeassert
-    - funlen
-    - gci
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
-    - gochecksumtype
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godot
-    - godox
-    - gofmt
-    - gofumpt
-    - goheader
-    - goimports
-    - gomoddirectives
-    - gomodguard
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - gosmopolitan
-    - govet
-    - grouper
-    - importas
-    - inamedparam
-    - ineffassign
-    - interfacebloat
-    - intrange
-    - ireturn
-    - lll
-    - loggercheck
-    - maintidx
-    - makezero
-    - mirror
-    - misspell
-    - mnd
-    - musttag
-    - nakedret
-    - nestif
-    - nilerr
-    - nilnil
-    - nlreturn
-    - noctx
-    - nolintlint
-    - nonamedreturns
-    - nosprintfhostport
-    - paralleltest
-    - perfsprint
-    - prealloc
-    - predeclared
-    - promlinter
-    - protogetter
-    - reassign
-    - revive
-    - rowserrcheck
-    - sloglint
-    - spancheck
-    - sqlclosecheck
-    - staticcheck
-    - stylecheck
-    - tagalign
-    - tagliatelle
-    - tenv
-    - testableexamples
-    - testifylint
-    - testpackage
-    - thelper
-    - tparallel
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-    - wsl
-    - zerologlint
+  #enable: {}
   # Enable all available linters.
   # Default: false
   #enable-all: true
   # Disable specific linter
   # https://golangci-lint.run/usage/linters/#disabled-by-default
-  disable:
-    - deadcode # Deprecated
-    - exhaustivestruct # Deprecated
-    - golint # Deprecated
-    - ifshort # Deprecated
-    - interfacer # Deprecated
-    - maligned # Deprecated
-    - gomnd # Deprecated
-    - nosnakecase # Deprecated
-    - scopelint # Deprecated
-    - structcheck # Deprecated
-    - varcheck # Deprecated
+  #disable: {}
   # Enable presets.
   # https://golangci-lint.run/usage/linters
   # Default: []
