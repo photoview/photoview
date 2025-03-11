@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": ""
+        "merge": "",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,8 +87,12 @@
         "title": ""
       },
       "merge_face_groups": {
-        "description": "",
+        "destination_description": "",
         "destination_table": {
+          "title": ""
+        },
+        "sources_description": "",
+        "sources_table": {
           "title": ""
         },
         "title": ""
@@ -146,6 +152,21 @@
       "description": "Escaneará todos los usuarios para buscar archivos nuevos o actualizados",
       "scan_all_users": "Escanear todos los usuarios",
       "title": "Escáner"
+    },
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
     },
     "user_preferences": {
       "change_language": {
@@ -254,14 +275,19 @@
     "download": {
       "filesize": {
         "byte_one": "",
+        "byte_many": "",
         "byte_other": "",
         "giga_byte_one": "",
+        "giga_byte_many": "",
         "giga_byte_other": "",
         "kilo_byte_one": "",
+        "kilo_byte_many": "",
         "kilo_byte_other": "",
         "mega_byte_one": "",
+        "mega_byte_many": "",
         "mega_byte_other": "",
         "tera_byte_one": "",
+        "tera_byte_many": "",
         "tera_byte_other": ""
       },
       "table_columns": {
@@ -278,6 +304,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Programa de acción",
           "aperture_priority": "Prioridad de abertura",
