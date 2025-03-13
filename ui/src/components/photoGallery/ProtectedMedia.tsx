@@ -181,11 +181,11 @@ export interface ProtectedVideoProps_Media {
 
 export interface ProtectedVideoProps {
   media: ProtectedVideoProps_Media
-  setVideo: () => void
+  setVideo: (ref: HTMLVideoElement | null) => void
 }
 
 export const ProtectedVideo = ({ media, setVideo, ...props }: ProtectedVideoProps) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   React.useEffect(() => {
     setVideo && setVideo(videoRef.current);

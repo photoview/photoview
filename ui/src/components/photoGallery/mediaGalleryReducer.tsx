@@ -4,7 +4,8 @@ import { MediaType } from '../../__generated__/globalTypes'
 
 
 export interface MediaGalleryState {
-  videoMedia: number[]
+  videoMediaIndices: number[]
+  photoMediaIndices: number[]
   presenting: boolean
   activeIndex: number
   media: MediaGalleryFields[]
@@ -14,12 +15,27 @@ export type GalleryAction =
   | { type: 'nextImage' }
   | { type: 'previousImage' }
   | { type: 'closePresentMode' }
+  | { type: 'nextSlidePhoto' }
+  | { type: 'nextSlideVideo' }
 
 export type PhotoGalleryAction =
   | GalleryAction
   | { type: 'openPresentMode'; activeIndex: number }
   | { type: 'selectImage'; index: number }
   | { type: 'replaceMedia'; media: MediaGalleryFields[] }
+
+function getNextSlideState(state: MediaGalleryState, type: MediaType): MediaGalleryState {
+  const indices = type === MediaType.Photo ? state.photoMediaIndices : state.videoMediaIndices
+  let nextIndex = indices.find(i => i > state.activeIndex) ?? indices.at(0)
+
+  if (nextIndex === undefined)
+    return state
+  
+  return {
+    ...state,
+    activeIndex: nextIndex
+  }
+}
 
 export function mediaGalleryReducer(
   state: MediaGalleryState,
@@ -70,35 +86,18 @@ export function mediaGalleryReducer(
         presenting: false,
       }
     case 'nextSlidePhoto':
-      if (state.videoMedia.length != state.media.length){
-        let a: number = (state.activeIndex + 1) % state.media.length;
-        while (state.media[a].type !== MediaType.Photo) {
-          a = (a + 1) % state.media.length;
-        }
-        return {
-          ...state,
-          activeIndex: a,
-        }
-      } else {
-        return {
-          ...state,
-        }
-      }
+     // Do nothing if all media are videos
+     if (state.photoMediaIndices.length === 0)
+      return {...state}
+     
+     return getNextSlideState(state, MediaType.Photo)
+      
     case 'nextSlideVideo':
-      if (state.videoMedia.length > 0) {
-        let b: number = (state.activeIndex + 1) % state.media.length;
-        while (state.media[b].type !== MediaType.Video) {
-          b = (b + 1) % state.media.length;
-        }
-        return {
-          ...state,
-          activeIndex: b, 
-        }
-      } else {
-        return {
-          ...state,
-        }
-      }
+      // Do nothing if there are no videos
+      if (state.videoMediaIndices.length === 0)
+        return {...state}
+      
+      return getNextSlideState(state, MediaType.Video)
   }
 }
 

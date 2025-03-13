@@ -1,4 +1,3 @@
-import React, { useRef } from 'react'
 import styled from 'styled-components'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { exhaustiveCheck } from '../../../helpers/utils'
@@ -26,7 +25,7 @@ const StyledVideo = styled(ProtectedVideo)`
 type PresentMediaProps = {
   media: MediaGalleryFields
   imageLoaded?(): void
-  setVideo(): void
+  setVideo(ref: HTMLVideoElement | null): void
 }
 
 const PresentMedia = ({

@@ -68,18 +68,18 @@ const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
 
   const { updateSidebar } = useContext(SidebarContext)
 
-  let mediaElements = []
-  let videoElements = []
-  let photoElements = []
+  let mediaElements: JSX.Element[] = []
+  let videoElementIndices: number[] = []
+  let photoElementIndices: number[] = []
 
   if (media) {
     mediaElements = media.map((media, index) => {
       const active = activeIndex == index
 
       if (media.type === MediaType.Video)
-        videoElements.push(index)
+        videoElementIndices.push(index)
       else 
-        photoElements.push(index)
+        photoElementIndices.push(index)
 
       return (
         <MediaThumbnail
@@ -111,8 +111,8 @@ const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
     }
   }
 
-  mediaState.videoMedia = videoElements;
-  mediaState.photoMedia = photoElements;
+  mediaState.videoMediaIndices = videoElementIndices;
+  mediaState.photoMediaIndices = photoElementIndices;
 
   return (
     <>

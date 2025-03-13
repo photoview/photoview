@@ -38,11 +38,11 @@ const PresentView = ({
   dispatchMedia,
   disableSaveCloseInHistory,
 }: PresentViewProps) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const setVideo = (ref) => {
+  const setVideo = (ref: HTMLVideoElement) => {
     videoRef.current = ref;
-  };
+  }
 
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {

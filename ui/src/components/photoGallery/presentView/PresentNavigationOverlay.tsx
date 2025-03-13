@@ -15,6 +15,7 @@ import PhotoIcon from './icons/Photo'
 import VideoIcon from './icons/Video'
 import RepeatIcon from './icons/Repeat'
 import PhotoVideoIcon from './icons/PhotoVideo'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 
 const StyledOverlayContainer = styled.div`
   width: 100%;
@@ -101,15 +102,15 @@ const ExitButton = styled(OverlayButton)`
   left: 28px;
   top: 28px;
 `
-const SlideButton = styled(OverlayButton)<{active:boolean}>`
+const SlideButton = styled(OverlayButton)<{active: boolean}>`
   left: 92px;
   top: 28px;
 `
-const SlideModeButton = styled(OverlayButton)<{active:boolean}>`
+const SlideModeButton = styled(OverlayButton)<{active?: boolean}>`
   left: 220px;
   top: 28px;
 `
-const IntervalButton = styled(OverlayIconContainer)<{time:integer}>`
+const IntervalButton = styled(OverlayIconContainer)<{time: number}>`
   left: 156px;
   top: 28px;
 `
@@ -133,6 +134,8 @@ type PresentNavigationOverlayProps = {
   children?: React.ReactChild
   dispatchMedia: React.Dispatch<GalleryAction>
   disableSaveCloseInHistory?: boolean
+  activeMedia: MediaGalleryFields
+  videoRef: React.MutableRefObject<HTMLVideoElement | null>
 }
 
 const PresentNavigationOverlay = ({
@@ -145,8 +148,8 @@ const PresentNavigationOverlay = ({
   const [hide, setHide] = useState(true)
   const [slide, setSlide] = useState<boolean>(false)
   const [aux, setAux] = useState<boolean>(false)
-  const [slideInterval, setSlideInterval] = useState<integer>(3)
-  const [slideMode, setSlideMode] = useState<integer>(2)
+  const [slideInterval, setSlideInterval] = useState<number>(3)
+  const [slideMode, setSlideMode] = useState<number>(2)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
   const smref = React.useRef(slideMode)
 
@@ -175,14 +178,14 @@ const PresentNavigationOverlay = ({
     }
 
     const handleSpace = () => {
-      if (activeMedia.type === MediaType.Video && ! slide ) {
+      if (videoRef.current && activeMedia.type === MediaType.Video && ! slide ) {
         if (videoRef.current.paused ){
           videoRef.current.play()
         } else {
           videoRef.current.pause()
         } 
       } else {
-        setSlide( (s) => !s );
+        toggle()
       } 
     };
 
@@ -196,18 +199,17 @@ const PresentNavigationOverlay = ({
   useEffect(() => {
     const interval = setInterval(() => {
       if (slide && activeMedia.type === MediaType.Photo) { 
-        //dispatchMedia({ type: 'nextImage'})
         nextSlide()
       }
     }, slideInterval*1000)
 
-    if (slide && activeMedia.type === MediaType.Video) {
+    if (videoRef.current && slide && activeMedia.type === MediaType.Video) {
       videoRef.current.play();
     }
 
     // if video, register playEnd at 'ended'
-    if ( videoRef != null ) {
-      if ( videoRef.current != null ) 
+    if (videoRef != null) {
+      if (videoRef.current != null) 
         videoRef.current.addEventListener('ended', playEnd);
     }
 
@@ -224,9 +226,9 @@ const PresentNavigationOverlay = ({
   // Continue after Video played
   const playEnd = () => {
     if (slide && smref.current < 3) {
-      setAux( (a) => !a );// single repeat might destroy basic repeat
+      setAux( (a) => !a ); // single repeat might destroy basic repeat
       nextSlide();
-    } else if (smref.current == 3 && activeMedia.type === MediaType.Video) {
+    } else if (videoRef.current && smref.current == 3 && activeMedia.type === MediaType.Video) {
       videoRef.current.play();
     }
   }
