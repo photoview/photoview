@@ -1,6 +1,7 @@
 package scanner_cache
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/pkg/errors"
 )
 
 type AlbumScannerCache struct {
@@ -27,25 +27,25 @@ func MakeAlbumCache() *AlbumScannerCache {
 }
 
 // Insert single album directory in cache
-func (c *AlbumScannerCache) InsertAlbumPath(path string, contains_photo bool) {
+func (c *AlbumScannerCache) InsertAlbumPath(path string, containsPhoto bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	c.path_contains_photos[path] = contains_photo
+	c.path_contains_photos[path] = containsPhoto
 }
 
 // Insert album path and all parent directories up to the given root directory in cache
-func (c *AlbumScannerCache) InsertAlbumPaths(end_path string, root string, contains_photo bool) {
-	curr_path := path.Clean(end_path)
-	root_path := path.Clean(root)
+func (c *AlbumScannerCache) InsertAlbumPaths(endPath string, root string, containsPhoto bool) {
+	currPath := path.Clean(endPath)
+	rootPath := path.Clean(root)
 
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for curr_path != root_path || curr_path == "." {
+	for currPath != rootPath || currPath == "." {
 
-		c.path_contains_photos[curr_path] = contains_photo
+		c.path_contains_photos[currPath] = containsPhoto
 
-		curr_path = path.Dir(curr_path)
+		currPath = path.Dir(currPath)
 	}
 }
 
@@ -69,24 +69,21 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 // 	(c.photo_types)[path] = content_type
 // }
 
-func (c *AlbumScannerCache) GetMediaType(path string) (*media_type.MediaType, error) {
+func (c *AlbumScannerCache) GetMediaType(path string) (media_type.MediaType, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	result, found := c.photo_types[path]
 	if found {
-		// log.Printf("Image cache hit: %s\n", path)
-		return &result, nil
+		return result, nil
 	}
 
-	mediaType, err := media_type.GetMediaType(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get media type (%s)", path)
+	mediaType := media_type.GetMediaType(path)
+	if mediaType == media_type.TypeUnknown {
+		return mediaType, fmt.Errorf("unknown media type (%s)", path)
 	}
 
-	if mediaType != nil {
-		(c.photo_types)[path] = *mediaType
-	}
+	c.photo_types[path] = mediaType
 
 	return mediaType, nil
 }
@@ -103,11 +100,11 @@ func (c *AlbumScannerCache) GetAlbumIgnore(path string) *[]string {
 	return nil
 }
 
-func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignore_data []string) {
+func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.ignore_data[path] = ignore_data
+	c.ignore_data[path] = ignoreData
 }
 
 func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
@@ -122,16 +119,16 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 		return false
 	}
 
-	if mediaType != nil {
-		// Make sure file isn't empty
-		fileStats, err := os.Stat(mediaPath)
-		if err != nil || fileStats.Size() == 0 {
-			return false
-		}
-
-		return true
+	if !mediaType.IsSupported() {
+		log.Printf("Unsupported media type %q for file: %s\n", mediaType, mediaPath)
+		return false
 	}
 
-	log.Printf("File is not a supported media %s\n", mediaPath)
-	return false
+	// Make sure file isn't empty
+	fileStats, err := os.Stat(mediaPath)
+	if err != nil || fileStats.Size() == 0 {
+		return false
+	}
+
+	return true
 }

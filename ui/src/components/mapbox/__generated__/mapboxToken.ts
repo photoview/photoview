@@ -11,9 +11,9 @@ export interface mapboxToken {
   /**
    * Get the mapbox api token, returns null if mapbox is not enabled
    */
-  mapboxToken: string | null
+  mapboxToken: string | null;
   /**
    * Get media owned by the logged in user, returned in GeoJson format
    */
-  myMediaGeoJson: Any
+  myMediaGeoJson: Any;
 }

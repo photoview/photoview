@@ -28,17 +28,7 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 				}
 			}
 
-			corsEnabled := devMode || uiEndpoint != nil
-			if corsEnabled {
-				methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
-				requestHeaders := []string{"authorization", "content-type", "content-length", "TokenPassword"}
-				responseHeaders := []string{"content-length"}
-
-				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ", "))
-				w.Header().Set("Access-Control-Allow-Headers", strings.Join(requestHeaders, ", "))
-				w.Header().Set("Access-Control-Allow-Credentials", "true")
-				w.Header().Set("Access-Control-Expose-Headers", strings.Join(responseHeaders, ", "))
-			}
+			w = handleCORS(devMode, uiEndpoint, w)
 
 			if req.Method != http.MethodOptions {
 				next.ServeHTTP(w, req)
@@ -47,4 +37,19 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 			}
 		})
 	}
+}
+
+func handleCORS(devMode bool, uiEndpoint *url.URL, w http.ResponseWriter) http.ResponseWriter {
+	corsEnabled := devMode || uiEndpoint != nil
+	if corsEnabled {
+		methods := []string{http.MethodGet, http.MethodPost, http.MethodOptions}
+		requestHeaders := []string{"authorization", "content-type", "content-length", "TokenPassword"}
+		responseHeaders := []string{"content-length"}
+
+		w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ", "))
+		w.Header().Set("Access-Control-Allow-Headers", strings.Join(requestHeaders, ", "))
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Expose-Headers", strings.Join(responseHeaders, ", "))
+	}
+	return w
 }

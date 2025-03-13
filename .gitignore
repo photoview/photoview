@@ -4,14 +4,17 @@ cache/
 /media_cache/
 /api/media_cache/
 /photos_path
-photoview.db
-photoview.db-journal
+photoview.db*
 
 .env
 testing.env
 
 # docker
 docker-compose.yml
+/Makefile
+/storage
+/database
+/tmp
 
 # dependencies
 node_modules/
@@ -19,6 +22,7 @@ node_modules/
 # testing
 /ui/coverage
 /api/coverage.txt
+/api/test-*-report.xml
 
 # building
 .cache/
@@ -42,3 +46,4 @@ yarn-error.log*
 .vscode
 __debug_bin
 .idea
+.nvmrc

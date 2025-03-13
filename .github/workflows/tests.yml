@@ -2,30 +2,30 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: ['*']
   pull_request:
     branches: [master]
 
 jobs:
   test-api:
     name: Test API
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        database: ['mysql', 'postgres', 'sqlite']
+        database: ['sqlite', 'mysql', 'postgres']
 
     services:
       mariadb:
-        image: mariadb:10.5
+        image: mariadb:lts
         env:
           MYSQL_DATABASE: photoview_test
           MYSQL_USER: photoview
           MYSQL_PASSWORD: photosecret
           MYSQL_RANDOM_ROOT_PASSWORD: yes
+        # https://github.com/MariaDB/mariadb-docker/issues/497
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mariadb-admin ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -33,7 +33,7 @@ jobs:
           - 3306:3306
 
       postgres:
-        image: postgres:13.2
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: photoview
           POSTGRES_PASSWORD: photosecret
@@ -46,105 +46,115 @@ jobs:
         ports:
           - 5432:5432
 
-    defaults:
-      run:
-        working-directory: api
-
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ^1.16
-        id: go
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Cache Go dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: api
+        tags: photoview/api
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Get C dependencies
-        run: |
-          sudo add-apt-repository ppa:strukturag/libheif
-          sudo add-apt-repository ppa:strukturag/libde265
-          sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
+    - name: Test
+      id: test
+      run: |
+        docker run --name test --network host \
+            -v "${{ github.workspace }}:/app" \
+            -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
+            -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
+            -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
+            -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
+          photoview/api \
+          /app/scripts/test_all.sh
+        docker cp test:/app/api/coverage.txt ./api/
+        docker cp test:/app/api/test-api-coverage-report.xml ./api/
 
-      - name: Get GO dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
+    - name: Upload coverage
+      uses: codecov/codecov-action@v5
+      if: ${{ steps.test.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
 
-      - name: Build
-        run: go build -v .
-
-      - name: Configure MySQL
-        if: ${{ matrix.database == 'mysql' }}
-        run: |
-          cp ../.github/mysql.testing.env testing.env
-
-      - name: Configure Postgres
-        if: ${{ matrix.database == 'postgres' }}
-        run: |
-          cp ../.github/postgres.testing.env testing.env
-
-      - name: Configure Sqlite
-        if: ${{ matrix.database == 'sqlite' }}
-        run: |
-          touch photoview_test.db
-          cp ../.github/sqlite.testing.env testing.env
-
-      - name: Test
-        run: go test ./... -v -database -filesystem -p 1 -coverprofile=coverage.txt -covermode=atomic
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          flags: api
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
+        files: ./api/test-api-coverage-report.xml
 
   test-ui:
     name: Test UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ui
-
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
-      - uses: actions/checkout@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=testing
 
-      - name: Install dependencies
-        run: npm clean-install
+    - name: Test
+      id: test
+      run: |
+        docker run --name test photoview/ui npm run test:ci
+        docker cp test:/app/ui/coverage ./ui/
+        docker cp test:/app/ui/junit-report.xml ./ui/
 
-      - name: Test
-        run: npm run test:ci
+    - name: Upload coverage
+      uses: codecov/codecov-action@v5
+      if: ${{ steps.test.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          flags: ui
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
+        directory: ./ui
+
+    - name: Run ESLint
+      working-directory: ui
+      run: |
+        docker run --name eslint photoview/ui npm run lint:ci || true
+        docker cp eslint:/app/ui/eslint-report.txt ./
+        echo "--------------------------"
+        echo "ESLint execution results :"
+        echo "--------------------------"
+        cat ./eslint-report.txt || echo "ESLint report file not found."
+
+    - name: ESLint artifact
+      id: eslint-artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ESLint-report
+        path: ./ui/eslint-report.txt
+        if-no-files-found: warn
+        compression-level: 9
+        overwrite: true

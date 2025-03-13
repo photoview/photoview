@@ -45,7 +45,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		} else {
 			log.Printf("ERROR: Can not handle media_purpose for video: %s\n", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
+			w.Write([]byte(internalServerError))
 			return
 		}
 
@@ -54,14 +54,14 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 				if err := scanner.ProcessSingleMedia(db, media); err != nil {
 					log.Printf("ERROR: processing video not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
+					w.Write([]byte(internalServerError))
 					return
 				}
 
 				if _, err := os.Stat(cachedPath); err != nil {
 					log.Printf("ERROR: after reprocessing video not found in cache: %s\n", err)
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
+					w.Write([]byte(internalServerError))
 					return
 				}
 			}

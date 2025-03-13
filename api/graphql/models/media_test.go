@@ -5,8 +5,12 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/test_utils"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+const mimeJpeg = "image/jpeg"
 
 func TestSanitizeMediaName(t *testing.T) {
 	tests := [][2]string{
@@ -51,9 +55,12 @@ func TestMediaURLCachePath(t *testing.T) {
 }
 
 func TestMediaURLGetURL(t *testing.T) {
+	done := test_utils.SetEnv(string(utils.EnvAPIEndpoint), "")
+	defer done()
+
 	photo := models.MediaURL{
 		MediaName:   "photo.jpg",
-		ContentType: "image/jpeg",
+		ContentType: mimeJpeg,
 		Purpose:     models.PhotoHighRes,
 	}
 
@@ -76,12 +83,12 @@ func TestMediaGetThumbnail(t *testing.T) {
 		MediaURL: []models.MediaURL{
 			{
 				MediaName:   "photo.jpg",
-				ContentType: "image/jpeg",
+				ContentType: mimeJpeg,
 				Purpose:     models.PhotoHighRes,
 			},
 			{
 				MediaName:   "thumbnail.jpg",
-				ContentType: "image/jpeg",
+				ContentType: mimeJpeg,
 				Purpose:     models.PhotoThumbnail,
 			},
 			{

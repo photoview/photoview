@@ -1,0 +1,85 @@
+name: photoview
+
+services:
+  ui:
+    image: photoview/ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ui
+      args:
+        - NODE_ENV=development
+    env_file: ui/example.env
+    volumes:
+      - .:/app:rw
+    ports:
+      - 1234:1234
+    command:
+      - /bin/bash
+      - -c
+      - |
+        npm ci
+        npm run mon
+
+  api:
+    image: photoview/api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    env_file: api/example.env
+    environment:
+      PHOTOVIEW_DATABASE_DRIVER: sqlite # Change to the right database driver
+      PHOTOVIEW_SQLITE_PATH: photoview.db
+      PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(mariadb)/photoview_test
+      PHOTOVIEW_POSTGRES_URL: postgres://photoview:photosecret@postgres:5432/photoview_test
+    volumes:
+      - .:/app:rw
+    ports:
+      - 4001:4001
+    command:
+      - /bin/bash
+      - -c
+      - |
+        export $(cat /env)
+        reflex -g '*.go' -s -- go run .
+
+  mariadb:
+    image: mariadb:lts
+    profiles:
+      - mysql
+    environment:
+      MYSQL_DATABASE: photoview_test
+      MYSQL_USER: photoview
+      MYSQL_PASSWORD: photosecret
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+    healthcheck:
+      test:
+        - CMD
+        - mariadb-admin
+        - --user=photoview
+        - --password=photosecret
+        - ping
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    expose:
+      - "3306"
+
+  postgres:
+    image: postgres:16-alpine
+    profiles:
+      - postgres
+    environment:
+      POSTGRES_DB: photoview_test
+      POSTGRES_USER: photoview
+      POSTGRES_PASSWORD: photosecret
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    expose:
+      - "5432"

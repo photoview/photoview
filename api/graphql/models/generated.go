@@ -14,7 +14,7 @@ type AuthorizeResult struct {
 	// A textual status message describing the result, can be used to show an error message when `success` is false
 	Status string `json:"status"`
 	// An access token used to authenticate new API requests as the newly authorized user. Is present when success is true
-	Token *string `json:"token"`
+	Token *string `json:"token,omitempty"`
 }
 
 type Coordinates struct {
@@ -30,6 +30,9 @@ type MediaDownload struct {
 	MediaURL *MediaURL `json:"mediaUrl"`
 }
 
+type Mutation struct {
+}
+
 type Notification struct {
 	// A key used to identify the notification, new notification updates with the same key, should replace the old notifications
 	Key  string           `json:"key"`
@@ -39,35 +42,38 @@ type Notification struct {
 	// The text for the body of the notification
 	Content string `json:"content"`
 	// A value between 0 and 1 when the notification type is `Progress`
-	Progress *float64 `json:"progress"`
+	Progress *float64 `json:"progress,omitempty"`
 	// Whether or not the message of the notification is positive, the UI might reflect this with a green color
 	Positive bool `json:"positive"`
 	// Whether or not the message of the notification is negative, the UI might reflect this with a red color
 	Negative bool `json:"negative"`
 	// Time in milliseconds before the notification should close
-	Timeout *int `json:"timeout"`
+	Timeout *int `json:"timeout,omitempty"`
 }
 
 // Used to specify how to sort items
 type Ordering struct {
 	// A column in the database to order by
-	OrderBy        *string         `json:"order_by"`
-	OrderDirection *OrderDirection `json:"order_direction"`
+	OrderBy        *string         `json:"order_by,omitempty"`
+	OrderDirection *OrderDirection `json:"order_direction,omitempty"`
 }
 
 // Used to specify pagination on a list of items
 type Pagination struct {
 	// How many items to maximally fetch
-	Limit *int `json:"limit"`
+	Limit *int `json:"limit,omitempty"`
 	// How many items to skip from the beginning of the query, specified by the `Ordering`
-	Offset *int `json:"offset"`
+	Offset *int `json:"offset,omitempty"`
+}
+
+type Query struct {
 }
 
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`
-	Progress *float64 `json:"progress"`
-	Message  *string  `json:"message"`
+	Progress *float64 `json:"progress,omitempty"`
+	Message  *string  `json:"message,omitempty"`
 }
 
 type SearchResult struct {
@@ -82,10 +88,14 @@ type SearchResult struct {
 // Credentials used to identify and authenticate a share token
 type ShareTokenCredentials struct {
 	Token    string  `json:"token"`
-	Password *string `json:"password"`
+	Password *string `json:"password,omitempty"`
+}
+
+type Subscription struct {
 }
 
 // A group of media from the same album and the same day, that is grouped together in a timeline view
+// NOTE: It isn't used. Just copy from the old schema.graphql.
 type TimelineGroup struct {
 	// The full album containing the media in this timeline group
 	Album *Album `json:"album"`
@@ -148,7 +158,7 @@ func (e LanguageTranslation) String() string {
 	return string(e)
 }
 
-func (e *LanguageTranslation) UnmarshalGQL(v interface{}) error {
+func (e *LanguageTranslation) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -195,7 +205,7 @@ func (e NotificationType) String() string {
 	return string(e)
 }
 
-func (e *NotificationType) UnmarshalGQL(v interface{}) error {
+func (e *NotificationType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -239,7 +249,7 @@ func (e OrderDirection) String() string {
 	return string(e)
 }
 
-func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
+func (e *OrderDirection) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -289,7 +299,7 @@ func (e ThumbnailFilter) String() string {
 	return string(e)
 }
 
-func (e *ThumbnailFilter) UnmarshalGQL(v interface{}) error {
+func (e *ThumbnailFilter) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
