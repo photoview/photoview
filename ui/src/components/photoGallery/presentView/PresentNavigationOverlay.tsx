@@ -203,8 +203,12 @@ const PresentNavigationOverlay = ({
       }
     }, slideInterval*1000)
 
-    if (videoRef.current && slide && activeMedia.type === MediaType.Video) {
-      videoRef.current.play();
+    if (videoRef != null) {
+      if (videoRef.current != null) {
+    	if (videoRef.current && slide && activeMedia.type === MediaType.Video) {
+      	   videoRef.current.play();
+	}
+      }
     }
 
     // if video, register playEnd at 'ended'
