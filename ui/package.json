@@ -35,7 +35,7 @@
     "@types/styled-components": "^5.1.34",
     "@types/url-join": "^4.0.3",
     "@vitejs/plugin-react": "^1.3.2",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
     "blurhash": "^2.0.5",
     "classnames": "^2.5.1",
     "connect-history-api-fallback": "^2.0.0",
