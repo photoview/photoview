@@ -40,6 +40,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": null
+      },
       "merge_people_groups": {
         "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
         "destination_table": {

@@ -30,6 +30,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "All images within this face group will be merged into the selected face group."
+      },
       "merge_people_groups": {
         "description": "All images within this face group will be merged into the selected face group.",
         "destination_table": {
