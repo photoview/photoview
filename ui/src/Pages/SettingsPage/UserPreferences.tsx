@@ -31,9 +31,15 @@ const languagePreferences = [
   { key: 9, label: 'Русский', flag: 'ru', value: LanguageTranslation.Russian },
   {
     key: 10,
-    label: '繁體中文',
+    label: '繁體中文 (香港)',
     flag: 'zh-HK',
-    value: LanguageTranslation.TraditionalChinese,
+    value: LanguageTranslation.TraditionalChineseHK,
+  },
+  {
+    key: 16,
+    label: '繁體中文 (台灣)',
+    flag: 'zh-TW',
+    value: LanguageTranslation.TraditionalChineseTW,
   },
   {
     key: 11,
