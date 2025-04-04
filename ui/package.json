@@ -52,7 +52,7 @@
     "react-i18next": "^15.4.1",
     "react-router-dom": "^6.3.0",
     "react-swipeable": "^7.0.2",
-    "react-test-renderer": "^19.0.0",
+    "react-test-renderer": "^19.1.0",
     "styled-components": "^5.3.11",
     "subscriptions-transport-ws": "^0.11.0",
     "tailwind-override": "^0.6.1",
