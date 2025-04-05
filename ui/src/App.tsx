@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Helmet } from 'react-helmet'
 import Routes from './components/routes/Routes'
-import MessagesWithProvider from './components/messages/Messages'
+import Messages from './components/messages/Messages'
 import { useTranslation } from 'react-i18next'
 import { loadTranslations } from './localization'
 import { useLocation } from 'react-router'
@@ -30,7 +30,7 @@ const App = () => {
         />
       </Helmet>
       <Routes />
-      <MessagesWithProvider />
+      <Messages />
     </>
   )
 }

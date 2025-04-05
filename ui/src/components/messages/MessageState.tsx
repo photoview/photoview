@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { Message } from './SubscriptionsHook'
+import { globalMessageHandler } from './globalMessageHandler'
 
 type MessageContextType = {
   messages: Message[]
@@ -33,6 +34,11 @@ export const MessageProvider = ({ children }: MessageProviderProps) => {
   const removeKey = (key: string) => {
     setMessages((prevMessages) => prevMessages.filter((msg) => msg.key !== key))
   }
+
+  // Initialize global message handler with React state functions
+  useEffect(() => {
+    globalMessageHandler.initialize({ add, removeKey })
+  }, [])
 
   const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour in ms
   const MESSAGE_LIFETIME = 24 * 60 * 60 * 1000; // 24 hours in ms

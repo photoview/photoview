@@ -13,10 +13,9 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 
 import urlJoin from 'url-join'
 import { clearTokenCookie } from './helpers/authentication'
-import { useMessageState } from './components/messages/MessageState'
+import { globalMessageHandler } from './components/messages/globalMessageHandler'
 import { Message } from './components/messages/SubscriptionsHook'
 import { NotificationType } from './__generated__/globalTypes'
-import React from "react";
 
 export const API_ENDPOINT = import.meta.env.REACT_APP_API_ENDPOINT
   ? (import.meta.env.REACT_APP_API_ENDPOINT as string)
@@ -105,9 +104,8 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${
-          graphQLErrors?.length || 0
-        } errors from the server. You are being logged out in an attempt to recover.`,
+        content: `Received ${graphQLErrors?.length
+          || 0} errors from the server. You are being logged out in an attempt to recover.`,
       })
     }
   }
@@ -121,11 +119,9 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         ...msg,
       },
     }))
-    // Use the MessageProvider to ensure the context is available
-    const addMessages = (setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
-      setMessages((messages: Message[]) => [...messages, ...newMessages])
-    }
-    addMessages(useMessageState().setMessages)
+
+    // Use the global handler instead of useMessageState
+    newMessages.forEach(message => globalMessageHandler.add(message))
   }
 })
 
@@ -135,22 +131,22 @@ type PaginateCacheType = {
 }
 
 // Modified version of Apollo's offsetLimitPagination()
-const paginateCache = (keyArgs: string[]) =>
-  ({
-    keyArgs,
-    merge(existing, incoming, { args, fieldName }) {
-      const merged = existing ? existing.slice(0) : []
-      if (args?.paginate) {
-        const { offset = 0 } = args.paginate as { offset: number }
-        for (let i = 0; i < incoming.length; ++i) {
-          merged[offset + i] = incoming[i]
-        }
-      } else {
-        throw new Error(`Paginate argument is missing for query: ${fieldName}`)
+export const paginateCache = (keyArgs: string[]) =>
+({
+  keyArgs,
+  merge(existing, incoming, { args, fieldName }) {
+    const merged = existing ? existing.slice(0) : []
+    if (args?.paginate) {
+      const { offset = 0 } = args.paginate as { offset: number }
+      for (let i = 0; i < incoming.length; ++i) {
+        merged[offset + i] = incoming[i]
       }
-      return merged
-    },
-  } as PaginateCacheType)
+    } else {
+      throw new Error(`Paginate argument is missing for query: ${fieldName}`)
+    }
+    return merged
+  },
+} as PaginateCacheType)
 
 const memoryCache = new InMemoryCache({
   typePolicies: {

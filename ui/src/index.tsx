@@ -10,6 +10,7 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 
 import './index.css'
 import { SidebarProvider } from './components/sidebar/Sidebar'
+import { MessageProvider } from './components/messages/MessageState'
 
 updateTheme()
 setupLocalization()
@@ -17,11 +18,13 @@ setupLocalization()
 const Main = () => (
   <ApolloProvider client={client}>
     <Router basename={import.meta.env.BASE_URL}>
-      <SidebarProvider>
-        <App />
-      </SidebarProvider>
-    </Router>
-  </ApolloProvider>
+      <MessageProvider>
+        <SidebarProvider>
+          <App />
+        </SidebarProvider>
+      </MessageProvider>
+    </Router >
+  </ApolloProvider >
 )
 
 const root = createRoot(document.getElementById('root')!)

@@ -92,4 +92,5 @@ const MessagesWithProvider = () => (
   </MessageProvider>
 )
 
+export { Messages }
 export default MessagesWithProvider
