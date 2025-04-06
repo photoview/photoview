@@ -1,5 +1,4 @@
 import type mapboxgl from 'mapbox-gl'
-import type geojson from 'geojson'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import MapClusterMarker from '../../Pages/PlacesPage/MapClusterMarker'
@@ -44,14 +43,24 @@ const makeUpdateMarkers =
       // for every media on the screen, create an HTML marker for it (if we didn't yet),
       // and add it to the map if it's not there already
       for (const feature of features) {
-        const point = feature.geometry as geojson.Point
-        const coords = point.coordinates as [number, number]
+        if (!feature.geometry) {
+          console.warn('WARN: geojson feature had no geometry', { feature })
+          continue
+        }
+
+        // Type guard to ensure geometry is a Point
+        if (feature.geometry.type !== 'Point') {
+          console.warn('WARN: geojson feature geometry is not a Point', { feature })
+          continue
+        }
+
+        const coords = feature.geometry.coordinates as [number, number]
         const props = feature.properties as MediaMarker
         if (props == null) {
           console.warn('WARN: geojson feature had no properties', {
             feature,
             geometry: feature.geometry,
-            coordinates: (feature.geometry as geojson.Point)?.coordinates,
+            coordinates: feature.geometry.coordinates,
           })
           continue
         }
