@@ -29,7 +29,7 @@
     "@types/jest": "^29.5.14",
     "@types/mapbox-gl": "^3.4.0",
     "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.1",
+    "@types/react-dom": "^19.1.2",
     "@types/react-helmet": "^6.1.11",
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.34",
