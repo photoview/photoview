@@ -23,7 +23,7 @@
   "dependencies": {
     "@apollo/client": "~3.13.6",
     "@babel/preset-typescript": "^7.27.0",
-    "@headlessui/react": "^2.2.0",
+    "@headlessui/react": "^2.2.1",
     "@mapbox/mapbox-gl-language": "^1.0.0",
     "@types/geojson": "^7946.0.16",
     "@types/jest": "^29.5.14",
