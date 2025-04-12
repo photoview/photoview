@@ -5,7 +5,7 @@ import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
 
 import { useTranslation } from 'react-i18next'
-import { Helmet } from 'react-helmet'
+import { Helmet, HelmetProvider } from '@dr.pogodin/react-helmet'
 import { useNavigate } from 'react-router'
 import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
@@ -141,9 +141,11 @@ const LoginPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{t('title.login', 'Login')} - Photoview</title>
-      </Helmet>
+      <HelmetProvider>
+        <Helmet>
+          <title>{t('title.login', 'Login')} - Photoview</title>
+        </Helmet>
+      </HelmetProvider>
       <div>
         <LogoHeader />
         <LoginForm />

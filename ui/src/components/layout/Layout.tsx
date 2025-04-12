@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client'
 import React, { useContext } from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet, HelmetProvider } from '@dr.pogodin/react-helmet'
 import Header from '../header/Header'
 import { Authorized } from '../routes/AuthorizedRoute'
 import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
@@ -24,9 +24,11 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
 
   return (
     <>
-      <Helmet>
-        <title>{title ? `${title} - Photoview` : `Photoview`}</title>
-      </Helmet>
+      <HelmetProvider>
+        <Helmet>
+          <title>{title ? `${title} - Photoview` : `Photoview`}</title>
+        </Helmet>
+      </HelmetProvider>
       <div className="relative" {...otherProps} data-testid="Layout">
         <Header />
         <div className="">

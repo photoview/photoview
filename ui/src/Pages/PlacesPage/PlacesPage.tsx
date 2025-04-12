@@ -1,7 +1,7 @@
 import { gql, useQuery } from '@apollo/client'
 import type mapboxgl from 'mapbox-gl'
 import React, { useReducer } from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet, HelmetProvider } from '@dr.pogodin/react-helmet'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
@@ -79,10 +79,12 @@ const MapPage = () => {
 
   return (
     <Layout title="Places">
-      <Helmet>
-        {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
-        {/* <style type="text/css">{mapboxStyles}</style> */}
-      </Helmet>
+      <HelmetProvider>
+        <Helmet>
+          {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
+          {/* <style type="text/css">{mapboxStyles}</style> */}
+        </Helmet>
+      </HelmetProvider>
       <MapWrapper>{mapContainer}</MapWrapper>
       <MapPresentMarker
         map={mapboxMap}
