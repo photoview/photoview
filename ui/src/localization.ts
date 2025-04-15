@@ -6,6 +6,8 @@ import { initReactI18next, TFunction } from 'react-i18next'
 import { LanguageTranslation } from './__generated__/globalTypes'
 import { authToken } from './helpers/authentication'
 import { exhaustiveCheck, isNil } from './helpers/utils'
+import type mapboxgl from 'mapbox-gl'
+import MapboxLanguage from '@mapbox/mapbox-gl-language'
 
 export type TranslationFn = TFunction<'translation'>
 
@@ -37,6 +39,7 @@ const SITE_TRANSLATION = gql`
     }
   }
 `
+let map_language: LanguageTranslation | null
 
 export const loadTranslations = () => {
   const [loadLang, { data }] = useLazyQuery<siteTranslation>(SITE_TRANSLATION)
@@ -53,6 +56,8 @@ export const loadTranslations = () => {
       i18n.changeLanguage('en')
       return
     }
+
+    map_language = language
 
     switch (language) {
       case LanguageTranslation.Danish:
@@ -153,4 +158,56 @@ export const loadTranslations = () => {
 
     exhaustiveCheck(language)
   }, [data?.myUserPreferences.language])
+}
+
+export const SetMapLanguages = (map: mapboxgl.Map) => {
+  if (isNil(map_language)) {
+    map.addControl(new MapboxLanguage({ defaultLanguage: 'en' }))
+    return
+  }
+
+  switch (map_language) {
+    case LanguageTranslation.Danish:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'da' }))
+      return
+    case LanguageTranslation.English:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'en' }))
+      return
+    case LanguageTranslation.French:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'fr' }))
+      return
+    case LanguageTranslation.Swedish:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'sv' }))
+      return
+    case LanguageTranslation.Italian:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'it' }))
+      return
+    case LanguageTranslation.Spanish:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'es' }))
+      return
+    case LanguageTranslation.Polish:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'pl' }))
+      return
+    case LanguageTranslation.German:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'de' }))
+      return
+    case LanguageTranslation.Russian:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'ru' }))
+      return
+    case LanguageTranslation.TraditionalChinese:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'zh-Hant' }))
+      return
+    case LanguageTranslation.SimplifiedChinese:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'zh-Hans' }))
+      return
+    case LanguageTranslation.Portuguese:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'pt' }))
+      return
+    case LanguageTranslation.Basque:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'en' }))
+      return
+    case LanguageTranslation.Turkish:
+      map.addControl(new MapboxLanguage({ defaultLanguage: 'tr' }))
+      return
+  }
 }
