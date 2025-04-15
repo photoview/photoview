@@ -10,6 +10,7 @@ import {
 import { MockedProvider } from '@apollo/client/testing'
 import { MemoryRouter } from 'react-router'
 import { myFaces_myFaceGroups } from './__generated__/myFaces'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 vi.mock('../../hooks/useScrollPagination')
 
@@ -70,13 +71,10 @@ describe('PeoplePage component', () => {
   ]
 
   test('people page', async () => {
-    render(
-      <MemoryRouter initialEntries={['/people']}>
-        <MockedProvider mocks={graphqlMocks} addTypename={false}>
-          <PeoplePage />
-        </MockedProvider>
-      </MemoryRouter>
-    )
+    renderWithProviders(<PeoplePage />, {
+      mocks: graphqlMocks,
+      initialEntries: ['/people']
+    })
 
     expect(screen.getByTestId('Layout')).toBeInTheDocument()
     expect(screen.getByText('Recognize unlabeled faces')).toBeInTheDocument()
@@ -138,14 +136,13 @@ describe('FaceDetails component', () => {
       imageFaces: [],
     }
 
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <FaceDetails
-          editLabel={false}
-          setEditLabel={vi.fn()}
-          group={emptyFaceGroup}
-        />
-      </MockedProvider>
+    renderWithProviders(
+      <FaceDetails
+        editLabel={false}
+        setEditLabel={vi.fn()}
+        group={emptyFaceGroup}
+      />,
+      { mocks: [] }
     )
 
     expect(screen.getByText('Unlabeled')).toBeInTheDocument()

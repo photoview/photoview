@@ -1,6 +1,7 @@
 import React from 'react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { MockedProvider } from '@apollo/client/testing'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 import {
   render,
@@ -84,23 +85,18 @@ describe('load correct share page, based on graphql query', () => {
       },
     }
 
-    render(
-      <MockedProvider
-        mocks={[...graphqlMocks, mediaPageMock]}
-        addTypename={false}
-        defaultOptions={{
-          // disable cache, required to make fragments work
+    renderWithProviders(<TokenRoute />, {
+      mocks: [...graphqlMocks, mediaPageMock],
+      initialEntries: historyMock,
+      path: "/share/:token/*",
+      route: <TokenRoute />,
+      apolloOptions: {
+        defaultOptions: {
           watchQuery: { fetchPolicy: 'no-cache' },
-          query: { fetchPolicy: 'no-cache' },
-        }}
-      >
-        <MemoryRouter initialEntries={historyMock}>
-          <Routes>
-            <Route path="/share/:token/*" element={<TokenRoute />} />
-          </Routes>
-        </MemoryRouter>
-      </MockedProvider>
-    )
+          query: { fetchPolicy: 'no-cache' }
+        }
+      }
+    })
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
 

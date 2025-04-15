@@ -1,5 +1,5 @@
 import { notificationSubscription } from './__generated__/notificationSubscription'
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { NotificationType } from '../../__generated__/globalTypes'
@@ -25,6 +25,7 @@ export interface Message {
   key: string
   type: NotificationType
   timeout?: number
+  timestamp?: number /* milliseconds since epoch */
   onDismiss?: () => void
   props: {
     header: string
@@ -40,7 +41,7 @@ type SubscriptionHookProps = {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 }
 
-const SubscriptionsHook = ({
+export const SubscriptionsHook = ({
   messages,
   setMessages,
 }: SubscriptionHookProps) => {
@@ -57,7 +58,7 @@ const SubscriptionsHook = ({
       setMessages(state => [
         ...state,
         {
-          key: Math.random().toString(26),
+          key: `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
           type: NotificationType.Message,
           props: {
             header: 'Network error',
