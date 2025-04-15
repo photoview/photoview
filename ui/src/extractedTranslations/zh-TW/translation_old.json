@@ -1,0 +1,85 @@
+{
+  "albums_page": {
+    "title": "相簿"
+  },
+  "general": {
+    "action": {
+      "delete": "刪除",
+      "more": "更多"
+    },
+    "loading": {
+      "media": "正在載入媒體",
+      "timeline": "正在載入時間軸"
+    }
+  },
+  "header": {
+    "search": {
+      "result_type": {
+        "photos": "相片"
+      }
+    }
+  },
+  "people_page": {
+    "face_group": {
+      "action": {
+        "add_label": "新增標籤",
+        "change_label": "修改標籤",
+        "detach_face": "分離人臉",
+        "merge_face": "合併人臉",
+        "move_faces": "移動人臉"
+      }
+    },
+    "modal": {
+      "merge_people_groups": {
+        "description": "此人臉群組中的所有圖片都會合併至所選的人臉群組。",
+        "destination_table": {
+          "title": "選擇目標人臉"
+        },
+        "title": "合併人臉群組"
+      }
+    },
+    "table": {
+      "select_face_group": {
+        "search_faces_placeholder": "搜尋人臉..."
+      },
+      "select_image_faces": {
+        "search_images_placeholder": "搜尋圖片..."
+      }
+    }
+  },
+  "settings": {
+    "users": {
+      "table": {
+        "column_names": {
+          "admin": "管理員"
+        }
+      }
+    }
+  },
+  "sidebar": {
+    "album": {
+      "cover_photo": "相簿封面",
+      "title": "相簿選項"
+    },
+    "download": {
+      "filesize": {
+        "byte": "{{count}} 位元組",
+        "byte_plural": "{{count}} 位元組",
+        "giga_byte": "{{count}} GB",
+        "giga_byte_plural": "{{count}} GB",
+        "kilo_byte": "{{count}} KB",
+        "kilo_byte_plural": "{{count}} KB",
+        "mega_byte": "{{count}} MB",
+        "mega_byte_plural": "{{count}} MB",
+        "tera_byte": "{{count}} TB",
+        "tera_byte_plural": "{{count}} TB"
+      }
+    },
+    "media": {
+      "album": "相簿"
+    },
+    "sharing": {
+      "table_header": "公開分享"
+    }
+  }
+}

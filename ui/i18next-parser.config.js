@@ -19,6 +19,7 @@ module.exports = {
     'sv',
     'zh-CN',
     'zh-HK',
+    'zh-TW',
   ],
   input: 'src/**/*.{js,ts,jsx,tsx}',
   output: 'src/extractedTranslations/$LOCALE/$NAMESPACE.json',
