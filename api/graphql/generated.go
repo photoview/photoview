@@ -387,7 +387,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 	return parsedSchema
 }
 
-func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
+func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
@@ -411,7 +411,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Album_media_args(context.TODO(), rawArgs)
+		args, err := ec.field_Album_media_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -451,7 +451,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Album_subAlbums_args(context.TODO(), rawArgs)
+		args, err := ec.field_Album_subAlbums_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -526,7 +526,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_FaceGroup_imageFaces_args(context.TODO(), rawArgs)
+		args, err := ec.field_FaceGroup_imageFaces_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -853,7 +853,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_authorizeUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_authorizeUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -865,7 +865,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_changeUserPreferences_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_changeUserPreferences_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -877,7 +877,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_combineFaceGroups_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_combineFaceGroups_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -889,7 +889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_createUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -901,7 +901,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteShareToken_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteShareToken_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -913,7 +913,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -925,7 +925,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_detachImageFaces_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_detachImageFaces_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -937,7 +937,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_favoriteMedia_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_favoriteMedia_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -949,7 +949,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_initialSetupWizard_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_initialSetupWizard_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -961,7 +961,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_moveImageFaces_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_moveImageFaces_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -973,7 +973,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_protectShareToken_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_protectShareToken_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -992,7 +992,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_resetAlbumCover_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_resetAlbumCover_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1011,7 +1011,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_scanUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_scanUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1023,7 +1023,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_setAlbumCover_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setAlbumCover_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1035,7 +1035,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_setFaceGroupLabel_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setFaceGroupLabel_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1047,7 +1047,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_setPeriodicScanInterval_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setPeriodicScanInterval_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1059,7 +1059,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_setScannerConcurrentWorkers_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setScannerConcurrentWorkers_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1071,7 +1071,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_setThumbnailDownsampleMethod_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_setThumbnailDownsampleMethod_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1083,7 +1083,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_shareAlbum_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_shareAlbum_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1095,7 +1095,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_shareMedia_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_shareMedia_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1107,7 +1107,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1119,7 +1119,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_userAddRootPath_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_userAddRootPath_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1131,7 +1131,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_userRemoveRootAlbum_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_userRemoveRootAlbum_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1199,7 +1199,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_album_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_album_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1211,7 +1211,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_faceGroup_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_faceGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1230,7 +1230,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_media_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_media_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1242,7 +1242,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_mediaList_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_mediaList_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1254,7 +1254,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_myAlbums_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_myAlbums_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1266,7 +1266,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_myFaceGroups_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_myFaceGroups_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1278,7 +1278,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_myMedia_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_myMedia_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1297,7 +1297,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_myTimeline_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_myTimeline_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1323,7 +1323,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_search_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1335,7 +1335,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_shareToken_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_shareToken_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1347,7 +1347,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_shareTokenValidatePassword_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_shareTokenValidatePassword_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -1366,7 +1366,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_user_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_user_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
