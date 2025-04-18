@@ -40,7 +40,7 @@
     "connect-history-api-fallback": "^2.0.0",
     "copy-to-clipboard": "^3.3.3",
     "husky": "^9.1.7",
-    "i18next": "^24.2.3",
+    "i18next": "^25.0.0",
     "mapbox-gl": "~3.4.0",
     "postcss": "^8.5.3",
     "prettier": "^2.8.8",
