@@ -33,6 +33,13 @@ const ALBUM_QUERY = gql`
 let refetchNeededAll = false
 let refetchNeededFavorites = false
 
+/**
+ * Displays an album page with a media gallery, supporting filtering, ordering, and infinite scroll pagination.
+ *
+ * Fetches album data by ID from the URL, allows toggling between all media and favorites, and manages pagination and ordering of media items. Handles loading and error states, and updates the page title dynamically based on album data.
+ *
+ * @throws {Error} If the album ID parameter is missing from the URL.
+ */
 function AlbumPage() {
   const { id: albumId } = useParams()
   if (isNil(albumId))

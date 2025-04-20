@@ -51,6 +51,12 @@ const link = split(
   httpLink
 )
 
+/**
+ * Extracts an array of server error objects from a network error if available.
+ *
+ * @param networkError - The network error potentially containing server error details.
+ * @returns An array of error objects from the server, or an empty array if none are found.
+ */
 function getServerErrorMessages(networkError: Error | undefined): Error[] {
   if (!networkError) return [];
   if (!('result' in networkError)) return [];

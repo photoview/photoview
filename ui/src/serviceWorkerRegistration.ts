@@ -25,6 +25,13 @@ type Config = {
   onUpdate?: (registration: ServiceWorkerRegistration) => void
 }
 
+/**
+ * Registers a service worker to enable offline capabilities and faster loading in production environments.
+ *
+ * If running on localhost, validates the service worker before registration and provides additional warnings for developers. In production, registers the service worker directly if supported and the public URL matches the current origin.
+ *
+ * @param config - Optional callbacks for service worker registration success or update events.
+ */
 export function register(config?: Config) {
   if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
@@ -57,6 +64,14 @@ export function register(config?: Config) {
   }
 }
 
+/**
+ * Registers a service worker at the specified URL and manages update and success callbacks.
+ *
+ * If a new service worker is found and installed, invokes the {@link Config.onUpdate} callback if a previous service worker controls the page, or {@link Config.onSuccess} if this is the initial installation.
+ *
+ * @param swUrl - The URL of the service worker script to register.
+ * @param config - Optional configuration with callbacks for update and success events.
+ */
 function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
     .register(swUrl)
@@ -90,6 +105,14 @@ function registerValidSW(swUrl: string, config?: Config) {
     })
 }
 
+/**
+ * Validates the existence and type of the service worker script at the specified URL.
+ *
+ * If the script is missing or not JavaScript, unregisters any existing service worker and reloads the page. Otherwise, proceeds to register the service worker. Logs a warning if the network is unavailable.
+ *
+ * @param swUrl - The URL of the service worker script to validate.
+ * @param config - Optional configuration with callbacks for registration events.
+ */
 function checkValidServiceWorker(swUrl: string, config?: Config) {
   // Check if the service worker can be found. If it can't reload the page.
   fetch(swUrl, {
