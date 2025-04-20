@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react'
 
-import React from 'react'
 import { MediaType } from '../../__generated__/globalTypes'
 import MediaGallery from './MediaGallery'
 import { MediaGalleryState } from './mediaGalleryReducer'

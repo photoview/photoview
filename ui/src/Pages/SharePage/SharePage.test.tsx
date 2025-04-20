@@ -1,9 +1,36 @@
 import { vi } from 'vitest'
 
-// Existing mock
 vi.mock('../../hooks/useScrollPagination')
+vi.mock('../../Pages/SharePage/MediaSharePage', () => {
+  const originalModule = vi.importActual('../../Pages/SharePage/MediaSharePage')
+  // Define interface for the props
+  interface MediaViewProps {
+    media?: {
+      id?: string;
+      title?: string;
+      type?: string;
+      highRes?: {
+        url?: string;
+      };
+    };
+  }
+  const MockMediaView = (props: MediaViewProps) =>
+    <div data-testid="MediaSharePage">{props.media?.title}</div>
+  const MockMediaSharePage = (props: MediaViewProps) => {
+    return (
+      <div data-testid="Layout">
+        <MockMediaView {...props} />
+      </div>
+    )
+  }
+  return {
+    __esModule: true,
+    ...originalModule,
+    MediaView: MockMediaView,
+    default: MockMediaSharePage,
+  }
+})
 
-import React from 'react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { MockedProvider } from '@apollo/client/testing'
 import { renderWithProviders } from '../../helpers/testUtils'
@@ -165,23 +192,19 @@ describe('load correct share page, based on graphql query', () => {
       },
     ]
 
-    render(
-      <MockedProvider
-        mocks={[...graphqlMocks, ...albumPageMock]}
-        addTypename={false}
-        defaultOptions={{
-          // disable cache, required to make fragments work
+    renderWithProviders(<TokenRoute />, {
+      mocks: [...graphqlMocks, ...albumPageMock],
+      initialEntries: historyMock,
+      path: "/share/:token/*",
+      route: <TokenRoute />,
+      apolloOptions: {
+        addTypename: false,
+        defaultOptions: {
           watchQuery: { fetchPolicy: 'no-cache' },
-          query: { fetchPolicy: 'no-cache' },
-        }}
-      >
-        <MemoryRouter initialEntries={historyMock}>
-          <Routes>
-            <Route path="/share/:token/*" element={<TokenRoute />} />
-          </Routes>
-        </MemoryRouter>
-      </MockedProvider>
-    )
+          query: { fetchPolicy: 'no-cache' }
+        }
+      }
+    })
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
     await waitForElementToBeRemoved(() => screen.getByText('Loading...'))

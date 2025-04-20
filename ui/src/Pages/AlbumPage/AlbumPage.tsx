@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { useQuery, gql } from '@apollo/client'
 import AlbumGallery, {
   ALBUM_GALLERY_FRAGMENT,
@@ -44,8 +44,10 @@ function AlbumPage() {
   const orderParams = useOrderingParams(urlParams)
 
   const onlyFavorites = urlParams.getParam('favorites') == '1' ? true : false
-  const setOnlyFavorites = (favorites: boolean) =>
-    urlParams.setParam('favorites', favorites ? '1' : '0')
+  const setOnlyFavorites = useCallback((favorites: boolean) =>
+    urlParams.setParam('favorites', favorites ? '1' : '0'),
+    [urlParams]
+  )
 
   const { loading, error, data, refetch, fetchMore } = useQuery<
     albumQuery,
@@ -86,8 +88,7 @@ function AlbumPage() {
       } else {
         setOnlyFavorites(onlyFavorites)
       }
-    },
-    [setOnlyFavorites, refetch]
+    }, [setOnlyFavorites, refetch, albumId]
   )
 
   if (error) return <div>Error</div>
@@ -95,7 +96,9 @@ function AlbumPage() {
   return (
     <Layout
       title={
-        data ? data.album.title : t('title.loading_album', 'Loading album')
+        !data ? t('title.loading_album', 'Loading album') :
+          !data.album ? t('title.not_found', 'Not found') :
+            data.album.title
       }
     >
       <AlbumGallery

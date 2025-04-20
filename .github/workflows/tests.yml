@@ -216,12 +216,10 @@ jobs:
             });
 
             const botComment = comments.data.find(
-              comment => comment.user.login === 'github-actions[bot]'
-              && comment.body.includes('ESLint')
+              comment => comment.body.includes('UI: ESLint issues:')
             );
 
             if (ESLintResults) {
-
               output += '#### UI: ESLint issues:\n';
               output += 'ESLint detected issues in the UI code.\n';
               output += '\n[ESLint execution report](' + ESLintResults + ')\n';
@@ -230,33 +228,25 @@ jobs:
               output += 'UI testing workflow execution time.';
               output += '\nAfter that time you need to go to the ESLint execution step in the ';
               output += 'Actions tab to see the same results.';
-
-              if (botComment) {
-                await github.rest.issues.updateComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              }
-
             } else {
-
-              if (botComment) {
-                await github.rest.issues.deleteComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo
-                });
-              }
+              output += '#### UI: ESLint issues:\n';
+              output += 'ESLint did not return any results.\n';
+              output += 'This means that probably the ESLint job failed. Please check it.\n';
             }
+
+            if (botComment) {
+              await github.rest.issues.deleteComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

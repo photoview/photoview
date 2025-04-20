@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { useForm } from 'react-hook-form'
 import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
@@ -47,10 +47,8 @@ const LoginForm = () => {
     formState: { errors: formErrors },
   } = useForm<LoginInputs>()
 
-  const [authorize, { loading, data }] = useMutation<
-    Authorize,
-    AuthorizeVariables
-  >(authorizeMutation, {
+  const [authorize, { loading, data }] = useMutation<Authorize, AuthorizeVariables>(
+    authorizeMutation, {
     onCompleted: data => {
       const { success, token } = data.authorizeUser
 
@@ -76,7 +74,7 @@ const LoginForm = () => {
     <form
       className="mx-auto max-w-[500px] px-4"
       onSubmit={handleSubmit(onSubmit)}
-      // loading={loading || (data && data.authorizeUser.success)}
+    // loading={loading || (data && data.authorizeUser.success)}
     >
       <TextField
         sizeVariant="big"
@@ -85,8 +83,8 @@ const LoginForm = () => {
         label={t('login_page.field.username', 'Username')}
         {...register('username', { required: true })}
         error={
-          formErrors.username?.type == 'required'
-            ? 'Please enter a username'
+          formErrors.username?.type === 'required'
+            ? t('login_page.field.username_error', 'Please enter a username')
             : undefined
         }
       />
@@ -121,6 +119,7 @@ type LoginInputs = {
 const LoginPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const token = authToken()
 
   const { data: initialSetupData } = useQuery<CheckInitialSetup>(
     INITIAL_SETUP_QUERY,
@@ -128,14 +127,14 @@ const LoginPage = () => {
   )
 
   useEffect(() => {
-    if (authToken()) navigate('/')
-  }, [])
+    if (token) navigate('/')
+  }, [token, navigate])
 
   useEffect(() => {
     if (initialSetupData?.siteInfo?.initialSetup) navigate('/initialSetup')
-  }, [initialSetupData?.siteInfo?.initialSetup])
+  }, [initialSetupData?.siteInfo?.initialSetup, navigate])
 
-  if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
+  if (token || initialSetupData?.siteInfo?.initialSetup) {
     return null
   }
 

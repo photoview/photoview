@@ -80,14 +80,14 @@ const AlbumGallery = React.forwardRef(
       openPresentMode: event => {
         dispatchMedia({
           type: 'openPresentMode',
-          activeIndex: event.state.activeIndex,
+          activeIndex: event?.state?.activeIndex,
         })
       },
     })
 
     let subAlbumElement = null
     if (album) {
-      if (album.subAlbums.length > 0) {
+      if (album?.subAlbums?.length > 0) {
         subAlbumElement = (
           <AlbumBoxes
             albums={album.subAlbums}

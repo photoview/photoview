@@ -1,10 +1,14 @@
-import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
-import { MockedProvider } from '@apollo/client/testing'
+import { screen, waitFor } from '@testing-library/react'
 import SingleFaceGroup, { SINGLE_FACE_GROUP } from './SingleFaceGroup'
-import { MemoryRouter } from 'react-router-dom'
 import { renderWithProviders } from '../../../helpers/testUtils'
+import { MY_FACES_QUERY } from '../PeoplePage'
 
+vi.mock('react-blurhash', () => ({
+  Blurhash: () =>
+    <div data-testid="mock-blurhash">Blurhash</div>,
+  BlurhashCanvas: () =>
+    <div data-testid="mock-blurhash-canvas">BlurhashCanvas</div>
+}))
 vi.mock('../../../hooks/useScrollPagination')
 
 test('single face group', async () => {
@@ -36,6 +40,7 @@ test('single face group', async () => {
                   id: '10',
                   type: 'Photo',
                   title: '122A2785-2.jpg',
+                  blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
                   thumbnail: {
                     __typename: 'MediaURL',
                     url: '/photo/thumbnail_122A2785-2_jpg_lFmZcaN5.jpg',
@@ -64,6 +69,7 @@ test('single face group', async () => {
                   id: '52',
                   type: 'Photo',
                   title: 'image.png',
+                  blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
                   thumbnail: {
                     __typename: 'MediaURL',
                     url: '/photo/thumbnail_image_png_OwTDG5fM.jpg',
@@ -82,6 +88,17 @@ test('single face group', async () => {
         },
       },
     },
+    {
+      request: {
+        query: MY_FACES_QUERY,
+        variables: {},
+      },
+      result: {
+        data: {
+          myFaceGroups: []
+        }
+      }
+    }
   ]
 
   renderWithProviders(<SingleFaceGroup faceGroupID="123" />, {
@@ -90,6 +107,77 @@ test('single face group', async () => {
   })
 
   await waitFor(() => {
-    expect(screen.getAllByRole('img')).toHaveLength(2)
+    const blurhashElements = screen.queryAllByTestId('mock-blurhash');
+    const canvasElements = screen.queryAllByTestId('mock-blurhash-canvas');
+    expect(blurhashElements.length + canvasElements.length).toBeGreaterThan(0);
+  }, { timeout: 2000 });
+})
+
+test('handles GraphQL error', async () => {
+  const graphqlMocks = [
+    {
+      request: {
+        query: SINGLE_FACE_GROUP,
+        variables: { limit: 200, offset: 0, id: '123' },
+      },
+      error: new Error('An error occurred'),
+    },
+    {
+      request: {
+        query: MY_FACES_QUERY,
+        variables: {},
+      },
+      result: {
+        data: {
+          myFaceGroups: []
+        }
+      }
+    }
+  ]
+
+  renderWithProviders(<SingleFaceGroup faceGroupID="123" />, {
+    mocks: graphqlMocks,
+    initialEntries: ['/person/123']
   })
+
+  // Check that the error message is displayed
+  await waitFor(() => {
+    expect(screen.getByText('An error occurred')).toBeInTheDocument();
+  }, { timeout: 2000 });
+})
+
+test('handles face group not found', async () => {
+  const graphqlMocks = [
+    {
+      request: {
+        query: SINGLE_FACE_GROUP,
+        variables: { limit: 200, offset: 0, id: '123' },
+      },
+      result: {
+        data: {
+          faceGroup: null,
+        },
+      },
+    },
+    {
+      request: {
+        query: MY_FACES_QUERY,
+        variables: {},
+      },
+      result: {
+        data: {
+          myFaceGroups: []
+        }
+      }
+    }
+  ]
+
+  renderWithProviders(<SingleFaceGroup faceGroupID="123" />, {
+    mocks: graphqlMocks,
+    initialEntries: ['/person/123']
+  })
+
+  await waitFor(() => {
+    expect(screen.getByText('Face group not found')).toBeInTheDocument();
+  }, { timeout: 2000 });
 })

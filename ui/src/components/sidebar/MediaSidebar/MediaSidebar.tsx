@@ -1,5 +1,5 @@
 import { gql, useLazyQuery } from '@apollo/client'
-import React, { useEffect, useContext } from 'react'
+import { useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -163,7 +163,7 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
-	const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
@@ -183,7 +183,6 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
   let albumPath = null
   const mediaAlbum = media.album
   if (!isNil(mediaAlbum)) {
-    console.log('PATH reversed', mediaAlbum.path ?? [])
     const pathElms = [
       ...[...(mediaAlbum.path ?? [])].reverse(),
       mediaAlbum,
@@ -192,7 +191,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         <Link
           className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
-					onClick={() => updateSidebar(null)}
+          onClick={() => updateSidebar(null)}
         >
           {album.title}
         </Link>
@@ -275,6 +274,7 @@ type MediaSidebarType = {
 }
 
 const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
+  const { t } = useTranslation()
   const [loadMedia, { loading, error, data }] = useLazyQuery<
     sidebarMediaQuery,
     sidebarMediaQueryVariables
@@ -288,7 +288,7 @@ const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
         },
       })
     }
-  }, [media])
+  }, [media, loadMedia])
 
   if (!media) return null
 
@@ -296,7 +296,11 @@ const MediaSidebar = ({ media, hidePreview }: MediaSidebarType) => {
     return <SidebarContent media={media} hidePreview={hidePreview} />
   }
 
-  if (error) return <div>{error.message}</div>
+  if (error) return (
+    <div className="p-4 text-red-600 dark:text-red-400">
+      {t('sidebar.error', 'Error loading media details: {{message}}', { message: error.message })}
+    </div>
+  )
 
   if (loading || data == null) {
     return <SidebarContent media={media} hidePreview={hidePreview} />

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
 import {
@@ -31,17 +31,19 @@ const MediaView = ({ media }: MediaViewProps) => {
   const { updateSidebar } = useContext(SidebarContext)
 
   useEffect(() => {
-    updateSidebar(<MediaSidebar media={media} hidePreview />)
-  }, [media])
+    if (typeof updateSidebar === 'function') {
+      updateSidebar(<MediaSidebar media={media} hidePreview />)
+    }
+  }, [media, updateSidebar])
 
   switch (media.type) {
     case MediaType.Photo:
       return <DisplayPhoto src={media.highRes?.url} />
     case MediaType.Video:
       return <DisplayVideo media={media} />
+    default:
+      return exhaustiveCheck(media.type)
   }
-
-  exhaustiveCheck(media.type)
 }
 
 type MediaSharePageType = {

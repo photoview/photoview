@@ -128,7 +128,9 @@ jobs:
               repo: context.repo.repo
             });
 
-            const botComment = comments.data.find(comment => comment.user.login === 'github-actions[bot]' && comment.body.includes('Anchore'));
+            const botComment = comments.data.find(
+              comment => comment.body.includes('Anchore Grype scan results:')
+            );
 
             output += '#### Anchore Grype scan results:\n';
             output += 'Anchore Grype detected vulnerabilities in project dependencies, for which fixed versions are available.\n';
@@ -136,31 +138,24 @@ jobs:
 
             if (scanResults) {
               output += '\n' + scanResults + '\n';
-
-              if (botComment) {
-                await github.rest.issues.updateComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              }
             } else {
-              if (botComment) {
-                await github.rest.issues.deleteComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo
-                });
-              }
+              output += '\nNo vulnerabilities detected.\n';
+              output += 'This might also mean that the scan job failed. Please check it.\n';
             }
+
+            if (botComment) {
+              await github.rest.issues.deleteComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
 
   hadolint:
     name: Hadolint Dockerfile
@@ -184,6 +179,7 @@ jobs:
         uses: actions/github-script@v7
         if: ${{ ( steps.hadolint.conclusion == 'success' || steps.hadolint.conclusion == 'failure' ) && github.event_name == 'pull_request' }}
         with:
+          github-token: ${{ secrets.COMMENT_TOKEN }}
           script: |
             let hadolintResults = process.env.HADOLINT_RESULTS;
             let output = '';
@@ -195,44 +191,34 @@ jobs:
             });
 
             const botComment = comments.data.find(
-              comment => comment.user.login === 'github-actions[bot]'
-              && comment.body.includes('Hadolint')
+              comment => comment.body.includes('Hadolint issues:')
             );
 
             if (hadolintResults) {
-
               output += '#### Hadolint issues:\n';
               output += 'Hadolint detected issues during execution.\n';
               output += '\n```\n' + hadolintResults + '\n```\n';
               output += '\nFind more info about detected issues and recommendations for fixes in the ';
               output += '[Rules table](https://github.com/hadolint/hadolint?tab=readme-ov-file#rules).';
-
-              if (botComment) {
-                await github.rest.issues.updateComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: output
-                });
-              }
-
             } else {
-
-              if (botComment) {
-                await github.rest.issues.deleteComment({
-                  comment_id: botComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo
-                });
-              }
+              output += '#### Hadolint issues:\n';
+              output += 'Hadolint did not find any issues.\n';
             }
+
+            if (botComment) {
+              await github.rest.issues.deleteComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+            }
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
 
       - name: Generate report
         uses: hadolint/hadolint-action@v3.1.0

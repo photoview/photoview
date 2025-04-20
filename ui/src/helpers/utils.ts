@@ -39,7 +39,7 @@ export function isNil(value: unknown): value is undefined | null {
   return value === undefined || value === null
 }
 
-export function exhaustiveCheck(value: never) {
+export function exhaustiveCheck(value: never): never {
   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   throw new Error(`Exhaustive check failed with value: ${value}`)
 }

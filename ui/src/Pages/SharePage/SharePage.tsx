@@ -1,4 +1,3 @@
-import React from 'react'
 import { useQuery, gql } from '@apollo/client'
 import { Route, Routes, useParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -86,7 +85,7 @@ export const VALIDATE_TOKEN_PASSWORD_QUERY = gql`
   }
 `
 
-const tokenFromParams = () => {
+const useTokenFromParams = () => {
   const { token } = useParams()
   if (isNil(token) || token.trim() === '') throw new Error('Expected `token` param to be defined')
   return token
@@ -95,7 +94,7 @@ const tokenFromParams = () => {
 const AuthorizedTokenRoute = () => {
   const { t } = useTranslation()
 
-  const token = tokenFromParams()
+  const token = useTokenFromParams()
   const password = getSharePassword(token)
 
   const { loading, error, data } = useQuery<
@@ -153,7 +152,7 @@ export const MessageContainer = styled.div`
 
 export const TokenRoute = () => {
   const { t } = useTranslation()
-  const token = tokenFromParams()
+  const token = useTokenFromParams()
 
   const { loading, error, data, refetch } = useQuery<
     ShareTokenValidatePassword,

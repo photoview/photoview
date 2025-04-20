@@ -1,5 +1,5 @@
 import { gql, useQuery } from '@apollo/client'
-import React, { useEffect, useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 import PaginateLoader from '../../../components/PaginateLoader'
 import MediaGallery from '../../../components/photoGallery/MediaGallery'
@@ -10,6 +10,7 @@ import {
   singleFaceGroup,
   singleFaceGroupVariables,
 } from './__generated__/singleFaceGroup'
+import { MediaGalleryFields } from '../../../components/photoGallery/__generated__/MediaGalleryFields'
 
 export const SINGLE_FACE_GROUP = gql`
   query singleFaceGroup($id: ID!, $limit: Int!, $offset: Int!) {
@@ -77,7 +78,10 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
     })
 
   useEffect(() => {
-    const media = data?.faceGroup.imageFaces.map(x => x.media) || []
+    const media = (data?.faceGroup?.imageFaces?.map(x => ({
+      ...x.media,
+      videoWeb: null
+    })) || []) as MediaGalleryFields[]
     dispatchMedia({ type: 'replaceMedia', media })
   }, [data])
 
@@ -85,6 +89,10 @@ const SingleFaceGroup = ({ faceGroupID }: SingleFaceGroupProps) => {
 
   if (error) {
     return <div>{error.message}</div>
+  }
+
+  if (data && !data.faceGroup) {
+    return <div>{t('general.notFound', 'Face group not found')}</div>
   }
 
   return (

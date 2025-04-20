@@ -1,15 +1,17 @@
-import React from 'react' //React must be in scope when using JSX.
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, act } from '@testing-library/react'
 import LoginPage from './LoginPage'
 import * as authentication from '../../helpers/authentication'
 import { createMemoryHistory } from 'history'
 import { mockInitialSetupGraphql } from './loginTestHelpers'
 import { renderWithProviders } from '../../helpers/testUtils'
-import { act } from '@testing-library/react'
 
 vi.mock('../../helpers/authentication.ts')
 
 const authToken = vi.mocked(authentication.authToken)
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('Login page redirects', () => {
   test('Auth token redirect', async () => {
@@ -20,7 +22,7 @@ describe('Login page redirects', () => {
 
     await act(async () => {
       await renderWithProviders(<LoginPage />, {
-        mocks: [],
+        mocks: [mockInitialSetupGraphql(false)],
         history,
       })
     })
@@ -65,6 +67,6 @@ describe('Login page', () => {
 
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Sign in')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 })
