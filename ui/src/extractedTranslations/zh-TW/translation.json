@@ -1,0 +1,359 @@
+{
+  "album_filter": {
+    "only_favorites": "僅顯示我的最愛",
+    "sort": "排序",
+    "sort_by": "排序方式",
+    "sorting_options": {
+      "date_imported": "匯入日期",
+      "date_shot": "拍攝日期",
+      "title": "標題",
+      "type": "類型"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "新增",
+      "cancel": "取消",
+      "remove": "移除",
+      "save": "儲存"
+    },
+    "loading": {
+      "album": "正在載入相簿",
+      "default": "載入中...",
+      "page": "正在載入頁面",
+      "paginate": {
+        "faces": "載入更多人物中",
+        "media": "載入更多媒體中"
+      },
+      "shares": "載入分享項目中..."
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "正在載入搜尋結果...",
+      "no_results": "找不到符合的結果",
+      "placeholder": "搜尋",
+      "result_type": {
+        "albums": "相簿",
+        "media": "媒體"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "密碼",
+      "submit": "登入",
+      "username": "使用者名稱"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "相片路徑",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "設定 Photoview"
+      },
+      "title": "初始設定"
+    },
+    "welcome": "歡迎使用 Photoview"
+  },
+  "meta": {
+    "description": "適合個人伺服器使用的簡潔易用相簿系統"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "變更標籤",
+      "detach_images": "移除人臉",
+      "merge_people": "合併人臉",
+      "move_faces": "移動人臉"
+    },
+    "face_group": {
+      "label_placeholder": "標籤",
+      "unlabeled": "未標示",
+      "unlabeled_person": "未標示的人物"
+    },
+    "modal": {
+      "action": {
+        "merge": "合併"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "移除人臉",
+          "select_images": "選擇要移除的相片"
+        },
+        "description": "將選取的相片從此人臉群組中移除，並移至新的人臉群組",
+        "title": "移除相片中的人臉"
+      },
+      "merge_face_groups": {
+        "description": "此人臉群組中的所有相片將會合併至選取的人臉群組。",
+        "destination_table": {
+          "title": "選擇目標人臉"
+        },
+        "title": "合併人臉群組"
+      },
+      "move_image_faces": {
+        "description": "將此人臉群組中選取的相片移至其他人臉群組",
+        "destination_face_group_table": {
+          "move_action": "移動相片中的人臉",
+          "title": "選擇目標人臉群組"
+        },
+        "image_select_table": {
+          "next_action": "下一步",
+          "title": "選擇要移動的相片"
+        },
+        "title": "移動相片中的人臉"
+      }
+    },
+    "recognize_unlabeled_faces_button": "辨識未標示的人臉",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "搜尋人臉..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "搜尋相片..."
+    }
+  },
+  "photos_page": {
+    "title": "時間軸"
+  },
+  "places_page": {
+    "title": "地點"
+  },
+  "routes": {
+    "page_not_found": "找不到頁面"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "允許同時執行的掃描工作數量上限",
+      "title": "掃描器平行工作數"
+    },
+    "logout": "登出",
+    "periodic_scanner": {
+      "checkbox_label": "啟用定期掃描",
+      "field": {
+        "description": "掃描器對所有使用者執行自動掃描的頻率",
+        "label": "定期掃描間隔"
+      },
+      "interval_unit": {
+        "days": "天",
+        "hour": "小時",
+        "minutes": "分鐘",
+        "months": "個月",
+        "seconds": "秒"
+      },
+      "title": "定期掃描"
+    },
+    "scanner": {
+      "description": "將會掃描所有使用者以取得新增或更新的媒體",
+      "scan_all_users": "掃描所有使用者",
+      "title": "掃描器"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "變更此使用者的網站語言",
+        "label": "網站語言"
+      },
+      "language_selector": {
+        "placeholder": "選擇語言"
+      },
+      "theme": {
+        "auto": {
+          "label": "依系統環境"
+        },
+        "dark": {
+          "label": "深色"
+        },
+        "description": "變更網站外觀",
+        "light": {
+          "label": "淺色"
+        },
+        "title": "佈景主題偏好設定"
+      },
+      "title": "使用者偏好設定"
+    },
+    "users": {
+      "add_user": {
+        "submit": "新增使用者"
+      },
+      "confirm_delete_user": {
+        "action": "刪除 {{user}}",
+        "description": "<0>您確定要刪除 <1></1> 嗎？</0><p>此動作無法復原</p>",
+        "title": "刪除使用者"
+      },
+      "password_reset": {
+        "description": "變更 <1>{{username}}</1> 的密碼",
+        "form": {
+          "label": "新密碼",
+          "placeholder": "密碼",
+          "submit": "變更密碼"
+        },
+        "title": "變更密碼"
+      },
+      "table": {
+        "column_names": {
+          "action": "動作",
+          "capabilities": "權限",
+          "photo_path": "相片路徑",
+          "username": "使用者名稱"
+        },
+        "new_user": "新增使用者",
+        "row": {
+          "action": {
+            "change_password": "變更密碼",
+            "delete": "刪除",
+            "edit": "編輯",
+            "scan": "掃描"
+          }
+        }
+      },
+      "title": "使用者"
+    },
+    "version_info": {
+      "build_date_title": "建置日期",
+      "title": "Photoview 版本",
+      "version_title": "發行版本"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "已分享的媒體"
+    },
+    "protected_share": {
+      "description": "此分享內容已設定密碼保護。",
+      "password_required_error": "請輸入密碼",
+      "title": "受保護的分享"
+    },
+    "share_not_found": "找不到這個分享內容",
+    "share_not_found_description": "此分享內容可能已過期或已被刪除。",
+    "wrong_password": "密碼錯誤，請重試。"
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "相簿封面",
+      "download": {
+        "high-resolutions": {
+          "description": "RAW 檔的高解析度 JPEG 圖片",
+          "title": "高解析度"
+        },
+        "originals": {
+          "description": "原始相片和影片",
+          "title": "原始檔案"
+        },
+        "thumbnails": {
+          "description": "低解析度相片，不包含影片",
+          "title": "縮圖"
+        },
+        "web-videos": {
+          "description": "已針對網頁最佳化的影片",
+          "title": "轉檔後的影片"
+        }
+      },
+      "reset_cover": "重設封面相片",
+      "set_cover": "設為封面相片",
+      "title_placeholder": "相簿標題"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "{{count}} 位元組",
+        "byte_other": "{{count}} 位元組",
+        "giga_byte_one": "{{count}} GB",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "{{count}} KB",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "{{count}} MB",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "{{count}} TB",
+        "tera_byte_other": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "尺寸",
+        "file_size": "大小",
+        "file_type": "類型",
+        "name": "名稱"
+      },
+      "title": "下載"
+    },
+    "location": {
+      "title": "位置資訊"
+    },
+    "media": {
+      "album_path": "相簿路徑",
+      "exif": {
+        "exposure_program": {
+          "action_program": "動作模式",
+          "aperture_priority": "光圈先決",
+          "bulb": "B 快門",
+          "creative_program": "創意模式",
+          "landscape_mode": "風景模式",
+          "manual": "手動",
+          "normal_program": "一般模式",
+          "not_defined": "未定義",
+          "portrait_mode": "人像模式",
+          "shutter_priority": "快門先決"
+        },
+        "flash": {
+          "auto": "自動",
+          "did_not_fire": "未閃光",
+          "fired": "已閃光",
+          "no_flash": "無閃光燈",
+          "no_flash_function": "無閃光燈功能",
+          "off": "關閉",
+          "on": "開啟",
+          "red_eye_reduction": "降低紅眼",
+          "return_detected": "偵測到反光",
+          "return_not_detected": "未偵測到反光"
+        },
+        "name": {
+          "aperture": "光圈",
+          "camera": "相機",
+          "coordinates": "座標",
+          "date_shot": "拍攝日期",
+          "exposure": "曝光",
+          "exposure_program": "模式",
+          "flash": "閃光燈",
+          "focal_length": "焦距",
+          "iso": "ISO",
+          "lens": "鏡頭",
+          "maker": "製造商"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "移除相片",
+        "merge_face": "合併人臉",
+        "move_face": "移動人臉"
+      },
+      "confirm_image_detach": "您確定要移除這張相片嗎？",
+      "title": "人物"
+    },
+    "sharing": {
+      "add_share": "新增分享",
+      "copy_link": "複製連結",
+      "delete": "刪除",
+      "more": "更多",
+      "no_shares_found": "找不到任何分享內容",
+      "public_link": "公開連結",
+      "title": "分享選項"
+    }
+  },
+  "sidemenu": {
+    "albums": "相簿",
+    "people": "人物",
+    "photos": "時間軸",
+    "places": "地點",
+    "settings": "設定"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "從今天起",
+      "dropdown_year": "{{year}} 年以及更早",
+      "label": "日期"
+    }
+  },
+  "title": {
+    "loading_album": "正在載入相簿",
+    "login": "登入",
+    "people": "人物",
+    "settings": "設定"
+  }
+}

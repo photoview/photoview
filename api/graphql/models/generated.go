@@ -112,21 +112,22 @@ type TimelineGroup struct {
 type LanguageTranslation string
 
 const (
-	LanguageTranslationEnglish            LanguageTranslation = "English"
-	LanguageTranslationFrench             LanguageTranslation = "French"
-	LanguageTranslationItalian            LanguageTranslation = "Italian"
-	LanguageTranslationSwedish            LanguageTranslation = "Swedish"
-	LanguageTranslationDanish             LanguageTranslation = "Danish"
-	LanguageTranslationSpanish            LanguageTranslation = "Spanish"
-	LanguageTranslationPolish             LanguageTranslation = "Polish"
-	LanguageTranslationUkrainian          LanguageTranslation = "Ukrainian"
-	LanguageTranslationGerman             LanguageTranslation = "German"
-	LanguageTranslationRussian            LanguageTranslation = "Russian"
-	LanguageTranslationTraditionalChinese LanguageTranslation = "TraditionalChinese"
-	LanguageTranslationSimplifiedChinese  LanguageTranslation = "SimplifiedChinese"
-	LanguageTranslationPortuguese         LanguageTranslation = "Portuguese"
-	LanguageTranslationBasque             LanguageTranslation = "Basque"
-	LanguageTranslationTurkish            LanguageTranslation = "Turkish"
+	LanguageTranslationEnglish              LanguageTranslation = "English"
+	LanguageTranslationFrench               LanguageTranslation = "French"
+	LanguageTranslationItalian              LanguageTranslation = "Italian"
+	LanguageTranslationSwedish              LanguageTranslation = "Swedish"
+	LanguageTranslationDanish               LanguageTranslation = "Danish"
+	LanguageTranslationSpanish              LanguageTranslation = "Spanish"
+	LanguageTranslationPolish               LanguageTranslation = "Polish"
+	LanguageTranslationUkrainian            LanguageTranslation = "Ukrainian"
+	LanguageTranslationGerman               LanguageTranslation = "German"
+	LanguageTranslationRussian              LanguageTranslation = "Russian"
+	LanguageTranslationTraditionalChineseTw LanguageTranslation = "TraditionalChineseTW"
+	LanguageTranslationTraditionalChineseHk LanguageTranslation = "TraditionalChineseHK"
+	LanguageTranslationSimplifiedChinese    LanguageTranslation = "SimplifiedChinese"
+	LanguageTranslationPortuguese           LanguageTranslation = "Portuguese"
+	LanguageTranslationBasque               LanguageTranslation = "Basque"
+	LanguageTranslationTurkish              LanguageTranslation = "Turkish"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
@@ -140,7 +141,8 @@ var AllLanguageTranslation = []LanguageTranslation{
 	LanguageTranslationUkrainian,
 	LanguageTranslationGerman,
 	LanguageTranslationRussian,
-	LanguageTranslationTraditionalChinese,
+	LanguageTranslationTraditionalChineseTw,
+	LanguageTranslationTraditionalChineseHk,
 	LanguageTranslationSimplifiedChinese,
 	LanguageTranslationPortuguese,
 	LanguageTranslationBasque,
@@ -149,7 +151,7 @@ var AllLanguageTranslation = []LanguageTranslation{
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChinese, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish:
+	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChineseTw, LanguageTranslationTraditionalChineseHk, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish:
 		return true
 	}
 	return false
