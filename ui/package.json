@@ -82,7 +82,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "i18next-parser": "^9.3.0",
     "lint-staged": "^15.5.1",
-    "nodemon": "^3.1.9",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "vitest": "^0.33.0"
