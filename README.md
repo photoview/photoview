@@ -71,9 +71,19 @@ Glory to Ukraine! 🇺🇦
 - [Supported Platforms](#supported-platforms)
 - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
 - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
-- [Advanced setup](#advanced-setup)
+    - [Initial Setup](#initial-setup)
+  - [Advanced setup](#advanced-setup)
+    - [Hardware Acceleration](#hardware-acceleration)
 - [Contributing](#contributing)
-- [Set up development environment](#set-up-development-environment)
+  - [Set up Docker development environment](#set-up-docker-development-environment)
+    - [Start API and UI server with Docker Compose](#start-api-and-ui-server-with-docker-compose)
+    - [Start API server with Docker](#start-api-server-with-docker)
+    - [Start UI server with Docker](#start-ui-server-with-docker)
+  - [Set up local development environment](#set-up-local-development-environment)
+    - [Install dependencies](#install-dependencies)
+    - [Local setup](#local-setup)
+    - [Start API server](#start-api-server)
+    - [Start UI server](#start-ui-server)
 
 ## Main features
 
@@ -131,14 +141,15 @@ All the photo galleries can do a lot of what I need, but no single one can do it
 > `7zz` should be installed in case, you'd like to use it in scope of the backup scenario instead of the default .tar.xz format. Read the comment in the `Makefile`, located on top of the `backup` section for more details.
 
 1. Download the content of the `docker-compose example` folder to the folder on your server, where you expect to host the Photoview internal data (database and cache files).
-   
+
    Please note that this folder contains 2 versions of the docker-compose file:
    - `docker-compose.example.yml` - the fully-functional and recommended for the most cases config
    - `docker-compose.minimal.example.yml` - the minimal and simple config for those, who find the previous one too complex and difficult to understand and manage
-   
+
    When downloading files, you need to choose only one of them.
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
+> If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
 4. Make sure that your media library's root folder and all the files and subfolders are readable and searchable by other users: run the next command (or corresponding sequence of commands from the `Makefile`):
 
    ```bash
@@ -198,63 +209,194 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 
 Setting up and configuring of all these protections depends on and requires a lot of info about your local network and self-hosted services. Based on this info, the configuration flow and resulting services architecture might differ a lot between cases. That is why in the scope of this project, we can only provide you with this high-level list of possible ways of webservice protection. You'll need to investigate them, find the best combination and configuration for your case, and take responsibility to configure everything in the correct and consistent way. We cannot provide you support for such highly secured setups, as a lot of things might work differently because of security limitations.
 
+### Hardware Acceleration
+
+It is possible to run the FFmpeg with a codec supproting the hardware acceleration, by defining `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION`. The value should be one of `qsv`, `vaapi`, `nvenc`.
+
+We only verified the hardware acceleration with `qsv` on an Intel chip. To let it work, it must map `/dev/dri` devices and set a ENV `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv`. See [docker-compose.example.yml](./docker-compose example/docker-compose.example.yml).
+
+If you verify other hardware accelerations working well, let us know.
+
 ## Contributing
 
 🎉 First off, thanks for your interest in contribution! 🎉
 
-This project is a result of hard work, and it's great to see you interested in contributing. 
+This project is a result of hard work, and it's great to see you interested in contributing.
 Contributions are not just about code — you can help in many ways!
 
-Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md). 
+Before you start, please take a moment to read our [Contributing guide](./CONTRIBUTING.md).
 It includes information on our code of conduct, the process for submitting pull requests, and more.
 
 Remember, every contribution counts. Let's make this project better together! 💪
 
-## Set up development environment
+## Set up Docker development environment
+
+Docker development environment is easy to set up. It only requires [Docker](https://docs.docker.com/engine/install/) and [Docker Compose Plugin](https://docs.docker.com/compose/install/) locally. All dependencies are installed in a container but not in the host.
+
+It also has some shortcomings. In macOS, Docker is running in a Linux VM. The fs notification doesn't work well in this case. You can't use `reflex` or `nodemon` to relaunch servers when code changes. The compiler runs pretty slow too.
+
+We recommend to use Docker development environment. If Docker environment doesn't work well, like on macOS, please use [local development environment](#set-up-local-development-environment).
+
+### Start API and UI server with Docker Compose
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker compose -f dev-compose.yaml build # Build images for development
+$ docker compose -f dev-compose.yaml up # Launch API and UI servers
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001). The site can now be accessed at [localhost:1234](http://localhost:1234). Both servers will be relaunched after the code is changed.
+
+By default, it uses sqlite3 as database. To run servers with other database, please update `PHOTOVIEW_DATABASE_DRIVER` value in `dev-compose.yaml` file and run:
+
+```sh
+$ docker compose -f dev-compose.yaml --profile mysql up # Run with mysql database
+or
+$ docker compose -f dev-compose.yaml --profile postgres up # Run with postgresql database
+```
+
+### Start API server with Docker
+
+If you don't want to depend on Docker Compose but only Docker, you can launch server as below.
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target api -t photoview/api . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
+    reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
+
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
+
+### Start UI server with Docker
+
+It may take a long time to build dependencies when launching servers first time.
+
+```sh
+$ docker build --target ui -t photoview/ui . # Build image for development
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm install # Install dependencies
+$ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
+    npm run mon # Monitor source code and (re)launch UI server
+```
+
+The site can now be accessed at [localhost:1234](http://localhost:1234).
+
+> [!NOTE]
+> The server runs on the host network as `--network host` flag. It's easy to communicate between API server and UI server. If you don't want to do that, please check [Docker Network](https://docs.docker.com/network/) to create a new network to run servers.
+
+## Set up local development environment
+
+In Linux, we recommend to use [Docker Compose or Docker](https://github.com/googollee/photoview?tab=readme-ov-file#set-up-docker-development-environment) as a local development environment.
+
+We can't keep verifying below commands on each environment. People may need to solve dependencies by their own.
+
+### Install dependencies
+
+- API
+  - Required packages:
+    - `golang` >= 1.22
+    - `g++`
+    - `libc-dev`
+    - `libheif` >= 1.15.1
+    - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
+        - `dlib`
+        - `libjpeg`
+        - `libblas`
+        - `libcblas`, recommended using `libatlas-base` in Debian.
+        - `liblapack`
+  - Optional tools during developing:
+    - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
+    - `sqlite`: the SQLite DBMS, useful to interact with Photoview's SQLite DB directly if you use it in your development environment.
+- UI
+  - Required packages:
+    - `node` = 18
+
+In Debian/Ubuntu, install dependencies:
+
+```sh
+$ sudo apt update # Update the package list
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
+$ sudo apt install reflex sqlite3 # For API optional tools
+```
+
+In macOS, install dependencies:
+
+```sh
+$ brew update # Update the package list
+$ brew install golang gcc pkg-config libheif dlib jpeg # For API
+$ brew install reflex sqlite3 # For API optional tools
+```
+
+Please follow the package manager guidance if you don't use `apt` or `homebrew`.
+
+For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
+
+```sh
+$ nvm install 18
+$ nvm use 18
+```
+
+You can install `node` with other package manager if you like.
 
 ### Local setup
 
-1. Install a local mysql server, and make a new database
-2. Rename `/api/example.env` to `.env` and update the `MYSQL_URL` field
-3. Rename `/ui/example.env` to `.env`
+1. Rename `/api/example.env` to `.env`
+  - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
+  - To set a different DBMS driver
+    - Comment the SQLite path variable
+    - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
+    - Uncomment the corresponding connection string variable for the new driver
+    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
+  - Optional: modify other variables if needed according to the inline comments
+2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
-
-Make sure [golang](https://golang.org/) is installed.
-
-Some C libraries are needed to compile the API, see [go-face requirements](https://github.com/Kagami/go-face#requirements) for more details.
-They can be installed as shown below:
-
-```sh
-# Ubuntu
-sudo add-apt-repository ppa:strukturag/libheif
-sudo add-apt-repository ppa:strukturag/libde265
-sudo apt-get update
-sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
-# Debian
-sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev libheif-dev
-# macOS
-brew install dlib libheif
-
-```
 
 Then run the following commands:
 
 ```bash
-cd ./api
-go install
-go run server.go
+# Optional: Set the compiler environment in Debian/Ubuntu
+$ source ./scripts/set_compiler_env.sh
+# Set the compiler environment with `homebrew`
+$ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
+$ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
+$ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
+# Start API server
+$ cd ./api
+$ go run .
 ```
+
+If you want to recompile the server automatically when code changes:
+
+```sh
+# Start API server
+$ cd ./api
+$ reflex -g '*.go' -s -- go run .
+```
+
+The graphql playground can now be accessed at [localhost:4001](http://localhost:4001).
 
 ### Start UI server
 
-Make sure [node](https://nodejs.org/en/) is installed.
 In a new terminal window run the following commands:
 
 ```bash
 cd ./ui
 npm install
 npm start
+```
+
+If you want to recompile the server automatically when code changes:
+
+```sh
+$ cd ./ui
+$ npm run mon
 ```
 
 The site can now be accessed at [localhost:1234](http://localhost:1234).

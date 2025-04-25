@@ -17,7 +17,6 @@ import (
 	"github.com/kkovaletp/photoview/api/routes"
 	"github.com/kkovaletp/photoview/api/scanner/exif"
 	"github.com/kkovaletp/photoview/api/scanner/face_detection"
-	"github.com/kkovaletp/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/kkovaletp/photoview/api/scanner/periodic_scanner"
 	"github.com/kkovaletp/photoview/api/scanner/scanner_queue"
 	"github.com/kkovaletp/photoview/api/server"
@@ -53,8 +52,6 @@ func main() {
 	if err := periodic_scanner.InitializePeriodicScanner(db); err != nil {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
-
-	executable_worker.InitializeExecutableWorkers()
 
 	exif.InitializeEXIFParser()
 
@@ -107,11 +104,7 @@ func main() {
 		apiEndpoint := utils.ApiEndpointUrl()
 		log.Printf("Photoview API public endpoint ready at %s\n", apiEndpoint.String())
 
-		if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
-			log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
-		} else {
-			log.Println("Photoview UI public endpoint ready at /")
-		}
+		logUIendpointURL()
 
 		if !shouldServeUI {
 			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
@@ -119,5 +112,13 @@ func main() {
 
 	}
 
-	log.Panic(http.ListenAndServe(":"+apiListenURL.Port(), handlers.CompressHandler(rootRouter)))
+	log.Panic(http.ListenAndServe(apiListenURL.Host, handlers.CompressHandler(rootRouter)))
+}
+
+func logUIendpointURL() {
+	if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
+		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+	} else {
+		log.Println("Photoview UI public endpoint ready at /")
+	}
 }

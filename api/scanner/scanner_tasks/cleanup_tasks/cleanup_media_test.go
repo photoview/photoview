@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
-	"github.com/kkovaletp/photoview/api/database/drivers"
 	"github.com/kkovaletp/photoview/api/graphql/models"
 	"github.com/kkovaletp/photoview/api/scanner/face_detection"
 	"github.com/kkovaletp/photoview/api/test_utils"
+	scanner_utils "github.com/kkovaletp/photoview/api/test_utils/scanner"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,32 +21,27 @@ func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
 
-	// Sqlite doesn't seem to support foreign key cascading
-	if drivers.SQLITE.MatchDatabase(db) {
-		t.SkipNow()
-	}
-
 	if !assert.NoError(t, face_detection.InitializeFaceDetector(db)) {
 		return
 	}
 
-	test_dir := t.TempDir()
-	assert.NoError(t, copy.Copy("../../test_data", test_dir))
+	testDir := t.TempDir()
+	assert.NoError(t, copy.Copy("../../test_media/library", testDir))
 
 	countAllMedia := func() int {
-		var all_media []*models.Media
-		if !assert.NoError(t, db.Find(&all_media).Error) {
+		var allMedia []*models.Media
+		if !assert.NoError(t, db.Find(&allMedia).Error) {
 			return -1
 		}
-		return len(all_media)
+		return len(allMedia)
 	}
 
 	countAllMediaURLs := func() int {
-		var all_media_urls []*models.MediaURL
-		if !assert.NoError(t, db.Find(&all_media_urls).Error) {
+		var allMediaURLs []*models.MediaURL
+		if !assert.NoError(t, db.Find(&allMediaURLs).Error) {
 			return -1
 		}
-		return len(all_media_urls)
+		return len(allMediaURLs)
 	}
 
 	pass := "1234"
@@ -60,50 +55,50 @@ func TestCleanupMedia(t *testing.T) {
 		return
 	}
 
-	root_album := models.Album{
+	rootAlbum := models.Album{
 		Title: "root album",
-		Path:  test_dir,
+		Path:  testDir,
 	}
 
-	if !assert.NoError(t, db.Save(&root_album).Error) {
+	if !assert.NoError(t, db.Save(&rootAlbum).Error) {
 		return
 	}
 
-	err = db.Model(user1).Association("Albums").Append(&root_album)
+	err = db.Model(user1).Association("Albums").Append(&rootAlbum)
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = db.Model(user2).Association("Albums").Append(&root_album)
+	err = db.Model(user2).Association("Albums").Append(&rootAlbum)
 	if !assert.NoError(t, err) {
 		return
 	}
 
 	t.Run("Modify albums", func(t *testing.T) {
-		test_utils.RunScannerOnUser(t, db, user1)
+		scanner_utils.RunScannerOnUser(t, db, user1)
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
 		// move faces directory
-		assert.NoError(t, os.Rename(path.Join(test_dir, "faces"), path.Join(test_dir, "faces_moved")))
-		test_utils.RunScannerAll(t, db)
+		assert.NoError(t, os.Rename(path.Join(testDir, "faces"), path.Join(testDir, "faces_moved")))
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
 		// remove faces_moved directory
-		assert.NoError(t, os.RemoveAll(path.Join(test_dir, "faces_moved")))
-		test_utils.RunScannerAll(t, db)
+		assert.NoError(t, os.RemoveAll(path.Join(testDir, "faces_moved")))
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 3, countAllMedia())
 		assert.Equal(t, 6, countAllMediaURLs())
 	})
 
 	t.Run("Modify images", func(t *testing.T) {
-		assert.NoError(t, os.Rename(path.Join(test_dir, "buttercup_close_summer_yellow.jpg"), path.Join(test_dir, "yellow-flower.jpg")))
-		test_utils.RunScannerAll(t, db)
+		assert.NoError(t, os.Rename(path.Join(testDir, "buttercup_close_summer_yellow.jpg"), path.Join(testDir, "yellow-flower.jpg")))
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 3, countAllMedia())
 		assert.Equal(t, 6, countAllMediaURLs())
 
-		assert.NoError(t, os.Remove(path.Join(test_dir, "lilac_lilac_bush_lilac.jpg")))
-		test_utils.RunScannerAll(t, db)
+		assert.NoError(t, os.Remove(path.Join(testDir, "lilac_lilac_bush_lilac.jpg")))
+		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 2, countAllMedia())
 		assert.Equal(t, 4, countAllMediaURLs())
 	})

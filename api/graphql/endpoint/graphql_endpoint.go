@@ -11,6 +11,7 @@ import (
 	"github.com/kkovaletp/photoview/api/graphql/resolvers"
 	"github.com/kkovaletp/photoview/api/server"
 	"github.com/kkovaletp/photoview/api/utils"
+	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/gorm"
 )
 
@@ -35,10 +36,10 @@ func GraphqlEndpoint(db *gorm.DB) *graphql_handler.Server {
 	graphqlServer.AddTransport(transport.POST{})
 	graphqlServer.AddTransport(transport.MultipartForm{})
 
-	graphqlServer.SetQueryCache(lru.New(1000))
+	graphqlServer.SetQueryCache(lru.New[*ast.QueryDocument](1000))
 
 	graphqlServer.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(100),
+		Cache: lru.New[string](100),
 	})
 
 	if utils.DevelopmentMode() {

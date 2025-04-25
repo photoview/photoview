@@ -4,7 +4,7 @@ cache/
 **/media_cache/
 /photos_path
 photoview.db
-photoview.db-*
+photoview.db*
 
 .env
 testing.env
@@ -22,6 +22,7 @@ docker-compose.yml
 # testing
 /ui/coverage
 /api/coverage.txt
+/api/test-*-report.xml
 
 # building
 .cache/

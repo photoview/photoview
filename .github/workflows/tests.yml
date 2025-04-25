@@ -9,12 +9,11 @@ on:
 jobs:
   test-api:
     name: Test API
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        database: ['mysql', 'postgres', 'sqlite']
+        database: ['sqlite', 'mysql', 'postgres']
 
     services:
       mariadb:
@@ -47,91 +46,55 @@ jobs:
         ports:
           - 5432:5432
 
-    defaults:
-      run:
-        working-directory: api
-
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Fetch branches
-        run: git fetch --all
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        id: go
-        with:
-          go-version-file: ${{ github.workspace }}/api/go.mod
-          cache: false
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: api
+        tags: photoview/api
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Cache Go dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+    - name: Test
+      id: test
+      run: |
+        docker run --name test --network host \
+            -v "${{ github.workspace }}:/app" \
+            -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
+            -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
+            -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
+            -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
+          photoview/api \
+          /app/scripts/test_all.sh
+        docker cp test:/app/api/coverage.txt ./api/
+        docker cp test:/app/api/test-api-coverage-report.xml ./api/
+        docker cp test:/app/api/test-report.xml ./api/
 
-      - name: Get C dependencies and 3rd-party tools
-        run: |
-          sudo add-apt-repository ppa:strukturag/libheif
-          sudo add-apt-repository ppa:strukturag/libde265
-          sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev ffmpeg exiftool gnupg2 gpg curl
-          echo 'deb [trusted=yes] http://download.opensuse.org/repositories/graphics:/darktable/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/graphics:darktable.list
-          sudo apt-get update
-          sudo apt-get install -y darktable
+    - name: Upload coverage
+      uses: codecov/codecov-action@v5
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
 
-      - name: Get GO dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: api-${{ matrix.database }}
+        files: ./api/test-api-coverage-report.xml
 
-      - name: Build
-        run: go build -v .
-
-      - name: Configure MySQL
-        if: ${{ matrix.database == 'mysql' }}
-        run: |
-          cp ../.github/mysql.testing.env testing.env
-
-      - name: Configure Postgres
-        if: ${{ matrix.database == 'postgres' }}
-        run: |
-          cp ../.github/postgres.testing.env testing.env
-
-      - name: Configure Sqlite
-        if: ${{ matrix.database == 'sqlite' }}
-        run: |
-          touch photoview_test.db
-          cp ../.github/sqlite.testing.env testing.env
-
-      - name: Test
-        id: test
-        run: |
-          set -euo pipefail
-          go install github.com/jstemmer/go-junit-report@latest
-          go test ./... -v -database -filesystem -p 1 -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic 2>&1 | tee >(go-junit-report > test-report.xml)
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-        with:
-          flags: api-${{ matrix.database }}
-          token: ${{ secrets.CODECOV_TKN }}
-
-      - name: Upload test execution results
-        uses: codecov/test-results-action@v1
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-        with:
-          flags: api-${{ matrix.database }}
-          token: ${{ secrets.CODECOV_TKN }}
-
-      - name: SonarCloud Scan
+     - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
         env:
@@ -144,61 +107,67 @@ jobs:
     name: Test UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ui
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Fetch branches
-        run: git fetch --all
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
+    - name: Build test image
+      uses: docker/build-push-action@v6
+      with:
+        pull: true
+        push: false
+        load: true
+        target: ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=testing
 
-      - name: Install dependencies
-        run: npm clean-install
+    - name: Test
+      id: test
+      run: |
+        docker run --name test photoview/ui npm run test:ci
+        docker cp test:/app/ui/coverage ./ui/
+        docker cp test:/app/ui/junit-report.xml ./ui/
 
-      - name: Test
-        id: test
-        run: npm run test:ci
+    - name: Upload coverage
+      uses: codecov/codecov-action@v5
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-        with:
-          flags: ui
-          token: ${{ secrets.CODECOV_TKN }}
+    - name: Upload test execution results
+      uses: codecov/test-results-action@v1
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ui
+        directory: ./ui
 
-      - name: Upload test execution results
-        uses: codecov/test-results-action@v1
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-        with:
-          flags: ui
-          token: ${{ secrets.CODECOV_TKN }}
+    - name: Run ESLint
+      working-directory: ui
+      run: |
+        docker run --name eslint photoview/ui npm run lint:ci || true
+        docker cp eslint:/app/ui/eslint-report.txt ./
+        echo "--------------------------"
+        echo "ESLint execution results :"
+        echo "--------------------------"
+        cat ./eslint-report.txt || echo "ESLint report file not found."
 
-      - name: Run ESLint
-        run: |
-          echo "--------------------------"
-          echo "ESLint execution results :"
-          echo "--------------------------"
-          npm run lint:ci || true
-
-      - name: ESLint artifact
-        id: eslint-artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ESLint-report
-          path: ./ui/eslint-report.txt
-          if-no-files-found: warn
-          compression-level: 9
-          overwrite: true
+    - name: ESLint artifact
+      id: eslint-artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ESLint-report
+        path: ./ui/eslint-report.txt
+        if-no-files-found: warn
+        compression-level: 9
+        overwrite: true
 
       - name: Publish ESlint report in PR comment
         uses: actions/github-script@v7

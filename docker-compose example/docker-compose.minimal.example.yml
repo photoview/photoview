@@ -1,6 +1,6 @@
 services:
   photoview:
-    image: viktorstrate/photoview:2
+    image: kkoval/photoview:master
     hostname: photoview
     container_name: photoview
     restart: unless-stopped
@@ -22,7 +22,7 @@ services:
       PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
-      PHOTOVIEW_LISTEN_IP: "photoview"
+      PHOTOVIEW_LISTEN_IP: "0.0.0.0"
       ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       ## Enable the following Godebug
       # - GODEBUG=asyncpreemptoff=1

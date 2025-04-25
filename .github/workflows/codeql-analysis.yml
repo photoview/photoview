@@ -7,7 +7,8 @@ on:
     # The branches below must be a subset of the branches above
     branches: [master]
   schedule:
-    - cron: '0 1 * * 4'
+    # At 01:37 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    - cron: '37 1 * * 4'
 
 jobs:
   create-matrix:
@@ -22,17 +23,15 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.languages }}
 
-  analyze:
-    name: Analyze
+  code-ql:
+    name: CodeQL
     needs: create-matrix
-    if: ${{ needs.create-matrix.outputs.matrix != '[]' }} && github.repository == 'kkovaletp/photoview'
+    if: ${{ needs.create-matrix.outputs.matrix != '[]' && github.repository == 'kkovaletp/photoview' }}
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
         language: ${{ fromJSON(needs.create-matrix.outputs.matrix) }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,15 +43,18 @@ jobs:
           languages: ${{ matrix.language }}
           # Run further tests
           queries: security-extended, security-and-quality
+          debug: true
 
       # Autobuild attempts to build any compiled languages (C/C++, C#, or Java).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
+        with:
+          working-directory: ${{ ( matrix.language == 'go' && './api' ) || ( matrix.language == 'javascript' && './ui' ) || '.' }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:${{ matrix.language }}"
 
   anchore:
     name: Anchore scan code dependencies
@@ -66,6 +68,7 @@ jobs:
       - name: Generate report
         id: scan
         uses: anchore/scan-action@v6
+        continue-on-error: true
         with:
           path: "."
           fail-build: false
@@ -81,6 +84,7 @@ jobs:
         id: scan-fixed
         uses: anchore/scan-action@v6
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         with:
           path: "."
           fail-build: false

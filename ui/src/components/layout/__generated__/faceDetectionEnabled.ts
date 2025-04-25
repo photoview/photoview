@@ -8,13 +8,13 @@
 // ====================================================
 
 export interface faceDetectionEnabled_siteInfo {
-  __typename: 'SiteInfo'
+  __typename: "SiteInfo";
   /**
    * Whether or not face detection is enabled and working
    */
-  faceDetectionEnabled: boolean
+  faceDetectionEnabled: boolean;
 }
 
 export interface faceDetectionEnabled {
-  siteInfo: faceDetectionEnabled_siteInfo
+  siteInfo: faceDetectionEnabled_siteInfo;
 }

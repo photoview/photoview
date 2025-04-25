@@ -1,0 +1,11 @@
+extend type Query {
+  """
+  Get a list of media, ordered first by day, then by album if multiple media was found for the same day.
+  """
+  myTimeline(
+    paginate: Pagination,
+    onlyFavorites: Boolean,
+    "Only fetch media that is older than this date"
+    fromDate: Time
+  ): [Media!]! @isAuthorized
+}

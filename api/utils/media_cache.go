@@ -37,16 +37,16 @@ func CachePathForMedia(albumID int, mediaID int) (string, error) {
 	return photoCachePath, nil
 }
 
-var test_cache_path string = ""
+var testCachePath string = ""
 
 func ConfigureTestCache(tmpDir string) {
-	test_cache_path = tmpDir
+	testCachePath = tmpDir
 }
 
 // MediaCachePath returns the path for where the media cache is located on the file system
 func MediaCachePath() string {
-	if test_cache_path != "" {
-		return test_cache_path
+	if testCachePath != "" {
+		return testCachePath
 	}
 
 	photoCache := EnvMediaCachePath.GetValue()
