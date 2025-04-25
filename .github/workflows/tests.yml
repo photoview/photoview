@@ -94,14 +94,14 @@ jobs:
         flags: api-${{ matrix.database }}
         files: ./api/test-api-coverage-report.xml
 
-     - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_API }}
-        with:
-          projectBaseDir: api/
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_API }}
+      with:
+        projectBaseDir: api/
 
   test-ui:
     name: Test UI
@@ -169,59 +169,59 @@ jobs:
         compression-level: 9
         overwrite: true
 
-      - name: Publish ESlint report in PR comment
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        with:
-          github-token: ${{ secrets.COMMENT_TOKEN }}
-          script: |
-            let ESLintResults = "${{ steps.eslint-artifact.outputs.artifact-url }}";
-            let output = '';
+    - name: Publish ESlint report in PR comment
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        github-token: ${{ secrets.COMMENT_TOKEN }}
+        script: |
+          let ESLintResults = "${{ steps.eslint-artifact.outputs.artifact-url }}";
+          let output = '';
 
-            const comments = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
+          const comments = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+
+          const botComment = comments.data.find(
+            comment => comment.body.includes('UI: ESLint issues:')
+          );
+
+          if (ESLintResults) {
+            output += '#### UI: ESLint issues:\n';
+            output += 'ESLint detected issues in the UI code.\n';
+            output += '\n[ESLint execution report](' + ESLintResults + ')\n';
+            output += '\nMake sure that you are logged in to be able to access the report.';
+            output += '\nThe report is accessible by this link within 90 days after the last ';
+            output += 'UI testing workflow execution time.';
+            output += '\nAfter that time you need to go to the ESLint execution step in the ';
+            output += 'Actions tab to see the same results.';
+          } else {
+            output += '#### UI: ESLint issues:\n';
+            output += 'ESLint did not return any results.\n';
+            output += 'This means that probably the ESLint job failed. Please check it.\n';
+          }
+
+          if (botComment) {
+            await github.rest.issues.deleteComment({
+              comment_id: botComment.id,
               owner: context.repo.owner,
               repo: context.repo.repo
             });
+          }
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
 
-            const botComment = comments.data.find(
-              comment => comment.body.includes('UI: ESLint issues:')
-            );
-
-            if (ESLintResults) {
-              output += '#### UI: ESLint issues:\n';
-              output += 'ESLint detected issues in the UI code.\n';
-              output += '\n[ESLint execution report](' + ESLintResults + ')\n';
-              output += '\nMake sure that you are logged in to be able to access the report.';
-              output += '\nThe report is accessible by this link within 90 days after the last ';
-              output += 'UI testing workflow execution time.';
-              output += '\nAfter that time you need to go to the ESLint execution step in the ';
-              output += 'Actions tab to see the same results.';
-            } else {
-              output += '#### UI: ESLint issues:\n';
-              output += 'ESLint did not return any results.\n';
-              output += 'This means that probably the ESLint job failed. Please check it.\n';
-            }
-
-            if (botComment) {
-              await github.rest.issues.deleteComment({
-                comment_id: botComment.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo
-              });
-            }
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_UI }}
-        with:
-          projectBaseDir: ui/
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_UI }}
+      with:
+        projectBaseDir: ui/
