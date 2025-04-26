@@ -165,7 +165,7 @@ jobs:
         docker cp eslint:/app/ui/eslint-report.txt ./
         docker cp eslint:/app/ui/eslint-report.json ./
         echo "--------------------------"
-        cat ./eslint-report.json | jq || { echo "Invalid JSON file"; exit 1; }
+        cat ./eslint-report.json
         echo "--------------------------"
         jq --arg workspace "${{ github.workspace }}/ui" '
           (.. | objects | select(has("filePath")) | .filePath) |=
@@ -181,9 +181,10 @@ jobs:
     - name: ESLint artifact
       id: eslint-artifact
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: ESLint-report
-        path: ./ui/eslint-report.txt
+        path: ./ui/eslint-report.*
         if-no-files-found: warn
         compression-level: 9
         overwrite: true
