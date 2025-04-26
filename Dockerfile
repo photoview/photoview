@@ -32,9 +32,10 @@ COPY ui/package.json ui/package-lock.json /app/ui/
 RUN npm ci
 
 COPY ui/ /app/ui
+# hadolint ignore=SC2155
 RUN if [ "${BUILD_DATE}" = "undefined" ]; then \
-    export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
-    export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
+  export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
+  export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
   fi; \
   npm run build -- --base="${UI_PUBLIC_URL}"
 
@@ -44,8 +45,6 @@ ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-
-WORKDIR /app/api
 
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
@@ -64,12 +63,13 @@ RUN chmod +x /app/scripts/*.sh \
   && /app/scripts/install_build_dependencies.sh \
   && /app/scripts/install_runtime_dependencies.sh
 
+# hadolint ignore=DL3022
 COPY --from=kkoval/dependencies /artifacts.tar.gz /dependencies/
+WORKDIR /dependencies
 # Split values in `/env`
-# hadolint ignore=SC2046
+# hadolint ignore=SC2046,SC2086
 RUN export $(cat /env) \
   && git config --global --add safe.directory /app \
-  && cd /dependencies/ \
   && tar xfv artifacts.tar.gz \
   && cp -a include/* /usr/local/include/ \
   && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
@@ -79,6 +79,7 @@ RUN export $(cat /env) \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
 
 COPY api/go.mod api/go.sum /app/api/
+WORKDIR /app/api
 # Split values in `/env`
 # hadolint ignore=SC2046
 RUN export $(cat /env) \
@@ -88,8 +89,8 @@ RUN export $(cat /env) \
   && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
   # Build dependencies that use CGO
   && go install \
-    github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face
+  github.com/mattn/go-sqlite3 \
+  github.com/Kagami/go-face
 
 COPY api /app/api
 # Split values in `/env`
@@ -106,6 +107,7 @@ ARG TARGETPLATFORM
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
+WORKDIR /dependencies
 RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   chmod +x /app/scripts/install_runtime_dependencies.sh \
   # Create a user to run Photoview server
@@ -114,7 +116,6 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   # Install required dependencies
   && /app/scripts/install_runtime_dependencies.sh \
   # Install self-building libs
-  && cd /dependencies \
   && cp -a lib/* /usr/local/lib/ \
   && cp -a bin/* /usr/local/bin/ \
   && cp -a etc/* /usr/local/etc/ \
@@ -145,9 +146,9 @@ EXPOSE ${PHOTOVIEW_LISTEN_PORT}
 
 HEALTHCHECK --interval=60s --timeout=10s \
   CMD curl --fail http://localhost:${PHOTOVIEW_LISTEN_PORT}/api/graphql \
-    -X POST -H 'Content-Type: application/json' \
-    --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
-    || exit 1
+  -X POST -H 'Content-Type: application/json' \
+  --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
+  || exit 1
 
 LABEL org.opencontainers.image.source=https://github.com/kkovaletp/photoview/
 USER photoview

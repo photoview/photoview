@@ -53,6 +53,9 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
+    - name: Git fetch blame information
+      run: git fetch --unshallow
+
     - name: Build test image
       uses: docker/build-push-action@v6
       with:
@@ -83,19 +86,19 @@ jobs:
       uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TKN }}
         flags: api-${{ matrix.database }}
 
     - name: Upload test execution results
       uses: codecov/test-results-action@v1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TKN }}
         flags: api-${{ matrix.database }}
         files: ./api/test-api-coverage-report.xml
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@master
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -113,6 +116,9 @@ jobs:
 
     - name: Checkout repo
       uses: actions/checkout@v4
+
+    - name: Git fetch blame information
+      run: git fetch --unshallow
 
     - name: Build test image
       uses: docker/build-push-action@v6
@@ -138,14 +144,14 @@ jobs:
       uses: codecov/codecov-action@v5
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TKN }}
         flags: ui
 
     - name: Upload test execution results
       uses: codecov/test-results-action@v1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TKN }}
         flags: ui
         directory: ./ui
 
@@ -154,6 +160,7 @@ jobs:
       run: |
         docker run --name eslint photoview/ui npm run lint:ci || true
         docker cp eslint:/app/ui/eslint-report.txt ./
+        docker cp eslint:/app/ui/eslint-report.json ./
         echo "--------------------------"
         echo "ESLint execution results :"
         echo "--------------------------"
@@ -218,7 +225,7 @@ jobs:
           })
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@master
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }} && github.repository == 'kkovaletp/photoview'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any

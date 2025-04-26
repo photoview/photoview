@@ -89,10 +89,10 @@ jobs:
           config: ${{ github.workspace }}/.hadolint.yaml
           output-file: ${{ github.workspace }}/hadolint.json
           format: json
-          failure-threshold: ignore
+          no-fail: true
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         if: github.repository == 'kkovaletp/photoview'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any

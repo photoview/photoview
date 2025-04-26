@@ -233,7 +233,7 @@ jobs:
           config: ${{ github.workspace }}/.hadolint.yaml
           output-file: hadolint.sarif
           format: sarif
-          failure-threshold: ignore
+          no-fail: true
 
       - name: Upload report
         uses: github/codeql-action/upload-sarif@v3
