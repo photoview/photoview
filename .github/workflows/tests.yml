@@ -168,12 +168,13 @@ jobs:
         cat ./eslint-report.json
         echo "--------------------------"
         jq --arg workspace "${{ github.workspace }}/ui" '
-          (.. | objects | select(has("filePath")) | .filePath) |=
-            if startswith("/app/ui/") then
-              ($workspace + (.filePath | sub("^/app/ui/"; "")))
+          map(
+            if has("filePath") and (.filePath | startswith("/app/ui/")) then
+              .filePath = ($workspace + (.filePath | sub("^/app/ui/"; "")))
             else
               .
             end
+          )
         ' ./eslint-report.json > ./eslint-report-fixed.json
         mv ./eslint-report-fixed.json ./eslint-report.json
         jq empty ./eslint-report.json || { echo "Invalid JSON file"; exit 1; }
@@ -184,7 +185,7 @@ jobs:
       if: always()
       with:
         name: ESLint-report
-        path: ./ui/eslint-report.*
+        path: ./ui/eslint-report*
         if-no-files-found: warn
         compression-level: 9
         overwrite: true
