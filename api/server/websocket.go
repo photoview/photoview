@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/kkovaletp/photoview/api/utils"
@@ -40,8 +41,10 @@ func isUIOnSameHost(uiEndpoint *url.URL, originURL *url.URL) bool {
 	if uiEndpoint.Host == originURL.Host {
 		return true
 	} else {
+		sanitizedOriginURLHost := strings.ReplaceAll(originURL.Host, "\n", "\\ n")
+		sanitizedOriginURLHost = strings.ReplaceAll(sanitizedOriginURLHost, "\r", "\\ r")
 		log.Printf("Not allowing websocket request from %s because it doesn't match PHOTOVIEW_UI_ENDPOINT %s",
-			originURL.Host, uiEndpoint.Host)
+			sanitizedOriginURLHost, uiEndpoint.Host)
 		return false
 	}
 }
