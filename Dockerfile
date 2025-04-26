@@ -29,7 +29,7 @@ ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
 WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY ui/ /app/ui
 # hadolint ignore=SC2155
