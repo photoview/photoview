@@ -80,7 +80,6 @@ jobs:
           /app/scripts/test_all.sh
         docker cp test:/app/api/coverage.txt ./api/
         docker cp test:/app/api/test-api-coverage-report.xml ./api/
-        docker cp test:/app/api/test-report.xml ./api/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
@@ -161,6 +160,17 @@ jobs:
         docker run --name eslint photoview/ui npm run lint:ci || true
         docker cp eslint:/app/ui/eslint-report.txt ./
         docker cp eslint:/app/ui/eslint-report.json ./
+        jq --arg workspace "${{ github.workspace }}/ui" '
+          (.. | objects | select(has("filePath")) | .filePath) |=
+            if startswith("/app/ui/") then
+              ($workspace + (.filePath | sub("^/app/ui/"; "")))
+            else
+              .
+            end
+        ' ./eslint-report.json > ./eslint-report-fixed.json
+        mv ./eslint-report-fixed.json ./eslint-report.json
+        jq empty ./eslint-report.json || { echo "Invalid JSON file"; exit 1; }
+
         echo "--------------------------"
         echo "ESLint execution results :"
         echo "--------------------------"
