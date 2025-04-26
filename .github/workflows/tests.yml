@@ -155,6 +155,7 @@ jobs:
         directory: ./ui
 
     - name: Run ESLint
+      id: eslint
       working-directory: ui
       run: |
         echo "--------------------------"
@@ -164,10 +165,7 @@ jobs:
         echo "--------------------------"
         docker cp eslint:/app/ui/eslint-report.txt ./
         docker cp eslint:/app/ui/eslint-report.json ./
-        echo "--------------------------"
-        cat ./eslint-report.json
-        echo "--------------------------"
-        jq --arg workspace "${{ github.workspace }}/ui" '
+        jq --arg workspace "${{ github.workspace }}/ui/" '
           map(
             if has("filePath") and (.filePath | startswith("/app/ui/")) then
               .filePath = ($workspace + (.filePath | sub("^/app/ui/"; "")))
@@ -182,7 +180,7 @@ jobs:
     - name: ESLint artifact
       id: eslint-artifact
       uses: actions/upload-artifact@v4
-      if: always()
+      if: ${{ steps.eslint.conclusion == 'success' || steps.eslint.conclusion == 'failure' }}
       with:
         name: ESLint-report
         path: ./ui/eslint-report*
