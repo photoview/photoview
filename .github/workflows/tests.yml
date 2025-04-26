@@ -157,9 +157,16 @@ jobs:
     - name: Run ESLint
       working-directory: ui
       run: |
+        echo "--------------------------"
+        echo "ESLint execution results :"
+        echo "--------------------------"
         docker run --name eslint photoview/ui npm run lint:ci || true
+        echo "--------------------------"
         docker cp eslint:/app/ui/eslint-report.txt ./
         docker cp eslint:/app/ui/eslint-report.json ./
+        echo "--------------------------"
+        cat ./eslint-report.json | jq || { echo "Invalid JSON file"; exit 1; }
+        echo "--------------------------"
         jq --arg workspace "${{ github.workspace }}/ui" '
           (.. | objects | select(has("filePath")) | .filePath) |=
             if startswith("/app/ui/") then
@@ -170,11 +177,6 @@ jobs:
         ' ./eslint-report.json > ./eslint-report-fixed.json
         mv ./eslint-report-fixed.json ./eslint-report.json
         jq empty ./eslint-report.json || { echo "Invalid JSON file"; exit 1; }
-
-        echo "--------------------------"
-        echo "ESLint execution results :"
-        echo "--------------------------"
-        cat ./eslint-report.txt || echo "ESLint report file not found."
 
     - name: ESLint artifact
       id: eslint-artifact
