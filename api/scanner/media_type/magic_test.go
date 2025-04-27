@@ -26,7 +26,7 @@ func TestMagic(t *testing.T) {
 		{"webp.webp", TypeWebP},
 
 		{"heif.heif", mediaType("image/heic")},
-		{"jpeg2000.jp2", mediaType("image/jp2")},
+		{"jpg2000.jp2", mediaType("image/jp2")},
 		{"tiff.tiff", mediaType("image/tiff")},
 
 		{"mp4.mp4", TypeMP4},
