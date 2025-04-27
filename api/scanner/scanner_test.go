@@ -36,7 +36,7 @@ func TestFullScan(t *testing.T) {
 		Path:  "./test_media",
 	}
 
-	wantVideos := []string{
+	wantNoImages := []string{
 		"avi.avi",
 		"bmp.bmp",
 		"mkv.mkv",
@@ -110,7 +110,7 @@ func TestFullScan(t *testing.T) {
 		}
 
 		want := slices.Clone(wantImages)
-		want = append(want, wantVideos...)
+		want = append(want, wantNoImages...)
 		want = append(want, wantThumbnailsImages...)
 		want = append(want, wantHighresImages...)
 		slices.Sort(want)

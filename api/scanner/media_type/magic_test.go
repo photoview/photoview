@@ -91,7 +91,7 @@ func getMediaFiles() []string {
 		"webp.webp",
 
 		"heif.heif",
-		"jpeg2000.jp2",
+		"jpg2000.jp2",
 		"tiff.tiff",
 
 		"mp4.mp4",
