@@ -33,10 +33,25 @@ func TestFullScan(t *testing.T) {
 
 	rootAlbum := models.Album{
 		Title: "root album",
-		Path:  "./test_media/library",
+		Path:  "./test_media",
 	}
 
+	wantVideos := []string{
+		"avi.avi",
+		"bmp.bmp",
+		"mkv.mkv",
+		"mp4.mp4",
+		"mpeg.mpg",
+		"ogg.ogg",
+		"quicktime.mov",
+		"webm.webm",
+		"wmv.wmv",
+	}
 	wantImages := []string{
+		"gif.gif",
+		"webp.webp",
+	}
+	wantThumbnailsImages := []string{
 		"buttercup_close_summer_yellow.jpg",
 		"lilac_lilac_bush_lilac.jpg",
 		"mount_merapi_volcano_indonesia.jpg",
@@ -46,7 +61,21 @@ func TestFullScan(t *testing.T) {
 		"girl_blond1.jpg",
 		"girl_blond2.jpg",
 		"girl_blond3.jpg",
+
+		"jpeg.jpg",
+		"jpg_with_file.jpg",
+		"png.png",
+		"standalone_jpg.jpg",
 	}
+	wantHighresImages := []string{
+		"heif.heif",
+		"jpg2000.jp2",
+		"raw_with_file.tiff",
+		"raw_with_jpg.tiff",
+		"standalone_raw.tiff",
+		"tiff.tiff",
+	}
+
 	wantFaceGroups := [][]string{
 		{"boy1.jpg", "boy2.jpg"},
 		{"girl_black_hair2.jpg"},
@@ -81,6 +110,9 @@ func TestFullScan(t *testing.T) {
 		}
 
 		want := slices.Clone(wantImages)
+		want = append(want, wantVideos...)
+		want = append(want, wantThumbnailsImages...)
+		want = append(want, wantHighresImages...)
 		slices.Sort(want)
 
 		got := make([]string, len(allMedia))
@@ -100,16 +132,34 @@ func TestFullScan(t *testing.T) {
 			t.Fatal("get all media url error:", err)
 		}
 
-		if got, want := len(allMediaURL), 18; got != want {
-			t.Errorf("got = %d, want: %v", got, want)
+		want := slices.Clone(wantImages)
+
+		wantThumbs := slices.Clone(wantThumbnailsImages)
+		want = append(want, wantThumbnailsImages...)
+		for _, file := range copyFilelistWithJpgExt(wantThumbs) {
+			want = append(want, "thumbnail_"+file)
 		}
 
-		want := slices.Clone(wantImages)
-		wantThumbs := slices.Clone(wantImages)
-		for _, thumb := range wantThumbs {
-			want = append(want, "thumbnail_"+thumb)
+		wantHighres := slices.Clone(wantHighresImages)
+		want = append(want, wantHighresImages...)
+		for _, file := range copyFilelistWithJpgExt(wantHighres) {
+			want = append(want, "highres_"+file)
+			want = append(want, "thumbnail_"+file)
+		}
+
+		wantSet := make(map[string]struct{})
+		for _, item := range want {
+			wantSet[item] = struct{}{}
+		}
+		want = make([]string, 0, len(wantSet))
+		for key := range wantSet {
+			want = append(want, key)
 		}
 		slices.Sort(want)
+
+		if got, want := len(allMediaURL), len(want); got != want {
+			t.Errorf("got = %d, want: %v", got, want)
+		}
 
 		got := make([]string, len(allMediaURL))
 		for i, media := range allMediaURL {
@@ -159,9 +209,9 @@ func TestFullScan(t *testing.T) {
 
 func equalNameWithoutSuffix(a, b string) bool {
 	extA := filepath.Ext(a)
-	mainA := strings.TrimRight(a, extA)
+	mainA := strings.TrimSuffix(a, extA)
 	extB := filepath.Ext(b)
-	mainB := strings.TrimRight(b, extB)
+	mainB := strings.TrimSuffix(b, extB)
 
 	// ext names are not same
 	if extA != extB {
@@ -212,6 +262,18 @@ func groupMediaWithFaces(medias []*models.ImageFace) [][]string {
 	slices.SortFunc(ret, func(a, b []string) int {
 		return strings.Compare(fmt.Sprint(a), fmt.Sprint(b))
 	})
+
+	return ret
+}
+
+func copyFilelistWithJpgExt(list []string) []string {
+	ret := make([]string, 0, len(list))
+	for _, f := range list {
+		ext := filepath.Ext(f)
+		main := strings.TrimSuffix(f, ext)
+
+		ret = append(ret, main+".jpg")
+	}
 
 	return ret
 }
