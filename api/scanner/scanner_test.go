@@ -66,6 +66,8 @@ func TestFullScan(t *testing.T) {
 		"jpg_with_file.jpg",
 		"png.png",
 		"standalone_jpg.jpg",
+
+		"recoverable_bad_rst_marker.jpg",
 	}
 	wantHighresImages := []string{
 		"heif.heif",
