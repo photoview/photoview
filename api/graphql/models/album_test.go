@@ -203,7 +203,8 @@ func TestAlbumThumbnail(t *testing.T) {
 
 		result, err := emptyAlbum.Thumbnail(db)
 		assert.NoError(t, err)
-		assert.Nil(t, result, "Album with no media should return nil thumbnail")
+		assert.NotNil(t, result, "Album with no media should return an empty Media object")
+		assert.Equal(t, 0, result.ID, "Empty album thumbnail should have ID=0")
 	})
 
 	t.Run("Thumbnail from grandchild media", func(t *testing.T) {
