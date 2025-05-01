@@ -128,8 +128,17 @@ func TestAlbumGetChildrenAndParents(t *testing.T) {
 func TestAlbumThumbnail(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
+	mediaAlbum := models.Album{
+		Title: "Media album",
+		Path:  "/media_album",
+	}
+	if !assert.NoError(t, db.Save(&mediaAlbum).Error) {
+		return
+	}
+
 	media := models.Media{
-		Path: "thumb.jpg",
+		Path:    "thumb.jpg",
+		AlbumID: mediaAlbum.ID,
 	}
 	if !assert.NoError(t, db.Save(&media).Error) {
 		return
