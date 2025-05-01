@@ -124,3 +124,62 @@ func TestAlbumGetChildrenAndParents(t *testing.T) {
 	})
 
 }
+
+func TestAlbumThumbnail(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	media := models.Media{
+		Path: "thumb.jpg",
+	}
+	if !assert.NoError(t, db.Save(&media).Error) {
+		return
+	}
+
+	t.Run("Thumbnail from CoverID", func(t *testing.T) {
+		album := models.Album{
+			Title:   "Album with cover",
+			Path:    "/cover_album",
+			CoverID: &media.ID,
+		}
+		if !assert.NoError(t, db.Save(&album).Error) {
+			return
+		}
+
+		result, err := album.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, media.ID, result.ID)
+	})
+
+	t.Run("Thumbnail from child media", func(t *testing.T) {
+		parentAlbum := models.Album{
+			Title: "Parent album",
+			Path:  "/parent",
+		}
+		if !assert.NoError(t, db.Save(&parentAlbum).Error) {
+			return
+		}
+
+		childAlbum := models.Album{
+			Title:         "Child album",
+			Path:          "/parent/child",
+			ParentAlbumID: &parentAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childAlbum).Error) {
+			return
+		}
+
+		childMedia := models.Media{
+			Path:    "child_media.jpg",
+			AlbumID: childAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childMedia).Error) {
+			return
+		}
+
+		result, err := parentAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, childMedia.ID, result.ID)
+	})
+}
