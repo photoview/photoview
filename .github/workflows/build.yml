@@ -85,11 +85,11 @@ jobs:
       - name: Hadolint report for Sonar
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile
-          config: ${{ github.workspace }}/.hadolint.yaml
+          dockerfile:  Dockerfile
+          config:      ${{ github.workspace }}/.hadolint.yaml
           output-file: ${{ github.workspace }}/hadolint.json
-          format: json
-          no-fail: true
+          format:      json
+          no-fail:     true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@master
@@ -143,17 +143,17 @@ jobs:
         id: docker_buildx
         uses: docker/build-push-action@v6
         with:
-          context: .
-          sbom: true
-          provenance: mode=max
-          platforms: ${{ env.PLATFORMS }}
+          context:     .
+          sbom:        true
+          provenance:  mode=max
+          platforms:   ${{ env.PLATFORMS }}
           pull:        true
           push:        ${{ env.IS_PUSHING_IMAGES }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags:        ${{ steps.docker_meta.outputs.tags }}
+          labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from:  type=gha
+          cache-to:    type=gha,mode=max
           build-args: |
             NODE_ENV=production
             BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
