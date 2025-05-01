@@ -191,4 +191,60 @@ func TestAlbumThumbnail(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.Equal(t, childMedia.ID, result.ID)
 	})
+
+	t.Run("Empty album with no media", func(t *testing.T) {
+		emptyAlbum := models.Album{
+			Title: "Empty album",
+			Path:  "/empty",
+		}
+		if !assert.NoError(t, db.Save(&emptyAlbum).Error) {
+			return
+		}
+
+		result, err := emptyAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.Nil(t, result, "Album with no media should return nil thumbnail")
+	})
+
+	t.Run("Thumbnail from grandchild media", func(t *testing.T) {
+		// Create grandparent-parent-child relationship with media only in child
+		grandparentAlbum := models.Album{
+			Title: "Grandparent",
+			Path:  "/grandparent",
+		}
+		if !assert.NoError(t, db.Save(&grandparentAlbum).Error) {
+			return
+		}
+
+		parentAlbum := models.Album{
+			Title:         "Parent",
+			Path:          "/grandparent/parent",
+			ParentAlbumID: &grandparentAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&parentAlbum).Error) {
+			return
+		}
+
+		childAlbum := models.Album{
+			Title:         "Child",
+			Path:          "/grandparent/parent/child",
+			ParentAlbumID: &parentAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childAlbum).Error) {
+			return
+		}
+
+		childMedia := models.Media{
+			Path:    "deep_media.jpg",
+			AlbumID: childAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childMedia).Error) {
+			return
+		}
+
+		result, err := grandparentAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, childMedia.ID, result.ID)
+	})
 }
