@@ -13,8 +13,8 @@ services:
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     ## Or comment out the `postgres:` and uncomment the `mariadb:` if PHOTOVIEW_DATABASE_DRIVER is set to `mysql`
     depends_on:
-      # mariadb:
       postgres:
+      #mariadb:
         condition: service_healthy
     ## Security options for some restricted systems
     security_opt:
@@ -28,7 +28,7 @@ services:
       # PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
-      PHOTOVIEW_LISTEN_IP: "photoview"
+      PHOTOVIEW_LISTEN_IP: "0.0.0.0"
       ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
       ## If you change this, remember to update the port mapping (under the `ports:`) above!
       # PHOTOVIEW_LISTEN_PORT: 8080
