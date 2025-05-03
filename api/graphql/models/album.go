@@ -106,5 +106,9 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 		return nil, err
 	}
 
+	if media.ID == 0 {
+		return nil, nil // Return nil for empty albums
+	}
+
 	return &media, nil
 }

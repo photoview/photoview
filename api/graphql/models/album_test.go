@@ -203,8 +203,7 @@ func TestAlbumThumbnail(t *testing.T) {
 
 		result, err := emptyAlbum.Thumbnail(db)
 		assert.NoError(t, err)
-		assert.NotNil(t, result, "Album with no media should return an empty Media object")
-		assert.Equal(t, 0, result.ID, "Empty album thumbnail should have ID=0")
+		assert.Nil(t, result, "Empty albums should have nil thumbnail")
 	})
 
 	t.Run("Thumbnail from grandchild media", func(t *testing.T) {
@@ -247,5 +246,121 @@ func TestAlbumThumbnail(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, childMedia.ID, result.ID)
+	})
+
+	t.Run("CoverID takes precedence over any media", func(t *testing.T) {
+		// Create album with both direct media and a cover ID
+		priorityAlbum := models.Album{
+			Title:   "Priority album",
+			Path:    "/priority",
+			CoverID: &media.ID, // Using existing media as cover
+		}
+		if !assert.NoError(t, db.Save(&priorityAlbum).Error) {
+			return
+		}
+
+		// Add direct media to the album
+		directMedia := models.Media{
+			Path:    "direct_media.jpg",
+			AlbumID: priorityAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&directMedia).Error) {
+			return
+		}
+
+		// Test that CoverID takes precedence
+		result, err := priorityAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.Equal(t, media.ID, result.ID, "CoverID should take precedence over direct media")
+	})
+
+	t.Run("Some media is returned when multiple exist in hierarchy", func(t *testing.T) {
+		// Create a parent album
+		parentAlbum := models.Album{
+			Title: "Parent album",
+			Path:  "/parent_media_test",
+		}
+		if !assert.NoError(t, db.Save(&parentAlbum).Error) {
+			return
+		}
+
+		// Add direct media to parent
+		parentMedia := models.Media{
+			Path:    "parent_media.jpg",
+			AlbumID: parentAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&parentMedia).Error) {
+			return
+		}
+
+		// Create child album with media
+		childAlbum := models.Album{
+			Title:         "Child album",
+			Path:          "/parent_media_test/child",
+			ParentAlbumID: &parentAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childAlbum).Error) {
+			return
+		}
+
+		childMedia := models.Media{
+			Path:    "child_media.jpg",
+			AlbumID: childAlbum.ID,
+		}
+		if !assert.NoError(t, db.Save(&childMedia).Error) {
+			return
+		}
+
+		// Test that some media is returned
+		result, err := parentAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.True(t, result.ID == parentMedia.ID || result.ID == childMedia.ID,
+			"Should return either direct media or child album media")
+		t.Logf("For reference - Selected: %d, Parent media: %d, Child media: %d",
+			result.ID, parentMedia.ID, childMedia.ID)
+	})
+
+	t.Run("Database order determines which media is selected", func(t *testing.T) {
+		// Create album with multiple media
+		multiMediaAlbum := models.Album{
+			Title: "Album with multiple media",
+			Path:  "/multi_media",
+		}
+		if !assert.NoError(t, db.Save(&multiMediaAlbum).Error) {
+			return
+		}
+
+		// Add multiple media to the album
+		mediaItems := []models.Media{
+			{Path: "media1.jpg", AlbumID: multiMediaAlbum.ID},
+			{Path: "media2.jpg", AlbumID: multiMediaAlbum.ID},
+			{Path: "media3.jpg", AlbumID: multiMediaAlbum.ID},
+		}
+		if !assert.NoError(t, db.Save(&mediaItems).Error) {
+			return
+		}
+
+		// Test which media is selected - this documents the current behavior
+		// rather than asserting a specific priority
+		result, err := multiMediaAlbum.Thumbnail(db)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+
+		// Log which item was selected for documentation purposes
+		t.Logf("Selected media ID: %d (Path: unknown)", result.ID)
+		for i, item := range mediaItems {
+			t.Logf("Media %d: ID %d, Path %s", i+1, item.ID, item.Path)
+		}
+
+		// Verify one of our media items was selected
+		found := false
+		for _, item := range mediaItems {
+			if result.ID == item.ID {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "One of the album's media should be selected")
 	})
 }
