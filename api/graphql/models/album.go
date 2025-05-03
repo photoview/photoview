@@ -98,13 +98,16 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 			INNER JOIN sub_albums ON children.parent_album_id = sub_albums.id
 		)
 		SELECT * FROM media
-		INNER JOIN media_urls ON media_urls.media_id = media.id
 		WHERE media.album_id IN (SELECT id FROM sub_albums)
 		LIMIT 1
 	`
 
 	if err := db.Raw(query, a.ID).Scan(&media).Error; err != nil {
 		return nil, err
+	}
+
+	if media.ID == 0 {
+		return nil, nil // Return nil for empty albums
 	}
 
 	return &media, nil
