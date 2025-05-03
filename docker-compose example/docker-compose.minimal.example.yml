@@ -1,4 +1,19 @@
 services:
+  ## Makes sure that the media cache folder is created with the correct permissions
+  photoview-prepare:
+    image: photoview/photoview:2
+    hostname: photoview-prepare
+    container_name: photoview-prepare
+    user: root
+    entrypoint: []
+    command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache"
+    cap_add:
+      - CHOWN
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "${HOST_PHOTOVIEW_LOCATION}/storage:/home/photoview/media-cache"
+
   photoview:
     image: photoview/photoview:2
     hostname: photoview
@@ -10,6 +25,8 @@ services:
     ## This ensures that DB is initialized and ready for connections.
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     depends_on:
+      photoview-prepare:
+        condition: service_completed_successfully
       mariadb:
         condition: service_healthy
     ## Security options for some restricted systems
