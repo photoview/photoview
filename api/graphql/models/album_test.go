@@ -1,7 +1,9 @@
 package models_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
@@ -259,9 +261,9 @@ func TestAlbumThumbnail(t *testing.T) {
 			return
 		}
 
-		// Add direct media to the album
+		// Add direct media to the album with unique path
 		directMedia := models.Media{
-			Path:    "direct_media.jpg",
+			Path:    fmt.Sprintf("direct_media_%d.jpg", time.Now().UnixNano()),
 			AlbumID: priorityAlbum.ID,
 		}
 		if !assert.NoError(t, db.Save(&directMedia).Error) {
@@ -284,9 +286,9 @@ func TestAlbumThumbnail(t *testing.T) {
 			return
 		}
 
-		// Add direct media to parent
+		// Add direct media to parent with unique path
 		parentMedia := models.Media{
-			Path:    "parent_media.jpg",
+			Path:    fmt.Sprintf("parent_media_%d.jpg", time.Now().UnixNano()),
 			AlbumID: parentAlbum.ID,
 		}
 		if !assert.NoError(t, db.Save(&parentMedia).Error) {
@@ -303,8 +305,9 @@ func TestAlbumThumbnail(t *testing.T) {
 			return
 		}
 
+		// Add child media with unique path
 		childMedia := models.Media{
-			Path:    "child_media.jpg",
+			Path:    fmt.Sprintf("child_media_%d.jpg", time.Now().UnixNano()),
 			AlbumID: childAlbum.ID,
 		}
 		if !assert.NoError(t, db.Save(&childMedia).Error) {
@@ -331,24 +334,24 @@ func TestAlbumThumbnail(t *testing.T) {
 			return
 		}
 
-		// Add multiple media to the album
+		// Add multiple media to the album with unique paths
 		mediaItems := []models.Media{
-			{Path: "media1.jpg", AlbumID: multiMediaAlbum.ID},
-			{Path: "media2.jpg", AlbumID: multiMediaAlbum.ID},
-			{Path: "media3.jpg", AlbumID: multiMediaAlbum.ID},
+			{Path: fmt.Sprintf("media1_%d.jpg", time.Now().UnixNano()), AlbumID: multiMediaAlbum.ID},
+			// Sleep briefly to ensure different timestamps
+			{Path: fmt.Sprintf("media2_%d.jpg", time.Now().UnixNano()+1), AlbumID: multiMediaAlbum.ID},
+			{Path: fmt.Sprintf("media3_%d.jpg", time.Now().UnixNano()+2), AlbumID: multiMediaAlbum.ID},
 		}
 		if !assert.NoError(t, db.Save(&mediaItems).Error) {
 			return
 		}
 
-		// Test which media is selected - this documents the current behavior
-		// rather than asserting a specific priority
+		// Test which media is selected
 		result, err := multiMediaAlbum.Thumbnail(db)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 
 		// Log which item was selected for documentation purposes
-		t.Logf("Selected media ID: %d (Path: unknown)", result.ID)
+		t.Logf("Selected media ID: %d", result.ID)
 		for i, item := range mediaItems {
 			t.Logf("Media %d: ID %d, Path %s", i+1, item.ID, item.Path)
 		}
