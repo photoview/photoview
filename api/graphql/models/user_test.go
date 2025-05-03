@@ -137,7 +137,7 @@ func TestUserOwnsAlbum(t *testing.T) {
 		return
 	}
 
-	sub_albums := []models.Album{
+	subAlbums := []models.Album{
 		{
 			Title:         "subalbum1",
 			Path:          "/photos/album2/subalbum1",
@@ -155,7 +155,7 @@ func TestUserOwnsAlbum(t *testing.T) {
 		},
 	}
 
-	if !assert.NoError(t, db.Model(&user).Association("Albums").Append(&sub_albums)) {
+	if !assert.NoError(t, db.Model(&user).Association("Albums").Append(&subAlbums)) {
 		return
 	}
 
@@ -165,22 +165,22 @@ func TestUserOwnsAlbum(t *testing.T) {
 		assert.True(t, owns)
 	}
 
-	for _, album := range sub_albums {
+	for _, album := range subAlbums {
 		owns, err := user.OwnsAlbum(db, &album)
 		assert.NoError(t, err)
 		assert.True(t, owns)
 	}
 
-	separate_album := models.Album{
+	separateAlbum := models.Album{
 		Title: "separate_album",
 		Path:  "/my_media/album123",
 	}
 
-	if !assert.NoError(t, db.Save(&separate_album).Error) {
+	if !assert.NoError(t, db.Save(&separateAlbum).Error) {
 		return
 	}
 
-	owns, err := user.OwnsAlbum(db, &separate_album)
+	owns, err := user.OwnsAlbum(db, &separateAlbum)
 	assert.NoError(t, err)
 	assert.False(t, owns)
 }

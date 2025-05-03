@@ -2,18 +2,18 @@ package auth
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 
-	"github.com/99designs/gqlgen/handler"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/kkovaletp/photoview/api/dataloader"
 	"github.com/kkovaletp/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
 
-var ErrUnauthorized = errors.New("unauthorized")
+var ErrUnauthorized = fmt.Errorf("unauthorized")
 
 // A private key for context that only this package can access. This is important
 // to prevent collisions between different context uses
@@ -59,7 +59,7 @@ func TokenFromBearer(bearer *string) (*string, error) {
 	regex, _ := regexp.Compile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 	matches := regex.FindStringSubmatch(*bearer)
 	if len(matches) != 2 {
-		return nil, errors.New("invalid bearer format")
+		return nil, fmt.Errorf("invalid bearer format")
 	}
 
 	token := matches[1]
@@ -72,8 +72,8 @@ func UserFromContext(ctx context.Context) *models.User {
 	return raw
 }
 
-func AuthWebsocketInit(db *gorm.DB) func(context.Context, handler.InitPayload) (context.Context, error) {
-	return func(ctx context.Context, initPayload handler.InitPayload) (context.Context, error) {
+func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload) (context.Context, error) {
+	return func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
 
 		bearer, exists := initPayload["Authorization"].(string)
 		if !exists {
@@ -90,7 +90,7 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, handler.InitPayload) (
 		// user, err := models.VerifyTokenAndGetUser(db, *token)
 		if err != nil {
 			log.Printf("Invalid token in websocket: %s\n", err)
-			return nil, errors.New("invalid authorization token")
+			return nil, fmt.Errorf("invalid authorization token")
 		}
 
 		// put it in context

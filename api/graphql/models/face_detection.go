@@ -111,7 +111,7 @@ func (fr *FaceRectangle) Scan(value interface{}) error {
 	slices := strings.Split(stringArray, ":")
 
 	if len(slices) != 4 {
-		return fmt.Errorf("Invalid face rectangle format, expected 4 values, got %d", len(slices))
+		return fmt.Errorf("invalid face rectangle format, expected 4 values, got %d", len(slices))
 	}
 
 	var err error

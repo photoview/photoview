@@ -8,17 +8,17 @@
 // ====================================================
 
 export interface earliestMedia_myMedia {
-  __typename: 'Media'
-  id: string
+  __typename: "Media";
+  id: string;
   /**
    * The date the image was shot or the date it was imported as a fallback
    */
-  date: Time
+  date: Time;
 }
 
 export interface earliestMedia {
   /**
    * List of media owned by the logged in user
    */
-  myMedia: earliestMedia_myMedia[]
+  myMedia: earliestMedia_myMedia[];
 }

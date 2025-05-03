@@ -4,6 +4,7 @@ import (
 	"github.com/kkovaletp/photoview/api/database"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type TestDBManager struct {
@@ -39,7 +40,9 @@ func (dbm *TestDBManager) Close() error {
 }
 
 func (dbm *TestDBManager) setup() error {
-	config := gorm.Config{}
+	config := gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	}
 	db, err := database.ConfigureDatabase(&config)
 	if err != nil {
 		return errors.Wrap(err, "configure test database")

@@ -52,9 +52,9 @@ func InitializePeriodicScanner(db *gorm.DB) error {
 }
 
 func ChangePeriodicScanInterval(duration time.Duration) {
-	var new_ticker *time.Ticker = nil
+	var newTicker *time.Ticker = nil
 	if duration > 0 {
-		new_ticker = time.NewTicker(duration)
+		newTicker = time.NewTicker(duration)
 		log.Printf("Periodic scan interval changed: %s", duration.String())
 	} else {
 		log.Print("Periodic scan interval changed: disabled")
@@ -68,7 +68,7 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 			mainPeriodicScanner.ticker.Stop()
 		}
 
-		mainPeriodicScanner.ticker = new_ticker
+		mainPeriodicScanner.ticker = newTicker
 		mainPeriodicScanner.ticker_changed <- true
 	}
 }

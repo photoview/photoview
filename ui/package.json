@@ -9,7 +9,7 @@
   "license": "GPL-3.0",
   "description": "UI app for Photoview",
   "scripts": {
-    "start": "vite",
+    "start": "vite --host=0.0.0.0",
     "mon": "nodemon",
     "build": "vite build",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",

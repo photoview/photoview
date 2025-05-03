@@ -16,6 +16,9 @@ import (
 )
 
 func TestAuthenticateRoute(t *testing.T) {
+	const imageData = "IMAGE DATA"
+	const albumData = "ALBUM DATA"
+
 	db := test_utils.DatabaseTest(t)
 
 	user, err := models.RegisterUser(db, "username", nil, false)
@@ -44,7 +47,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 	t.Run("Authenticate Media", func(t *testing.T) {
 		t.Run("Authorized request", func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/photo/image.jpg", strings.NewReader("IMAGE DATA"))
+			req := httptest.NewRequest("GET", "/photo/image.jpg", strings.NewReader(imageData))
 			ctx := auth.AddUserToContext(req.Context(), user)
 			req = req.WithContext(ctx)
 
@@ -57,7 +60,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request without access token", func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/photo/image.jpg", strings.NewReader("IMAGE DATA"))
+			req := httptest.NewRequest("GET", "/photo/image.jpg", strings.NewReader(imageData))
 
 			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
 
@@ -76,7 +79,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		t.Run("Request with share token", func(t *testing.T) {
 			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
-			req := httptest.NewRequest("GET", url, strings.NewReader("IMAGE DATA"))
+			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
 
 			cookie := http.Cookie{
 				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
@@ -95,7 +98,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 	t.Run("Authenticate Album", func(t *testing.T) {
 		t.Run("Authorized request", func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/download/album/1", strings.NewReader("ALBUM DATA"))
+			req := httptest.NewRequest("GET", "/download/album/1", strings.NewReader(albumData))
 			ctx := auth.AddUserToContext(req.Context(), user)
 			req = req.WithContext(ctx)
 
@@ -108,7 +111,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request without access token", func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/download/album/1", strings.NewReader("ALBUM DATA"))
+			req := httptest.NewRequest("GET", "/download/album/1", strings.NewReader(albumData))
 
 			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
 
@@ -127,7 +130,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		t.Run("Request with share token", func(t *testing.T) {
 			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
-			req := httptest.NewRequest("GET", url, strings.NewReader("ALBUM DATA"))
+			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
 
 			cookie := http.Cookie{
 				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),

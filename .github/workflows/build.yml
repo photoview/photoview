@@ -1,56 +1,61 @@
 name: Docker builds
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: [master]
     tags:
       - v*
+  pull_request:
+    branches: [master]
   schedule:
+    # At 01:18 every Thursday. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
     - cron: '18 1 * * 4'
 
 env:
+  IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'kkovaletp/photoview' }}
+  # IS_PUSHING_IMAGES: true # Switch on when pushing images with forked repos.
+  DOCKER_REGISTRY: ${{ github.repository != 'kkovaletp/photoview' && 'ghcr.io/' || '' }}
   DOCKER_USERNAME: kkoval
   DOCKER_IMAGE: kkoval/photoview
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
 jobs:
   prepare:
-    name: Get latest tag
+    name: Prepare the Matrix
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-tags: 'true'
+          fetch-depth: 0
 
       - name: Prepare the Matrix
         id: prepare_matrix
         shell: bash
         run: |
+          echo Event is '${{ github.event_name }}'
           case ${{ github.event_name }} in
             pull_request)
-              echo Event is ${{ github.event_name }}
               echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             push)
-              echo Event is ${{ github.event_name }}
               echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
             schedule)
-              echo Event is ${{ github.event_name }}
               git fetch --all
-              TAG=$(git describe --tags --abbrev=0 || exit 0)
-              echo TAG = $TAG
+              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
+              echo TAG is $TAG
               if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               else
-                echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}, {"tag": "$TAG", "ref": "$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)"}]' | tee -a $GITHUB_OUTPUT
+                echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
               fi
               ;;
             *)
               echo "Run for '${{ github.event_name }}' is not expected"
-              echo 'tags=[{"tag": "", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
+              echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
               ;;
           esac
 
@@ -66,6 +71,9 @@ jobs:
       matrix:
         tags: ${{ fromJson(needs.prepare.outputs.tags) }}
     steps:
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
       - name: Checkout ${{ matrix.tags.ref }}
         uses: actions/checkout@v4
         with:
@@ -77,14 +85,14 @@ jobs:
       - name: Hadolint report for Sonar
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile
-          config: ${{ github.workspace }}/.hadolint.yaml
+          dockerfile:  Dockerfile
+          config:      ${{ github.workspace }}/.hadolint.yaml
           output-file: ${{ github.workspace }}/hadolint.json
-          format: json
-          failure-threshold: ignore
+          format:      json
+          no-fail:     true
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         if: github.repository == 'kkovaletp/photoview'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -99,27 +107,31 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Docker Login
-        if: github.event_name != 'pull_request' && github.repository == 'kkovaletp/photoview'
+        if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' || '' }}
+          username: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor || env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.token || env.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
-          images: ${{ env.DOCKER_IMAGE }}
-          # Docker tags based on the following events/attributes
+          context: "git"
+          images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
           tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag != 'master' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=ref,event=branch' || '' }}
+            ${{ github.event_name == 'schedule' && matrix.tags.tag == 'master' && 'type=sha' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=branch' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=ref,event=pr' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{version}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}.{{minor}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
+            ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
 
       - name: Set build args
         id: vars
@@ -131,17 +143,19 @@ jobs:
         id: docker_buildx
         uses: docker/build-push-action@v6
         with:
-          context: .
-          sbom: true
-          provenance: mode=max
-          platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name != 'pull_request' && github.repository == 'kkovaletp/photoview' }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          context:     .
+          sbom:        true
+          provenance:  mode=max
+          platforms:   ${{ env.PLATFORMS }}
+          pull:        true
+          push:        ${{ env.IS_PUSHING_IMAGES }}
+          tags:        ${{ steps.docker_meta.outputs.tags }}
+          labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from:  type=gha
+          cache-to:    type=gha,mode=max
           build-args: |
+            NODE_ENV=production
             BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
             REACT_APP_BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
             VERSION=${{ steps.vars.outputs.VERSION }}
@@ -170,20 +184,22 @@ jobs:
       - name: Docker Login
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && 'ghcr.io' || '' }}
+          username: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.actor || env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_REGISTRY == 'ghcr.io/' && github.token || env.DOCKER_PASSWORD }}
 
-      - name: Run Dockle for 'kkoval/photoview:${{ matrix.tags.tag }}'
+      - name: Run Dockle for '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
         id: dockle
         if: ${{ matrix.tags.tag != '' }}
+        continue-on-error: true
         uses: erzz/dockle-action@v1
         with:
-          image: kkoval/photoview:${{ matrix.tags.tag }}
-          report-name: dockle-results-${{ matrix.tags.tag }}
-          report-format: sarif
+          image:             '${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}:${{ matrix.tags.tag }}'
+          report-name:       dockle-results-${{ matrix.tags.tag }}
+          report-format:     sarif
           failure-threshold: fatal
-          exit-code: 1
-          timeout: 5m
+          exit-code:         1
+          timeout:           5m
 
       - name: Upload SARIF file
         if: ${{ steps.dockle.conclusion == 'success' || steps.dockle.conclusion == 'failure' }}

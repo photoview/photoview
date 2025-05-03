@@ -8,13 +8,13 @@
 // ====================================================
 
 export interface CheckInitialSetup_siteInfo {
-  __typename: 'SiteInfo'
+  __typename: "SiteInfo";
   /**
    * Whether or not the initial setup wizard should be shown
    */
-  initialSetup: boolean
+  initialSetup: boolean;
 }
 
 export interface CheckInitialSetup {
-  siteInfo: CheckInitialSetup_siteInfo
+  siteInfo: CheckInitialSetup_siteInfo;
 }

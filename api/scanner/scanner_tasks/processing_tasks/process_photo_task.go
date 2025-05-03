@@ -55,7 +55,6 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error processing photo highres")
 	}
 
-	var photoDimensions *media_utils.PhotoDimensions
 	var baseImagePath string = photo.Path
 
 	// Generate high res jpeg
@@ -92,15 +91,14 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 	}
 
+	var photoDimensions *media_utils.PhotoDimensions
 	// Save original photo to database
 	if origURL == nil {
 
 		// Make sure photo dimensions is set
-		if photoDimensions == nil {
-			photoDimensions, err = media_utils.GetPhotoDimensions(baseImagePath)
-			if err != nil {
-				return []*models.MediaURL{}, err
-			}
+		photoDimensions, err = media_utils.GetPhotoDimensions(baseImagePath)
+		if err != nil {
+			return []*models.MediaURL{}, err
 		}
 
 		original, err := saveOriginalPhotoToDB(ctx.GetDB(), photo, mediaData, photoDimensions)

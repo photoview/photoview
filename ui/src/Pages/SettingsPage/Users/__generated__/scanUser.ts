@@ -8,17 +8,17 @@
 // ====================================================
 
 export interface scanUser_scanUser {
-  __typename: 'ScannerResult'
-  success: boolean
+  __typename: "ScannerResult";
+  success: boolean;
 }
 
 export interface scanUser {
   /**
    * Scan a single user for new media
    */
-  scanUser: scanUser_scanUser
+  scanUser: scanUser_scanUser;
 }
 
 export interface scanUserVariables {
-  userId: string
+  userId: string;
 }

@@ -3,6 +3,7 @@
 package models
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -95,6 +96,7 @@ type Subscription struct {
 }
 
 // A group of media from the same album and the same day, that is grouped together in a timeline view
+// NOTE: It isn't used. Just copy from the old schema.graphql.
 type TimelineGroup struct {
 	// The full album containing the media in this timeline group
 	Album *Album `json:"album"`
@@ -110,21 +112,22 @@ type TimelineGroup struct {
 type LanguageTranslation string
 
 const (
-	LanguageTranslationEnglish            LanguageTranslation = "English"
-	LanguageTranslationFrench             LanguageTranslation = "French"
-	LanguageTranslationItalian            LanguageTranslation = "Italian"
-	LanguageTranslationSwedish            LanguageTranslation = "Swedish"
-	LanguageTranslationDanish             LanguageTranslation = "Danish"
-	LanguageTranslationSpanish            LanguageTranslation = "Spanish"
-	LanguageTranslationPolish             LanguageTranslation = "Polish"
-	LanguageTranslationUkrainian          LanguageTranslation = "Ukrainian"
-	LanguageTranslationGerman             LanguageTranslation = "German"
-	LanguageTranslationRussian            LanguageTranslation = "Russian"
-	LanguageTranslationTraditionalChinese LanguageTranslation = "TraditionalChinese"
-	LanguageTranslationSimplifiedChinese  LanguageTranslation = "SimplifiedChinese"
-	LanguageTranslationPortuguese         LanguageTranslation = "Portuguese"
-	LanguageTranslationBasque             LanguageTranslation = "Basque"
-	LanguageTranslationTurkish            LanguageTranslation = "Turkish"
+	LanguageTranslationEnglish              LanguageTranslation = "English"
+	LanguageTranslationFrench               LanguageTranslation = "French"
+	LanguageTranslationItalian              LanguageTranslation = "Italian"
+	LanguageTranslationSwedish              LanguageTranslation = "Swedish"
+	LanguageTranslationDanish               LanguageTranslation = "Danish"
+	LanguageTranslationSpanish              LanguageTranslation = "Spanish"
+	LanguageTranslationPolish               LanguageTranslation = "Polish"
+	LanguageTranslationUkrainian            LanguageTranslation = "Ukrainian"
+	LanguageTranslationGerman               LanguageTranslation = "German"
+	LanguageTranslationRussian              LanguageTranslation = "Russian"
+	LanguageTranslationTraditionalChineseTw LanguageTranslation = "TraditionalChineseTW"
+	LanguageTranslationTraditionalChineseHk LanguageTranslation = "TraditionalChineseHK"
+	LanguageTranslationSimplifiedChinese    LanguageTranslation = "SimplifiedChinese"
+	LanguageTranslationPortuguese           LanguageTranslation = "Portuguese"
+	LanguageTranslationBasque               LanguageTranslation = "Basque"
+	LanguageTranslationTurkish              LanguageTranslation = "Turkish"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
@@ -138,7 +141,8 @@ var AllLanguageTranslation = []LanguageTranslation{
 	LanguageTranslationUkrainian,
 	LanguageTranslationGerman,
 	LanguageTranslationRussian,
-	LanguageTranslationTraditionalChinese,
+	LanguageTranslationTraditionalChineseTw,
+	LanguageTranslationTraditionalChineseHk,
 	LanguageTranslationSimplifiedChinese,
 	LanguageTranslationPortuguese,
 	LanguageTranslationBasque,
@@ -147,7 +151,7 @@ var AllLanguageTranslation = []LanguageTranslation{
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChinese, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish:
+	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChineseTw, LanguageTranslationTraditionalChineseHk, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish:
 		return true
 	}
 	return false
@@ -157,7 +161,7 @@ func (e LanguageTranslation) String() string {
 	return string(e)
 }
 
-func (e *LanguageTranslation) UnmarshalGQL(v interface{}) error {
+func (e *LanguageTranslation) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -172,6 +176,20 @@ func (e *LanguageTranslation) UnmarshalGQL(v interface{}) error {
 
 func (e LanguageTranslation) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *LanguageTranslation) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e LanguageTranslation) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 // Specified the type a particular notification is of
@@ -204,7 +222,7 @@ func (e NotificationType) String() string {
 	return string(e)
 }
 
-func (e *NotificationType) UnmarshalGQL(v interface{}) error {
+func (e *NotificationType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -219,6 +237,20 @@ func (e *NotificationType) UnmarshalGQL(v interface{}) error {
 
 func (e NotificationType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *NotificationType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e NotificationType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 // Used to specify which order to sort items in
@@ -248,7 +280,7 @@ func (e OrderDirection) String() string {
 	return string(e)
 }
 
-func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
+func (e *OrderDirection) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -263,6 +295,20 @@ func (e *OrderDirection) UnmarshalGQL(v interface{}) error {
 
 func (e OrderDirection) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OrderDirection) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OrderDirection) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 // Supported downsampling filters for thumbnail generation
@@ -298,7 +344,7 @@ func (e ThumbnailFilter) String() string {
 	return string(e)
 }
 
-func (e *ThumbnailFilter) UnmarshalGQL(v interface{}) error {
+func (e *ThumbnailFilter) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -313,4 +359,18 @@ func (e *ThumbnailFilter) UnmarshalGQL(v interface{}) error {
 
 func (e ThumbnailFilter) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ThumbnailFilter) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ThumbnailFilter) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

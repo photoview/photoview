@@ -24,8 +24,8 @@ please take a moment to review this guide, which outlines the process for making
 with several channels, and you're welcome to join it to chat with the community and maintainers 
 to ask for help, discuss some project-related topics, or help others.
 
-2. **Browse Issues**: Check the [open issues](https://github.com/photoview/photoview/issues), 
-[PRs](https://github.com/photoview/photoview/pulls), and [discussions](https://github.com/photoview/photoview/discussions)  
+2. **Browse Issues**: Check the [open issues](https://github.com/kkovaletp/photoview/issues), 
+[PRs](https://github.com/kkovaletp/photoview/pulls), and [discussions](https://github.com/kkovaletp/photoview/discussions)  
 to see if your bug or idea has already been reported or discussed. If not, you can open a new issue.
 While browsing the issues, if you see an issue with useful from your PoV feature proposal or a bug, 
 you're struggling with, it would be a helpful contribution to like the 1st post of that issue in the 
@@ -36,7 +36,7 @@ issue's thread - that would help as well.
 3. **Check Open Source Guide**: Familiarize yourself with the [Open Source Guide](https://opensource.guide/) 
 for general information on contributing to open-source projects.
 
-4. **Review Good First Issues**: We've collected some [good first issues](https://github.com/photoview/photoview/labels/good%20first%20issue) 
+4. **Review Good First Issues**: We've collected some [good first issues](https://github.com/kkovaletp/photoview/labels/good%20first%20issue) 
 that are suitable for newcomers. These are a great way to start contributing to Photoview.
 
 ## Reporting Issues
@@ -53,7 +53,7 @@ documentation improvements, and more. If you have the skills, it doesn't matter 
 ### Here's how you can contribute
 
 - **Code**: If you're looking to help with code, check out the open issues. This 
-[filter](https://github.com/photoview/photoview/issues?q=is%3Aopen+is%3Aissue+project%3Aphotoview%2Fphotoview%2F1+-label%3Aduplicate+-label%3Ainvalid+-label%3Awontfix+no%3Aassignee)
+[filter](https://github.com/kkovaletp/photoview/issues?q=is%3Aopen+is%3Aissue+project%3Aphotoview%2Fphotoview%2F1+-label%3Aduplicate+-label%3Ainvalid+-label%3Awontfix+no%3Aassignee)
 contains issues, reviewed by maintainers, and waiting for contribution. 
 In particular, they have the Photoview project assigned and don't have any invalid labels.
 - **Code review**: If you're a skilled developer with experience in the project's technology stack,
@@ -129,7 +129,7 @@ and ensure they don't introduce any regressions.
 
 7. **Push Changes to Your Fork**: Push your changes to your forked repository on GitHub.
 
-8. **Create a Pull Request**: [Create a pull request](https://github.com/photoview/photoview/compare) 
+8. **Create a Pull Request**: [Create a pull request](https://github.com/kkovaletp/photoview/compare) 
 from your branch to the `master` branch of the Photoview repository. Provide a detailed description 
 of your changes and reference any related issues.
 
@@ -165,8 +165,8 @@ the [GNU Affero General Public License (AGPL) version 3](./LICENSE.txt). Ensure 
 There are several ways to get help for your contribution to the project:
 
 - Search for the answer in the project's [documentation](https://github.com/photoview/photoview.github.io), 
-[issues](https://github.com/photoview/photoview/issues), [PRs](https://github.com/photoview/photoview/pulls), 
-and [discussions](https://github.com/photoview/photoview/discussions).
+[issues](https://github.com/kkovaletp/photoview/issues), [PRs](https://github.com/kkovaletp/photoview/pulls), 
+and [discussions](https://github.com/kkovaletp/photoview/discussions).
 - We have the [Discord server](https://discord.gg/jQ392948u9) with several channels, 
 and you're welcome to join it to chat with the community and maintainers.
 - Start a Discussion in the repo, providing a detailed and complete description of your case, environment, and the problem.

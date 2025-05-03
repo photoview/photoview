@@ -10,6 +10,7 @@ import (
 	"github.com/kkovaletp/photoview/api/scanner/scanner_task"
 	"github.com/kkovaletp/photoview/api/scanner/scanner_tasks/processing_tasks"
 	"github.com/pkg/errors"
+	"gopkg.in/vansante/go-ffprobe.v2"
 	"gorm.io/gorm"
 )
 
@@ -60,18 +61,7 @@ func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 		}
 	}
 
-	var framerate *float64 = nil
-	if stream.AvgFrameRate != "" {
-		parts := strings.Split(stream.AvgFrameRate, "/")
-		if len(parts) == 2 {
-			if numerator, err := strconv.ParseInt(parts[0], 10, 64); err == nil {
-				if denominator, err := strconv.ParseInt(parts[1], 10, 64); err == nil {
-					result := float64(numerator) / float64(denominator)
-					framerate = &result
-				}
-			}
-		}
-	}
+	framerate := getFrameRate(stream)
 
 	videoMetadata := models.VideoMetadata{
 		Width:        stream.Width,
@@ -91,4 +81,20 @@ func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
 	}
 
 	return nil
+}
+
+func getFrameRate(stream *ffprobe.Stream) *float64 {
+	var framerate *float64 = nil
+	if stream.AvgFrameRate != "" {
+		parts := strings.Split(stream.AvgFrameRate, "/")
+		if len(parts) == 2 {
+			if numerator, err := strconv.ParseInt(parts[0], 10, 64); err == nil {
+				if denominator, err := strconv.ParseInt(parts[1], 10, 64); err == nil {
+					result := float64(numerator) / float64(denominator)
+					framerate = &result
+				}
+			}
+		}
+	}
+	return framerate
 }

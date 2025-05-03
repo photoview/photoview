@@ -13,8 +13,8 @@ services:
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     ## Or comment out the `postgres:` and uncomment the `mariadb:` if PHOTOVIEW_DATABASE_DRIVER is set to `mysql`
     depends_on:
-      # mariadb:
       postgres:
+      #mariadb:
         condition: service_healthy
     ## Security options for some restricted systems
     security_opt:
@@ -28,7 +28,7 @@ services:
       # PHOTOVIEW_MYSQL_URL: "${MARIADB_USER}:${MARIADB_PASSWORD}@tcp(photoview-mariadb)/${MARIADB_DATABASE}"
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # PHOTOVIEW_SQLITE_PATH: ${PHOTOVIEW_SQLITE_PATH}
-      PHOTOVIEW_LISTEN_IP: "photoview"
+      PHOTOVIEW_LISTEN_IP: "0.0.0.0"
       ## Uncomment the next variable and set a different value to change the port photoview uses inside the container.
       ## If you change this, remember to update the port mapping (under the `ports:`) above!
       # PHOTOVIEW_LISTEN_PORT: 8080
@@ -42,7 +42,11 @@ services:
       ## A token can be generated for free here https://account.mapbox.com/access-tokens/
       ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
       MAPBOX_TOKEN: ${MAPBOX_TOKEN}
-    ## Share hardware devices with scan job runners (optional):
+      ## If you want to use it, set the correct value in the .env file.
+      ## Support `qsv`, `vaapi`, `nvenc`.
+      ## Only `qsv` is verified with `/dev/dri` devices (see below `devices`).
+      PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION: ${PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION}
+    ## Share hardware devices with FFmpeg (optional):
     # devices:
       ## Uncomment next devices mappings if they are available in your host system
       ## Intel QSV
