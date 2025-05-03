@@ -7,9 +7,7 @@ services:
     user: root
     entrypoint: []
     command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache"
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
+    cap_add: [CHOWN]
     volumes:
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
