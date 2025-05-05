@@ -1,7 +1,7 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/99designs/gqlgen v0.17.72 h1:2JDAuutIYtAN26BAtigfLZFnTN53fpYbIENL8bVgAKY=
-github.com/99designs/gqlgen v0.17.72/go.mod h1:BoL4C3j9W2f95JeWMrSArdDNGWmZB9MOS2EMHJDZmUc=
+github.com/99designs/gqlgen v0.17.73 h1:A3Ki+rHWqKbAOlg5fxiZBnz6OjW3nwupDHEG15gEsrg=
+github.com/99designs/gqlgen v0.17.73/go.mod h1:2RyGWjy2k7W9jxrs8MOQthXGkD3L3oGr0jXW3Pu8lGg=
 github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e h1:lqIUFzxaqyYqUn4MhzAvSAh4wIte/iLNcIEWxpT/qbc=
 github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e/go.mod h1:9wdDJkRgo3SGTcFwbQ7elVIQhIr2bbBjecuY7VoqmPU=
 github.com/PuerkitoBio/goquery v1.10.3 h1:pFYcNSqHxBD06Fpj/KsbStFRsgRATgnf3LeXiUkhzPo=
@@ -97,8 +97,8 @@ github.com/strukturag/libheif v1.18.2 h1:CrlRS7Kwl2odl4DYM/m6ay/HPXEcmQPK1xF8FxA
 github.com/strukturag/libheif v1.18.2/go.mod h1:E/PNRlmVtrtj9j2AvBZlrO4dsBDu6KfwDZn7X1Ce8Ks=
 github.com/urfave/cli/v2 v2.27.6 h1:VdRdS98FNhKZ8/Az8B7MTyGQmpIr36O1EHybx/LaZ4g=
 github.com/urfave/cli/v2 v2.27.6/go.mod h1:3Sevf16NykTbInEnD0yKkjDAeZDS0A6bzhBH5hrMvTQ=
-github.com/vektah/gqlparser/v2 v2.5.25 h1:FmWtFEa+invTIzWlWK6Vk7BVEZU/97QBzeI8Z1JjGt8=
-github.com/vektah/gqlparser/v2 v2.5.25/go.mod h1:D1/VCZtV3LPnQrcPBeR/q5jkSQIPti0uYCP/RI0gIeo=
+github.com/vektah/gqlparser/v2 v2.5.26 h1:REqqFkO8+SOEgZHR/eHScjjVjGS8Nk3RMO/juiTobN4=
+github.com/vektah/gqlparser/v2 v2.5.26/go.mod h1:D1/VCZtV3LPnQrcPBeR/q5jkSQIPti0uYCP/RI0gIeo=
 github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 h1:3UeQBvD0TFrlVjOeLOBz+CPAI8dnbqNSVwUwRrkp7vQ=
 github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0/go.mod h1:IXCdmsXIht47RaVFLEdVnh1t+pgYtTAhQGj73kz+2DM=
 github.com/xor-gate/goexif2 v1.1.0 h1:OvTZ5iEvsDhRWFjV5xY3wT7uHFna28nSSP7ucau+cXQ=
