@@ -98,12 +98,8 @@ func deleteEmptyFaceGroups(sourceFaceGroups []*models.FaceGroup, tx *gorm.DB) er
 
 func deleteFaceGroups(sourceFaceGroups []*models.FaceGroup, tx *gorm.DB) error {
 	for _, faceGroup := range sourceFaceGroups {
-		if err := tx.Model(&models.ImageFace{}).Where(faceGroupIDIsQuestion, faceGroup.ID).Error; err != nil {
-			return err
-		}
-
 		if err := tx.Delete(&faceGroup).Error; err != nil {
-			return err
+			return fmt.Errorf("Delete FaceGroup(%d) error: %w", faceGroup.ID, err)
 		}
 	}
 	return nil
