@@ -69,3 +69,24 @@ func (cli *MagickCli) EncodeJpeg(inputPath string, outputPath string, jpegQualit
 
 	return nil
 }
+
+func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, width, height int) error {
+	if cli.err != nil {
+		return fmt.Errorf("generate thumbnail %q error: magick: %w", inputPath, cli.err)
+	}
+
+	args := []string{
+		inputPath,
+		"-resize",
+		fmt.Sprintf("%dx%d", width, height),
+		outputPath,
+	}
+
+	cmd := exec.Command(cli.path, args...)
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("generate thumbnail with \"%s %v\" error: %w", cli.path, args, err)
+	}
+
+	return nil
+}
