@@ -45,13 +45,13 @@ jobs:
               ;;
             schedule)
               git fetch --all
-              TAG=$(git describe --tags --abbrev=0 --always || exit 0)
-              echo TAG is $TAG
-              if [ -z "$TAG" ]; then
+              #TAG=$(git describe --tags --abbrev=0 --always || exit 0)
+              #echo TAG is $TAG
+              #if [ -z "$TAG" ]; then
                 echo 'tags=[{"tag": "${{ github.ref_name }}", "ref": "${{ github.ref }}"}]' | tee -a $GITHUB_OUTPUT
-              else
-                echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
-              fi
+              #else
+              #  echo tags=[{'"'tag'"': '"'${{ github.ref_name }}'"', '"'ref'"': '"'${{ github.ref }}'"'}, {'"'tag'"': '"'${TAG#v}'"', '"'ref'"': '"'$(git show-ref --tags -d | grep "/$TAG$" | cut -d ' ' -f 2)'"'}] | tee -a $GITHUB_OUTPUT
+              #fi
               ;;
             *)
               echo "Run for '${{ github.event_name }}' is not expected"
