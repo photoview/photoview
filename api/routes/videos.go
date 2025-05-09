@@ -36,7 +36,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		if len(mediaURLs) > 1 {
 			sanitizedMediaName := strings.ReplaceAll(mediaName, "\n", "")
 			sanitizedMediaName = strings.ReplaceAll(sanitizedMediaName, "\r", "")
-			log.Warn("Multiple video web URLs found for name %s: %d", sanitizedMediaName, len(mediaURLs))
+			log.Warn("Multiple video web URLs found for name", sanitizedMediaName, len(mediaURLs))
 		}
 
 		mediaURL := mediaURLs[0]
@@ -44,7 +44,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
-				log.Warn("got error authenticating video: %s", err)
+				log.Warn("got error authenticating video:", err)
 			}
 			w.WriteHeader(status)
 			w.Write([]byte(response))
@@ -56,7 +56,7 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		if mediaURL.Purpose == models.VideoWeb {
 			cachedPath = path.Join(utils.MediaCachePath(), strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
 		} else {
-			log.Error("Can not handle media_purpose for video: %s", mediaURL.Purpose)
+			log.Error("Can not handle media_purpose for video:", mediaURL.Purpose)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return
@@ -65,14 +65,14 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		if _, err := os.Stat(cachedPath); err != nil {
 			if os.IsNotExist(err) {
 				if err := scanner.ProcessSingleMedia(db, media); err != nil {
-					log.Error("processing video not found in cache: %s", err)
+					log.Error("processing video not found in cache:", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(internalServerError))
 					return
 				}
 
 				if _, err := os.Stat(cachedPath); err != nil {
-					log.Error("video not found in cache after reprocessing: %s", err)
+					log.Error("video not found in cache after reprocessing:", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(internalServerError))
 					return
