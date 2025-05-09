@@ -51,7 +51,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMedia(db, media); err != nil {
+			if err = scanner.ProcessSingleMediaFunc(db, media); err != nil {
 				log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
