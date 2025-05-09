@@ -1,4 +1,19 @@
 services:
+  ## Makes sure that the media cache folder is created with the correct permissions
+  photoview-prepare:
+    image: kkoval/photoview:master
+    hostname: photoview-prepare
+    container_name: photoview-prepare
+    user: root
+    entrypoint: []
+    command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache"
+    cap_add:
+      - CHOWN
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "${HOST_PHOTOVIEW_LOCATION}/storage:/home/photoview/media-cache"
+
   photoview:
     image: kkoval/photoview:master
     labels:
@@ -13,6 +28,8 @@ services:
     ## Comment out the entire `depends_on` section if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
     ## Or comment out the `postgres:` and uncomment the `mariadb:` if PHOTOVIEW_DATABASE_DRIVER is set to `mysql`
     depends_on:
+      photoview-prepare:
+        condition: service_completed_successfully
       postgres:
       #mariadb:
         condition: service_healthy
@@ -33,7 +50,11 @@ services:
       ## If you change this, remember to update the port mapping (under the `ports:`) above!
       # PHOTOVIEW_LISTEN_PORT: 8080
       ## Uncomment the next variable and set a different value to set the location of the media cache inside the container.
-      ## If you change this, remember to update the right side of the storage volume mount (under the `volumes:`) below!
+      ## Make sure that you know why you are doing this.
+      ## If you change this, remember to update the corresponding paths in:
+      ## - the command of the `photoview-prepare` service
+      ## - the `photoview-prepare` service's right side of the storage volume mount (under the `volumes:`)
+      ## - the right side of the storage volume mount (under the `volumes:`) below
       # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
       ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       ## Enable the following Godebug
