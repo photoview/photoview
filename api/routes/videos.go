@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -34,9 +35,13 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 		}
 
 		if len(mediaURLs) > 1 {
-			sanitizedMediaName := strings.ReplaceAll(mediaName, "\n", "")
-			sanitizedMediaName = strings.ReplaceAll(sanitizedMediaName, "\r", "")
-			log.Warn("Multiple video web URLs found for name", sanitizedMediaName, len(mediaURLs))
+			sanitizedMediaName := strings.Map(func(r rune) rune {
+				if unicode.IsPrint(r) {
+					return r
+				}
+				return -1
+			}, mediaName)
+			log.Warn("Multiple video web URLs found for name", sanitizedMediaName, "count", len(mediaURLs), "using", mediaURLs[0])
 		}
 
 		mediaURL := mediaURLs[0]
