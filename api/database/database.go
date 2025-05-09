@@ -175,6 +175,10 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Setup UserAlbums join table failed: %v\n", err)
 	}
 
+	if err := db.AutoMigrate(database_models...); err != nil {
+		log.Printf("Auto migration failed: %v\n", err)
+	}
+
 	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
 	if db.Migrator().HasColumn(&models.SiteInfo{}, "thumbnail_method") {
 		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
