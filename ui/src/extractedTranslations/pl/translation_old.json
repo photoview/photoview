@@ -53,7 +53,7 @@
         "title": null
       },
       "merge_face_groups": {
-        "description": null,
+        "description": "Wszystkie obrazy w tej grupie twarzy zostaną połączone z wybraną grupą twarzy.",
         "destination_table": {
           "title": null
         },
