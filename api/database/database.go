@@ -195,6 +195,11 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
 	}
 
+	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
+	if db.Migrator().HasColumn(&models.SiteInfo{}, "thumbnail_method") {
+		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
+	}
+
 	return nil
 }
 
