@@ -23,8 +23,8 @@ export enum LanguageTranslation {
   SimplifiedChinese = "SimplifiedChinese",
   Spanish = "Spanish",
   Swedish = "Swedish",
-  TraditionalChineseTW = "TraditionalChineseTW",
   TraditionalChineseHK = "TraditionalChineseHK",
+  TraditionalChineseTW = "TraditionalChineseTW",
   Turkish = "Turkish",
   Ukrainian = "Ukrainian",
 }
@@ -49,18 +49,6 @@ export enum NotificationType {
 export enum OrderDirection {
   ASC = "ASC",
   DESC = "DESC",
-}
-
-/**
- * Supported downsampling filters for thumbnail generation
- */
-export enum ThumbnailFilter {
-  Box = "Box",
-  CatmullRom = "CatmullRom",
-  Lanczos = "Lanczos",
-  Linear = "Linear",
-  MitchellNetravali = "MitchellNetravali",
-  NearestNeighbor = "NearestNeighbor",
 }
 
 //==============================================================
