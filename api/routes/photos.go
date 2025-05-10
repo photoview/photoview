@@ -26,6 +26,11 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		}
 
 		media := mediaURL.Media
+		if media == nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404 - Media not found"))
+			return
+		}
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
@@ -46,7 +51,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMedia(db, media); err != nil {
+			if err = scanner.ProcessSingleMediaFunc(db, media); err != nil {
 				log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
