@@ -179,11 +179,6 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Auto migration failed: %v\n", err)
 	}
 
-	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
-	if db.Migrator().HasColumn(&models.SiteInfo{}, "thumbnail_method") {
-		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
-	}
-
 	// v2.1.0 - Replaced by Media.CreatedAt
 	if db.Migrator().HasColumn(&models.Media{}, "date_imported") {
 		db.Migrator().DropColumn(&models.Media{}, "date_imported")
@@ -198,6 +193,11 @@ func MigrateDatabase(db *gorm.DB) error {
 	// Remove invalid GPS data from DB
 	if err := migrations.MigrateForExifGPSCorrection(db); err != nil {
 		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
+	}
+
+	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
+	if db.Migrator().HasColumn(&models.SiteInfo{}, "thumbnail_method") {
+		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
 	}
 
 	return nil
