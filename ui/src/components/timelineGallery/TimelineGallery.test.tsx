@@ -4,6 +4,7 @@ import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import TimelineGallery, { MY_TIMELINE_QUERY } from './TimelineGallery'
 import { timelineData } from './timelineTestData'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 vi.mock('../../hooks/useScrollPagination')
 
@@ -22,13 +23,10 @@ test('timeline with media', async () => {
     },
   ]
 
-  render(
-    <MemoryRouter initialEntries={['/timeline']}>
-      <MockedProvider mocks={graphqlMocks}>
-        <TimelineGallery />
-      </MockedProvider>
-    </MemoryRouter>
-  )
+  renderWithProviders(<TimelineGallery />, {
+    mocks: graphqlMocks,
+    initialEntries: ['/timeline']
+  })
 
   expect(screen.queryByLabelText('Show only favorites')).toBeInTheDocument()
 
