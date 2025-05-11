@@ -153,31 +153,30 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AuthorizeUser                func(childComplexity int, username string, password string) int
-		ChangeUserPreferences        func(childComplexity int, language *string) int
-		CombineFaceGroups            func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupID int) int
-		CreateUser                   func(childComplexity int, username string, password *string, admin bool) int
-		DeleteShareToken             func(childComplexity int, token string) int
-		DeleteUser                   func(childComplexity int, id int) int
-		DetachImageFaces             func(childComplexity int, imageFaceIDs []int) int
-		FavoriteMedia                func(childComplexity int, mediaID int, favorite bool) int
-		InitialSetupWizard           func(childComplexity int, username string, password string, rootPath string) int
-		MoveImageFaces               func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
-		ProtectShareToken            func(childComplexity int, token string, password *string) int
-		RecognizeUnlabeledFaces      func(childComplexity int) int
-		ResetAlbumCover              func(childComplexity int, albumID int) int
-		ScanAll                      func(childComplexity int) int
-		ScanUser                     func(childComplexity int, userID int) int
-		SetAlbumCover                func(childComplexity int, coverID int) int
-		SetFaceGroupLabel            func(childComplexity int, faceGroupID int, label *string) int
-		SetPeriodicScanInterval      func(childComplexity int, interval int) int
-		SetScannerConcurrentWorkers  func(childComplexity int, workers int) int
-		SetThumbnailDownsampleMethod func(childComplexity int, method models.ThumbnailFilter) int
-		ShareAlbum                   func(childComplexity int, albumID int, expire *time.Time, password *string) int
-		ShareMedia                   func(childComplexity int, mediaID int, expire *time.Time, password *string) int
-		UpdateUser                   func(childComplexity int, id int, username *string, password *string, admin *bool) int
-		UserAddRootPath              func(childComplexity int, id int, rootPath string) int
-		UserRemoveRootAlbum          func(childComplexity int, userID int, albumID int) int
+		AuthorizeUser               func(childComplexity int, username string, password string) int
+		ChangeUserPreferences       func(childComplexity int, language *string) int
+		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupID int) int
+		CreateUser                  func(childComplexity int, username string, password *string, admin bool) int
+		DeleteShareToken            func(childComplexity int, token string) int
+		DeleteUser                  func(childComplexity int, id int) int
+		DetachImageFaces            func(childComplexity int, imageFaceIDs []int) int
+		FavoriteMedia               func(childComplexity int, mediaID int, favorite bool) int
+		InitialSetupWizard          func(childComplexity int, username string, password string, rootPath string) int
+		MoveImageFaces              func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
+		ProtectShareToken           func(childComplexity int, token string, password *string) int
+		RecognizeUnlabeledFaces     func(childComplexity int) int
+		ResetAlbumCover             func(childComplexity int, albumID int) int
+		ScanAll                     func(childComplexity int) int
+		ScanUser                    func(childComplexity int, userID int) int
+		SetAlbumCover               func(childComplexity int, coverID int) int
+		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
+		SetPeriodicScanInterval     func(childComplexity int, interval int) int
+		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
+		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
+		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string) int
+		UpdateUser                  func(childComplexity int, id int, username *string, password *string, admin *bool) int
+		UserAddRootPath             func(childComplexity int, id int, rootPath string) int
+		UserRemoveRootAlbum         func(childComplexity int, userID int, albumID int) int
 	}
 
 	Notification struct {
@@ -239,7 +238,6 @@ type ComplexityRoot struct {
 		FaceDetectionEnabled func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
-		ThumbnailMethod      func(childComplexity int) int
 	}
 
 	Subscription struct {
@@ -330,7 +328,6 @@ type MutationResolver interface {
 	ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
-	SetThumbnailDownsampleMethod(ctx context.Context, method models.ThumbnailFilter) (models.ThumbnailFilter, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
@@ -1066,18 +1063,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
 
-	case "Mutation.setThumbnailDownsampleMethod":
-		if e.complexity.Mutation.SetThumbnailDownsampleMethod == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_setThumbnailDownsampleMethod_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.SetThumbnailDownsampleMethod(childComplexity, args["method"].(models.ThumbnailFilter)), true
-
 	case "Mutation.shareAlbum":
 		if e.complexity.Mutation.ShareAlbum == nil {
 			break
@@ -1499,13 +1484,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SiteInfo.PeriodicScanInterval(childComplexity), true
 
-	case "SiteInfo.thumbnailMethod":
-		if e.complexity.SiteInfo.ThumbnailMethod == nil {
-			break
-		}
-
-		return e.complexity.SiteInfo.ThumbnailMethod(childComplexity), true
-
 	case "Subscription.notification":
 		if e.complexity.Subscription.Notification == nil {
 			break
@@ -1784,7 +1762,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/thumbnails.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
+//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1806,7 +1784,6 @@ var sources = []*ast.Source{
 	{Name: "resolvers/search.graphql", Input: sourceData("resolvers/search.graphql"), BuiltIn: false},
 	{Name: "resolvers/share_token.graphql", Input: sourceData("resolvers/share_token.graphql"), BuiltIn: false},
 	{Name: "resolvers/site_info.graphql", Input: sourceData("resolvers/site_info.graphql"), BuiltIn: false},
-	{Name: "resolvers/thumbnails.graphql", Input: sourceData("resolvers/thumbnails.graphql"), BuiltIn: false},
 	{Name: "resolvers/timeline.graphql", Input: sourceData("resolvers/timeline.graphql"), BuiltIn: false},
 	{Name: "resolvers/user.graphql", Input: sourceData("resolvers/user.graphql"), BuiltIn: false},
 }
@@ -2672,34 +2649,6 @@ func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_argsWorke
 	}
 
 	var zeroVal int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_setThumbnailDownsampleMethod_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_setThumbnailDownsampleMethod_argsMethod(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["method"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_setThumbnailDownsampleMethod_argsMethod(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (models.ThumbnailFilter, error) {
-	if _, ok := rawArgs["method"]; !ok {
-		var zeroVal models.ThumbnailFilter
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("method"))
-	if tmp, ok := rawArgs["method"]; ok {
-		return ec.unmarshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, tmp)
-	}
-
-	var zeroVal models.ThumbnailFilter
 	return zeroVal, nil
 }
 
@@ -8383,83 +8332,6 @@ func (ec *executionContext) fieldContext_Mutation_protectShareToken(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_setThumbnailDownsampleMethod(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_setThumbnailDownsampleMethod(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().SetThumbnailDownsampleMethod(rctx, fc.Args["method"].(models.ThumbnailFilter))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.IsAdmin == nil {
-				var zeroVal models.ThumbnailFilter
-				return zeroVal, errors.New("directive isAdmin is not implemented")
-			}
-			return ec.directives.IsAdmin(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(models.ThumbnailFilter); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.ThumbnailFilter)
-	fc.Result = res
-	return ec.marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_setThumbnailDownsampleMethod(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ThumbnailFilter does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_setThumbnailDownsampleMethod_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_authorizeUser(ctx, field)
 	if err != nil {
@@ -10453,8 +10325,6 @@ func (ec *executionContext) fieldContext_Query_siteInfo(_ context.Context, field
 				return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
 			case "concurrentWorkers":
 				return ec.fieldContext_SiteInfo_concurrentWorkers(ctx, field)
-			case "thumbnailMethod":
-				return ec.fieldContext_SiteInfo_thumbnailMethod(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiteInfo", field.Name)
 		},
@@ -11883,72 +11753,6 @@ func (ec *executionContext) fieldContext_SiteInfo_concurrentWorkers(_ context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SiteInfo_thumbnailMethod(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SiteInfo_thumbnailMethod(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.ThumbnailMethod, nil
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.IsAdmin == nil {
-				var zeroVal models.ThumbnailFilter
-				return zeroVal, errors.New("directive isAdmin is not implemented")
-			}
-			return ec.directives.IsAdmin(ctx, obj, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(models.ThumbnailFilter); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/photoview/photoview/api/graphql/models.ThumbnailFilter`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.ThumbnailFilter)
-	fc.Result = res
-	return ec.marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SiteInfo_thumbnailMethod(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiteInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ThumbnailFilter does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16515,13 +16319,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "setThumbnailDownsampleMethod":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_setThumbnailDownsampleMethod(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "authorizeUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_authorizeUser(ctx, field)
@@ -17328,11 +17125,6 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "concurrentWorkers":
 			out.Values[i] = ec._SiteInfo_concurrentWorkers(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "thumbnailMethod":
-			out.Values[i] = ec._SiteInfo_thumbnailMethod(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -18601,16 +18393,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx context.Context, v any) (models.ThumbnailFilter, error) {
-	var res models.ThumbnailFilter
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNThumbnailFilter2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐThumbnailFilter(ctx context.Context, sel ast.SelectionSet, v models.ThumbnailFilter) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
