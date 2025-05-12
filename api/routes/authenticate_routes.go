@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -72,7 +73,14 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	var shareToken models.ShareToken
 
 	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, "unauthorized", http.StatusForbidden, err
+		}
 		return false, internalServerError, http.StatusInternalServerError, err
+	}
+
+	if shareToken.Expire != nil && time.Now().After(*shareToken.Expire) {
+		return false, "unauthorized", http.StatusForbidden, errors.New("share token expired")
 	}
 
 	// Validate share token password, if set

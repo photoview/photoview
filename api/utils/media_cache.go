@@ -39,6 +39,10 @@ func CachePathForMedia(albumID int, mediaID int) (string, error) {
 
 var testCachePath string = ""
 
+func GetTestCachePath() string {
+	return testCachePath
+}
+
 func ConfigureTestCache(tmpDir string) {
 	testCachePath = tmpDir
 }
