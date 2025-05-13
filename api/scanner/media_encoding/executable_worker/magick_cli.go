@@ -1,11 +1,14 @@
 package executable_worker
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/photoview/photoview/api/log"
+	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/utils"
 )
 
@@ -89,4 +92,35 @@ func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, wid
 	}
 
 	return nil
+}
+
+func (cli *MagickCli) IdentifyDimension(inputPath string) (ret media_utils.PhotoDimensions, err error) {
+	if cli.err != nil {
+		err = fmt.Errorf("identify dimension %q error: magick: %w", inputPath, cli.err)
+		return
+	}
+
+	args := []string{
+		"identify",
+		"-format",
+		`{"height":%h, "width":%w}`,
+		inputPath,
+	}
+
+	cmd := exec.Command(cli.path, args...)
+
+	var output bytes.Buffer
+	cmd.Stdout = &output
+
+	if e := cmd.Run(); e != nil {
+		err = fmt.Errorf("identify dimension with \"%s %v\" error: %w", cli.path, args, e)
+		return
+	}
+
+	if e := json.NewDecoder(&output).Decode(&ret); e != nil {
+		err = fmt.Errorf("identify dimension with \"%s %v\" error: %w", cli.path, args, e)
+		return
+	}
+
+	return
 }

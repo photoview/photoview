@@ -3,15 +3,26 @@ set -eu
 
 : ${FAIL_WITH=""}
 
-if [ "$1" = "-version" ]
-then
-  echo magick: version fake
-fi
-
 if [ "${FAIL_WITH}" != "" ]
 then
   echo ${FAIL_WITH}
   exit -1
 fi
+
+if [ "$#" = "0" ] # no args
+then
+  exit 0
+fi
+
+case "$1" in
+  "-version")
+    echo magick: version fake
+    exit 0
+    ;;
+  "identify")
+    echo -n '{"height":800, "width":1000}'
+    exit 0
+    ;;
+esac
 
 echo $@
