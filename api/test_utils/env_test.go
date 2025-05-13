@@ -13,11 +13,7 @@ func TestPathFromAPIRoot(t *testing.T) {
 }
 
 func TestSetPathWithCurrent(t *testing.T) {
-	pathDone := SetEnv("PATH", "")
-	defer pathDone()
-
-	testDone := SetPathWithCurrent("./test")
-	defer testDone()
+	SetPathWithCurrent(t, "./test")
 
 	path := os.Getenv("PATH")
 	if got, want := path, "api/test_utils/test"; !strings.HasSuffix(got, want) {

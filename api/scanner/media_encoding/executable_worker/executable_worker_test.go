@@ -17,11 +17,8 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("VersionFail", func(t *testing.T) {
-		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-		defer donePath()
-
-		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-		defer doneEnv()
+		test_utils.SetPathWithCurrent(t, testdataBinPath)
+		t.Setenv("FAIL_WITH", "expect failure")
 
 		err := SetFfprobePath()
 		if err == nil {
@@ -30,8 +27,7 @@ func TestInitFfprobePath(t *testing.T) {
 	})
 
 	t.Run("Succeed", func(t *testing.T) {
-		donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-		defer donePath()
+		test_utils.SetPathWithCurrent(t, testdataBinPath)
 
 		err := SetFfprobePath()
 		if err != nil {

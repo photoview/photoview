@@ -11,8 +11,7 @@ import (
 )
 
 func TestMagickCliNotExist(t *testing.T) {
-	done := test_utils.SetPathWithCurrent()
-	defer done()
+	test_utils.SetPathWithCurrent(t, "")
 
 	Magick = newMagickCli()
 
@@ -41,11 +40,8 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
-
-	doneDisableRaw := test_utils.SetEnv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
-	defer doneDisableRaw()
+	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 
 	Magick = newMagickCli()
 
@@ -74,11 +70,8 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliVersionFail(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
-
-	done := test_utils.SetEnv("FAIL_WITH", "failure")
-	defer done()
+	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv("FAIL_WITH", "failure")
 
 	Magick = newMagickCli()
 
@@ -107,8 +100,7 @@ func TestMagickCliVersionFail(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
+	test_utils.SetPathWithCurrent(t, testdataBinPath)
 
 	Magick = newMagickCli()
 
@@ -116,8 +108,7 @@ func TestMagickCliFail(t *testing.T) {
 		t.Fatal("MagickCli should be installed")
 	}
 
-	done := test_utils.SetEnv("FAIL_WITH", "failure")
-	defer done()
+	t.Setenv("FAIL_WITH", "failure")
 
 	err := Magick.EncodeJpeg("input", "output", 70)
 	if err == nil {
@@ -145,8 +136,7 @@ func TestMagickCliFail(t *testing.T) {
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
+	test_utils.SetPathWithCurrent(t, testdataBinPath)
 
 	Magick = newMagickCli()
 
@@ -176,6 +166,15 @@ func TestMagickCliSucceed(t *testing.T) {
 
 		if diff := cmp.Diff(got, media_utils.PhotoDimensions{Width: 1000, Height: 800}); diff != "" {
 			t.Errorf("MagickCli.IdentifyDimension(...) diff: (-got, +want)\n%s", diff)
+		}
+	})
+
+	t.Run("IdentifyDimensionInvalidJSON", func(t *testing.T) {
+		t.Setenv("INVALID_OUTPUT", `{"width":1000,`)
+
+		_, err := Magick.IdentifyDimension("input")
+		if want := `unexpected EOF$`; !regexp.MustCompile(want).MatchString(err.Error()) {
+			t.Errorf("MagickCli.IdentifyDimension() = error(%v), which should match with regexp %q", err, want)
 		}
 	})
 }

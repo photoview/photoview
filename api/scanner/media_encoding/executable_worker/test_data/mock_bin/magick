@@ -2,6 +2,7 @@
 set -eu
 
 : ${FAIL_WITH=""}
+: ${INVALID_OUTPUT=""}
 
 if [ "${FAIL_WITH}" != "" ]
 then
@@ -20,6 +21,12 @@ case "$1" in
     exit 0
     ;;
   "identify")
+    if [ "${INVALID_OUTPUT}" != "" ]
+    then
+      echo -n ${INVALID_OUTPUT}
+      exit 0
+    fi
+
     echo -n '{"height":800, "width":1000}'
     exit 0
     ;;
