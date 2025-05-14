@@ -74,12 +74,12 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 
 	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, "unauthorized", http.StatusForbidden, err
+			return false, "unauthorized", http.StatusForbidden, errors.New("share token not found")
 		}
 		return false, internalServerError, http.StatusInternalServerError, err
 	}
 
-	if shareToken.Expire != nil && time.Now().After(*shareToken.Expire) {
+	if shareToken.Expire != nil && time.Now().UTC().After(shareToken.Expire.UTC()) {
 		return false, "unauthorized", http.StatusForbidden, errors.New("share token expired")
 	}
 

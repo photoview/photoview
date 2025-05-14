@@ -13,85 +13,20 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
-	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 // setTestCachePath temporarily sets a different media cache path for testing
 // and returns a function to restore the original state
 func setTestCachePath(tempPath string) func() {
-	// Store the original value
-	original := utils.GetTestCachePath()
 	// Set the test value
 	utils.ConfigureTestCache(tempPath)
-	// Return function to restore original value
+	// Return function to clear the override for this goroutine
 	return func() {
-		utils.ConfigureTestCache(original)
-	}
-}
-
-// mockVideoHandler replicates the video route handler but skips authentication
-func mockVideoHandler(db *gorm.DB, tempCachePath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		mediaName := mux.Vars(r)["name"]
-
-		var mediaURLs []models.MediaURL
-		if err := db.Model(&models.MediaURL{}).
-			Select("media_urls.*").
-			Joins("Media").
-			Where("media_urls.media_name = ? AND media_urls.purpose = ?", mediaName, models.VideoWeb).
-			Find(&mediaURLs).
-			Error; err != nil || len(mediaURLs) == 0 || mediaURLs[0].Media == nil {
-
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404"))
-			return
-		}
-
-		if len(mediaURLs) > 1 {
-			log.Warn("Multiple video web URLs found for name", mediaName, "count", len(mediaURLs), "using", mediaURLs[0])
-		}
-
-		mediaURL := mediaURLs[0]
-		media := mediaURL.Media
-
-		// Authentication check is skipped in mock handler
-
-		var cachedPath string
-
-		if mediaURL.Purpose == models.VideoWeb {
-			cachedPath = path.Join(tempCachePath, strconv.Itoa(int(media.AlbumID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-		} else {
-			log.Error("Can not handle media_purpose for video:", mediaURL.Purpose)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal server error"))
-			return
-		}
-
-		if _, err := os.Stat(cachedPath); err != nil {
-			if os.IsNotExist(err) {
-				if err := scanner.ProcessSingleMedia(db, media); err != nil {
-					log.Error("processing video not found in cache:", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					return
-				}
-
-				if _, err := os.Stat(cachedPath); err != nil {
-					log.Error("video not found in cache after reprocessing:", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("internal server error"))
-					return
-				}
-			}
-		}
-
-		http.ServeFile(w, r, cachedPath)
+		utils.ConfigureTestCache("")
 	}
 }
 
@@ -167,7 +102,7 @@ func TestVideoRoutes(t *testing.T) {
 	RegisterVideoRoutes(db, realRouter)
 
 	mockRouter := mux.NewRouter()
-	mockRouter.HandleFunc("/{name}", mockVideoHandler(db, tempCachePath))
+	registerMockVideoRoutesForTesting(db, mockRouter, tempCachePath)
 
 	// Create test cases
 	testCases := []struct {
@@ -290,9 +225,7 @@ func TestVideoRoutes(t *testing.T) {
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
 				// This will likely fail in tests because ProcessSingleMedia can't fully work in tests
 				// When ProcessSingleMedia fails, we expect 500
-				if rr.Code != http.StatusOK {
-					assert.Equal(t, http.StatusInternalServerError, rr.Code)
-				}
+				assert.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, rr.Code)
 			},
 			cleanupFunc: nil,
 		},
@@ -304,7 +237,7 @@ func TestVideoRoutes(t *testing.T) {
 			req := httptest.NewRequest("GET", tc.url, nil)
 
 			// For auth tests, add proper cookie
-			if tc.name == "Authentication with share token" {
+			if tc.useRealAuth {
 				cookie := http.Cookie{
 					Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
 					Value: tokenPassword,
