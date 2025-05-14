@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/utils"
 )
 
@@ -94,7 +93,12 @@ func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, wid
 	return nil
 }
 
-func (cli *MagickCli) IdentifyDimension(inputPath string) (ret media_utils.PhotoDimensions, err error) {
+type Dimension struct {
+	Width  int
+	Height int
+}
+
+func (cli *MagickCli) IdentifyDimension(inputPath string) (ret Dimension, err error) {
 	if cli.err != nil {
 		err = fmt.Errorf("identify dimension %q error: magick: %w", inputPath, cli.err)
 		return

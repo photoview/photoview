@@ -30,7 +30,10 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_u
 		return nil, fmt.Errorf("can't identify dimension of file %q: %w", outputPath, err)
 	}
 
-	return &ret, nil
+	return &media_utils.PhotoDimensions{
+		Width:  ret.Width,
+		Height: ret.Height,
+	}, nil
 }
 
 func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {

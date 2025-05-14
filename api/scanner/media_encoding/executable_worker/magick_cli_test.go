@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 )
 
 func TestMagickCliNotExist(t *testing.T) {
@@ -163,7 +162,7 @@ func TestMagickCliSucceed(t *testing.T) {
 			t.Fatalf("MagickCli.IdentifyDimension(...) = %v, should be nil.", err)
 		}
 
-		if diff := cmp.Diff(got, media_utils.PhotoDimensions{Width: 1000, Height: 800}); diff != "" {
+		if diff := cmp.Diff(got, Dimension{Width: 1000, Height: 800}); diff != "" {
 			t.Errorf("MagickCli.IdentifyDimension(...) diff: (-got, +want)\n%s", diff)
 		}
 	})
