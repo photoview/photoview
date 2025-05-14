@@ -5,13 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, "")
+	SetPathWithCurrent(t, "")
 
 	Ffmpeg = newFfmpegCli()
 
@@ -33,7 +32,7 @@ func TestFfmpegNotExist(t *testing.T) {
 }
 
 func TestFfmpegVersionFail(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("FAIL_WITH", "expect failure")
 
 	Ffmpeg = newFfmpegCli()
@@ -56,7 +55,7 @@ func TestFfmpegVersionFail(t *testing.T) {
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 
 	Ffmpeg = newFfmpegCli()
@@ -79,7 +78,7 @@ func TestFfmpegIgnore(t *testing.T) {
 }
 
 func TestFfmpeg(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 
 	Ffmpeg = newFfmpegCli()
 
@@ -132,7 +131,7 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 
 	Ffmpeg = newFfmpegCli()
@@ -149,7 +148,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 }
 
 func TestFfmpegWithCustomCodec(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 
 	Ffmpeg = newFfmpegCli()

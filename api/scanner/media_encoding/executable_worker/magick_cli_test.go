@@ -7,11 +7,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
-	"github.com/photoview/photoview/api/test_utils"
 )
 
 func TestMagickCliNotExist(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, "")
+	SetPathWithCurrent(t, "")
 
 	Magick = newMagickCli()
 
@@ -40,7 +39,7 @@ func TestMagickCliNotExist(t *testing.T) {
 }
 
 func TestMagickCliIgnore(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("PHOTOVIEW_DISABLE_RAW_PROCESSING", "true")
 
 	Magick = newMagickCli()
@@ -70,7 +69,7 @@ func TestMagickCliIgnore(t *testing.T) {
 }
 
 func TestMagickCliVersionFail(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("FAIL_WITH", "failure")
 
 	Magick = newMagickCli()
@@ -100,7 +99,7 @@ func TestMagickCliVersionFail(t *testing.T) {
 }
 
 func TestMagickCliFail(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 
 	Magick = newMagickCli()
 
@@ -136,7 +135,7 @@ func TestMagickCliFail(t *testing.T) {
 }
 
 func TestMagickCliSucceed(t *testing.T) {
-	test_utils.SetPathWithCurrent(t, testdataBinPath)
+	SetPathWithCurrent(t, testdataBinPath)
 
 	Magick = newMagickCli()
 
