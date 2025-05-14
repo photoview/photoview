@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/disintegration/imaging"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
@@ -22,26 +21,16 @@ import (
 )
 
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
-
-	var siteInfo models.SiteInfo
-	if err := db.First(&siteInfo).Error; err != nil {
-		return nil, err
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
+		return nil, fmt.Errorf("can't generate thumbnail of flie %q: %w", inputPath, err)
 	}
 
-	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
+	ret, err := executable_worker.Magick.IdentifyDimension(outputPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can't identify dimension of file %q: %w", outputPath, err)
 	}
 
-	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
-	dimensions = dimensions.ThumbnailScale()
-
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
-	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
-		return nil, err
-	}
-
-	return &dimensions, nil
+	return &ret, nil
 }
 
 func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
