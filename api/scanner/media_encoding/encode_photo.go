@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/jpeg"
-	"os"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -20,35 +17,33 @@ import (
 	"gorm.io/gorm"
 )
 
-func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
-	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
-		return nil, fmt.Errorf("can't generate thumbnail of flie %q: %w", inputPath, err)
-	}
+// Dimension presents the Dimension of a image.
+type Dimension struct {
+	Width  int
+	Height int
+}
 
-	ret, err := executable_worker.Magick.IdentifyDimension(outputPath)
+// GetPhotoDimensions returns the dimension of the image `imagePath`.
+func GetPhotoDimensions(imagePath string) (Dimension, error) {
+	ret, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
-		return nil, fmt.Errorf("can't identify dimension of file %q: %w", outputPath, err)
+		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
 
-	return &media_utils.PhotoDimensions{
+	return Dimension{
 		Width:  ret.Width,
 		Height: ret.Height,
 	}, nil
 }
 
-func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
-	photo_file, err := os.Create(outputPath)
-	if err != nil {
-		return errors.Wrapf(err, "could not create file: %s", outputPath)
-	}
-	defer photo_file.Close()
-
-	err = jpeg.Encode(photo_file, image, &jpeg.Options{Quality: jpegQuality})
-	if err != nil {
-		return err
+// EncodeThumbnail encodes a thumbnail of `inputPath`, and store it as `outputPath`.
+// It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
+func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
+		return Dimension{}, fmt.Errorf("can't generate thumbnail of flie %q: %w", inputPath, err)
 	}
 
-	return nil
+	return GetPhotoDimensions(outputPath)
 }
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
