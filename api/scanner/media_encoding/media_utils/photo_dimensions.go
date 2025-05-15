@@ -1,8 +1,10 @@
 package media_utils
 
 import (
+	"fmt"
 	"image"
-	"os"
+
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 )
 
 type PhotoDimensions struct {
@@ -11,20 +13,14 @@ type PhotoDimensions struct {
 }
 
 func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
-	photoFile, err := os.Open(imagePath)
+	ret, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
-		return nil, err
-	}
-	defer photoFile.Close()
-
-	config, _, err := image.DecodeConfig(photoFile)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
 
 	return &PhotoDimensions{
-		Width:  config.Width,
-		Height: config.Height,
+		Width:  ret.Width,
+		Height: ret.Height,
 	}, nil
 }
 

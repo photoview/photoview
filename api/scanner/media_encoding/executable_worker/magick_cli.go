@@ -79,7 +79,7 @@ func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, wid
 
 	args := []string{
 		inputPath,
-		"-resize",
+		"-thumbnail",
 		fmt.Sprintf("%dx%d", width, height),
 		outputPath,
 	}
@@ -107,7 +107,7 @@ func (cli *MagickCli) IdentifyDimension(inputPath string) (ret Dimension, err er
 	args := []string{
 		"identify",
 		"-format",
-		`{"height":%h, "width":%w}`,
+		`{"height":%H, "width":%W}`,
 		inputPath,
 	}
 

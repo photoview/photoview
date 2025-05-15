@@ -38,7 +38,6 @@ func TestFullScan(t *testing.T) {
 
 	wantNoImages := []string{
 		"avi.avi",
-		"bmp.bmp",
 		"mkv.mkv",
 		"mp4.mp4",
 		"mpeg.mpg",
@@ -49,7 +48,6 @@ func TestFullScan(t *testing.T) {
 	}
 	wantImages := []string{
 		"gif.gif",
-		"webp.webp",
 	}
 	wantThumbnailsImages := []string{
 		"buttercup_close_summer_yellow.jpg",
@@ -62,8 +60,10 @@ func TestFullScan(t *testing.T) {
 		"girl_blond2.jpg",
 		"girl_blond3.jpg",
 
+		"bmp.bmp",
 		"jpeg.jpg",
 		"jpg_with_file.jpg",
+		"webp.webp",
 		"png.png",
 		"standalone_jpg.jpg",
 

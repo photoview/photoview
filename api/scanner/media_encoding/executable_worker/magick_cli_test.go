@@ -121,13 +121,13 @@ func TestMagickCliFail(t *testing.T) {
 	if err == nil {
 		t.Fatalf(`MagickCli.GenerateThumbnail(...) = nil, should be an error.`)
 	}
-	if got, want := err.Error(), `^generate thumbnail with ".*/test_data/mock_bin/magick \[input -resize 100x100 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^generate thumbnail with ".*/test_data/mock_bin/magick \[input -thumbnail 100x100 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf(`MagickCli.GenerateThumbnail(...) = %q, should be matched with reg pattern %q`, got, want)
 	}
 
 	{
 		_, got := Magick.IdentifyDimension("input")
-		if want := `^identify dimension with ".*/test_data/mock_bin/magick \[identify -format {"height":\%h, "width":\%w} input\]" error: .*$`; !regexp.MustCompile(want).MatchString(got.Error()) {
+		if want := `^identify dimension with ".*/test_data/mock_bin/magick \[identify -format {"height":\%H, "width":\%W} input\]" error: .*$`; !regexp.MustCompile(want).MatchString(got.Error()) {
 			t.Errorf("Magick.IdentifyDimension() = %v, should be matched with reg pattern %q", got, want)
 		}
 	}
