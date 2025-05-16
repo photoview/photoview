@@ -46,11 +46,9 @@ func TestFullScan(t *testing.T) {
 		"webm.webm",
 		"wmv.wmv",
 	}
-	wantImages := []string{
-		"gif.gif",
-	}
 	wantThumbnailsImages := []string{
 		"buttercup_close_summer_yellow.jpg",
+		"gif.gif",
 		"lilac_lilac_bush_lilac.jpg",
 		"mount_merapi_volcano_indonesia.jpg",
 		"boy1.jpg",
@@ -111,7 +109,7 @@ func TestFullScan(t *testing.T) {
 			t.Fatal("get all media error:", err)
 		}
 
-		want := slices.Clone(wantImages)
+		var want []string
 		want = append(want, wantNoImages...)
 		want = append(want, wantThumbnailsImages...)
 		want = append(want, wantHighresImages...)
@@ -134,7 +132,7 @@ func TestFullScan(t *testing.T) {
 			t.Fatal("get all media url error:", err)
 		}
 
-		want := slices.Clone(wantImages)
+		var want []string
 
 		wantThumbs := slices.Clone(wantThumbnailsImages)
 		want = append(want, wantThumbnailsImages...)

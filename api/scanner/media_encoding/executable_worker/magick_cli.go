@@ -78,7 +78,7 @@ func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, wid
 	}
 
 	args := []string{
-		inputPath,
+		inputPath + "[0]", // If there are multiple frames (like gif), only thumbnail the first frame.
 		"-thumbnail",
 		fmt.Sprintf("%dx%d", width, height),
 		outputPath,

@@ -121,7 +121,7 @@ func TestMagickCliFail(t *testing.T) {
 	if err == nil {
 		t.Fatalf(`MagickCli.GenerateThumbnail(...) = nil, should be an error.`)
 	}
-	if got, want := err.Error(), `^generate thumbnail with ".*/test_data/mock_bin/magick \[input -thumbnail 100x100 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^generate thumbnail with ".*/test_data/mock_bin/magick \[input\[0\] -thumbnail 100x100 output\]" error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf(`MagickCli.GenerateThumbnail(...) = %q, should be matched with reg pattern %q`, got, want)
 	}
 
