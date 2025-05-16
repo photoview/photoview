@@ -93,12 +93,7 @@ func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, wid
 	return nil
 }
 
-type Dimension struct {
-	Width  int
-	Height int
-}
-
-func (cli *MagickCli) IdentifyDimension(inputPath string) (ret Dimension, err error) {
+func (cli *MagickCli) IdentifyDimension(inputPath string) (width, height int, err error) {
 	if cli.err != nil {
 		err = fmt.Errorf("identify dimension %q error: magick: %w", inputPath, cli.err)
 		return
@@ -119,6 +114,14 @@ func (cli *MagickCli) IdentifyDimension(inputPath string) (ret Dimension, err er
 	if e := cmd.Run(); e != nil {
 		err = fmt.Errorf("identify dimension with \"%s %v\" error: %w", cli.path, args, e)
 		return
+	}
+
+	ret := struct {
+		Width  *int
+		Height *int
+	}{
+		Width:  &width,
+		Height: &height,
 	}
 
 	if e := json.NewDecoder(&output).Decode(&ret); e != nil {

@@ -25,14 +25,14 @@ type Dimension struct {
 
 // GetPhotoDimensions returns the dimension of the image `imagePath`.
 func GetPhotoDimensions(imagePath string) (Dimension, error) {
-	ret, err := executable_worker.Magick.IdentifyDimension(imagePath)
+	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
 
 	return Dimension{
-		Width:  ret.Width,
-		Height: ret.Height,
+		Width:  w,
+		Height: h,
 	}, nil
 }
 

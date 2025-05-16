@@ -4,8 +4,6 @@ import (
 	"errors"
 	"regexp"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestMagickCliNotExist(t *testing.T) {
@@ -30,7 +28,7 @@ func TestMagickCliNotExist(t *testing.T) {
 	}
 
 	{
-		_, got := Magick.IdentifyDimension("input")
+		_, _, got := Magick.IdentifyDimension("input")
 		if want := ErrNoDependency; !errors.Is(got, want) {
 			t.Errorf("Magick.IdentifyDimension() = %v, want: %v", got, want)
 		}
@@ -60,7 +58,7 @@ func TestMagickCliIgnore(t *testing.T) {
 	}
 
 	{
-		_, got := Magick.IdentifyDimension("input")
+		_, _, got := Magick.IdentifyDimension("input")
 		if want := ErrDisabledFunction; !errors.Is(got, want) {
 			t.Errorf("Magick.IdentifyDimension() = %v, want: %v", got, want)
 		}
@@ -90,7 +88,7 @@ func TestMagickCliVersionFail(t *testing.T) {
 	}
 
 	{
-		_, got := Magick.IdentifyDimension("input")
+		_, _, got := Magick.IdentifyDimension("input")
 		if want := ErrNoDependency; !errors.Is(got, want) {
 			t.Errorf("Magick.IdentifyDimension() = %v, want: %v", got, want)
 		}
@@ -126,7 +124,7 @@ func TestMagickCliFail(t *testing.T) {
 	}
 
 	{
-		_, got := Magick.IdentifyDimension("input")
+		_, _, got := Magick.IdentifyDimension("input")
 		if want := `^identify dimension with ".*/test_data/mock_bin/magick \[identify -format {"height":\%H, "width":\%W} input\]" error: .*$`; !regexp.MustCompile(want).MatchString(got.Error()) {
 			t.Errorf("Magick.IdentifyDimension() = %v, should be matched with reg pattern %q", got, want)
 		}
@@ -157,20 +155,23 @@ func TestMagickCliSucceed(t *testing.T) {
 	})
 
 	t.Run("IdentifyDimension", func(t *testing.T) {
-		got, err := Magick.IdentifyDimension("input")
+		w, h, err := Magick.IdentifyDimension("input")
 		if err != nil {
 			t.Fatalf("MagickCli.IdentifyDimension(...) = %v, should be nil.", err)
 		}
 
-		if diff := cmp.Diff(got, Dimension{Width: 1000, Height: 800}); diff != "" {
-			t.Errorf("MagickCli.IdentifyDimension(...) diff: (-got, +want)\n%s", diff)
+		if got, want := w, 1000; got != want {
+			t.Errorf("got = %d, want = %d", got, want)
+		}
+		if got, want := h, 800; got != want {
+			t.Errorf("got = %d, want = %d", got, want)
 		}
 	})
 
 	t.Run("IdentifyDimensionInvalidJSON", func(t *testing.T) {
 		t.Setenv("INVALID_OUTPUT", `{"width":1000,`)
 
-		_, err := Magick.IdentifyDimension("input")
+		_, _, err := Magick.IdentifyDimension("input")
 		if want := `unexpected EOF$`; !regexp.MustCompile(want).MatchString(err.Error()) {
 			t.Errorf("MagickCli.IdentifyDimension() = error(%v), which should match with regexp %q", err, want)
 		}
