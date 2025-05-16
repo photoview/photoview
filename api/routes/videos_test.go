@@ -17,6 +17,7 @@ import (
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 // setTestCachePath temporarily sets a different media cache path for testing
@@ -26,6 +27,46 @@ func setTestCachePath(tempPath string) func() {
 	utils.ConfigureTestCache(tempPath)
 	return func() {
 		utils.ConfigureTestCache(original)
+	}
+}
+
+// mockProcessSingleMedia replaces scanner.ProcessSingleMedia with a mock function during tests
+// and returns a function to restore the original implementation
+var originalProcessSingleMedia = processSingleMediaFn
+
+func mockProcessSingleMedia(t *testing.T, shouldSucceed bool) func() {
+	// Replace with mock implementation
+	processSingleMediaFn = func(db *gorm.DB, media *models.Media) error {
+		if shouldSucceed {
+			// On success: create the expected video file in cache
+			mediaURLs := []models.MediaURL{}
+			if err := db.Where("media_id = ? AND purpose = ?", media.ID, models.VideoWeb).Find(&mediaURLs).Error; err != nil {
+				return err
+			}
+
+			if len(mediaURLs) == 0 {
+				return fmt.Errorf("no media URLs found")
+			}
+
+			// Get the cache path
+			tempCachePath := utils.GetTestCachePath()
+			albumDir := path.Join(tempCachePath, strconv.Itoa(int(media.AlbumID)))
+			mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURLs[0].MediaID)))
+			if err := os.MkdirAll(mediaDir, 0755); err != nil {
+				return err
+			}
+
+			videoPath := path.Join(mediaDir, mediaURLs[0].MediaName)
+			return os.WriteFile(videoPath, []byte("mocked processed video content"), 0644)
+		}
+
+		// On failure: return an error
+		return fmt.Errorf("mock processing error")
+	}
+
+	// Return cleanup function
+	return func() {
+		processSingleMediaFn = originalProcessSingleMedia
 	}
 }
 
@@ -206,11 +247,11 @@ func TestVideoRoutes(t *testing.T) {
 			},
 		},
 		{
-			name:        "Video file not in cache, needs processing",
+			name:        "Video file not in cache, processing succeeds",
 			url:         "/video.mp4",
-			useRealAuth: false, // Use mock router for non-auth tests
+			useRealAuth: false,
 			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
-				// Ensure cache directory exists but file doesn't
+				// Ensure cache directory exists but file doesn't exist
 				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
@@ -219,12 +260,40 @@ func TestVideoRoutes(t *testing.T) {
 				videoPath := path.Join(mediaDir, mediaURL.MediaName)
 				os.Remove(videoPath)
 
+				// Set up mock to succeed
+				cleanup := mockProcessSingleMedia(t, true)
+				t.Cleanup(cleanup)
+
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				// This will likely fail in tests because ProcessSingleMedia can't fully work in tests
-				// When ProcessSingleMedia fails, we expect 500
-				assert.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, rr.Code)
+				assert.Equal(t, http.StatusOK, rr.Code)
+				assert.Equal(t, "mocked processed video content", rr.Body.String())
+			},
+			cleanupFunc: nil,
+		},
+		{
+			name:        "Video file not in cache, processing fails",
+			url:         "/video.mp4",
+			useRealAuth: false,
+			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+				// Ensure cache directory exists but file doesn't exist
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+
+				// Delete file if it exists
+				videoPath := path.Join(mediaDir, mediaURL.MediaName)
+				os.Remove(videoPath)
+
+				// Set up mock to fail
+				cleanup := mockProcessSingleMedia(t, false)
+				t.Cleanup(cleanup)
+
+				return httptest.NewRecorder()
+			},
+			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusInternalServerError, rr.Code)
 			},
 			cleanupFunc: nil,
 		},

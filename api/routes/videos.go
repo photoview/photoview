@@ -16,6 +16,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var processSingleMediaFn = scanner.ProcessSingleMedia
+
 func handleVideoRequest(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -68,7 +70,9 @@ func handleVideoRequest(
 		// Use the provided cache path function
 		cachedPath = getCachePathFn(int(media.AlbumID), int(mediaURL.MediaID), mediaURL.MediaName)
 	} else {
-		log.Error("Can not handle media_purpose for video:", mediaURL.Purpose)
+		log.Error("Can not handle media_purpose for video",
+			"purpose", mediaURL.Purpose,
+			"expected", models.VideoWeb)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(internalServerError))
 		return
@@ -76,7 +80,7 @@ func handleVideoRequest(
 
 	if _, err := os.Stat(cachedPath); err != nil {
 		if os.IsNotExist(err) {
-			if err := scanner.ProcessSingleMedia(db, media); err != nil {
+			if err := processSingleMediaFn(db, media); err != nil {
 				log.Error("processing video not found in cache:", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
@@ -124,7 +128,7 @@ func registerMockVideoRoutesForTesting(db *gorm.DB, router *mux.Router, tempCach
 			w, r, db, mediaName,
 			// Skip authentication for tests
 			func(media *models.Media, db *gorm.DB, r *http.Request) (bool, string, int, error) {
-				return true, "success", http.StatusAccepted, nil
+				return true, "success", http.StatusOK, nil
 			},
 			// Use test cache path
 			func(albumID, mediaID int, filename string) string {
