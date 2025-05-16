@@ -26,9 +26,7 @@ func handleVideoRequest(
 ) {
 	var mediaURLs []models.MediaURL
 	if err := db.Model(&models.MediaURL{}).
-		Select("media_urls.*, Media.*").
 		Preload("Media").
-		Joins("Media").
 		Where("media_urls.media_name = ? AND media_urls.purpose = ?", mediaName, models.VideoWeb).
 		Find(&mediaURLs).
 		Error; err != nil || len(mediaURLs) == 0 || mediaURLs[0].Media == nil {
@@ -45,13 +43,16 @@ func handleVideoRequest(
 			}
 			return -1
 		}, mediaName)
-		log.Warn("Multiple video web URLs found for name", sanitizedMediaName, "count", len(mediaURLs), "using", mediaURLs[0])
+		log.Warn("Multiple video web URLs found",
+			"name", sanitizedMediaName,
+			"count", len(mediaURLs),
+			"using", mediaURLs[0],
+		)
 	}
 
 	mediaURL := mediaURLs[0]
 	var media = mediaURL.Media
 
-	// Use the provided authentication function
 	if success, response, status, err := authenticateFn(media, db, r); !success {
 		if err != nil {
 			log.Warn("got error authenticating video:", err)

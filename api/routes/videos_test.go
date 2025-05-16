@@ -22,11 +22,10 @@ import (
 // setTestCachePath temporarily sets a different media cache path for testing
 // and returns a function to restore the original state
 func setTestCachePath(tempPath string) func() {
-	// Set the test value
+	original := utils.GetTestCachePath()
 	utils.ConfigureTestCache(tempPath)
-	// Return function to clear the override for this goroutine
 	return func() {
-		utils.ConfigureTestCache("")
+		utils.ConfigureTestCache(original)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -37,13 +38,20 @@ func CachePathForMedia(albumID int, mediaID int) (string, error) {
 	return photoCachePath, nil
 }
 
-var testCachePath string = ""
+var (
+	testCachePath string = ""
+	cacheMutex    sync.RWMutex
+)
 
 func GetTestCachePath() string {
+	cacheMutex.RLock()
+	defer cacheMutex.RUnlock()
 	return testCachePath
 }
 
 func ConfigureTestCache(tmpDir string) {
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
 	testCachePath = tmpDir
 }
 
