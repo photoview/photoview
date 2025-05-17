@@ -40,7 +40,7 @@ func GetPhotoDimensions(imagePath string) (Dimension, error) {
 // It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
 	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
-		return Dimension{}, fmt.Errorf("can't generate thumbnail of flie %q: %w", inputPath, err)
+		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
 	return GetPhotoDimensions(outputPath)
