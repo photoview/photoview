@@ -31,7 +31,7 @@ GOOS="$TARGETOS"
 GOARCH="$TARGETARCH"
 
 GOARM="7"
-if [ "$TARGETARCH" = "arm" && ! -z "$TARGETVARIANT" ]; then
+if [ "$TARGETARCH" = "arm" ] && [ ! -z "$TARGETVARIANT" ]; then
   case "$TARGETVARIANT" in
   "v5")
     export GOARM="5"

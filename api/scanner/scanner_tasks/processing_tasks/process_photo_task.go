@@ -8,17 +8,8 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/pkg/errors"
-
-	// Image decoders
-	_ "image/gif"
-	_ "image/png"
-
-	_ "golang.org/x/image/bmp"
-	_ "golang.org/x/image/tiff"
-	_ "golang.org/x/image/webp"
 )
 
 type ProcessPhotoTask struct {
@@ -91,12 +82,11 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 	}
 
-	var photoDimensions *media_utils.PhotoDimensions
 	// Save original photo to database
 	if origURL == nil {
 
 		// Make sure photo dimensions is set
-		photoDimensions, err = media_utils.GetPhotoDimensions(baseImagePath)
+		photoDimensions, err := media_encoding.GetPhotoDimensions(baseImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}

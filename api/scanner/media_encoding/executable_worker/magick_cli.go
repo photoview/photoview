@@ -1,6 +1,8 @@
 package executable_worker
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -68,4 +70,64 @@ func (cli *MagickCli) EncodeJpeg(inputPath string, outputPath string, jpegQualit
 	}
 
 	return nil
+}
+
+func (cli *MagickCli) GenerateThumbnail(inputPath string, outputPath string, width, height int) error {
+	if cli.err != nil {
+		return fmt.Errorf("generate thumbnail %q error: magick: %w", inputPath, cli.err)
+	}
+
+	args := []string{
+		inputPath + "[0]", // If there are multiple frames (like gif), only thumbnail the first frame.
+		"-thumbnail",
+		fmt.Sprintf("%dx%d", width, height),
+		outputPath,
+	}
+
+	cmd := exec.Command(cli.path, args...)
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("generate thumbnail with \"%s %v\" error: %w", cli.path, args, err)
+	}
+
+	return nil
+}
+
+func (cli *MagickCli) IdentifyDimension(inputPath string) (width, height int, err error) {
+	if cli.err != nil {
+		err = fmt.Errorf("identify dimension %q error: magick: %w", inputPath, cli.err)
+		return
+	}
+
+	args := []string{
+		"identify",
+		"-format",
+		`{"height":%H, "width":%W}`,
+		inputPath,
+	}
+
+	cmd := exec.Command(cli.path, args...)
+
+	var output bytes.Buffer
+	cmd.Stdout = &output
+
+	if e := cmd.Run(); e != nil {
+		err = fmt.Errorf("identify dimension with \"%s %v\" error: %w", cli.path, args, e)
+		return
+	}
+
+	ret := struct {
+		Width  *int
+		Height *int
+	}{
+		Width:  &width,
+		Height: &height,
+	}
+
+	if e := json.NewDecoder(&output).Decode(&ret); e != nil {
+		err = fmt.Errorf("identify dimension with \"%s %v\" error: %w", cli.path, args, e)
+		return
+	}
+
+	return
 }

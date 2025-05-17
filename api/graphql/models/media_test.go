@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,8 +54,7 @@ func TestMediaURLCachePath(t *testing.T) {
 }
 
 func TestMediaURLGetURL(t *testing.T) {
-	done := test_utils.SetEnv(string(utils.EnvAPIEndpoint), "")
-	defer done()
+	t.Setenv(string(utils.EnvAPIEndpoint), "")
 
 	photo := models.MediaURL{
 		MediaName:   "photo.jpg",

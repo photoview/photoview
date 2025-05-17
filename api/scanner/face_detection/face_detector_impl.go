@@ -8,6 +8,7 @@ import (
 
 	"github.com/Kagami/go-face"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -136,7 +137,7 @@ func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 
 	match := fd.classifyDescriptor(face.Descriptor)
 
-	faceRect, err := models.ToDBFaceRectangle(face.Rectangle, imagePath)
+	dimension, err := media_encoding.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return err
 	}
@@ -144,7 +145,13 @@ func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 	imageFace := models.ImageFace{
 		MediaID:    media.ID,
 		Descriptor: models.FaceDescriptor(face.Descriptor),
-		Rectangle:  *faceRect,
+		Rectangle: models.FaceRectangle{
+			// Converts a pixel absolute rectangle to a relative FaceRectangle.
+			MinX: float64(face.Rectangle.Min.X) / float64(dimension.Width),
+			MaxX: float64(face.Rectangle.Max.X) / float64(dimension.Width),
+			MinY: float64(face.Rectangle.Min.Y) / float64(dimension.Height),
+			MaxY: float64(face.Rectangle.Max.Y) / float64(dimension.Height),
+		},
 	}
 
 	var faceGroup models.FaceGroup

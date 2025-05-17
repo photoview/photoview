@@ -12,7 +12,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -144,7 +143,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
 
-		thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
+		thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
@@ -182,7 +181,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 				return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
 
-			thumbDimensions, err := media_utils.GetPhotoDimensions(thumbImagePath)
+			thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 			}
