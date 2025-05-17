@@ -21,15 +21,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
-	models.ThumbnailFilterNearestNeighbor:   imaging.NearestNeighbor,
-	models.ThumbnailFilterBox:               imaging.Box,
-	models.ThumbnailFilterLinear:            imaging.Linear,
-	models.ThumbnailFilterMitchellNetravali: imaging.MitchellNetravali,
-	models.ThumbnailFilterCatmullRom:        imaging.CatmullRom,
-	models.ThumbnailFilterLanczos:           imaging.Lanczos,
-}
-
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
 
 	var siteInfo models.SiteInfo
@@ -45,7 +36,7 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_u
 	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
 	dimensions = dimensions.ThumbnailScale()
 
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, thumbFilter[siteInfo.ThumbnailMethod])
+	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
 	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
 		return nil, err
 	}
