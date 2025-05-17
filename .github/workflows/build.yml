@@ -18,7 +18,7 @@ env:
   DOCKER_USERNAME: kkoval
   DOCKER_IMAGE: kkoval/photoview
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
+  PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
   prepare:

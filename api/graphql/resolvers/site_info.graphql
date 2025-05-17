@@ -8,8 +8,6 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
-  "The filter to use when generating thumbnails"
-  thumbnailMethod: ThumbnailFilter! @isAdmin
 }
 
 extend type Query {
