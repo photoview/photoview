@@ -86,7 +86,7 @@ jobs:
         flags: api-${{ matrix.database }}
 
     - name: Upload test execution results
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@v1.0.1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
         flags: ui
 
     - name: Upload test execution results
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@v1.0.1
       if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
