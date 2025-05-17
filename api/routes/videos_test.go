@@ -71,6 +71,10 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool) func() {
 }
 
 func TestVideoRoutes(t *testing.T) {
+	defer func() {
+		processSingleMediaFn = originalProcessSingleMedia
+	}()
+
 	// Setup test database
 	db := test_utils.DatabaseTest(t)
 
@@ -183,7 +187,34 @@ func TestVideoRoutes(t *testing.T) {
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusNotFound, rr.Code)
-				assert.Equal(t, "404", rr.Body.String())
+				assert.Equal(t, "not found", rr.Body.String())
+			},
+			cleanupFunc: nil,
+		},
+		{
+			name:        "Filesystem permission error",
+			url:         "/video.mp4",
+			useRealAuth: false,
+			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+				// Prepare cache dir and file
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				videoPath := path.Join(mediaDir, mediaURL.MediaName)
+				// Create a directory instead of a file - this will cause the file to exist
+				// (passing the os.Stat check) but will fail when http.ServeFile tries to serve it
+				os.Remove(videoPath)
+				require.NoError(t, os.Mkdir(videoPath, 0755))
+
+				// Verify our setup works correctly
+				fi, err := os.Stat(videoPath)
+				require.NoError(t, err, "Directory should exist")
+				require.True(t, fi.IsDir(), "Path should be a directory, not a file")
+
+				return httptest.NewRecorder()
+			},
+			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusInternalServerError, rr.Code)
 			},
 			cleanupFunc: nil,
 		},

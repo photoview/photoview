@@ -16,7 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var processSingleMediaFn = scanner.ProcessSingleMedia
+var processSingleMediaFn = func(db *gorm.DB, media *models.Media) error {
+	return scanner.ProcessSingleMedia(db, media)
+}
 
 func handleVideoRequest(
 	w http.ResponseWriter,
@@ -34,7 +36,7 @@ func handleVideoRequest(
 		Error; err != nil || len(mediaURLs) == 0 || mediaURLs[0].Media == nil {
 
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404"))
+		w.Write([]byte("not found"))
 		return
 	}
 
@@ -57,7 +59,10 @@ func handleVideoRequest(
 
 	if success, response, status, err := authenticateFn(media, db, r); !success {
 		if err != nil {
-			log.Warn("got error authenticating video:", err)
+			log.Warn("got error authenticating video:",
+				"error", err,
+				"media ID", media.ID,
+				"media path", media.Path)
 		}
 		w.WriteHeader(status)
 		w.Write([]byte(response))
@@ -78,29 +83,64 @@ func handleVideoRequest(
 		return
 	}
 
+	// Context-aware processing function that respects client disconnections
+	contextAwareProcessFn := func(db *gorm.DB, media *models.Media) error {
+		// If the client disconnects during processing, this will be detected
+		ctx := r.Context()
+
+		// Create a channel to communicate processing completion
+		done := make(chan error, 1)
+
+		go func() {
+			// Run the actual processing in a goroutine
+			done <- processSingleMediaFn(db, media)
+		}()
+
+		// Wait for either processing to complete or context to be canceled
+		select {
+		case err := <-done:
+			return err
+		case <-ctx.Done():
+			log.Warn("Client disconnected during video processing",
+				"mediaID", media.ID,
+				"reason", ctx.Err())
+			return ctx.Err()
+		}
+	}
+
 	if _, err := os.Stat(cachedPath); err != nil {
 		if os.IsNotExist(err) {
-			if err := processSingleMediaFn(db, media); err != nil {
-				log.Error("processing video not found in cache:", err)
+			if err := contextAwareProcessFn(db, media); err != nil {
+				log.Error("processing video not found in cache:",
+					"error", err,
+					"media ID", media.ID,
+					"media path", media.Path)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
 			}
 
 			if _, err := os.Stat(cachedPath); err != nil {
-				log.Error("video not found in cache after reprocessing:", err)
+				log.Error("video not found in cache after reprocessing:",
+					"error", err,
+					"media ID", media.ID,
+					"media path", media.Path)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
 			}
 		} else {
-			log.Error("cached video access error:", err)
+			log.Error("cached video access error:",
+				"error", err,
+				"media ID", media.ID,
+				"media path", media.Path)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return
 		}
 	}
 
+	w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
 	http.ServeFile(w, r, cachedPath)
 }
 
