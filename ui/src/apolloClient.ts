@@ -13,9 +13,10 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 
 import urlJoin from 'url-join'
 import { clearTokenCookie } from './helpers/authentication'
-import { MessageState } from './components/messages/Messages'
+import { useMessageState } from './components/messages/MessageState'
 import { Message } from './components/messages/SubscriptionsHook'
 import { NotificationType } from './__generated__/globalTypes'
+import React from "react";
 
 export const API_ENDPOINT = import.meta.env.REACT_APP_API_ENDPOINT
   ? (import.meta.env.REACT_APP_API_ENDPOINT as string)
@@ -41,7 +42,7 @@ const wsLink = new WebSocketLink({
 })
 
 const link = split(
-  // split based on operation type
+  // split based on the operation type
   ({ query }) => {
     const definition = getMainDefinition(query)
     return (
@@ -120,7 +121,11 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
         ...msg,
       },
     }))
-    MessageState.set((messages: Message[]) => [...messages, ...newMessages])
+    // Use the MessageProvider to ensure the context is available
+    const addMessages = (setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
+      setMessages((messages: Message[]) => [...messages, ...newMessages])
+    }
+    addMessages(useMessageState().setMessages)
   }
 })
 
@@ -150,7 +155,7 @@ const paginateCache = (keyArgs: string[]) =>
 const memoryCache = new InMemoryCache({
   typePolicies: {
     // There only exists one global instance of SiteInfo,
-    // therefore it can always be merged
+    // therefore, it can always be merged
     SiteInfo: {
       merge: true,
     },
