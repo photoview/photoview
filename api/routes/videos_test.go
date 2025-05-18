@@ -155,7 +155,6 @@ func TestVideoRoutes(t *testing.T) {
 		useRealAuth  bool // To determine which router to use
 		setupFunc    func(t *testing.T) *httptest.ResponseRecorder
 		validateFunc func(t *testing.T, rr *httptest.ResponseRecorder)
-		cleanupFunc  func(t *testing.T)
 	}{
 		{
 			name:        "Valid video retrieval",
@@ -173,10 +172,18 @@ func TestVideoRoutes(t *testing.T) {
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				_, err := os.Stat(filePath)
+				require.NoError(t, err, "File does not exist: %s", filePath)
+
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+				})
 			},
-			cleanupFunc: nil,
 		},
 		{
 			name:        "Video not found",
@@ -186,10 +193,13 @@ func TestVideoRoutes(t *testing.T) {
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				filePath := path.Join(tempCachePath, strconv.Itoa(int(album.ID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				_, err := os.Stat(filePath)
+				require.Error(t, err, "File exists: %s", filePath)
+
 				assert.Equal(t, http.StatusNotFound, rr.Code)
 				assert.Equal(t, "not found", rr.Body.String())
 			},
-			cleanupFunc: nil,
 		},
 		{
 			name:        "Filesystem permission error",
@@ -203,7 +213,6 @@ func TestVideoRoutes(t *testing.T) {
 				videoPath := path.Join(mediaDir, mediaURL.MediaName)
 				// Create a directory instead of a file - this will cause the file to exist
 				// (passing the os.Stat check) but will fail when http.ServeFile tries to serve it
-				os.Remove(videoPath)
 				require.NoError(t, os.Mkdir(videoPath, 0755))
 
 				// Verify our setup works correctly
@@ -214,9 +223,18 @@ func TestVideoRoutes(t *testing.T) {
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				folderPath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				files, err := os.ReadDir(folderPath)
+				require.NoError(t, err, "Failed to read folder: %s", folderPath)
+				require.Empty(t, files, "Folder is not empty: %s", folderPath)
+
 				assert.Equal(t, http.StatusInternalServerError, rr.Code)
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+				})
 			},
-			cleanupFunc: nil,
 		},
 		{
 			name:        "Authentication with share token",
@@ -234,10 +252,18 @@ func TestVideoRoutes(t *testing.T) {
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				_, err := os.Stat(filePath)
+				require.NoError(t, err, "File does not exist: %s", filePath)
+
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+				})
 			},
-			cleanupFunc: nil,
 		},
 		{
 			name:        "Multiple media URLs with same name",
@@ -268,13 +294,18 @@ func TestVideoRoutes(t *testing.T) {
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				// Should still work despite multiple URLs with warning logged
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				_, err := os.Stat(filePath)
+				require.NoError(t, err, "File does not exist: %s", filePath)
+
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
-			},
-			cleanupFunc: func(t *testing.T) {
-				// Delete the second media URL
-				db.Unscoped().Where("media_name = ? AND id != ?", "video.mp4", mediaURL.ID).Delete(&models.MediaURL{})
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+					db.Unscoped().Where("media_name = ? AND id != ?", "video.mp4", mediaURL.ID).Delete(&models.MediaURL{})
+				})
 			},
 		},
 		{
@@ -287,21 +318,25 @@ func TestVideoRoutes(t *testing.T) {
 				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				// Delete file if it exists
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
-				os.Remove(videoPath)
-
-				// Set up mock to succeed
-				cleanup := mockProcessSingleMedia(t, true)
-				t.Cleanup(cleanup)
+				t.Cleanup(func() {
+					mockProcessSingleMedia(t, true)
+				})
 
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
+				_, err := os.Stat(filePath)
+				require.NoError(t, err, "File does not exist: %s", filePath)
+
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "mocked processed video content", rr.Body.String())
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+				})
 			},
-			cleanupFunc: nil,
 		},
 		{
 			name:        "Video file not in cache, processing fails",
@@ -313,20 +348,25 @@ func TestVideoRoutes(t *testing.T) {
 				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				// Delete file if it exists
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
-				os.Remove(videoPath)
-
-				// Set up mock to fail
-				cleanup := mockProcessSingleMedia(t, false)
-				t.Cleanup(cleanup)
+				t.Cleanup(func() {
+					mockProcessSingleMedia(t, false)
+				})
 
 				return httptest.NewRecorder()
 			},
 			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				files, err := os.ReadDir(mediaDir)
+				require.NoError(t, err, "Failed to read folder: %s", mediaDir)
+				require.Empty(t, files, "Folder is not empty: %s", mediaDir, files)
+
 				assert.Equal(t, http.StatusInternalServerError, rr.Code)
+
+				t.Cleanup(func() {
+					require.NoError(t, os.RemoveAll(albumDir))
+				})
 			},
-			cleanupFunc: nil,
 		},
 	}
 
@@ -351,10 +391,6 @@ func TestVideoRoutes(t *testing.T) {
 			}
 
 			tc.validateFunc(t, rr)
-
-			if tc.cleanupFunc != nil {
-				tc.cleanupFunc(t)
-			}
 		})
 	}
 }
