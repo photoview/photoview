@@ -12,8 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
-	_ "github.com/strukturag/libheif/go/heif"
-
 	"gorm.io/gorm"
 )
 
