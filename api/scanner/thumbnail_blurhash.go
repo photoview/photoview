@@ -3,6 +3,7 @@ package scanner
 import (
 	"fmt"
 	"image"
+	_ "image/jpeg"
 	"log"
 	"os"
 
