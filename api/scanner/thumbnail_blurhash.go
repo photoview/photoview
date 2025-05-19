@@ -40,7 +40,7 @@ func GenerateBlurhashes(db *gorm.DB) error {
 
 			hashStr, err := GenerateBlurhashFromThumbnail(thumbnail)
 			if err != nil {
-				log.Printf("failed to generate blurhash for media (%d): %v", row.ID, err)
+				log.Printf("failed to generate blurhash: %v", err)
 				processErrors = append(processErrors, err)
 				continue
 			}
@@ -72,26 +72,26 @@ func GenerateBlurhashes(db *gorm.DB) error {
 func GenerateBlurhashFromThumbnail(thumbnail *models.MediaURL) (string, error) {
 	thumbnail_path, err := thumbnail.CachedPath()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("get path of media id=%d error: %w", thumbnail.MediaID, err)
 	}
 
 	imageFile, err := os.Open(thumbnail_path)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("open %s error: %w", thumbnail_path, err)
 	}
 
 	imageData, _, err := image.Decode(imageFile)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decode %q error: %w", thumbnail_path, err)
 	}
 
 	hashStr, err := blurhash.Encode(4, 3, imageData)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("encode blurhash of %q error: %w", thumbnail_path, err)
 	}
 
 	// if err := db.Model(&models.Media{}).Where("id = ?", thumbnail.MediaID).Update("blurhash", hashStr).Error; err != nil {
-	// 	return "", err
+	// return "", fmt.Errorf("update blurhash of media id=%d error: %w", thumbnail.MediaID, err)
 	// }
 
 	return hashStr, nil
