@@ -17,7 +17,7 @@ import {
 } from './__generated__/combineFaces'
 import { singleFaceGroup_faceGroup } from './__generated__/singleFaceGroup'
 
-const COMBINE_FACES_MUTATION = gql`
+export const COMBINE_FACES_MUTATION = gql`
   mutation combineFaces($destID: ID!, $srcIDs: [ID!]!) {
     combineFaceGroups(
       destinationFaceGroupID: $destID
