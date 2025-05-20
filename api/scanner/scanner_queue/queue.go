@@ -144,7 +144,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		nextJob := queue.up_next[0]
 		queue.up_next = queue.up_next[1:]
 		queue.in_progress = append(queue.in_progress, nextJob)
-		jobNum := len(queue.in_progress) + 1
+		jobNum := len(queue.in_progress)
 
 		go func() {
 			log.Printf("Starting job %d/%d\n", jobNum, maxJobs)
