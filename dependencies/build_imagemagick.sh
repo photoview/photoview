@@ -24,7 +24,6 @@ cp -r /usr/local/etc/ImageMagick-7 /output/etc/
 cp -r /usr/local/lib/ImageMagick-* /output/lib/
 cp -r /usr/local/lib/libMagickCore-* /output/lib/
 cp -r /usr/local/lib/libMagickWand-* /output/lib/
-cp -r /usr/local/lib/ImageMagick-* /output/lib/
 cp -r /usr/local/include/ImageMagick-7 /output/include/
 cp -r /usr/local/lib/pkgconfig/ImageMagick*.pc /output/pkgconfig/
 cp -r /usr/local/lib/pkgconfig/MagickCore*.pc /output/pkgconfig/
