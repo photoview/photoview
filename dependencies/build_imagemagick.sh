@@ -18,7 +18,15 @@ make
 make install
 cd ..
 
-mkdir -p /output/bin /output/etc
+mkdir -p /output/bin /output/etc /output/lib /output/include /output/pkgconfig
 cp /usr/local/bin/magick /output/bin/
-cp -r /usr/local/etc/ImageMagick-7 /output/etc/ImageMagick-7
+cp -r /usr/local/etc/ImageMagick-7 /output/etc/
+cp -r /usr/local/lib/ImageMagick-* /output/lib/
+cp -r /usr/local/lib/libMagickCore-* /output/lib/
+cp -r /usr/local/lib/libMagickWand-* /output/lib/
+cp -r /usr/local/lib/ImageMagick-* /output/lib/
+cp -r /usr/local/include/ImageMagick-7 /output/include/
+cp -r /usr/local/lib/pkgconfig/ImageMagick*.pc /output/pkgconfig/
+cp -r /usr/local/lib/pkgconfig/MagickCore*.pc /output/pkgconfig/
+cp -r /usr/local/lib/pkgconfig/MagickWand*.pc /output/pkgconfig/
 file /output/bin/magick
