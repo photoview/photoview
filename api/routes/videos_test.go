@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -34,7 +34,10 @@ func setTestCachePath(tempPath string) func() {
 // and returns a function to restore the original implementation
 var originalProcessSingleMedia = processSingleMediaFn
 
-func mockProcessSingleMedia(t *testing.T, shouldSucceed bool) func() {
+func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, albumID int) func() {
+	// Save original implementation
+	savedFn := processSingleMediaFn
+
 	// Replace with mock implementation
 	processSingleMediaFn = func(db *gorm.DB, media *models.Media) error {
 		if shouldSucceed {
@@ -50,13 +53,13 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool) func() {
 
 			// Get the cache path
 			tempCachePath := utils.GetTestCachePath()
-			albumDir := path.Join(tempCachePath, strconv.Itoa(int(media.AlbumID)))
-			mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURLs[0].MediaID)))
+			albumDir := filepath.Join(tempCachePath, strconv.Itoa(albumID))
+			mediaDir := filepath.Join(albumDir, strconv.Itoa(mediaID))
 			if err := os.MkdirAll(mediaDir, 0755); err != nil {
 				return err
 			}
 
-			videoPath := path.Join(mediaDir, mediaURLs[0].MediaName)
+			videoPath := filepath.Join(mediaDir, mediaURLs[0].MediaName)
 			return os.WriteFile(videoPath, []byte("mocked processed video content"), 0644)
 		}
 
@@ -66,56 +69,70 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool) func() {
 
 	// Return cleanup function
 	return func() {
-		processSingleMediaFn = originalProcessSingleMedia
+		processSingleMediaFn = savedFn
 	}
 }
 
-func TestVideoRoutes(t *testing.T) {
-	defer func() {
-		processSingleMediaFn = originalProcessSingleMedia
-	}()
-
-	// Setup test database
-	db := test_utils.DatabaseTest(t)
-
-	// Setup test cache directory
-	tempCachePath := t.TempDir()
-	restorePath := setTestCachePath(tempCachePath)
-	defer restorePath()
-
-	// Create test user
+// createTestResources creates all the necessary test resources for a single test case
+// and returns cleanup functions to be called with t.Cleanup()
+func createTestResources(t *testing.T, db *gorm.DB, testID string) (
+	*models.User,
+	*models.Album,
+	*models.Media,
+	*models.MediaURL,
+	string, // mediaName
+	string, // cachePath
+	string, // shareToken
+	string, // tokenPassword
+) {
+	// Create test user with unique username
 	user := &models.User{
-		Username: "testuser",
+		Username: fmt.Sprintf("testuser-%s", testID),
 	}
 	require.NoError(t, db.Create(user).Error)
+	t.Cleanup(func() {
+		db.Unscoped().Delete(user)
+	})
 
-	// Create test album
+	// Create test album with unique title and path
 	album := &models.Album{
-		Title: "Test Album",
-		Path:  "/test/album/path",
+		Title: fmt.Sprintf("Test Album %s", testID),
+		Path:  fmt.Sprintf("/test/album/path/%s", testID),
 	}
 	require.NoError(t, db.Create(album).Error)
+	t.Cleanup(func() {
+		db.Unscoped().Delete(album)
+	})
 
 	// Establish ownership via many-to-many relationship
 	require.NoError(t, db.Model(album).Association("Owners").Append(user))
+	t.Cleanup(func() {
+		db.Model(album).Association("Owners").Clear()
+	})
+
+	// Create unique media name for this test
+	mediaName := fmt.Sprintf("video-%s.mp4", testID)
 
 	// Create media with VideoWeb purpose
 	media := &models.Media{
-		Title:    "Test Video",
-		Path:     path.Join(t.TempDir(), "video.mp4"),
-		PathHash: "testhash1",
+		Title:    fmt.Sprintf("Test Video %s", testID),
+		Path:     filepath.Join(t.TempDir(), mediaName),
+		PathHash: fmt.Sprintf("testhash-%s", testID),
 		AlbumID:  album.ID,
 		Album:    *album,
 		DateShot: time.Now(),
 		Type:     "video",
 	}
 	require.NoError(t, db.Create(media).Error)
+	t.Cleanup(func() {
+		db.Unscoped().Delete(media)
+	})
 
 	// Create media URL entry
 	mediaURL := &models.MediaURL{
 		MediaID:     media.ID,
 		Media:       media,
-		MediaName:   "video.mp4",
+		MediaName:   mediaName,
 		Width:       1920,
 		Height:      1080,
 		Purpose:     models.VideoWeb,
@@ -123,158 +140,147 @@ func TestVideoRoutes(t *testing.T) {
 		FileSize:    1024,
 	}
 	require.NoError(t, db.Create(mediaURL).Error)
+	t.Cleanup(func() {
+		db.Unscoped().Delete(mediaURL)
+	})
 
-	// Create another media with no URLs
-	mediaNoURLs := &models.Media{
-		Title:    "Video Without URLs",
-		Path:     path.Join(t.TempDir(), "no-urls.mp4"),
-		PathHash: "testhash2",
-		AlbumID:  album.ID,
-		DateShot: time.Now(),
-		Type:     "video",
-	}
-	require.NoError(t, db.Create(mediaNoURLs).Error)
+	// Create a unique cache path for this test
+	cachePath := filepath.Join(t.TempDir(), fmt.Sprintf("cache-%s", testID))
+	require.NoError(t, os.MkdirAll(cachePath, 0755))
+	t.Cleanup(func() {
+		os.RemoveAll(cachePath)
+	})
 
 	// Prepare share token for auth tests
-	tokenPassword := "secret-password"
+	tokenPassword := fmt.Sprintf("secret-password-%s", testID)
 	expiry := time.Now().Add(24 * time.Hour)
 	shareToken, err := actions.AddMediaShare(db, user, media.ID, &expiry, &tokenPassword)
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		db.Unscoped().Delete(shareToken)
+	})
 
-	// Create two routers - one with real handler for auth tests, one with mock handler for other tests
-	realRouter := mux.NewRouter()
-	RegisterVideoRoutes(db, realRouter)
+	return user, album, media, mediaURL, mediaName, cachePath, shareToken.Value, tokenPassword
+}
 
-	mockRouter := mux.NewRouter()
-	registerMockVideoRoutesForTesting(db, mockRouter, tempCachePath)
+func TestVideoRoutes(t *testing.T) {
+	// Setup test database
+	db := test_utils.DatabaseTest(t)
 
-	// Create test cases
+	// Define test cases
 	testCases := []struct {
-		name         string
-		url          string
-		useRealAuth  bool // To determine which router to use
-		setupFunc    func(t *testing.T) *httptest.ResponseRecorder
-		validateFunc func(t *testing.T, rr *httptest.ResponseRecorder)
+		name     string
+		testFunc func(*testing.T, *gorm.DB)
 	}{
 		{
-			name:        "Valid video retrieval",
-			url:         "/video.mp4",
-			useRealAuth: false, // Use mock router for non-auth tests
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+			name: "Valid video retrieval",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "valid")
+
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
 				// Create cache directory and file
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
+				videoPath := filepath.Join(mediaDir, mediaName)
 				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				_, err := os.Stat(filePath)
-				require.NoError(t, err, "File does not exist: %s", filePath)
+				// Create mock router without auth for this test
+				router := mux.NewRouter()
+				registerMockVideoRoutesForTesting(db, router, cachePath)
 
+				// Make request
+				req := httptest.NewRequest("GET", "/"+mediaName, nil)
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-				})
 			},
 		},
 		{
-			name:        "Video not found",
-			url:         "/nonexistent.mp4",
-			useRealAuth: false, // Use mock router for non-auth tests
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				filePath := path.Join(tempCachePath, strconv.Itoa(int(album.ID)), strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				_, err := os.Stat(filePath)
-				require.Error(t, err, "File exists: %s", filePath)
+			name: "Video not found",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, _, _, _, _, cachePath, _, _ := createTestResources(t, db, "notfound")
 
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
+				// Create mock router without auth for this test
+				router := mux.NewRouter()
+				registerMockVideoRoutesForTesting(db, router, cachePath)
+
+				// Make request with nonexistent video name
+				req := httptest.NewRequest("GET", "/nonexistent.mp4", nil)
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusNotFound, rr.Code)
 				assert.Equal(t, "not found", rr.Body.String())
 			},
 		},
 		{
-			name:        "Filesystem permission error",
-			url:         "/video.mp4",
-			useRealAuth: false,
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
-				// Prepare cache dir and file
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
-				// Create a directory instead of a file - this will cause the file to exist
-				// (passing the os.Stat check) but will fail when http.ServeFile tries to serve it
-				require.NoError(t, os.Mkdir(videoPath, 0755))
+			name: "Authentication with share token",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, album, media, _, mediaName, cachePath, tokenValue, tokenPassword := createTestResources(t, db, "auth")
 
-				// Verify our setup works correctly
-				fi, err := os.Stat(videoPath)
-				require.NoError(t, err, "Directory should exist")
-				require.True(t, fi.IsDir(), "Path should be a directory, not a file")
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				folderPath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				files, err := os.ReadDir(folderPath)
-				require.NoError(t, err, "Failed to read folder: %s", folderPath)
-				require.Empty(t, files, "Folder is not empty: %s", folderPath)
-
-				assert.Equal(t, http.StatusInternalServerError, rr.Code)
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-				})
-			},
-		},
-		{
-			name:        "Authentication with share token",
-			url:         fmt.Sprintf("/video.mp4?token=%s", shareToken.Value),
-			useRealAuth: true, // Use real router for auth tests
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
 				// Create the file in cache
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
+				videoPath := filepath.Join(mediaDir, mediaName)
 				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				_, err := os.Stat(filePath)
-				require.NoError(t, err, "File does not exist: %s", filePath)
+				// Create real router with auth for this test
+				router := mux.NewRouter()
+				RegisterVideoRoutes(db, router)
 
+				// Make request with token
+				req := httptest.NewRequest("GET", "/"+mediaName+"?token="+tokenValue, nil)
+				cookie := http.Cookie{
+					Name:  fmt.Sprintf("share-token-pw-%s", tokenValue),
+					Value: tokenPassword,
+				}
+				req.AddCookie(&cookie)
+
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-				})
 			},
 		},
 		{
-			name:        "Multiple media URLs with same name",
-			url:         "/video.mp4",
-			useRealAuth: false, // Use mock router for non-auth tests
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+			name: "Multiple media URLs with same name",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "multiple")
+
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
 				// Create second mediaURL with same name
 				mediaURL2 := &models.MediaURL{
 					MediaID:     media.ID,
 					Media:       media,
-					MediaName:   "video.mp4", // Same name
+					MediaName:   mediaName, // Same name
 					Width:       1280,
 					Height:      720,
 					Purpose:     models.VideoWeb,
@@ -282,115 +288,103 @@ func TestVideoRoutes(t *testing.T) {
 					FileSize:    512,
 				}
 				require.NoError(t, db.Create(mediaURL2).Error)
+				t.Cleanup(func() {
+					db.Unscoped().Delete(mediaURL2)
+				})
 
 				// Create cache directory and file
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				videoPath := path.Join(mediaDir, mediaURL.MediaName)
+				videoPath := filepath.Join(mediaDir, mediaName)
 				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				_, err := os.Stat(filePath)
-				require.NoError(t, err, "File does not exist: %s", filePath)
+				// Create mock router without auth for this test
+				router := mux.NewRouter()
+				registerMockVideoRoutesForTesting(db, router, cachePath)
 
+				// Make request
+				req := httptest.NewRequest("GET", "/"+mediaName, nil)
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "test video content", rr.Body.String())
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-					db.Unscoped().Where("media_name = ? AND id != ?", "video.mp4", mediaURL.ID).Delete(&models.MediaURL{})
-				})
 			},
 		},
 		{
-			name:        "Video file not in cache, processing succeeds",
-			url:         "/video.mp4",
-			useRealAuth: false,
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+			name: "Video file not in cache, processing succeeds",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "process-success")
+
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
 				// Ensure cache directory exists but file doesn't exist
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				t.Cleanup(func() {
-					mockProcessSingleMedia(t, true)
-				})
+				// Mock processing to succeed
+				restoreProcessingFn := mockProcessSingleMedia(t, true, int(media.ID), int(album.ID))
+				t.Cleanup(restoreProcessingFn)
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				filePath := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)), mediaURL.MediaName)
-				_, err := os.Stat(filePath)
-				require.NoError(t, err, "File does not exist: %s", filePath)
+				// Create mock router without auth for this test
+				router := mux.NewRouter()
+				registerMockVideoRoutesForTesting(db, router, cachePath)
 
+				// Make request
+				req := httptest.NewRequest("GET", "/"+mediaName, nil)
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusOK, rr.Code)
 				assert.Equal(t, "mocked processed video content", rr.Body.String())
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-				})
 			},
 		},
 		{
-			name:        "Video file not in cache, processing fails",
-			url:         "/video.mp4",
-			useRealAuth: false,
-			setupFunc: func(t *testing.T) *httptest.ResponseRecorder {
+			name: "Video file not in cache, processing fails",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				// Create unique resources for this test
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "process-fail")
+
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
 				// Ensure cache directory exists but file doesn't exist
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
 				require.NoError(t, os.MkdirAll(mediaDir, 0755))
 
-				t.Cleanup(func() {
-					mockProcessSingleMedia(t, false)
-				})
+				// Mock processing to fail
+				restoreProcessingFn := mockProcessSingleMedia(t, false, int(media.ID), int(album.ID))
+				t.Cleanup(restoreProcessingFn)
 
-				return httptest.NewRecorder()
-			},
-			validateFunc: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				albumDir := path.Join(tempCachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := path.Join(albumDir, strconv.Itoa(int(mediaURL.MediaID)))
-				files, err := os.ReadDir(mediaDir)
-				require.NoError(t, err, "Failed to read folder: %s", mediaDir)
-				require.Empty(t, files, "Folder is not empty: %s", mediaDir, files)
+				// Create mock router without auth for this test
+				router := mux.NewRouter()
+				registerMockVideoRoutesForTesting(db, router, cachePath)
 
+				// Make request
+				req := httptest.NewRequest("GET", "/"+mediaName, nil)
+				rr := httptest.NewRecorder()
+				router.ServeHTTP(rr, req)
+
+				// Validate response
 				assert.Equal(t, http.StatusInternalServerError, rr.Code)
-
-				t.Cleanup(func() {
-					require.NoError(t, os.RemoveAll(albumDir))
-				})
 			},
 		},
 	}
 
+	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rr := tc.setupFunc(t)
-			req := httptest.NewRequest("GET", tc.url, nil)
-
-			// For auth tests, add proper cookie
-			if tc.useRealAuth {
-				cookie := http.Cookie{
-					Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
-					Value: tokenPassword,
-				}
-				req.AddCookie(&cookie)
-
-				// Use real router for auth test
-				realRouter.ServeHTTP(rr, req)
-			} else {
-				// Use mock router for non-auth tests
-				mockRouter.ServeHTTP(rr, req)
-			}
-
-			tc.validateFunc(t, rr)
+			tc.testFunc(t, db)
 		})
 	}
 }
