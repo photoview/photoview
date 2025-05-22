@@ -4,59 +4,44 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/jpeg"
-	"os"
 	"time"
 
-	"github.com/disintegration/imaging"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
-	_ "github.com/strukturag/libheif/go/heif"
-
 	"gorm.io/gorm"
 )
 
-func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
-
-	var siteInfo models.SiteInfo
-	if err := db.First(&siteInfo).Error; err != nil {
-		return nil, err
-	}
-
-	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
-	if err != nil {
-		return nil, err
-	}
-
-	dimensions := media_utils.PhotoDimensionsFromRect(inputImage.Bounds())
-	dimensions = dimensions.ThumbnailScale()
-
-	thumbImage := imaging.Resize(inputImage, dimensions.Width, dimensions.Height, imaging.NearestNeighbor)
-	if err = encodeImageJPEG(thumbImage, outputPath, 60); err != nil {
-		return nil, err
-	}
-
-	return &dimensions, nil
+// Dimension presents the Dimension of a image.
+type Dimension struct {
+	Width  int
+	Height int
 }
 
-func encodeImageJPEG(image image.Image, outputPath string, jpegQuality int) error {
-	photo_file, err := os.Create(outputPath)
+// GetPhotoDimensions returns the dimension of the image `imagePath`.
+func GetPhotoDimensions(imagePath string) (Dimension, error) {
+	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
-		return errors.Wrapf(err, "could not create file: %s", outputPath)
-	}
-	defer photo_file.Close()
-
-	err = jpeg.Encode(photo_file, image, &jpeg.Options{Quality: jpegQuality})
-	if err != nil {
-		return err
+		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
 
-	return nil
+	return Dimension{
+		Width:  w,
+		Height: h,
+	}, nil
+}
+
+// EncodeThumbnail encodes a thumbnail of `inputPath`, and store it as `outputPath`.
+// It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
+func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
+		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
+	}
+
+	return GetPhotoDimensions(outputPath)
 }
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
