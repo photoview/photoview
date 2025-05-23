@@ -3,7 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
+	"syscall"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -59,6 +62,8 @@ func main() {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
 
+	setupGracefulShutdown()
+
 	rootRouter := mux.NewRouter()
 
 	rootRouter.Use(dataloader.Middleware(db))
@@ -113,6 +118,23 @@ func main() {
 	}
 
 	log.Panic(http.ListenAndServe(apiListenURL.Host, handlers.CompressHandler(rootRouter)))
+}
+
+func setupGracefulShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		log.Println("Shutting down Photoview...")
+
+		// Shutdown scanners in correct order
+		periodic_scanner.ShutdownPeriodicScanner()
+		scanner_queue.CloseScannerQueue()
+
+		log.Println("Shutdown complete")
+		os.Exit(0)
+	}()
 }
 
 func logUIendpointURL() {

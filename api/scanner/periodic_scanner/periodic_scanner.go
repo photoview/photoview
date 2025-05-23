@@ -1,6 +1,7 @@
 package periodic_scanner
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 type periodicScanner struct {
 	ticker         *time.Ticker
 	ticker_changed chan bool
+	done           chan struct{}
 	mutex          *sync.Mutex
 	db             *gorm.DB
 }
@@ -20,7 +22,6 @@ type periodicScanner struct {
 var mainPeriodicScanner *periodicScanner = nil
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
-
 	var siteInfo models.SiteInfo
 	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
@@ -31,7 +32,7 @@ func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 
 func InitializePeriodicScanner(db *gorm.DB) error {
 	if mainPeriodicScanner != nil {
-		panic("periodic scanner has already been initialized")
+		return fmt.Errorf("periodic scanner has already been initialized")
 	}
 
 	scanInterval, err := getPeriodicScanInterval(db)
@@ -42,10 +43,11 @@ func InitializePeriodicScanner(db *gorm.DB) error {
 	mainPeriodicScanner = &periodicScanner{
 		db:             db,
 		ticker_changed: make(chan bool),
+		done:           make(chan struct{}),
 		mutex:          &sync.Mutex{},
 	}
 
-	go scanIntervalRunner()
+	go mainPeriodicScanner.scanIntervalRunner()
 
 	ChangePeriodicScanInterval(scanInterval)
 	return nil
@@ -73,15 +75,50 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 	}
 }
 
-func scanIntervalRunner() {
+// ShutdownPeriodicScanner gracefully shuts down the periodic scanner
+func ShutdownPeriodicScanner() {
+	if mainPeriodicScanner != nil {
+		log.Info("Shutting down periodic scanner")
+
+		// Signal the runner goroutine to stop
+		close(mainPeriodicScanner.done)
+
+		// Stop the ticker if it exists
+		mainPeriodicScanner.mutex.Lock()
+		if mainPeriodicScanner.ticker != nil {
+			mainPeriodicScanner.ticker.Stop()
+			mainPeriodicScanner.ticker = nil
+		}
+		mainPeriodicScanner.mutex.Unlock()
+
+		// Reset the global scanner
+		mainPeriodicScanner = nil
+	}
+}
+
+func (ps *periodicScanner) scanIntervalRunner() {
 	for {
 		log.Info("Scan interval runner: Waiting for signal")
-		mainPeriodicScanner.mutex.Lock()
-		ticker := mainPeriodicScanner.ticker
+
+		// Check for shutdown signal first
+		select {
+		case <-ps.done:
+			log.Info("Scan interval runner: Shutting down")
+			return
+		default:
+			// Continue if not shutting down
+		}
+
+		ps.mutex.Lock()
+		ticker := ps.ticker
+		ps.mutex.Unlock()
+
 		if ticker != nil {
-			mainPeriodicScanner.mutex.Unlock()
 			select {
-			case <-mainPeriodicScanner.ticker_changed:
+			case <-ps.done:
+				log.Info("Scan interval runner: Shutting down")
+				return
+			case <-ps.ticker_changed:
 				log.Info("Scan interval runner: New ticker detected")
 			case <-ticker.C:
 				log.Info("Scan interval runner: Starting periodic scan")
@@ -90,9 +127,13 @@ func scanIntervalRunner() {
 				}
 			}
 		} else {
-			mainPeriodicScanner.mutex.Unlock()
-			<-mainPeriodicScanner.ticker_changed
-			log.Info("Scan interval runner: New ticker detected")
+			select {
+			case <-ps.done:
+				log.Info("Scan interval runner: Shutting down")
+				return
+			case <-ps.ticker_changed:
+				log.Info("Scan interval runner: New ticker detected")
+			}
 		}
 	}
 }
