@@ -58,6 +58,7 @@ func BenchmarkMagickCLI(b *testing.B) {
 		}()
 	}
 }
+
 func BenchmarkMagickWand(b *testing.B) {
 	dir := b.TempDir()
 

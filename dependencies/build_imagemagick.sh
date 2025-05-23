@@ -13,7 +13,12 @@ curl -L -o ./magick.tar.gz "$URL"
 
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
-./configure --enable-64bit-channel-masks --enable-static --enable-delegate-build --disable-shared --with-x=no --with-magick-plus-plus=no --host=${DEB_HOST_MULTIARCH}
+./configure \
+  --enable-64bit-channel-masks \
+  --enable-static --enable-shared --enable-delegate-build \
+  --with-x=no --with-magick-plus-plus=no --with-gvc=no \
+  --without-perl --disable-doc \
+  --host=${DEB_HOST_MULTIARCH}
 make
 make install
 cd ..
