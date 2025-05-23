@@ -116,7 +116,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   # Install required dependencies
   && /app/scripts/install_runtime_dependencies.sh \
   # Install self-building libs
-  && cp -a lib/* /usr/local/lib/ \
+  && cp -a lib/*.so* /usr/local/lib/ \
   && cp -a bin/* /usr/local/bin/ \
   && cp -a etc/* /usr/local/etc/ \
   && ldconfig \
