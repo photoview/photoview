@@ -76,15 +76,19 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 func scanIntervalRunner() {
 	for {
 		log.Print("Scan interval runner: Waiting for signal")
-		if mainPeriodicScanner.ticker != nil {
+		mainPeriodicScanner.mutex.Lock()
+		ticker := mainPeriodicScanner.ticker
+		if ticker != nil {
+			mainPeriodicScanner.mutex.Unlock()
 			select {
 			case <-mainPeriodicScanner.ticker_changed:
 				log.Print("Scan interval runner: New ticker detected")
-			case <-mainPeriodicScanner.ticker.C:
+			case <-ticker.C:
 				log.Print("Scan interval runner: Starting periodic scan")
 				scanner_queue.AddAllToQueue()
 			}
 		} else {
+			mainPeriodicScanner.mutex.Unlock()
 			<-mainPeriodicScanner.ticker_changed
 			log.Print("Scan interval runner: New ticker detected")
 		}
