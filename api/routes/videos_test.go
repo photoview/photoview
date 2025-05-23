@@ -165,6 +165,11 @@ func createTestResources(t *testing.T, db *gorm.DB, testID string) (
 }
 
 func TestVideoRoutes(t *testing.T) {
+	// Ensure original function is always restored
+	defer func() {
+		processSingleMediaFn = originalProcessSingleMedia
+	}()
+
 	// Setup test database
 	db := test_utils.DatabaseTest(t)
 
