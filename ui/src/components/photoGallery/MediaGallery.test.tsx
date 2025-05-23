@@ -4,6 +4,7 @@ import React from 'react'
 import { MediaType } from '../../__generated__/globalTypes'
 import MediaGallery from './MediaGallery'
 import { MediaGalleryState } from './mediaGalleryReducer'
+import { renderWithProviders } from '../../helpers/testUtils'
 
 vi.mock('./photoGalleryMutations', () => ({
   useMarkFavoriteMutation: () => [vi.fn()],
@@ -54,7 +55,7 @@ test('photo gallery with media', () => {
     presenting: false,
   }
 
-  render(
+  renderWithProviders(
     <MediaGallery
       dispatchMedia={dispatchMedia}
       mediaState={mediaState}

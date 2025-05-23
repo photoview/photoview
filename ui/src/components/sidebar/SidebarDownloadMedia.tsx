@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { NotificationType } from '../../__generated__/globalTypes'
 import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
-import { MessageState } from '../messages/Messages'
+import { useMessageState } from '../messages/MessageState'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
 import React from 'react'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
@@ -13,6 +13,13 @@ import {
   sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
 } from './__generated__/sidebarDownloadQuery'
+
+interface MessageOptions {
+  key: string
+  type: NotificationType
+  props: any
+  onDismiss?: () => void
+}
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -55,7 +62,11 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn) => async (url: string) => {
+const downloadMedia = (
+  t: TranslationFn,
+  add: (message: MessageOptions) => void,
+  removeKey: (key: string) => void
+) => async (url: string) => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
     location.origin
@@ -75,7 +86,7 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
 
   let blob = null
   if (response.headers.has('content-length')) {
-    blob = await downloadMediaShowProgress(t)(response)
+    blob = await downloadMediaShowProgress(t, add, removeKey)(response)
   } else {
     blob = await response.blob()
   }
@@ -97,10 +108,16 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
 }
 
 const downloadMediaShowProgress =
-  (t: TranslationFn) => async (response: Response) => {
+  (
+    t: TranslationFn,
+    add: (message: MessageOptions) => void,
+    removeKey: (key: string) => void
+  ) => async (response: Response) => {
+    const notifyKey = `download-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
     const totalBytes = Number(response.headers.get('content-length'))
     const reader = response.body?.getReader()
     const data = new Uint8Array(totalBytes)
+    const DOWNLOAD_COMPLETE_NOTIFICATION_DURATION = 2000
 
     if (reader == null) {
       throw new Error('Download reader is null')
@@ -112,67 +129,104 @@ const downloadMediaShowProgress =
       reader.cancel('Download canceled by user')
     }
 
-    const notifyKey = Math.random().toString(26)
-    MessageState.add({
+    if (totalBytes === 0) {
+      add({
+        key: notifyKey,
+        type: NotificationType.Close,
+        props: {
+          negative: true,
+          header: 'Downloading media failed',
+          content: `The content length of the downloaded media is 0 bytes, which has no sense and usually
+          means that there is an unknown lower-level error.`,
+        },
+      });
+      throw new Error('Content length of the downloaded media is 0.')
+    }
+
+    add({
       key: notifyKey,
       type: NotificationType.Progress,
       onDismiss,
       props: {
-        header: 'Downloading photo',
+        header: 'Downloading media',
         content: `Starting download`,
         percent: 0,
       },
     })
 
+    const PROGRESS_THROTTLE_MS = 500;
+    let lastUpdate = 0;
     let receivedBytes = 0
     let result
-    do {
-      result = await reader.read()
+    try {
+      do {
+        result = await reader.read()
 
-      if (canceled) break
+        if (canceled) break
 
-      if (result.value) data.set(result.value, receivedBytes)
+        if (result.value) {
+          if (receivedBytes + result.value.length > totalBytes) {
+            throw new Error('Received more data than expected');
+          }
+          data.set(result.value, receivedBytes)
+          receivedBytes += result.value.length
+        }
 
-      receivedBytes += result.value ? result.value.length : 0
-
-      MessageState.add({
+        const now = Date.now();
+        if (now - lastUpdate >= PROGRESS_THROTTLE_MS) {
+          add({
+            key: notifyKey,
+            type: NotificationType.Progress,
+            onDismiss,
+            props: {
+              header: 'Downloading media',
+              percent: (receivedBytes / totalBytes) * 100,
+              content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
+                totalBytes
+              )} bytes downloaded`,
+            },
+          });
+          lastUpdate = now;
+        }
+      } while (!result.done)
+    } catch (error) {
+      add({
         key: notifyKey,
-        type: NotificationType.Progress,
-        onDismiss,
+        type: NotificationType.Close,
         props: {
-          header: 'Downloading photo',
-          percent: (receivedBytes / totalBytes) * 100,
-          content: `${formatBytes(t)(receivedBytes)} of ${formatBytes(t)(
-            totalBytes
-          )} bytes downloaded`,
+          negative: true,
+          header: 'Downloading media failed',
+          content: `The media download task failed with the error: ${error instanceof Error
+            ? error.message
+            : 'Unknown error occurred'
+            }`,
         },
-      })
-    } while (!result.done)
+      });
+      return
+    }
 
     if (canceled) {
       return
     }
 
-    MessageState.add({
+    add({
       key: notifyKey,
       type: NotificationType.Progress,
       props: {
-        header: 'Downloading photo completed',
-        content: `The photo has been downloaded`,
+        header: 'Downloading media completed',
+        content: `The media has been downloaded`,
         percent: 100,
         positive: true,
       },
     })
 
     setTimeout(() => {
-      MessageState.removeKey(notifyKey)
-    }, 2000)
+      removeKey(notifyKey)
+    }, DOWNLOAD_COMPLETE_NOTIFICATION_DURATION)
 
-    const content = new Blob([data.buffer], {
-      type: response.headers.get('content-type') || undefined,
+    return new Blob([data.buffer], {
+      type: response.headers.get('content-type') || 'application/octet-stream',
     })
-
-    return content
   }
 
 const downloadBlob = (blob: Blob, filename: string) => {
@@ -200,9 +254,11 @@ type SidebarDownloadTableRow = {
 
 type SidebarDownloadTableProps = {
   rows: SidebarDownloadTableRow[]
+  add: (message: MessageOptions) => void
+  removeKey: (key: string) => void
 }
 
-const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
+const SidebarDownloadTable = ({ rows, add, removeKey }: SidebarDownloadTableProps) => {
   const { t } = useTranslation()
 
   const extractExtension = (url: string) => {
@@ -212,7 +268,7 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
     return urlMatch[0].split('.').pop()?.trim().toLowerCase()
   }
 
-  const download = downloadMedia(t)
+  const download = downloadMedia(t, add, removeKey)
   const bytes = formatBytes(t)
   const downloadRows = rows.map(x => (
     <SidebarTable.Row key={x.url} onClick={() => download(x.url)} tabIndex={0}>
@@ -252,6 +308,7 @@ type SidebarMediaDownladProps = {
 
 const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
   const { t } = useTranslation()
+  const { add, removeKey } = useMessageState()
   if (!media || !media.id) return null
 
   const [loadPhotoDownloads, { called, loading, data }] = useLazyQuery<
@@ -287,7 +344,11 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
         {t('sidebar.download.title', 'Download')}
       </SidebarSectionTitle>
 
-      <SidebarDownloadTable rows={downloadRows} />
+      <SidebarDownloadTable
+        rows={downloadRows}
+        add={add}
+        removeKey={removeKey}
+      />
     </SidebarSection>
   )
 }
