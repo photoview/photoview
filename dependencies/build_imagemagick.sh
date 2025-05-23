@@ -16,7 +16,9 @@ cd ImageMagick-*
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
-  --with-x=no --with-magick-plus-plus=no --with-gvc=no \
+  --with-heic --with-jpeg --with-png \
+  --with-raw --with-tiff --with-webp \
+  --without-x --without-magick-plus-plus \
   --without-perl --disable-doc \
   --host=${DEB_HOST_MULTIARCH}
 make
