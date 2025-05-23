@@ -6,7 +6,6 @@ import (
 
 	"github.com/kkovaletp/photoview/api/graphql/models"
 	"github.com/kkovaletp/photoview/api/scanner/media_encoding"
-	"github.com/kkovaletp/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -18,7 +17,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
-	photoDimensions, err := media_utils.GetPhotoDimensions(imagePath)
+	photoDimensions, err := media_encoding.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return nil, err
 	}
