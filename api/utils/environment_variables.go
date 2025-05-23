@@ -15,6 +15,7 @@ const (
 	EnvUIPath                    EnvironmentVariable = "PHOTOVIEW_UI_PATH"
 	EnvMediaCachePath            EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
 	EnvFaceRecognitionModelsPath EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH"
+	EnvHTTPUserAuth              EnvironmentVariable = "PHOTOVIEW_HTTP_USER_AUTH"
 )
 
 // Network related
