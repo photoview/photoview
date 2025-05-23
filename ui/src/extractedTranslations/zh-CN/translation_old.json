@@ -7,6 +7,9 @@
       "move_faces": null
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "该组面孔中的所有照片都会被合并至选择的面孔"
+      },
       "merge_people_groups": {
         "description": "所有在此的脸孔群组将会合并到已选择的脸孔群组",
         "destination_table": {
@@ -14,6 +17,23 @@
         },
         "title": "合并脸孔群组"
       }
+    }
+  },
+  "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
     }
   },
   "sidebar": {

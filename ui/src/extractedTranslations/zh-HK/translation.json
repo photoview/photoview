@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "合併"
+        "merge": "合併",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "分離相片中的臉孔"
       },
       "merge_face_groups": {
-        "description": "所有在此的臉孔群組將會合併到已選擇的臉孔群組",
+        "destination_description": "",
         "destination_table": {
           "title": "選擇目標臉孔群組"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "合併臉孔群組"
       },
@@ -273,6 +279,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "動態模式",
           "aperture_priority": "光圈優先",

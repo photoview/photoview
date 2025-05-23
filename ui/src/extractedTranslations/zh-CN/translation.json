@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "修改面孔命名",
       "detach_images": "解除面孔标记",
+      "merge_face": "",
       "merge_people": "合并面孔至",
       "move_faces": "移动面孔至"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "合并"
+        "merge": "合并",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "解除面孔标记"
       },
       "merge_face_groups": {
-        "description": "该组面孔中的所有照片都会被合并至选择的面孔",
+        "destination_description": "",
         "destination_table": {
           "title": "选择目标面孔"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "合并面孔组"
       },
@@ -254,7 +260,11 @@
     "download": {
       "filesize": {
         "byte_one": "{{count}} 字节",
-        "byte_other": "{{count}} 字节"
+        "byte_other": "{{count}} 字节",
+        "giga_byte_other": "",
+        "kilo_byte_other": "",
+        "mega_byte_other": "",
+        "tera_byte_other": ""
       },
       "table_columns": {
         "dimensions": "尺寸",
@@ -270,6 +280,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "动态模式",
           "aperture_priority": "光圈优先",

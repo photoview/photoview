@@ -62,19 +62,21 @@
   },
   "people_page": {
     "action_label": {
-      "change_label": "",
-      "detach_images": "",
-      "merge_people": "",
-      "move_faces": ""
+      "change_label": "Byt märkning",
+      "detach_images": "Skilj ansikte",
+      "merge_face": "Slå ihop ansikte",
+      "merge_people": "Slå ihop ansikten",
+      "move_faces": "Flytta ansikten"
     },
     "face_group": {
       "label_placeholder": "Märkning",
       "unlabeled": "Omärkt",
-      "unlabeled_person": ""
+      "unlabeled_person": "Omärkt person"
     },
     "modal": {
       "action": {
-        "merge": ""
+        "merge": "Slå ihop",
+        "next": "Nästa"
       },
       "detach_image_faces": {
         "action": {
@@ -85,11 +87,15 @@
         "title": ""
       },
       "merge_face_groups": {
-        "description": "",
+        "destination_description": "Välj målansiktsgruppen som andra ansikten ska slås samman med.",
         "destination_table": {
-          "title": ""
+          "title": "Välj målansiktet"
         },
-        "title": ""
+        "sources_description": "Välj en eller flera ansiktsgrupper att slå samman med målgruppen",
+        "sources_table": {
+          "title": "Välj minst ett ansikte att slå ihop med:"
+        },
+        "title": "Slå Ihop Ansiktsgrupper"
       },
       "move_image_faces": {
         "description": "",
@@ -104,7 +110,7 @@
         "title": ""
       }
     },
-    "recognize_unlabeled_faces_button": "Känna igen omärkta ansikten",
+    "recognize_unlabeled_faces_button": "Identifiera omärkta ansikten",
     "tableselect_face_group": {
       "search_faces_placeholder": ""
     },
@@ -278,6 +284,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Actionprogram",
           "aperture_priority": "Bländarprioritet",

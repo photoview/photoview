@@ -30,6 +30,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "All images within this face group will be merged into the selected face group."
+      },
       "merge_people_groups": {
         "description": "All images within this face group will be merged into the selected face group.",
         "destination_table": {
@@ -48,6 +51,21 @@
     }
   },
   "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "The filter to use when generating thumbnails",
+        "filter": {
+          "box": "Box",
+          "catmull_rom": "Catmull-Rom",
+          "Lanczos": "Lanczos (highest quality)",
+          "linear": "Linear",
+          "mitchell_netravali": "Mitchell-Netravali",
+          "nearest_neighbor": "Nearest Neighbor (default)"
+        },
+        "label": "Downsampling method"
+      },
+      "title": "Thumbnail preferences"
+    },
     "users": {
       "table": {
         "column_names": {

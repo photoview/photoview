@@ -40,6 +40,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой."
+      },
       "merge_people_groups": {
         "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
         "destination_table": {
@@ -64,6 +67,21 @@
     }
   },
   "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
+    },
     "users": {
       "table": {
         "column_names": {

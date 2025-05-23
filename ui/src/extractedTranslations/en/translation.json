@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Change label",
       "detach_images": "Detach face",
+      "merge_face": "Merge face",
       "merge_people": "Merge face",
       "move_faces": "Move faces"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Merge"
+        "merge": "Merge",
+        "next": "Next"
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Detach Image Faces"
       },
       "merge_face_groups": {
-        "description": "All images within this face group will be merged into the selected face group.",
+        "destination_description": "Select the face group that other groups should be merged into.",
         "destination_table": {
           "title": "Select the destination face"
+        },
+        "sources_description": "Select all face groups that will be merged into the destination group.",
+        "sources_table": {
+          "title": "Select one or more source faces to merge into:"
         },
         "title": "Merge Face Groups"
       },
@@ -278,6 +284,7 @@
     "media": {
       "album_path": "Album path",
       "exif": {
+        "description": "Description",
         "exposure_program": {
           "action_program": "Action program",
           "aperture_priority": "Aperture priority",

@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Ændre navn",
       "detach_images": "Løsriv billeder",
+      "merge_face": "",
       "merge_people": "Sammenflet personer",
       "move_faces": "Flyt ansigter"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Sammenflet"
+        "merge": "Sammenflet",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Løsriv Billeder"
       },
       "merge_face_groups": {
-        "description": "Alle billeder fra denne gruppe vil blive flettet sammen med den valgte gruppe",
+        "destination_description": "",
         "destination_table": {
           "title": "Vælg destinationsgruppe"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Vælg gruppe at flette med"
       },
@@ -278,6 +284,7 @@
     "media": {
       "album_path": "Album sti",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Actionprogram",
           "aperture_priority": "Blændeprioritet",

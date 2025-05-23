@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Name ändern",
       "detach_images": "Bild ablösen",
+      "merge_face": "",
       "merge_people": "Gesichter zusammenführen",
       "move_faces": "Gesicht verschieben "
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "zusammenführen"
+        "merge": "zusammenführen",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Bilder von Person ablösen"
       },
       "merge_face_groups": {
-        "description": "Alle Bilder dieser nicht Zugeordneten Person werden mit folgender Person zusammengeführt",
+        "destination_description": "",
         "destination_table": {
           "title": "Personen zusammenführen"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Personen zusammenführen"
       },
@@ -278,6 +284,7 @@
     "media": {
       "album_path": "Pfad",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Action (kurze Verschlusszeit)",
           "aperture_priority": "Blende Priorität",

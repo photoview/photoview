@@ -30,6 +30,9 @@
       }
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "此人臉群組中的所有相片將會合併至選取的人臉群組。"
+      },
       "merge_people_groups": {
         "description": "此人臉群組中的所有圖片都會合併至所選的人臉群組。",
         "destination_table": {

@@ -9,6 +9,7 @@ import (
 )
 
 const faceGroupIDIsQuestion = "face_group_id = ?"
+const faceGroupIDsInQuestion = "face_group_id IN (?)"
 const mediaAlbumIDInQuestion = "media.album_id IN (?)"
 const imageFacesIDInQuestion = "image_faces.id IN (?)"
 
@@ -33,7 +34,7 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 		userAlbumIDs[i] = album.ID
 	}
 
-	// Verify that user owns at leat one of the images in the face group
+	// Verify that user owns at least one of the images in the face group
 	imageFaceQuery := db.
 		Select("image_faces.id").
 		Table("image_faces").
@@ -90,6 +91,15 @@ func deleteEmptyFaceGroups(sourceFaceGroups []*models.FaceGroup, tx *gorm.DB) er
 			if err := tx.Delete(&faceGroup).Error; err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func deleteFaceGroups(sourceFaceGroups []*models.FaceGroup, tx *gorm.DB) error {
+	for _, faceGroup := range sourceFaceGroups {
+		if err := tx.Delete(&faceGroup).Error; err != nil {
+			return fmt.Errorf("Delete FaceGroup(%d) error: %w", faceGroup.ID, err)
 		}
 	}
 	return nil

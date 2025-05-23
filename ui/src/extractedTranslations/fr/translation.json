@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Changer le label",
       "detach_images": "Détacher le visage",
+      "merge_face": "",
       "merge_people": "Fusionner le visage",
       "move_faces": "Déplacer les visages"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Fusionner"
+        "merge": "Fusionner",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Détacher les visages des images"
       },
       "merge_face_groups": {
-        "description": "Toutes les images de ce groupe de visages seront fusionnées dans le groupe de visages sélectionné.",
+        "destination_description": "",
         "destination_table": {
           "title": "Sélectionner le visage de destination"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Fusionner des groupes de visages"
       },
@@ -283,6 +289,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Programme d'action",
           "aperture_priority": "Priorité d'ouverture",
