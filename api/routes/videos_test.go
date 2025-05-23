@@ -43,7 +43,8 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, album
 		if shouldSucceed {
 			// On success: create the expected video file in cache
 			mediaURLs := []models.MediaURL{}
-			if err := db.Where("media_id = ? AND purpose = ?", media.ID, models.VideoWeb).Find(&mediaURLs).Error; err != nil {
+			if err := db.Where("media_id = ? AND purpose = ?", media.ID, models.VideoWeb).
+				Find(&mediaURLs).Error; err != nil {
 				return err
 			}
 
