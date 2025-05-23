@@ -5,12 +5,10 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
-	"image"
 	"strconv"
 	"strings"
 
 	"github.com/kkovaletp/photoview/api/database/drivers"
-	"github.com/kkovaletp/photoview/api/scanner/media_encoding/media_utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -75,24 +73,10 @@ func (fd FaceDescriptor) Value() (driver.Value, error) {
 	return buf.Bytes(), nil
 }
 
+// FaceRectangle stores a relative rectangle of a face in an image.
 type FaceRectangle struct {
 	MinX, MaxX float64
 	MinY, MaxY float64
-}
-
-// ToDBFaceRectangle converts a pixel absolute rectangle to a relative FaceRectangle to be saved in the database
-func ToDBFaceRectangle(imgRec image.Rectangle, imagePath string) (*FaceRectangle, error) {
-	size, err := media_utils.GetPhotoDimensions(imagePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &FaceRectangle{
-		MinX: float64(imgRec.Min.X) / float64(size.Width),
-		MaxX: float64(imgRec.Max.X) / float64(size.Width),
-		MinY: float64(imgRec.Min.Y) / float64(size.Height),
-		MaxY: float64(imgRec.Max.Y) / float64(size.Height),
-	}, nil
 }
 
 // GormDataType datatype used in database

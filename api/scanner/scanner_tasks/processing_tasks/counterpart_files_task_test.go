@@ -73,8 +73,7 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			done := test_utils.SetEnv(string(utils.EnvDisableRawProcessing), fmt.Sprintf("%v", tc.disableRawProcessing))
-			defer done()
+			t.Setenv(string(utils.EnvDisableRawProcessing), fmt.Sprintf("%v", tc.disableRawProcessing))
 
 			ctx := scanner_task.NewTaskContext(context.Background(), nil, nil, nil)
 

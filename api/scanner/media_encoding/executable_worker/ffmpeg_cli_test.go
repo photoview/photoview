@@ -5,14 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/kkovaletp/photoview/api/test_utils"
 	"github.com/kkovaletp/photoview/api/utils"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
-	done := test_utils.SetPathWithCurrent()
-	defer done()
+	SetPathWithCurrent(t, "")
 
 	Ffmpeg = newFfmpegCli()
 
@@ -34,11 +32,8 @@ func TestFfmpegNotExist(t *testing.T) {
 }
 
 func TestFfmpegVersionFail(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
-
-	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-	defer doneEnv()
+	SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv("FAIL_WITH", "expect failure")
 
 	Ffmpeg = newFfmpegCli()
 
@@ -60,11 +55,8 @@ func TestFfmpegVersionFail(t *testing.T) {
 }
 
 func TestFfmpegIgnore(t *testing.T) {
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
-
-	doneEnv := test_utils.SetEnv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
-	defer doneEnv()
+	SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 
 	Ffmpeg = newFfmpegCli()
 
@@ -86,8 +78,7 @@ func TestFfmpegIgnore(t *testing.T) {
 }
 
 func TestFfmpeg(t *testing.T) {
-	done := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer done()
+	SetPathWithCurrent(t, testdataBinPath)
 
 	Ffmpeg = newFfmpegCli()
 
@@ -96,8 +87,7 @@ func TestFfmpeg(t *testing.T) {
 	}
 
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
-		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-		defer doneEnv()
+		t.Setenv("FAIL_WITH", "expect failure")
 
 		err := Ffmpeg.EncodeMp4("input", "output")
 		if err == nil {
@@ -121,8 +111,7 @@ func TestFfmpeg(t *testing.T) {
 		},
 	}
 	t.Run("EncodeVideoThumbnailMp4Failed", func(t *testing.T) {
-		doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-		defer doneEnv()
+		t.Setenv("FAIL_WITH", "expect failure")
 
 		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
 		if err == nil {
@@ -142,16 +131,12 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
-	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
-	defer doneCodec()
-
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
+	SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 
 	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-	defer doneEnv()
+	t.Setenv("FAIL_WITH", "expect failure")
 
 	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
@@ -162,17 +147,13 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 	}
 }
 
-func TestFfmpegWithCustomCOdec(t *testing.T) {
-	doneCodec := test_utils.SetEnv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
-	defer doneCodec()
-
-	donePath := test_utils.SetPathWithCurrent(testdataBinPath)
-	defer donePath()
+func TestFfmpegWithCustomCodec(t *testing.T) {
+	SetPathWithCurrent(t, testdataBinPath)
+	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 
 	Ffmpeg = newFfmpegCli()
 
-	doneEnv := test_utils.SetEnv("FAIL_WITH", "expect failure")
-	defer doneEnv()
+	t.Setenv("FAIL_WITH", "expect failure")
 
 	err := Ffmpeg.EncodeMp4("input", "output")
 	if err == nil {
