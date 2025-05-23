@@ -1,11 +1,11 @@
 package periodic_scanner
 
 import (
-	"log"
 	"sync"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"gorm.io/gorm"
 )
@@ -55,9 +55,9 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 	var newTicker *time.Ticker = nil
 	if duration > 0 {
 		newTicker = time.NewTicker(duration)
-		log.Printf("Periodic scan interval changed: %s", duration.String())
+		log.Info("Periodic scan interval changed: %s", duration.String())
 	} else {
-		log.Print("Periodic scan interval changed: disabled")
+		log.Info("Periodic scan interval changed: disabled")
 	}
 
 	{
@@ -75,22 +75,24 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 
 func scanIntervalRunner() {
 	for {
-		log.Print("Scan interval runner: Waiting for signal")
+		log.Info("Scan interval runner: Waiting for signal")
 		mainPeriodicScanner.mutex.Lock()
 		ticker := mainPeriodicScanner.ticker
 		if ticker != nil {
 			mainPeriodicScanner.mutex.Unlock()
 			select {
 			case <-mainPeriodicScanner.ticker_changed:
-				log.Print("Scan interval runner: New ticker detected")
+				log.Info("Scan interval runner: New ticker detected")
 			case <-ticker.C:
-				log.Print("Scan interval runner: Starting periodic scan")
-				scanner_queue.AddAllToQueue()
+				log.Info("Scan interval runner: Starting periodic scan")
+				if err := scanner_queue.AddAllToQueue(); err != nil {
+					log.Error("Scan interval runner: Failed to add all users to queue: %v", err)
+				}
 			}
 		} else {
 			mainPeriodicScanner.mutex.Unlock()
 			<-mainPeriodicScanner.ticker_changed
-			log.Print("Scan interval runner: New ticker detected")
+			log.Info("Scan interval runner: New ticker detected")
 		}
 	}
 }
