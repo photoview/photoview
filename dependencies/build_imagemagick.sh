@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 : ${DEB_HOST_MULTIARCH=`uname -m`-linux-gnu}
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
@@ -18,7 +18,14 @@ make
 make install
 cd ..
 
-mkdir -p /output/bin /output/etc
+mkdir -p /output/bin /output/etc /output/lib /output/include /output/pkgconfig
 cp /usr/local/bin/magick /output/bin/
-cp -r /usr/local/etc/ImageMagick-7 /output/etc/ImageMagick-7
+cp -a /usr/local/etc/ImageMagick-7 /output/etc/
+cp -a /usr/local/lib/ImageMagick-* /output/lib/
+cp -a /usr/local/lib/libMagickCore-* /output/lib/
+cp -a /usr/local/lib/libMagickWand-* /output/lib/
+cp -a /usr/local/include/ImageMagick-7 /output/include/
+cp -a /usr/local/lib/pkgconfig/ImageMagick*.pc /output/pkgconfig/
+cp -a /usr/local/lib/pkgconfig/MagickCore*.pc /output/pkgconfig/
+cp -a /usr/local/lib/pkgconfig/MagickWand*.pc /output/pkgconfig/
 file /output/bin/magick

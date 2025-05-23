@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 : ${DEB_HOST_MULTIARCH=`uname -m`-linux-gnu}
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
