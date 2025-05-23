@@ -29,7 +29,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/jest": "^29.5.14",
     "@types/mapbox-gl": "^3.4.0",
-    "@types/react": "^19.1.4",
+    "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@types/react-router-dom": "^5.3.3",
     "@types/styled-components": "^5.1.34",
