@@ -11,12 +11,23 @@ import (
 	"gorm.io/gorm"
 )
 
+type ScannerQueue interface {
+	AddAllToQueue() error
+}
+
+type RealScannerQueue struct{}
+
+func (r *RealScannerQueue) AddAllToQueue() error {
+	return scanner_queue.AddAllToQueue()
+}
+
 type periodicScanner struct {
 	ticker         *time.Ticker
 	ticker_changed chan bool
 	done           chan struct{}
 	mutex          *sync.Mutex
 	db             *gorm.DB
+	scannerQueue   ScannerQueue
 }
 
 var mainPeriodicScannerMutex sync.Mutex
@@ -31,7 +42,7 @@ func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 	return time.Duration(siteInfo.PeriodicScanInterval) * time.Second, nil
 }
 
-func InitializePeriodicScanner(db *gorm.DB) error {
+func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
 	mainPeriodicScannerMutex.Lock()
 	defer mainPeriodicScannerMutex.Unlock()
 
@@ -49,19 +60,39 @@ func InitializePeriodicScanner(db *gorm.DB) error {
 		ticker_changed: make(chan bool),
 		done:           make(chan struct{}),
 		mutex:          &sync.Mutex{},
+		scannerQueue:   queue,
 	}
 
 	go mainPeriodicScanner.scanIntervalRunner()
 
-	ChangePeriodicScanInterval(scanInterval)
+	var newTicker *time.Ticker = nil
+	if scanInterval > 0 {
+		newTicker = time.NewTicker(scanInterval)
+		log.Info("Periodic scan interval changed: " + scanInterval.String())
+	} else {
+		log.Info("Periodic scan interval changed: disabled")
+	}
+
+	mainPeriodicScanner.ticker = newTicker
+
+	select {
+	case mainPeriodicScanner.ticker_changed <- true:
+	default:
+		// Channel might be full, but that's okay
+	}
+
 	return nil
+}
+
+func InitializePeriodicScanner(db *gorm.DB) error {
+	return InitializePeriodicScannerWithQueue(db, &RealScannerQueue{})
 }
 
 func ChangePeriodicScanInterval(duration time.Duration) {
 	var newTicker *time.Ticker = nil
 	if duration > 0 {
 		newTicker = time.NewTicker(duration)
-		log.Info("Periodic scan interval changed: %s", duration.String())
+		log.Info("Periodic scan interval changed: " + duration.String())
 	} else {
 		log.Info("Periodic scan interval changed: disabled")
 	}
@@ -79,7 +110,11 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 		}
 
 		scanner.ticker = newTicker
-		scanner.ticker_changed <- true
+		select {
+		case scanner.ticker_changed <- true:
+		default:
+			// Channel might be full, but that's okay
+		}
 	}
 }
 
@@ -124,8 +159,8 @@ func (ps *periodicScanner) scanIntervalRunner() {
 				log.Info("Scan interval runner: New ticker detected")
 			case <-ticker.C:
 				log.Info("Scan interval runner: Starting periodic scan")
-				if err := scanner_queue.AddAllToQueue(); err != nil {
-					log.Error("Scan interval runner: Failed to add all users to queue: %v", err)
+				if err := ps.scannerQueue.AddAllToQueue(); err != nil {
+					log.Error("Scan interval runner: Failed to add all users to queue", err)
 				}
 			}
 		} else {
