@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
+	"syscall"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -26,7 +31,6 @@ import (
 )
 
 func main() {
-
 	log.Println("Starting Photoview...")
 
 	if err := godotenv.Load(); err != nil {
@@ -58,6 +62,12 @@ func main() {
 	if err := face_detection.InitializeFaceDetector(db); err != nil {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
+
+	// Create context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	setupGracefulShutdown(cancel)
 
 	rootRouter := mux.NewRouter()
 
@@ -112,7 +122,48 @@ func main() {
 
 	}
 
-	log.Panic(http.ListenAndServe(apiListenURL.Host, handlers.CompressHandler(rootRouter)))
+	srv := &http.Server{
+		Addr:    apiListenURL.Host,
+		Handler: handlers.CompressHandler(rootRouter),
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Panicf("HTTP server failed: %s", err)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-ctx.Done()
+
+	log.Println("Shutting down HTTP server...")
+
+	// Create shutdown context with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
+	// Shutdown HTTP server gracefully
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("HTTP server shutdown error: %s", err)
+	}
+
+	log.Println("Shutdown complete")
+}
+
+func setupGracefulShutdown(cancel context.CancelFunc) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		log.Println("Shutting down Photoview...")
+
+		// Shutdown scanners in correct order
+		periodic_scanner.ShutdownPeriodicScanner()
+		scanner_queue.CloseScannerQueue()
+
+		cancel()
+	}()
 }
 
 func logUIendpointURL() {
