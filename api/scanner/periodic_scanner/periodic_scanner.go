@@ -160,7 +160,7 @@ func (ps *periodicScanner) scanIntervalRunner() {
 			case <-ticker.C:
 				log.Info("Scan interval runner: Starting periodic scan")
 				if err := ps.scannerQueue.AddAllToQueue(); err != nil {
-					log.Error("Scan interval runner: Failed to add all users to queue", err)
+					log.Error("Scan interval runner: Failed to add all users to queue", "error", err)
 				}
 			}
 		} else {

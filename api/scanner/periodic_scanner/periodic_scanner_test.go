@@ -19,8 +19,7 @@ type MockScannerQueue struct {
 }
 
 func (m *MockScannerQueue) AddAllToQueue() error {
-	args := m.Called()
-	return args.Error(0)
+	return m.Called().Error(0)
 }
 
 func TestMain(m *testing.M) {
@@ -58,8 +57,7 @@ func TestGetPeriodicScanInterval(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		err := createTestSiteInfo(db, 300)
-		assert.NoError(t, err)
+		assert.NoError(t, createTestSiteInfo(db, 300))
 
 		duration, err := getPeriodicScanInterval(db)
 		assert.NoError(t, err)
@@ -82,15 +80,8 @@ func TestInitializePeriodicScanner(t *testing.T) {
 		defer resetPeriodicScanner()
 
 		mockQueue := &MockScannerQueue{}
-
-		err := createTestSiteInfo(db, 300)
-		assert.NoError(t, err)
-
-		err = InitializePeriodicScannerWithQueue(db, mockQueue)
-		assert.NoError(t, err)
-
-		// Wait a bit for initialization to complete
-		time.Sleep(50 * time.Millisecond)
+		assert.NoError(t, createTestSiteInfo(db, 300))
+		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue))
 
 		// Verify initialization
 		mainPeriodicScannerMutex.Lock()
@@ -101,7 +92,7 @@ func TestInitializePeriodicScanner(t *testing.T) {
 		assert.NotNil(t, scanner.scannerQueue)
 		assert.Equal(t, mockQueue, scanner.scannerQueue)
 
-		// Verify ticker is set up (no additional mutex needed for read in test)
+		// Verify ticker is set up
 		scanner.mutex.Lock()
 		tickerExists := scanner.ticker != nil
 		scanner.mutex.Unlock()
@@ -111,11 +102,8 @@ func TestInitializePeriodicScanner(t *testing.T) {
 	t.Run("backward compatibility with original function", func(t *testing.T) {
 		defer resetPeriodicScanner()
 
-		err := createTestSiteInfo(db, 300)
-		assert.NoError(t, err)
-
-		err = InitializePeriodicScanner(db)
-		assert.NoError(t, err)
+		assert.NoError(t, createTestSiteInfo(db, 300))
+		assert.NoError(t, InitializePeriodicScanner(db))
 
 		// Verify it uses RealScannerQueue
 		mainPeriodicScannerMutex.Lock()
@@ -129,15 +117,12 @@ func TestInitializePeriodicScanner(t *testing.T) {
 		defer resetPeriodicScanner()
 
 		mockQueue := &MockScannerQueue{}
-		err := createTestSiteInfo(db, 300)
-		assert.NoError(t, err)
+		assert.NoError(t, createTestSiteInfo(db, 300))
+		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue))
 
-		err1 := InitializePeriodicScannerWithQueue(db, mockQueue)
-		assert.NoError(t, err1)
-
-		err2 := InitializePeriodicScannerWithQueue(db, mockQueue)
-		assert.Error(t, err2)
-		assert.Contains(t, err2.Error(), "already been initialized")
+		err := InitializePeriodicScannerWithQueue(db, mockQueue)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "already been initialized")
 	})
 }
 
@@ -264,9 +249,6 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 			t.Fatal("Could not send ticker change signal")
 		}
 
-		// Allow processing time
-		time.Sleep(50 * time.Millisecond)
-
 		// Clean shutdown
 		close(ps.done)
 
@@ -294,6 +276,5 @@ func TestRealScannerQueue(t *testing.T) {
 		assert.NotNil(t, queue)
 
 		// We don't test the actual call since it requires external setup
-		// The integration tests will cover the real functionality
 	})
 }
