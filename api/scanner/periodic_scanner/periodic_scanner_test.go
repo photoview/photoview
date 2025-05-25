@@ -57,19 +57,21 @@ func TestGetPeriodicScanInterval(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		assert.NoError(t, createTestSiteInfo(db, 300))
+		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
 
 		duration, err := getPeriodicScanInterval(db)
-		assert.NoError(t, err)
-		assert.Equal(t, 300*time.Second, duration)
+		assert.NoError(t, err, "Failed to retrieve periodic scan interval from database")
+		assert.Equal(t, 300*time.Second, duration,
+			"Periodic scan interval should be 300 seconds but got %v", duration)
 	})
 
 	t.Run("database error - no site info", func(t *testing.T) {
 		db.Exec("DELETE FROM site_info")
 
 		duration, err := getPeriodicScanInterval(db)
-		assert.Error(t, err)
-		assert.Equal(t, time.Duration(0), duration)
+		assert.Error(t, err, "Expected error when no site info exists in database")
+		assert.Equal(t, time.Duration(0), duration,
+			"Duration should be zero when database error occurs, but got %v", duration)
 	})
 }
 
@@ -80,49 +82,55 @@ func TestInitializePeriodicScanner(t *testing.T) {
 		defer resetPeriodicScanner()
 
 		mockQueue := &MockScannerQueue{}
-		assert.NoError(t, createTestSiteInfo(db, 300))
-		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue))
+		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
+		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue),
+			"Failed to initialize periodic scanner with mock queue")
 
 		// Verify initialization
 		mainPeriodicScannerMutex.Lock()
 		scanner := mainPeriodicScanner
 		mainPeriodicScannerMutex.Unlock()
 
-		assert.NotNil(t, scanner)
-		assert.NotNil(t, scanner.scannerQueue)
-		assert.Equal(t, mockQueue, scanner.scannerQueue)
+		assert.NotNil(t, scanner, "mainPeriodicScanner should not be nil after successful initialization")
+		assert.NotNil(t, scanner.scannerQueue, "Scanner queue should not be nil after initialization")
+		assert.Equal(t, mockQueue, scanner.scannerQueue, "Scanner should use the injected mock queue instance")
 
 		// Verify ticker is set up
 		scanner.mutex.Lock()
 		tickerExists := scanner.ticker != nil
 		scanner.mutex.Unlock()
-		assert.True(t, tickerExists)
+		assert.True(t, tickerExists, "Ticker should be created and set up after scanner initialization")
 	})
 
 	t.Run("backward compatibility with original function", func(t *testing.T) {
 		defer resetPeriodicScanner()
 
-		assert.NoError(t, createTestSiteInfo(db, 300))
-		assert.NoError(t, InitializePeriodicScanner(db))
+		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
+		assert.NoError(t, InitializePeriodicScanner(db),
+			"Failed to initialize periodic scanner using original function")
 
 		// Verify it uses RealScannerQueue
 		mainPeriodicScannerMutex.Lock()
 		defer mainPeriodicScannerMutex.Unlock()
 
-		assert.NotNil(t, mainPeriodicScanner)
-		assert.IsType(t, &RealScannerQueue{}, mainPeriodicScanner.scannerQueue)
+		assert.NotNil(t, mainPeriodicScanner,
+			"mainPeriodicScanner should be initialized by original InitializePeriodicScanner function")
+		assert.IsType(t, &RealScannerQueue{}, mainPeriodicScanner.scannerQueue,
+			"Original InitializePeriodicScanner should use RealScannerQueue by default")
 	})
 
 	t.Run("double initialization error", func(t *testing.T) {
 		defer resetPeriodicScanner()
 
 		mockQueue := &MockScannerQueue{}
-		assert.NoError(t, createTestSiteInfo(db, 300))
-		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue))
+		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
+		assert.NoError(t, InitializePeriodicScannerWithQueue(db, mockQueue),
+			"Failed first initialization for double initialization test")
 
 		err := InitializePeriodicScannerWithQueue(db, mockQueue)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "already been initialized")
+		assert.Error(t, err, "Second initialization attempt should return an error")
+		assert.Contains(t, err.Error(), "already been initialized",
+			"Double initialization error should contain 'already been initialized' message")
 	})
 }
 
@@ -156,7 +164,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 		case <-callChan:
 			// Success - at least one call received
 		case <-time.After(200 * time.Millisecond):
-			t.Fatal("Expected at least one call to AddAllToQueue within timeout")
+			t.Fatal("Expected at least one call to AddAllToQueue within 200ms timeout, but ticker events were not processed")
 		}
 
 		// Proper cleanup - stop ticker first, then close done
@@ -219,7 +227,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 		case <-runnerDone:
 			// Success
 		case <-time.After(1 * time.Second):
-			t.Fatal("Runner did not exit within timeout")
+			t.Fatal("scanIntervalRunner goroutine did not exit within 1 second after closing done channel")
 		}
 
 		mockQueue.AssertExpectations(t)
@@ -246,7 +254,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 		select {
 		case ps.ticker_changed <- true:
 		case <-time.After(100 * time.Millisecond):
-			t.Fatal("Could not send ticker change signal")
+			t.Fatal("Could not send ticker change signal within 100ms - channel may be blocked")
 		}
 
 		// Clean shutdown
@@ -257,7 +265,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 		case <-runnerDone:
 			// Success
 		case <-time.After(500 * time.Millisecond):
-			t.Fatal("Runner did not exit after ticker change")
+			t.Fatal("scanIntervalRunner did not exit within 500ms after receiving ticker change signal and shutdown")
 		}
 
 		// Test passes if no deadlock occurs
@@ -273,7 +281,7 @@ func TestRealScannerQueue(t *testing.T) {
 		var _ ScannerQueue = queue
 
 		// Test that it doesn't panic when created
-		assert.NotNil(t, queue)
+		assert.NotNil(t, queue, "RealScannerQueue instance should not be nil after creation")
 
 		// We don't test the actual call since it requires external setup
 	})
