@@ -37,7 +37,7 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 	}
 
 	if err := wand.SetImageCompressionQuality(70); err != nil {
-		return fmt.Errorf("ImagickWand set JEPG quality %d for %q error: %w", jpegQuality, inputPath, err)
+		return fmt.Errorf("ImagickWand set JPEG quality %d for %q error: %w", jpegQuality, inputPath, err)
 	}
 
 	if err := wand.WriteImage(outputPath); err != nil {
@@ -64,7 +64,7 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 	}
 
 	if err := wand.SetImageCompressionQuality(70); err != nil {
-		return fmt.Errorf("ImagickWand set JEPG quality %d for %q error: %w", 70, inputPath, err)
+		return fmt.Errorf("ImagickWand set JPEG quality %d for %q error: %w", 70, inputPath, err)
 	}
 
 	if err := wand.WriteImage(outputPath); err != nil {
