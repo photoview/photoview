@@ -14,7 +14,7 @@ var ErrNoDependency = errors.New("dependency not found")
 var ErrDisabledFunction = errors.New("function disabled")
 
 func init() {
-	Magick = newMagickCli()
+	Magick = newMagickWand()
 	Ffmpeg = newFfmpegCli()
 
 	if err := SetFfprobePath(); err != nil {
@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-var Magick *MagickCli = nil
+var Magick *MagickWand = nil
 var Ffmpeg *FfmpegCli = nil
 
 type ExecutableWorker interface {
