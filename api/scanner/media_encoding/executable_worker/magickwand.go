@@ -8,7 +8,6 @@ import (
 )
 
 type MagickWand struct {
-	err error
 }
 
 func newMagickWand() *MagickWand {
