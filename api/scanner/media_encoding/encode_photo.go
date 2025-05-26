@@ -21,6 +21,31 @@ type Dimension struct {
 	Height int
 }
 
+// ThumbnailScale generates a new dimension for thumbnails.
+func (d *Dimension) ThumbnailScale() Dimension {
+	aspect := float64(d.Width) / float64(d.Height)
+
+	var width, height int
+
+	if aspect > 1 {
+		width = 1024
+		height = int(1024 / aspect)
+	} else {
+		width = int(1024 * aspect)
+		height = 1024
+	}
+
+	if width > d.Width {
+		width = d.Width
+		height = d.Height
+	}
+
+	return Dimension{
+		Width:  width,
+		Height: height,
+	}
+}
+
 // GetPhotoDimensions returns the dimension of the image `imagePath`.
 func GetPhotoDimensions(imagePath string) (Dimension, error) {
 	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
@@ -37,11 +62,22 @@ func GetPhotoDimensions(imagePath string) (Dimension, error) {
 // EncodeThumbnail encodes a thumbnail of `inputPath`, and store it as `outputPath`.
 // It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
-	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, 1024, 1024); err != nil {
+	w, h, err := executable_worker.Magick.IdentifyDimension(inputPath)
+	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
-	return GetPhotoDimensions(outputPath)
+	origin := Dimension{
+		Width:  w,
+		Height: h,
+	}
+	thumbnail := origin.ThumbnailScale()
+
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, thumbnail.Width, thumbnail.Height); err != nil {
+		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
+	}
+
+	return thumbnail, nil
 }
 
 // EncodeMediaData is used to easily decode media data, with a cache so expensive operations are not repeated
