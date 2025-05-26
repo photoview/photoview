@@ -54,8 +54,8 @@ func GetPhotoDimensions(imagePath string) (Dimension, error) {
 	}
 
 	return Dimension{
-		Width:  w,
-		Height: h,
+		Width:  int(w),
+		Height: int(h),
 	}, nil
 }
 
@@ -68,12 +68,12 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 	}
 
 	origin := Dimension{
-		Width:  w,
-		Height: h,
+		Width:  int(w),
+		Height: int(h),
 	}
 	thumbnail := origin.ThumbnailScale()
 
-	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, thumbnail.Width, thumbnail.Height); err != nil {
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 

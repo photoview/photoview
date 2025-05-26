@@ -47,7 +47,7 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 	return nil
 }
 
-func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, width, height int) error {
+func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, width, height uint) error {
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
@@ -55,7 +55,7 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 		return fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
 	}
 
-	if err := wand.ThumbnailImage(uint(width), uint(height)); err != nil {
+	if err := wand.ThumbnailImage(width, height); err != nil {
 		return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
 	}
 
@@ -74,7 +74,7 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 	return nil
 }
 
-func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height int, err error) {
+func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, err error) {
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
@@ -83,8 +83,8 @@ func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height int, e
 		return
 	}
 
-	width = int(wand.GetImageWidth())
-	height = int(wand.GetImageHeight())
+	width = wand.GetImageWidth()
+	height = wand.GetImageHeight()
 
 	return
 }
