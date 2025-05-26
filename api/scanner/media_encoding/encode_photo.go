@@ -23,6 +23,10 @@ type Dimension struct {
 
 // ThumbnailScale generates a new dimension for thumbnails.
 func (d *Dimension) ThumbnailScale() Dimension {
+	if d.Height == 0 || d.Width == 0 {
+		return Dimension{Width: 0, Height: 0}
+	}
+
 	aspect := float64(d.Width) / float64(d.Height)
 
 	var width, height int
