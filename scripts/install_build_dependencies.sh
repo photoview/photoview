@@ -3,6 +3,7 @@ set -eu
 
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
 echo Arch: ${DEB_HOST_ARCH}
+apt-get update
 
 # Install libheif dependencies
 apt-get install -y --no-install-recommends libdav1d-dev:${DEB_HOST_ARCH} libde265-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH} libopenh264-dev:${DEB_HOST_ARCH} libpng-dev:${DEB_HOST_ARCH} libnuma-dev:${DEB_HOST_ARCH} zlib1g-dev:${DEB_HOST_ARCH}
