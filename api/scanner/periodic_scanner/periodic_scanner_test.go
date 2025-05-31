@@ -27,8 +27,6 @@ func TestMain(m *testing.M) {
 }
 
 func resetPeriodicScanner() {
-	mainPeriodicScannerMutex.Lock()
-	defer mainPeriodicScannerMutex.Unlock()
 
 	if mainPeriodicScanner != nil {
 		select {
@@ -87,18 +85,14 @@ func TestInitializePeriodicScanner(t *testing.T) {
 			"Failed to initialize periodic scanner with mock queue")
 
 		// Verify initialization
-		mainPeriodicScannerMutex.Lock()
-		scanner := mainPeriodicScanner
-		mainPeriodicScannerMutex.Unlock()
-
-		assert.NotNil(t, scanner, "mainPeriodicScanner should not be nil after successful initialization")
-		assert.NotNil(t, scanner.scannerQueue, "Scanner queue should not be nil after initialization")
-		assert.Equal(t, mockQueue, scanner.scannerQueue, "Scanner should use the injected mock queue instance")
+		assert.NotNil(t, mainPeriodicScanner, "mainPeriodicScanner should not be nil after successful initialization")
+		assert.NotNil(t, mainPeriodicScanner.scannerQueue, "Scanner queue should not be nil after initialization")
+		assert.Equal(t, mockQueue, mainPeriodicScanner.scannerQueue, "Scanner should use the injected mock queue instance")
 
 		// Verify ticker is set up
-		scanner.mutex.Lock()
-		tickerExists := scanner.ticker != nil
-		scanner.mutex.Unlock()
+		mainPeriodicScanner.tickerLocker.Lock()
+		tickerExists := mainPeriodicScanner.ticker != nil
+		mainPeriodicScanner.tickerLocker.Unlock()
 		assert.True(t, tickerExists, "Ticker should be created and set up after scanner initialization")
 	})
 
@@ -110,9 +104,6 @@ func TestInitializePeriodicScanner(t *testing.T) {
 			"Failed to initialize periodic scanner using original function")
 
 		// Verify it uses RealScannerQueue
-		mainPeriodicScannerMutex.Lock()
-		defer mainPeriodicScannerMutex.Unlock()
-
 		assert.NotNil(t, mainPeriodicScanner,
 			"mainPeriodicScanner should be initialized by original InitializePeriodicScanner function")
 		assert.IsType(t, &RealScannerQueue{}, mainPeriodicScanner.scannerQueue,
@@ -152,7 +143,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 			ticker:         time.NewTicker(50 * time.Millisecond),
 			ticker_changed: make(chan bool, 1),
 			done:           make(chan struct{}),
-			mutex:          &sync.Mutex{},
+			tickerLocker:   sync.Mutex{},
 			scannerQueue:   mockQueue,
 		}
 
@@ -187,7 +178,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 			ticker:         time.NewTicker(30 * time.Millisecond),
 			ticker_changed: make(chan bool, 1),
 			done:           make(chan struct{}),
-			mutex:          &sync.Mutex{},
+			tickerLocker:   sync.Mutex{},
 			scannerQueue:   mockQueue,
 		}
 
@@ -211,7 +202,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 			ticker:         nil, // No ticker to avoid timing issues
 			ticker_changed: make(chan bool, 1),
 			done:           make(chan struct{}),
-			mutex:          &sync.Mutex{},
+			tickerLocker:   sync.Mutex{},
 			scannerQueue:   mockQueue,
 		}
 
@@ -240,7 +231,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 			ticker:         nil, // Start without ticker
 			ticker_changed: make(chan bool, 1),
 			done:           make(chan struct{}),
-			mutex:          &sync.Mutex{},
+			tickerLocker:   sync.Mutex{},
 			scannerQueue:   mockQueue,
 		}
 

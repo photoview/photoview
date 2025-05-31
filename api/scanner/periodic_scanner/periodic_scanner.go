@@ -23,14 +23,13 @@ func (r *RealScannerQueue) AddAllToQueue() error {
 
 type periodicScanner struct {
 	ticker         *time.Ticker
+	tickerLocker   sync.Mutex
 	ticker_changed chan bool
 	done           chan struct{}
-	mutex          *sync.Mutex
 	db             *gorm.DB
 	scannerQueue   ScannerQueue
 }
 
-var mainPeriodicScannerMutex sync.Mutex
 var mainPeriodicScanner *periodicScanner = nil
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
@@ -43,8 +42,6 @@ func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 }
 
 func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
-	mainPeriodicScannerMutex.Lock()
-	defer mainPeriodicScannerMutex.Unlock()
 
 	if mainPeriodicScanner != nil {
 		return fmt.Errorf("periodic scanner has already been initialized")
@@ -59,7 +56,7 @@ func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
 		db:             db,
 		ticker_changed: make(chan bool),
 		done:           make(chan struct{}),
-		mutex:          &sync.Mutex{},
+		tickerLocker:   sync.Mutex{},
 		scannerQueue:   queue,
 	}
 
@@ -97,21 +94,17 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 		log.Info("Periodic scan interval changed: disabled")
 	}
 
-	mainPeriodicScannerMutex.Lock()
-	scanner := mainPeriodicScanner
-	mainPeriodicScannerMutex.Unlock()
+	if mainPeriodicScanner != nil {
+		mainPeriodicScanner.tickerLocker.Lock()
+		defer mainPeriodicScanner.tickerLocker.Unlock()
 
-	if scanner != nil {
-		scanner.mutex.Lock()
-		defer scanner.mutex.Unlock()
-
-		if scanner.ticker != nil {
-			scanner.ticker.Stop()
+		if mainPeriodicScanner.ticker != nil {
+			mainPeriodicScanner.ticker.Stop()
 		}
 
-		scanner.ticker = newTicker
+		mainPeriodicScanner.ticker = newTicker
 		select {
-		case scanner.ticker_changed <- true:
+		case mainPeriodicScanner.ticker_changed <- true:
 		default:
 			// Channel might be full, but that's okay
 		}
@@ -120,8 +113,6 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 
 // ShutdownPeriodicScanner gracefully shuts down the periodic scanner
 func ShutdownPeriodicScanner() {
-	mainPeriodicScannerMutex.Lock()
-	defer mainPeriodicScannerMutex.Unlock()
 
 	if mainPeriodicScanner != nil {
 		log.Info("Shutting down periodic scanner")
@@ -130,12 +121,12 @@ func ShutdownPeriodicScanner() {
 		close(mainPeriodicScanner.done)
 
 		// Stop the ticker if it exists
-		mainPeriodicScanner.mutex.Lock()
+		mainPeriodicScanner.tickerLocker.Lock()
 		if mainPeriodicScanner.ticker != nil {
 			mainPeriodicScanner.ticker.Stop()
 			mainPeriodicScanner.ticker = nil
 		}
-		mainPeriodicScanner.mutex.Unlock()
+		mainPeriodicScanner.tickerLocker.Unlock()
 
 		// Reset the global scanner
 		mainPeriodicScanner = nil
@@ -146,9 +137,9 @@ func (ps *periodicScanner) scanIntervalRunner() {
 	for {
 		log.Info("Scan interval runner: Waiting for signal")
 
-		ps.mutex.Lock()
+		ps.tickerLocker.Lock()
 		ticker := ps.ticker
-		ps.mutex.Unlock()
+		ps.tickerLocker.Unlock()
 
 		if ticker != nil {
 			select {
