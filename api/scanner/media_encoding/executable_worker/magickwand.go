@@ -78,8 +78,8 @@ func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, 
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
-	if e := wand.ReadImage(inputPath); e != nil {
-		err = fmt.Errorf("ImagickWand read %q error: %w", inputPath, e)
+	if errRI := wand.ReadImage(inputPath); errRI != nil {
+		err = fmt.Errorf("ImagickWand read %q error: %w", inputPath, errRI)
 		return
 	}
 
