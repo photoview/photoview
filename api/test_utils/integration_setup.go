@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
@@ -48,6 +49,9 @@ func IntegrationTestRun(m *testing.M) int {
 
 	faceModelsPath := path.Join(path.Dir(file), "..", "data", "models")
 	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
+
+	terminateWorkers := executable_worker.Initialize()
+	defer terminateWorkers()
 
 	result := m.Run()
 

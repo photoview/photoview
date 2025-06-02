@@ -8,6 +8,7 @@ import (
 )
 
 type MagickWand struct {
+	initialized bool
 }
 
 func newMagickWand() *MagickWand {
@@ -17,14 +18,25 @@ func newMagickWand() *MagickWand {
 
 	log.Info("Found magickwand worker: "+verstr, "version", vernum)
 
-	return &MagickWand{}
+	return &MagickWand{
+		initialized: true,
+	}
+}
+
+func (cli *MagickWand) Terminate() {
+	cli.initialized = false
+	imagick.Terminate()
 }
 
 func (cli *MagickWand) IsInstalled() bool {
-	return true
+	return cli != nil && cli.initialized
 }
 
 func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuality uint) error {
+	if !cli.IsInstalled() {
+		return fmt.Errorf("ImagickWand is not initialized")
+	}
+
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
@@ -48,6 +60,10 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 }
 
 func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, width, height uint) error {
+	if !cli.IsInstalled() {
+		return fmt.Errorf("ImagickWand is not initialized")
+	}
+
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
@@ -75,6 +91,11 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 }
 
 func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, err error) {
+	if !cli.IsInstalled() {
+		err = fmt.Errorf("ImagickWand is not initialized")
+		return
+	}
+
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 

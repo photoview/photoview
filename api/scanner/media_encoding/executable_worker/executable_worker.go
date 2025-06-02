@@ -13,12 +13,18 @@ import (
 var ErrNoDependency = errors.New("dependency not found")
 var ErrDisabledFunction = errors.New("function disabled")
 
-func init() {
+// Initialize Initializes all workers. It returns a function to terminate workers, which should be called before the program closing.
+func Initialize() func() {
 	Magick = newMagickWand()
 	Ffmpeg = newFfmpegCli()
 
 	if err := SetFfprobePath(); err != nil {
 		log.Error("Init ffprobe fail.", "error", err)
+	}
+
+	return func() {
+		Magick.Terminate()
+		Magick = nil
 	}
 }
 
