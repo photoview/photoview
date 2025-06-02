@@ -34,8 +34,8 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	termiateWorkers := executable_worker.Initialize()
-	defer termiateWorkers()
+	terminateWorkers := executable_worker.Initialize()
+	defer terminateWorkers()
 
 	devMode := utils.DevelopmentMode()
 
