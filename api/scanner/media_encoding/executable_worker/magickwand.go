@@ -24,7 +24,7 @@ func (cli *MagickWand) IsInstalled() bool {
 	return true
 }
 
-func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuality int) error {
+func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuality uint) error {
 	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
@@ -36,7 +36,7 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 		return fmt.Errorf("ImagickWand set JPEG format for %q error: %w", inputPath, err)
 	}
 
-	if err := wand.SetImageCompressionQuality(70); err != nil {
+	if err := wand.SetImageCompressionQuality(jpegQuality); err != nil {
 		return fmt.Errorf("ImagickWand set JPEG quality %d for %q error: %w", jpegQuality, inputPath, err)
 	}
 
