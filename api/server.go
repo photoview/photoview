@@ -34,7 +34,7 @@ func main() {
 	log.Println("Starting Photoview...")
 
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		log.Println("No .env file found. If Photoview runs in Docker, this is expected and correct.")
 	}
 
 	devMode := utils.DevelopmentMode()
@@ -66,8 +66,6 @@ func main() {
 	// Create context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	setupGracefulShutdown(cancel)
 
 	rootRouter := mux.NewRouter()
 
@@ -127,6 +125,8 @@ func main() {
 		Handler: handlers.CompressHandler(rootRouter),
 	}
 
+	setupGracefulShutdown(srv, ctx)
+
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Panicf("HTTP server failed: %s", err)
@@ -135,8 +135,6 @@ func main() {
 
 	// Wait for shutdown signal
 	<-ctx.Done()
-
-	log.Println("Shutting down HTTP server...")
 
 	// Create shutdown context with timeout
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -150,7 +148,7 @@ func main() {
 	log.Println("Shutdown complete")
 }
 
-func setupGracefulShutdown(cancel context.CancelFunc) {
+func setupGracefulShutdown(server *http.Server, ctx context.Context) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -162,7 +160,7 @@ func setupGracefulShutdown(cancel context.CancelFunc) {
 		periodic_scanner.ShutdownPeriodicScanner()
 		scanner_queue.CloseScannerQueue()
 
-		cancel()
+		server.Shutdown(ctx)
 	}()
 }
 
