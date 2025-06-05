@@ -17,6 +17,7 @@ import (
 	"github.com/kkovaletp/photoview/api/routes"
 	"github.com/kkovaletp/photoview/api/scanner/exif"
 	"github.com/kkovaletp/photoview/api/scanner/face_detection"
+	"github.com/kkovaletp/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/kkovaletp/photoview/api/scanner/periodic_scanner"
 	"github.com/kkovaletp/photoview/api/scanner/scanner_queue"
 	"github.com/kkovaletp/photoview/api/server"
@@ -32,6 +33,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
+
+	terminateWorkers := executable_worker.Initialize()
+	defer terminateWorkers()
 
 	devMode := utils.DevelopmentMode()
 
