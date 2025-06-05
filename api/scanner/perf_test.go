@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/kkovaletp/photoview/api/scanner/media_encoding/executable_worker"
+	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
 func BenchmarkStdlib(b *testing.B) {
@@ -53,6 +54,39 @@ func BenchmarkMagickCLI(b *testing.B) {
 
 			if err := executable_worker.Magick.EncodeJpeg("./test_media/real_media/png.png", output, 70); err != nil {
 				b.Fatal("encode jpeg error:", err)
+			}
+		}()
+	}
+}
+
+func BenchmarkMagickWand(b *testing.B) {
+	dir := b.TempDir()
+
+	imagick.Initialize()
+	defer imagick.Terminate()
+
+	for b.Loop() {
+		func() {
+			mw := imagick.NewMagickWand()
+			defer mw.Destroy()
+
+			if err := mw.ReadImage("./test_media/real_media/png.png"); err != nil {
+				b.Fatal("read error:", err)
+			}
+
+			output := filepath.Join(dir, "test.jpg")
+			defer os.Remove(output)
+
+			if err := mw.SetFormat("JPEG"); err != nil {
+				b.Fatal("set format error:", err)
+			}
+
+			if err := mw.SetImageCompressionQuality(70); err != nil {
+				b.Fatal("set quality error:", err)
+			}
+
+			if err := mw.WriteImage(output); err != nil {
+				b.Fatal("write error:", err)
 			}
 		}()
 	}

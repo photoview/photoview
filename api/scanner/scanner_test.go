@@ -122,7 +122,7 @@ func TestFullScan(t *testing.T) {
 		slices.Sort(got)
 
 		if diff := cmp.Diff(got, want); diff != "" {
-			t.Errorf("all media diff:\n%s", diff)
+			t.Errorf("all media diff (-got, +want):\n%s", diff)
 		}
 	})
 
@@ -168,7 +168,7 @@ func TestFullScan(t *testing.T) {
 		slices.Sort(got)
 
 		if diff := cmp.Diff(got, want, cmp.Comparer(equalNameWithoutSuffix)); diff != "" {
-			t.Errorf("all media diff:\n%s", diff)
+			t.Errorf("all media diff (-got, +want):\n%s", diff)
 		}
 	})
 
@@ -202,7 +202,7 @@ func TestFullScan(t *testing.T) {
 		got := groupMediaWithFaces(allImageFaces)
 
 		if diff := cmp.Diff(got, wantFaceGroups); diff != "" {
-			t.Errorf("all media diff:\n%s", diff)
+			t.Errorf("all media diff (-got, +want):\n%s", diff)
 		}
 	})
 }
