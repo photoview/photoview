@@ -253,46 +253,7 @@ jobs:
 
       - name: Fetch branches
         shell: bash
-        run: git fetch --all
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        id: go
-        with:
-          #go-version: '~1.21.13' # Temporary hardcode Go version, as Coverity doesn't support latest Go
-          go-version-file: 'api/go.mod'
-          cache: false
-
-      # Temporary w/a until newer GO version is not supported by Coverity
-      #- name: Modify go.mod for CI
-      #  run: |
-      #    sed -i 's/^go [0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?/go 1.21/' api/go.mod
-
-      - name: Cache Go dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Get C dependencies
-        shell: bash
-        run: |
-          sudo add-apt-repository ppa:strukturag/libheif
-          sudo add-apt-repository ppa:strukturag/libde265
-          sudo apt-get update
-          sudo apt-get install -y libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev libheif-dev
-
-      - name: Get GO dependencies
-        shell: bash
-        working-directory: api
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
+        run: git fetch --all --unshallow
 
         # Coverity steps are based on the https://github.com/vapier/coverity-scan-action/blob/main/action.yml
         # and the https://github.com/vapier/coverity-scan-action/pull/3/files
@@ -335,19 +296,6 @@ jobs:
         shell: bash
         run: |
           echo "${{ github.workspace }}/cov-analysis/bin" >> $GITHUB_PATH
-
-      # Build and capture API code
-      # At this moment Coverity doesn't support GO 1.22, so ignoring build failures
-      - name: Build API with cov-build
-        shell: bash
-        working-directory: api
-        run: |
-          cov-build --dir ${{ github.workspace }}/cov-int \
-            --return-emit-failures \
-            --fs-capture-search ./ go build -v . || (\
-              cat ${{ github.workspace }}/cov-int/build-log.txt && \
-              exit 1 \
-            )
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
