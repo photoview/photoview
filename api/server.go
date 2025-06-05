@@ -22,6 +22,7 @@ import (
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/photoview/photoview/api/server"
@@ -36,6 +37,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found. If Photoview runs in Docker, this is expected and correct.")
 	}
+
+	terminateWorkers := executable_worker.Initialize()
+	defer terminateWorkers()
 
 	devMode := utils.DevelopmentMode()
 
