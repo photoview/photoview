@@ -25,7 +25,12 @@ func getLogger(ctx context.Context) *slog.Logger {
 		return defaultLogger
 	}
 
-	return logger.(*slog.Logger)
+	ret, ok := logger.(*slog.Logger)
+	if !ok {
+		return defaultLogger
+	}
+
+	return ret
 }
 
 func WithAttrs(ctx context.Context, args ...any) context.Context {
