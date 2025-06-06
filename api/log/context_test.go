@@ -50,27 +50,46 @@ func TestLogger(t *testing.T) {
 	Warn(nil, "no_context")
 	Error(nil, "no_context")
 
+	bg := context.Background()
+
+	Debug(bg, "bg_context")
+	Info(bg, "bg_context")
+	Warn(bg, "bg_context")
+	Error(bg, "bg_context")
+
+
 	ctx1 := WithAttrs(context.Background(), "arg1", "value")
-	Debug(ctx1, "with_context")
-	Info(ctx1, "with_context")
-	Warn(ctx1, "with_context")
-	Error(ctx1, "with_context")
+	Debug(ctx1, "with_context_1")
+	Info(ctx1, "with_context_1")
+	Warn(ctx1, "with_context_1")
+	Error(ctx1, "with_context_1")
 
 	ctx2 := WithAttrs(ctx1, "arg2", "value")
-	Debug(ctx2, "with_context")
-	Info(ctx2, "with_context")
-	Warn(ctx2, "with_context")
-	Error(ctx2, "with_context")
+	Debug(ctx2, "with_context_2")
+	Info(ctx2, "with_context_2")
+	Warn(ctx2, "with_context_2")
+	Error(ctx2, "with_context_2")
+
+	Debug(ctx1, "with_context_1")
+	Info(ctx1, "with_context_1")
+	Warn(ctx1, "with_context_1")
+	Error(ctx1, "with_context_1")
 
 	want := `{"level":"INFO","msg":"no_context"}
 {"level":"WARN","msg":"no_context"}
 {"level":"ERROR","msg":"no_context"}
-{"level":"INFO","msg":"with_context","arg1":"value"}
-{"level":"WARN","msg":"with_context","arg1":"value"}
-{"level":"ERROR","msg":"with_context","arg1":"value"}
-{"level":"INFO","msg":"with_context","arg1":"value","arg2":"value"}
-{"level":"WARN","msg":"with_context","arg1":"value","arg2":"value"}
-{"level":"ERROR","msg":"with_context","arg1":"value","arg2":"value"}
+{"level":"INFO","msg":"bg_context"}
+{"level":"WARN","msg":"bg_context"}
+{"level":"ERROR","msg":"bg_context"}
+{"level":"INFO","msg":"with_context_1","arg1":"value"}
+{"level":"WARN","msg":"with_context_1","arg1":"value"}
+{"level":"ERROR","msg":"with_context_1","arg1":"value"}
+{"level":"INFO","msg":"with_context_2","arg1":"value","arg2":"value"}
+{"level":"WARN","msg":"with_context_2","arg1":"value","arg2":"value"}
+{"level":"ERROR","msg":"with_context_2","arg1":"value","arg2":"value"}
+{"level":"INFO","msg":"with_context_1","arg1":"value"}
+{"level":"WARN","msg":"with_context_1","arg1":"value"}
+{"level":"ERROR","msg":"with_context_1","arg1":"value"}
 `
 	if diff := cmp.Diff(output.String(), want); diff != "" {
 		t.Errorf("diff: (-got, +want)\n%s", diff)
