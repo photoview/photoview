@@ -57,7 +57,6 @@ func TestLogger(t *testing.T) {
 	Warn(bg, "bg_context")
 	Error(bg, "bg_context")
 
-
 	ctx1 := WithAttrs(context.Background(), "arg1", "value")
 	Debug(ctx1, "with_context_1")
 	Info(ctx1, "with_context_1")
@@ -75,6 +74,7 @@ func TestLogger(t *testing.T) {
 	Warn(ctx1, "with_context_1")
 	Error(ctx1, "with_context_1")
 
+	// Debug messages are filtered out due to slog.LevelInfo in mock logger
 	want := `{"level":"INFO","msg":"no_context"}
 {"level":"WARN","msg":"no_context"}
 {"level":"ERROR","msg":"no_context"}
