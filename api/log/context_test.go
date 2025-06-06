@@ -9,7 +9,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func mockDefaultLogger() (*bytes.Buffer, func()) {
+func mockDefaultLogger(t *testing.T) *bytes.Buffer {
+	t.Helper()
+
 	var output bytes.Buffer
 	handler := slog.NewJSONHandler(&output, &slog.HandlerOptions{
 		AddSource: false,
@@ -27,14 +29,15 @@ func mockDefaultLogger() (*bytes.Buffer, func()) {
 	oldLogger := defaultLogger
 	defaultLogger = logger
 
-	return &output, func() {
+	t.Cleanup(func() {
 		defaultLogger = oldLogger
-	}
+	})
+
+	return &output
 }
 
 func TestLogger(t *testing.T) {
-	output, done := mockDefaultLogger()
-	defer done()
+	output := mockDefaultLogger(t)
 
 	Debug(nil, "no_context")
 	Info(nil, "no_context")
