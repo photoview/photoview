@@ -21,6 +21,9 @@ import {
 import { recognizeUnlabeledFaces } from './__generated__/recognizeUnlabeledFaces'
 import { isNil, tailwindClassNames } from '../../helpers/utils'
 import classNames from 'classnames'
+import MergeFaceGroupsModal, {
+  MergeFaceGroupsModalState,
+} from './SingleFaceGroup/MergeFaceGroupsModal'
 
 export const MY_FACES_QUERY = gql`
   query myFaces($limit: Int, $offset: Int) {
@@ -254,6 +257,10 @@ export const PeoplePage = () => {
     },
   })
 
+  const [mergeModalState, setMergeModalState] = useState(
+    MergeFaceGroupsModalState.Closed
+  )
+
   const [recognizeUnlabeled, { loading: recognizeUnlabeledLoading }] =
     useMutation<recognizeUnlabeledFaces>(RECOGNIZE_UNLABELED_FACES_MUTATION)
 
@@ -269,31 +276,61 @@ export const PeoplePage = () => {
     return <div>{error.message}</div>
   }
 
-  let faces = null
+  let faces: JSX.Element[] | null = null
   if (data) {
     faces = data.myFaceGroups.map(faceGroup => (
       <FaceGroup key={faceGroup.id} group={faceGroup} />
     ))
   }
 
+  let modals = null
+  modals = (
+    <MergeFaceGroupsModal
+      state={mergeModalState}
+      setState={setMergeModalState}
+      refetchQueries={[
+        {
+          query: MY_FACES_QUERY,
+        },
+      ]}
+    />
+  )
+
   return (
     <Layout title={t('title.people', 'People')}>
-      <Button
-        disabled={recognizeUnlabeledLoading}
-        onClick={() => {
-          recognizeUnlabeled()
-        }}
-      >
-        {t(
-          'people_page.recognize_unlabeled_faces_button',
-          'Recognize unlabeled faces'
-        )}
-      </Button>
+      <ul className="flex gap-2 flex-wrap mb-6">
+        <li>
+          <Button
+            aria-label='Recognize unlabled faces'
+            disabled={recognizeUnlabeledLoading}
+            onClick={() => {
+              recognizeUnlabeled()
+            }}
+          >
+            {t(
+              'people_page.recognize_unlabeled_faces_button',
+              'Recognize unlabeled faces'
+            )}
+          </Button>
+        </li>
+        <li>
+          <Button
+            aria-label='Merge people'
+            onClick={() => {
+              setMergeModalState(MergeFaceGroupsModalState.SelectDestination)
+            }}
+          >
+            {t('people_page.action_label.merge_people', 'Merge people')}
+          </Button>
+        </li>
+      </ul>
+      
       <FaceGroupsWrapper ref={containerElem}>{faces}</FaceGroupsWrapper>
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
         text={t('general.loading.paginate.faces', 'Loading more people')}
       />
+      {modals}
     </Layout>
   )
 }
