@@ -67,12 +67,10 @@ func main() {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
 
-	// Create context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	rootRouter := mux.NewRouter()
-
 	rootRouter.Use(dataloader.Middleware(db))
 	rootRouter.Use(auth.Middleware(db))
 	rootRouter.Use(server.LoggingMiddleware)
@@ -129,7 +127,7 @@ func main() {
 		Handler: handlers.CompressHandler(rootRouter),
 	}
 
-	setupGracefulShutdown(srv, ctx)
+	setupGracefulShutdown(srv)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -139,32 +137,24 @@ func main() {
 
 	// Wait for shutdown signal
 	<-ctx.Done()
-
-	// Create shutdown context with timeout
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-
-	// Shutdown HTTP server gracefully
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("HTTP server shutdown error: %s", err)
-	}
-
-	log.Println("Shutdown complete")
 }
 
-func setupGracefulShutdown(server *http.Server, ctx context.Context) {
+func setupGracefulShutdown(server *http.Server) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-c
 		log.Println("Shutting down Photoview...")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute) // Wait for 1m to shutdown
+		defer cancel()
 
 		// Shutdown scanners in correct order
 		periodic_scanner.ShutdownPeriodicScanner()
 		scanner_queue.CloseScannerQueue()
 
 		server.Shutdown(ctx)
+		log.Println("Shutdown complete")
 	}()
 }
 
