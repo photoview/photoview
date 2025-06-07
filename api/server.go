@@ -67,9 +67,6 @@ func main() {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	rootRouter := mux.NewRouter()
 	rootRouter.Use(dataloader.Middleware(db))
 	rootRouter.Use(auth.Middleware(db))
@@ -129,14 +126,9 @@ func main() {
 
 	setupGracefulShutdown(srv)
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Panicf("HTTP server failed: %s", err)
-		}
-	}()
-
-	// Wait for shutdown signal
-	<-ctx.Done()
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Panicf("HTTP server failed: %s", err)
+	}
 }
 
 func setupGracefulShutdown(server *http.Server) {
