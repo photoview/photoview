@@ -23,6 +23,7 @@ node_modules/
 /ui/coverage
 /api/coverage.txt
 /api/test-*-report.xml
+cover.cov
 
 # building
 .cache/
