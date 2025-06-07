@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Zmień etykietę",
       "detach_images": "Odłącz twarz",
+      "merge_face": "",
       "merge_people": "Połącz twarze",
       "move_faces": "Przenieś twarze"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Połącz"
+        "merge": "Połącz",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Odłącz zdjęcia twarzy"
       },
       "merge_face_groups": {
-        "description": "Wszystkie obrazy w tej grupie twarzy zostaną połączone z wybraną grupą twarzy.",
+        "destination_description": "",
         "destination_table": {
           "title": "Wybierz twarz"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Połącz grupy twarzy"
       },
@@ -254,9 +260,9 @@
     "download": {
       "filesize": {
         "byte_one": "{{count}} bajt",
-        "byte_other": "{{count}} bajty",
         "byte_few": "",
         "byte_many": "",
+        "byte_other": "{{count}} bajty",
         "giga_byte_one": "",
         "giga_byte_few": "",
         "giga_byte_many": "",
@@ -288,6 +294,7 @@
     "media": {
       "album_path": "Ścieżka albumu",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Program działania",
           "aperture_priority": "Priorytet przysłony",

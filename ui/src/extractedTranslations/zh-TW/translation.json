@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "變更標籤",
       "detach_images": "移除人臉",
+      "merge_face": "",
       "merge_people": "合併人臉",
       "move_faces": "移動人臉"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "合併"
+        "merge": "合併",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "移除相片中的人臉"
       },
       "merge_face_groups": {
-        "description": "此人臉群組中的所有相片將會合併至選取的人臉群組。",
+        "destination_description": "",
         "destination_table": {
           "title": "選擇目標人臉"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "合併人臉群組"
       },
@@ -278,6 +284,7 @@
     "media": {
       "album_path": "相簿路徑",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "動作模式",
           "aperture_priority": "光圈先決",

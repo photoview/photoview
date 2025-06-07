@@ -7,6 +7,9 @@
       "move_faces": null
     },
     "modal": {
+      "merge_face_groups": {
+        "description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado."
+      },
       "merge_people_groups": {
         "description": "Todas as imagens neste grupo de caras serão juntas no grupo selecionado.",
         "destination_table": {
@@ -14,6 +17,23 @@
         },
         "title": "Juntar grupos de cara"
       }
+    }
+  },
+  "settings": {
+    "thumbnails": {
+      "method": {
+        "description": "",
+        "filter": {
+          "box": "",
+          "catmull_rom": "",
+          "Lanczos": "",
+          "linear": "",
+          "mitchell_netravali": "",
+          "nearest_neighbor": ""
+        },
+        "label": ""
+      },
+      "title": ""
     }
   },
   "sidebar": {

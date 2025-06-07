@@ -140,7 +140,7 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 }
 
 // CombineFaceGroups is the resolver for the combineFaceGroups field.
-func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error) {
+func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupIDs []int) (*models.FaceGroup, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -151,24 +151,44 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
+	if len(sourceFaceGroupIDs) < 1 {
+		return nil, errors.New("at least one source face group ID is required")
+	}
+
 	destinationFaceGroup, err := userOwnedFaceGroup(db, user, destinationFaceGroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceFaceGroupID)
-	if err != nil {
-		return nil, err
+	var sourceFaceGroups []*models.FaceGroup
+
+	// Validate the source groups before beginning the merge
+	for _, sourceID := range sourceFaceGroupIDs {
+		if sourceID == destinationFaceGroup.ID {
+			return nil, errors.New("source face groups cannot include the destination face group")
+		}
+
+		// Ensure the user owns at least one picture with each source
+		sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceID)
+		if err != nil {
+			return nil, err
+		}
+
+		sourceFaceGroups = append(sourceFaceGroups, sourceFaceGroup)
 	}
 
+	// Perform the merge
 	updateError := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.ImageFace{}).
-			Where(faceGroupIDIsQuestion, sourceFaceGroup.ID).
+
+		if err := tx.
+			Model(&models.ImageFace{}).
+			Where(faceGroupIDsInQuestion, sourceFaceGroupIDs).
 			Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Delete(&sourceFaceGroup).Error; err != nil {
+		// delete the source face groups
+		if err := deleteFaceGroups(sourceFaceGroups, tx); err != nil {
 			return err
 		}
 
@@ -179,7 +199,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, updateError
 	}
 
-	face_detection.GlobalFaceDetector.MergeCategories(int32(sourceFaceGroupID), int32(destinationFaceGroupID))
+	face_detection.GlobalFaceDetector.MergeImageFaces(sourceFaceGroupIDs, int32(destinationFaceGroupID))
 
 	return destinationFaceGroup, nil
 }
