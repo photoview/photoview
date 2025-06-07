@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "Cambia etichetta",
       "detach_images": "Separa viso",
+      "merge_face": "",
       "merge_people": "Unisci viso",
       "move_faces": "Sposta visi"
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Unisci"
+        "merge": "Unisci",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Separa immagini volto"
       },
       "merge_face_groups": {
-        "description": "Tutte le immagini di questo volto saranno unite alle immagini del volto selezionato",
+        "destination_description": "",
         "destination_table": {
           "title": "Seleziona il volto di destinazione"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Unisci immagini volto"
       },
@@ -254,14 +260,19 @@
     "download": {
       "filesize": {
         "byte_one": "",
+        "byte_many": "",
         "byte_other": "",
         "giga_byte_one": "",
+        "giga_byte_many": "",
         "giga_byte_other": "",
         "kilo_byte_one": "",
+        "kilo_byte_many": "",
         "kilo_byte_other": "",
         "mega_byte_one": "",
+        "mega_byte_many": "",
         "mega_byte_other": "",
         "tera_byte_one": "",
+        "tera_byte_many": "",
         "tera_byte_other": ""
       },
       "table_columns": {
@@ -278,6 +289,7 @@
     "media": {
       "album_path": "Percorso album",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Programma sport",
           "aperture_priority": "Priorità apertura",

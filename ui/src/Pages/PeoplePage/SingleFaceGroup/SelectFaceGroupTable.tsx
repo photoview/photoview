@@ -35,17 +35,20 @@ export const RowLabel = styled.span<{ $selected: boolean }>`
 type FaceGroupRowProps = {
   faceGroup: myFaces_myFaceGroups
   faceSelected: boolean
-  setFaceSelected(): void
+  selectable: boolean
+  toggleFaceSelected(): void
 }
 
 const FaceGroupRow = ({
   faceGroup,
   faceSelected,
-  setFaceSelected,
+  selectable,
+  toggleFaceSelected,
 }: FaceGroupRowProps) => {
+  const { t } = useTranslation()
   return (
-    <TableRow key={faceGroup.id} onClick={setFaceSelected}>
-      <FlexCell>
+    <TableRow key={faceGroup.id} onClick={toggleFaceSelected} className={selectable ? 'cursor-pointer' : 'cursor-not-allowed'}>
+      <FlexCell className={faceSelected ? 'brightness-110' : ''}>
         <FaceCircleWrapper $selected={faceSelected}>
           <FaceCircleImage
             imageFace={faceGroup.imageFaces[0]}
@@ -54,11 +57,12 @@ const FaceGroupRow = ({
           />
         </FaceCircleWrapper>
         <span
-          className={`ml-3 ${faceSelected ? 'font-semibold' : ''} ${
-            !faceGroup.label ? 'text-gray-500 italic' : ''
-          }`}
+          className={`ml-3 ${
+            faceSelected ? 'font-semibold text-slate-100' : 'text-gray-400'
+          } ${!faceSelected && !faceGroup.label ? 'text-gray-600 italic' : ''}`}
         >
-          {faceGroup.label ?? 'Unlabeled'}
+          {faceGroup.label ??
+            t('people_page.face_group.unlabeled', 'Unlabeled')}
         </span>
       </FlexCell>
     </TableRow>
@@ -67,20 +71,22 @@ const FaceGroupRow = ({
 
 type SelectFaceGroupTableProps = {
   faceGroups: myFaces_myFaceGroups[]
-  selectedFaceGroup: singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
-  setSelectedFaceGroup: React.Dispatch<
-    React.SetStateAction<
-      singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
-    >
+  selectedFaceGroups: Set<
+    singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
   >
-  title: string
+  toggleSelectedFaceGroup: React.Dispatch<
+      singleFaceGroup_faceGroup | myFaces_myFaceGroups | null
+  >
+  title: string,
+  frozen: boolean
 }
 
 const SelectFaceGroupTable = ({
   faceGroups,
-  selectedFaceGroup,
-  setSelectedFaceGroup,
+  selectedFaceGroups,
+  toggleSelectedFaceGroup,
   title,
+  frozen
 }: SelectFaceGroupTableProps) => {
   const { t } = useTranslation()
 
@@ -96,8 +102,9 @@ const SelectFaceGroupTable = ({
       <FaceGroupRow
         key={face.id}
         faceGroup={face}
-        faceSelected={selectedFaceGroup?.id == face.id}
-        setFaceSelected={() => setSelectedFaceGroup(face)}
+        faceSelected={[...selectedFaceGroups].some(val => val?.id === face.id)}
+        selectable={!frozen}
+        toggleFaceSelected={() => !frozen && toggleSelectedFaceGroup(face)}
       />
     ))
 
