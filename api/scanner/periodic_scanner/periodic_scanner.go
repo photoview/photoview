@@ -65,9 +65,9 @@ func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
 	var newTicker *time.Ticker = nil
 	if scanInterval > 0 {
 		newTicker = time.NewTicker(scanInterval)
-		log.Info("Periodic scan interval changed: " + scanInterval.String())
+		log.Info(nil, "Periodic scan interval changed: "+scanInterval.String())
 	} else {
-		log.Info("Periodic scan interval changed: disabled")
+		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
 	mainPeriodicScanner.ticker = newTicker
@@ -89,9 +89,9 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 	var newTicker *time.Ticker = nil
 	if duration > 0 {
 		newTicker = time.NewTicker(duration)
-		log.Info("Periodic scan interval changed: " + duration.String())
+		log.Info(nil, "Periodic scan interval changed: "+duration.String())
 	} else {
-		log.Info("Periodic scan interval changed: disabled")
+		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
 	if mainPeriodicScanner != nil {
@@ -115,7 +115,7 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 func ShutdownPeriodicScanner() {
 
 	if mainPeriodicScanner != nil {
-		log.Info("Shutting down periodic scanner")
+		log.Info(nil, "Shutting down periodic scanner")
 
 		// Signal the runner goroutine to stop
 		close(mainPeriodicScanner.done)
@@ -135,7 +135,7 @@ func ShutdownPeriodicScanner() {
 
 func (ps *periodicScanner) scanIntervalRunner() {
 	for {
-		log.Info("Scan interval runner: Waiting for signal")
+		log.Info(nil, "Scan interval runner: Waiting for signal")
 
 		ps.tickerLocker.Lock()
 		ticker := ps.ticker
@@ -144,23 +144,23 @@ func (ps *periodicScanner) scanIntervalRunner() {
 		if ticker != nil {
 			select {
 			case <-ps.done:
-				log.Info("Scan interval runner: Shutting down")
+				log.Info(nil, "Scan interval runner: Shutting down")
 				return
 			case <-ps.ticker_changed:
-				log.Info("Scan interval runner: New ticker detected")
+				log.Info(nil, "Scan interval runner: New ticker detected")
 			case <-ticker.C:
-				log.Info("Scan interval runner: Starting periodic scan")
+				log.Info(nil, "Scan interval runner: Starting periodic scan")
 				if err := ps.scannerQueue.AddAllToQueue(); err != nil {
-					log.Error("Scan interval runner: Failed to add all users to queue", "error", err)
+					log.Error(nil, "Scan interval runner: Failed to add all users to queue", "error", err)
 				}
 			}
 		} else {
 			select {
 			case <-ps.done:
-				log.Info("Scan interval runner: Shutting down")
+				log.Info(nil, "Scan interval runner: Shutting down")
 				return
 			case <-ps.ticker_changed:
-				log.Info("Scan interval runner: New ticker detected")
+				log.Info(nil, "Scan interval runner: New ticker detected")
 			}
 		}
 	}
