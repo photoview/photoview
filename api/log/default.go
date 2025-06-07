@@ -4,22 +4,22 @@ import (
 	"context"
 )
 
-// Debug calls [Logger.DebugContext] on the default logger.
+// Debug logs debug messages.
 func Debug(ctx context.Context, msg string, args ...any) {
 	getLogger(ctx).DebugContext(ctx, msg, args...)
 }
 
-// Info calls [Logger.InfoContext] on the default logger.
+// Info logs info messages.
 func Info(ctx context.Context, msg string, args ...any) {
 	getLogger(ctx).InfoContext(ctx, msg, args...)
 }
 
-// Warn calls [Logger.WarnContext] on the default logger.
+// Warn logs warning messages.
 func Warn(ctx context.Context, msg string, args ...any) {
 	getLogger(ctx).WarnContext(ctx, msg, args...)
 }
 
-// Error calls [Logger.ErrorContext] on the default logger.
+// Error logs error messages.
 func Error(ctx context.Context, msg string, args ...any) {
 	getLogger(ctx).ErrorContext(ctx, msg, args...)
 }

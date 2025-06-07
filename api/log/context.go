@@ -33,6 +33,7 @@ func getLogger(ctx context.Context) *slog.Logger {
 	return ret
 }
 
+// WithAttrs creates a new context containing a new logger with [args] as logging attributes.
 func WithAttrs(ctx context.Context, args ...any) context.Context {
 	old := getLogger(ctx)
 	new := old.With(args...)
