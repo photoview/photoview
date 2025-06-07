@@ -5,6 +5,33 @@ import { MockedProvider } from '@apollo/client/testing'
 import { MY_FACES_QUERY } from '../PeoplePage'
 import { COMBINE_FACES_MUTATION } from './MergeFaceGroupsModal'
 
+// Mock Modal component to prevent import issues
+vi.mock('../../../primitives/Modal', () => ({
+    __esModule: true,
+    default: ({ children, open, title, description, actions, onClose }: any) =>
+        open ? (
+            <div data-testid="modal">
+                <div data-testid="modal-title">{title}</div>
+                <div data-testid="modal-description">{description}</div>
+                <div data-testid="modal-content">{children}</div>
+                <div data-testid="modal-actions">
+                    {actions?.map((action: any) => (
+                        <button key={action.key} onClick={action.onClick}>
+                            {action.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        ) : null,
+}))
+
+// Mock useTranslation to prevent i18n issues
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key: string, fallback?: string) => fallback || key,
+    }),
+}))
+
 // Mock useNavigate before any imports that use it
 const navigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -15,10 +42,10 @@ vi.mock('react-router-dom', async () => {
 // Mock IntersectionObserver for tests
 beforeAll(() => {
     global.IntersectionObserver = class {
-        constructor() {}
-        observe() {}
-        unobserve() {}
-        disconnect() {}
+        constructor() { }
+        observe() { }
+        unobserve() { }
+        disconnect() { }
     } as any
 })
 
@@ -47,7 +74,7 @@ vi.mock('./SelectFaceGroupTable', () => ({
     ),
 }))
 
-const mockFaceGroups = ["Alice", "Bob", "Charlie", "David", "Felix"].map((name, index) => { return { __typename: 'FaceGroup', id: index.toString(), label: name, imageFaceCount: 0, imageFaces: [] }})
+const mockFaceGroups = ["Alice", "Bob", "Charlie", "David", "Felix"].map((name, index) => { return { __typename: 'FaceGroup', id: index.toString(), label: name, imageFaceCount: 0, imageFaces: [] } })
 
 const myFacesMock = {
     request: { query: MY_FACES_QUERY },
@@ -116,7 +143,7 @@ async function testMerge(destinationID: string, sourceIDs: string[]) {
 
     // Wait for source face groups to load
     await waitFor(() => getByTestId(sourceTestIDs[0]))
-    
+
     // Select multiple source face groups
     for (const testID of sourceTestIDs)
         fireEvent.click(getByTestId(testID))
