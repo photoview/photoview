@@ -94,17 +94,18 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
-	if mainPeriodicScanner != nil {
-		mainPeriodicScanner.tickerLocker.Lock()
-		defer mainPeriodicScanner.tickerLocker.Unlock()
+	scanner := mainPeriodicScanner
+	if scanner != nil {
+		scanner.tickerLocker.Lock()
+		defer scanner.tickerLocker.Unlock()
 
-		if mainPeriodicScanner.ticker != nil {
-			mainPeriodicScanner.ticker.Stop()
+		if scanner.ticker != nil {
+			scanner.ticker.Stop()
 		}
 
-		mainPeriodicScanner.ticker = newTicker
+		scanner.ticker = newTicker
 		select {
-		case mainPeriodicScanner.ticker_changed <- true:
+		case scanner.ticker_changed <- true:
 		default:
 			// Channel might be full, but that's okay
 		}
