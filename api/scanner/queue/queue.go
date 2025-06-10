@@ -60,6 +60,10 @@ func (q *Queue) UpdateInterval(newInterval time.Duration) {
 }
 
 func (q *Queue) UpdateWorkers(newMax int) {
+	if newMax < 0 {
+		newMax = 0
+	}
+
 	q.workersMu.Lock()
 	defer q.workersMu.Unlock()
 
@@ -67,7 +71,7 @@ func (q *Queue) UpdateWorkers(newMax int) {
 		return
 	}
 
-	if len(q.workers) < newMax {
+	if len(q.workers) > newMax {
 		closing := q.workers[newMax:]
 		q.workers = q.workers[:newMax]
 
@@ -78,7 +82,7 @@ func (q *Queue) UpdateWorkers(newMax int) {
 		return
 	}
 
-	// len(q.workers) > newMax
+	// len(q.workers) < newMax
 	q.workers = slices.Grow(q.workers, newMax-len(q.workers))
 	for len(q.workers) < newMax {
 		worker := newWorker(log.WithAttrs(q.ctx, "worker_id", len(q.workers)), q.db, q.handout, &q.waitWorkers)
