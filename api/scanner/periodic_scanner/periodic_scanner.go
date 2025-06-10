@@ -117,6 +117,8 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 
 // ShutdownPeriodicScanner gracefully shuts down the periodic scanner
 func ShutdownPeriodicScanner() {
+	mainPeriodicScannerLocker.Lock()
+	defer mainPeriodicScannerLocker.Unlock()
 
 	if mainPeriodicScanner != nil {
 		log.Info(nil, "Shutting down periodic scanner")
