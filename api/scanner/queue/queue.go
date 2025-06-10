@@ -151,7 +151,7 @@ func (q *Queue) AddAllUsers(ctx context.Context) error {
 func (q *Queue) AddUser(ctx context.Context, user *models.User) error {
 	jobs, err := q.findUserJobs(user)
 	if err != nil {
-		return fmt.Errorf("find albums for user (id: %d) error: %w", err)
+		return fmt.Errorf("find albums for user (id: %d) error: %w", user.ID, err)
 	}
 
 	select {
