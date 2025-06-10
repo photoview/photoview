@@ -31,6 +31,7 @@ type periodicScanner struct {
 }
 
 var mainPeriodicScanner *periodicScanner = nil
+var mainPeriodicScannerLocker sync.Mutex
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 	var siteInfo models.SiteInfo
@@ -94,7 +95,9 @@ func ChangePeriodicScanInterval(duration time.Duration) {
 		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
+	mainPeriodicScannerLocker.Lock()
 	scanner := mainPeriodicScanner
+	mainPeriodicScannerLocker.Unlock()
 	if scanner != nil {
 		scanner.tickerLocker.Lock()
 		defer scanner.tickerLocker.Unlock()
