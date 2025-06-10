@@ -43,12 +43,13 @@ func (w *worker) Close() {
 func (w *worker) Run() {
 	defer w.parentWaiter.Done()
 
+MAIN:
 	for {
 		select {
 		case job := <-w.input:
 			w.processJob(job)
 		case <-w.done:
-			break
+			break MAIN
 		}
 	}
 }

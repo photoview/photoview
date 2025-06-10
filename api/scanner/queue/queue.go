@@ -98,6 +98,7 @@ func (q *Queue) Run() {
 		q.waitWorkers.Wait()
 	}()
 
+  MAIN:
 	for {
 		if len(q.backlog) > 0 {
 			select {
@@ -109,7 +110,7 @@ func (q *Queue) Run() {
 			case <-q.trigger.C:
 				q.AddAllUsers(q.ctx)
 			case <-q.done:
-				break
+				break MAIN
 			}
 
 			continue
@@ -121,7 +122,7 @@ func (q *Queue) Run() {
 		case <-q.trigger.C:
 			q.AddAllUsers(q.ctx)
 		case <-q.done:
-			break
+			break MAIN
 		}
 	}
 }
@@ -133,6 +134,7 @@ func (q *Queue) AddAllUsers(ctx context.Context) error {
 	}
 
 	var jobs []Job
+
 	for _, user := range users {
 		job, err := q.findUserJobs(user)
 		if err != nil {
