@@ -30,6 +30,7 @@ type worker struct {
 func newWorker(ctx context.Context, db *gorm.DB, input <-chan Job, parentWaiter *sync.WaitGroup) *worker {
 	return &worker{
 		ctx:          ctx,
+		db:           db,
 		input:        input,
 		done:         make(chan struct{}),
 		parentWaiter: parentWaiter,
