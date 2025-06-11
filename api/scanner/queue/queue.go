@@ -45,7 +45,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		trigger: time.NewTicker(interval),
 	}
 
-	ret.UpdateWorkers(siteInfo.ConcurrentWorkers)
+	ret.ResizeWorkers(siteInfo.ConcurrentWorkers)
 
 	return ret, nil
 }
@@ -55,11 +55,11 @@ func (q *Queue) Close() {
 	close(q.done)
 }
 
-func (q *Queue) UpdateInterval(newInterval time.Duration) {
+func (q *Queue) UpdateScanInterval(newInterval time.Duration) {
 	q.trigger.Reset(newInterval)
 }
 
-func (q *Queue) UpdateWorkers(newMax int) {
+func (q *Queue) ResizeWorkers(newMax int) {
 	if newMax < 0 {
 		newMax = 0
 	}
@@ -94,11 +94,11 @@ func (q *Queue) UpdateWorkers(newMax int) {
 
 func (q *Queue) Run() {
 	defer func() {
-		q.UpdateWorkers(0)
+		q.ResizeWorkers(0)
 		q.waitWorkers.Wait()
 	}()
 
-  MAIN:
+MAIN:
 	for {
 		if len(q.backlog) > 0 {
 			select {
