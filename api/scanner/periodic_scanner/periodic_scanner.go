@@ -43,6 +43,8 @@ func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 }
 
 func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
+	mainPeriodicScannerLocker.Lock()
+	defer mainPeriodicScannerLocker.Unlock()
 
 	if mainPeriodicScanner != nil {
 		return fmt.Errorf("periodic scanner has already been initialized")
