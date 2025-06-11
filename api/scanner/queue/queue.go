@@ -108,7 +108,12 @@ MAIN:
 			case input := <-q.input:
 				q.backlog = append(q.backlog, input...)
 			case <-q.trigger.C:
-				q.AddAllAlbums(q.ctx)
+				jobs, err := q.findAllAlbumsJobs()
+				if err != nil {
+					log.Error(q.ctx, "interval scan", "error", err)
+					continue
+				}
+				q.backlog = append(q.backlog, jobs...)
 			case <-q.done:
 				break MAIN
 			}
@@ -120,7 +125,12 @@ MAIN:
 		case input := <-q.input:
 			q.backlog = append(q.backlog, input...)
 		case <-q.trigger.C:
-			q.AddAllAlbums(q.ctx)
+			jobs, err := q.findAllAlbumsJobs()
+			if err != nil {
+				log.Error(q.ctx, "interval scan", "error", err)
+				continue
+			}
+			q.backlog = append(q.backlog, jobs...)
 		case <-q.done:
 			break MAIN
 		}
@@ -128,19 +138,9 @@ MAIN:
 }
 
 func (q *Queue) AddAllAlbums(ctx context.Context) error {
-	var users []*models.User
-	if err := q.db.Find(&users).Error; err != nil {
-		return fmt.Errorf("get all users from database error: %w", err)
-	}
-
-	var jobs []Job
-
-	for _, user := range users {
-		job, err := q.findUserJobs(user)
-		if err != nil {
-			return fmt.Errorf("failed to add user (id: %d) for scanning: %w", user.ID, err)
-		}
-		jobs = append(jobs, job...)
+	jobs, err := q.findAllAlbumsJobs()
+	if err != nil {
+		return err
 	}
 
 	select {
@@ -155,7 +155,7 @@ func (q *Queue) AddAllAlbums(ctx context.Context) error {
 }
 
 func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
-	jobs, err := q.findUserJobs(user)
+	jobs, err := q.findUserAlbumsJobs(user)
 	if err != nil {
 		return fmt.Errorf("find albums for user (id: %d) error: %w", user.ID, err)
 	}
@@ -171,7 +171,26 @@ func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (q *Queue) findUserJobs(user *models.User) ([]Job, error) {
+func (q *Queue) findAllAlbumsJobs() ([]Job, error) {
+	var users []*models.User
+	if err := q.db.Find(&users).Error; err != nil {
+		return nil, fmt.Errorf("get all users from database error: %w", err)
+	}
+
+	var jobs []Job
+
+	for _, user := range users {
+		job, err := q.findUserAlbumsJobs(user)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add user (id: %d) for scanning: %w", user.ID, err)
+		}
+		jobs = append(jobs, job...)
+	}
+
+	return jobs, nil
+}
+
+func (q *Queue) findUserAlbumsJobs(user *models.User) ([]Job, error) {
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(q.db, user, albumCache)
 	if len(album_errors) != 0 {
