@@ -62,23 +62,25 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 }
 
 func (q *Queue) Close() {
+	defer q.waitWorkers.Wait()
+
 	q.trigger.Stop()
 	close(q.done)
 }
 
 func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-		return fmt.Errorf("ivalid periodic scan interval(%v): must >=0", newnterval)
+		return fmt.Errorf("ivalid periodic scan interval(%v): must >=0", newInterval)
 	}
 
 	if newInterval == 0 {
-		trigger.Stop()
+		q.trigger.Stop()
 		return nil
-	}	
+	}
 
 	q.trigger.Reset(newInterval)
 	return nil
-	
+}
 
 func (q *Queue) ResizeWorkers(newMax int) {
 	if newMax < 0 {
@@ -114,10 +116,7 @@ func (q *Queue) ResizeWorkers(newMax int) {
 }
 
 func (q *Queue) Run() {
-	defer func() {
-		q.ResizeWorkers(0)
-		q.waitWorkers.Wait()
-	}()
+	defer q.ResizeWorkers(0)
 
 MAIN:
 	for {
