@@ -15,17 +15,18 @@ import (
 )
 
 type Queue struct {
-	db          *gorm.DB
-	waitWorkers sync.WaitGroup
-	ctx         context.Context
-	input       chan []Job
-	handout     chan Job
-	done        chan struct{}
-	trigger     *time.Ticker
-	backlog     []Job
+	db      *gorm.DB
+	wait    sync.WaitGroup
+	ctx     context.Context
+	input   chan []Job
+	handout chan Job
+	done    chan struct{}
+	trigger *time.Ticker
 
 	workers   []*worker
 	workersMu sync.Mutex
+
+	backlog []Job // Must be handled by `run` goroutine only.
 }
 
 func NewQueue(db *gorm.DB) (*Queue, error) {
@@ -35,7 +36,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	}
 
 	if siteInfo.PeriodicScanInterval < 0 {
-		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >0", siteInfo.PeriodicScanInterval)
+		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >=0", siteInfo.PeriodicScanInterval)
 	}
 
 	interval := time.Duration(siteInfo.PeriodicScanInterval) * time.Second
@@ -45,6 +46,10 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		ticker.Stop()
 	} else {
 		ticker = time.NewTicker(interval)
+	}
+
+	if siteInfo.ConcurrentWorkers < 0 {
+		return nil, fmt.Errorf("invalid concurrent workers (%d): must >=0", siteInfo.ConcurrentWorkers)
 	}
 
 	ret := &Queue{
@@ -57,12 +62,14 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	}
 
 	ret.ResizeWorkers(siteInfo.ConcurrentWorkers)
+	ret.wait.Add(1)
+	go ret.run()
 
 	return ret, nil
 }
 
 func (q *Queue) Close() {
-	defer q.waitWorkers.Wait()
+	defer q.wait.Wait()
 
 	q.trigger.Stop()
 	close(q.done)
@@ -82,16 +89,16 @@ func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
 	return nil
 }
 
-func (q *Queue) ResizeWorkers(newMax int) {
+func (q *Queue) ResizeWorkers(newMax int) error {
 	if newMax < 0 {
-		newMax = 0
+		return fmt.Errorf("invalid concurrent workers (%d): must >=0", newMax)
 	}
 
 	q.workersMu.Lock()
 	defer q.workersMu.Unlock()
 
 	if len(q.workers) == newMax {
-		return
+		return nil
 	}
 
 	if len(q.workers) > newMax {
@@ -102,21 +109,24 @@ func (q *Queue) ResizeWorkers(newMax int) {
 			worker.Close()
 		}
 
-		return
+		return nil
 	}
 
 	// len(q.workers) < newMax
 	q.workers = slices.Grow(q.workers, newMax-len(q.workers))
 	for len(q.workers) < newMax {
-		worker := newWorker(log.WithAttrs(q.ctx, "worker_id", len(q.workers)), q.db, q.handout, &q.waitWorkers)
-		q.waitWorkers.Add(1)
+		worker := newWorker(log.WithAttrs(q.ctx, "worker_id", len(q.workers)), q.db, q.handout, &q.wait)
+		q.wait.Add(1)
 		go worker.Run()
 		q.workers = append(q.workers, worker)
 	}
+
+	return nil
 }
 
-func (q *Queue) Run() {
+func (q *Queue) run() {
 	defer q.ResizeWorkers(0)
+	defer q.wait.Done()
 
 MAIN:
 	for {
@@ -128,12 +138,7 @@ MAIN:
 			case input := <-q.input:
 				q.backlog = append(q.backlog, input...)
 			case <-q.trigger.C:
-				jobs, err := q.findAllAlbumsJobs()
-				if err != nil {
-					log.Error(q.ctx, "interval scan", "error", err)
-					continue
-				}
-				q.backlog = append(q.backlog, jobs...)
+				q.fillAllAlbumsToBacklog()
 			case <-q.done:
 				break MAIN
 			}
@@ -145,12 +150,7 @@ MAIN:
 		case input := <-q.input:
 			q.backlog = append(q.backlog, input...)
 		case <-q.trigger.C:
-			jobs, err := q.findAllAlbumsJobs()
-			if err != nil {
-				log.Error(q.ctx, "interval scan", "error", err)
-				continue
-			}
-			q.backlog = append(q.backlog, jobs...)
+			q.fillAllAlbumsToBacklog()
 		case <-q.done:
 			break MAIN
 		}
@@ -189,6 +189,17 @@ func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 	}
 
 	return nil
+}
+
+// Must be run in the `run()` goroutine.
+func (q *Queue) fillAllAlbumsToBacklog() {
+	jobs, err := q.findAllAlbumsJobs()
+	if err != nil {
+		log.Error(q.ctx, "interval scan", "error", err)
+		return
+	}
+
+	q.backlog = append(q.backlog, jobs...)
 }
 
 func (q *Queue) findAllAlbumsJobs() ([]Job, error) {
