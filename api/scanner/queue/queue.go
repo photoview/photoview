@@ -61,7 +61,10 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		trigger: ticker,
 	}
 
-	ret.ResizeWorkers(siteInfo.ConcurrentWorkers)
+	if err := ret.RescaleWorkers(siteInfo.ConcurrentWorkers); err != nil {
+		return nil, err
+	}
+
 	ret.wait.Add(1)
 	go ret.run()
 
@@ -89,7 +92,7 @@ func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
 	return nil
 }
 
-func (q *Queue) ResizeWorkers(newMax int) error {
+func (q *Queue) RescaleWorkers(newMax int) error {
 	if newMax < 0 {
 		return fmt.Errorf("invalid concurrent workers (%d): must >=0", newMax)
 	}
@@ -125,7 +128,7 @@ func (q *Queue) ResizeWorkers(newMax int) error {
 }
 
 func (q *Queue) run() {
-	defer q.ResizeWorkers(0)
+	defer q.RescaleWorkers(0)
 	defer q.wait.Done()
 
 MAIN:
