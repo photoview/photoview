@@ -36,8 +36,16 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 
 	if siteInfo.PeriodicScanInterval < 0 {
 		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >0", siteInfo.PeriodicScanInterval)
-	}	
+	}
+
 	interval := time.Duration(siteInfo.PeriodicScanInterval) * time.Second
+	var ticker *time.Ticker
+	if interval == 0 {
+		ticker = time.NewTicker(time.Second) // The interval is not matter since the ticker is stopped.
+		ticker.Stop()
+	} else {
+		ticker = time.NewTicker(interval)
+	}
 
 	ret := &Queue{
 		db:      db,
@@ -45,7 +53,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		input:   make(chan []Job),
 		handout: make(chan Job),
 		done:    make(chan struct{}),
-		trigger: time.NewTicker(interval),
+		trigger: ticker,
 	}
 
 	ret.ResizeWorkers(siteInfo.ConcurrentWorkers)
@@ -60,11 +68,17 @@ func (q *Queue) Close() {
 
 func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-    return fmt.Errorf( "invalid periodic scan interval(%v): must >=0",  newInterval)
+		return fmt.Errorf("ivalid periodic scan interval(%v): must >=0", newnterval)
 	}
+
+	if newInterval == 0 {
+		trigger.Stop()
+		return nil
+	}	
+
 	q.trigger.Reset(newInterval)
-  return nil
-}
+	return nil
+	
 
 func (q *Queue) ResizeWorkers(newMax int) {
 	if newMax < 0 {
