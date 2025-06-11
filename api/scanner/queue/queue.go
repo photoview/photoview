@@ -34,6 +34,9 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		return nil, fmt.Errorf("can't get site info: %w", err)
 	}
 
+	if siteInfo.PeriodicScanInterval < 0 {
+		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >0", siteInfo.PeriodicScanInterval)
+	}	
 	interval := time.Duration(siteInfo.PeriodicScanInterval) * time.Second
 
 	ret := &Queue{
@@ -55,8 +58,12 @@ func (q *Queue) Close() {
 	close(q.done)
 }
 
-func (q *Queue) UpdateScanInterval(newInterval time.Duration) {
+func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
+	if newInterval < 0 {
+    return fmt.Errorf( "invalid periodic scan interval(%v): must >=0",  newInterval)
+	}
 	q.trigger.Reset(newInterval)
+  return nil
 }
 
 func (q *Queue) ResizeWorkers(newMax int) {
