@@ -70,7 +70,7 @@ func (q *Queue) Close() {
 
 func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-		return fmt.Errorf("ivalid periodic scan interval(%v): must >=0", newInterval)
+		return fmt.Errorf("invalid periodic scan interval(%v): must >=0", newInterval)
 	}
 
 	if newInterval == 0 {
