@@ -108,7 +108,7 @@ func (q *Queue) Run() {
 			case input := <-q.input:
 				q.backlog = append(q.backlog, input...)
 			case <-q.trigger.C:
-				q.AddAllUsers(q.ctx)
+				q.AddAllAlbums(q.ctx)
 			case <-q.done:
 				break MAIN
 			}
@@ -120,14 +120,14 @@ func (q *Queue) Run() {
 		case input := <-q.input:
 			q.backlog = append(q.backlog, input...)
 		case <-q.trigger.C:
-			q.AddAllUsers(q.ctx)
+			q.AddAllAlbums(q.ctx)
 		case <-q.done:
 			break MAIN
 		}
 	}
 }
 
-func (q *Queue) AddAllUsers(ctx context.Context) error {
+func (q *Queue) AddAllAlbums(ctx context.Context) error {
 	var users []*models.User
 	if err := q.db.Find(&users).Error; err != nil {
 		return fmt.Errorf("get all users from database error: %w", err)
@@ -154,7 +154,7 @@ func (q *Queue) AddAllUsers(ctx context.Context) error {
 	return nil
 }
 
-func (q *Queue) AddUser(ctx context.Context, user *models.User) error {
+func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 	jobs, err := q.findUserJobs(user)
 	if err != nil {
 		return fmt.Errorf("find albums for user (id: %d) error: %w", user.ID, err)
