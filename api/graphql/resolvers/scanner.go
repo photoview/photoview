@@ -19,9 +19,9 @@ import (
 
 // ScanAll is the resolver for the scanAll field.
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
-	err := scanner_queue.AddAllToQueue()
+	err := r.queue.AddAllAlbums(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("scan all album error: %w", err)
 	}
 
 	startMessage := "Scanner started"
@@ -40,7 +40,9 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		return nil, fmt.Errorf("get user from database: %w", err)
 	}
 
-	scanner_queue.AddUserToQueue(&user)
+	if err := r.queue.AddUserAlbums(ctx, &user); err != nil {
+		return nil, fmt.Errorf("scan user album error: %w", err)
+	}
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{

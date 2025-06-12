@@ -18,8 +18,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
-	"github.com/photoview/photoview/api/scanner/periodic_scanner"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/scanner/queue"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
@@ -49,13 +48,11 @@ func main() {
 		log.Panicf("Could not migrate database: %s\n", err)
 	}
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
-		log.Panicf("Could not initialize scanner queue: %s\n", err)
+	queue, err := queue.NewQueue(db)
+	if err != nil {
+		log.Panicf("Could not create the background queue: %s", err)
 	}
-
-	if err := periodic_scanner.InitializePeriodicScanner(db); err != nil {
-		log.Panicf("Could not initialize periodic scanner: %s", err)
-	}
+	defer queue.Close()
 
 	exif.InitializeEXIFParser()
 
@@ -82,7 +79,7 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint(db))
+	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint(db, queue))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	db_drivers "github.com/photoview/photoview/api/database/drivers"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -32,21 +34,20 @@ func DefaultSiteInfo(db *gorm.DB) SiteInfo {
 // GetSiteInfo gets the site info row from the database, and creates it if it does not exist
 func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 
-	var siteInfo []*SiteInfo
+	var siteInfo *SiteInfo
 
-	if err := db.Limit(1).Find(&siteInfo).Error; err != nil {
-		return nil, errors.Wrap(err, "get site info from database")
-	}
+	if err := db.First(&siteInfo).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			newSiteInfo := DefaultSiteInfo(db)
 
-	if len(siteInfo) == 0 {
-		newSiteInfo := DefaultSiteInfo(db)
+			if err := db.Create(&newSiteInfo).Error; err != nil {
+				return nil, fmt.Errorf("initialize site_info error: %w", err)
+			}
 
-		if err := db.Create(&newSiteInfo).Error; err != nil {
-			return nil, errors.Wrap(err, "initialize site_info")
+			return &newSiteInfo, nil
 		}
-
-		return &newSiteInfo, nil
-	} else {
-		return siteInfo[0], nil
+		return nil, fmt.Errorf("get site info from database error: %w", err)
 	}
+
+	return siteInfo, nil
 }

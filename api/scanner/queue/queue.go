@@ -30,8 +30,8 @@ type Queue struct {
 }
 
 func NewQueue(db *gorm.DB) (*Queue, error) {
-	var siteInfo models.SiteInfo
-	if err := db.First(&siteInfo).Error; err != nil {
+	siteInfo, err := models.GetSiteInfo(db)
+	if err != nil {
 		return nil, fmt.Errorf("can't get site info: %w", err)
 	}
 
