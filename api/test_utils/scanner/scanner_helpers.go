@@ -16,7 +16,7 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 	}
 	defer queue.Close()
 
-	if err := queue.AddAllAlbums(t.Context()); err != nil {
+	if err := queue.AddUserAlbums(t.Context(), user); err != nil {
 		t.Fatalf("scan all albums error: %v", err)
 		return
 	}
