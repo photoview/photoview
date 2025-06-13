@@ -38,11 +38,15 @@ func newWorker(ctx context.Context, db *gorm.DB, input <-chan Job, parentWaiter 
 }
 
 func (w *worker) Close() {
+	log.Info(w.ctx, "closing worker")
 	close(w.done)
 }
 
 func (w *worker) Run() {
 	defer w.parentWaiter.Done()
+	defer log.Info(w.ctx, "worker done")
+
+	log.Info(w.ctx, "worker start")
 
 MAIN:
 	for {
@@ -56,6 +60,7 @@ MAIN:
 }
 
 func (w *worker) processJob(job Job) {
+	log.Info(w.ctx, "process album", "album", job.album.Title)
 	task := scanner_task.NewTaskContext(w.ctx, w.db, job.album, job.cache)
 	if err := scanner.ScanAlbum(task); err != nil {
 		log.Error(w.ctx, "Failed to scan album", "error", err, "album", job.album.Title)

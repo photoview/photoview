@@ -18,7 +18,6 @@ type Queue struct {
 	db      *gorm.DB
 	wait    sync.WaitGroup
 	ctx     context.Context
-	input   chan []Job
 	handout chan Job
 	done    chan struct{}
 	trigger *time.Ticker
@@ -26,7 +25,9 @@ type Queue struct {
 	workers   []*worker
 	workersMu sync.Mutex
 
-	backlog []Job // Must be handled by `run` goroutine only.
+	backlogUpdated chan struct{}
+	backlog        []Job
+	backlogMu      sync.Mutex
 }
 
 func NewQueue(db *gorm.DB) (*Queue, error) {
@@ -53,29 +54,53 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	}
 
 	ret := &Queue{
-		db:      db,
-		ctx:     log.WithAttrs(context.Background(), "process", "queue"),
-		input:   make(chan []Job),
-		handout: make(chan Job),
-		done:    make(chan struct{}),
-		trigger: ticker,
+		db:             db,
+		ctx:            log.WithAttrs(context.Background(), "process", "queue"),
+		handout:        make(chan Job),
+		done:           make(chan struct{}),
+		trigger:        ticker,
+		backlogUpdated: make(chan struct{}, 1),
 	}
 
 	if err := ret.RescaleWorkers(siteInfo.ConcurrentWorkers); err != nil {
 		return nil, err
 	}
 
-	ret.wait.Add(1)
-	go ret.run()
-
 	return ret, nil
 }
 
 func (q *Queue) Close() {
-	defer q.wait.Wait()
+	defer func() {
+		q.wait.Wait()
+		log.Info(q.ctx, "backlog remain", "length", q.lenBacklog())
+	}()
 
+	log.Info(q.ctx, "closing queue")
 	q.trigger.Stop()
 	close(q.done)
+	q.RescaleWorkers(0)
+}
+
+func (q *Queue) RunBackground() {
+	q.wait.Add(1)
+	go q.run()
+}
+
+func (q *Queue) ConsumeAllBacklog(ctx context.Context) {
+	for {
+		job, ok := q.popBacklog()
+		if !ok {
+			log.Info(q.ctx, "consume all backlog: return")
+			return
+		}
+
+		log.Info(q.ctx, "consume all backlog", "album", job.album.Title)
+		select {
+		case q.handout <- job:
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (q *Queue) UpdateScanInterval(newInterval time.Duration) error {
@@ -106,7 +131,11 @@ func (q *Queue) RescaleWorkers(newMax int) error {
 
 	if len(q.workers) > newMax {
 		closing := q.workers[newMax:]
-		q.workers = q.workers[:newMax]
+		if newMax == 0 {
+			q.workers = nil
+		} else {
+			q.workers = q.workers[:newMax]
+		}
 
 		for _, worker := range closing {
 			worker.Close()
@@ -128,20 +157,21 @@ func (q *Queue) RescaleWorkers(newMax int) error {
 }
 
 func (q *Queue) run() {
-	defer q.RescaleWorkers(0)
 	defer q.wait.Done()
+	defer log.Info(q.ctx, "queue background done")
 
+	log.Info(q.ctx, "queue background start")
 MAIN:
 	for {
-		if len(q.backlog) > 0 {
-			select {
-			case q.handout <- q.backlog[0]:
-				q.backlog = q.backlog[1:]
+		job, ok := q.popBacklog()
 
-			case input := <-q.input:
-				q.backlog = append(q.backlog, input...)
+		if ok {
+			log.Info(q.ctx, "run", "album", job.album.Title)
+			select {
+			case q.handout <- job:
+			case <-q.backlogUpdated:
 			case <-q.trigger.C:
-				q.fillAllAlbumsToBacklog()
+				q.AddAllAlbums(q.ctx)
 			case <-q.done:
 				break MAIN
 			}
@@ -150,10 +180,9 @@ MAIN:
 		}
 
 		select {
-		case input := <-q.input:
-			q.backlog = append(q.backlog, input...)
+		case <-q.backlogUpdated:
 		case <-q.trigger.C:
-			q.fillAllAlbumsToBacklog()
+			q.AddAllAlbums(q.ctx)
 		case <-q.done:
 			break MAIN
 		}
@@ -166,13 +195,7 @@ func (q *Queue) AddAllAlbums(ctx context.Context) error {
 		return err
 	}
 
-	select {
-	case q.input <- jobs:
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-q.done:
-		return fmt.Errorf("queue is closed")
-	}
+	q.appendBacklog(jobs)
 
 	return nil
 }
@@ -183,26 +206,44 @@ func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 		return fmt.Errorf("find albums for user (id: %d) error: %w", user.ID, err)
 	}
 
-	select {
-	case q.input <- jobs:
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-q.done:
-		return fmt.Errorf("queue is closed")
-	}
+	q.appendBacklog(jobs)
 
 	return nil
 }
 
-// Must be run in the `run()` goroutine.
-func (q *Queue) fillAllAlbumsToBacklog() {
-	jobs, err := q.findAllAlbumsJobs()
-	if err != nil {
-		log.Error(q.ctx, "interval scan", "error", err)
-		return
+func (q *Queue) appendBacklog(jobs []Job) {
+	for _, job := range jobs {
+		log.Info(q.ctx, "insert to queue backlog", "album", job.album.Title)
+	}
+	q.backlogMu.Lock()
+	q.backlog = append(q.backlog, jobs...)
+	q.backlogMu.Unlock()
+
+	select {
+	case q.backlogUpdated <- struct{}{}:
+	default:
+	}
+}
+
+func (q *Queue) popBacklog() (Job, bool) {
+	q.backlogMu.Lock()
+	defer q.backlogMu.Unlock()
+
+	if len(q.backlog) == 0 {
+		return Job{}, false
 	}
 
-	q.backlog = append(q.backlog, jobs...)
+	ret := q.backlog[0]
+	q.backlog = q.backlog[1:]
+
+	return ret, true
+}
+
+func (q *Queue) lenBacklog() int {
+	q.backlogMu.Lock()
+	defer q.backlogMu.Unlock()
+
+	return len(q.backlog)
 }
 
 func (q *Queue) findAllAlbumsJobs() ([]Job, error) {

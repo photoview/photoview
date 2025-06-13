@@ -52,6 +52,7 @@ func main() {
 	if err != nil {
 		log.Panicf("Could not create the background queue: %s", err)
 	}
+	queue.RunBackground()
 	defer queue.Close()
 
 	exif.InitializeEXIFParser()

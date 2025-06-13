@@ -20,6 +20,8 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 		t.Fatalf("scan all albums error: %v", err)
 		return
 	}
+
+	queue.ConsumeAllBacklog(t.Context())
 }
 
 func RunScannerAll(t *testing.T, db *gorm.DB) {
@@ -34,4 +36,6 @@ func RunScannerAll(t *testing.T, db *gorm.DB) {
 		t.Fatalf("scan all albums error: %v", err)
 		return
 	}
+
+	queue.ConsumeAllBacklog(t.Context())
 }

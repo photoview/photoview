@@ -41,7 +41,7 @@ func (dbm *TestDBManager) Close() error {
 
 func (dbm *TestDBManager) setup() error {
 	config := gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Warn),
 	}
 	db, err := database.ConfigureDatabase(&config)
 	if err != nil {
