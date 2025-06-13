@@ -56,6 +56,10 @@ const (
 	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
 )
 
+func (c TaskContext) Context() context.Context {
+	return c.ctx
+}
+
 func (c TaskContext) GetAlbum() *models.Album {
 	return c.ctx.Value(taskCtxKeyAlbum).(*models.Album)
 }

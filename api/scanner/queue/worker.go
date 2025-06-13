@@ -63,7 +63,6 @@ func (w *worker) processJob(job Job) {
 	log.Info(w.ctx, "process album", "album", job.album.Title)
 	task := scanner_task.NewTaskContext(w.ctx, w.db, job.album, job.cache)
 	if err := scanner.ScanAlbum(task); err != nil {
-		log.Error(w.ctx, "Failed to scan album", "error", err, "album", job.album.Title)
-		scanner_utils.ScannerError("Failed to scan album: %v", err)
+		scanner_utils.ScannerError(w.ctx, "Failed to scan album: %v", err)
 	}
 }

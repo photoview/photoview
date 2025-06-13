@@ -1,18 +1,19 @@
 package scanner_utils
 
 import (
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
 )
 
-func ScannerError(format string, args ...interface{}) {
+func ScannerError(ctx context.Context, format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 
-	log.Printf("ERROR: %s", message)
+	log.Error(ctx, message)
 	notification.BroadcastNotification(&models.Notification{
 		Key:      utils.GenerateToken(),
 		Type:     models.NotificationTypeMessage,
