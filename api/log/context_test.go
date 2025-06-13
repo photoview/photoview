@@ -12,7 +12,7 @@ import (
 
 func init() {
 	// Avoid panic with providing flags in `test_utils/integration_setup.go`.
-	flag.CommandLine.Init("executable_worker", flag.ContinueOnError)
+	flag.CommandLine.Init("log", flag.ContinueOnError)
 }
 
 func mockDefaultLogger(t *testing.T) *bytes.Buffer {
