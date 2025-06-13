@@ -23,6 +23,7 @@ docker-compose.yml
 /ui/coverage
 /api/coverage.txt
 /api/test-*-report.xml
+*.cov
 
 # building
 .cache/

@@ -16,7 +16,7 @@ func newMagickWand() *MagickWand {
 
 	verstr, vernum := imagick.GetVersion()
 
-	log.Info("Found magickwand worker: "+verstr, "version", vernum)
+	log.Info(nil, "Found magickwand worker: "+verstr, "version", vernum)
 
 	return &MagickWand{
 		initialized: true,
