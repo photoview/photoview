@@ -26,7 +26,7 @@ type FfmpegCli struct {
 
 func newFfmpegCli() *FfmpegCli {
 	if utils.EnvDisableVideoEncoding.GetBool() {
-		log.Warn("Executable ffmpeg worker disabled", utils.EnvDisableVideoEncoding.GetName(), utils.EnvDisableVideoEncoding.GetValue())
+		log.Warn(nil, "Executable ffmpeg worker disabled", utils.EnvDisableVideoEncoding.GetName(), utils.EnvDisableVideoEncoding.GetValue())
 		return &FfmpegCli{
 			err: ErrDisabledFunction,
 		}
@@ -34,7 +34,7 @@ func newFfmpegCli() *FfmpegCli {
 
 	path, err := exec.LookPath("ffmpeg")
 	if err != nil {
-		log.Error("Executable ffmpeg worker not found")
+		log.Error(nil, "Executable ffmpeg worker not found")
 		return &FfmpegCli{
 			err: ErrNoDependency,
 		}
@@ -42,7 +42,7 @@ func newFfmpegCli() *FfmpegCli {
 
 	version, err := exec.Command(path, "-version").Output()
 	if err != nil {
-		log.Error("Executable ffmpeg worker getting version error", "error", err)
+		log.Error(nil, "Executable ffmpeg worker getting version error", "error", err)
 		return &FfmpegCli{
 			err: ErrNoDependency,
 		}
@@ -59,7 +59,7 @@ func newFfmpegCli() *FfmpegCli {
 		}
 	}
 
-	log.Info("Found executable worker: ffmpeg", "version", strings.Split(string(version), "\n")[0], "codec", codec)
+	log.Info(nil, "Found executable worker: ffmpeg", "version", strings.Split(string(version), "\n")[0], "codec", codec)
 
 	return &FfmpegCli{
 		path:       path,
