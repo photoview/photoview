@@ -47,7 +47,7 @@ func handleVideoRequest(
 			}
 			return -1
 		}, mediaName)
-		log.Warn("Multiple video web URLs found",
+		log.Warn(nil, "Multiple video web URLs found",
 			"name", sanitizedMediaName,
 			"count", len(mediaURLs),
 			"using", mediaURLs[0],
@@ -59,7 +59,7 @@ func handleVideoRequest(
 
 	if success, response, status, err := authenticateFn(media, db, r); !success {
 		if err != nil {
-			log.Warn("got error authenticating video:",
+			log.Warn(nil, "got error authenticating video:",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)
@@ -75,7 +75,7 @@ func handleVideoRequest(
 		// Use the provided cache path function
 		cachedPath = getCachePathFn(int(media.AlbumID), int(mediaURL.MediaID), mediaURL.MediaName)
 	} else {
-		log.Error("Can not handle media_purpose for video",
+		log.Error(nil, "Can not handle media_purpose for video",
 			"purpose", mediaURL.Purpose,
 			"expected", models.VideoWeb)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -101,7 +101,7 @@ func handleVideoRequest(
 		case err := <-done:
 			return err
 		case <-ctx.Done():
-			log.Warn("Client disconnected during video processing",
+			log.Warn(nil, "Client disconnected during video processing",
 				"mediaID", media.ID,
 				"reason", ctx.Err())
 			return ctx.Err()
@@ -111,7 +111,7 @@ func handleVideoRequest(
 	if _, err := os.Stat(cachedPath); err != nil {
 		if os.IsNotExist(err) {
 			if err := contextAwareProcessFn(db, media); err != nil {
-				log.Error("processing video not found in cache:",
+				log.Error(nil, "processing video not found in cache:",
 					"error", err,
 					"media ID", media.ID,
 					"media path", media.Path)
@@ -121,7 +121,7 @@ func handleVideoRequest(
 			}
 
 			if _, err := os.Stat(cachedPath); err != nil {
-				log.Error("video not found in cache after reprocessing:",
+				log.Error(nil, "video not found in cache after reprocessing:",
 					"error", err,
 					"media ID", media.ID,
 					"media path", media.Path)
@@ -130,7 +130,7 @@ func handleVideoRequest(
 				return
 			}
 		} else {
-			log.Error("cached video access error:",
+			log.Error(nil, "cached video access error:",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)
@@ -151,28 +151,9 @@ func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 		handleVideoRequest(
 			w, r, db, mediaName,
-			authenticateMedia, // Real authentication
+			authenticateMedia,
 			func(albumID, mediaID int, filename string) string {
 				return path.Join(utils.MediaCachePath(), strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
-			},
-		)
-	})
-}
-
-func registerMockVideoRoutesForTesting(db *gorm.DB, router *mux.Router, tempCachePath string) {
-	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
-		mediaName := mux.Vars(r)["name"]
-
-		// Use no-op auth and test cache path
-		handleVideoRequest(
-			w, r, db, mediaName,
-			// Skip authentication for tests
-			func(media *models.Media, db *gorm.DB, r *http.Request) (bool, string, int, error) {
-				return true, "success", http.StatusOK, nil
-			},
-			// Use test cache path
-			func(albumID, mediaID int, filename string) string {
-				return path.Join(tempCachePath, strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
 			},
 		)
 	})

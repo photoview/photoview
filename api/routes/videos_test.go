@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -72,6 +73,25 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, album
 	return func() {
 		processSingleMediaFn = savedFn
 	}
+}
+
+func registerMockVideoRoutesForTesting(db *gorm.DB, router *mux.Router, tempCachePath string) {
+	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
+		mediaName := mux.Vars(r)["name"]
+
+		// Use no-op auth and test cache path
+		handleVideoRequest(
+			w, r, db, mediaName,
+			// Skip authentication for tests
+			func(media *models.Media, db *gorm.DB, r *http.Request) (bool, string, int, error) {
+				return true, "success", http.StatusOK, nil
+			},
+			// Use test cache path
+			func(albumID, mediaID int, filename string) string {
+				return path.Join(tempCachePath, strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
+			},
+		)
+	})
 }
 
 // createTestResources creates all the necessary test resources for a single test case
