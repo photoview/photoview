@@ -14,7 +14,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var ProcessSingleMediaFunc = ProcessSingleMedia
+var ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
+	return ProcessSingleMedia(ctx, db, media)
+}
 
 func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
@@ -72,7 +74,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
 // Function waits for processing to finish before returning.
-func ProcessSingleMedia(db *gorm.DB, media *models.Media) error {
+func ProcessSingleMedia(ctx context.Context, db *gorm.DB, media *models.Media) error {
 	albumCache := scanner_cache.MakeAlbumCache()
 
 	var album models.Album
@@ -82,7 +84,7 @@ func ProcessSingleMedia(db *gorm.DB, media *models.Media) error {
 
 	mediaData := media_encoding.NewEncodeMediaData(media)
 
-	taskContext := scanner_task.NewTaskContext(context.Background(), db, &album, albumCache)
+	taskContext := scanner_task.NewTaskContext(ctx, db, &album, albumCache)
 	if err := scanMedia(taskContext, media, &mediaData, 0, 1); err != nil {
 		return errors.Wrap(err, "single media scan")
 	}

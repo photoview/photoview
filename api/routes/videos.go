@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path"
@@ -16,8 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var processSingleMediaFn = func(db *gorm.DB, media *models.Media) error {
-	return scanner.ProcessSingleMedia(db, media)
+var processSingleMediaFn = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
+	return scanner.ProcessSingleMedia(ctx, db, media)
 }
 
 func handleVideoRequest(
@@ -47,7 +48,7 @@ func handleVideoRequest(
 			}
 			return -1
 		}, mediaName)
-		log.Warn(nil, "Multiple video web URLs found",
+		log.Warn(r.Context(), "Multiple video web URLs found",
 			"name", sanitizedMediaName,
 			"count", len(mediaURLs),
 			"using", mediaURLs[0],
@@ -59,7 +60,7 @@ func handleVideoRequest(
 
 	if success, response, status, err := authenticateFn(media, db, r); !success {
 		if err != nil {
-			log.Warn(nil, "got error authenticating video:",
+			log.Warn(r.Context(), "got error authenticating video:",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)
@@ -75,7 +76,7 @@ func handleVideoRequest(
 		// Use the provided cache path function
 		cachedPath = getCachePathFn(int(media.AlbumID), int(mediaURL.MediaID), mediaURL.MediaName)
 	} else {
-		log.Error(nil, "Can not handle media_purpose for video",
+		log.Error(r.Context(), "Can not handle media_purpose for video",
 			"purpose", mediaURL.Purpose,
 			"expected", models.VideoWeb)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -83,35 +84,18 @@ func handleVideoRequest(
 		return
 	}
 
-	// Context-aware processing function that respects client disconnections
-	contextAwareProcessFn := func(db *gorm.DB, media *models.Media) error {
-		// If the client disconnects during processing, this will be detected
-		ctx := r.Context()
-
-		// Create a channel to communicate processing completion
-		done := make(chan error, 1)
-
-		go func() {
-			// Run the actual processing in a goroutine
-			done <- processSingleMediaFn(db, media)
-		}()
-
-		// Wait for either processing to complete or context to be canceled
-		select {
-		case err := <-done:
-			return err
-		case <-ctx.Done():
-			log.Warn(nil, "Client disconnected during video processing",
-				"mediaID", media.ID,
-				"reason", ctx.Err())
-			return ctx.Err()
-		}
-	}
-
 	if _, err := os.Stat(cachedPath); err != nil {
 		if os.IsNotExist(err) {
-			if err := contextAwareProcessFn(db, media); err != nil {
-				log.Error(nil, "processing video not found in cache:",
+			if err := processSingleMediaFn(r.Context(), db, media); err != nil {
+				// Check if error was due to context cancellation
+				if r.Context().Err() != nil {
+					log.Warn(r.Context(), "video processing cancelled due to client disconnect",
+						"mediaID", media.ID,
+						"reason", r.Context().Err())
+					return // Don't send response if client disconnected
+				}
+
+				log.Error(r.Context(), "processing video not found in cache:",
 					"error", err,
 					"media ID", media.ID,
 					"media path", media.Path)
@@ -121,7 +105,7 @@ func handleVideoRequest(
 			}
 
 			if _, err := os.Stat(cachedPath); err != nil {
-				log.Error(nil, "video not found in cache after reprocessing:",
+				log.Error(r.Context(), "video not found in cache after reprocessing:",
 					"error", err,
 					"media ID", media.ID,
 					"media path", media.Path)
@@ -130,7 +114,7 @@ func handleVideoRequest(
 				return
 			}
 		} else {
-			log.Error(nil, "cached video access error:",
+			log.Error(r.Context(), "cached video access error:",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
@@ -33,17 +35,26 @@ func setTestCachePath(tempPath string) func() {
 
 // mockProcessSingleMedia replaces scanner.ProcessSingleMedia with a mock function during tests
 // and returns a function to restore the original implementation
-var originalProcessSingleMedia = processSingleMediaFn
+var originalProcessSingleMedia = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
+	return scanner.ProcessSingleMedia(ctx, db, media)
+}
 
 func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, albumID int) func() {
 	// Save original implementation
 	savedFn := processSingleMediaFn
 
 	// Replace with mock implementation
-	processSingleMediaFn = func(db *gorm.DB, media *models.Media) error {
+	processSingleMediaFn = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
+		// Check if context is already cancelled before starting work
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		if shouldSucceed {
 			// On success: create the expected video file in cache
-			mediaURLs := []models.MediaURL{}
+			var mediaURLs []models.MediaURL
 			if err := db.Where("media_id = ? AND purpose = ?", media.ID, models.VideoWeb).
 				Find(&mediaURLs).Error; err != nil {
 				return err
@@ -62,7 +73,10 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, album
 			}
 
 			videoPath := filepath.Join(mediaDir, mediaURLs[0].MediaName)
-			return os.WriteFile(videoPath, []byte("mocked processed video content"), 0644)
+			if err := os.WriteFile(videoPath, []byte("mocked processed video content"), 0644); err != nil {
+				return fmt.Errorf("failed to write mock video file: %w", err)
+			}
+			return nil
 		}
 
 		// On failure: return an error
@@ -403,6 +417,50 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Validate response
 				assert.Equal(t, http.StatusInternalServerError, rr.Code)
+			},
+		},
+		{
+			name: "Context cancellation during processing",
+			testFunc: func(t *testing.T, db *gorm.DB) {
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "cancellation")
+
+				// Setup cache path for this test
+				restorePath := setTestCachePath(cachePath)
+				t.Cleanup(restorePath)
+
+				// Ensure cache directory exists but file doesn't exist to trigger processing
+				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
+				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
+				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+
+				// Create cancellable context
+				ctx, cancel := context.WithCancel(context.Background())
+
+				// Mock processing that simulates context cancellation
+				savedFn := processSingleMediaFn
+				processSingleMediaFn = func(reqCtx context.Context, db *gorm.DB, media *models.Media) error {
+					cancel()
+					return fmt.Errorf("processing interrupted by cancellation")
+				}
+				t.Cleanup(func() { processSingleMediaFn = savedFn })
+
+				// Create request with cancelled context
+				req := httptest.NewRequest("GET", "/video/"+mediaName, nil)
+				req = req.WithContext(ctx)
+				w := httptest.NewRecorder()
+
+				// Use testing router without auth
+				mockRouter := mux.NewRouter().PathPrefix("/video").Subrouter()
+				registerMockVideoRoutesForTesting(db, mockRouter, cachePath)
+
+				mockRouter.ServeHTTP(w, req)
+
+				// When context is cancelled, processing should be cancelled
+				// 1. Status remains default 200 (no explicit status written)
+				assert.Equal(t, http.StatusOK, w.Code, "Status should remain default when context cancelled")
+
+				// 2. Response body should be empty (no video content served)
+				assert.Empty(t, w.Body.String(), "Response body should be empty when context cancelled")
 			},
 		},
 	}

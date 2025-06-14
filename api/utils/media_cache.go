@@ -39,26 +39,29 @@ func CachePathForMedia(albumID int, mediaID int) (string, error) {
 }
 
 var (
-	testCachePath string = ""
-	cacheMutex    sync.RWMutex
+	testCachePath       string = ""
+	testCachePathLocker sync.RWMutex
 )
 
 func GetTestCachePath() string {
-	cacheMutex.RLock()
-	defer cacheMutex.RUnlock()
+	testCachePathLocker.RLock()
+	defer testCachePathLocker.RUnlock()
 	return testCachePath
 }
 
 func ConfigureTestCache(tmpDir string) {
-	cacheMutex.Lock()
-	defer cacheMutex.Unlock()
+	testCachePathLocker.Lock()
+	defer testCachePathLocker.Unlock()
 	testCachePath = tmpDir
 }
 
 // MediaCachePath returns the path for where the media cache is located on the file system
 func MediaCachePath() string {
-	if testCachePath != "" {
-		return testCachePath
+	testCachePathLocker.RLock()
+	cachedPath := testCachePath
+	testCachePathLocker.RUnlock()
+	if cachedPath != "" {
+		return cachedPath
 	}
 
 	photoCache := EnvMediaCachePath.GetValue()
