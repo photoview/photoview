@@ -1,26 +1,39 @@
 package periodic_scanner
 
 import (
-	"log"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"gorm.io/gorm"
 )
 
+type ScannerQueue interface {
+	AddAllToQueue() error
+}
+
+type RealScannerQueue struct{}
+
+func (r *RealScannerQueue) AddAllToQueue() error {
+	return scanner_queue.AddAllToQueue()
+}
+
 type periodicScanner struct {
 	ticker         *time.Ticker
+	tickerLocker   sync.Mutex
 	ticker_changed chan bool
-	mutex          *sync.Mutex
+	done           chan struct{}
 	db             *gorm.DB
+	scannerQueue   ScannerQueue
 }
 
 var mainPeriodicScanner *periodicScanner = nil
+var mainPeriodicScannerLocker sync.Mutex
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
-
 	var siteInfo models.SiteInfo
 	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
@@ -29,9 +42,12 @@ func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
 	return time.Duration(siteInfo.PeriodicScanInterval) * time.Second, nil
 }
 
-func InitializePeriodicScanner(db *gorm.DB) error {
+func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
+	mainPeriodicScannerLocker.Lock()
+	defer mainPeriodicScannerLocker.Unlock()
+
 	if mainPeriodicScanner != nil {
-		panic("periodic scanner has already been initialized")
+		return fmt.Errorf("periodic scanner has already been initialized")
 	}
 
 	scanInterval, err := getPeriodicScanInterval(db)
@@ -42,51 +58,118 @@ func InitializePeriodicScanner(db *gorm.DB) error {
 	mainPeriodicScanner = &periodicScanner{
 		db:             db,
 		ticker_changed: make(chan bool),
-		mutex:          &sync.Mutex{},
+		done:           make(chan struct{}),
+		tickerLocker:   sync.Mutex{},
+		scannerQueue:   queue,
 	}
 
-	go scanIntervalRunner()
+	go mainPeriodicScanner.scanIntervalRunner()
 
-	ChangePeriodicScanInterval(scanInterval)
+	var newTicker *time.Ticker = nil
+	if scanInterval > 0 {
+		newTicker = time.NewTicker(scanInterval)
+		log.Info(nil, "Periodic scan interval changed: "+scanInterval.String())
+	} else {
+		log.Info(nil, "Periodic scan interval changed: disabled")
+	}
+
+	mainPeriodicScanner.ticker = newTicker
+
+	select {
+	case mainPeriodicScanner.ticker_changed <- true:
+	default:
+		// Channel might be full, but that's okay
+	}
+
 	return nil
+}
+
+func InitializePeriodicScanner(db *gorm.DB) error {
+	return InitializePeriodicScannerWithQueue(db, &RealScannerQueue{})
 }
 
 func ChangePeriodicScanInterval(duration time.Duration) {
 	var newTicker *time.Ticker = nil
 	if duration > 0 {
 		newTicker = time.NewTicker(duration)
-		log.Printf("Periodic scan interval changed: %s", duration.String())
+		log.Info(nil, "Periodic scan interval changed: "+duration.String())
 	} else {
-		log.Print("Periodic scan interval changed: disabled")
+		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
-	{
-		mainPeriodicScanner.mutex.Lock()
-		defer mainPeriodicScanner.mutex.Unlock()
+	mainPeriodicScannerLocker.Lock()
+	scanner := mainPeriodicScanner
+	mainPeriodicScannerLocker.Unlock()
+	if scanner != nil {
+		scanner.tickerLocker.Lock()
+		defer scanner.tickerLocker.Unlock()
 
-		if mainPeriodicScanner.ticker != nil {
-			mainPeriodicScanner.ticker.Stop()
+		if scanner.ticker != nil {
+			scanner.ticker.Stop()
 		}
 
-		mainPeriodicScanner.ticker = newTicker
-		mainPeriodicScanner.ticker_changed <- true
+		scanner.ticker = newTicker
+		select {
+		case scanner.ticker_changed <- true:
+		default:
+			// Channel might be full, but that's okay
+		}
 	}
 }
 
-func scanIntervalRunner() {
-	for {
-		log.Print("Scan interval runner: Waiting for signal")
+// ShutdownPeriodicScanner gracefully shuts down the periodic scanner
+func ShutdownPeriodicScanner() {
+	mainPeriodicScannerLocker.Lock()
+	defer mainPeriodicScannerLocker.Unlock()
+
+	if mainPeriodicScanner != nil {
+		log.Info(nil, "Shutting down periodic scanner")
+
+		// Signal the runner goroutine to stop
+		close(mainPeriodicScanner.done)
+
+		// Stop the ticker if it exists
+		mainPeriodicScanner.tickerLocker.Lock()
 		if mainPeriodicScanner.ticker != nil {
+			mainPeriodicScanner.ticker.Stop()
+			mainPeriodicScanner.ticker = nil
+		}
+		mainPeriodicScanner.tickerLocker.Unlock()
+
+		// Reset the global scanner
+		mainPeriodicScanner = nil
+	}
+}
+
+func (ps *periodicScanner) scanIntervalRunner() {
+	for {
+		log.Info(nil, "Scan interval runner: Waiting for signal")
+
+		ps.tickerLocker.Lock()
+		ticker := ps.ticker
+		ps.tickerLocker.Unlock()
+
+		if ticker != nil {
 			select {
-			case <-mainPeriodicScanner.ticker_changed:
-				log.Print("Scan interval runner: New ticker detected")
-			case <-mainPeriodicScanner.ticker.C:
-				log.Print("Scan interval runner: Starting periodic scan")
-				scanner_queue.AddAllToQueue()
+			case <-ps.done:
+				log.Info(nil, "Scan interval runner: Shutting down")
+				return
+			case <-ps.ticker_changed:
+				log.Info(nil, "Scan interval runner: New ticker detected")
+			case <-ticker.C:
+				log.Info(nil, "Scan interval runner: Starting periodic scan")
+				if err := ps.scannerQueue.AddAllToQueue(); err != nil {
+					log.Error(nil, "Scan interval runner: Failed to add all users to queue", "error", err)
+				}
 			}
 		} else {
-			<-mainPeriodicScanner.ticker_changed
-			log.Print("Scan interval runner: New ticker detected")
+			select {
+			case <-ps.done:
+				log.Info(nil, "Scan interval runner: Shutting down")
+				return
+			case <-ps.ticker_changed:
+				log.Info(nil, "Scan interval runner: New ticker detected")
+			}
 		}
 	}
 }

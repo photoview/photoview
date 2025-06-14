@@ -74,7 +74,6 @@ RUN export $(cat /env) \
   && cp -a include/* /usr/local/include/ \
   && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
   && cp -a lib/* /usr/local/lib/ \
-  && cp -a bin/* /usr/local/bin/ \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb
 
@@ -115,9 +114,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
   && /app/scripts/install_runtime_dependencies.sh \
   # Install self-building libs
   && cd /dependencies \
-  && cp -a lib/* /usr/local/lib/ \
-  && cp -a bin/* /usr/local/bin/ \
-  && cp -a etc/* /usr/local/etc/ \
+  && cp -a lib/*.so* /usr/local/lib/ \
   && ldconfig \
   && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
   && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \

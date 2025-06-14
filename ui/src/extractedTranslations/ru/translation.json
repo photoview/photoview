@@ -64,6 +64,7 @@
     "action_label": {
       "change_label": "",
       "detach_images": "",
+      "merge_face": "",
       "merge_people": "",
       "move_faces": ""
     },
@@ -74,7 +75,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Объединить"
+        "merge": "Объединить",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -85,9 +87,13 @@
         "title": "Отсоединить фото с лицами"
       },
       "merge_face_groups": {
-        "description": "Все фотографии в этой группе лиц будут обьеденены с выбранной группой.",
+        "destination_description": "",
         "destination_table": {
           "title": "Выберете конечное лицо"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Обьединить группы лиц"
       },
@@ -288,6 +294,7 @@
     "media": {
       "album_path": "",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Действие программа",
           "aperture_priority": "Приоритет диафрагмы",

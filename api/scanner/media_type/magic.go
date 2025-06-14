@@ -18,7 +18,7 @@ func init() {
 	libmagic.libmagic, libmagic.err = newLibMagic()
 	if libmagic.err != nil {
 		libmagic.libmagic = nil
-		log.Error("Init libmagic error.", "error", libmagic.err)
+		log.Error(nil, "Init libmagic error.", "error", libmagic.err)
 	}
 }
 
@@ -29,13 +29,13 @@ func GetMediaType(f string) MediaType {
 	defer libmagic.mu.Unlock()
 
 	if libmagic.err != nil {
-		log.Warn("GetMediaType() error.", "error", libmagic.err, "file", f)
+		log.Warn(nil, "GetMediaType() error.", "error", libmagic.err, "file", f)
 		return TypeUnknown
 	}
 
 	mime, err := libmagic.libmagic.Type(f)
 	if err != nil {
-		log.Warn("GetMediaType() error.", "error", err, "file", f)
+		log.Warn(nil, "GetMediaType() error.", "error", err, "file", f)
 		return TypeUnknown
 	}
 

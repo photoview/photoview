@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 : ${TARGETPLATFORM=linux/`dpkg --print-architecture`}
 
