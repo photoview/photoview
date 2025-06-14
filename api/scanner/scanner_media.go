@@ -14,9 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
-	return ProcessSingleMedia(ctx, db, media)
-}
+var ProcessSingleMediaFunc = ProcessSingleMedia
 
 func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)

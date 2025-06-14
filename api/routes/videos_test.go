@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
-	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
@@ -35,9 +34,7 @@ func setTestCachePath(tempPath string) func() {
 
 // mockProcessSingleMedia replaces scanner.ProcessSingleMedia with a mock function during tests
 // and returns a function to restore the original implementation
-var originalProcessSingleMedia = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
-	return scanner.ProcessSingleMedia(ctx, db, media)
-}
+var originalProcessSingleMedia = processSingleMediaFn
 
 func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, albumID int) func() {
 	// Save original implementation
