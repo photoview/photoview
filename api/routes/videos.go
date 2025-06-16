@@ -123,17 +123,14 @@ func handleVideoRequest(
 	http.ServeFile(w, r, cachedPath)
 }
 
+func generateCacheFilename(albumID, mediaID int, filename string) string {
+	return path.Join(utils.MediaCachePath(), strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
+}
+
 func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		mediaName := mux.Vars(r)["name"]
-
-		handleVideoRequest(
-			w, r, db, mediaName,
-			authenticateMedia,
-			func(albumID, mediaID int, filename string) string {
-				return path.Join(utils.MediaCachePath(), strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
-			},
-		)
+		handleVideoRequest(w, r, db, mediaName, authenticateMedia, generateCacheFilename)
 	})
 }
