@@ -7,7 +7,8 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/log"
+
+	// "github.com/photoview/photoview/api/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -21,18 +22,18 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 	if user != nil {
 		var album models.Album
 		if err := db.First(&album, media.AlbumID).Error; err != nil {
-			log.Debug(nil, "Failed to find album for media %d: %v", media.ID, err)
+			// log.Debug(nil, "Failed to find album for media %d: %v", media.ID, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		ownsAlbum, err := user.OwnsAlbum(db, &album)
 		if err != nil {
-			log.Debug(nil, "Failed to check if user owns album %d for media %d: %v", media.AlbumID, media.ID, err)
+			// log.Debug(nil, "Failed to check if user owns album %d for media %d: %v", media.AlbumID, media.ID, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if !ownsAlbum {
-			log.Debug(nil, "User does not own album %d for media %d", media.AlbumID, media.ID)
+			// log.Debug(nil, "User does not own album %d for media %d", media.AlbumID, media.ID)
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {
@@ -50,12 +51,12 @@ func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (succe
 	if user != nil {
 		ownsAlbum, err := user.OwnsAlbum(db, album)
 		if err != nil {
-			log.Debug(nil, "Failed to check if user owns album %d: %v", album.ID, err)
+			// log.Debug(nil, "Failed to check if user owns album %d: %v", album.ID, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if !ownsAlbum {
-			log.Debug(nil, "User does not own album %d", album.ID)
+			// log.Debug(nil, "User does not own album %d", album.ID)
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {
@@ -78,15 +79,15 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 
 	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Debug(nil, "Share token not found: %s", token)
+			// log.Debug(nil, "Share token not found: %s", token)
 			return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 		}
-		log.Debug(nil, "Error fetching share token: %s, error: %v", token, err)
+		// log.Debug(nil, "Error fetching share token: %s, error: %v", token, err)
 		return false, internalServerError, http.StatusInternalServerError, err
 	}
 
 	if shareToken.Expire != nil && time.Now().UTC().After(shareToken.Expire.UTC()) {
-		log.Debug(nil, "Share token expired: %s", token)
+		// log.Debug(nil, "Share token expired: %s", token)
 		return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 	}
 
@@ -94,7 +95,7 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	if shareToken.Password != nil {
 		tokenPasswordCookie, err := r.Cookie(fmt.Sprintf("share-token-pw-%s", shareToken.Value))
 		if err != nil {
-			log.Debug(nil, "Error getting share token password cookie: %v", err)
+			// log.Debug(nil, "Error getting share token password cookie: %v", err)
 			return false, "unauthorized", http.StatusForbidden, errors.Wrap(err, "share token password invalid")
 		}
 		// tokenPassword := r.Header.Get("TokenPassword")
@@ -102,22 +103,22 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 
 		if err := bcrypt.CompareHashAndPassword([]byte(*shareToken.Password), []byte(tokenPassword)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
-				log.Debug(nil, "Incorrect password for share token: %s", token)
+				// log.Debug(nil, "Incorrect password for share token: %s", token)
 				return false, "unauthorized", http.StatusForbidden, errors.New("share token password invalid")
 			} else {
-				log.Debug(nil, "Error comparing share token password: %s, error: %v", token, err)
+				// log.Debug(nil, "Error comparing share token password: %s, error: %v", token, err)
 				return false, internalServerError, http.StatusInternalServerError, err
 			}
 		}
 	}
 
 	if shareToken.AlbumID != nil && albumID == nil {
-		log.Debug(nil, "Share token is of type album, but no albumID was provided to function")
+		// log.Debug(nil, "Share token is of type album, but no albumID was provided to function")
 		return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 	}
 
 	if shareToken.MediaID != nil && mediaID == nil {
-		log.Debug(nil, "Share token is of type media, but no mediaID was provided to function")
+		// log.Debug(nil, "Share token is of type media, but no mediaID was provided to function")
 		return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 	}
 
@@ -135,18 +136,18 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 			`, *shareToken.AlbumID, albumID).Find(&count).Error
 
 		if err != nil {
-			log.Debug(nil, "Error checking child albums for share token: %s, error: %v", token, err)
+			// log.Debug(nil, "Error checking child albums for share token: %s, error: %v", token, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
 		if count == 0 {
-			log.Debug(nil, "No child albums found for share token: %s", token)
+			// log.Debug(nil, "No child albums found for share token: %s", token)
 			return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 		}
 	}
 
 	if shareToken.MediaID != nil && *mediaID != *shareToken.MediaID {
-		log.Debug(nil, "Media share token does not match mediaID: %d != %d", *mediaID, *shareToken.MediaID)
+		// log.Debug(nil, "Media share token does not match mediaID: %d != %d", *mediaID, *shareToken.MediaID)
 		return false, "unauthorized", http.StatusForbidden, errors.New("invalid share token")
 	}
 

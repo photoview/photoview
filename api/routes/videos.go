@@ -6,8 +6,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
-	"unicode"
 
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -42,14 +40,8 @@ func handleVideoRequest(
 	}
 
 	if len(mediaURLs) > 1 {
-		sanitizedMediaName := strings.Map(func(r rune) rune {
-			if unicode.IsPrint(r) {
-				return r
-			}
-			return -1
-		}, mediaName)
 		log.Warn(r.Context(), "Multiple video web URLs found",
-			"name", sanitizedMediaName,
+			"name", mediaName,
 			"count", len(mediaURLs),
 			"using", mediaURLs[0],
 		)
@@ -60,7 +52,7 @@ func handleVideoRequest(
 
 	if success, response, status, err := authenticateFn(media, db, r); !success {
 		if err != nil {
-			log.Warn(r.Context(), "got error authenticating video:",
+			log.Warn(r.Context(), "got error authenticating video",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)
@@ -85,36 +77,36 @@ func handleVideoRequest(
 	}
 
 	if _, err := os.Stat(cachedPath); err != nil {
-		if os.IsNotExist(err) {
-			if err := processSingleMediaFn(r.Context(), db, media); err != nil {
-				// Check if error was due to context cancellation
-				if r.Context().Err() != nil {
-					log.Warn(r.Context(), "video processing cancelled due to client disconnect",
-						"mediaID", media.ID,
-						"reason", r.Context().Err())
-					return // Don't send response if client disconnected
-				}
+		if !os.IsNotExist(err) {
+			log.Error(r.Context(), "cached video access error",
+				"error", err,
+				"media ID", media.ID,
+				"media path", media.Path)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return
+		}
 
-				log.Error(r.Context(), "processing video not found in cache:",
-					"error", err,
-					"media ID", media.ID,
-					"media path", media.Path)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
+		if err := processSingleMediaFn(r.Context(), db, media); err != nil {
+			// Check if error was due to context cancellation
+			if r.Context().Err() != nil {
+				log.Warn(r.Context(), "video processing cancelled due to client disconnect",
+					"mediaID", media.ID,
+					"reason", r.Context().Err())
+				return // Don't send response if client disconnected
 			}
 
-			if _, err := os.Stat(cachedPath); err != nil {
-				log.Error(r.Context(), "video not found in cache after reprocessing:",
-					"error", err,
-					"media ID", media.ID,
-					"media path", media.Path)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-		} else {
-			log.Error(r.Context(), "cached video access error:",
+			log.Error(r.Context(), "processing video not found in cache",
+				"error", err,
+				"media ID", media.ID,
+				"media path", media.Path)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return
+		}
+
+		if _, err := os.Stat(cachedPath); err != nil {
+			log.Error(r.Context(), "video not found in cache after reprocessing",
 				"error", err,
 				"media ID", media.ID,
 				"media path", media.Path)
