@@ -91,7 +91,7 @@ func handleVideoRequest(
 
 		if err := processSingleMediaFn(r.Context(), db, media); err != nil {
 			// Check if error was due to context cancellation
-			if errors.Is(err, context.Canceled) {
+			if r.Context().Err() != nil && errors.Is(r.Context().Err(), context.Canceled) {
 				log.Warn(r.Context(), "video processing cancelled due to client disconnect",
 					"mediaID", media.ID,
 					"reason", r.Context().Err())
