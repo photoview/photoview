@@ -12,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +32,7 @@ func handleVideoRequest(
 	if err := db.Model(&models.MediaURL{}).
 		Preload("Media").
 		Where("media_urls.media_name = ? AND media_urls.purpose = ?", mediaName, models.VideoWeb).
+		Order("created_at DESC").
 		Find(&mediaURLs).
 		Error; err != nil || len(mediaURLs) == 0 || mediaURLs[0].Media == nil {
 
@@ -89,7 +91,7 @@ func handleVideoRequest(
 
 		if err := processSingleMediaFn(r.Context(), db, media); err != nil {
 			// Check if error was due to context cancellation
-			if r.Context().Err() != nil {
+			if errors.Is(err, context.Canceled) {
 				log.Warn(r.Context(), "video processing cancelled due to client disconnect",
 					"mediaID", media.ID,
 					"reason", r.Context().Err())
@@ -117,6 +119,7 @@ func handleVideoRequest(
 	}
 
 	w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
+	w.Header().Set("Content-Type", mediaURL.ContentType)
 	http.ServeFile(w, r, cachedPath)
 }
 
