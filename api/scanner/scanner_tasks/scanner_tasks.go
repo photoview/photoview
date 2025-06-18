@@ -1,9 +1,11 @@
 package scanner_tasks
 
 import (
+	"fmt"
 	"io/fs"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
@@ -74,6 +76,7 @@ func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileI
 		}
 
 		skip, err := task.MediaFound(ctx, fileInfo, mediaPath)
+		log.Info(ctx, "task media found", "task", fmt.Sprintf("%T", task), "media_path", mediaPath, "skip", skip)
 
 		if err != nil {
 			return false, err

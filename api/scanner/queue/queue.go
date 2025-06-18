@@ -247,6 +247,7 @@ func (q *Queue) lenBacklog() int {
 }
 
 func (q *Queue) findAllAlbumsJobs() ([]Job, error) {
+	log.Info(q.ctx, "find all job")
 	var users []*models.User
 	if err := q.db.Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("get all users from database error: %w", err)
@@ -266,6 +267,7 @@ func (q *Queue) findAllAlbumsJobs() ([]Job, error) {
 }
 
 func (q *Queue) findUserAlbumsJobs(user *models.User) ([]Job, error) {
+	log.Info(q.ctx, "find job for user", "user", user.ID)
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(q.db, user, albumCache)
 	if len(album_errors) != 0 {
