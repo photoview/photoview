@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -89,7 +90,7 @@ func TestPhotoRoutes(t *testing.T) {
 
 		// mock scan to fail
 		origScan := scanner.ProcessSingleMediaFunc
-		scanner.ProcessSingleMediaFunc = func(db *gorm.DB, m *models.Media) error {
+		scanner.ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, m *models.Media) error {
 			return fmt.Errorf("scan error")
 		}
 		defer func() { scanner.ProcessSingleMediaFunc = origScan }()

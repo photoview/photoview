@@ -94,6 +94,70 @@ func TestAuthenticateRoute(t *testing.T) {
 			assert.Equal(t, "success", responseMessage)
 			assert.Equal(t, http.StatusAccepted, responseStatus)
 		})
+
+		t.Run("Request with invalid share token", func(t *testing.T) {
+			url := fmt.Sprintf("/photo/image.jpg?token=%s", "invalid-token")
+			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
+			// Even if a cookie is sent, the token is invalid
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", "invalid-token"),
+				Value: "whatever",
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with share token but no password cookie", func(t *testing.T) {
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
+			// No cookie provided
+			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with share token and wrong password", func(t *testing.T) {
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
+				Value: "incorrect-password",
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with expired share token", func(t *testing.T) {
+			expired := time.Now().Add(-time.Hour)
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expired, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
+				Value: tokenPassword,
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
 	})
 
 	t.Run("Authenticate Album", func(t *testing.T) {
@@ -138,13 +202,75 @@ func TestAuthenticateRoute(t *testing.T) {
 			}
 			req.AddCookie(&cookie)
 
-			success, responseMessage, responseStatus, err := authenticateMedia(&media, db, req)
+			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
 
 			assert.NoError(t, err)
 			assert.True(t, success)
 			assert.Equal(t, "success", responseMessage)
 			assert.Equal(t, http.StatusAccepted, responseStatus)
 		})
-	})
 
+		t.Run("Request with invalid album share token", func(t *testing.T) {
+			url := fmt.Sprintf("/download/album/1?token=%s", "invalid-token")
+			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", "invalid-token"),
+				Value: "whatever",
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with album share token but no password cookie", func(t *testing.T) {
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
+			// No cookie provided
+			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with album share token and wrong password", func(t *testing.T) {
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
+				Value: "incorrect-password",
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+
+		t.Run("Request with expired album share token", func(t *testing.T) {
+			expired := time.Now().Add(-time.Hour)
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expired, &tokenPassword)
+			assert.NoError(t, err)
+			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
+			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
+			cookie := http.Cookie{
+				Name:  fmt.Sprintf("share-token-pw-%s", shareToken.Value),
+				Value: tokenPassword,
+			}
+			req.AddCookie(&cookie)
+			success, responseMessage, responseStatus, err := authenticateAlbum(&album, db, req)
+			assert.Error(t, err)
+			assert.False(t, success)
+			assert.Equal(t, "unauthorized", responseMessage)
+			assert.Equal(t, http.StatusForbidden, responseStatus)
+		})
+	})
 }

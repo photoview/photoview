@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -37,16 +38,30 @@ func CachePathForMedia(albumID int, mediaID int) (string, error) {
 	return photoCachePath, nil
 }
 
-var testCachePath string = ""
+var (
+	testCachePath       string = ""
+	testCachePathLocker sync.RWMutex
+)
+
+func GetTestCachePath() string {
+	testCachePathLocker.RLock()
+	defer testCachePathLocker.RUnlock()
+	return testCachePath
+}
 
 func ConfigureTestCache(tmpDir string) {
+	testCachePathLocker.Lock()
+	defer testCachePathLocker.Unlock()
 	testCachePath = tmpDir
 }
 
 // MediaCachePath returns the path for where the media cache is located on the file system
 func MediaCachePath() string {
-	if testCachePath != "" {
-		return testCachePath
+	testCachePathLocker.RLock()
+	cachedPath := testCachePath
+	testCachePathLocker.RUnlock()
+	if cachedPath != "" {
+		return cachedPath
 	}
 
 	photoCache := EnvMediaCachePath.GetValue()
