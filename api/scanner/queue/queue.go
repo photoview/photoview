@@ -26,8 +26,10 @@ type Queue struct {
 	workersMu sync.Mutex
 
 	backlogUpdated chan struct{}
-	backlog        []Job
-	backlogMu      sync.Mutex
+
+	backlog []Job
+	ongoing map[int]Job
+	jobsMu  sync.Mutex
 }
 
 func NewQueue(db *gorm.DB) (*Queue, error) {
@@ -60,6 +62,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 		done:           make(chan struct{}),
 		trigger:        ticker,
 		backlogUpdated: make(chan struct{}, 1),
+		ongoing:        make(map[int]Job),
 	}
 
 	if err := ret.RescaleWorkers(siteInfo.ConcurrentWorkers); err != nil {
@@ -147,7 +150,7 @@ func (q *Queue) RescaleWorkers(newMax int) error {
 	// len(q.workers) < newMax
 	q.workers = slices.Grow(q.workers, newMax-len(q.workers))
 	for len(q.workers) < newMax {
-		worker := newWorker(log.WithAttrs(q.ctx, "worker_id", len(q.workers)), q.db, q.handout, &q.wait)
+		worker := newWorker(log.WithAttrs(q.ctx, "worker_id", len(q.workers)), q.db, q.handout, q.jobDone, &q.wait)
 		q.wait.Add(1)
 		go worker.Run()
 		q.workers = append(q.workers, worker)
@@ -212,12 +215,26 @@ func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 }
 
 func (q *Queue) appendBacklog(jobs []Job) {
-	for _, job := range jobs {
-		log.Info(q.ctx, "insert to queue backlog", "album", job.album.Title)
+	q.jobsMu.Lock()
+	defer q.jobsMu.Unlock()
+
+NEXT_NEW_JOB:
+	for _, newJob := range jobs {
+		for _, existJob := range q.ongoing {
+			if newJob.album.ID == existJob.album.ID {
+				continue NEXT_NEW_JOB
+			}
+		}
+
+		for _, existJob := range q.backlog {
+			if newJob.album.ID == existJob.album.ID {
+				continue NEXT_NEW_JOB
+			}
+		}
+
+		q.backlog = append(q.backlog, newJob)
+		log.Info(q.ctx, "insert to queue backlog", "album", newJob.album.Title)
 	}
-	q.backlogMu.Lock()
-	q.backlog = append(q.backlog, jobs...)
-	q.backlogMu.Unlock()
 
 	select {
 	case q.backlogUpdated <- struct{}{}:
@@ -225,9 +242,16 @@ func (q *Queue) appendBacklog(jobs []Job) {
 	}
 }
 
+func (q *Queue) jobDone(job Job) {
+	q.jobsMu.Lock()
+	defer q.jobsMu.Unlock()
+
+	delete(q.ongoing, job.album.ID)
+}
+
 func (q *Queue) popBacklog() (Job, bool) {
-	q.backlogMu.Lock()
-	defer q.backlogMu.Unlock()
+	q.jobsMu.Lock()
+	defer q.jobsMu.Unlock()
 
 	if len(q.backlog) == 0 {
 		return Job{}, false
@@ -236,12 +260,14 @@ func (q *Queue) popBacklog() (Job, bool) {
 	ret := q.backlog[0]
 	q.backlog = q.backlog[1:]
 
+	q.ongoing[ret.album.ID] = ret
+
 	return ret, true
 }
 
 func (q *Queue) lenBacklog() int {
-	q.backlogMu.Lock()
-	defer q.backlogMu.Unlock()
+	q.jobsMu.Lock()
+	defer q.jobsMu.Unlock()
 
 	return len(q.backlog)
 }

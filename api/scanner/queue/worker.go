@@ -24,15 +24,17 @@ type worker struct {
 	db           *gorm.DB
 	input        <-chan Job
 	done         chan struct{}
+	doneCallback func(Job)
 	parentWaiter *sync.WaitGroup
 }
 
-func newWorker(ctx context.Context, db *gorm.DB, input <-chan Job, parentWaiter *sync.WaitGroup) *worker {
+func newWorker(ctx context.Context, db *gorm.DB, input <-chan Job, callback func(Job), parentWaiter *sync.WaitGroup) *worker {
 	return &worker{
 		ctx:          ctx,
 		db:           db,
 		input:        input,
 		done:         make(chan struct{}),
+		doneCallback: callback,
 		parentWaiter: parentWaiter,
 	}
 }
@@ -61,6 +63,8 @@ MAIN:
 
 func (w *worker) processJob(job Job) {
 	log.Info(w.ctx, "process album", "album", job.album.Title)
+	defer w.doneCallback(job)
+
 	task := scanner_task.NewTaskContext(w.ctx, w.db, job.album, job.cache)
 	if err := scanner.ScanAlbum(task); err != nil {
 		scanner_utils.ScannerError(w.ctx, "Failed to scan album: %v", err)
