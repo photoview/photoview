@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
+	"syscall"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -26,11 +31,10 @@ import (
 )
 
 func main() {
-
 	log.Println("Starting Photoview...")
 
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		log.Println("No .env file found. If Photoview runs in Docker, this is expected and correct.")
 	}
 
 	terminateWorkers := executable_worker.Initialize()
@@ -62,7 +66,6 @@ func main() {
 	}
 
 	rootRouter := mux.NewRouter()
-
 	rootRouter.Use(dataloader.Middleware(db))
 	rootRouter.Use(auth.Middleware(db))
 	rootRouter.Use(server.LoggingMiddleware)
@@ -114,7 +117,38 @@ func main() {
 
 	}
 
-	log.Panic(http.ListenAndServe(apiListenURL.Host, handlers.CompressHandler(rootRouter)))
+	srv := &http.Server{
+		Addr:    apiListenURL.Host,
+		Handler: handlers.CompressHandler(rootRouter),
+	}
+
+	setupGracefulShutdown(srv)
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Panicf("HTTP server failed: %s", err)
+	}
+}
+
+func setupGracefulShutdown(server *http.Server) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		log.Println("Shutting down Photoview...")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute) // Wait for 1m to shutdown
+		defer cancel()
+
+		// Shutdown scanners in correct order
+		periodic_scanner.ShutdownPeriodicScanner()
+		scanner_queue.CloseScannerQueue()
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Printf("Server shutdown error: %s", err)
+		} else {
+			log.Println("Shutdown complete")
+		}
+	}()
 }
 
 func logUIendpointURL() {
