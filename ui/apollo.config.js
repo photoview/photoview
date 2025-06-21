@@ -6,7 +6,7 @@ const schemasFolder = path.join(__dirname, '..', 'api', 'graphql', 'resolvers');
 
 let completeSchema;
 try {
-   completeSchema = readdirSync(schemasFolder)
+  completeSchema = readdirSync(schemasFolder)
     .filter(x => x.endsWith('.graphql'))
     .map(x => {
       const filePath = path.join(schemasFolder, x);

@@ -1,2 +1,3 @@
 # Dependencies
-This is used to build and store 3rd-party dependencies for Photoview products
+
+This directory contains scripts and Dockerfile to build third-party dependencies for Photoview. It is not intended for end-users or runtime execution.

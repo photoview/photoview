@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd /output
-tar czfv /artifacts.tar.gz *
+tar czfv /artifacts.tar.gz ./*
