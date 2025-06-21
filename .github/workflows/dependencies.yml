@@ -59,13 +59,17 @@ jobs:
           set -euo pipefail
           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           # Fetch latest version tags from GitHub releases
-          LIBRAW_VERSION=$(curl -fsSL --retry 3 ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
-          LIBHEIF_VERSION=$(curl -fsSL --retry 3 ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
-          IMAGEMAGICK_VERSION=$(curl -fsSL --retry 3 ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+          IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
-          JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 3 ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+          JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
           # Output as environment variables
           echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT

@@ -23,7 +23,7 @@ MAJOR_VER=$(echo "${VER}" | cut -d. -f1)
 URL="https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/${JELLYFIN_FFMPEG_VERSION}/jellyfin-ffmpeg${MAJOR_VER}_${VER}-bookworm_${DEB_HOST_ARCH}.deb"
 echo download jellyfin-ffmpeg from "$URL"
 mkdir -p /output/deb
-curl -fsSL --retry 3 -o /output/deb/jellyfin-ffmpeg.deb "$URL"
+curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o /output/deb/jellyfin-ffmpeg.deb "$URL"
 
 # After successful download, cache the results
 echo "Caching jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} build results..."

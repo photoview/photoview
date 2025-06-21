@@ -25,7 +25,8 @@ apt-get install -y --no-install-recommends \
 
 URL="https://api.github.com/repos/LibRaw/LibRaw/tarball/${LIBRAW_VERSION}"
 echo download libraw from "$URL"
-curl -fsSL --retry 3 -o ./libraw.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
+curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./libraw.tar.gz \
+  ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
 tar xfv ./libraw.tar.gz
 cd LibRaw-*
