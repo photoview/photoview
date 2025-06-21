@@ -10,7 +10,7 @@ CACHE_MARKER="${CACHE_DIR}/LibRaw-${LIBRAW_VERSION}-complete"
 if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   echo "LibRaw ${LIBRAW_VERSION} found in cache, reusing..."
   mkdir -p /output
-  cp -r "${CACHE_DIR}/output/"* /output/
+  cp -ra "${CACHE_DIR}/output/"* /output/
   exit 0
 fi
 
@@ -25,7 +25,7 @@ apt-get install -y --no-install-recommends \
 
 URL="https://api.github.com/repos/LibRaw/LibRaw/tarball/${LIBRAW_VERSION}"
 echo download libraw from "$URL"
-curl -L -o ./libraw.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
+curl -fsSL --retry 3 -o ./libraw.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
 tar xfv ./libraw.tar.gz
 cd LibRaw-*
@@ -50,7 +50,7 @@ file /usr/local/lib/libraw_r.so*
 # After successful build, cache the results
 echo "Caching LibRaw ${LIBRAW_VERSION} build results..."
 mkdir -p "${CACHE_DIR}/output"
-cp -r /output/* "${CACHE_DIR}/output/"
+cp -ra /output/* "${CACHE_DIR}/output/"
 touch "$CACHE_MARKER"
 
 echo "LibRaw ${LIBRAW_VERSION} build complete and cached"

@@ -24,11 +24,12 @@ COPY ui/package.json ui/package-lock.json /app/ui/
 RUN npm ci
 
 COPY ui/ /app/ui
+# hadolint ignore=SC2155
 RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
     export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
-    export COMMIT_SHA=${GITHUB_SHA:-$(git rev-parse --short HEAD)}; \
+    export COMMIT_SHA=${GITHUB_SHA:-$(git rev-parse --short HEAD || echo 000000)}; \
     export REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA}; \
-    export VERSION="${VERSION:-$(git rev-parse --abbrev-ref HEAD)}-${TARGETARCH}"; \
+    export VERSION="${VERSION:-$(git rev-parse --abbrev-ref HEAD || echo unknown-branch)}-${TARGETARCH}"; \
     export REACT_APP_BUILD_VERSION=${VERSION}; \
     npm run build -- --base="${UI_PUBLIC_URL}"
 

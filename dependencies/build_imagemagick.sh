@@ -10,7 +10,7 @@ CACHE_MARKER="${CACHE_DIR}/ImageMagick-${IMAGEMAGICK_VERSION}-complete"
 if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   echo "ImageMagick ${IMAGEMAGICK_VERSION} found in cache, reusing..."
   mkdir -p /output
-  cp -r "${CACHE_DIR}/output/"* /output/
+  cp -ra "${CACHE_DIR}/output/"* /output/
   exit 0
 fi
 
@@ -37,7 +37,7 @@ apt-get install -y --no-install-recommends \
 
 URL="https://api.github.com/repos/ImageMagick/ImageMagick/tarball/${IMAGEMAGICK_VERSION}"
 echo download ImageMagick from "$URL"
-curl -L -o ./magick.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
+curl -fsSL --retry 3 -o ./magick.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
@@ -54,7 +54,7 @@ make install
 cd ..
 
 mkdir -p /output/bin /output/etc /output/lib /output/include /output/pkgconfig
-cp /usr/local/bin/magick /output/bin/
+cp -a /usr/local/bin/magick /output/bin/
 cp -a /usr/local/etc/ImageMagick-7 /output/etc/
 cp -a /usr/local/lib/ImageMagick-* /output/lib/
 cp -a /usr/local/lib/libMagickCore-* /output/lib/
@@ -68,7 +68,7 @@ file /output/bin/magick
 # After successful build, cache the results
 echo "Caching ImageMagick ${IMAGEMAGICK_VERSION} build results..."
 mkdir -p "${CACHE_DIR}/output"
-cp -r /output/* "${CACHE_DIR}/output/"
+cp -ra /output/* "${CACHE_DIR}/output/"
 touch "$CACHE_MARKER"
 
 echo "ImageMagick ${IMAGEMAGICK_VERSION} build complete and cached"

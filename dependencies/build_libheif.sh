@@ -10,7 +10,7 @@ CACHE_MARKER="${CACHE_DIR}/libheif-${LIBHEIF_VERSION}-complete"
 if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   echo "libheif ${LIBHEIF_VERSION} found in cache, reusing..."
   mkdir -p /output
-  cp -r "${CACHE_DIR}/output/"* /output/
+  cp -ra "${CACHE_DIR}/output/"* /output/
   exit 0
 fi
 
@@ -29,7 +29,7 @@ apt-get install -y --no-install-recommends \
 
 URL="https://api.github.com/repos/strukturag/libheif/tarball/${LIBHEIF_VERSION}"
 echo download libheif from "$URL"
-curl -L -o ./libheif.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
+curl -fsSL --retry 3 -o ./libheif.tar.gz ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
 tar xfv ./libheif.tar.gz
 cd ./*-libheif-*
@@ -56,7 +56,7 @@ file /usr/local/lib/libheif.so*
 # After successful build, cache the results
 echo "Caching libheif ${LIBHEIF_VERSION} build results..."
 mkdir -p "${CACHE_DIR}/output"
-cp -r /output/* "${CACHE_DIR}/output/"
+cp -ra /output/* "${CACHE_DIR}/output/"
 touch "$CACHE_MARKER"
 
 echo "libheif ${LIBHEIF_VERSION} build complete and cached"

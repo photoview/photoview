@@ -45,9 +45,7 @@ ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/download-ffmpeg
 COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLYFIN_FFMPEG_VERSION} \
-    --mount=type=secret,id=github_token \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
-    && export $(cat /env) && ./download_jellyfin-ffmpeg.sh
+    export $(cat /env) && ./download_jellyfin-ffmpeg.sh
 
 FROM base-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
