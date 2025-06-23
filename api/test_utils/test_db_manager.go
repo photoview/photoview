@@ -1,6 +1,8 @@
 package test_utils
 
 import (
+	"fmt"
+
 	"github.com/photoview/photoview/api/database"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -13,19 +15,21 @@ type TestDBManager struct {
 
 func (dbm *TestDBManager) SetupOrReset() error {
 	if dbm.DB == nil {
-		return dbm.setup()
-	} else {
-		return dbm.reset()
+		if err := dbm.setup(); err != nil {
+			return fmt.Errorf("setup db error: %w", err)
+		}
 	}
+
+	if err := dbm.reset(); err != nil {
+		return fmt.Errorf("reset db error: %w", err)
+	}
+
+	return nil
 }
 
 func (dbm *TestDBManager) Close() error {
 	if dbm.DB == nil {
 		return nil
-	}
-
-	if err := dbm.reset(); err != nil {
-		return err
 	}
 
 	sqlDB, err := dbm.DB.DB()
@@ -48,23 +52,18 @@ func (dbm *TestDBManager) setup() error {
 		return errors.Wrap(err, "configure test database")
 	}
 
-	if err := database.MigrateDatabase(db); err != nil {
-		return errors.Wrap(err, "migrate test database")
-	}
-
 	dbm.DB = db
-
-	if err := dbm.reset(); err != nil {
-		return err
-	}
 
 	return nil
 }
 
 func (dbm *TestDBManager) reset() error {
-
 	if err := database.ClearDatabase(dbm.DB); err != nil {
-		return errors.Wrap(err, "reset test database")
+		return fmt.Errorf("clean database error: %w", err)
+	}
+
+	if err := database.MigrateDatabase(dbm.DB); err != nil {
+		return fmt.Errorf("migrate database error: %w", err)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package test_utils
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"path"
 	"runtime"
@@ -31,6 +32,9 @@ func UnitTestRun(m *testing.M) int {
 }
 
 func IntegrationTestRun(m *testing.M) int {
+	fmt.Println("enter integration test run")
+	defer fmt.Println("quit integration test run")
+
 	flag.Parse()
 
 	_, file, _, ok := runtime.Caller(0)
