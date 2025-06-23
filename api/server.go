@@ -139,10 +139,6 @@ func setupGracefulShutdown(server *http.Server) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute) // Wait for 1m to shutdown
 		defer cancel()
 
-		// Shutdown scanners in correct order
-		periodic_scanner.ShutdownPeriodicScanner()
-		scanner_queue.CloseScannerQueue()
-
 		if err := server.Shutdown(ctx); err != nil {
 			log.Printf("Server shutdown error: %s", err)
 		} else {
