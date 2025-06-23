@@ -13,7 +13,7 @@ type TestDBManager struct {
 	DB *gorm.DB
 }
 
-func (dbm *TestDBManager) SetupOrReset() error {
+func (dbm *TestDBManager) SetupAndReset() error {
 	if dbm.DB == nil {
 		if err := dbm.setup(); err != nil {
 			return fmt.Errorf("setup db error: %w", err)
@@ -45,7 +45,7 @@ func (dbm *TestDBManager) Close() error {
 
 func (dbm *TestDBManager) setup() error {
 	config := gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.Default.LogMode(logger.Info),
 	}
 	db, err := database.ConfigureDatabase(&config)
 	if err != nil {

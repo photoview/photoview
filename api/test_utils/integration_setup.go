@@ -60,17 +60,6 @@ func IntegrationTestRun(m *testing.M) int {
 	return result
 }
 
-func FullStack() string {
-	buf := make([]byte, 1024)
-	for {
-		n := runtime.Stack(buf, true)
-		if n < len(buf) {
-			return string(buf[:n])
-		}
-		buf = make([]byte, 2*len(buf))
-	}
-}
-
 func FilesystemTest(t *testing.T) {
 	if !*integration_flags.Filesystem {
 		t.Skip("Filesystem integration tests disabled")
@@ -83,7 +72,7 @@ func DatabaseTest(t *testing.T) *gorm.DB {
 		t.Skip("Database integration tests disabled")
 	}
 
-	if err := test_dbm.SetupOrReset(); err != nil {
+	if err := test_dbm.SetupAndReset(); err != nil {
 		t.Fatalf("failed to setup or reset test database: %v", err)
 	}
 
