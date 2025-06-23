@@ -99,6 +99,7 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 		)
 		SELECT * FROM media
 		WHERE media.album_id IN (SELECT id FROM sub_albums)
+		ORDER BY media.id
 		LIMIT 1
 	`
 
