@@ -26,11 +26,7 @@ func TestCleanupMedia(t *testing.T) {
 		return
 	}
 
-	// testDir := t.TempDir()
-	testDir, err := os.MkdirTemp(os.TempDir(), "cleanup_task_*")
-	if err != nil {
-		t.Fatal("create temp dir error:", err)
-	}
+	testDir := t.TempDir()
 	assert.NoError(t, copy.Copy("../../test_media/library", testDir))
 
 	countAllMedia := func() int {

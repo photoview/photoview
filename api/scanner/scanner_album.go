@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	llog "github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks"
@@ -103,7 +102,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
-			scanner_utils.ScannerError(ctx.Context(), "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
+			scanner_utils.ScannerError(ctx, "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
 		}
 	}
 
@@ -115,8 +114,6 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
-	llog.Info(ctx, "find media for album", "album", ctx.GetAlbum().Title)
-
 	albumMedia := make([]*models.Media, 0)
 
 	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
@@ -126,7 +123,6 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
 	for _, item := range dirContent {
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
-		llog.Info(ctx, "scan media", "media_path", mediaPath)
 
 		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
 		if err != nil {
@@ -163,11 +159,9 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			})
 
 			if err != nil {
-				llog.Error(ctx, "scan media error", "error", err, "album", ctx.GetAlbum().Title, "media_path", mediaPath)
 				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
 			}
-			llog.Info(ctx, "finish scan media", "media_path", mediaPath)
 		}
 
 	}
