@@ -75,7 +75,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 func (q *Queue) Close() {
 	defer func() {
 		q.wait.Wait()
-		log.Info(q.ctx, "backlog remain", "length", q.lenBacklog())
+		log.Info(q.ctx, "jobs remain", "length", q.lenJobs())
 	}()
 
 	log.Info(q.ctx, "closing queue")
@@ -127,6 +127,10 @@ func (q *Queue) RescaleWorkers(newMax int) error {
 
 	q.workersMu.Lock()
 	defer q.workersMu.Unlock()
+
+	defer func() {
+		log.Info(q.ctx, "rescaled worker", "worker_number", len(q.workers))
+	}()
 
 	if len(q.workers) == newMax {
 		return nil
@@ -265,11 +269,11 @@ func (q *Queue) popBacklog() (Job, bool) {
 	return ret, true
 }
 
-func (q *Queue) lenBacklog() int {
+func (q *Queue) lenJobs() int {
 	q.jobsMu.Lock()
 	defer q.jobsMu.Unlock()
 
-	return len(q.backlog)
+	return len(q.backlog) + len(q.ongoing)
 }
 
 func (q *Queue) findAllAlbumsJobs() ([]Job, error) {

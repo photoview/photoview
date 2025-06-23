@@ -2,7 +2,6 @@ package test_utils
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"path"
 	"runtime"
@@ -32,9 +31,6 @@ func UnitTestRun(m *testing.M) int {
 }
 
 func IntegrationTestRun(m *testing.M) int {
-	fmt.Println("enter integration test run")
-	defer fmt.Println("quit integration test run")
-
 	flag.Parse()
 
 	_, file, _, ok := runtime.Caller(0)
@@ -62,6 +58,17 @@ func IntegrationTestRun(m *testing.M) int {
 	test_dbm.Close()
 
 	return result
+}
+
+func FullStack() string {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return string(buf[:n])
+		}
+		buf = make([]byte, 2*len(buf))
+	}
 }
 
 func FilesystemTest(t *testing.T) {
