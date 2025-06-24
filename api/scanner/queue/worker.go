@@ -43,6 +43,7 @@ MAIN:
 	for {
 		select {
 		case job := <-w.input:
+			log.Info(w.ctx, "handout", "job", job)
 			w.callback.processJob(w.ctx, job)
 		case <-w.done:
 			break MAIN

@@ -165,12 +165,27 @@ MAIN:
 		job, ok := q.popBacklog()
 
 		if ok {
+			handed := false
+			done := false
 			select {
 			case q.handout <- job:
+				handed = true
 			case <-q.backlogUpdated:
 			case <-q.trigger.C:
 				q.callback.periodicTrigger(q.ctx)
 			case <-q.done:
+				done = true
+			}
+
+			if !handed {
+				// Interrupted by other signal, put the job back.
+				// Should not use `appendBacklog()` to avoid signal of `backlogUpdated`.
+				q.jobsMu.Lock()
+				q.backlog = append(q.backlog, job)
+				q.jobsMu.Unlock()
+			}
+
+			if done {
 				break MAIN
 			}
 
@@ -245,8 +260,10 @@ func (q *commonQueue[Job]) lenJobs() int {
 }
 
 func (q *commonQueue[Job]) processJob(ctx context.Context, job Job) {
+	log.Info(ctx, "job is running", "job", job)
 	q.callback.processJob(ctx, job)
 	q.jobDone(job)
+	log.Info(ctx, "job is done", "job", job)
 }
 
 func (q *commonQueue[Job]) finish(ctx context.Context) {
