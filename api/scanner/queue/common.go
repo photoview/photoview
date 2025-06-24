@@ -73,7 +73,9 @@ func (q *commonQueue[Job]) Close() {
 	log.Info(q.ctx, "closing queue")
 	q.trigger.Stop()
 	close(q.done)
-	q.RescaleWorkers(0)
+	if err := q.RescaleWorkers(0); err != nil {
+		log.Error(q.ctx, "closing all workers error", "error", err)
+	}
 }
 
 func (q *commonQueue[Job]) RunBackground() {
