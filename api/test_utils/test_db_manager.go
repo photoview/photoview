@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/photoview/photoview/api/database"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -34,7 +33,7 @@ func (dbm *TestDBManager) Close() error {
 
 	sqlDB, err := dbm.DB.DB()
 	if err != nil {
-		return errors.Wrap(err, "get db instance when closing test database")
+		return fmt.Errorf("get db instance when closing test database error: %w", err)
 	}
 
 	sqlDB.Close()
@@ -49,7 +48,7 @@ func (dbm *TestDBManager) setup() error {
 	}
 	db, err := database.ConfigureDatabase(&config)
 	if err != nil {
-		return errors.Wrap(err, "configure test database")
+		return fmt.Errorf("configure test database error: %w", err)
 	}
 
 	dbm.DB = db
