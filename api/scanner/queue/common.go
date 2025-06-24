@@ -181,6 +181,7 @@ MAIN:
 				// Interrupted by other signal, put the job back.
 				// Should not use `appendBacklog()` to avoid signal of `backlogUpdated`.
 				q.jobsMu.Lock()
+				delete(q.ongoing, job.Key())
 				q.backlog = append(q.backlog, job)
 				q.jobsMu.Unlock()
 			}
