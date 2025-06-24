@@ -263,10 +263,17 @@ func (q *commonQueue[Job]) lenJobs() int {
 }
 
 func (q *commonQueue[Job]) processJob(ctx context.Context, job Job) {
+	defer func() {
+		log.Info(ctx, "job is done", "job", job)
+
+		if r := recover(); r != nil {
+			log.Error(ctx, "panic when process job", "job", job, "panic", r)
+		}
+	}()
+
 	log.Info(ctx, "job is running", "job", job)
 	q.callback.processJob(ctx, job)
 	q.jobDone(job)
-	log.Info(ctx, "job is done", "job", job)
 }
 
 func (q *commonQueue[Job]) finish(ctx context.Context) {
