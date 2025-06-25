@@ -95,6 +95,7 @@ func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 		select {
 		case q.handout <- job:
 		case <-ctx.Done():
+			q.pushBacklog(job)
 			return
 		}
 	}
@@ -182,10 +183,7 @@ MAIN:
 			if !handed {
 				// Interrupted by other signal, put the job back.
 				// Should not use `appendBacklog()` to avoid signal of `backlogUpdated`.
-				q.jobsMu.Lock()
-				delete(q.ongoing, job.Key())
-				q.backlog = append(q.backlog, job)
-				q.jobsMu.Unlock()
+				q.pushBacklog(job)
 			}
 
 			if done {
@@ -253,6 +251,14 @@ func (q *commonQueue[Job]) popBacklog() (Job, bool) {
 	q.ongoing[ret.Key()] = ret
 
 	return ret, true
+}
+
+func (q *commonQueue[Job]) pushBacklog(job Job) {
+	q.jobsMu.Lock()
+	defer q.jobsMu.Unlock()
+
+	delete(q.ongoing, job.Key())
+	q.backlog = append(q.backlog, job)
 }
 
 func (q *commonQueue[Job]) lenJobs() int {
