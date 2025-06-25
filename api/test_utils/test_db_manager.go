@@ -1,8 +1,9 @@
 package test_utils
 
 import (
+	"fmt"
+
 	"github.com/photoview/photoview/api/database"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -11,12 +12,14 @@ type TestDBManager struct {
 	DB *gorm.DB
 }
 
-func (dbm *TestDBManager) SetupOrReset() error {
+func (dbm *TestDBManager) SetupAndReset() error {
 	if dbm.DB == nil {
-		return dbm.setup()
-	} else {
-		return dbm.reset()
+		if err := dbm.setup(); err != nil {
+			return fmt.Errorf("setup db error: %w", err)
+		}
 	}
+
+	return dbm.reset()
 }
 
 func (dbm *TestDBManager) Close() error {
@@ -24,13 +27,9 @@ func (dbm *TestDBManager) Close() error {
 		return nil
 	}
 
-	if err := dbm.reset(); err != nil {
-		return err
-	}
-
 	sqlDB, err := dbm.DB.DB()
 	if err != nil {
-		return errors.Wrap(err, "get db instance when closing test database")
+		return fmt.Errorf("get db instance when closing test database error: %w", err)
 	}
 
 	sqlDB.Close()
@@ -45,26 +44,21 @@ func (dbm *TestDBManager) setup() error {
 	}
 	db, err := database.ConfigureDatabase(&config)
 	if err != nil {
-		return errors.Wrap(err, "configure test database")
-	}
-
-	if err := database.MigrateDatabase(db); err != nil {
-		return errors.Wrap(err, "migrate test database")
+		return fmt.Errorf("configure test database error: %w", err)
 	}
 
 	dbm.DB = db
-
-	if err := dbm.reset(); err != nil {
-		return err
-	}
 
 	return nil
 }
 
 func (dbm *TestDBManager) reset() error {
-
 	if err := database.ClearDatabase(dbm.DB); err != nil {
-		return errors.Wrap(err, "reset test database")
+		return fmt.Errorf("clean database error: %w", err)
+	}
+
+	if err := database.MigrateDatabase(dbm.DB); err != nil {
+		return fmt.Errorf("migrate database error: %w", err)
 	}
 
 	return nil
