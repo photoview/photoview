@@ -39,6 +39,10 @@ type commonQueue[Job commonJob] struct {
 }
 
 func newCommonQueue[Job commonJob](ctx context.Context, interval time.Duration, workerNum int, callback queueCallback[Job]) (*commonQueue[Job], error) {
+	if interval < 0 {
+		return nil, fmt.Errorf("interval should be >= 0")
+	}
+
 	var ticker *time.Ticker
 	if interval == 0 {
 		ticker = time.NewTicker(time.Second) // The interval is not matter since the ticker is stopped.
