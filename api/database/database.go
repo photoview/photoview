@@ -204,10 +204,15 @@ func MigrateDatabase(db *gorm.DB) error {
 }
 
 func ClearDatabase(db *gorm.DB) error {
+	var errors Errors
 	for _, model := range database_models {
 		if err := db.Migrator().DropTable(model); err != nil {
-			return fmt.Errorf("drop table %T error: %w", model, err)
+			errors.Append(err)
 		}
+	}
+
+	if !errors.IsNil() {
+		return fmt.Errorf("drop tables error: %w", errors)
 	}
 
 	return nil
