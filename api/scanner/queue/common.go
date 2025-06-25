@@ -107,7 +107,7 @@ func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 
 func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-		return fmt.Errorf("invalid periodic scan interval(%v): must >=0", newInterval)
+		return fmt.Errorf("invalid periodic scan interval(%d): must >=0", newInterval)
 	}
 
 	if newInterval == 0 {
