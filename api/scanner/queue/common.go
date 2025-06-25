@@ -45,7 +45,7 @@ func newCommonQueue[Job commonJob](ctx context.Context, interval time.Duration, 
 
 	var ticker *time.Ticker
 	if interval == 0 {
-		ticker = time.NewTicker(time.Second) // The interval is not matter since the ticker is stopped.
+		ticker = time.NewTicker(time.Second) // The interval does not matter since the ticker is stopped.
 		ticker.Stop()
 	} else {
 		ticker = time.NewTicker(interval)
