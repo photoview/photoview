@@ -262,7 +262,7 @@ func (q *commonQueue[Job]) pushBacklog(job Job) {
 	defer q.jobsMu.Unlock()
 
 	delete(q.ongoing, job.Key())
-	q.backlog = append(q.backlog, job)
+	q.backlog = append([]Job{job}, q.backlog...)
 }
 
 func (q *commonQueue[Job]) lenJobs() int {
