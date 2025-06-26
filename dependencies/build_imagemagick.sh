@@ -1,6 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+# Fallback to the latest version if IMAGEMAGICK_VERSION is not set
+if [ -z "$IMAGEMAGICK_VERSION" ]; then
+  echo "WARN: ImageMagick version is empty, most likely the script runs not on CI."
+  echo "Fetching the latest version from ImageMagick repo..."
+  IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+    "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
+fi
+
 : "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/ImageMagick-${IMAGEMAGICK_VERSION}"
@@ -12,14 +20,6 @@ if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   mkdir -p /output
   cp -ra "${CACHE_DIR}/output/"* /output/
   exit 0
-fi
-
-# Fallback to the latest version if IMAGEMAGICK_VERSION is not set
-if [ -z "$IMAGEMAGICK_VERSION" ]; then
-  echo "WARN: ImageMagick version is empty, most likely the script runs not on CI."
-  echo "Fetching the latest version from ImageMagick repo..."
-  IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-    "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
 fi
 
 echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
