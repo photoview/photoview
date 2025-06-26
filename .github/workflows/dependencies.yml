@@ -11,7 +11,7 @@ on:
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
-  IS_CACHING: ${{ github.event_name == 'pull_request' }}
+  IS_CACHING: true
   DOCKER_USERNAME: viktorstrate
   DOCKER_IMAGE: photoview/dependencies
   PLATFORMS: linux/amd64,linux/arm64
@@ -51,6 +51,32 @@ jobs:
             type=raw,value=latest
             type=sha
 
+      - name: Detect dependency versions
+        id: versions
+        working-directory: dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          # Fetch latest version tags from GitHub releases
+          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
+          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
+          IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
+          JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
+          # Output as environment variables
+          echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -61,8 +87,15 @@ jobs:
           tags:        ${{ steps.docker_meta.outputs.tags }}
           labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from:  ${{ ( env.IS_CACHING == 'true' && 'type=gha' ) || '' }}
-          cache-to:    ${{ ( env.IS_CACHING == 'true' && 'type=gha,mode=max' ) || '' }}
-          no-cache:    ${{ env.IS_CACHING != 'true' }}
           sbom:        true
           provenance:  mode=max
+          no-cache:    ${{ env.IS_CACHING != 'true' }}
+          cache-from:  type=gha,scope=dependencies
+          cache-to:    type=gha,mode=max,scope=dependencies
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
+            LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
+            IMAGEMAGICK_VERSION=${{ steps.versions.outputs.IMAGEMAGICK_VERSION }}
+            JELLYFIN_FFMPEG_VERSION=${{ steps.versions.outputs.JELLYFIN_FFMPEG_VERSION }}
