@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Fallback to the latest version if LIBHEIF_VERSION is not set
-if [ -z "$LIBHEIF_VERSION" ]; then
+if [[ -z "$LIBHEIF_VERSION" ]]; then
   echo "WARN: libheif version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from libheif repo..."
   LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \

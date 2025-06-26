@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Fallback to the latest version if IMAGEMAGICK_VERSION is not set
-if [ -z "$IMAGEMAGICK_VERSION" ]; then
+if [[ -z "$IMAGEMAGICK_VERSION" ]]; then
   echo "WARN: ImageMagick version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from ImageMagick repo..."
   IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
