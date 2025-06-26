@@ -14,6 +14,14 @@ if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   exit 0
 fi
 
+# Fallback to the latest version if LIBRAW_VERSION is not set
+if [ -z "$LIBRAW_VERSION" ]; then
+  echo "WARN: LibRaw version is empty, most likely the script runs not on CI."
+  echo "Fetching the latest version from LibRaw repo..."
+  LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+    "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
+fi
+
 echo "Building LibRaw ${LIBRAW_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
