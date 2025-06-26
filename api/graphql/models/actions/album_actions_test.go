@@ -163,8 +163,8 @@ func TestAlbumCover(t *testing.T) {
 			albumThumb, err := album.Thumbnail(db)
 			assert.NoError(t, err)
 
-			// Should return pic1 since no coverID has been set
-			assert.EqualValues(t, "pic1", albumThumb.Title)
+			// Should return the latest photo since no coverID has been set
+			assert.EqualValues(t, "pic6", albumThumb.Title)
 		}
 
 		{
@@ -186,7 +186,7 @@ func TestAlbumCover(t *testing.T) {
 		resetThumb, err := resetAlbum.Thumbnail(db)
 		assert.NoError(t, err)
 
-		assert.Equal(t, "pic3", resetThumb.Title)
+		assert.Equal(t, "pic4", resetThumb.Title)
 	})
 
 	t.Run("Album change cover photos", func(t *testing.T) {
