@@ -72,7 +72,7 @@ func DatabaseTest(t *testing.T) *gorm.DB {
 		t.Skip("Database integration tests disabled")
 	}
 
-	if err := test_dbm.SetupOrReset(); err != nil {
+	if err := test_dbm.SetupAndReset(); err != nil {
 		t.Fatalf("failed to setup or reset test database: %v", err)
 	}
 

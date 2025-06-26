@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -204,50 +205,16 @@ func MigrateDatabase(db *gorm.DB) error {
 }
 
 func ClearDatabase(db *gorm.DB) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-
-		dbDriver := drivers.DatabaseDriverFromEnv()
-
-		if dbDriver == drivers.MYSQL {
-			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0;").Error; err != nil {
-				return err
-			}
-		}
-
-		if err := clearTables(tx, dbDriver); err != nil {
-			return err
-		}
-
-		if dbDriver == drivers.MYSQL {
-			if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1;").Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-}
-
-func clearTables(tx *gorm.DB, dbDriver drivers.DatabaseDriverType) error {
-	dryRun := tx.Session(&gorm.Session{DryRun: true})
+	var errs []error
 	for _, model := range database_models {
-		// get table name of model structure
-		table := dryRun.Find(model).Statement.Table
-
-		switch dbDriver {
-		case drivers.POSTGRES:
-			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-				return err
-			}
-		case drivers.MYSQL:
-			if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)).Error; err != nil {
-				return err
-			}
-		case drivers.SQLITE:
-			if err := tx.Exec(fmt.Sprintf("DELETE FROM %s", table)).Error; err != nil {
-				return err
-			}
+		if err := db.Migrator().DropTable(model); err != nil {
+			errs = append(errs, err)
 		}
 	}
+
+	if err := errors.Join(errs...); err != nil {
+		return fmt.Errorf("drop tables error: %w", err)
+	}
+
 	return nil
 }
