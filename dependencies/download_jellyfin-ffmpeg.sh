@@ -7,7 +7,7 @@ set -euo pipefail
 echo Compiler: ${DEB_HOST_MULTIARCH} Arch: ${DEB_HOST_ARCH}
 
 URL=$(curl -s https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest \
-  | grep '"browser_download_url".*bookworm_${DEB_HOST_ARCH}' \
+  | grep \"browser_download_url\".\*bookworm_${DEB_HOST_ARCH} \
   | cut -d : -f 2,3 \
   | tr -d ' ,"')
 echo download jellyfin-ffmpeg from $URL
