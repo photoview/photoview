@@ -1,13 +1,14 @@
 #!/bin/bash
-set -euo pipefail
 
 # Fallback to the latest version if LIBRAW_VERSION is not set
-if [[ -z "$LIBRAW_VERSION" ]]; then
+if [[ -z "${LIBRAW_VERSION}" ]]; then
   echo "WARN: LibRaw version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from LibRaw repo..."
   LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
     "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
 fi
+
+set -euo pipefail
 
 : "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"

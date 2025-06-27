@@ -13,7 +13,9 @@ WORKDIR /tmp/build-libraw
 COPY --chmod=0755 build_libraw.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRAW_VERSION} \
     --mount=type=secret,id=github_token \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
     && export $(cat /env) && ./build_libraw.sh
 
 FROM base-prep AS build-libheif
@@ -24,7 +26,9 @@ WORKDIR /tmp/build-libheif
 COPY --chmod=0755 build_libheif.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBHEIF_VERSION} \
     --mount=type=secret,id=github_token \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
     && export $(cat /env) && ./build_libheif.sh
 
 FROM base-prep AS build-imagemagick
@@ -35,7 +39,9 @@ WORKDIR /tmp/build-imagemagick
 COPY --chmod=0755 build_imagemagick.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${IMAGEMAGICK_VERSION} \
     --mount=type=secret,id=github_token \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
     && export $(cat /env) && ./build_imagemagick.sh
 
 FROM base-prep AS download-jellyfin-ffmpeg

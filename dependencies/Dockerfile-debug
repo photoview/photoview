@@ -1,0 +1,2 @@
+FROM debian:bookworm-slim
+COPY --from=dependencies:self /artifacts.tar.gz /
