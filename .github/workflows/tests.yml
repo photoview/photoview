@@ -56,13 +56,13 @@ jobs:
     - name: Build test image
       uses: docker/build-push-action@v6
       with:
-        pull:       true
-        push:       false
-        load:       true
-        target:     api
-        tags:       photoview/api
-        cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
-        cache-to:   type=gha,mode=max,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
+        pull: true
+        push: false
+        load: true
+        target: api
+        tags: photoview/api
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Test
       id: test
@@ -107,13 +107,13 @@ jobs:
     - name: Build test image
       uses: docker/build-push-action@v6
       with:
-        pull:       true
-        push:       false
-        load:       true
-        target:     ui
-        tags:       photoview/ui
-        cache-from: type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-        cache-to:   type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
+        pull: true
+        push: false
+        load: true
+        target: ui
+        tags: photoview/ui
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         build-args: |
           NODE_ENV=testing
 

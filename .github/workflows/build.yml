@@ -129,15 +129,12 @@ jobs:
           tags:        ${{ steps.docker_meta.outputs.tags }}
           labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          cache-from: |
-            type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-            type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
-          cache-to: |
-            type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-            type=gha,mode=max,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
+          cache-from:  type=gha
+          cache-to:    type=gha,mode=max
           build-args: |
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
+            COMMIT_SHA=${{ github.sha }}
 
   dockle:
     name: Dockle Container Analysis
