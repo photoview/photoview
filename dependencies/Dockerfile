@@ -61,6 +61,5 @@ COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh
 
-FROM scratch AS release
+FROM debian:bookworm-slim AS release
 COPY --from=final-assembly /artifacts.tar.gz /
-USER nobody
