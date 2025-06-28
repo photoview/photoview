@@ -27,6 +27,8 @@ echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
+echo "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}"
+mkdir -p /usr/local/bin /usr/local/include /usr/local/lib/pkgconfig /usr/local/lib
 cp -a /libs/bin/* /usr/local/bin/
 cp -a /libs/include/* /usr/local/include/
 cp -a /libs/pkgconfig/* /usr/local/lib/pkgconfig/
