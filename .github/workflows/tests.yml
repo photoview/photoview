@@ -61,8 +61,7 @@ jobs:
         load:       true
         target:     api
         tags:       photoview/api
-        cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
-        cache-to:   type=gha,mode=max,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
+        cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
 
     - name: Test
       id: test
@@ -113,7 +112,6 @@ jobs:
         target:     ui
         tags:       photoview/ui
         cache-from: type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-        cache-to:   type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
         build-args: |
           NODE_ENV=testing
 
