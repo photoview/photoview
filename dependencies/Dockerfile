@@ -36,6 +36,8 @@ ARG IMAGEMAGICK_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-imagemagick
+COPY --from=build-libraw /output/ /libs/
+COPY --from=build-libheif /output/ /libs/
 COPY --chmod=0755 build_imagemagick.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${IMAGEMAGICK_VERSION} \
     --mount=type=secret,id=github_token \

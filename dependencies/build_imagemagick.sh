@@ -27,6 +27,12 @@ echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
+cp -a /libs/bin/* /usr/local/bin/
+cp -a /libs/include/* /usr/local/include/
+cp -a /libs/pkgconfig/* /usr/local/lib/pkgconfig/
+cp -a /libs/lib/* /usr/local/lib/
+ldconfig
+
 apt-get install -y --no-install-recommends \
   libjxl-dev:"${DEB_HOST_ARCH}" \
   liblcms2-dev:"${DEB_HOST_ARCH}" \
