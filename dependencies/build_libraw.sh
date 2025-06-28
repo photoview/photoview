@@ -27,7 +27,7 @@ echo "Building LibRaw ${LIBRAW_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
-apt-get install -y --no-install-recommends \
+apt-get install -y \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
   liblcms2-dev:"${DEB_HOST_ARCH}" \
   zlib1g-dev:"${DEB_HOST_ARCH}"

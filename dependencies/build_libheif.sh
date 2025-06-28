@@ -27,7 +27,7 @@ echo "Building libheif ${LIBHEIF_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
-apt-get install -y --no-install-recommends \
+apt-get install -y \
   libdav1d-dev:"${DEB_HOST_ARCH}" \
   libde265-dev:"${DEB_HOST_ARCH}" \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \

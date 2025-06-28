@@ -27,15 +27,7 @@ echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
-echo "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}"
-mkdir -p /usr/local/bin /usr/local/include /usr/local/lib/pkgconfig /usr/local/lib
-cp -a /libs/bin/* /usr/local/bin/
-cp -a /libs/include/* /usr/local/include/
-cp -a /libs/pkgconfig/* /usr/local/lib/pkgconfig/
-cp -a /libs/lib/* /usr/local/lib/
-ldconfig
-
-apt-get install -y --no-install-recommends \
+apt-get install -y \
   libjxl-dev:"${DEB_HOST_ARCH}" \
   liblcms2-dev:"${DEB_HOST_ARCH}" \
   liblqr-1-0-dev:"${DEB_HOST_ARCH}" \

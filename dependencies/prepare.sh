@@ -13,7 +13,7 @@ fi
 
 dpkg --add-architecture "$DEBIAN_ARCH"
 apt-get update
-apt-get install -y --no-install-recommends \
+apt-get install -y \
   curl \
   jq \
   ca-certificates \

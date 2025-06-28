@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRA
     fi \
     && export $(cat /env) && ./build_libraw.sh
 
-FROM base-prep AS build-libheif
+FROM build-libraw AS build-libheif
 ARG LIBHEIF_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
@@ -31,13 +31,11 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBH
     fi \
     && export $(cat /env) && ./build_libheif.sh
 
-FROM base-prep AS build-imagemagick
+FROM build-libheif AS build-imagemagick
 ARG IMAGEMAGICK_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-imagemagick
-COPY --from=build-libraw /output/ /libs/
-COPY --from=build-libheif /output/ /libs/
 COPY --chmod=0755 build_imagemagick.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${IMAGEMAGICK_VERSION} \
     --mount=type=secret,id=github_token \
