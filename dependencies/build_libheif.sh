@@ -1,13 +1,14 @@
 #!/bin/bash
-set -euo pipefail
 
 # Fallback to the latest version if LIBHEIF_VERSION is not set
-if [[ -z "$LIBHEIF_VERSION" ]]; then
+if [[ -z "${LIBHEIF_VERSION}" ]]; then
   echo "WARN: libheif version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from libheif repo..."
   LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
     "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
 fi
+
+set -euo pipefail
 
 : "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
@@ -26,7 +27,7 @@ echo "Building libheif ${LIBHEIF_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
 
-apt-get install -y --no-install-recommends \
+apt-get install -y \
   libdav1d-dev:"${DEB_HOST_ARCH}" \
   libde265-dev:"${DEB_HOST_ARCH}" \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
