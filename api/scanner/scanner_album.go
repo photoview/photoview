@@ -114,7 +114,6 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
-
 	albumMedia := make([]*models.Media, 0)
 
 	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)

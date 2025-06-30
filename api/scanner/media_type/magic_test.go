@@ -2,6 +2,7 @@ package media_type
 
 import (
 	"errors"
+	"flag"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -9,6 +10,11 @@ import (
 	magic "github.com/hosom/gomagic"
 	"github.com/photoview/photoview/api/test_utils"
 )
+
+func init() {
+	// Avoid panic with providing flags in `test_utils/integration_setup.go`.
+	flag.CommandLine.Init("media_type", flag.ContinueOnError)
+}
 
 func TestMagic(t *testing.T) {
 	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
