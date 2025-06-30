@@ -13,7 +13,7 @@ import (
 func ScannerError(ctx context.Context, format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 
-	log.Error(ctx, "ERROR: %s", message)
+	log.Error(ctx, message)
 	notification.BroadcastNotification(&models.Notification{
 		Key:      utils.GenerateToken(),
 		Type:     models.NotificationTypeMessage,
