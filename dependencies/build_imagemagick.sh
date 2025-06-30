@@ -49,16 +49,24 @@ echo download ImageMagick from "$URL"
 curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./magick.tar.gz \
   ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
+FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
+
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
-  --with-heic --with-jpeg --with-png \
-  --with-raw --with-tiff --with-webp \
   --without-x --without-magick-plus-plus \
   --without-perl --disable-doc \
-  --host="${DEB_HOST_MULTIARCH}"
+  --host="${DEB_HOST_MULTIARCH}" \
+  ${FEATURES}
+
+# Ensure that features are enabled
+for feature in ${FEATURES}
+do
+  grep -- ${feature}'.*yes$' config.log || (echo "Can't enable feature ${feature}"; false)
+done
+
 make
 make install
 cd ..
