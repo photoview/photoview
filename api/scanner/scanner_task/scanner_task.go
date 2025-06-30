@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -87,4 +88,8 @@ func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
 	}
 
 	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.Context))
+}
+
+func (c TaskContext) Deadline() (time.Time, bool) {
+	return c.ctx.Deadline()
 }
