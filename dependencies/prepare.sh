@@ -27,7 +27,9 @@ apt-get install -y \
   cmake
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
-echo "PKG_CONFIG_PATH=/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig" >>/env
+set -a
+. /env # Set right DEB_TARGET_GNU_TYPE
+echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/${DEB_TARGET_GNU_TYPE}/pkgconfig" >>/env
 # shellcheck disable=SC2046
 export $(cat /env)
 cat /env
