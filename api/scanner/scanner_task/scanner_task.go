@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"io/fs"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -99,4 +100,8 @@ func (c TaskContext) Done() <-chan struct{} {
 
 func (c TaskContext) Err() error {
 	return c.ctx.Err()
+}
+
+func (c TaskContext) Deadline() (time.Time, bool) {
+	return c.ctx.Deadline()
 }

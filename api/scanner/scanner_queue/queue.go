@@ -36,7 +36,7 @@ func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
 func (job *ScannerJob) Run(db *gorm.DB) {
 	err := scanner.ScanAlbum(job.ctx)
 	if err != nil {
-		scanner_utils.ScannerError("Failed to scan album: %v", err)
+		scanner_utils.ScannerError(nil, "Failed to scan album: %v", err)
 	}
 }
 
@@ -181,7 +181,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		})
 
 		if err := scanner.GenerateBlurhashes(queue.db); err != nil {
-			scanner_utils.ScannerError("Failed to generate blurhashes: %v", err)
+			scanner_utils.ScannerError(nil, "Failed to generate blurhashes: %v", err)
 		}
 
 		notification.BroadcastNotification(&models.Notification{

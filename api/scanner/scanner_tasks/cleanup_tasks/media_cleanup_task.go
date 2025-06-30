@@ -15,7 +15,7 @@ func (t MediaCleanupTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMe
 
 	cleanupErrors := CleanupMedia(ctx.GetDB(), ctx.GetAlbum().ID, albumMedia)
 	for _, err := range cleanupErrors {
-		scanner_utils.ScannerError("delete old media: %s", err)
+		scanner_utils.ScannerError(ctx, "delete old media: %s", err)
 	}
 
 	return nil
