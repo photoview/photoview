@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"flag"
 	"io/fs"
-	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
@@ -37,11 +36,11 @@ type ScannerTask interface {
 }
 
 type TaskContext struct {
-	ctx context.Context
+	context.Context
 }
 
 func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
-	ctx := TaskContext{ctx: parent}
+	ctx := TaskContext{Context: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
 	ctx = ctx.WithDB(db)
@@ -58,15 +57,15 @@ const (
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
-	return c.ctx.Value(taskCtxKeyAlbum).(*models.Album)
+	return c.Context.Value(taskCtxKeyAlbum).(*models.Album)
 }
 
 func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {
-	return c.ctx.Value(taskCtxKeyAlbumCache).(*scanner_cache.AlbumScannerCache)
+	return c.Context.Value(taskCtxKeyAlbumCache).(*scanner_cache.AlbumScannerCache)
 }
 
 func (c TaskContext) GetDB() *gorm.DB {
-	return c.ctx.Value(taskCtxKeyDatabase).(*gorm.DB)
+	return c.Context.Value(taskCtxKeyDatabase).(*gorm.DB)
 }
 
 func (c TaskContext) DatabaseTransaction(transFunc func(ctx TaskContext) error, opts ...*sql.TxOptions) error {
@@ -77,12 +76,8 @@ func (c TaskContext) DatabaseTransaction(transFunc func(ctx TaskContext) error, 
 
 func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 	return TaskContext{
-		ctx: context.WithValue(c.ctx, key, val),
+		Context: context.WithValue(c.Context, key, val),
 	}
-}
-
-func (c TaskContext) Value(key interface{}) interface{} {
-	return c.ctx.Value(key)
 }
 
 func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
@@ -91,17 +86,5 @@ func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
 		return c
 	}
 
-	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.ctx))
-}
-
-func (c TaskContext) Done() <-chan struct{} {
-	return c.ctx.Done()
-}
-
-func (c TaskContext) Err() error {
-	return c.ctx.Err()
-}
-
-func (c TaskContext) Deadline() (time.Time, bool) {
-	return c.ctx.Deadline()
+	return c.WithValue(taskCtxKeyDatabase, db.WithContext(c.Context))
 }
