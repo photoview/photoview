@@ -1,6 +1,6 @@
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS base-prep
 ARG TARGETPLATFORM
-SHELL ["/bin/bash", "-aeuo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 COPY --chmod=0755 prepare.sh /tmp/
 RUN /tmp/prepare.sh \
     && mkdir -p /output/bin /output/lib /output/include /output/pkgconfig /output/etc /output/deb
@@ -16,7 +16,8 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRA
     if [ -f /run/secrets/github_token ]; then \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
-    && . /env && ./build_libraw.sh
+    && set -a && . /env && set +a \
+    && ./build_libraw.sh
 
 FROM build-libraw AS build-libheif
 ARG LIBHEIF_VERSION
@@ -29,7 +30,8 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBH
     if [ -f /run/secrets/github_token ]; then \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
-    && . /env && ./build_libheif.sh
+    && set -a && . /env && set +a \
+    && ./build_libheif.sh
 
 FROM build-libheif AS build-imagemagick
 ARG IMAGEMAGICK_VERSION
@@ -42,7 +44,8 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${
     if [ -f /run/secrets/github_token ]; then \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
-    && . /env && ./build_imagemagick.sh
+    && set -a && . /env && set +a \
+    && ./build_imagemagick.sh
 
 FROM base-prep AS download-jellyfin-ffmpeg
 ARG JELLYFIN_FFMPEG_VERSION
@@ -51,7 +54,8 @@ ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/download-ffmpeg
 COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLYFIN_FFMPEG_VERSION} \
-    . /env && ./download_jellyfin-ffmpeg.sh
+    set -a && . /env && set +a \
+    && ./download_jellyfin-ffmpeg.sh
 
 FROM base-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
