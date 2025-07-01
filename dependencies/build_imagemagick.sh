@@ -10,8 +10,8 @@ fi
 
 set -euo pipefail
 
-: "${DEB_TARGET_MULTIARCH:=$(uname -m)-linux-gnu}"
-: "${DEB_TARGET_ARCH:=$(dpkg --print-architecture)}"
+: "${DEB_HOST_GNU_TYPE:=$(uname -m)-linux-gnu}"
+: "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/ImageMagick-${IMAGEMAGICK_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/ImageMagick-${IMAGEMAGICK_VERSION}-complete"
 
@@ -25,40 +25,41 @@ fi
 
 echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
 
-echo Compiler: "${DEB_TARGET_MULTIARCH}" Arch: "${DEB_TARGET_ARCH}"
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 apt-get install -y \
-  libjxl-dev:"${DEB_TARGET_ARCH}" \
-  liblcms2-dev:"${DEB_TARGET_ARCH}" \
-  liblqr-1-0-dev:"${DEB_TARGET_ARCH}" \
-  libdjvulibre-dev:"${DEB_TARGET_ARCH}" \
-  libjpeg62-turbo-dev:"${DEB_TARGET_ARCH}" \
-  libopenjp2-7-dev:"${DEB_TARGET_ARCH}" \
-  libopenexr-dev:"${DEB_TARGET_ARCH}" \
-  libpng-dev:"${DEB_TARGET_ARCH}" \
-  libtiff-dev:"${DEB_TARGET_ARCH}" \
-  libwebp-dev:"${DEB_TARGET_ARCH}" \
-  libxml2-dev:"${DEB_TARGET_ARCH}" \
-  libfftw3-dev:"${DEB_TARGET_ARCH}" \
-  zlib1g-dev:"${DEB_TARGET_ARCH}" \
-  liblzma-dev:"${DEB_TARGET_ARCH}" \
-  libbz2-dev:"${DEB_TARGET_ARCH}"
+  libjxl-dev:"${DEB_HOST_ARCH}" \
+  liblcms2-dev:"${DEB_HOST_ARCH}" \
+  liblqr-1-0-dev:"${DEB_HOST_ARCH}" \
+  libdjvulibre-dev:"${DEB_HOST_ARCH}" \
+  libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
+  libopenjp2-7-dev:"${DEB_HOST_ARCH}" \
+  libopenexr-dev:"${DEB_HOST_ARCH}" \
+  libpng-dev:"${DEB_HOST_ARCH}" \
+  libtiff-dev:"${DEB_HOST_ARCH}" \
+  libwebp-dev:"${DEB_HOST_ARCH}" \
+  libxml2-dev:"${DEB_HOST_ARCH}" \
+  libfftw3-dev:"${DEB_HOST_ARCH}" \
+  zlib1g-dev:"${DEB_HOST_ARCH}" \
+  liblzma-dev:"${DEB_HOST_ARCH}" \
+  libbz2-dev:"${DEB_HOST_ARCH}"
 
 URL="https://api.github.com/repos/ImageMagick/ImageMagick/tarball/${IMAGEMAGICK_VERSION}"
 echo download ImageMagick from "$URL"
 curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./magick.tar.gz \
   ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} "$URL"
 
-FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
-
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
+
+FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
+
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
   --without-x --without-magick-plus-plus \
   --without-perl --disable-doc \
-  --host="${DEB_TARGET_MULTIARCH}" \
+  --host="${DEB_HOST_GNU_TYPE}" \
   ${FEATURES}
 
 # Ensure that features are enabled

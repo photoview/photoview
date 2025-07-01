@@ -10,8 +10,8 @@ fi
 
 set -euo pipefail
 
-: "${DEB_TARGET_MULTIARCH:=$(uname -m)-linux-gnu}"
-: "${DEB_TARGET_ARCH:=$(dpkg --print-architecture)}"
+: "${DEB_HOST_GNU_TYPE:=$(uname -m)-linux-gnu}"
+: "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/LibRaw-${LIBRAW_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/LibRaw-${LIBRAW_VERSION}-complete"
 
@@ -25,12 +25,12 @@ fi
 
 echo "Building LibRaw ${LIBRAW_VERSION} (cache miss)..."
 
-echo Compiler: "${DEB_TARGET_MULTIARCH}" Arch: "${DEB_TARGET_ARCH}"
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 apt-get install -y \
-  libjpeg62-turbo-dev:"${DEB_TARGET_ARCH}" \
-  liblcms2-dev:"${DEB_TARGET_ARCH}" \
-  zlib1g-dev:"${DEB_TARGET_ARCH}"
+  libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
+  liblcms2-dev:"${DEB_HOST_ARCH}" \
+  zlib1g-dev:"${DEB_HOST_ARCH}"
 
 URL="https://api.github.com/repos/LibRaw/LibRaw/tarball/${LIBRAW_VERSION}"
 echo download libraw from "$URL"
@@ -45,7 +45,7 @@ autoreconf --install
   --disable-silent-rules \
   --disable-maintainer-mode \
   --disable-dependency-tracking \
-  --host="${DEB_TARGET_MULTIARCH}"
+  --host="${DEB_HOST_GNU_TYPE}"
 make
 make install
 cd ..

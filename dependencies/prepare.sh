@@ -2,7 +2,7 @@
 set -euo pipefail
 
 : "${TARGETPLATFORM:=linux/$(dpkg --print-architecture)}"
-: "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
+: "${DEB_HOST_GNU_TYPE:=$(uname -m)-linux-gnu}"
 
 TARGETARCH="$(echo "$TARGETPLATFORM" | cut -d"/" -f2)"
 
@@ -27,9 +27,7 @@ apt-get install -y \
   cmake
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
-set -a
-. /env # Set right DEB_TARGET_GNU_TYPE
-echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/${DEB_TARGET_GNU_TYPE}/pkgconfig" >>/env
-# shellcheck disable=SC2046
 export $(cat /env)
+
+echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/${DEB_HOST_GNU_TYPE}/pkgconfig" >>/env
 cat /env
