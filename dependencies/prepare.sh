@@ -2,7 +2,6 @@
 set -euo pipefail
 
 : "${TARGETPLATFORM:=linux/$(dpkg --print-architecture)}"
-: "${DEB_HOST_GNU_TYPE:=$(uname -m)-linux-gnu}"
 
 TARGETARCH="$(echo "$TARGETPLATFORM" | cut -d"/" -f2)"
 
@@ -10,6 +9,8 @@ DEBIAN_ARCH=$TARGETARCH
 if [ "$TARGETARCH" = "arm" ]; then
   DEBIAN_ARCH=armel
 fi
+
+: "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEB_HOST_ARCH" -qDEB_HOST_GNU_TYPE)}"
 
 dpkg --add-architecture "$DEBIAN_ARCH"
 apt-get update
