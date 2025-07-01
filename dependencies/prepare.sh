@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -aeuo pipefail
 
 : "${TARGETPLATFORM:=linux/$(dpkg --print-architecture)}"
 
@@ -28,7 +28,7 @@ apt-get install -y \
   cmake
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
-export $(cat /env) # Set the proper DEB_HOST_MULTIARCH
+. /env # Set the proper DEB_HOST_MULTIARCH
 
 echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig" >>/env
 cat /env
