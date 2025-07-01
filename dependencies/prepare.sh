@@ -10,8 +10,6 @@ if [ "$TARGETARCH" = "arm" ]; then
   DEBIAN_ARCH=armel
 fi
 
-: "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEBIAN_ARCH" -qDEB_HOST_GNU_TYPE)}"
-
 dpkg --add-architecture "$DEBIAN_ARCH"
 apt-get update
 apt-get install -y \
