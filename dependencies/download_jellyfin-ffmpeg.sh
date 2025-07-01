@@ -10,8 +10,8 @@ fi
 
 set -euo pipefail
 
-: "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
+: "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEB_HOST_ARCH" -qDEB_HOST_GNU_TYPE)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/jellyfin-ffmpeg-${JELLYFIN_FFMPEG_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/jellyfin-ffmpeg-${JELLYFIN_FFMPEG_VERSION}-complete"
 
@@ -25,7 +25,7 @@ fi
 
 echo "Downloading jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} (cache miss)..."
 
-echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 VER="${JELLYFIN_FFMPEG_VERSION#v}"
 MAJOR_VER=$(echo "${VER}" | cut -d. -f1)

@@ -10,8 +10,8 @@ fi
 
 set -euo pipefail
 
-: "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
+: "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEB_HOST_ARCH" -qDEB_HOST_GNU_TYPE)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/LibRaw-${LIBRAW_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/LibRaw-${LIBRAW_VERSION}-complete"
 
@@ -25,7 +25,7 @@ fi
 
 echo "Building LibRaw ${LIBRAW_VERSION} (cache miss)..."
 
-echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 apt-get install -y \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
@@ -45,7 +45,7 @@ autoreconf --install
   --disable-silent-rules \
   --disable-maintainer-mode \
   --disable-dependency-tracking \
-  --host="${DEB_HOST_MULTIARCH}"
+  --host="${DEB_HOST_GNU_TYPE}"
 make
 make install
 cd ..

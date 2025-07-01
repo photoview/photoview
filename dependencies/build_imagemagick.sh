@@ -10,8 +10,8 @@ fi
 
 set -euo pipefail
 
-: "${DEB_HOST_MULTIARCH:=$(uname -m)-linux-gnu}"
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
+: "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEB_HOST_ARCH" -qDEB_HOST_GNU_TYPE)}"
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/ImageMagick-${IMAGEMAGICK_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/ImageMagick-${IMAGEMAGICK_VERSION}-complete"
 
@@ -25,7 +25,7 @@ fi
 
 echo "Building ImageMagick ${IMAGEMAGICK_VERSION} (cache miss)..."
 
-echo Compiler: "${DEB_HOST_MULTIARCH}" Arch: "${DEB_HOST_ARCH}"
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 apt-get install -y \
   libjxl-dev:"${DEB_HOST_ARCH}" \
@@ -51,14 +51,23 @@ curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./magick.tar.gz \
 
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
+
+FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
+
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
-  --with-heic --with-jpeg --with-png \
-  --with-raw --with-tiff --with-webp \
   --without-x --without-magick-plus-plus \
   --without-perl --disable-doc \
-  --host="${DEB_HOST_MULTIARCH}"
+  --host="${DEB_HOST_GNU_TYPE}" \
+  ${FEATURES}
+
+# Ensure that features are enabled
+for feature in ${FEATURES}
+do
+  grep -- ${feature}'.*yes$' config.log || (echo "Can't enable feature ${feature}"; false)
+done
+
 make
 make install
 cd ..
