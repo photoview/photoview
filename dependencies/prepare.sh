@@ -28,9 +28,5 @@ apt-get install -y \
   cmake
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
-set -a
-source /env # Set the proper DEB_HOST_MULTIARCH
-set +a
-
-echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig" >>/env
+echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/$(dpkg-architecture -a "$DEBIAN_ARCH" -qDEB_HOST_MULTIARCH)/pkgconfig" >>/env
 cat /env
