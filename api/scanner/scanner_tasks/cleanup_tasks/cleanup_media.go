@@ -121,7 +121,7 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	})
 
 	if err != nil {
-		scanner_utils.ScannerError("Could not delete old albums from database:\n%s\n", err)
+		scanner_utils.ScannerError(nil, "Could not delete old albums from database:\n%s\n", err)
 		deleteErrors = append(deleteErrors, err)
 	}
 

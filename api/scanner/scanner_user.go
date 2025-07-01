@@ -254,7 +254,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 
 		dirContent, err := os.ReadDir(dirPath)
 		if err != nil {
-			scanner_utils.ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
+			scanner_utils.ScannerError(nil, "Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false
 		}
 
