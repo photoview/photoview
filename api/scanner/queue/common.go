@@ -68,6 +68,7 @@ func newCommonQueue[Job commonJob](ctx context.Context, interval time.Duration, 
 	return ret, nil
 }
 
+// Close closes the queue and waits all workers finishing their jobs. It could be called multiple times in different goroutines.
 func (q *commonQueue[Job]) Close() {
 	defer func() {
 		q.wait.Wait()
@@ -82,11 +83,14 @@ func (q *commonQueue[Job]) Close() {
 	}
 }
 
+// RunBackground runs the background goroutine to process jobs and periodic jobs.
 func (q *commonQueue[Job]) RunBackground() {
 	q.wait.Add(1)
 	go q.run()
 }
 
+// ConsumeAllBacklog waits all jobs to be done in the queue backlog. It doesn't require `RunBackground`.
+// This function is useful with unit tests.
 func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 	for {
 		job, ok := q.popBacklog()
@@ -105,6 +109,7 @@ func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 	}
 }
 
+// UpdateScanInterval updates the interval of background periodic jobs.
 func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
 		return fmt.Errorf("invalid periodic scan interval(%d): must >=0", newInterval)
@@ -119,6 +124,7 @@ func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	return nil
 }
 
+// RescaleWorkers rescales the number of background workers.
 func (q *commonQueue[Job]) RescaleWorkers(newMax int) error {
 	if newMax < 0 {
 		return fmt.Errorf("invalid concurrent workers (%d): must >=0", newMax)

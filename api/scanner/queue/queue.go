@@ -1,3 +1,4 @@
+// Package queue provides a queue to run jobs in the background.
 package queue
 
 import (
@@ -28,6 +29,7 @@ func (j *queueJob) String() string {
 	return j.album.Title
 }
 
+// Queue is a queue and worker manager to run background jobs.
 type Queue struct {
 	*commonQueue[*queueJob]
 
@@ -35,6 +37,7 @@ type Queue struct {
 	db  *gorm.DB
 }
 
+// NewQueue creates a new Queue. It reads `db` to get the number of workers and the interval of triggering periodic jobs.
 func NewQueue(db *gorm.DB) (*Queue, error) {
 	siteInfo, err := models.GetSiteInfo(db)
 	if err != nil {
@@ -73,6 +76,7 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	return ret, nil
 }
 
+// AddAllAlbums adds jobs from all albums.
 func (q *Queue) AddAllAlbums(ctx context.Context) error {
 	jobs, err := q.findAllAlbumsJobs()
 	if err != nil {
@@ -84,6 +88,7 @@ func (q *Queue) AddAllAlbums(ctx context.Context) error {
 	return nil
 }
 
+// AddUserAlbums adds jobs from the `user`.
 func (q *Queue) AddUserAlbums(ctx context.Context, user *models.User) error {
 	jobs, err := q.findUserAlbumsJobs(user)
 	if err != nil {
