@@ -7,7 +7,6 @@ import (
 
 	"github.com/otiai10/copy"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
@@ -79,13 +78,13 @@ func TestCleanupMedia(t *testing.T) {
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
-		log.Info(t.Context(), "move face directory")
+		// move faces directory
 		assert.NoError(t, os.Rename(path.Join(testDir, "faces"), path.Join(testDir, "faces_moved")))
 		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 9, countAllMedia())
 		assert.Equal(t, 18, countAllMediaURLs())
 
-		log.Info(t.Context(), "remove face directory")
+		// remove faces_moved directory
 		assert.NoError(t, os.RemoveAll(path.Join(testDir, "faces_moved")))
 		scanner_utils.RunScannerAll(t, db)
 		assert.Equal(t, 3, countAllMedia())

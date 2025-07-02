@@ -10,7 +10,7 @@ import (
 	"github.com/photoview/photoview/api/utils"
 )
 
-func ScannerError(ctx context.Context, format string, args ...interface{}) {
+func ScannerError(ctx context.Context, format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 
 	log.Error(ctx, message)
