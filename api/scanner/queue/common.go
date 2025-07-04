@@ -79,7 +79,7 @@ func (q *commonQueue[Job]) Close() {
 	q.trigger.Stop()
 	close(q.done)
 	if err := q.RescaleWorkers(0); err != nil {
-		log.Error(q.ctx, "closing all workers error", "error", err)
+		log.Error(q.ctx, "failed to close all workers", "error", err)
 	}
 }
 
@@ -92,14 +92,15 @@ func (q *commonQueue[Job]) RunBackground() {
 // ConsumeAllBacklog waits all jobs to be done in the queue backlog. It doesn't require `RunBackground`.
 // This function is useful with unit tests.
 func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
+	defer log.Info(q.ctx, "empty backlog")
+
 	for {
 		job, ok := q.popBacklog()
 		if !ok {
-			log.Info(q.ctx, "consumed all backlog")
 			return
 		}
 
-		log.Info(q.ctx, "consuming all backlog", "job", job)
+		log.Info(q.ctx, "consuming backlog", "job", job)
 		select {
 		case q.handout <- job:
 		case <-ctx.Done():
@@ -112,7 +113,7 @@ func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 // UpdateScanInterval updates the interval of background periodic jobs.
 func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-		return fmt.Errorf("invalid periodic scan interval(%d): must >=0", newInterval)
+		return fmt.Errorf("invalid periodic scan interval(%d): must >= 0", newInterval)
 	}
 
 	if newInterval == 0 {
@@ -127,14 +128,14 @@ func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 // RescaleWorkers rescales the number of background workers.
 func (q *commonQueue[Job]) RescaleWorkers(newMax int) error {
 	if newMax < 0 {
-		return fmt.Errorf("invalid concurrent workers (%d): must >=0", newMax)
+		return fmt.Errorf("invalid concurrent workers (%d): must >= 0", newMax)
 	}
 
 	q.workersMu.Lock()
 	defer q.workersMu.Unlock()
 
 	defer func() {
-		log.Info(q.ctx, "rescaled worker", "worker_number", len(q.workers))
+		log.Info(q.ctx, "rescaled workers", "workers_number", len(q.workers))
 	}()
 
 	if len(q.workers) == newMax {
@@ -169,8 +170,10 @@ func (q *commonQueue[Job]) RescaleWorkers(newMax int) error {
 }
 
 func (q *commonQueue[Job]) run() {
-	defer q.wait.Done()
-	defer log.Info(q.ctx, "queue background done")
+	defer func() {
+		log.Info(q.ctx, "queue background done")
+		q.wait.Done()
+	}()
 
 	log.Info(q.ctx, "queue background start")
 MAIN:
@@ -281,7 +284,7 @@ func (q *commonQueue[Job]) lenJobs() int {
 func (q *commonQueue[Job]) processJob(ctx context.Context, job Job) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error(ctx, "panic when process job", "job", job, "panic", r)
+			log.Error(ctx, "panic happened during job processing", "job", job, "panic", r)
 		}
 
 		q.jobDone(job)

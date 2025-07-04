@@ -34,8 +34,10 @@ func (w *worker[Job]) Close() {
 }
 
 func (w *worker[Job]) Run() {
-	defer w.callback.finish(w.ctx)
-	defer log.Info(w.ctx, "worker done")
+	defer func() {
+		log.Info(w.ctx, "worker done")
+		w.callback.finish(w.ctx)
+	}()
 
 	log.Info(w.ctx, "worker start")
 

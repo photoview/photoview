@@ -45,20 +45,13 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	}
 
 	if siteInfo.PeriodicScanInterval < 0 {
-		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >=0", siteInfo.PeriodicScanInterval)
+		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >= 0", siteInfo.PeriodicScanInterval)
 	}
 
 	interval := time.Duration(siteInfo.PeriodicScanInterval) * time.Second
-	var ticker *time.Ticker
-	if interval == 0 {
-		ticker = time.NewTicker(time.Second) // The interval is not matter since the ticker is stopped.
-		ticker.Stop()
-	} else {
-		ticker = time.NewTicker(interval)
-	}
 
 	if siteInfo.ConcurrentWorkers < 0 {
-		return nil, fmt.Errorf("invalid concurrent workers (%d): must >=0", siteInfo.ConcurrentWorkers)
+		return nil, fmt.Errorf("invalid concurrent workers (%d): must >= 0", siteInfo.ConcurrentWorkers)
 	}
 
 	ctx := log.WithAttrs(context.Background(), "process", "queue")
@@ -112,13 +105,13 @@ func (q *Queue) processJob(ctx context.Context, job *queueJob) {
 
 func (q *Queue) periodicTrigger(ctx context.Context) {
 	if err := q.AddAllAlbums(ctx); err != nil {
-		log.Error(ctx, "fill queue error", "error", err)
+		log.Error(ctx, "failed to add all albums to the queue", "error", err)
 	}
 }
 
 // helpers
 func (q *Queue) findAllAlbumsJobs() ([]*queueJob, error) {
-	log.Info(q.ctx, "find all job")
+	log.Info(q.ctx, "find jobs for all albums")
 	var users []*models.User
 	if err := q.db.Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("get all users from database error: %w", err)
@@ -138,7 +131,7 @@ func (q *Queue) findAllAlbumsJobs() ([]*queueJob, error) {
 }
 
 func (q *Queue) findUserAlbumsJobs(user *models.User) ([]*queueJob, error) {
-	log.Info(q.ctx, "find job for user", "user", user.ID)
+	log.Info(q.ctx, "find jobs for user", "user", user.ID)
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(q.db, user, albumCache)
 	if err := errors.Join(album_errors...); err != nil {
