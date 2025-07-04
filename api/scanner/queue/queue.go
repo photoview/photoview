@@ -103,7 +103,7 @@ func (q *Queue) processJob(ctx context.Context, job *queueJob) {
 	}
 }
 
-func (q *Queue) periodicTrigger(ctx context.Context) {
+func (q *Queue) fillPeriodicJobs(ctx context.Context) {
 	if err := q.AddAllAlbums(ctx); err != nil {
 		log.Error(ctx, "failed to add all albums to the queue", "error", err)
 	}

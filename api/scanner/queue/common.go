@@ -20,7 +20,7 @@ type commonJob interface {
 
 type queueCallback[Job commonJob] interface {
 	processJob(ctx context.Context, job Job)
-	periodicTrigger(ctx context.Context)
+	fillPeriodicJobs(ctx context.Context)
 }
 
 type commonQueue[Job commonJob] struct {
@@ -191,7 +191,7 @@ MAIN:
 				handed = true
 			case <-q.backlogUpdated:
 			case <-q.trigger.C:
-				q.callback.periodicTrigger(q.ctx)
+				q.callback.fillPeriodicJobs(q.ctx)
 			case <-q.done:
 				done = true
 			}
@@ -212,7 +212,7 @@ MAIN:
 		select {
 		case <-q.backlogUpdated:
 		case <-q.trigger.C:
-			q.callback.periodicTrigger(q.ctx)
+			q.callback.fillPeriodicJobs(q.ctx)
 		case <-q.done:
 			break MAIN
 		}

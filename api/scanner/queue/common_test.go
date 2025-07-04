@@ -52,7 +52,7 @@ func (p *mockProcessor) processJob(ctx context.Context, job *mockJob) {
 	job.setDone()
 }
 
-func (p *mockProcessor) periodicTrigger(ctx context.Context) {
+func (p *mockProcessor) fillPeriodicJobs(ctx context.Context) {
 	p.lastTriggerMu.Lock()
 	defer p.lastTriggerMu.Unlock()
 
