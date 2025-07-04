@@ -11,7 +11,10 @@ import (
 )
 
 type commonJob interface {
+	// Key returns a unique integer of each job, to identify the job.
 	Key() int
+
+	// String returns a short description of the job, for logging or any other string output.
 	String() string
 }
 
