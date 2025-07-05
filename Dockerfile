@@ -21,8 +21,10 @@ WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
 RUN if [ "$NODE_ENV" = "production" ]; then \
+    echo "Installing production dependencies only..."; \
     npm ci --omit=dev; \
     else \
+    echo "Installing all dependencies..."; \
     npm ci; \
     fi
 
