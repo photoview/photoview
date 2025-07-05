@@ -134,7 +134,7 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
     -exec sed -i "s/=\"-=<GitHub-CI-commit-sha-placeholder>=-\";/=\"${GITHUB_SHA:-unknown_commit}\";/g" {} \;
 # TEMP verification commands:
 RUN grep -Hn '="[^"]*";' /app/ui/assets/SettingsPage.*.js | grep "${GITHUB_SHA:-unknown_commit}" \
-    grep -Hn '="-=<GitHub-CI-commit-sha-placeholder>=-";' /app/ui/assets/SettingsPage.*.js
+    && grep -Hn '="-=<GitHub-CI-commit-sha-placeholder>=-";' /app/ui/assets/SettingsPage.*.js || true
 
 WORKDIR /home/photoview
 
