@@ -111,7 +111,8 @@ func (q *Queue) fillPeriodicJobs(ctx context.Context) {
 
 // helpers
 func (q *Queue) findAllAlbumsJobs() ([]*queueJob, error) {
-	log.Info(q.ctx, "find jobs for all albums")
+	log.Info(q.ctx, "find albums for all users and create scanner jobs")
+
 	var users []*models.User
 	if err := q.db.Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("get all users from database error: %w", err)
@@ -131,7 +132,7 @@ func (q *Queue) findAllAlbumsJobs() ([]*queueJob, error) {
 }
 
 func (q *Queue) findUserAlbumsJobs(user *models.User) ([]*queueJob, error) {
-	log.Info(q.ctx, "find jobs for user", "user", user.ID)
+	log.Info(q.ctx, "find albums for a user and create scanner jobs", "user", user.ID)
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(q.db, user, albumCache)
 	if err := errors.Join(album_errors...); err != nil {

@@ -189,7 +189,6 @@ MAIN:
 			select {
 			case q.handout <- job:
 				handed = true
-			case <-q.backlogUpdated:
 			case <-q.trigger.C:
 				q.callback.fillPeriodicJobs(q.ctx)
 			case <-q.done:
