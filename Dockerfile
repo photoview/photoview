@@ -1,7 +1,6 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
 ARG TARGETARCH
-ARG GITHUB_SHA
 ARG VERSION
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -21,15 +20,19 @@ ENV UI_PUBLIC_URL=${UI_PUBLIC_URL:-/}
 WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
-RUN npm ci
+RUN if [ "$NODE_ENV" = "production" ]; then \
+    npm ci --omit=dev; \
+    else \
+    npm ci; \
+    fi
 
 COPY ui/ /app/ui
 # hadolint ignore=SC2155
 RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
     export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
-    export COMMIT_SHA=${GITHUB_SHA:-$(git rev-parse --short HEAD || echo 000000)}; \
+    export COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
     export REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA}; \
-    export VERSION="${VERSION:-$(git rev-parse --abbrev-ref HEAD || echo unknown-branch)}-${TARGETARCH}"; \
+    export VERSION="${VERSION:-unknown-branch}-${TARGETARCH}"; \
     export REACT_APP_BUILD_VERSION=${VERSION}; \
     npm run build -- --base="${UI_PUBLIC_URL}"
 
@@ -95,6 +98,7 @@ RUN export $(cat /env) \
 ### Build release image ###
 FROM debian:bookworm-slim AS release
 ARG TARGETPLATFORM
+ARG GITHUB_SHA
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -122,6 +126,10 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
 COPY api/data /app/data
 COPY --from=ui /app/ui/dist /app/ui
 COPY --from=api /app/api/photoview /app/photoview
+# This is a w/a for letting the UI build stage to be cached
+# and not rebuilt every new commit because of the build_arg value change.
+RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
+    -exec sed -i 's/="-=<GitHub-CI-commit-sha-placeholder>=-";/="${GITHUB_SHA:-unknown_commit}";/g' {} \;
 
 WORKDIR /home/photoview
 
