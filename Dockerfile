@@ -131,7 +131,10 @@ COPY --from=api /app/api/photoview /app/photoview
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
-    -exec sed -i 's/="-=<GitHub-CI-commit-sha-placeholder>=-";/="${GITHUB_SHA:-unknown_commit}";/g' {} \;
+    -exec sed -i "s/=\"-=<GitHub-CI-commit-sha-placeholder>=-\";/=\"${GITHUB_SHA:-unknown_commit}\";/g" {} \; \
+    # TEMP verification commands:
+    grep -Hn '="[^"]*";' /app/ui/assets/SettingsPage.*.js | grep "${GITHUB_SHA:-unknown_commit}" \
+    grep -Hn '="-=<GitHub-CI-commit-sha-placeholder>=-";' /app/ui/assets/SettingsPage.*.js
 
 WORKDIR /home/photoview
 
