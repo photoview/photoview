@@ -112,6 +112,7 @@ jobs:
         target:     ui
         tags:       photoview/ui
         cache-from: type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
+        cache-to:   type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
         build-args: |
           NODE_ENV=testing
 
