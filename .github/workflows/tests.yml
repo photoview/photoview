@@ -74,8 +74,7 @@ jobs:
             -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
           photoview/api \
           /app/scripts/test_all.sh
-        docker cp test:/app/api/coverage.txt ./api/
-        docker cp test:/app/api/test-api-coverage-report.xml ./api/
+        docker cp test:/app/api/test-api-coverage-report.txt ./api/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v5
@@ -83,6 +82,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
+        files: ./api/test-api-coverage-report.txt
 
     - name: Upload test execution results
       uses: codecov/test-results-action@v1
@@ -90,7 +90,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: api-${{ matrix.database }}
-        files: ./api/test-api-coverage-report.xml
+        files: ./api/test-api-coverage-report.txt
 
   test-ui:
     name: Test UI

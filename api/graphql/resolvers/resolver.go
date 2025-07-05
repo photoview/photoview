@@ -3,6 +3,7 @@ package resolvers
 import (
 	"context"
 
+	"github.com/photoview/photoview/api/scanner/queue"
 	"gorm.io/gorm"
 )
 
@@ -10,11 +11,13 @@ import (
 
 type Resolver struct {
 	database *gorm.DB
+	queue    *queue.Queue
 }
 
-func NewRootResolver(db *gorm.DB) Resolver {
+func NewRootResolver(db *gorm.DB, queue *queue.Queue) Resolver {
 	return Resolver{
 		database: db,
+		queue:    queue,
 	}
 }
 
