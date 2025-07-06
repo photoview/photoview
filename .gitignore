@@ -22,7 +22,7 @@ node_modules/
 # testing
 /ui/coverage
 /api/coverage.txt
-/api/test-*-report.xml
+/api/test-*-report.txt
 *.cov
 
 # building
