@@ -158,7 +158,7 @@ jobs:
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
             GITHUB_SHA=${{ steps.args.outputs.short_sha }}
-            DEPS_TAG=${{ steps.args.outputs.deps_tag }}
+            DEPS_IMG=photoview/dependencies:${{ steps.args.outputs.deps_tag }}
 
   dockle:
     name: Dockle Container Analysis

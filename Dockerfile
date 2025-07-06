@@ -41,7 +41,7 @@ RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.24-bookworm AS api
 ARG TARGETPLATFORM
-ARG DEPS_TAG=latest
+ARG DEPS_IMG=photoview/dependencies:latest
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -65,7 +65,7 @@ RUN chmod +x /app/scripts/*.sh \
     && /app/scripts/install_build_dependencies.sh \
     && /app/scripts/install_runtime_dependencies.sh
 
-COPY --from=photoview/dependencies:${DEPS_TAG} /artifacts.tar.gz /dependencies/
+COPY --from=${DEPS_IMG} /artifacts.tar.gz /dependencies/
 # Split values in `/env`
 # hadolint ignore=SC2046
 RUN export $(cat /env) \
