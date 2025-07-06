@@ -144,7 +144,7 @@ jobs:
           build-args: |
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
-            GITHUB_SHA=${{ steps.git.outputs.short_sha }}
+            COMMIT_SHA=${{ steps.git.outputs.short_sha }}
 
   dockle:
     name: Dockle Container Analysis
