@@ -41,7 +41,6 @@ RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); \
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.24-bookworm AS api
 ARG TARGETPLATFORM
-ARG DEPS_IMG=photoview/dependencies:latest
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -65,7 +64,7 @@ RUN chmod +x /app/scripts/*.sh \
     && /app/scripts/install_build_dependencies.sh \
     && /app/scripts/install_runtime_dependencies.sh
 
-COPY --from=${DEPS_IMG} /artifacts.tar.gz /dependencies/
+COPY --from=photoview/dependencies:latest /artifacts.tar.gz /dependencies/
 # Split values in `/env`
 # hadolint ignore=SC2046
 RUN export $(cat /env) \
@@ -133,9 +132,6 @@ COPY --from=api /app/api/photoview /app/photoview
 # and not rebuilt every new commit because of the build_arg value change.
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
     -exec sed -i "s/=\"-=<GitHub-CI-commit-sha-placeholder>=-\";/=\"${GITHUB_SHA}\";/g" {} \;
-# TEMP verification commands:
-RUN grep -Hn '="[^"]*";' /app/ui/assets/SettingsPage.*.js | grep "${GITHUB_SHA}" \
-    && grep -Hn '="-=<GitHub-CI-commit-sha-placeholder>=-";' /app/ui/assets/SettingsPage.*.js || true
 
 WORKDIR /home/photoview
 

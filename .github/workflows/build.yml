@@ -80,7 +80,12 @@ jobs:
           ref: ${{ matrix.tags.ref }}
 
       - name: Fetch branches
-        run: git fetch --all
+        id: git
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --all
+          echo "short_sha=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -117,22 +122,6 @@ jobs:
             ${{ github.event_name != 'schedule' && 'type=semver,pattern={{major}}' || '' }}
             ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
 
-      - name: Prepare build arguments
-        id: args
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "short_sha=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
-          echo "deps_tag=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            "https://registry.hub.docker.com/v2/repositories/photoview/dependencies/tags?page_size=100" \
-            | jq -r '
-              .results
-              | map(select(.name | startswith("sha-")))
-              | sort_by(.tag_last_pushed)
-              | reverse
-              | .[0].name
-            ')" | tee -a $GITHUB_OUTPUT
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -144,10 +133,8 @@ jobs:
           pull:        true
           push:        ${{ env.IS_PUSHING_IMAGES }}
           tags:        ${{ steps.docker_meta.outputs.tags }}
+          labels:      ${{ steps.docker_meta.outputs.labels }}
           annotations: ${{ steps.docker_meta.outputs.annotations }}
-          labels: |
-            ${{ steps.docker_meta.outputs.labels }}
-            photoview.dependencies.tag: ${{ steps.args.outputs.deps_tag }}
           cache-from: |
             type=gha,scope=ui-${{ hashFiles('ui/package-lock.json') }}
             type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
@@ -157,8 +144,7 @@ jobs:
           build-args: |
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
-            GITHUB_SHA=${{ steps.args.outputs.short_sha }}
-            DEPS_IMG=photoview/dependencies:${{ steps.args.outputs.deps_tag }}
+            GITHUB_SHA=${{ steps.git.outputs.short_sha }}
 
   dockle:
     name: Dockle Container Analysis
