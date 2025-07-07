@@ -23,7 +23,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	updatedURLs := make([]*models.MediaURL, 0)
 	photo := mediaData.Media
 
-	log.Info(ctx, "Processing photo: %s\n", photo.Path)
+	log.Info(ctx, "Processing photo", "photo", photo.Path)
 
 	photoURLFromDB := makePhotoURLChecker(ctx.GetDB(), photo.ID)
 
