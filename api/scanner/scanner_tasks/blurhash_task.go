@@ -27,7 +27,7 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 	}
 
 	var media *models.Media
-	if err := ctx.GetDB().Where("id = ?", mediaData.Media.ID).First(&media).Error; err != nil {
+	if err := ctx.GetDB().Preload("MediaURL").Where("id = ?", mediaData.Media.ID).First(&media).Error; err != nil {
 		return fmt.Errorf("failed to get media(id:%d): %w", mediaData.Media.ID, err)
 	}
 
