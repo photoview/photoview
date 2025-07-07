@@ -120,10 +120,12 @@ func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	}
 
 	if newInterval == 0 {
+		log.Info(q.ctx, "Periodic scan interval changed", "interval", "disabled")
 		q.trigger.Stop()
 		return nil
 	}
 
+	log.Info(q.ctx, "Periodic scan interval changed", "interval", newInterval)
 	q.trigger.Reset(newInterval)
 	return nil
 }
@@ -181,6 +183,7 @@ func (q *commonQueue[Job]) run() {
 	log.Info(q.ctx, "queue background start")
 MAIN:
 	for {
+		log.Info(q.ctx, "backlog length", "len", q.lenJobs())
 		job, ok := q.popBacklog()
 
 		if ok {
