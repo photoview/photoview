@@ -26,8 +26,13 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 		}
 	}
 
-	media := mediaData.Media
+	var media *models.Media
+	if err := ctx.GetDB().Where("id = ?", mediaData.Media.ID).First(&media); err != nil {
+		return fmt.Errorf("failed to get media(id:%d): %w", mediaData.Media.ID, err)
+	}
+
 	if media.Blurhash != nil && !hasThumbnailUpdated {
+		log.Info(ctx, "No thumbnail updated, ignore generating blurhash", "media", media.Path)
 		return nil
 	}
 
@@ -46,7 +51,7 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 		return fmt.Errorf("failed to store blurhash of image %q: %w", mediaData.Media.Path, err)
 	}
 
-	log.Info(ctx, "Generated blurhash of image %q", mediaData.Media.Path)
+	log.Info(ctx, "Generated blurhash of image", "media", mediaData.Media.Path)
 
 	return nil
 }
