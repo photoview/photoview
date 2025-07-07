@@ -173,7 +173,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
 
 		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
-			log.Info(ctx, "Video thumbnail found in database but not in cache, re-encoding photo to cache", "video", videoThumbnailURL.MediaName)
+			log.Info(ctx, "Video thumbnail found in database but not in cache, re-encoding video thumbnail to cache", "video", videoThumbnailURL.MediaName)
 			updatedURLs = append(updatedURLs, videoThumbnailURL)
 
 			err = executable_worker.Ffmpeg.EncodeVideoThumbnail(video.Path, thumbImagePath, probeData)
