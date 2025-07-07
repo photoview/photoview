@@ -10,11 +10,11 @@ WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
 RUN if [ "$NODE_ENV" = "production" ]; then \
-    echo "Installing production dependencies only..."; \
-    npm ci --omit=dev; \
+        echo "Installing production dependencies only..."; \
+        npm ci --omit=dev; \
     else \
-    echo "Installing all dependencies..."; \
-    npm ci; \
+        echo "Installing all dependencies..."; \
+        npm ci; \
     fi
 
 COPY ui/ /app/ui
@@ -87,8 +87,8 @@ RUN export $(cat /env) \
     && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
     # Build dependencies that use CGO
     && go install \
-    github.com/mattn/go-sqlite3 \
-    github.com/Kagami/go-face
+        github.com/mattn/go-sqlite3 \
+        github.com/Kagami/go-face
 
 COPY api /app/api
 # Split values in `/env`
@@ -129,9 +129,9 @@ COPY --from=ui /app/ui/dist /app/ui
 COPY --from=api /app/api/photoview /app/photoview
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
-ARG COMMIT_SHA=?commit?
+ARG COMMIT_SHA=NoCommit
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
-    -exec sed -i "s/=\"-=<GitHub-CI-commit-sha-placeholder>=-\";/=\"${COMMIT_SHA}\";/g" {} \;
+        -exec sed -i "s/=\"-=<GitHub-CI-commit-sha-placeholder>=-\";/=\"${COMMIT_SHA}\";/g" {} \;
 
 WORKDIR /home/photoview
 
@@ -147,8 +147,8 @@ EXPOSE ${PHOTOVIEW_LISTEN_PORT}
 
 HEALTHCHECK --interval=60s --timeout=10s \
     CMD curl --fail http://localhost:${PHOTOVIEW_LISTEN_PORT}/api/graphql \
-    -X POST -H 'Content-Type: application/json' \
-    --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
+        -X POST -H 'Content-Type: application/json' \
+        --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
     || exit 1
 
 USER photoview
