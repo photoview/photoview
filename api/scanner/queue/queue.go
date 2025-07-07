@@ -45,13 +45,13 @@ func NewQueue(db *gorm.DB) (*Queue, error) {
 	}
 
 	if siteInfo.PeriodicScanInterval < 0 {
-		return nil, fmt.Errorf("invalid periodic scan interval (%d): must >= 0", siteInfo.PeriodicScanInterval)
+		return nil, fmt.Errorf("invalid periodic scan interval (%d): must be >= 0", siteInfo.PeriodicScanInterval)
 	}
 
 	interval := time.Duration(siteInfo.PeriodicScanInterval) * time.Second
 
 	if siteInfo.ConcurrentWorkers < 0 {
-		return nil, fmt.Errorf("invalid concurrent workers (%d): must >= 0", siteInfo.ConcurrentWorkers)
+		return nil, fmt.Errorf("invalid concurrent workers (%d): must be >= 0", siteInfo.ConcurrentWorkers)
 	}
 
 	ctx := log.WithAttrs(context.Background(), "process", "queue")

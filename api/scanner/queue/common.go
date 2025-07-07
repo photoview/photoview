@@ -116,7 +116,7 @@ func (q *commonQueue[Job]) ConsumeAllBacklog(ctx context.Context) {
 // UpdateScanInterval updates the interval of background periodic jobs.
 func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 	if newInterval < 0 {
-		return fmt.Errorf("invalid periodic scan interval(%d): must >= 0", newInterval)
+		return fmt.Errorf("invalid periodic scan interval(%d): must be >= 0", newInterval)
 	}
 
 	if newInterval == 0 {
@@ -131,7 +131,7 @@ func (q *commonQueue[Job]) UpdateScanInterval(newInterval time.Duration) error {
 // RescaleWorkers rescales the number of background workers.
 func (q *commonQueue[Job]) RescaleWorkers(newMax int) error {
 	if newMax < 0 {
-		return fmt.Errorf("invalid concurrent workers (%d): must >= 0", newMax)
+		return fmt.Errorf("invalid concurrent workers (%d): must be >= 0", newMax)
 	}
 
 	q.workersMu.Lock()
