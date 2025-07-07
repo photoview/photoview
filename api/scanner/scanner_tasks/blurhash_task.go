@@ -33,7 +33,7 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 
 	thumbnail, err := media.GetThumbnail()
 	if err != nil {
-		return fmt.Errorf("failed to get thubmnail of image %q: %w", mediaData.Media.Path, err)
+		return fmt.Errorf("failed to get thumbnail of image %q: %w", mediaData.Media.Path, err)
 	}
 
 	hashStr, err := generateBlurhashFromThumbnail(thumbnail)
@@ -53,25 +53,25 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 
 // generateBlurhashFromThumbnail generates a blurhash for a single media and stores it in the database
 func generateBlurhashFromThumbnail(thumbnail *models.MediaURL) (string, error) {
-	thumbnail_path, err := thumbnail.CachedPath()
+	path, err := thumbnail.CachedPath()
 	if err != nil {
 		return "", fmt.Errorf("get path of media(id:%d) error: %w", thumbnail.MediaID, err)
 	}
 
-	imageFile, err := os.Open(thumbnail_path)
+	f, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("open %q error: %w", thumbnail_path, err)
+		return "", fmt.Errorf("open %q error: %w", path, err)
 	}
-	defer imageFile.Close()
+	defer f.Close()
 
-	imageData, _, err := image.Decode(imageFile)
+	imageData, _, err := image.Decode(f)
 	if err != nil {
-		return "", fmt.Errorf("decode %q error: %w", thumbnail_path, err)
+		return "", fmt.Errorf("decode %q error: %w", path, err)
 	}
 
 	hashStr, err := blurhash.Encode(4, 3, imageData)
 	if err != nil {
-		return "", fmt.Errorf("encode blurhash of %q error: %w", thumbnail_path, err)
+		return "", fmt.Errorf("encode blurhash of %q error: %w", path, err)
 	}
 
 	return hashStr, nil
