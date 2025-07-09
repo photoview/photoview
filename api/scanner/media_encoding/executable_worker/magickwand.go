@@ -44,6 +44,10 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 		return fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
 	}
 
+	if err := wand.AutoOrientImage(); err != nil {
+		return fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
+	}
+
 	if err := wand.SetFormat("JPEG"); err != nil {
 		return fmt.Errorf("ImagickWand set JPEG format for %q error: %w", inputPath, err)
 	}
@@ -73,6 +77,10 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 
 	if err := wand.ThumbnailImage(width, height); err != nil {
 		return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
+	}
+
+	if err := wand.AutoOrientImage(); err != nil {
+		return fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
 	}
 
 	if err := wand.SetFormat("JPEG"); err != nil {
