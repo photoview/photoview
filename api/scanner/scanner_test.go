@@ -103,10 +103,7 @@ func TestFullScan(t *testing.T) {
 		t.Fatal("initalize face detector error:", err)
 	}
 
-	start := time.Now()
 	scanner_utils.RunScannerOnUser(t, db, user)
-	dur := time.Now().Sub(start)
-	t.Logf("RunScannerOnUser took %s.", dur)
 
 	t.Run("CheckMedia", func(t *testing.T) {
 		var allMedia []*models.Media

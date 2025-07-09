@@ -2,6 +2,7 @@ package scanner_utils
 
 import (
 	"testing"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner"
@@ -11,6 +12,12 @@ import (
 )
 
 func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
+	start := time.Now()
+	defer func() {
+		dur := time.Now().Sub(start)
+		t.Logf("RunScannerOnUser(user(id:%d)) took %s.", user.ID, dur)
+	}()
+
 	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db)) {
 		return
 	}
@@ -28,6 +35,12 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 }
 
 func RunScannerAll(t *testing.T, db *gorm.DB) {
+	start := time.Now()
+	defer func() {
+		dur := time.Now().Sub(start)
+		t.Logf("RunScannerAll() took %s.", dur)
+	}()
+
 	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db)) {
 		return
 	}
