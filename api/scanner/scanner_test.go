@@ -36,44 +36,46 @@ func TestFullScan(t *testing.T) {
 		Path:  "./test_media",
 	}
 
-	wantNoImages := []string{
-		"avi.avi",
-		"mkv.mkv",
-		"mp4.mp4",
-		"mpeg.mpg",
-		"ogg.ogg",
-		"quicktime.mov",
-		"webm.webm",
-		"wmv.wmv",
-	}
-	wantThumbnailsImages := []string{
-		"buttercup_close_summer_yellow.jpg",
+	wantWebPhotos := []string{
+		"bmp.bmp",
 		"gif.gif",
-		"lilac_lilac_bush_lilac.jpg",
-		"mount_merapi_volcano_indonesia.jpg",
+		"jpeg.jpg",
+		"png.png",
+		"webp.webp",
+
+		"jpg_with_file.jpg",
+		"recoverable_bad_rst_marker.jpg",
+		"standalone_jpg.jpg",
+
 		"boy1.jpg",
 		"boy2.jpg",
+		"buttercup_close_summer_yellow.jpg",
 		"girl_black_hair2.jpg",
 		"girl_blond1.jpg",
 		"girl_blond2.jpg",
 		"girl_blond3.jpg",
-
-		"bmp.bmp",
-		"jpeg.jpg",
-		"jpg_with_file.jpg",
-		"webp.webp",
-		"png.png",
-		"standalone_jpg.jpg",
-
-		"recoverable_bad_rst_marker.jpg",
+		"lilac_lilac_bush_lilac.jpg",
+		"mount_merapi_volcano_indonesia.jpg",
 	}
-	wantHighresImages := []string{
+	wantNonWebPhotos := []string{
 		"heif.heif",
 		"jpg2000.jp2",
 		"raw_with_file.tiff",
 		"raw_with_jpg.tiff",
 		"standalone_raw.tiff",
 		"tiff.tiff",
+	}
+	wantWebVideos := []string{
+		"mp4.mp4",
+		"mpeg.mpg",
+		"ogg.ogg",
+		"webm.webm",
+	}
+	wantNonWebVideos := []string{
+		"avi.avi",
+		"mkv.mkv",
+		"quicktime.mov",
+		"wmv.wmv",
 	}
 
 	wantFaceGroups := [][]string{
@@ -109,15 +111,19 @@ func TestFullScan(t *testing.T) {
 			t.Fatal("get all media error:", err)
 		}
 
-		var want []string
-		want = append(want, wantNoImages...)
-		want = append(want, wantThumbnailsImages...)
-		want = append(want, wantHighresImages...)
+		want := []string{}
+		want = append(want, wantWebPhotos...)
+		want = append(want, wantNonWebPhotos...)
+		want = append(want, wantWebVideos...)
+		want = append(want, wantNonWebVideos...)
 		slices.Sort(want)
 
 		got := make([]string, len(allMedia))
 		for i, media := range allMedia {
 			got[i] = media.Title
+			if media.Blurhash == nil {
+				t.Errorf("media %q(%s) doesn't have Blurhash, while it should have", media.Title, media.Type)
+			}
 		}
 		slices.Sort(got)
 
@@ -133,28 +139,27 @@ func TestFullScan(t *testing.T) {
 		}
 
 		var want []string
-
-		wantThumbs := slices.Clone(wantThumbnailsImages)
-		want = append(want, wantThumbnailsImages...)
-		for _, file := range copyFilelistWithJpgExt(wantThumbs) {
-			want = append(want, "thumbnail_"+file)
+		want = append(want, wantWebPhotos...)
+		for _, name := range wantWebPhotos {
+			want = append(want, "thumbnail_"+strings.ReplaceAll(name, ".", "_")+".jpg")
 		}
 
-		wantHighres := slices.Clone(wantHighresImages)
-		want = append(want, wantHighresImages...)
-		for _, file := range copyFilelistWithJpgExt(wantHighres) {
-			want = append(want, "highres_"+file)
-			want = append(want, "thumbnail_"+file)
+		want = append(want, wantNonWebPhotos...)
+		for _, name := range wantNonWebPhotos {
+			want = append(want, "thumbnail_"+strings.ReplaceAll(name, ".", "_")+".jpg")
+			want = append(want, "highres_"+strings.ReplaceAll(name, ".", "_")+".jpg")
 		}
 
-		wantSet := make(map[string]struct{})
-		for _, item := range want {
-			wantSet[item] = struct{}{}
+		want = append(want, wantWebVideos...)
+		for _, name := range wantWebVideos {
+			want = append(want, "video_thumb_"+strings.ReplaceAll(name, ".", "_")+".jpg")
 		}
-		want = make([]string, 0, len(wantSet))
-		for key := range wantSet {
-			want = append(want, key)
+
+		for _, name := range wantNonWebVideos {
+			want = append(want, "video_thumb_"+strings.ReplaceAll(name, ".", "_")+".jpg")
+			want = append(want, "web_video_"+strings.ReplaceAll(name, ".", "_")+".mp4")
 		}
+
 		slices.Sort(want)
 
 		if got, want := len(allMediaURL), len(want); got != want {
@@ -168,7 +173,7 @@ func TestFullScan(t *testing.T) {
 		slices.Sort(got)
 
 		if diff := cmp.Diff(got, want, cmp.Comparer(equalNameWithoutSuffix)); diff != "" {
-			t.Errorf("all media diff (-got, +want):\n%s", diff)
+			t.Errorf("all media url diff (-got, +want):\n%s", diff)
 		}
 	})
 
@@ -218,8 +223,8 @@ func equalNameWithoutSuffix(a, b string) bool {
 		return false
 	}
 
-	// a is not part of b and b is not part of a
-	if strings.Index(mainA, mainB) < 0 && strings.Index(mainB, mainA) < 0 {
+	// a is not prefix of b and b is not prefix of a
+	if strings.HasPrefix(mainA, mainB) && strings.HasPrefix(mainB, mainA) {
 		return false
 	}
 

@@ -2,14 +2,22 @@ package scanner_utils
 
 import (
 	"testing"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
+	start := time.Now()
+	defer func() {
+		dur := time.Now().Sub(start)
+		t.Logf("RunScannerOnUser(user(id:%d)) took %s.", user.ID, dur)
+	}()
+
 	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db)) {
 		return
 	}
@@ -20,9 +28,19 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 
 	// wait for all jobs to finish
 	scanner_queue.CloseScannerQueue()
+
+	if err := scanner.GenerateBlurhashes(db); err != nil {
+		t.Fatalf("generate blurhashes error: %v", err)
+	}
 }
 
 func RunScannerAll(t *testing.T, db *gorm.DB) {
+	start := time.Now()
+	defer func() {
+		dur := time.Now().Sub(start)
+		t.Logf("RunScannerAll() took %s.", dur)
+	}()
+
 	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db)) {
 		return
 	}
@@ -33,4 +51,8 @@ func RunScannerAll(t *testing.T, db *gorm.DB) {
 
 	// wait for all jobs to finish
 	scanner_queue.CloseScannerQueue()
+
+	if err := scanner.GenerateBlurhashes(db); err != nil {
+		t.Fatalf("generate blurhashes error: %v", err)
+	}
 }
