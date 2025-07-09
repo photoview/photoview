@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
@@ -39,21 +38,6 @@ func BenchmarkStdlib(b *testing.B) {
 
 			if err := jpeg.Encode(output, img, &jpeg.Options{Quality: 70}); err != nil {
 				b.Fatal("encode error:", err)
-			}
-		}()
-	}
-}
-
-func BenchmarkMagickCLI(b *testing.B) {
-	dir := b.TempDir()
-
-	for b.Loop() {
-		func() {
-			output := filepath.Join(dir, "test.jpg")
-			defer os.Remove(output)
-
-			if err := executable_worker.Magick.EncodeJpeg("./test_media/real_media/png.png", output, 70); err != nil {
-				b.Fatal("encode jpeg error:", err)
 			}
 		}()
 	}

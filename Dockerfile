@@ -75,7 +75,9 @@ RUN export $(cat /env) \
     && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
     && cp -a lib/* /usr/local/lib/ \
     && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb
+    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/
 
 COPY api/go.mod api/go.sum /app/api/
 # Split values in `/env`

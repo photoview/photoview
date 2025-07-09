@@ -34,6 +34,8 @@ func SetPathWithCurrent(t *testing.T, paths ...string) {
 
 func TestInitFfprobePath(t *testing.T) {
 	t.Run("PathFail", func(t *testing.T) {
+		SetPathWithCurrent(t, "non_exist_path")
+
 		err := SetFfprobePath()
 		if err == nil {
 			t.Fatalf("InitFfprobePath() returns nil, want an error")
