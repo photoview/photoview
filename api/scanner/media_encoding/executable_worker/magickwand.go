@@ -90,14 +90,12 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 		return fmt.Errorf("ImagickWand set orientation for %q error: %w", inputPath, err)
 	}
 
+	// If the original image is rotated by 90 degrees, swap width and height for thumbnail generation
 	if originalWidth != wand.GetImageWidth() && originalHeight != wand.GetImageHeight() {
-		if err := wand.ThumbnailImage(height, width); err != nil {
-			return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
-		}
-	} else {
-		if err := wand.ThumbnailImage(width, height); err != nil {
-			return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
-		}
+		width, height = height, width
+	}
+	if err := wand.ThumbnailImage(width, height); err != nil {
+		return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
 	}
 
 	if err := wand.SetFormat("JPEG"); err != nil {
