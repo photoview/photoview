@@ -77,8 +77,13 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 	}
 	thumbnail := origin.ThumbnailScale()
 
-	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
+	isRotated, err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height))
+	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
+	}
+
+	if isRotated {
+		thumbnail.Width, thumbnail.Height = thumbnail.Height, thumbnail.Width
 	}
 
 	return thumbnail, nil
