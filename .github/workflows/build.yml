@@ -126,7 +126,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context:     .
-          target:      release
+          #target:      release # Uncomment brefore releasing the new version, as the 2.4.0 doesn't have this target.
           sbom:        true
           provenance:  mode=max
           platforms:   ${{ env.PLATFORMS }}
