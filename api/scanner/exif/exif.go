@@ -1,12 +1,13 @@
 package exif
 
 import (
-	"log"
+	"sync"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 )
 
 type ExifParser interface {
@@ -14,18 +15,21 @@ type ExifParser interface {
 }
 
 var globalExifParser ExifParser
+var globalInit sync.Once
 
 func InitializeEXIFParser() {
-	// Decide between internal or external Exif parser
-	exiftoolParser, err := NewExiftoolParser()
+	globalInit.Do(func() {
+		// Decide between internal or external Exif parser
+		exiftoolParser, err := NewExiftoolParser()
+		if err != nil {
+			log.Warn(nil, "Failed to get exiftool, using internal exif parser instead", "exif_error", err)
+			globalExifParser = NewInternalExifParser()
+			return
+		}
 
-	if err != nil {
-		log.Printf("Failed to get exiftool, using internal exif parser instead: %v\n", err)
-		globalExifParser = NewInternalExifParser()
-	} else {
-		log.Println("Found exiftool")
+		log.Info(nil, "Found exiftool")
 		globalExifParser = exiftoolParser
-	}
+	})
 }
 
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
