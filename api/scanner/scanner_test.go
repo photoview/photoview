@@ -212,7 +212,7 @@ func TestFullScan(t *testing.T) {
 		}
 	})
 
-	t.Run("CheckVertialPhotos", func(t *testing.T) {
+	t.Run("CheckVerticalPhotos", func(t *testing.T) {
 		verticalPhotos := []string{
 			"up_arrow_web.jpg", "up_arrow_nonweb.tiff",
 		}
