@@ -67,7 +67,7 @@ RUN set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
     && tar xfv artifacts.tar.gz \
     && cp -a include/* /usr/local/include/ \
-    && cp -a pkgconfig/* ${PKG_CONFIG_PATH} \
+    && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
     && ldconfig \
     && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
