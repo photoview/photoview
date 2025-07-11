@@ -1,14 +1,12 @@
 package scanner_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -178,18 +176,14 @@ func TestFullScan(t *testing.T) {
 	})
 
 	t.Run("CheckFaceGroup", func(t *testing.T) {
-		ctx, done := context.WithTimeout(t.Context(), time.Second*5)
-		defer done()
+		var allFaceGroups []*models.FaceGroup
+		if err := db.Find(&allFaceGroups).Error; err != nil {
+			t.Fatal("get face groups error:", err)
+		}
 
-		waitFor(ctx, t, time.Second/2, func() bool {
-			var allFaceGroups []*models.FaceGroup
-			if err := db.Find(&allFaceGroups).Error; err != nil {
-				t.Fatal("get face groups error:", err)
-				return false
-			}
-
-			return len(allFaceGroups) == len(wantFaceGroups)
-		})
+		if got, want := len(allFaceGroups), len(wantFaceGroups); got != want {
+			t.Errorf("len(allFaceGroups) = %d, want: %d", got, want)
+		}
 	})
 
 	t.Run("CheckFaces", func(t *testing.T) {
@@ -229,24 +223,6 @@ func equalNameWithoutSuffix(a, b string) bool {
 	}
 
 	return true
-}
-
-func waitFor(ctx context.Context, t *testing.T, interval time.Duration, checkFn func() bool) {
-	t.Helper()
-
-	ticker := time.NewTicker(interval)
-	for {
-		select {
-		case <-ctx.Done():
-			t.Fatal("check timeout")
-			return
-		case <-ticker.C:
-		}
-
-		if checkFn() {
-			return
-		}
-	}
 }
 
 func groupMediaWithFaces(medias []*models.ImageFace) [][]string {

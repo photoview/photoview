@@ -18,14 +18,13 @@ func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, media
 	didProcess := len(updatedURLs) > 0
 
 	if didProcess && mediaData.Media.Type == models.MediaTypePhoto {
-		go func(media *models.Media) {
-			if face_detection.GlobalFaceDetector == nil {
-				return
-			}
-			if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), media); err != nil {
-				scanner_utils.ScannerError(ctx, "Error detecting faces in image (%s): %s", media.Path, err)
-			}
-		}(mediaData.Media)
+		media := mediaData.Media
+		if face_detection.GlobalFaceDetector == nil {
+			return nil
+		}
+		if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), media); err != nil {
+			scanner_utils.ScannerError(ctx, "Error detecting faces in image (%s): %s", media.Path, err)
+		}
 	}
 
 	return nil
