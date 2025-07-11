@@ -224,7 +224,7 @@ func TestFullScan(t *testing.T) {
 
 			thumbnail, err := media.GetThumbnail()
 			if err != nil {
-				t.Fatalf("can't get high resolution of media %q: %v", media.Title, err)
+				t.Fatalf("can't get thumbnail of media %q: %v", filename, err)
 			}
 
 			if thumbnail.Width >= thumbnail.Height {
