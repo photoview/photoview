@@ -78,6 +78,7 @@ jobs:
 
     - name: Archive code coverage results
       uses: actions/upload-artifact@v4
+      if: ${{ steps.test.conclusion == 'success' }}
       with:
         name: api-${{ matrix.database }}-code-coverage-report
         path: ./api/coverage.txt
