@@ -1,14 +1,10 @@
 package media_type
 
 import (
-	"flag"
 	"testing"
-)
 
-func init() {
-	// Avoid panic with providing flags in `test_utils/integration_setup.go`.
-	flag.CommandLine.Init("media_type", flag.ContinueOnError)
-}
+	_ "github.com/photoview/photoview/api/test_utils/flags"
+)
 
 type boolImage bool
 

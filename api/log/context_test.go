@@ -3,17 +3,12 @@ package log
 import (
 	"bytes"
 	"context"
-	"flag"
 	"log/slog"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	_ "github.com/photoview/photoview/api/test_utils/flags"
 )
-
-func init() {
-	// Avoid panic with providing flags in `test_utils/integration_setup.go`.
-	flag.CommandLine.Init("executable_worker", flag.ContinueOnError)
-}
 
 func mockDefaultLogger(t *testing.T) *bytes.Buffer {
 	t.Helper()

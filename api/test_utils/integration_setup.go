@@ -9,19 +9,10 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/test_utils/flags"
 	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
-
-type integration_options struct {
-	Database   *bool
-	Filesystem *bool
-}
-
-var integration_flags integration_options = integration_options{
-	Database:   flag.Bool("database", false, "run database integration tests"),
-	Filesystem: flag.Bool("filesystem", false, "run filesystem integration tests"),
-}
 
 var test_dbm TestDBManager = TestDBManager{}
 
@@ -38,7 +29,7 @@ func IntegrationTestRun(m *testing.M) int {
 		log.Fatal("could not get runtime file path")
 	}
 
-	if *integration_flags.Database {
+	if flags.Database {
 
 		envPath := path.Join(path.Dir(file), "..", "testing.env")
 
@@ -61,14 +52,14 @@ func IntegrationTestRun(m *testing.M) int {
 }
 
 func FilesystemTest(t *testing.T) {
-	if !*integration_flags.Filesystem {
+	if !flags.Filesystem {
 		t.Skip("Filesystem integration tests disabled")
 	}
 	utils.ConfigureTestCache(t.TempDir())
 }
 
 func DatabaseTest(t *testing.T) *gorm.DB {
-	if !*integration_flags.Database {
+	if !flags.Database {
 		t.Skip("Database integration tests disabled")
 	}
 

@@ -33,24 +33,11 @@ func (cli *MagickWand) IsInstalled() bool {
 }
 
 func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuality uint) error {
-	if !cli.IsInstalled() {
-		return fmt.Errorf("ImagickWand is not initialized")
+	wand, err := cli.createWandFromFile(inputPath)
+	if err != nil {
+		return err
 	}
-
-	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
-
-	if err := wand.ReadImage(inputPath); err != nil {
-		return fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
-	}
-
-	if err := wand.AutoOrientImage(); err != nil {
-		return fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
-	}
-	// Reset EXIF orientation to 1 (top-left) since image is now properly oriented
-	if err := wand.SetImageOrientation(imagick.ORIENTATION_TOP_LEFT); err != nil {
-		return fmt.Errorf("ImagickWand set orientation for %q error: %w", inputPath, err)
-	}
 
 	if err := wand.SetFormat("JPEG"); err != nil {
 		return fmt.Errorf("ImagickWand set JPEG format for %q error: %w", inputPath, err)
@@ -68,32 +55,12 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 }
 
 func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, width, height uint) error {
-	if !cli.IsInstalled() {
-		return fmt.Errorf("ImagickWand is not initialized")
+	wand, err := cli.createWandFromFile(inputPath)
+	if err != nil {
+		return err
 	}
-
-	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
 
-	if err := wand.ReadImage(inputPath); err != nil {
-		return fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
-	}
-
-	originalWidth := wand.GetImageWidth()
-	originalHeight := wand.GetImageHeight()
-
-	if err := wand.AutoOrientImage(); err != nil {
-		return fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
-	}
-	// Reset EXIF orientation to 1 (top-left) since image is now properly oriented
-	if err := wand.SetImageOrientation(imagick.ORIENTATION_TOP_LEFT); err != nil {
-		return fmt.Errorf("ImagickWand set orientation for %q error: %w", inputPath, err)
-	}
-
-	// If the original image is rotated by 90 degrees, swap width and height for thumbnail generation
-	if originalWidth != wand.GetImageWidth() && originalHeight != wand.GetImageHeight() {
-		width, height = height, width
-	}
 	if err := wand.ThumbnailImage(width, height); err != nil {
 		return fmt.Errorf("ImagickWand generate thumbnail for %q error: %w", inputPath, err)
 	}
@@ -113,22 +80,39 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 	return nil
 }
 
-func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, err error) {
-	if !cli.IsInstalled() {
-		err = fmt.Errorf("ImagickWand is not initialized")
+func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, reterr error) {
+	wand, err := cli.createWandFromFile(inputPath)
+	if err != nil {
+		reterr = err
 		return
 	}
-
-	wand := imagick.NewMagickWand()
 	defer wand.Destroy()
-
-	if errRI := wand.ReadImage(inputPath); errRI != nil {
-		err = fmt.Errorf("ImagickWand read %q error: %w", inputPath, errRI)
-		return
-	}
 
 	width = wand.GetImageWidth()
 	height = wand.GetImageHeight()
 
 	return
+}
+
+func (cli *MagickWand) createWandFromFile(inputPath string) (*imagick.MagickWand, error) {
+	if !cli.IsInstalled() {
+		return nil, fmt.Errorf("ImagickWand is not initialized")
+	}
+
+	wand := imagick.NewMagickWand()
+
+	if err := wand.ReadImage(inputPath); err != nil {
+		return nil, fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
+	}
+
+	if err := wand.AutoOrientImage(); err != nil {
+		return nil, fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
+	}
+
+	// Reset EXIF orientation to 1 (top-left) since image is now properly oriented
+	if err := wand.SetImageOrientation(imagick.ORIENTATION_TOP_LEFT); err != nil {
+		return nil, fmt.Errorf("ImagickWand set orientation for %q error: %w", inputPath, err)
+	}
+
+	return wand, nil
 }
