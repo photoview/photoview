@@ -81,6 +81,15 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
+	w, h, err = executable_worker.Magick.IdentifyDimension(outputPath)
+	if err != nil {
+		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
+	}
+	thumbnail = Dimension{
+		Width:  int(w),
+		Height: int(h),
+	}
+
 	return thumbnail, nil
 }
 
