@@ -39,10 +39,6 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 	}
 	defer wand.Destroy()
 
-	if err := wand.AutoOrientImage(); err != nil {
-		return fmt.Errorf("ImagickWand auto-orient %q error: %w", inputPath, err)
-	}
-
 	if err := wand.SetFormat("JPEG"); err != nil {
 		return fmt.Errorf("ImagickWand set JPEG format for %q error: %w", inputPath, err)
 	}
