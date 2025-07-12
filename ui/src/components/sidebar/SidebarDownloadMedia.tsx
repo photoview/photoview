@@ -10,9 +10,10 @@ import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
 import {
   sidebarDownloadQuery,
-  sidebarDownloadQueryVariables,
   sidebarDownloadQuery_media_downloads,
+  sidebarDownloadQueryVariables,
 } from './__generated__/sidebarDownloadQuery'
+import { isNil } from '../../helpers/utils'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -73,7 +74,7 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
     credentials: 'include',
   })
 
-  let blob = null
+  let blob
   if (response.headers.has('content-length')) {
     blob = await downloadMediaShowProgress(t)(response)
   } else {
@@ -102,8 +103,20 @@ const downloadMediaShowProgress =
     const reader = response.body?.getReader()
     const data = new Uint8Array(totalBytes)
 
-    if (reader == null) {
-      throw new Error('Download reader is null')
+    if (reader == null || isNil(totalBytes)) {
+      MessageState.add({
+        key: `download-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 11)}`,
+        type: NotificationType.Close,
+        props: {
+          negative: true,
+          header: 'Downloading media failed',
+          content: `The content length of the downloaded media is 0 bytes, which has no sense and usually
+          means that there is an unknown lower-level error.`,
+        },
+      })
+      return
     }
 
     let canceled = false
@@ -116,7 +129,6 @@ const downloadMediaShowProgress =
     MessageState.add({
       key: notifyKey,
       type: NotificationType.Progress,
-      onDismiss,
       props: {
         header: 'Downloading photo',
         content: `Starting download`,
@@ -168,11 +180,9 @@ const downloadMediaShowProgress =
       MessageState.removeKey(notifyKey)
     }, 2000)
 
-    const content = new Blob([data.buffer], {
+    return new Blob([data.buffer], {
       type: response.headers.get('content-type') || undefined,
     })
-
-    return content
   }
 
 const downloadBlob = (blob: Blob, filename: string) => {
@@ -246,11 +256,11 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   )
 }
 
-type SidebarMediaDownladProps = {
+type SidebarMediaDownloadProps = {
   media: MediaSidebarMedia
 }
 
-const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
+const SidebarMediaDownload = ({ media }: SidebarMediaDownloadProps) => {
   const { t } = useTranslation()
   if (!media || !media.id) return null
 
