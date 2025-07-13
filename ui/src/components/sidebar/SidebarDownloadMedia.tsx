@@ -302,3 +302,5 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownloadProps) => {
 }
 
 export default SidebarMediaDownload
+
+export { downloadMediaShowProgress }
