@@ -22,6 +22,16 @@ func TestEnsureExifOrient(t *testing.T) {
 	}
 	defer et.Close()
 
+	t.Log("Orientation explaination:")
+	t.Log("1 = Horizontal (normal)")
+	t.Log("2 = Mirror horizontal")
+	t.Log("3 = Rotate 180")
+	t.Log("4 = Mirror vertical")
+	t.Log("5 = Mirror horizontal and rotate 270 CW")
+	t.Log("6 = Rotate 90 CW")
+	t.Log("7 = Mirror horizontal and rotate 90 CW")
+	t.Log("8 = Rotate 270 CW")
+
 	// Test files should be present in the same directory as this test
 	for _, file := range []string{
 		"left_arrow_normal_web.jpg",
@@ -39,9 +49,9 @@ func TestEnsureExifOrient(t *testing.T) {
 			t.Fatalf("get orientation with file %s error: %v", file, err)
 		}
 
-		want := int64(1) // Normal
+		want := int64(1)
 		if strings.Contains(file, "_90cw_") {
-			want = 6 // 90 clockwise
+			want = 6
 		}
 
 		if got != want {
