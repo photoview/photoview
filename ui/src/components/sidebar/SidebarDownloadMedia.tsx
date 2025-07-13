@@ -13,7 +13,6 @@ import {
   sidebarDownloadQuery_media_downloads,
   sidebarDownloadQueryVariables,
 } from './__generated__/sidebarDownloadQuery'
-import { isNil } from '../../helpers/utils'
 
 export const SIDEBAR_DOWNLOAD_QUERY = gql`
   query sidebarDownloadQuery($mediaId: ID!) {
@@ -103,7 +102,7 @@ const downloadMediaShowProgress =
     const reader = response.body?.getReader()
     const data = new Uint8Array(totalBytes)
 
-    if (reader == null || isNil(totalBytes)) {
+    if (reader == null || totalBytes <= 0 || isNaN(totalBytes)) {
       MessageState.add({
         key: `download-${Date.now()}-${Math.random()
           .toString(36)
