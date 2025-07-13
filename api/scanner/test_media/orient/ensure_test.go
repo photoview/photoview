@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestEnsureExifOrient(t *testing.T) {
-	buf := make([]byte, 256*1024)
+	buf := make([]byte, 64*1024)
 
 	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
 	if err != nil {
@@ -22,6 +22,7 @@ func TestEnsureExifOrient(t *testing.T) {
 	}
 	defer et.Close()
 
+	// Test files should be present in the same directory as this test
 	for _, file := range []string{
 		"left_arrow_normal_web.jpg",
 		"up_arrow_90cw_web.jpg",
