@@ -2,6 +2,7 @@ package periodic_scanner
 
 import (
 	"errors"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func (m *MockScannerQueue) AddAllToQueue() error {
 }
 
 func TestMain(m *testing.M) {
-	test_utils.UnitTestRun(m)
+	os.Exit(test_utils.UnitTestRun(m))
 }
 
 func resetPeriodicScanner() {
