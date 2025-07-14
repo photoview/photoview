@@ -85,7 +85,7 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	if origURL == nil {
 
 		// Make sure photo dimensions is set
-		photoDimensions, err := media_encoding.GetPhotoDimensions(baseImagePath)
+		photoDimensions, err := media_encoding.GetPhotoDimensions(photo.Path)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}
