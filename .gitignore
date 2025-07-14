@@ -21,7 +21,7 @@ node_modules/
 
 # testing
 /ui/coverage
-/api/coverage.txt
+/api/coverage*
 /api/test-*-report.xml
 *.cov
 
