@@ -3,7 +3,10 @@ package flags
 import "flag"
 
 var (
-	Database   bool
+	// Database enables database-integration tests when the `-database` flag is passed to `go test`.
+	Database bool
+
+	// Filesystem enables filesystem-integration tests when the `-filesystem` flag is passed to `go test`.
 	Filesystem bool
 )
 
