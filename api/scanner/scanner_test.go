@@ -215,13 +215,13 @@ func TestFullScan(t *testing.T) {
 	})
 
 	t.Run("CheckPhotosOrientation", func(t *testing.T) {
-		verticalPhotos := []string{
+		photoFiles := []string{
 			"left_arrow_normal_web.jpg",
 			"up_arrow_90cw_web.jpg",
 			"left_arrow_normal_nonweb.tiff",
 			"up_arrow_90cw_nonweb.tiff",
 		}
-		for _, filename := range verticalPhotos {
+		for _, filename := range photoFiles {
 			var media models.Media
 			if err := db.Preload("MediaURL").Where("title = ?", filename).Find(&media).Error; err != nil {
 				t.Fatalf("can't find media with name %q: %v", filename, err)
