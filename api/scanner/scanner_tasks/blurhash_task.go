@@ -74,7 +74,11 @@ func generateBlurhashFromThumbnail(thumbnail *models.MediaURL) (string, error) {
 		return "", fmt.Errorf("decode %q error: %w", path, err)
 	}
 
-	hashStr, err := blurhash.Encode(4, 3, imageData)
+	const (
+		componentX = 4
+		componentY = 3
+	)
+	hashStr, err := blurhash.Encode(componentX, componentY, imageData)
 	if err != nil {
 		return "", fmt.Errorf("encode blurhash of %q error: %w", path, err)
 	}
