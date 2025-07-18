@@ -175,18 +175,6 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 		notification.BroadcastNotification(&models.Notification{
 			Key:      globalScannerProgress,
 			Type:     models.NotificationTypeMessage,
-			Header:   "Generating blurhashes",
-			Content:  "Generating blurhashes for newly scanned media",
-			Positive: true,
-		})
-
-		if err := scanner.GenerateBlurhashes(queue.db); err != nil {
-			scanner_utils.ScannerError(nil, "Failed to generate blurhashes: %v", err)
-		}
-
-		notification.BroadcastNotification(&models.Notification{
-			Key:      globalScannerProgress,
-			Type:     models.NotificationTypeMessage,
 			Header:   "Scanner complete",
 			Content:  "All jobs have been scanned",
 			Positive: true,
