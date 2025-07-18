@@ -12,16 +12,14 @@ import (
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/periodic_scanner"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"gorm.io/gorm"
 )
 
 // ScanAll is the resolver for the scanAll field.
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
-	err := scanner_queue.AddAllToQueue()
+	err := r.queue.AddAllAlbums(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("scan all album error: %w", err)
 	}
 
 	startMessage := "Scanner started"
@@ -40,7 +38,9 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		return nil, fmt.Errorf("get user from database: %w", err)
 	}
 
-	scanner_queue.AddUserToQueue(&user)
+	if err := r.queue.AddUserAlbums(ctx, &user); err != nil {
+		return nil, fmt.Errorf("scan user album error: %w", err)
+	}
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{
@@ -71,7 +71,7 @@ func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval
 		return 0, err
 	}
 
-	periodic_scanner.ChangePeriodicScanInterval(time.Duration(siteInfo.PeriodicScanInterval) * time.Second)
+	r.queue.UpdateScanInterval(time.Duration(siteInfo.PeriodicScanInterval) * time.Second)
 
 	return siteInfo.PeriodicScanInterval, nil
 }
@@ -101,7 +101,9 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, err
 	}
 
-	scanner_queue.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
+	if err := r.queue.RescaleWorkers(siteInfo.ConcurrentWorkers); err != nil {
+		return 0, err
+	}
 
 	return siteInfo.ConcurrentWorkers, nil
 }
