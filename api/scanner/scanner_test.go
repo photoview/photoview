@@ -54,6 +54,9 @@ func TestFullScan(t *testing.T) {
 		"girl_blond3.jpg",
 		"lilac_lilac_bush_lilac.jpg",
 		"mount_merapi_volcano_indonesia.jpg",
+
+		"left_arrow_normal_web.jpg",
+		"up_arrow_90cw_web.jpg",
 	}
 	wantNonWebPhotos := []string{
 		"heif.heif",
@@ -62,6 +65,9 @@ func TestFullScan(t *testing.T) {
 		"raw_with_jpg.tiff",
 		"standalone_raw.tiff",
 		"tiff.tiff",
+
+		"left_arrow_normal_nonweb.tiff",
+		"up_arrow_90cw_nonweb.tiff",
 	}
 	wantWebVideos := []string{
 		"mp4.mp4",
@@ -202,6 +208,37 @@ func TestFullScan(t *testing.T) {
 
 		if diff := cmp.Diff(got, wantFaceGroups); diff != "" {
 			t.Errorf("all media diff (-got, +want):\n%s", diff)
+		}
+	})
+
+	t.Run("CheckPhotosOrientation", func(t *testing.T) {
+		photoFiles := []string{
+			"left_arrow_normal_web.jpg",
+			"up_arrow_90cw_web.jpg",
+			"left_arrow_normal_nonweb.tiff",
+			"up_arrow_90cw_nonweb.tiff",
+		}
+		for _, filename := range photoFiles {
+			var media models.Media
+			if err := db.Preload("MediaURL").Where("title = ?", filename).Find(&media).Error; err != nil {
+				t.Fatalf("can't find media with name %q: %v", filename, err)
+			}
+
+			thumbnail, err := media.GetThumbnail()
+			if err != nil {
+				t.Fatalf("can't get thumbnail of media %q: %v", filename, err)
+			}
+
+			switch {
+			case strings.HasPrefix(filename, "up"):
+				if thumbnail.Width >= thumbnail.Height {
+					t.Errorf("media %q dimension: %dx%d, which should be a vertial photo", filename, thumbnail.Width, thumbnail.Height)
+				}
+			case strings.HasPrefix(filename, "left"):
+				if thumbnail.Width <= thumbnail.Height {
+					t.Errorf("media %q dimension: %dx%d, which should be a horizontal photo", filename, thumbnail.Width, thumbnail.Height)
+				}
+			}
 		}
 	})
 }
