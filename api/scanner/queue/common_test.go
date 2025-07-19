@@ -69,16 +69,16 @@ func TestCommonQueueParallel(t *testing.T) {
 
 	jobDuration := time.Second / 10
 	jobs := []*mockJob{
-		&mockJob{id: 1, sleepDuration: jobDuration},
-		&mockJob{id: 2, sleepDuration: jobDuration},
-		&mockJob{id: 3, sleepDuration: jobDuration},
+		{id: 1, sleepDuration: jobDuration},
+		{id: 2, sleepDuration: jobDuration},
+		{id: 3, sleepDuration: jobDuration},
 	}
 	queue.appendBacklog(jobs)
 
 	start := time.Now()
 	queue.ConsumeAllBacklog(t.Context())
 	queue.Close() // ensure all jobs are done
-	duration := time.Now().Sub(start)
+	duration := time.Since(start)
 
 	if got, want := duration, jobDuration; (got - want).Abs() >= (jobDuration / 10) {
 		t.Errorf("queue.ConsumeAllBacklog() took %v to finish, which should be around %v since jobs run in parallel", got, want)
@@ -169,9 +169,9 @@ func TestCommonQueueBackgroundJobs(t *testing.T) {
 
 	jobDuration := time.Second / 10
 	jobs := []*mockJob{
-		&mockJob{id: 1, sleepDuration: jobDuration},
-		&mockJob{id: 2, sleepDuration: jobDuration},
-		&mockJob{id: 3, sleepDuration: jobDuration},
+		{id: 1, sleepDuration: jobDuration},
+		{id: 2, sleepDuration: jobDuration},
+		{id: 3, sleepDuration: jobDuration},
 	}
 	queue.appendBacklog(jobs)
 
@@ -245,9 +245,9 @@ func TestCommonQueueRescaleWorkers(t *testing.T) {
 
 	jobDuration := time.Second / 10
 	jobs := []*mockJob{
-		&mockJob{id: 1, sleepDuration: jobDuration},
-		&mockJob{id: 2, sleepDuration: jobDuration},
-		&mockJob{id: 3, sleepDuration: jobDuration},
+		{id: 1, sleepDuration: jobDuration},
+		{id: 2, sleepDuration: jobDuration},
+		{id: 3, sleepDuration: jobDuration},
 	}
 	queue.appendBacklog(jobs)
 
@@ -278,9 +278,9 @@ func TestCommonQueueRescaleWorkers(t *testing.T) {
 	t.Log("len(worker) = 1")
 
 	jobs = []*mockJob{
-		&mockJob{id: 1, sleepDuration: jobDuration},
-		&mockJob{id: 2, sleepDuration: jobDuration},
-		&mockJob{id: 3, sleepDuration: jobDuration},
+		{id: 1, sleepDuration: jobDuration},
+		{id: 2, sleepDuration: jobDuration},
+		{id: 3, sleepDuration: jobDuration},
 	}
 	queue.appendBacklog(jobs)
 
