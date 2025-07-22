@@ -17,7 +17,7 @@ func TestPathFromAPIRoot(t *testing.T) {
 
 	for _, tc := range tests {
 		if got, want := PathFromAPIRoot(tc.paths...), tc.want; !strings.HasSuffix(got, want) {
-			t.Fatalf(`PathFromAPIRoot("./server.go") = %q, want a suffix: %q`, got, want)
+			t.Fatalf("PathFromAPIRoot(%v) = %q, want a suffix: %q", tc.paths, got, want)
 		}
 	}
 }
