@@ -34,7 +34,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if success, response, status, err := authenticateMedia(media, db, r); !success {
 			if err != nil {
-				log.Warn(r.Context(), "error authenticating photo", "error", err)
+				log.Error(r.Context(), "error authenticating photo", "error", err)
 			}
 			w.WriteHeader(status)
 			w.Write([]byte(response))
