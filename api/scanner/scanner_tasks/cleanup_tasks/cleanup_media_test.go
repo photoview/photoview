@@ -14,7 +14,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(test_utils.IntegrationTestRun(m))
+	test_utils.IntegrationTestRun(m)
 }
 
 func TestCleanupMedia(t *testing.T) {
