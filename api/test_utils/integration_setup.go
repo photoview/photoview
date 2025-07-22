@@ -3,8 +3,7 @@ package test_utils
 import (
 	"flag"
 	"log"
-	"path"
-	"runtime"
+	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -16,39 +15,30 @@ import (
 
 var test_dbm TestDBManager = TestDBManager{}
 
-func UnitTestRun(m *testing.M) int {
+func UnitTestRun(m *testing.M) {
 	flag.Parse()
-	return m.Run()
+	os.Exit(m.Run())
 }
 
-func IntegrationTestRun(m *testing.M) int {
+func IntegrationTestRun(m *testing.M) {
 	flag.Parse()
 
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		log.Fatal("could not get runtime file path")
-	}
-
 	if flags.Database {
-
-		envPath := path.Join(path.Dir(file), "..", "testing.env")
+		envPath := PathFromAPIRoot("testing.env")
 
 		if err := godotenv.Load(envPath); err != nil {
 			log.Println("No testing.env file found")
 		}
 	}
+	defer test_dbm.Close()
 
-	faceModelsPath := path.Join(path.Dir(file), "..", "data", "models")
+	faceModelsPath := PathFromAPIRoot("data/models")
 	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
 
 	terminateWorkers := executable_worker.Initialize()
 	defer terminateWorkers()
 
-	result := m.Run()
-
-	test_dbm.Close()
-
-	return result
+	os.Exit(m.Run())
 }
 
 func FilesystemTest(t *testing.T) {

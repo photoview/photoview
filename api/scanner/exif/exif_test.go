@@ -2,7 +2,6 @@ package exif_test
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(test_utils.IntegrationTestRun(m))
+	test_utils.IntegrationTestRun(m)
 }
 
 func TestExifParsers(t *testing.T) {
