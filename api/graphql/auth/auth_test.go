@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(test_utils.UnitTestRun(m))
+	test_utils.UnitTestRun(m)
 }
 
 func TestTokenFromBearer(t *testing.T) {

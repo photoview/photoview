@@ -2,7 +2,6 @@ package scanner_test
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -16,7 +15,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(test_utils.IntegrationTestRun(m))
+	test_utils.IntegrationTestRun(m)
 }
 
 func TestFullScan(t *testing.T) {

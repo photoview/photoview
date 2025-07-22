@@ -13,7 +13,7 @@ import (
 )
 
 func TestCounterpartFilesTaskMediaFound(t *testing.T) {
-	mediaPath := test_utils.PathFromAPIRoot("scanner/test_media/real_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
 		name                 string
