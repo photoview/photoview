@@ -32,7 +32,7 @@ func IntegrationTestRun(m *testing.M) {
 	}
 	defer test_dbm.Close()
 
-	faceModelsPath := PathFromAPIRoot("data/models")
+	faceModelsPath := PathFromAPIRoot("data", "models")
 	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
 
 	terminateWorkers := executable_worker.Initialize()

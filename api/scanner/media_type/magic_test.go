@@ -11,7 +11,7 @@ import (
 )
 
 func TestMagic(t *testing.T) {
-	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
 		filepath string
@@ -69,7 +69,7 @@ func TestMagicNoInit(t *testing.T) {
 		libmagic.err = nil
 	})
 
-	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 	file := filepath.Join(mediaPath, "file.pdf")
 
 	got := GetMediaType(file)
@@ -79,7 +79,7 @@ func TestMagicNoInit(t *testing.T) {
 }
 
 func getMediaFiles() []string {
-	mediaPath := test_utils.PathFromAPIRoot("./scanner/test_media/real_media")
+	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 	var files []string
 	for _, f := range []string{
 		"file.pdf",
