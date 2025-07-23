@@ -79,9 +79,9 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*fl
 	}
 
 	// GPS data validation
-	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 90) {
+	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 180) {
 		log.Printf(
-			"Incorrect GPS data in the %s Exif data: %f, %f, while expected values between '-90' and '90'. Ignoring GPS data.",
+			"Incorrect GPS data in the %s Exif data: %f, %f, while expected latitude between '-90' and '90', and longitude between '-180' and '180'. Ignoring GPS data.",
 			mediaPath, *GPSLat, *GPSLong)
 		return nil, nil
 	}
