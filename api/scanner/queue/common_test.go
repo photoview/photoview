@@ -2,17 +2,13 @@ package queue
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"sync"
 	"testing"
 	"time"
-)
 
-func init() {
-	// Avoid panic with providing flags in `test_utils/integration_setup.go`.
-	flag.CommandLine.Init("queue", flag.ContinueOnError)
-}
+	_ "github.com/photoview/photoview/api/test_utils/flags"
+)
 
 type mockJob struct {
 	id            int
