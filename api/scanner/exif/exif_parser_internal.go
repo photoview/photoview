@@ -70,6 +70,7 @@ func (p internalExifParser) ParseExif(mediaPath string) (returnExif *models.Medi
 		newExif.Lens = lens
 	}
 
+	// Get time of photo
 	date, err := exifTags.DateTime()
 	if err == nil {
 		_, tz := date.Zone()
