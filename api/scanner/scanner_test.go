@@ -59,6 +59,7 @@ func TestFullScan(t *testing.T) {
 	}
 	wantNonWebPhotos := []string{
 		"heif.heif",
+		"jpegxl.jxl",
 		"jpg2000.jp2",
 		"raw_with_file.tiff",
 		"raw_with_jpg.tiff",
