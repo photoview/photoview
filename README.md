@@ -297,7 +297,7 @@ In macOS, install dependencies:
 
 ```sh
 $ brew update # Update the package list
-$ brew install golang gcc pkg-config libheif dlib jpeg # For API
+$ brew install golang gcc pkg-config libheif dlib jpeg libmagic imagemagick # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 
@@ -333,8 +333,10 @@ Then run the following commands:
 $ source ./scripts/set_compiler_env.sh
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
-$ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
-$ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib"
+$ export C_INCLUDE_PATH="$(brew --prefix)/opt/libmagic/include"
+$ export LD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib"
+$ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib"
+$ export CGO_CFLAGS_ALLOW=-Xpreprocessor
 # Start API server
 $ cd ./api
 $ go run .
