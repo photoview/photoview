@@ -332,7 +332,7 @@ Then run the following commands:
 # Optional: Set the compiler environment in Debian/Ubuntu
 $ source ./scripts/set_compiler_env.sh
 # Set the compiler environment with `homebrew`
-$ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include"
+$ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include:${CPLUS_INCLUDE_PATH:-}"
 $ export C_INCLUDE_PATH="$(brew --prefix)/opt/libmagic/include:${C_INCLUDE_PATH:-}"
 $ export DYLD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:${DYLD_LIBRARY_PATH:-}"
 $ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:${LIBRARY_PATH:-}"
