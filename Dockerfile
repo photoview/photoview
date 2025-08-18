@@ -39,7 +39,7 @@ RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)'); \
     npm run build -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.24-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-bookworm AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
