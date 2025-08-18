@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-tags: 'true'
           fetch-depth: 0
@@ -75,7 +75,7 @@ jobs:
         run: rm -rf /opt/hostedtoolcache
 
       - name: Checkout ${{ matrix.tags.ref }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ matrix.tags.ref }}
 
@@ -161,7 +161,7 @@ jobs:
     steps:
       # Makes sure your .dockleignore file is available to the next step
       - name: Checkout ${{ matrix.tags.ref }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ matrix.tags.ref }}
 
