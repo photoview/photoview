@@ -16,7 +16,7 @@ import (
 var test_dbm TestDBManager = TestDBManager{}
 
 func UnitTestRun(m *testing.M) {
-	exitCode := 0
+	exitCode := 1
 	defer func() {
 		os.Exit(exitCode)
 	}()
@@ -27,7 +27,7 @@ func UnitTestRun(m *testing.M) {
 }
 
 func IntegrationTestRun(m *testing.M) {
-	exitCode := 0
+	exitCode := 1
 	defer func() {
 		os.Exit(exitCode)
 	}()
