@@ -16,11 +16,22 @@ import (
 var test_dbm TestDBManager = TestDBManager{}
 
 func UnitTestRun(m *testing.M) {
+	exitCode := 1
+	defer func() {
+		os.Exit(exitCode)
+	}()
+
 	flag.Parse()
-	os.Exit(m.Run())
+
+	exitCode = m.Run()
 }
 
 func IntegrationTestRun(m *testing.M) {
+	exitCode := 1
+	defer func() {
+		os.Exit(exitCode)
+	}()
+
 	flag.Parse()
 
 	if flags.Database {
@@ -38,7 +49,7 @@ func IntegrationTestRun(m *testing.M) {
 	terminateWorkers := executable_worker.Initialize()
 	defer terminateWorkers()
 
-	os.Exit(m.Run())
+	exitCode = m.Run()
 }
 
 func FilesystemTest(t *testing.T) {
