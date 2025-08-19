@@ -23,7 +23,7 @@ func GenerateToken() string {
 
 		n, err := rand.Int(rand.Reader, charLen)
 		if err != nil {
-			log.Panicf("Could not generate random number: %s\n", err)
+			log.Panicf("Could not generate random number: %v", err)
 		}
 		b[i] = charset[n.Int64()]
 	}
