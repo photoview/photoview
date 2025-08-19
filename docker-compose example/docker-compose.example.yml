@@ -156,9 +156,26 @@ services:
       retries: 5
       start_period: 3m
 
-  ## Uncomment the `postgres` service if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
+  ## Uncomment both `postgres` services if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
+#   postgres-autoupgrade:
+#     image: pgautoupgrade/pgautoupgrade:17-alpine
+#     hostname: pgsql-upg
+#     container_name: pgsql-upg
+#     restart: "no"
+#     environment:
+#       POSTGRES_DB: ${PGSQL_DATABASE}
+#       POSTGRES_USER: ${PGSQL_USER}
+#       POSTGRES_PASSWORD: ${PGSQL_PASSWORD}
+#       PGAUTO_ONESHOT: yes
+#     volumes:
+#       ## Example:
+#       ## - "/host/folder:/container/folder"
+#       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
+#       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+#       - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
+
 #  postgres:
-#    image: postgres:16-alpine
+#    image: postgres:17-alpine
 #    labels:
 #      - "com.centurylinklabs.watchtower.enable=true"
 #    hostname: photoview-pgsql
@@ -169,6 +186,9 @@ services:
 #    security_opt:
 #      - seccomp:unconfined
 #      - apparmor:unconfined
+#    depends_on:
+#      postgres-autoupgrade:
+#        condition: service_completed_successfully
 #    ## Uncomment next 2 lines if you want to access the database directly
 #    # ports:
 #      # - 5432:5432
