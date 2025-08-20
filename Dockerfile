@@ -61,7 +61,7 @@ RUN chmod +x /app/scripts/*.sh \
     && /app/scripts/install_runtime_dependencies.sh
 
 # hadolint ignore=DL3022
-COPY --from=photoview/dependencies:latest /artifacts.tar.gz /dependencies/
+COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
 WORKDIR /dependencies
 RUN set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
