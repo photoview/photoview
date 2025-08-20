@@ -277,6 +277,8 @@ We can't keep verifying below commands on each environment. People may need to s
         - `libjpeg`
         - `libblas`
         - `liblapack`
+    - `libmagic`
+    - `libmagickwand`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
     - `sqlite`: the SQLite DBMS, useful to interact with Photoview's SQLite DB directly if you use it in your development environment.
@@ -288,7 +290,7 @@ In Debian/Ubuntu, install dependencies:
 
 ```sh
 $ sudo apt update # Update the package list
-$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev # For API requirement
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev libmagic-dev libmagickwand-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
 
@@ -342,7 +344,9 @@ $ cd ./api
 $ go mod download
 
 # Update go-face dependencies
-$ sed -i 's/-lcblas//g' $(go env GOMODCACHE)/pkg/mod/github.com/\!kagami/go-face*/face.go
+$ sed -i 's/-lcblas//g' $(go env GOMODCACHE)/pkg/mod/github.com/\!kagami/go-face*/face.go # Linux
+# Or
+$ sed -i '' 's/-lcblas//g' $(go env GOMODCACHE)/pkg/mod/github.com/\!kagami/go-face*/face.go # macOS
 
 # Start API server
 $ go run .
