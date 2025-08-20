@@ -331,9 +331,6 @@ Then run the following commands:
 # Optional: Set the compiler environment in Debian/Ubuntu
 $ source ./scripts/set_compiler_env.sh
 
-# Update go-face dependencies
-$ sed -i 's/-lcblas//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include:${CPLUS_INCLUDE_PATH:-}"
 $ export C_INCLUDE_PATH="$(brew --prefix)/opt/libmagic/include:$(brew --prefix)/opt/libheif/include:${C_INCLUDE_PATH:-}"
@@ -341,8 +338,13 @@ $ export DYLD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/d
 $ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:$(brew --prefix)/opt/libheif/lib:${LIBRARY_PATH:-}"
 $ export CGO_CFLAGS_ALLOW=-Xpreprocessor
 
-# Start API server
 $ cd ./api
+$ go mod download
+
+# Update go-face dependencies
+$ sed -i 's/-lcblas//g' ${GOPATH}/pkg/mod/github.com/\!kagami/go-face*/face.go
+
+# Start API server
 $ go run .
 ```
 
