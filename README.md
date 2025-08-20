@@ -276,7 +276,6 @@ We can't keep verifying below commands on each environment. People may need to s
         - `dlib`
         - `libjpeg`
         - `libblas`
-        - `libcblas`, recommended using `libatlas-base` in Debian.
         - `liblapack`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
@@ -289,7 +288,7 @@ In Debian/Ubuntu, install dependencies:
 
 ```sh
 $ sudo apt update # Update the package list
-$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
+$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
 
@@ -331,12 +330,17 @@ Then run the following commands:
 ```bash
 # Optional: Set the compiler environment in Debian/Ubuntu
 $ source ./scripts/set_compiler_env.sh
+
+# Update go-face dependencies
+$ sed -i 's/-lcblas//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
+
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include:${CPLUS_INCLUDE_PATH:-}"
 $ export C_INCLUDE_PATH="$(brew --prefix)/opt/libmagic/include:$(brew --prefix)/opt/libheif/include:${C_INCLUDE_PATH:-}"
 $ export DYLD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:$(brew --prefix)/opt/libheif/lib:${DYLD_LIBRARY_PATH:-}"
 $ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:$(brew --prefix)/opt/libheif/lib:${LIBRARY_PATH:-}"
 $ export CGO_CFLAGS_ALLOW=-Xpreprocessor
+
 # Start API server
 $ cd ./api
 $ go run .
