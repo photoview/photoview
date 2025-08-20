@@ -342,7 +342,7 @@ $ cd ./api
 $ go mod download
 
 # Update go-face dependencies
-$ sed -i 's/-lcblas//g' ${GOPATH}/pkg/mod/github.com/\!kagami/go-face*/face.go
+$ sed -i 's/-lcblas//g' $(go env GOMODCACHE)/pkg/mod/github.com/\!kagami/go-face*/face.go
 
 # Start API server
 $ go run .
