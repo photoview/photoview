@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim AS base-prep
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:trixie-slim AS base-prep
 ARG TARGETPLATFORM
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 COPY --chmod=0755 prepare.sh /tmp/
@@ -65,5 +65,5 @@ COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh
 
-FROM debian:bookworm-slim AS release
+FROM debian:trixie-slim AS release
 COPY --from=final-assembly /artifacts.tar.gz /
