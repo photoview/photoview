@@ -18,6 +18,7 @@ apt-get install -y \
   ca-certificates \
   crossbuild-essential-"${DEBIAN_ARCH}" \
   libc-dev:"${DEBIAN_ARCH}" \
+  dpkg-dev \
   autoconf \
   automake \
   libtool \
