@@ -270,7 +270,6 @@ We can't keep verifying below commands on each environment. People may need to s
   - Required packages:
     - `golang` >= 1.22
     - `g++`
-    - `libc-dev`
     - `libheif` >= 1.15.1
     - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
         - `dlib`
@@ -290,7 +289,7 @@ In Debian/Ubuntu, install dependencies:
 
 ```sh
 $ sudo apt update # Update the package list
-$ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev libmagic-dev libmagickwand-dev # For API requirement
+$ sudo apt install golang g++ libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev libmagic-dev libmagickwand-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
 
