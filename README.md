@@ -15,7 +15,7 @@ You configure Photoview to look for photos and videos within a directory on your
 When your media has been scanned, they show up on the website, organised in the same way as on the filesystem.
 
 > If you have questions regarding setup or development,
-feel free to join the Discord server https://discord.gg/jQ392948u9
+feel free to join the Discord server [https://discord.gg/jQ392948u9](https://discord.gg/jQ392948u9)
 
 # ATTENTION to Docker users !!!
 
@@ -23,9 +23,16 @@ We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photo
 
 Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
 
+# ATTENTION to PostgreSQL users !!!
+
+We switched to the PostgreSQL 17 in the `master` branch. The PostgreSQL 17 will be the default recommended version
+of the PostgreSQL for the future release. If you use Photoview from this branch, please make sure to update
+your `docker-compose.yml` according to the `./docker-compose example/docker-compose.example.yml`.
+Don't forget to backup your DB before running the upgrade.
+
 ## Demo site
 
-Visit https://photos.qpqp.dk/
+Visit [https://photos.qpqp.dk/](https://photos.qpqp.dk/)
 
 Username: **demo**
 
@@ -34,10 +41,12 @@ Password: **demo**
 ## Contents
 
 - [ATTENTION to Docker users !!!](#attention-to-docker-users-)
+- [ATTENTION to PostgreSQL users !!!](#attention-to-postgresql-users-)
   - [Demo site](#demo-site)
   - [Contents](#contents)
   - [Main features](#main-features)
   - [Supported platforms](#supported-platforms)
+  - [Supported databases](#supported-databases)
   - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
   - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
     - [Initial Setup](#initial-setup)
@@ -68,11 +77,28 @@ Password: **demo**
 
 ## Supported platforms
 
-- [Docker](https://hub.docker.com/r/viktorstrate/photoview/)
+- [Docker](https://hub.docker.com/r/photoview/photoview/) (Docker Engine version not older than 1 year and major version not older than the previous one).
+  > [!NOTE] We don't support Portainer or any other abstraction layers on top of the Docker with Docker-Compose. If you see an issue, try to setup Photoview on top of the Docker-Compose directly and reproduce the issue before reporting it.
+- [Debian Linux](https://www.debian.org/) 12 and 13, [Ubuntu Linux](https://ubuntu.com/) LTS and newer short-term releases
 - [Arch Linux Aur](https://aur.archlinux.org/packages/photoview)
 - [Unraid](https://forums.unraid.net/topic/103028-support-photoview-corneliousjd-repo/)
 - EmbassyOS: [announcement](https://start9labs.medium.com/new-service-photoview-72ee681b2ff0), [repo](https://github.com/Start9Labs/embassyos-photoview-wrapper)
 - [YunoHost](https://github.com/YunoHost-Apps/photoview_ynh)
+- [TrueNAS](https://www.truenas.com/)
+
+We provide only limited support for Photoview standard deployment scenario on the mentioned platforms. Project team has no testing environment for all those platforms and can help only based on users' logs and traces. If your setup is more customized, it limits our abilities to help even more.
+
+## Supported databases
+
+- [SQLite](https://sqlite.org/): built-in DBMS with no requirement in an additional service and no additional maintanance, but provides lowest performance and no scalability.
+- [MariaDB](https://mariadb.org/) LTS version: the default choice. Runs as an additional service, provides a good balance between performance and maintanance.
+- [PostgreSQL](https://www.postgresql.org/) 16 and 17: the option for the best performance. Runs as an additional service, provides the best performance with the cost of a bit more maintanance needed.
+
+We provide the support for running Photoview with these 3 DBMSs when one of them is used as a dedicated DBMS for the
+Photoview server only. If you run a shared DBMS service and use it to serve DBs for several different services, including
+Photoview, we can provide only limited support: only the SQL-related issues will be accepted. All DB management and DB
+connection related issues would be on the user in that case, because we cannot ensure the correct and consistent shared
+DBMS configuration.
 
 ## Why yet another self-hosted photo gallery
 
@@ -115,16 +141,19 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    - `docker-compose.minimal.example.yml` - the minimal and simple config for those, who find the previous one too complex and difficult to understand and manage
 
    When downloading files, you need to choose only one of them.
+
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
-> If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
+
+    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
+
 4. Make sure that your media library's root folder and all the files and subfolders are readable and searchable by other users: run the next command (or corresponding sequence of commands from the `Makefile`):
 
    ```bash
    make readable
    ```
 
-   If command(s) return `Permission denied` error, run them under the user, owning corresponding files and folders. Alternatively, run them adding `sudo ` before the command: this will switch the execution context to `root` user and ask for the root password. You have to have permission to run `sudo` in the system.
+   If command(s) return `Permission denied` error, run them under the user, owning corresponding files and folders. Alternatively, run them adding `sudo` before the command: this will switch the execution context to `root` user and ask for the root password. You have to have permission to run `sudo` in the system.
 
    If you don't want to give required permissions to `others` group for your files, alternatively, you can:
 
@@ -139,7 +168,7 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    make all
    ```
 
-If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, Photoview can now be accessed at http://localhost:8000
+If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, Photoview can now be accessed at [http://localhost:8000](http://localhost:8000)
 
 ### Initial Setup
 
@@ -167,6 +196,7 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 2. Use **VPN** to provide external access to local services.
 3. Setting up a **Reverse proxy** in front of the service and forwarding all the traffic through it, exposing HTTPS port with strong certificate and cipher suites to the Internet. This could be one of the next products or something else that you prefer:
    - [Traefic Proxy](https://doc.traefik.io/traefik/)
+   - [Caddy](https://caddyserver.com/docs/getting-started)
    - [NGinx Proxy Manager](https://nginxproxymanager.com/guide/)
    - [Cloudflare Gateway](https://www.cloudflare.com/zero-trust/products/gateway/)
 4. Configure an external **Multi-Factor Authentication** service to manage authentication for your service (part of Cloudflare services, but you can choose anything else).
@@ -209,7 +239,7 @@ We recommend to use Docker development environment. If Docker environment doesn'
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker compose -f dev-compose.yaml build # Build images for development
 $ docker compose -f dev-compose.yaml up # Launch API and UI servers
 ```
@@ -218,7 +248,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 By default, it uses sqlite3 as database. To run servers with other database, please update `PHOTOVIEW_DATABASE_DRIVER` value in `dev-compose.yaml` file and run:
 
-```sh
+```console
 $ docker compose -f dev-compose.yaml --profile mysql up # Run with mysql database
 or
 $ docker compose -f dev-compose.yaml --profile postgres up # Run with postgresql database
@@ -230,7 +260,7 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker build --target api -t photoview/api . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
     reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
@@ -245,7 +275,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker build --target ui -t photoview/ui . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
     npm install # Install dependencies
@@ -273,11 +303,11 @@ We can't keep verifying below commands on each environment. People may need to s
     - `libc-dev`
     - `libheif` >= 1.15.1
     - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
-        - `dlib`
-        - `libjpeg`
-        - `libblas`
-        - `libcblas`, recommended using `libatlas-base` in Debian.
-        - `liblapack`
+      - `dlib`
+      - `libjpeg`
+      - `libblas`
+      - `libcblas`, recommended using `libatlas-base` in Debian.
+      - `liblapack`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
     - `sqlite`: the SQLite DBMS, useful to interact with Photoview's SQLite DB directly if you use it in your development environment.
@@ -287,7 +317,7 @@ We can't keep verifying below commands on each environment. People may need to s
 
 In Debian/Ubuntu, install dependencies:
 
-```sh
+```console
 $ sudo apt update # Update the package list
 $ sudo apt install golang g++ libc-dev libheif-dev libdlib-dev libjpeg-dev libblas-dev libatlas-base-dev liblapack-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
@@ -295,7 +325,7 @@ $ sudo apt install reflex sqlite3 # For API optional tools
 
 In macOS, install dependencies:
 
-```sh
+```console
 $ brew update # Update the package list
 $ brew install golang gcc pkg-config libheif dlib jpeg libmagic imagemagick # For API
 $ brew install reflex sqlite3 # For API optional tools
@@ -305,7 +335,7 @@ Please follow the package manager guidance if you don't use `apt` or `homebrew`.
 
 For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
 
-```sh
+```console
 $ nvm install 18
 $ nvm use 18
 ```
@@ -315,28 +345,32 @@ You can install `node` with other package manager if you like.
 ### Local setup
 
 1. Rename `/api/example.env` to `.env`
-  - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
-  - To set a different DBMS driver
-    - Comment the SQLite path variable
-    - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
-    - Uncomment the corresponding connection string variable for the new driver
-    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
-  - Optional: modify other variables if needed according to the inline comments
+
+     - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
+     - To set a different DBMS driver
+       - Comment the SQLite path variable
+       - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
+       - Uncomment the corresponding connection string variable for the new driver
+          > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
+     - Optional: modify other variables if needed according to the inline comments
+
 2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
 
 Then run the following commands:
 
-```bash
+```console
 # Optional: Set the compiler environment in Debian/Ubuntu
 $ source ./scripts/set_compiler_env.sh
+
 # Set the compiler environment with `homebrew`
 $ export CPLUS_INCLUDE_PATH="$(brew --prefix)/opt/jpeg/include:$(brew --prefix)/opt/dlib/include:${CPLUS_INCLUDE_PATH:-}"
 $ export C_INCLUDE_PATH="$(brew --prefix)/opt/libmagic/include:$(brew --prefix)/opt/libheif/include:${C_INCLUDE_PATH:-}"
 $ export DYLD_LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:$(brew --prefix)/opt/libheif/lib:${DYLD_LIBRARY_PATH:-}"
 $ export LIBRARY_PATH="$(brew --prefix)/opt/jpeg/lib:$(brew --prefix)/opt/dlib/lib:$(brew --prefix)/opt/libmagic/lib:$(brew --prefix)/opt/libheif/lib:${LIBRARY_PATH:-}"
 $ export CGO_CFLAGS_ALLOW=-Xpreprocessor
+
 # Start API server
 $ cd ./api
 $ go run .
@@ -344,7 +378,7 @@ $ go run .
 
 If you want to recompile the server automatically when code changes:
 
-```sh
+```console
 # Start API server
 $ cd ./api
 $ reflex -g '*.go' -s -- go run .
@@ -356,15 +390,15 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 In a new terminal window run the following commands:
 
-```bash
-cd ./ui
-npm install
-npm start
+```console
+$ cd ./ui
+$ npm install
+$ npm start
 ```
 
 If you want to recompile the server automatically when code changes:
 
-```sh
+```console
 $ cd ./ui
 $ npm run mon
 ```
