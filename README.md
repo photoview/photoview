@@ -154,7 +154,7 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    make readable
    ```
 
-   If command(s) return `Permission denied` error, run them under the user, owning corresponding files and folders. Alternatively, run them adding `sudo` before the command: this will switch the execution context to `root` user and ask for the root password. You have to have permission to run `sudo` in the system.
+   If command(s) return `Permission denied` error, run them under the user owning corresponding files and folders. Alternatively, prefix them with `sudo`: this switches the execution context to `root` and typically prompts for your own password (unless configured otherwise). You must have `sudo` privileges to do this.
 
    If you don't want to give required permissions to `others` group for your files, alternatively, you can:
 
