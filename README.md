@@ -19,14 +19,19 @@ feel free to join the Discord server [https://discord.gg/jQ392948u9](https://dis
 
 # ATTENTION to Docker users !!!
 
-We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photoview>, and all new images for the `master` tag as well as future releases will be published there instead of the previously used registry. Old images will still be accessible in the old registry <https://hub.docker.com/r/viktorstrate/photoview>, so if you want to use one of those older images, revert to the old registry.
+We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photoview>, and all new images for the
+`master` tag as well as future releases will be published there instead of the previously used registry. Old images
+will still be accessible in the old registry <https://hub.docker.com/r/viktorstrate/photoview>, so if you want to
+use one of those older images, revert to the old registry.
 
-Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
+Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the
+corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
 
 # ATTENTION to PostgreSQL users !!!
 
 We switched to PostgreSQL 17 on the `master` branch. PostgreSQL 17 will be the default recommended version
-for the next release (PostgreSQL 16 remains supported). If you follow `master`:
+for the next release (PostgreSQL 16 remains supported). If you follow `master`, please check the
+[official PostgreSQL upgrade guide](https://www.postgresql.org/docs/current/upgrading.html), and:
 
 - For Docker users: please update your `docker-compose.yml` to match [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
 - For direct host installations or external/shared PostgreSQL instances: please upgrade your PostgreSQL server and database manually to version 17 following PostgreSQL guidance.

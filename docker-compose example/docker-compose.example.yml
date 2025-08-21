@@ -156,7 +156,8 @@ services:
       retries: 5
       start_period: 3m
 
-  ## Uncomment the `postgres-autoupgrade` service if you want to upgrade PostgreSQL automatically.
+  ## Uncomment the `postgres-autoupgrade` service if you want to upgrade PostgreSQL automatically, or follow the
+  ## official PostgreSQL upgrade guide https://www.postgresql.org/docs/current/upgrading.html manually.
   ## Don't forget to uncomment the 3 `depends_on` lines in the `postgres` service.
   ## This service will upgrade the PostgreSQL database to the version 17.
   ## Read more on the https://hub.docker.com/r/pgautoupgrade/pgautoupgrade
