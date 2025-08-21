@@ -214,8 +214,11 @@ You can run FFmpeg with hardware-acceleration–capable codecs by defining `PHOT
 `.env` file. Supported values: `qsv`, `vaapi`, `nvenc`.
 
 We've verified the hardware acceleration with `qsv` on an Intel chip only. To enable it, map your `/dev/dri` devices from
-the host to the `photoview` service and set the `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv` in your `.env` file.
+the host into the `photoview` service and set the `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv` in your `.env` file.
 See [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
+
+- For `vaapi` environment variable value, map `/dev/dri` from the host into the `photoview` service.
+- For `nvenc`, install and enable the NVIDIA Container Toolkit on the host, map all NVIDIA devices from the host into the `photoview` service, and run with the NVIDIA runtime.
 
 If you confirm other acceleration backends, please let us know.
 
