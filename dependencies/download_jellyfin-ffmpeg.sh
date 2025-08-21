@@ -29,7 +29,7 @@ echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 VER="${JELLYFIN_FFMPEG_VERSION#v}"
 MAJOR_VER=$(echo "${VER}" | cut -d. -f1)
-URL="https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/${JELLYFIN_FFMPEG_VERSION}/jellyfin-ffmpeg${MAJOR_VER}_${VER}-bookworm_${DEB_HOST_ARCH}.deb"
+URL="https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/${JELLYFIN_FFMPEG_VERSION}/jellyfin-ffmpeg${MAJOR_VER}_${VER}-trixie_${DEB_HOST_ARCH}.deb"
 echo download jellyfin-ffmpeg from "$URL"
 mkdir -p /output/deb
 curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o /output/deb/jellyfin-ffmpeg.deb "$URL"

@@ -39,7 +39,7 @@ RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)'); \
     npm run build -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-bookworm AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-trixie AS api
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -61,7 +61,7 @@ RUN chmod +x /app/scripts/*.sh \
     && /app/scripts/install_runtime_dependencies.sh
 
 # hadolint ignore=DL3022
-COPY --from=photoview/dependencies:latest /artifacts.tar.gz /dependencies/
+COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
 WORKDIR /dependencies
 RUN set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
@@ -81,6 +81,7 @@ RUN set -a && source /env && set +a \
     && go mod download \
     # Patch go-face
     && sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
+    && sed -i 's/-lcblas//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go \
     # Build dependencies that use CGO
     && go install \
         github.com/mattn/go-sqlite3 \
@@ -92,7 +93,7 @@ RUN set -a && source /env && set +a \
     && go build -v -o photoview .
 
 ### Build release image ###
-FROM debian:bookworm-slim AS release
+FROM debian:trixie-slim AS release
 ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006

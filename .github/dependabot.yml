@@ -6,9 +6,20 @@ updates:
     schedule:
       interval: "weekly"
 
-  # Maintain dependencies for Dockerfile
+  # Maintain dependencies for Dockerfiles
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/"
+      - "/dependencies"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "node"
+
+  # Maintain dependencies for Docker Compose
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/docker-compose example"
     schedule:
       interval: "weekly"
     ignore:
