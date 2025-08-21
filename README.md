@@ -26,10 +26,10 @@ Please update your `docker-compose.yml` file to use the new registry for the `ph
 # ATTENTION to PostgreSQL users !!!
 
 We switched to PostgreSQL 17 on the `master` branch. PostgreSQL 17 will be the default recommended version
-for the next release. If you follow `master`:
+for the next release (PostgreSQL 16 remains supported). If you follow `master`:
 
 - For Docker users: please update your `docker-compose.yml` to match [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
-- For direct host installations and external shared PostgreSQL instance usage scenarios: please upgrade your PostgreSQL database manually to version 17.
+- For direct host installations or external/shared PostgreSQL instances: please upgrade your PostgreSQL server and database manually to version 17 following PostgreSQL guidance.
 
 Don't forget to back up your database before upgrading.
 
@@ -198,7 +198,7 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 3. Setting up a **Reverse proxy** in front of the service and forwarding all the traffic through it, exposing HTTPS port with strong certificate and cipher suites to the Internet. This could be one of the next products or something else that you prefer:
    - [Traefik Proxy](https://doc.traefik.io/traefik/)
    - [Caddy](https://caddyserver.com/docs/getting-started)
-   - [NGinx Proxy Manager](https://nginxproxymanager.com/guide/)
+   - [Nginx Proxy Manager](https://nginxproxymanager.com/guide/)
    - [Cloudflare Gateway](https://www.cloudflare.com/zero-trust/products/gateway/)
 4. Configure an external **Multi-Factor Authentication** service to manage authentication for your service (part of Cloudflare services, but you can choose anything else).
 5. Configure **Web Application Firewall** to protect from common web exploits like SQL injection, cross-site scripting, and cross-site forgery requests (part of Cloudflare services, but you can choose anything else).
