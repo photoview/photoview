@@ -199,7 +199,7 @@ services:
 #    #    condition: service_completed_successfully
 #    ## Uncomment the following 2 lines if you want to access the database directly
 #    # ports:
-#      # - 5432:5432 ## host:container
+#      # - "5432:5432" ## host:container
 #    environment:
 #      POSTGRES_DB: ${PGSQL_DATABASE}
 #      POSTGRES_USER: ${PGSQL_USER}
