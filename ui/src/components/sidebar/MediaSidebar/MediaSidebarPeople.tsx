@@ -210,7 +210,7 @@ const MediaSidebarPeople = ({ media }: MediaSidebarFacesProps) => {
       <SidebarSectionTitle>
         {t('sidebar.people.title', 'People')}
       </SidebarSectionTitle>
-      <ul className="flex overflow-x-auto gap-4 px-4">{faceElms}</ul>
+      <ul className="grid grid-cols-3 gap-4 px-4">{faceElms}</ul>
     </SidebarSection>
   )
 }
