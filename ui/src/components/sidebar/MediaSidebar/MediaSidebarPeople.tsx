@@ -167,7 +167,7 @@ const MediaSidebarPerson = ({ face, menuFlipped }: MediaSidebarFaceProps) => {
   const [changeLabel, setChangeLabel] = useState(false)
 
   return (
-    <li className="inline-block">
+    <li className="flex flex-col items-center">
       <Link to={`/people/${face.faceGroup.id}`}>
         <FaceCircleImage imageFace={face} selectable={true} size="92px" />
       </Link>
