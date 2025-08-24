@@ -76,6 +76,7 @@ const CircleImageWrapper = styled.div<{ size: string }>`
   height: ${({ size }) => size};
   object-fit: fill;
   overflow: hidden;
+  margin: auto;
 `
 
 type FaceCircleImageFace = {
