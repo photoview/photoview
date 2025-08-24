@@ -200,7 +200,7 @@ const MediaSidebarPeople = ({ media }: MediaSidebarFacesProps) => {
   const { t } = useTranslation()
 
   const faceElms = (media.faces ?? []).map((face, i) => (
-    <MediaSidebarPerson key={face.id} face={face} menuFlipped={i == 0} />
+    <MediaSidebarPerson key={face.id} face={face} menuFlipped={i % 3 == 0} />
   ))
 
   if (faceElms.length == 0) return null
