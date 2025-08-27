@@ -11,12 +11,12 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
-type externalExifParser struct {
+type ExifParser struct {
 	et         *exiftool.Exiftool
 	dataLoader *dataloader.ExiftoolLoader
 }
 
-func NewExiftoolParser() (ExifParser, error) {
+func NewExiftoolParser() (*ExifParser, error) {
 	buf := make([]byte, 256*1024)
 
 	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
@@ -26,7 +26,7 @@ func NewExiftoolParser() (ExifParser, error) {
 		return nil, err
 	}
 
-	return &externalExifParser{
+	return &ExifParser{
 		et:         et,
 		dataLoader: dataloader.NewExiftoolLoader(et),
 	}, nil
@@ -97,7 +97,7 @@ func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*fl
 	return GPSLat, GPSLong
 }
 
-func (p *externalExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, returnErr error) {
+func (p *ExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, returnErr error) {
 	// ExifTool - No print conversion mode
 	if p.et == nil {
 		et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
