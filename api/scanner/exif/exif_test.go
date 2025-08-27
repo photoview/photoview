@@ -20,24 +20,19 @@ func TestMain(m *testing.M) {
 func TestExifParsers(t *testing.T) {
 	test_utils.FilesystemTest(t)
 
-	parsers := []struct {
-		name   string
-		parser exif.ExifParser
-	}{
-		{
-			name:   "internal",
-			parser: exif.NewInternalExifParser(),
-		},
+	externalParser, err := exif.NewExiftoolParser()
+	if err != nil {
+		t.Fatalf("can't init exiftool: %v", err)
 	}
 
-	if externalParser, err := exif.NewExiftoolParser(); err == nil {
-		parsers = append(parsers, struct {
-			name   string
-			parser exif.ExifParser
-		}{
+	parsers := []struct {
+		name   string
+		parser *exif.ExifParser
+	}{
+		{
 			name:   "external",
 			parser: externalParser,
-		})
+		},
 	}
 
 	images := []struct {
