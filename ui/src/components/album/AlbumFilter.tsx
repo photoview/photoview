@@ -32,12 +32,19 @@ export const FavoritesCheckbox = ({
   )
 }
 
+type SortingOption = { value: string; label: string }
+
 type SortingOptionsProps = {
   ordering?: MediaOrdering
   setOrdering?: SetOrderingFn
+  items?: SortingOption[]
 }
 
-const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
+const SortingOptions = ({
+  setOrdering,
+  ordering,
+  items,
+}: SortingOptionsProps) => {
   const { t } = useTranslation()
 
   const changeOrderDirection = () => {
@@ -57,7 +64,7 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
     }
   }
 
-  const sortingOptions = [
+  const defaultOptions: SortingOption[] = [
     {
       value: 'date_shot',
       label: t('album_filter.sorting_options.date_shot', 'Date shot'),
@@ -75,6 +82,8 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
       label: t('album_filter.sorting_options.type', 'Kind'),
     },
   ]
+
+  const sortingOptions = items ?? defaultOptions
 
   return (
     <fieldset>
@@ -119,6 +128,7 @@ type AlbumFilterProps = {
   setOnlyFavorites?(favorites: boolean): void
   ordering?: MediaOrdering
   setOrdering?: SetOrderingFn
+  sortingOptions?: SortingOption[]
 }
 
 const AlbumFilter = ({
@@ -126,10 +136,15 @@ const AlbumFilter = ({
   setOnlyFavorites,
   setOrdering,
   ordering,
+  sortingOptions,
 }: AlbumFilterProps) => {
   return (
     <div className="flex items-end gap-4 flex-wrap mb-4">
-      <SortingOptions ordering={ordering} setOrdering={setOrdering} />
+      <SortingOptions
+        ordering={ordering}
+        setOrdering={setOrdering}
+        items={sortingOptions}
+      />
       {authToken() && setOnlyFavorites && (
         <FavoritesCheckbox
           onlyFavorites={onlyFavorites}
