@@ -49,7 +49,7 @@ func IntegrationTestRun(m *testing.M) {
 
 	exifCleanup, err := exif.Initialize()
 	if err != nil {
-		log.Fatalf("init exif error: %v", err)
+		log.Panicf("init exif error: %v", err)
 	}
 	defer exifCleanup()
 
