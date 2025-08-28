@@ -1,7 +1,6 @@
 package test_utils
 
 import (
-	"context"
 	"flag"
 	"log"
 	"os"
@@ -34,8 +33,6 @@ func IntegrationTestRun(m *testing.M) {
 		os.Exit(exitCode)
 	}()
 
-	ctx := context.Background()
-
 	flag.Parse()
 
 	if flags.Database {
@@ -50,11 +47,11 @@ func IntegrationTestRun(m *testing.M) {
 	faceModelsPath := PathFromAPIRoot("data", "models")
 	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
 
-	cleanup, err := exif.Initialize(ctx)
+	exifCleanup, err := exif.Initialize()
 	if err != nil {
 		log.Fatalf("init exif error: %v", err)
 	}
-	defer cleanup(ctx)
+	defer exifCleanup()
 
 	terminateWorkers := executable_worker.Initialize()
 	defer terminateWorkers()

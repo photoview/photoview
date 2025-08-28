@@ -32,7 +32,6 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
 	log.Println("Starting Photoview...")
 
 	if err := godotenv.Load(); err != nil {
@@ -62,11 +61,11 @@ func main() {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
 
-	cleanup, err := exif.Initialize(ctx)
+	exifCleanup, err := exif.Initialize()
 	if err != nil {
 		log.Panicf("Could not initialize exif parser: %s", err)
 	}
-	defer cleanup(ctx)
+	defer exifCleanup()
 
 	if err := face_detection.InitializeFaceDetector(db); err != nil {
 		log.Panicf("Could not initialize face detector: %s\n", err)

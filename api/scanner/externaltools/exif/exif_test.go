@@ -13,11 +13,11 @@ func TestParseWithoutInit(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	cleanup, err := Initialize(t.Context())
+	cleanup, err := Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() error: %v", err)
 	}
-	defer cleanup(t.Context())
+	defer cleanup()
 
 	if _, err := Parse("./test_data/bird.jpg"); err != nil {
 		t.Fatalf("Parse() returns an error: %v", err)

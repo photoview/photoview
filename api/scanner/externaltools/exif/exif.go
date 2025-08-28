@@ -1,7 +1,6 @@
 package exif
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -10,18 +9,18 @@ import (
 
 var globalExifParser *ExifParser
 
-func Initialize(ctx context.Context) (func(context.Context), error) {
+func Initialize() (func(), error) {
 	var err error
 	globalExifParser, err = NewExifParser()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info(ctx, "Found exiftool")
+	log.Info(nil, "Found exiftool")
 
-	return func(ctx context.Context) {
+	return func() {
 		if err := globalExifParser.Close(); err != nil {
-			log.Error(ctx, "Cleanup exiftool error:", err)
+			log.Error(nil, "Cleanup exiftool error:", err)
 		}
 	}, nil
 }
