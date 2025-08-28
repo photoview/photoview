@@ -21,7 +21,7 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 	}
 
 	if err := SaveEXIF(ctx.GetDB(), media); err != nil {
-		log.Warn(ctx, "SaveEXIF failed", "title", media.Title, "error", err)
+		log.Warn(ctx, "SaveEXIF failed", "title", media.Title, "error", err, "path", media.Path)
 	}
 
 	return nil

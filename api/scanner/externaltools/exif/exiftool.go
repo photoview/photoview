@@ -167,18 +167,13 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, error) {
 			continue
 		}
 
-		dateTime, err := time.Parse(layout, date)
-		if err == nil {
-			retEXIF.DateShot = &dateTime
-			foundExif = true
-			break
-		}
-
-		dateTime, err = time.Parse(layoutWithOffset, date)
-		if err == nil {
-			retEXIF.DateShot = &dateTime
-			foundExif = true
-			break
+		for _, layout := range []string{layout, layoutWithOffset} {
+			dateTime, err := time.Parse(layout, date)
+			if err == nil {
+				retEXIF.DateShot = &dateTime
+				foundExif = true
+				break
+			}
 		}
 	}
 

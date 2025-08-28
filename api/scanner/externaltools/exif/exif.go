@@ -33,10 +33,15 @@ func Initialize() (func(), error) {
 	}, nil
 }
 
+var globalMu sync.Mutex
+
 func Parse(filepath string) (*models.MediaEXIF, error) {
 	if globalExifParser == nil {
 		return nil, fmt.Errorf("no exif parser initialized")
 	}
+
+	globalMu.Lock()
+	defer globalMu.Unlock()
 
 	return globalExifParser.ParseExif(filepath)
 }

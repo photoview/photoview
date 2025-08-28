@@ -38,7 +38,6 @@ func TestExifParsers(t *testing.T) {
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
-				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")
 				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
@@ -56,26 +55,22 @@ func TestExifParsers(t *testing.T) {
 			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
-				if exif == nil {
-					assert.Nil(t, exif)
-				} else {
-					assert.Equal(t, 0, exif.ID)
-					assert.True(t, exif.CreatedAt.IsZero())
-					assert.True(t, exif.UpdatedAt.IsZero())
-					assert.Nil(t, exif.Description)
-					assert.Nil(t, exif.Camera)
-					assert.Nil(t, exif.Maker)
-					assert.Nil(t, exif.Lens)
-					assert.Nil(t, exif.Exposure)
-					assert.Nil(t, exif.Aperture)
-					assert.Nil(t, exif.Iso)
-					assert.Nil(t, exif.FocalLength)
-					assert.Nil(t, exif.Flash)
-					assert.Nil(t, exif.Orientation)
-					assert.Nil(t, exif.ExposureProgram)
-					assert.Nil(t, exif.GPSLatitude)
-					assert.Nil(t, exif.GPSLongitude)
-				}
+				assert.Equal(t, 0, exif.ID)
+				assert.True(t, exif.CreatedAt.IsZero())
+				assert.True(t, exif.UpdatedAt.IsZero())
+				assert.Nil(t, exif.Description)
+				assert.Nil(t, exif.Camera)
+				assert.Nil(t, exif.Maker)
+				assert.Nil(t, exif.Lens)
+				assert.Nil(t, exif.Exposure)
+				assert.Nil(t, exif.Aperture)
+				assert.Nil(t, exif.Iso)
+				assert.Nil(t, exif.FocalLength)
+				assert.Nil(t, exif.Flash)
+				assert.Nil(t, exif.Orientation)
+				assert.Nil(t, exif.ExposureProgram)
+				assert.Nil(t, exif.GPSLatitude)
+				assert.Nil(t, exif.GPSLongitude)
 			},
 		},
 		{
