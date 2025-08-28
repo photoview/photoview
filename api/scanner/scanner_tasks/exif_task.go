@@ -49,7 +49,7 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 	}
 
 	// Add EXIF to database and link to media
-	if err := tx.Model(&media).Association("Exif").Replace(exif); err != nil {
+	if err := tx.Model(media).Association("Exif").Replace(exif); err != nil {
 		return fmt.Errorf("failed to save media exif to database: %w", err)
 	}
 
