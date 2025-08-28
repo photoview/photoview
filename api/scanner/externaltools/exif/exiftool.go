@@ -149,6 +149,7 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, error) {
 	// Get time of photo
 	layout := "2006:01:02 15:04:05"
 	layoutWithOffset := "2006:01:02 15:04:05-07:00"
+CREATE_DATE:
 	for _, createDateKey := range []string{
 		// Keep the order for the priority to generate DateShot
 		"CreationDate",
@@ -162,17 +163,17 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, error) {
 		"MediaModifyDate",
 		"FileModifyDate",
 	} {
-		date, err := fileInfo.GetString(createDateKey)
+		dateStr, err := fileInfo.GetString(createDateKey)
 		if err != nil {
 			continue
 		}
 
 		for _, layout := range []string{layout, layoutWithOffset} {
-			dateTime, err := time.Parse(layout, date)
+			date, err := time.Parse(layout, dateStr)
 			if err == nil {
-				retEXIF.DateShot = &dateTime
+				retEXIF.DateShot = &date
 				foundExif = true
-				break
+				break CREATE_DATE
 			}
 		}
 	}
