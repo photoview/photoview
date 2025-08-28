@@ -39,22 +39,22 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 		return nil
 	}
 
-	exif, err := exif.Parse(media.Path)
+	exifData, err := exif.Parse(media.Path)
 	if err != nil {
 		return fmt.Errorf("failed to parse exif data: %w", err)
 	}
 
-	if exif == nil {
+	if exifData == nil {
 		return nil
 	}
 
 	// Add EXIF to database and link to media
-	if err := tx.Model(media).Association("Exif").Replace(exif); err != nil {
+	if err := tx.Model(media).Association("Exif").Replace(exifData); err != nil {
 		return fmt.Errorf("failed to save media exif to database: %w", err)
 	}
 
-	if exif.DateShot != nil && !exif.DateShot.Equal(media.DateShot) {
-		media.DateShot = *exif.DateShot
+	if exifData.DateShot != nil && !exifData.DateShot.Equal(media.DateShot) {
+		media.DateShot = *exifData.DateShot
 		if err := tx.Save(media).Error; err != nil {
 			return fmt.Errorf("failed to update media date_shot: %w", err)
 		}
