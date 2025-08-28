@@ -2,46 +2,20 @@ package exif
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"time"
 
 	"github.com/barasher/go-exiftool"
-	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 )
-
-type ExifParser struct {
-	et         *exiftool.Exiftool
-	dataLoader *dataloader.ExiftoolLoader
-}
-
-func NewExiftoolParser() (*ExifParser, error) {
-	buf := make([]byte, 256*1024)
-
-	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
-
-	if err != nil {
-		log.Printf("Error initializing ExifTool: %s\n", err)
-		return nil, err
-	}
-
-	return &ExifParser{
-		et:         et,
-		dataLoader: dataloader.NewExiftoolLoader(et),
-	}, nil
-}
 
 // isFloatReal returns true when the float value represents a real number
 // (different than +Inf, -Inf or NaN)
 func isFloatReal(v float64) bool {
-	if math.IsInf(v, 1) {
-		return false
-	} else if math.IsInf(v, -1) {
-		return false
-	} else if math.IsNaN(v) {
+	if math.IsInf(v, 0) || math.IsNaN(v) {
 		return false
 	}
+
 	return true
 }
 
@@ -51,12 +25,15 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	if exif.Exposure != nil && !isFloatReal(*exif.Exposure) {
 		exif.Exposure = nil
 	}
+
 	if exif.Aperture != nil && !isFloatReal(*exif.Aperture) {
 		exif.Aperture = nil
 	}
+
 	if exif.FocalLength != nil && !isFloatReal(*exif.FocalLength) {
 		exif.FocalLength = nil
 	}
+
 	if (exif.GPSLatitude != nil && !isFloatReal(*exif.GPSLatitude)) ||
 		(exif.GPSLongitude != nil && !isFloatReal(*exif.GPSLongitude)) {
 		exif.GPSLatitude = nil
@@ -64,161 +41,151 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
-func extractValidGpsData(fileInfo *exiftool.FileMetadata, mediaPath string) (*float64, *float64) {
-	var GPSLat, GPSLong *float64
-
-	// GPS coordinates - longitude
-	longitudeRaw, err := fileInfo.GetFloat("GPSLongitude")
-	if err == nil {
-		GPSLong = &longitudeRaw
-	}
+func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, error) {
+	var latitude, longitude *float64
 
 	// GPS coordinates - latitude
-	latitudeRaw, err := fileInfo.GetFloat("GPSLatitude")
+	rawLatitude, err := fileInfo.GetFloat("GPSLatitude")
 	if err == nil {
-		GPSLat = &latitudeRaw
+		latitude = &rawLatitude
+	}
+
+	// GPS coordinates - longitude
+	rawLongitude, err := fileInfo.GetFloat("GPSLongitude")
+	if err == nil {
+		longitude = &rawLongitude
+	}
+
+	if latitude == nil || longitude == nil {
+		return 0, 0, fmt.Errorf("no valid GPS data")
 	}
 
 	// GPS data validation
-	if (GPSLat != nil && math.Abs(*GPSLat) > 90) || (GPSLong != nil && math.Abs(*GPSLong) > 180) {
-		latStr := "<empty>"
-		if GPSLat != nil {
-			latStr = fmt.Sprintf("%f", *GPSLat)
-		}
-		longStr := "<empty>"
-		if GPSLong != nil {
-			longStr = fmt.Sprintf("%f", *GPSLong)
-		}
-		log.Printf(
-			"Incorrect GPS data in the %s Exif metadata: %s, %s, (expected latitude '-90'..'90' / longitude '-180'..'180'). Ignoring GPS data.",
-			mediaPath, latStr, longStr)
-		return nil, nil
+	if math.Abs(*latitude) > 90 || math.Abs(*longitude) > 180 {
+		latStr := fmt.Sprintf("%f", *latitude)
+
+		longStr := fmt.Sprintf("%f", *longitude)
+
+		return 0, 0, fmt.Errorf("incorrect GPS data: latitude %s should be (-90, 90), longitude %s should be (-180, 180)", latStr, longStr)
 	}
-	return GPSLat, GPSLong
+
+	return *latitude, *longitude, nil
 }
 
-func (p *ExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, returnErr error) {
-	// ExifTool - No print conversion mode
-	if p.et == nil {
-		et, err := exiftool.NewExiftool(exiftool.NoPrintConversion())
-		p.et = et
+type ExifParser struct {
+	exiftool *exiftool.Exiftool
+}
 
-		if err != nil {
-			log.Printf("Error initializing ExifTool: %s\n", err)
-			return nil, err
-		}
+func NewExifParser() (*ExifParser, error) {
+	buf := make([]byte, 256*1024)
+
+	et, err := exiftool.NewExiftool(exiftool.NoPrintConversion(), exiftool.Buffer(buf, 64*1024))
+
+	if err != nil {
+		return nil, fmt.Errorf("error initializing ExifTool: %w", err)
 	}
 
-	fileInfo, err := p.dataLoader.Load(mediaPath)
-	if err != nil {
+	return &ExifParser{
+		exiftool: et,
+	}, nil
+}
+
+func (p *ExifParser) Close() error {
+	return p.exiftool.Close()
+}
+
+func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, error) {
+	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
+	if l := len(fileInfos); l != 1 {
+		return nil, fmt.Errorf("invalid file infos with %q, len(fileInfos) = %d", mediaPath, l)
+	}
+
+	fileInfo := fileInfos[0]
+	if err := fileInfo.Err; err != nil {
 		return nil, err
 	}
 
-	newExif := models.MediaEXIF{}
+	retEXIF := models.MediaEXIF{}
 	foundExif := false
 
-	// Get description
-	description, err := fileInfo.GetString("ImageDescription")
-	if err == nil {
-		foundExif = true
-		newExif.Description = &description
-	}
-
-	// Get camera model
-	model, err := fileInfo.GetString("Model")
-	if err == nil {
-		foundExif = true
-		newExif.Camera = &model
-	}
-
-	// Get Camera make
-	make, err := fileInfo.GetString("Make")
-	if err == nil {
-		foundExif = true
-		newExif.Maker = &make
-	}
-
-	// Get lens
-	lens, err := fileInfo.GetString("LensModel")
-	if err == nil {
-		foundExif = true
-		newExif.Lens = &lens
-	}
-
-	//Get time of photo
-	createDateKeys := []string{"CreationDate", "DateTimeOriginal", "CreateDate", "TrackCreateDate", "MediaCreateDate", "FileCreateDate", "ModifyDate", "TrackModifyDate", "MediaModifyDate", "FileModifyDate"}
-	for _, createDateKey := range createDateKeys {
-		date, err := fileInfo.GetString(createDateKey)
+	for field, ptr := range map[string]**string{
+		"ImageDescription": &retEXIF.Description,
+		"Model":            &retEXIF.Camera, // camera model
+		"Make":             &retEXIF.Maker,  // camera make
+		"LensModel":        &retEXIF.Lens,
+	} {
+		value, err := fileInfo.GetString(field)
 		if err == nil {
-			layout := "2006:01:02 15:04:05"
-			dateTime, err := time.Parse(layout, date)
-			if err == nil {
-				foundExif = true
-				newExif.DateShot = &dateTime
-			} else {
-				layoutWithOffset := "2006:01:02 15:04:05-07:00"
-				dateTime, err = time.Parse(layoutWithOffset, date)
-				if err == nil {
-					foundExif = true
-					newExif.DateShot = &dateTime
-				}
-			}
+			*ptr = &value
+			foundExif = true
+		}
+	}
+
+	for field, ptr := range map[string]**int64{
+		"ISO":             &retEXIF.Iso,
+		"Flash":           &retEXIF.Flash,
+		"Orientation":     &retEXIF.Orientation,
+		"ExposureProgram": &retEXIF.ExposureProgram,
+	} {
+		value, err := fileInfo.GetInt(field)
+		if err == nil {
+			*ptr = &value
+			foundExif = true
+		}
+	}
+
+	for field, ptr := range map[string]**float64{
+		"ExposureTime": &retEXIF.Exposure,
+		"Aperture":     &retEXIF.Aperture,
+		"FocalLength":  &retEXIF.FocalLength,
+	} {
+		value, err := fileInfo.GetFloat(field)
+		if err == nil {
+			*ptr = &value
+			foundExif = true
+		}
+	}
+
+	// Get time of photo
+	layout := "2006:01:02 15:04:05"
+	layoutWithOffset := "2006:01:02 15:04:05-07:00"
+	for _, createDateKey := range []string{
+		// Keep the order for the priority to generate DateShot
+		"CreationDate",
+		"DateTimeOriginal",
+		"CreateDate",
+		"TrackCreateDate",
+		"MediaCreateDate",
+		"FileCreateDate",
+		"ModifyDate",
+		"TrackModifyDate",
+		"MediaModifyDate",
+		"FileModifyDate",
+	} {
+		date, err := fileInfo.GetString(createDateKey)
+		if err != nil {
+			continue
+		}
+
+		dateTime, err := time.Parse(layout, date)
+		if err == nil {
+			retEXIF.DateShot = &dateTime
+			foundExif = true
+			break
+		}
+
+		dateTime, err = time.Parse(layoutWithOffset, date)
+		if err == nil {
+			retEXIF.DateShot = &dateTime
+			foundExif = true
 			break
 		}
 	}
 
-	// Get exposure time
-	exposureTime, err := fileInfo.GetFloat("ExposureTime")
-	if err == nil {
-		foundExif = true
-		newExif.Exposure = &exposureTime
-	}
-
-	// Get aperture
-	aperture, err := fileInfo.GetFloat("Aperture")
-	if err == nil {
-		foundExif = true
-		newExif.Aperture = &aperture
-	}
-
-	// Get ISO
-	iso, err := fileInfo.GetInt("ISO")
-	if err == nil {
-		foundExif = true
-		newExif.Iso = &iso
-	}
-
-	// Get focal length
-	focalLen, err := fileInfo.GetFloat("FocalLength")
-	if err == nil {
-		foundExif = true
-		newExif.FocalLength = &focalLen
-	}
-
-	// Get flash info
-	flash, err := fileInfo.GetInt("Flash")
-	if err == nil {
-		foundExif = true
-		newExif.Flash = &flash
-	}
-
-	// Get orientation
-	orientation, err := fileInfo.GetInt("Orientation")
-	if err == nil {
-		foundExif = true
-		newExif.Orientation = &orientation
-	}
-
-	// Get exposure program
-	expProgram, err := fileInfo.GetInt("ExposureProgram")
-	if err == nil {
-		foundExif = true
-		newExif.ExposureProgram = &expProgram
-	}
-
 	// Get GPS data
-	newExif.GPSLatitude, newExif.GPSLongitude = extractValidGpsData(&fileInfo, mediaPath)
-	if (newExif.GPSLatitude != nil) && (newExif.GPSLongitude != nil) {
+	lat, long, err := extractValidGPSData(&fileInfo)
+	if err == nil {
+		retEXIF.GPSLatitude, retEXIF.GPSLongitude = &lat, &long
 		foundExif = true
 	}
 
@@ -226,7 +193,6 @@ func (p *ExifParser) ParseExif(mediaPath string) (returnExif *models.MediaEXIF, 
 		return nil, nil
 	}
 
-	returnExif = &newExif
-	sanitizeEXIF(returnExif)
-	return
+	sanitizeEXIF(&retEXIF)
+	return &retEXIF, nil
 }

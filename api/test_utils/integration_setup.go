@@ -1,12 +1,14 @@
 package test_utils
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/test_utils/flags"
 	"github.com/photoview/photoview/api/utils"
@@ -32,6 +34,8 @@ func IntegrationTestRun(m *testing.M) {
 		os.Exit(exitCode)
 	}()
 
+	ctx := context.Background()
+
 	flag.Parse()
 
 	if flags.Database {
@@ -45,6 +49,12 @@ func IntegrationTestRun(m *testing.M) {
 
 	faceModelsPath := PathFromAPIRoot("data", "models")
 	utils.ConfigureTestFaceRecognitionModelsPath(faceModelsPath)
+
+	cleanup, err := exif.Initialize(ctx)
+	if err != nil {
+		log.Fatalf("init exif error: %v", err)
+	}
+	defer cleanup(ctx)
 
 	terminateWorkers := executable_worker.Initialize()
 	defer terminateWorkers()

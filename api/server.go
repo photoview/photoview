@@ -20,7 +20,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	graphql_endpoint "github.com/photoview/photoview/api/graphql/endpoint"
 	"github.com/photoview/photoview/api/routes"
-	"github.com/photoview/photoview/api/scanner/exif"
+	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
@@ -32,6 +32,7 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	log.Println("Starting Photoview...")
 
 	if err := godotenv.Load(); err != nil {
@@ -61,7 +62,11 @@ func main() {
 		log.Panicf("Could not initialize periodic scanner: %s", err)
 	}
 
-	exif.InitializeEXIFParser()
+	cleanup, err := exif.Initialize(ctx)
+	if err != nil {
+		log.Panicf("Could not initialize exif parser: %s", err)
+	}
+	defer cleanup(ctx)
 
 	if err := face_detection.InitializeFaceDetector(db); err != nil {
 		log.Panicf("Could not initialize face detector: %s\n", err)

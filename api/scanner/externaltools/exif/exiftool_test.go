@@ -1,37 +1,31 @@
-package exif_test
+package exif
 
 import (
 	"fmt"
+	"math"
 	"path"
 	"testing"
 	"time"
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner/exif"
-	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	test_utils.IntegrationTestRun(m)
-}
-
 func TestExifParsers(t *testing.T) {
-	test_utils.FilesystemTest(t)
-
-	externalParser, err := exif.NewExiftoolParser()
+	parser, err := NewExifParser()
 	if err != nil {
 		t.Fatalf("can't init exiftool: %v", err)
 	}
+	defer parser.Close()
 
 	parsers := []struct {
 		name   string
-		parser *exif.ExifParser
+		parser *ExifParser
 	}{
 		{
 			name:   "external",
-			parser: externalParser,
+			parser: parser,
 		},
 	}
 
@@ -136,12 +130,126 @@ func TestExifParsers(t *testing.T) {
 	}
 }
 
-// func TestExternalExifParser(t *testing.T) {
-// 	parser := externalExifParser{}
+func TestExtractValidGPSData(t *testing.T) {
+	tests := []struct {
+		name                string
+		latitude, longitude float64
+		wantOK              bool
+	}{
+		{"LatNormalLongNormal", 10.0, 10.0, true},
 
-// 	exif, err := parser.ParseExif((bird_path))
+		{"LatNilLongNormal", math.NaN(), 10.0, false},
+		{"LatNormalLongNil", 10.0, math.NaN(), false},
 
-// 	if assert.NoError(t, err) {
-// 		assert.Equal(t, exif, &bird_exif)
-// 	}
-// }
+		{"Lat>90LongNormal", 100.0, 10.0, false},
+		{"Lat<-90LongNormal", -100.0, 10.0, false},
+
+		{"LatNormalLong>180", 10.0, 190.0, false},
+		{"LatNormalLong<-180", 10.0, -190.0, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			metadata := exiftool.EmptyFileMetadata()
+			if !math.IsNaN(tc.latitude) {
+				metadata.SetFloat("GPSLatitude", tc.latitude)
+			}
+			if !math.IsNaN(tc.longitude) {
+				metadata.SetFloat("GPSLongitude", tc.longitude)
+			}
+
+			lat, long, err := extractValidGPSData(&metadata)
+			gotOK := err == nil
+			if got, want := gotOK, tc.wantOK; got != want {
+				t.Fatalf("extractValidGPSData({lat: %f, long: %f}) got an error: %v, want: %v", tc.latitude, tc.longitude, err, want)
+			}
+
+			if err != nil {
+				// no need to check data if there is an error
+				return
+			}
+
+			if got, want := lat, tc.latitude; got != want {
+				t.Fatalf("extractValidGPSData({lat: %f, long: %f}) got latitude: %v, want: %v", tc.latitude, tc.longitude, got, want)
+			}
+			if got, want := long, tc.longitude; got != want {
+				t.Fatalf("extractValidGPSData({lat: %f, long: %f}) got longitude: %v, want: %v", tc.latitude, tc.longitude, got, want)
+			}
+		})
+	}
+}
+
+func TestIsFloatReal(t *testing.T) {
+	tests := []struct {
+		name  string
+		value float64
+		want  bool
+	}{
+		{"Normal", 10.0, true},
+		{"+Inf", math.Inf(1), false},
+		{"-Inf", math.Inf(-1), false},
+		{"Nan", math.NaN(), false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := isFloatReal(tc.value)
+			if got != tc.want {
+				t.Errorf("isFloatReal(%f) = %v, want: %v", tc.value, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSanitizeEXIF(t *testing.T) {
+	nan := math.NaN()
+	var exif models.MediaEXIF
+
+	tests := []struct {
+		field string
+		ptr   **float64
+	}{
+		{"Exposure", &exif.Exposure},
+		{"Aperture", &exif.Aperture},
+		{"FocalLength", &exif.FocalLength},
+		{"GPSLatitude", &exif.GPSLatitude},
+		{"GPSLongitude", &exif.GPSLongitude},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.field, func(t *testing.T) {
+			*tc.ptr = &nan
+			sanitizeEXIF(&exif)
+			if got := *tc.ptr; got != nil {
+				t.Errorf("after sanitizeEXIF(), exif.%s = %v, want: nil", tc.field, got)
+			}
+		})
+	}
+}
+
+func TestSanitizeEXIF_GPS(t *testing.T) {
+	nan := math.NaN()
+	valid := float64(10.0)
+	var exif models.MediaEXIF
+
+	tests := []struct {
+		field string
+		ptr   **float64
+	}{
+		{"GPSLatitude", &exif.GPSLatitude},
+		{"GPSLongitude", &exif.GPSLongitude},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.field, func(t *testing.T) {
+			exif.GPSLatitude = &valid
+			exif.GPSLongitude = &valid
+
+			*tc.ptr = &nan
+			sanitizeEXIF(&exif)
+			if exif.GPSLatitude != nil || exif.GPSLongitude != nil {
+				t.Errorf("after sanitizeEXIF(), exif.GPSLatitude = %v, exif.GPSLongitude = %v, want both: nil", exif.GPSLatitude, exif.GPSLongitude)
+			}
+		})
+	}
+}
