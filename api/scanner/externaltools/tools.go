@@ -1,4 +1,5 @@
-// package externaltools contains a group of tools outside go runtime.
-// They are provided by the runtime environment. Some of them must be initiazlied before using, and be cleaned up properly when finishing.
-// The dependency of packages under externaltools must be as less as possible, to avoid cycle dependencies.
+// Package externaltools provides wrappers for tools outside the Go runtime.
+// These tools are provided by the runtime environment. Some require initialization
+// and must be cleaned up properly when finished.
+// Packages under externaltools should have as few dependencies as possible to avoid cycles.
 package externaltools
