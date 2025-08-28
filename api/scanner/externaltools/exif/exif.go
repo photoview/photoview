@@ -2,16 +2,21 @@ package exif
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
 )
 
 var globalExifParser *ExifParser
+var globalInit sync.Once
 
 func Initialize() (func(), error) {
 	var err error
-	globalExifParser, err = NewExifParser()
+	globalInit.Do(func() {
+		globalExifParser, err = NewExifParser()
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +26,10 @@ func Initialize() (func(), error) {
 	return func() {
 		if err := globalExifParser.Close(); err != nil {
 			log.Error(nil, "Cleanup exiftool error:", err)
+			return
 		}
+
+		globalExifParser = nil
 	}, nil
 }
 

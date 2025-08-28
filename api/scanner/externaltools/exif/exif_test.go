@@ -19,7 +19,14 @@ func TestParse(t *testing.T) {
 	}
 	defer cleanup()
 
-	if _, err := Parse("./test_data/bird.jpg"); err != nil {
+	filename := "./test_data/bird.jpg"
+
+	metadata, err := Parse(filename)
+	if err != nil {
 		t.Fatalf("Parse() returns an error: %v", err)
+	}
+
+	if metadata == nil {
+		t.Errorf("Parse(%q) should not return nil", filename)
 	}
 }
