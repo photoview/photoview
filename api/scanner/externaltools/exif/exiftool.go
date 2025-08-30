@@ -43,7 +43,7 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 
 	fileInfo := fileInfos[0]
 	if err := fileInfo.Err; err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}
 
 	retEXIF := models.MediaEXIF{}
