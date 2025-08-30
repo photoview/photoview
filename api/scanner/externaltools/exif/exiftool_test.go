@@ -1,7 +1,6 @@
 package exif
 
 import (
-	"fmt"
 	"math"
 	"path"
 	"testing"
@@ -89,7 +88,7 @@ func TestExifParser(t *testing.T) {
 	}
 
 	for _, img := range images {
-		t.Run(fmt.Sprintf("%s", path.Base(img.path)), func(t *testing.T) {
+		t.Run(path.Base(img.path), func(t *testing.T) {
 			exif, failures, err := parser.ParseExif(img.path)
 			if len(failures) != 0 {
 				t.Errorf("parse failures: %v", failures)
@@ -123,10 +122,10 @@ func TestExifParserWithFailure(t *testing.T) {
 	}
 
 	for _, img := range imagesWithFailures {
-		t.Run(fmt.Sprintf("%s", path.Base(img.path)), func(t *testing.T) {
+		t.Run(path.Base(img.path), func(t *testing.T) {
 			exif, failures, err := parser.ParseExif(img.path)
 			if len(failures) == 0 {
-				t.Errorf("parse failures: %v, should have at lease one failure", failures)
+				t.Errorf("parse failures: %v, should have at least one failure", failures)
 			}
 
 			img.assert(t, exif, err)
@@ -173,10 +172,10 @@ func TestExtractValidGPSData(t *testing.T) {
 				return
 			}
 
-			if got, want := lat, tc.latitude; got != want {
+			if got, want := lat, tc.latitude; math.Abs(got-want) >= math.SmallestNonzeroFloat64 {
 				t.Fatalf("extractValidGPSData({lat: %f, long: %f}) got latitude: %v, want: %v", tc.latitude, tc.longitude, got, want)
 			}
-			if got, want := long, tc.longitude; got != want {
+			if got, want := long, tc.longitude; math.Abs(got-want) >= math.SmallestNonzeroFloat64 {
 				t.Fatalf("extractValidGPSData({lat: %f, long: %f}) got longitude: %v, want: %v", tc.latitude, tc.longitude, got, want)
 			}
 		})
@@ -192,7 +191,7 @@ func TestIsFloatReal(t *testing.T) {
 		{"Normal", 10.0, true},
 		{"+Inf", math.Inf(1), false},
 		{"-Inf", math.Inf(-1), false},
-		{"Nan", math.NaN(), false},
+		{"NaN", math.NaN(), false},
 	}
 
 	for _, tc := range tests {
