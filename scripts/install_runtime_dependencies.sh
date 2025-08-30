@@ -2,7 +2,7 @@
 set -eu
 
 apt-get update
-apt-get install -y --no-install-recommends curl libimage-exiftool-perl
+apt-get install -y --no-install-recommends curl file libimage-exiftool-perl
 
 # libheif dependencies
 apt-get install -y --no-install-recommends libdav1d7 librav1e0.7 libde265-0 libx265-215 libjpeg62-turbo libopenh264-8 libpng16-16t64 libnuma1 zlib1g
