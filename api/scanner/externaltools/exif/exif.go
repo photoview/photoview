@@ -43,5 +43,14 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 
-	return globalExifParser.ParseExif(filepath)
+	exif, failures, err := globalExifParser.ParseExif(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(failures) > 0 {
+		log.Warn(nil, "Parse exif failures", "filepath", filepath, "errors", failures)
+	}
+
+	return exif, nil
 }

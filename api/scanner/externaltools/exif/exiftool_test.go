@@ -12,22 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExifParsers(t *testing.T) {
+func TestExifParser(t *testing.T) {
 	parser, err := NewExifParser()
 	if err != nil {
 		t.Fatalf("can't init exiftool: %v", err)
 	}
 	defer parser.Close()
-
-	parsers := []struct {
-		name   string
-		parser *ExifParser
-	}{
-		{
-			name:   "external",
-			parser: parser,
-		},
-	}
 
 	images := []struct {
 		path   string
@@ -52,6 +42,22 @@ func TestExifParsers(t *testing.T) {
 			},
 		},
 		{
+			path: "./test_data/CorrectGPS.jpg",
+			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
+				const precision = 1e-7
+				assert.NoError(t, err)
+				assert.NotNil(t, exif.GPSLatitude,
+					"GPSLatitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLatitude)
+				assert.NotNil(t, exif.GPSLongitude,
+					"GPSLongitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLongitude)
+				assert.InDelta(t, *exif.GPSLatitude, 44.478997222222226, precision,
+					"The exact value from input data is expected: %+v", exif.GPSLatitude)
+				assert.InDelta(t, *exif.GPSLongitude, 11.297922222222223, precision,
+					"The exact value from input data is expected: %+v", exif.GPSLongitude)
+			},
+		},
+		{
+			// stripped.jpg has a file modified date with the offset.
 			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
@@ -80,6 +86,31 @@ func TestExifParsers(t *testing.T) {
 				assert.Nil(t, exif.Exposure)
 			},
 		},
+	}
+
+	for _, img := range images {
+		t.Run(fmt.Sprintf("%s", path.Base(img.path)), func(t *testing.T) {
+			exif, failures, err := parser.ParseExif(img.path)
+			if len(failures) != 0 {
+				t.Errorf("parse failures: %v", failures)
+			}
+
+			img.assert(t, exif, err)
+		})
+	}
+}
+
+func TestExifParserWithFailure(t *testing.T) {
+	parser, err := NewExifParser()
+	if err != nil {
+		t.Fatalf("can't init exiftool: %v", err)
+	}
+	defer parser.Close()
+
+	imagesWithFailures := []struct {
+		path   string
+		assert func(t *testing.T, exif *models.MediaEXIF, err error)
+	}{
 		{
 			path: "./test_data/IncorrectGPS.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
@@ -89,39 +120,17 @@ func TestExifParsers(t *testing.T) {
 					"GPSLongitude expected to be NULL for an incorrect input data: %+v", exif.GPSLongitude)
 			},
 		},
-		{
-			path: "./test_data/CorrectGPS.jpg",
-			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
-				const precision = 1e-7
-				assert.NoError(t, err)
-				assert.NotNil(t, exif.GPSLatitude,
-					"GPSLatitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLatitude)
-				assert.NotNil(t, exif.GPSLongitude,
-					"GPSLongitude expected to be Not-NULL for a correct input data: %+v", exif.GPSLongitude)
-				assert.InDelta(t, *exif.GPSLatitude, 44.478997222222226, precision,
-					"The exact value from input data is expected: %+v", exif.GPSLatitude)
-				assert.InDelta(t, *exif.GPSLongitude, 11.297922222222223, precision,
-					"The exact value from input data is expected: %+v", exif.GPSLongitude)
-			},
-		},
 	}
 
-	for _, p := range parsers {
-		for _, img := range images {
-			t.Run(fmt.Sprintf("%s:%s", p.name, path.Base(img.path)), func(t *testing.T) {
+	for _, img := range imagesWithFailures {
+		t.Run(fmt.Sprintf("%s", path.Base(img.path)), func(t *testing.T) {
+			exif, failures, err := parser.ParseExif(img.path)
+			if len(failures) == 0 {
+				t.Errorf("parse failures: %v, should have at lease one failure", failures)
+			}
 
-				if p.name == "external" {
-					_, err := exiftool.NewExiftool()
-					if err != nil {
-						t.Skip("failed to get exiftool, skipping test")
-					}
-				}
-
-				exif, err := p.parser.ParseExif(img.path)
-
-				img.assert(t, exif, err)
-			})
-		}
+			img.assert(t, exif, err)
+		})
 	}
 }
 
