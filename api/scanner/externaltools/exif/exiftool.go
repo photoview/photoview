@@ -34,16 +34,26 @@ func (p *ExifParser) Close() error {
 	return p.exiftool.Close()
 }
 
-// ParseExif returns the exif data.
-func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
-	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
-	if l := len(fileInfos); l != 1 {
-		return nil, nil, fmt.Errorf("invalid file infos with %q, len(fileInfos) = %d", mediaPath, l)
+// MIMEType returns the mime type of the file.
+func (p *ExifParser) MIMEType(mediaPath string) (string, error) {
+	fileInfo, err := p.readFileInfo(mediaPath)
+	if err != nil {
+		return "", err
 	}
 
-	fileInfo := fileInfos[0]
-	if err := fileInfo.Err; err != nil {
-		return nil, nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
+	mime, err := fileInfo.GetString("MIMEType")
+	if err != nil {
+		return "", err
+	}
+
+	return mime, nil
+}
+
+// ParseExif returns the exif data.
+func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
+	fileInfo, err := p.readFileInfo(mediaPath)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	retEXIF := models.MediaEXIF{}
@@ -95,44 +105,16 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 	}
 
 	// Get time of photo
-	layout := "2006:01:02 15:04:05"
-	layoutWithOffset := "2006:01:02 15:04:05-07:00"
-CREATE_DATE:
-	for _, createDateKey := range []string{
-		// Keep the order for the priority to generate DateShot
-		"CreationDate",
-		"DateTimeOriginal",
-		"CreateDate",
-		"TrackCreateDate",
-		"MediaCreateDate",
-		"FileCreateDate",
-		"ModifyDate",
-		"TrackModifyDate",
-		"MediaModifyDate",
-		"FileModifyDate",
-	} {
-		dateStr, err := fileInfo.GetString(createDateKey)
-		if err != nil {
-			continue
-		}
-
-		if date, err := time.Parse(layout, dateStr); err == nil {
-			retEXIF.DateShot = &date
-			foundExif = true
-			break CREATE_DATE
-		}
-
-		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
-			retEXIF.DateShot = &date
-			foundExif = true
-			break CREATE_DATE
-		} else {
-			failures.Append(createDateKey, err)
-		}
+	date, err := extractShotDateTime(fileInfo)
+	if err != nil {
+		failures.Append("DateShot", err)
+	} else {
+		retEXIF.DateShot = &date
+		foundExif = true
 	}
 
 	// Get GPS data
-	lat, long, err := extractValidGPSData(&fileInfo)
+	lat, long, err := extractValidGPSData(fileInfo)
 	if err != nil {
 		failures.Append("gps", err)
 	} else {
@@ -146,6 +128,20 @@ CREATE_DATE:
 
 	sanitizeEXIF(&retEXIF)
 	return &retEXIF, failures, nil
+}
+
+func (p *ExifParser) readFileInfo(mediaPath string) (*exiftool.FileMetadata, error) {
+	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
+	if l := len(fileInfos); l != 1 {
+		return nil, fmt.Errorf("invalid file infos with %q, len(fileInfos) = %d", mediaPath, l)
+	}
+
+	fileInfo := fileInfos[0]
+	if err := fileInfo.Err; err != nil {
+		return nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
+	}
+
+	return &fileInfo, nil
 }
 
 // isFloatReal returns true when the float value represents a real number
@@ -180,17 +176,17 @@ func sanitizeEXIF(exif *models.MediaEXIF) {
 	}
 }
 
-func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, error) {
+func extractValidGPSData(meta *exiftool.FileMetadata) (float64, float64, error) {
 	var latitude, longitude *float64
 
 	// GPS coordinates - latitude
-	rawLatitude, err := fileInfo.GetFloat("GPSLatitude")
+	rawLatitude, err := meta.GetFloat("GPSLatitude")
 	if err == nil {
 		latitude = &rawLatitude
 	}
 
 	// GPS coordinates - longitude
-	rawLongitude, err := fileInfo.GetFloat("GPSLongitude")
+	rawLongitude, err := meta.GetFloat("GPSLongitude")
 	if err == nil {
 		longitude = &rawLongitude
 	}
@@ -209,4 +205,46 @@ func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, err
 	}
 
 	return *latitude, *longitude, nil
+}
+
+func extractShotDateTime(meta *exiftool.FileMetadata) (time.Time, error) {
+	timezoneStr, err := meta.GetString("OffsetTimeOriginal")
+	if err != nil {
+		timezoneStr = ""
+	}
+
+	layout := "2006:01:02 15:04:05"
+	layoutWithOffset := "2006:01:02 15:04:05-07:00"
+	for _, createDateKey := range []string{
+		// Keep the order for the priority to generate DateShot
+		"CreationDate",
+		"DateTimeOriginal",
+		"CreateDate",
+		"TrackCreateDate",
+		"MediaCreateDate",
+		"FileCreateDate",
+		"ModifyDate",
+		"TrackModifyDate",
+		"MediaModifyDate",
+		"FileModifyDate",
+	} {
+		dateStr, err := meta.GetString(createDateKey)
+		if err != nil {
+			continue
+		}
+
+		if date, err := time.Parse(layout, dateStr); err == nil {
+			return date, nil
+		}
+
+		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
+			return date, nil
+		}
+
+		if date, err := time.Parse(layoutWithOffset, dateStr+timezoneStr); err == nil {
+			return date, nil
+		}
+	}
+
+	return time.Time{}, exiftool.ErrKeyNotFound
 }
