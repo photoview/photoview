@@ -34,21 +34,6 @@ func (p *ExifParser) Close() error {
 	return p.exiftool.Close()
 }
 
-// MIMEType returns the mime type of the file.
-func (p *ExifParser) MIMEType(mediaPath string) (string, error) {
-	fileInfo, err := p.readFileInfo(mediaPath)
-	if err != nil {
-		return "", err
-	}
-
-	mime, err := fileInfo.GetString("MIMEType")
-	if err != nil {
-		return "", err
-	}
-
-	return mime, nil
-}
-
 // ParseExif returns the exif data.
 func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
 	fileInfo, err := p.readFileInfo(mediaPath)
@@ -105,7 +90,7 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 	}
 
 	// Get time of photo
-	date, err := extractShotDateTime(fileInfo)
+	date, err := extractDateShot(fileInfo)
 	if err != nil {
 		failures.Append("DateShot", err)
 	} else {
@@ -207,7 +192,7 @@ func extractValidGPSData(meta *exiftool.FileMetadata) (float64, float64, error) 
 	return *latitude, *longitude, nil
 }
 
-func extractShotDateTime(meta *exiftool.FileMetadata) (time.Time, error) {
+func extractDateShot(meta *exiftool.FileMetadata) (time.Time, error) {
 	timezoneStr, err := meta.GetString("OffsetTimeOriginal")
 	if err != nil {
 		timezoneStr = ""
@@ -233,17 +218,20 @@ func extractShotDateTime(meta *exiftool.FileMetadata) (time.Time, error) {
 			continue
 		}
 
-		if date, err := time.Parse(layout, dateStr); err == nil {
-			return date, nil
+		if timezoneStr == "" {
+			if date, err := time.Parse(layout, dateStr); err == nil {
+				return date, nil
+			}
+		} else {
+			if date, err := time.Parse(layoutWithOffset, dateStr+timezoneStr); err == nil {
+				return date, nil
+			}
 		}
 
 		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
 			return date, nil
 		}
 
-		if date, err := time.Parse(layoutWithOffset, dateStr+timezoneStr); err == nil {
-			return date, nil
-		}
 	}
 
 	return time.Time{}, exiftool.ErrKeyNotFound

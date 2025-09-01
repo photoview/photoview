@@ -256,3 +256,53 @@ func TestSanitizeEXIF_GPS(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractDateShot(t *testing.T) {
+	tests := []struct {
+		name     string
+		exifTags map[string]string
+		want     time.Time
+		wantErr  bool
+	}{
+		{"NoTime", map[string]string{"abc": "123"}, time.Time{}, true},
+
+		{"DateTimeOriginal",
+			map[string]string{
+				"DateTimeOriginal": "2025:09:01 10:00:00",
+			},
+			time.Date(2025, 9, 1, 10, 0, 0, 0, time.Local), false},
+		{"DateTimeOriginalWithOffsetTimeOriginal",
+			map[string]string{
+				"DateTimeOriginal":   "2025:09:01 10:00:00",
+				"OffsetTimeOriginal": "+02:00",
+			},
+			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("", 2*60*60)), false},
+		{"FileCreateDate",
+			map[string]string{
+				"FileCreateDate": "2025:09:01 10:00:00+02:00",
+			},
+			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("", 2*60*60)), false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			metadata := exiftool.EmptyFileMetadata()
+			for key, value := range tc.exifTags {
+				metadata.SetString(key, value)
+			}
+
+			gotTime, err := extractDateShot(&metadata)
+			gotErr := err != nil
+			if gotErr != tc.wantErr {
+				t.Fatalf("extractDateShot(%v) returns an error: %v, want an error: %v", tc.exifTags, gotErr, tc.wantErr)
+			}
+			if gotErr {
+				return
+			}
+
+			if got, want := gotTime.Format(time.RFC3339), tc.want.Format(time.RFC3339); got != want {
+				t.Errorf("extractDateShot(%v) = %v, want: %v", tc.exifTags, got, want)
+			}
+		})
+	}
+}
