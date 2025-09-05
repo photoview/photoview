@@ -43,25 +43,24 @@ const AlbumsPage = () => {
     }
   )
 
+  const sortingOptions = [
+    {
+      value: 'updated_at',
+      label: t('album_filter.sorting_options.date_imported', 'Date imported'),
+    },
+    {
+      value: 'title',
+      label: t('album_filter.sorting_options.title', 'Title'),
+    },
+  ]
+
   return (
     <Layout title="Albums">
       <AlbumFilter
         onlyFavorites={false}
         ordering={orderParams}
         setOrdering={orderParams.setOrdering}
-        sortingOptions={[
-          {
-            value: 'updated_at',
-            label: t(
-              'album_filter.sorting_options.date_imported',
-              'Date imported'
-            ),
-          },
-          {
-            value: 'title',
-            label: t('album_filter.sorting_options.title', 'Title'),
-          },
-        ]}
+        sortingOptions={sortingOptions}
       />
       <AlbumBoxes error={error} albums={data?.myAlbums} />
     </Layout>
