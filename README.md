@@ -15,17 +15,32 @@ You configure Photoview to look for photos and videos within a directory on your
 When your media has been scanned, they show up on the website, organised in the same way as on the filesystem.
 
 > If you have questions regarding setup or development,
-feel free to join the Discord server https://discord.gg/jQ392948u9
+feel free to join the Discord server [https://discord.gg/jQ392948u9](https://discord.gg/jQ392948u9)
 
 # ATTENTION to Docker users !!!
 
-We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photoview> and all new images for the `master` tag, as well as future releases are going to be published there instead of the previously used registry. Old images will be still accessible in the old registry <https://hub.docker.com/r/viktorstrate/photoview>, so if you want to use 1 of those old images, you need to revert back to the old registry.
+We migrated to the new Docker registry <https://hub.docker.com/r/photoview/photoview>, and all new images for the
+`master` tag as well as future releases will be published there instead of the previously used registry. Old images
+will still be accessible in the old registry <https://hub.docker.com/r/viktorstrate/photoview>, so if you want to
+use one of those older images, revert to the old registry.
 
-Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
+Please update your `docker-compose.yml` file to use the new registry for the `photoview` image, as shown in the
+corresponding example of the compose file: <https://github.com/photoview/photoview/tree/master/docker-compose%20example>
+
+# ATTENTION to PostgreSQL users !!!
+
+We switched to PostgreSQL 17 on the `master` branch. PostgreSQL 17 will be the default recommended version
+for the next release (PostgreSQL 16 remains supported). If you follow `master`, please check the
+[official PostgreSQL upgrade guide](https://www.postgresql.org/docs/current/upgrading.html), and:
+
+- For Docker users: please update your `docker-compose.yml` to match [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
+- For direct host installations or external/shared PostgreSQL instances: please upgrade your PostgreSQL server and database manually to version 17 following PostgreSQL guidance.
+
+Don't forget to back up your database before upgrading.
 
 ## Demo site
 
-Visit https://photos.qpqp.dk/
+Visit [https://photos.qpqp.dk/](https://photos.qpqp.dk/)
 
 Username: **demo**
 
@@ -34,10 +49,12 @@ Password: **demo**
 ## Contents
 
 - [ATTENTION to Docker users !!!](#attention-to-docker-users-)
+- [ATTENTION to PostgreSQL users !!!](#attention-to-postgresql-users-)
   - [Demo site](#demo-site)
   - [Contents](#contents)
   - [Main features](#main-features)
   - [Supported platforms](#supported-platforms)
+  - [Supported databases](#supported-databases)
   - [Why yet another self-hosted photo gallery](#why-yet-another-self-hosted-photo-gallery)
   - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
     - [Initial Setup](#initial-setup)
@@ -68,11 +85,26 @@ Password: **demo**
 
 ## Supported platforms
 
-- [Docker](https://hub.docker.com/r/viktorstrate/photoview/)
-- [Arch Linux Aur](https://aur.archlinux.org/packages/photoview)
+- [Docker](https://hub.docker.com/r/photoview/photoview/) (Docker Engine released within the last year and a major version not older than the previous one).
+  > [!NOTE] We don’t support Portainer or other abstraction layers on top of Docker Compose. If you encounter an issue, please reproduce it on the setup with plain Docker Compose before reporting.
+- [Debian Linux](https://www.debian.org/) 12 and 13, [Ubuntu Linux](https://ubuntu.com/) LTS and newer short-term releases
+- [Arch Linux AUR](https://aur.archlinux.org/packages/photoview)
 - [Unraid](https://forums.unraid.net/topic/103028-support-photoview-corneliousjd-repo/)
 - EmbassyOS: [announcement](https://start9labs.medium.com/new-service-photoview-72ee681b2ff0), [repo](https://github.com/Start9Labs/embassyos-photoview-wrapper)
 - [YunoHost](https://github.com/YunoHost-Apps/photoview_ynh)
+- [TrueNAS](https://www.truenas.com/)
+
+We provide limited support for the standard deployment scenarios on the platforms above. The project team has no testing environments for all of them, so assistance is based on user-provided logs and traces. Highly customized setups may further limit our ability to help.
+
+## Supported databases
+
+- [SQLite](https://sqlite.org/): built-in DBMS, no additional service or maintenance required; lowest performance and no scalability.
+- [MariaDB](https://mariadb.org/) LTS version: default choice. Runs as an additional service; good balance between performance and maintenance effort.
+- [PostgreSQL](https://www.postgresql.org/) 16 and 17: typically the best performance. Runs as an additional service; requires slightly more maintenance.
+
+We support running Photoview with one of these DBMSs when used as a dedicated instance for Photoview only.
+If you share a DBMS among multiple services, our support is limited to SQL issues. DB management and connection-related
+issues are the user’s responsibility due to the variability of shared configurations.
 
 ## Why yet another self-hosted photo gallery
 
@@ -115,16 +147,19 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    - `docker-compose.minimal.example.yml` - the minimal and simple config for those, who find the previous one too complex and difficult to understand and manage
 
    When downloading files, you need to choose only one of them.
+
 2. Rename downloaded files and remove the `example` from their names (so, you need to have `.env`, `docker-compose.yml`, and `Makefile` files). If you choose the `docker-compose.minimal.example.yml` on previous step, make sure to rename it to the `docker-compose.yml`.
 3. Open these files in a text editor and read them. Modify where needed according to the documentation comments to properly match your setup. There are comments of 2 types: those, starting with `##`, are explanations and examples, which should not be uncommented; those, starting with `#`, are optional or alternative configuration parts, which might be uncommented in certain circumstances, described in corresponding explanations. It is better to go through the files in the next order: `.env`, `docker-compose.yml`, and `Makefile`.
-> If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
+
+    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g., `@`), make sure to URL-encode them, e.g., `p@ss` → `p%40ss`.
+
 4. Make sure that your media library's root folder and all the files and subfolders are readable and searchable by other users: run the next command (or corresponding sequence of commands from the `Makefile`):
 
    ```bash
    make readable
    ```
 
-   If command(s) return `Permission denied` error, run them under the user, owning corresponding files and folders. Alternatively, run them adding `sudo ` before the command: this will switch the execution context to `root` user and ask for the root password. You have to have permission to run `sudo` in the system.
+   If command(s) return `Permission denied` error, run them under the user owning corresponding files and folders. Alternatively, prefix them with `sudo`: this switches the execution context to `root` and typically prompts for your own password (unless configured otherwise). You must have `sudo` privileges to do this.
 
    If you don't want to give required permissions to `others` group for your files, alternatively, you can:
 
@@ -139,7 +174,7 @@ All the photo galleries can do a lot of what I need, but no single one can do it
    make all
    ```
 
-If the endpoint or the port hasn't been changed in the `docker-compose.yml` file, Photoview can now be accessed at http://localhost:8000
+If you haven’t changed the endpoint or port in `docker-compose.yml` file, Photoview is available now at [http://localhost:8000](http://localhost:8000)
 
 ### Initial Setup
 
@@ -166,8 +201,9 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 1. Configure a **Firewall** on your local network's gateway and allow only the intended type of incoming traffic to pass.
 2. Use **VPN** to provide external access to local services.
 3. Setting up a **Reverse proxy** in front of the service and forwarding all the traffic through it, exposing HTTPS port with strong certificate and cipher suites to the Internet. This could be one of the next products or something else that you prefer:
-   - [Traefic Proxy](https://doc.traefik.io/traefik/)
-   - [NGinx Proxy Manager](https://nginxproxymanager.com/guide/)
+   - [Traefik Proxy](https://doc.traefik.io/traefik/)
+   - [Caddy](https://caddyserver.com/docs/getting-started)
+   - [Nginx Proxy Manager](https://nginxproxymanager.com/guide/)
    - [Cloudflare Gateway](https://www.cloudflare.com/zero-trust/products/gateway/)
 4. Configure an external **Multi-Factor Authentication** service to manage authentication for your service (part of Cloudflare services, but you can choose anything else).
 5. Configure **Web Application Firewall** to protect from common web exploits like SQL injection, cross-site scripting, and cross-site forgery requests (part of Cloudflare services, but you can choose anything else).
@@ -179,11 +215,17 @@ Setting up and configuring of all these protections depends on and requires a lo
 
 ### Hardware Acceleration
 
-It is possible to run the FFmpeg with a codec supproting the hardware acceleration, by defining `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION`. The value should be one of `qsv`, `vaapi`, `nvenc`.
+You can run FFmpeg with hardware-acceleration–capable codecs by defining `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION` in your
+`.env` file. Supported values: `qsv`, `vaapi`, `nvenc`.
 
-We only verified the hardware acceleration with `qsv` on an Intel chip. To let it work, it must map `/dev/dri` devices and set a ENV `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv`. See [docker-compose.example.yml](./docker-compose example/docker-compose.example.yml).
+We've verified the hardware acceleration with `qsv` on an Intel chip only. To enable it, map your `/dev/dri` devices from
+the host into the `photoview` service and set the `PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION=qsv` in your `.env` file.
+See [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
 
-If you verify other hardware accelerations working well, let us know.
+- For `vaapi` environment variable value, map `/dev/dri` from the host into the `photoview` service.
+- For `nvenc`, install and enable the NVIDIA Container Toolkit on the host, map all NVIDIA devices from the host into the `photoview` service, and run with the NVIDIA runtime.
+
+If you confirm other acceleration backends, please let us know.
 
 ## Contributing
 
@@ -209,7 +251,7 @@ We recommend to use Docker development environment. If Docker environment doesn'
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker compose -f dev-compose.yaml build # Build images for development
 $ docker compose -f dev-compose.yaml up # Launch API and UI servers
 ```
@@ -218,7 +260,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 By default, it uses sqlite3 as database. To run servers with other database, please update `PHOTOVIEW_DATABASE_DRIVER` value in `dev-compose.yaml` file and run:
 
-```sh
+```console
 $ docker compose -f dev-compose.yaml --profile mysql up # Run with mysql database
 or
 $ docker compose -f dev-compose.yaml --profile postgres up # Run with postgresql database
@@ -230,7 +272,7 @@ If you don't want to depend on Docker Compose but only Docker, you can launch se
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker build --target api -t photoview/api . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file api/example.env photoview/api \
     reflex -g '*.go' -s -- go run . # Monitor source code and (re)launch API server
@@ -245,7 +287,7 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 It may take a long time to build dependencies when launching servers first time.
 
-```sh
+```console
 $ docker build --target ui -t photoview/ui . # Build image for development
 $ docker run --rm -it -v `pwd`:/app --network host --env-file ui/example.env photoview/ui \
     npm install # Install dependencies
@@ -272,10 +314,10 @@ We can't keep verifying below commands on each environment. People may need to s
     - `g++`
     - `libheif` >= 1.15.1
     - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
-        - `dlib`
-        - `libjpeg`
-        - `libblas`
-        - `liblapack`
+      - `dlib`
+      - `libjpeg`
+      - `libblas`
+      - `liblapack`
     - `libmagic`
     - `libmagickwand`
   - Optional tools during developing:
@@ -287,7 +329,7 @@ We can't keep verifying below commands on each environment. People may need to s
 
 In Debian/Ubuntu, install dependencies:
 
-```sh
+```console
 $ sudo apt update # Update the package list
 $ sudo apt install golang g++ libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev libmagic-dev libmagickwand-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
@@ -295,7 +337,7 @@ $ sudo apt install reflex sqlite3 # For API optional tools
 
 In macOS, install dependencies:
 
-```sh
+```console
 $ brew update # Update the package list
 $ brew install golang gcc pkg-config libheif dlib jpeg libmagic imagemagick # For API
 $ brew install reflex sqlite3 # For API optional tools
@@ -305,7 +347,7 @@ Please follow the package manager guidance if you don't use `apt` or `homebrew`.
 
 For `node`, recommend to use [nvm](https://github.com/nvm-sh/nvm). Follow [Installing and Updating](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to install `nvm` locally, then:
 
-```sh
+```console
 $ nvm install 18
 $ nvm use 18
 ```
@@ -315,20 +357,22 @@ You can install `node` with other package manager if you like.
 ### Local setup
 
 1. Rename `/api/example.env` to `.env`
-  - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
-  - To set a different DBMS driver
-    - Comment the SQLite path variable
-    - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
-    - Uncomment the corresponding connection string variable for the new driver
-    > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g. `@`), make sure to URL-encode them.
-  - Optional: modify other variables if needed according to the inline comments
+
+     - Update `PHOTOVIEW_SQLITE_PATH` if you don't want to put sqlite file under `/api`
+     - To set a different DBMS driver
+       - Comment the SQLite path variable
+       - Update `PHOTOVIEW_DATABASE_DRIVER` with your driver
+       - Uncomment the corresponding connection string variable for the new driver
+          > If your `PGSQL_PASSWORD` or `MARIADB_PASSWORD` contain special characters (e.g., `@`), make sure to URL-encode them, e.g., `p@ss` → `p%40ss`.
+     - Optional: modify other variables if needed according to the inline comments
+
 2. Rename `/ui/example.env` to `.env`
 
 ### Start API server
 
 Then run the following commands:
 
-```bash
+```console
 # Optional: Set the compiler environment in Debian/Ubuntu
 $ source ./scripts/set_compiler_env.sh
 
@@ -353,7 +397,7 @@ $ go run .
 
 If you want to recompile the server automatically when code changes:
 
-```sh
+```console
 # Start API server
 $ cd ./api
 $ reflex -g '*.go' -s -- go run .
@@ -365,15 +409,15 @@ The graphql playground can now be accessed at [localhost:4001](http://localhost:
 
 In a new terminal window run the following commands:
 
-```bash
-cd ./ui
-npm install
-npm start
+```console
+$ cd ./ui
+$ npm install
+$ npm start
 ```
 
 If you want to recompile the server automatically when code changes:
 
-```sh
+```console
 $ cd ./ui
 $ npm run mon
 ```
