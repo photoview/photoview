@@ -13,10 +13,10 @@ COPY ui/package.json ui/package-lock.json /app/ui/
 RUN npm install --global npm@10 \
     && if [ "$NODE_ENV" = "production" ]; then \
         echo "Installing production dependencies only..."; \
-        npm ci --omit=dev; \
+        npm ci --omit=dev --no-audit --no-fund; \
     else \
         echo "Installing all dependencies..."; \
-        npm ci; \
+        npm ci --no-audit --no-fund; \
     fi
 
 COPY ui/ /app/ui
