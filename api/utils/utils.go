@@ -66,28 +66,26 @@ func FaceRecognitionModelsPath() string {
 // IsDirSymlink checks that the given path is a symlink and resolves to a
 // directory.
 func IsDirSymlink(linkPath string) (bool, error) {
-	isDirSymlink := false
 
 	fileInfo, err := os.Lstat(linkPath)
 	if err != nil {
-		return false, fmt.Errorf("cannot get fileinfo of the link %q: %w", linkPath, err)
+		return false, fmt.Errorf("cannot get fileinfo of the symlink %q: %w", linkPath, err)
 	}
 
-	//Resolve symlinks
+	// Resolve symlinks
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		resolvedPath, err := filepath.EvalSymlinks(linkPath)
 		if err != nil {
-			return false, fmt.Errorf("cannot resolve link target for %q, skipping it: %w", linkPath, err)
+			return false, fmt.Errorf("cannot resolve symlink target for %q, skipping it: %w", linkPath, err)
 		}
 
 		resolvedFile, err := os.Stat(resolvedPath)
 		if err != nil {
-			return false, fmt.Errorf("cannot get fileinfo of the link target %q for the symlink %q, skipping it: %w",
-				resolvedPath, linkPath, err)
+			return false, fmt.Errorf("cannot get fileinfo of the symlink %q target %q, skipping it: %w",
+				linkPath, resolvedPath, err)
 		}
-		isDirSymlink = resolvedFile.IsDir()
 
-		return isDirSymlink, nil
+		return resolvedFile.IsDir(), nil
 	}
 
 	return false, nil
