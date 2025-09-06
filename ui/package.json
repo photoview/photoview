@@ -12,7 +12,7 @@
     "start": "vite --host=0.0.0.0",
     "mon": "nodemon",
     "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "build:dev": "vite build --mode development --sourcemap --minify=false",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "lint:ci": "eslint ./src --config .eslintrc.js --no-color --fix-dry-run > eslint-report.txt",
     "test": "vitest",
