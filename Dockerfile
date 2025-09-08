@@ -9,12 +9,14 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
-RUN if [ "$NODE_ENV" = "production" ]; then \
+# NPM 10.x is the latest supported version for Node.js 18.x
+RUN npm install --global npm@10 \
+    && if [ "$NODE_ENV" = "production" ]; then \
         echo "Installing production dependencies only..."; \
-        npm ci --omit=dev; \
+        npm ci --omit=dev --no-audit --no-fund; \
     else \
         echo "Installing all dependencies..."; \
-        npm ci; \
+        npm ci --no-audit --no-fund; \
     fi
 
 COPY ui/ /app/ui
@@ -28,15 +30,15 @@ ARG UI_PUBLIC_URL=/
 ENV UI_PUBLIC_URL=${UI_PUBLIC_URL}
 
 ARG VERSION=unknown-branch
+ENV VERSION=${VERSION}
 ARG TARGETARCH
+ENV TARGETARCH=${TARGETARCH}
 # hadolint ignore=SC2155
-RUN export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)'); \
-    export REACT_APP_BUILD_DATE=${BUILD_DATE}; \
-    export COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
-    export REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA}; \
-    export VERSION="${VERSION}-${TARGETARCH}"; \
-    export REACT_APP_BUILD_VERSION=${VERSION}; \
-    npm run build -- --base="${UI_PUBLIC_URL}"
+RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
+    export REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
+    export REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}"; \
+    export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
+    npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-trixie AS api
@@ -140,7 +142,7 @@ ENV PHOTOVIEW_MEDIA_CACHE=/home/photoview/media-cache
 
 EXPOSE ${PHOTOVIEW_LISTEN_PORT}
 
-HEALTHCHECK --interval=60s --timeout=10s \
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=2 \
     CMD curl --fail http://localhost:${PHOTOVIEW_LISTEN_PORT}/api/graphql \
         -X POST -H 'Content-Type: application/json' \
         --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}' \
