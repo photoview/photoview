@@ -8,8 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 func GenerateToken() string {
@@ -67,29 +65,27 @@ func FaceRecognitionModelsPath() string {
 
 // IsDirSymlink checks that the given path is a symlink and resolves to a
 // directory.
-func IsDirSymlink(path string) (bool, error) {
-	isDirSymlink := false
+func IsDirSymlink(linkPath string) (bool, error) {
 
-	fileInfo, err := os.Lstat(path)
+	fileInfo, err := os.Lstat(linkPath)
 	if err != nil {
-		return false, errors.Wrapf(err, "could not stat %s", path)
+		return false, fmt.Errorf("cannot get fileinfo of the symlink %q: %w", linkPath, err)
 	}
 
-	//Resolve symlinks
+	// Resolve symlinks
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		resolvedPath, err := filepath.EvalSymlinks(path)
+		resolvedPath, err := filepath.EvalSymlinks(linkPath)
 		if err != nil {
-			return false, errors.Wrapf(err, "Cannot resolve linktarget of %s, ignoring it", path)
+			return false, fmt.Errorf("cannot resolve symlink target for %q, skipping it: %w", linkPath, err)
 		}
 
 		resolvedFile, err := os.Stat(resolvedPath)
 		if err != nil {
-			return false, fmt.Errorf("Cannot get fileinfo of linktarget %s of symlink %s, ignoring it: %w",
-				resolvedPath, path, err)
+			return false, fmt.Errorf("cannot get fileinfo of the symlink %q target %q, skipping it: %w",
+				linkPath, resolvedPath, err)
 		}
-		isDirSymlink = resolvedFile.IsDir()
 
-		return isDirSymlink, nil
+		return resolvedFile.IsDir(), nil
 	}
 
 	return false, nil

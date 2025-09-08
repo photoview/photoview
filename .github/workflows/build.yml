@@ -18,7 +18,8 @@ env:
   DOCKER_USERNAME: viktorstrate
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_IMAGE: ${{ github.repository }}
-  PLATFORMS: linux/amd64,linux/arm64
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64
+  QEMU_PLATFORMS: amd64,arm64
 
 jobs:
   prepare:
@@ -84,13 +85,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --all
+          git fetch --all --unshallow
           echo "COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: ${{ env.PLATFORMS }}
+          platforms: ${{ env.QEMU_PLATFORMS }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -129,7 +130,7 @@ jobs:
           #target:      release # Uncomment before releasing the new version, as the 2.4.0 doesn't have this target.
           sbom:        true
           provenance:  mode=max
-          platforms:   ${{ env.PLATFORMS }}
+          platforms:   ${{ env.DOCKER_PLATFORMS }}
           pull:        true
           push:        ${{ env.IS_PUSHING_IMAGES }}
           tags:        ${{ steps.docker_meta.outputs.tags }}
