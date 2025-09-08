@@ -292,7 +292,7 @@ func calculateTimezoneWithGPS(meta *exiftool.FileMetadata) (*time.Location, erro
 func dateWithNamedLocation(date time.Time) time.Time {
 	_, offsetSecs := date.Zone()
 
-	hour := int(offsetSecs / 60 * 60)
+	hour := int(offsetSecs / (60 * 60))
 	mins := int(offsetSecs/60) - hour*60
 	if mins < 0 {
 		mins = -mins
