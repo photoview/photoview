@@ -62,7 +62,7 @@ func TestMediaURLGetURL(t *testing.T) {
 		Purpose:     models.PhotoHighRes,
 	}
 
-	assert.Equal(t, "photo/photo.jpg", photo.URL())
+	assert.Equal(t, "/api/photo/photo.jpg", photo.URL())
 
 	video := models.MediaURL{
 		MediaName:   "video.mp4",
@@ -70,7 +70,7 @@ func TestMediaURLGetURL(t *testing.T) {
 		Purpose:     models.VideoWeb,
 	}
 
-	assert.Equal(t, "video/video.mp4", video.URL())
+	assert.Equal(t, "/api/video/video.mp4", video.URL())
 }
 
 func TestMediaGetThumbnail(t *testing.T) {

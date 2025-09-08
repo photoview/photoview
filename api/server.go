@@ -135,7 +135,7 @@ func main() {
 	}
 }
 
-func setupGracefulShutdown(server *http.Server) {
+func setupGracefulShutdown(http_server *http.Server) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -149,7 +149,7 @@ func setupGracefulShutdown(server *http.Server) {
 		periodic_scanner.ShutdownPeriodicScanner()
 		scanner_queue.CloseScannerQueue()
 
-		if err := server.Shutdown(ctx); err != nil {
+		if err := http_server.Shutdown(ctx); err != nil {
 			log.Printf("Server shutdown error: %s", err)
 		} else {
 			log.Println("Shutdown complete")

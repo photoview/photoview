@@ -4,19 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"path"
 	"strconv"
 )
 
 func ApiListenUrl() *url.URL {
 	const defaultPort = "4001"
-
-	shouldServeUI := ShouldServeUI()
-
-	apiPrefix := "/"
-	if shouldServeUI {
-		apiPrefix = "/api"
-	}
+	const apiPrefix = "/api"
 
 	var listenAddr string
 
@@ -45,23 +38,15 @@ func ApiListenUrl() *url.URL {
 }
 
 func ApiEndpointUrl() *url.URL {
-	var apiEndpointStr string
-
-	shouldServeUI := ShouldServeUI()
-	if shouldServeUI {
-		apiEndpointStr = "/"
-	} else {
-		apiEndpointStr = EnvAPIEndpoint.GetValue()
+	apiEndpointStr := EnvAPIEndpoint.GetValue()
+	if apiEndpointStr == "" {
+		apiEndpointStr = "/api"
 	}
 
 	apiEndpointURL, err := url.Parse(apiEndpointStr)
 	if err != nil {
 		log.Panicf("ERROR: Environment variable %s is not a proper url (%s): %v",
 			EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue(), err)
-	}
-
-	if shouldServeUI {
-		apiEndpointURL.Path = path.Join(apiEndpointURL.Path, "/api")
 	}
 
 	return apiEndpointURL
