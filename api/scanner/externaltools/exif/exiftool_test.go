@@ -60,22 +60,7 @@ func TestExifParser(t *testing.T) {
 			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, 0, exif.ID)
-				assert.True(t, exif.CreatedAt.IsZero())
-				assert.True(t, exif.UpdatedAt.IsZero())
-				assert.Nil(t, exif.Description)
-				assert.Nil(t, exif.Camera)
-				assert.Nil(t, exif.Maker)
-				assert.Nil(t, exif.Lens)
-				assert.Nil(t, exif.Exposure)
-				assert.Nil(t, exif.Aperture)
-				assert.Nil(t, exif.Iso)
-				assert.Nil(t, exif.FocalLength)
-				assert.Nil(t, exif.Flash)
-				assert.Nil(t, exif.Orientation)
-				assert.Nil(t, exif.ExposureProgram)
-				assert.Nil(t, exif.GPSLatitude)
-				assert.Nil(t, exif.GPSLongitude)
+				assert.Nil(t, exif)
 			},
 		},
 		{
@@ -276,12 +261,12 @@ func TestExtractDateShot(t *testing.T) {
 				"DateTimeOriginal":   "2025:09:01 10:00:00",
 				"OffsetTimeOriginal": "+02:00",
 			},
-			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("", 2*60*60)), false},
+			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("+02:00", 2*60*60)), false},
 		{"FileCreateDate",
 			map[string]string{
 				"FileCreateDate": "2025:09:01 10:00:00+02:00",
 			},
-			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("", 2*60*60)), false},
+			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("+02:00", 2*60*60)), false},
 	}
 
 	for _, tc := range tests {
@@ -302,6 +287,11 @@ func TestExtractDateShot(t *testing.T) {
 
 			if got, want := gotTime.Format(time.RFC3339), tc.want.Format(time.RFC3339); got != want {
 				t.Errorf("extractDateShot(%v) = %v, want: %v", tc.exifTags, got, want)
+			}
+
+			loc := gotTime.Location()
+			if loc.String() == "" {
+				t.Errorf("extractDateShot(%v) returns a timezone without a name, which should have a name", tc.exifTags)
 			}
 		})
 	}
