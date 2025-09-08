@@ -7,15 +7,24 @@ import (
 	"strconv"
 )
 
+const apiPrefix = "/api"
+
 func ApiListenUrl() *url.URL {
+	const defaultIP = "127.0.0.1"
 	const defaultPort = "4001"
-	const apiPrefix = "/api"
+
+	apiEndpointStr := EnvAPIEndpoint.GetValue()
+	if apiEndpointStr == "" {
+		apiEndpointStr = apiPrefix
+	} else if apiEndpointStr[0] != '/' {
+		apiEndpointStr = "/" + apiEndpointStr
+	}
 
 	var listenAddr string
 
 	listenAddr = EnvListenIP.GetValue()
 	if listenAddr == "" {
-		listenAddr = "127.0.0.1"
+		listenAddr = defaultIP
 	}
 
 	listenPortStr := EnvListenPort.GetValue()
@@ -32,7 +41,7 @@ func ApiListenUrl() *url.URL {
 	if err != nil {
 		log.Panicf("Could not format api url: %v", err)
 	}
-	apiUrl.Path = apiPrefix
+	apiUrl.Path = apiEndpointStr
 
 	return apiUrl
 }
@@ -40,13 +49,25 @@ func ApiListenUrl() *url.URL {
 func ApiEndpointUrl() *url.URL {
 	apiEndpointStr := EnvAPIEndpoint.GetValue()
 	if apiEndpointStr == "" {
-		apiEndpointStr = "/api"
+		apiEndpointStr = apiPrefix
 	}
 
 	apiEndpointURL, err := url.Parse(apiEndpointStr)
 	if err != nil {
 		log.Panicf("ERROR: Environment variable %s is not a proper url (%s): %v",
 			EnvAPIEndpoint.GetName(), EnvAPIEndpoint.GetValue(), err)
+	}
+
+	// If absolute URL with empty path (e.g. "https://host"), default to /api for backward compatibility.
+	if apiEndpointURL.Host != "" && (apiEndpointURL.Path == "") {
+		apiEndpointURL.Path = apiPrefix
+	}
+	// Ensure relative paths start with a leading slash.
+	if apiEndpointURL.Host == "" &&
+		apiEndpointURL.Scheme == "" &&
+		apiEndpointURL.Path != "" &&
+		apiEndpointURL.Path[0] != '/' {
+		apiEndpointURL.Path = "/" + apiEndpointURL.Path
 	}
 
 	return apiEndpointURL

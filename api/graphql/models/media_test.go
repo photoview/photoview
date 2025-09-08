@@ -105,7 +105,7 @@ func TestMediaGetThumbnail(t *testing.T) {
 	video := models.Media{
 		Title: "video-test.mp4",
 		Path:  "path/test.mp4",
-		Type:  models.MediaTypePhoto,
+		Type:  models.MediaTypeVideo,
 		MediaURL: []models.MediaURL{
 			{
 				MediaName:   "video.mp4",
