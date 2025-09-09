@@ -13,11 +13,11 @@ func ApiListenUrl() *url.URL {
 	const defaultIP = "127.0.0.1"
 	const defaultPort = "4001"
 
-	apiEndpointStr := EnvAPIEndpoint.GetValue()
-	if apiEndpointStr == "" {
-		apiEndpointStr = apiPrefix
-	} else if apiEndpointStr[0] != '/' {
-		apiEndpointStr = "/" + apiEndpointStr
+	// Reuse the normalization logic so absolute/relative values are both supported.
+	// If EnvAPIEndpoint contains a full URL, use its path component.
+	apiPath := ApiEndpointUrl().Path
+	if apiPath == "" {
+		apiPath = apiPrefix
 	}
 
 	var listenAddr string
@@ -37,13 +37,13 @@ func ApiListenUrl() *url.URL {
 		log.Panicf("%q must be a number %q: %v", EnvListenPort.GetName(), listenPortStr, err)
 	}
 
-	apiUrl, err := url.Parse(fmt.Sprintf("http://%s:%d", listenAddr, listenPort))
+	apiURL, err := url.Parse(fmt.Sprintf("http://%s:%d", listenAddr, listenPort))
 	if err != nil {
 		log.Panicf("Could not format api url: %v", err)
 	}
-	apiUrl.Path = apiEndpointStr
+	apiURL.Path = apiPath
 
-	return apiUrl
+	return apiURL
 }
 
 func ApiEndpointUrl() *url.URL {
