@@ -11,6 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func mustParseTimeInLocal(t *testing.T, str string) time.Time {
+	ret, err := time.ParseInLocation(time.DateTime, str, time.Local)
+	if err != nil {
+		t.Fatalf("invalid time")
+	}
+	return ret
+}
+
 func TestExifParser(t *testing.T) {
 	parser, err := NewExifParser()
 	if err != nil {
@@ -29,7 +37,7 @@ func TestExifParser(t *testing.T) {
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")
-				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
+				assert.WithinDuration(t, *exif.DateShot, mustParseTimeInLocal(t, "2012-05-06 15:39:44"), time.Minute)
 				assert.InDelta(t, *exif.Exposure, 1.0/4000.0, 0.0001)
 				assert.EqualValues(t, *exif.Aperture, 6.3)
 				assert.EqualValues(t, *exif.Iso, 800)
@@ -243,55 +251,314 @@ func TestSanitizeEXIF_GPS(t *testing.T) {
 }
 
 func TestExtractDateShot(t *testing.T) {
-	tests := []struct {
-		name     string
-		exifTags map[string]string
-		want     time.Time
-		wantErr  bool
-	}{
-		{"NoTime", map[string]string{"abc": "123"}, time.Time{}, true},
+	allExif := map[string]string{
+		"OffsetTimeOriginal":     "+01:00",
+		"OffsetTime":             "+02:00",
+		"TimeZone":               "+03:00",
+		"SubSecDateTimeOriginal": "2025:09:01 10:00:00.001+04:00",
+		"SubSecCreateDate":       "2025:09:01 10:00:00.002+05:00",
+		"DateTimeOriginal":       "2025:09:01 10:00:01",
+		"MediaCreateDate":        "2025:09:01 08:00:03+06:00",
+		"TrackCreateDate":        "2025:09:01 08:00:04+07:00",
+		"CreateDate":             "2025:09:01 08:00:05",
+		"GPSDateTime":            "2025:09:01 02:00:02Z",
+	}
 
-		{"DateTimeOriginal",
-			map[string]string{
-				"DateTimeOriginal": "2025:09:01 10:00:00",
+	tests := []struct {
+		name            string
+		withTags        []string
+		wantRFC3339Nano string
+		wantErr         bool
+	}{
+		{"NoTime", []string{}, "", true},
+
+		{
+			"SubSecDateTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"SubSecDateTimeOriginal",
+				"SubSecCreateDate",
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
 			},
-			time.Date(2025, 9, 1, 10, 0, 0, 0, time.Local), false},
-		{"DateTimeOriginalWithOffsetTimeOriginal",
-			map[string]string{
-				"DateTimeOriginal":   "2025:09:01 10:00:00",
-				"OffsetTimeOriginal": "+02:00",
+			"2025-09-01T10:00:00.001+04:00",
+			false,
+		},
+		{
+			"SubSecCreateDate",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"SubSecCreateDate",
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
 			},
-			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("+02:00", 2*60*60)), false},
-		{"FileCreateDate",
-			map[string]string{
-				"FileCreateDate": "2025:09:01 10:00:00+02:00",
+			"2025-09-01T10:00:00.002+05:00",
+			false,
+		},
+		{
+			"DateTimeOriginal/OffsetTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
 			},
-			time.Date(2025, 9, 1, 10, 0, 0, 0, time.FixedZone("+02:00", 2*60*60)), false},
+			"2025-09-01T10:00:01+01:00",
+			false,
+		},
+		{
+			"DateTimeOriginal/OffsetTime",
+			[]string{
+				"OffsetTime",
+				"TimeZone",
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T10:00:01+02:00",
+			false,
+		},
+		{
+			"DateTimeOriginal/TimeZone",
+			[]string{
+				"TimeZone",
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T10:00:01+03:00",
+			false,
+		},
+		{
+			"DateTimeOriginal/NoTimezone",
+			[]string{
+				"DateTimeOriginal",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T10:00:01+07:59",
+			false,
+		},
+		{
+			"GPSDateTime/OffsetTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T03:00:02+01:00",
+			false,
+		},
+		{
+			"GPSDateTime/OffsetTime",
+			[]string{
+				"OffsetTime",
+				"TimeZone",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T04:00:02+02:00",
+			false,
+		},
+		{
+			"GPSDateTime/TimeZone",
+			[]string{
+				"TimeZone",
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T05:00:02+03:00",
+			false,
+		},
+		{
+			"GPSDateTime/NoTimezone",
+			[]string{
+				"GPSDateTime",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T02:00:02Z",
+			false,
+		},
+		{
+			"MediaCreateDate/OffsetTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T03:00:03+01:00",
+			false,
+		},
+		{
+			"MediaCreateDate/OffsetTime",
+			[]string{
+				"OffsetTime",
+				"TimeZone",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T04:00:03+02:00",
+			false,
+		},
+		{
+			"MediaCreateDate/TimeZone",
+			[]string{
+				"TimeZone",
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T05:00:03+03:00",
+			false,
+		},
+		{
+			"MediaCreateDate/NoTimezone",
+			[]string{
+				"MediaCreateDate",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T08:00:03+06:00",
+			false,
+		},
+		{
+			"TrackCreateDate/OffsetTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T02:00:04+01:00",
+			false,
+		},
+		{
+			"TrackCreateDate/OffsetTime",
+			[]string{
+				"OffsetTime",
+				"TimeZone",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T03:00:04+02:00",
+			false,
+		},
+		{
+			"TrackCreateDate/TimeZone",
+			[]string{
+				"TimeZone",
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T04:00:04+03:00",
+			false,
+		},
+		{
+			"TrackCreateDate/NoTimezone",
+			[]string{
+				"TrackCreateDate",
+				"CreateDate",
+			},
+			"2025-09-01T08:00:04+07:00",
+			false,
+		},
+		{
+			"CreateDate/OffsetTimeOriginal",
+			[]string{
+				"OffsetTimeOriginal",
+				"OffsetTime",
+				"TimeZone",
+				"CreateDate",
+			},
+			"2025-09-01T08:00:05+01:00",
+			false,
+		},
+		{
+			"CreateDate/OffsetTime",
+			[]string{
+				"OffsetTime",
+				"TimeZone",
+				"CreateDate",
+			},
+			"2025-09-01T08:00:05+02:00",
+			false,
+		},
+		{
+			"CreateDate/TimeZone",
+			[]string{
+				"TimeZone",
+				"CreateDate",
+			},
+			"2025-09-01T08:00:05+03:00",
+			false,
+		},
+		{
+			"CreateDate/NoTimezone",
+			[]string{
+				"CreateDate",
+			},
+			"2025-09-01T08:00:05" + time.Now().Local().Format("-07:00"),
+			false,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			metadata := exiftool.EmptyFileMetadata()
-			for key, value := range tc.exifTags {
-				metadata.SetString(key, value)
+			for _, tag := range tc.withTags {
+				value, ok := allExif[tag]
+				if !ok {
+					t.Fatalf("can't get value for exif tag %q", tag)
+				}
+				metadata.SetString(tag, value)
 			}
 
 			gotTime, err := extractDateShot(&metadata)
 			gotErr := err != nil
 			if gotErr != tc.wantErr {
-				t.Fatalf("extractDateShot(%v) returns an error: %v, want an error: %v", tc.exifTags, gotErr, tc.wantErr)
+				t.Fatalf("extractDateShot(%v) returns an error: %v, want an error: %v", tc.withTags, gotErr, tc.wantErr)
 			}
 			if gotErr {
 				return
 			}
 
-			if got, want := gotTime.Format(time.RFC3339), tc.want.Format(time.RFC3339); got != want {
-				t.Errorf("extractDateShot(%v) = %v, want: %v", tc.exifTags, got, want)
-			}
-
-			loc := gotTime.Location()
-			if loc.String() == "" {
-				t.Errorf("extractDateShot(%v) returns a timezone without a name, which should have a name", tc.exifTags)
+			if got, want := gotTime.Format(time.RFC3339Nano), tc.wantRFC3339Nano; got != want {
+				t.Errorf("extractDateShot(%v) = %v, want: %v", tc.withTags, got, want)
 			}
 		})
 	}

@@ -213,53 +213,56 @@ TIMEZONE:
 	}
 
 	if loc == nil {
-		l, err := calculateTimezoneWithGPS(meta)
+		l, err := calculateTimezoneWithUtcGps(meta)
 		if err == nil {
 			loc = l
 		}
 	}
 
 	layout := "2006:01:02 15:04:05"
-	layoutWithOffset := "2006:01:02 15:04:05-07:00"
-	for _, createDateKey := range []string{
+	layoutWithOffset := "2006:01:02 15:04:05Z07:00"
+	for _, pattern := range []struct {
+		dateField        string
+		originalTimezone bool // true if the date in dateField has a timezone when took the image.
+	}{
 		// Keep the order for the priority to generate DateShot
-		"SubSecDateTimeOriginal",
-		"SubSecCreateDate",
-		"DateTimeOriginal",
-		"GPSTimeStamp",
-		"MediaCreateDate",
-		"TrackCreateDate",
-		"FileCreateDate",
-		"CreateDate",
+		{"SubSecDateTimeOriginal", true},
+		{"SubSecCreateDate", true},
+		{"DateTimeOriginal", false},
+		{"GPSDateTime", false},
+		{"MediaCreateDate", false},
+		{"TrackCreateDate", false},
+		{"FileCreateDate", false},
+		{"CreateDate", false},
 	} {
-		dateStr, err := meta.GetString(createDateKey)
+		dateStr, err := meta.GetString(pattern.dateField)
 		if err != nil {
 			continue
 		}
 
 		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
-			if loc != nil {
+			if !pattern.originalTimezone && loc != nil {
 				return date.In(loc), nil
 			}
 
-			return dateWithNamedLocation(date), nil
+			return date, nil
 		}
 
-		if loc == nil {
-			if date, err := time.Parse(layout, dateStr); err == nil {
-				return dateWithNamedLocation(date), nil
+		if loc != nil {
+			if date, err := time.ParseInLocation(layoutWithOffset, dateStr+loc.String(), loc); err == nil {
+				return date, nil
 			}
 		}
 
-		if date, err := time.Parse(layoutWithOffset, dateStr+loc.String()); err == nil {
-			return date.In(loc), nil
+		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
+			return date, nil
 		}
 	}
 
 	return time.Time{}, exiftool.ErrKeyNotFound
 }
 
-func calculateTimezoneWithGPS(meta *exiftool.FileMetadata) (*time.Location, error) {
+func calculateTimezoneWithUtcGps(meta *exiftool.FileMetadata) (*time.Location, error) {
 	originalStr, err := meta.GetString("DateTimeOriginal")
 	if err != nil {
 		return nil, err
@@ -269,11 +272,11 @@ func calculateTimezoneWithGPS(meta *exiftool.FileMetadata) (*time.Location, erro
 		return nil, err
 	}
 
-	gpsStr, err := meta.GetString("GPSTimeStamp")
+	gpsStr, err := meta.GetString("GPSDateTime")
 	if err != nil {
 		return nil, err
 	}
-	gps, err := time.Parse("2006:01:02 15:04:05", gpsStr)
+	gps, err := time.Parse("2006:01:02 15:04:05Z", gpsStr)
 	if err != nil {
 		return nil, err
 	}
@@ -284,22 +287,7 @@ func calculateTimezoneWithGPS(meta *exiftool.FileMetadata) (*time.Location, erro
 	if mins < 0 {
 		mins = -mins
 	}
-	zoneName := fmt.Sprintf("%+02d:%02d", hours, mins)
+	zoneName := fmt.Sprintf("%+03d:%02d", hours, mins)
 
 	return time.FixedZone(zoneName, int(diff.Seconds())), nil
-}
-
-func dateWithNamedLocation(date time.Time) time.Time {
-	_, offsetSecs := date.Zone()
-
-	hour := int(offsetSecs / (60 * 60))
-	mins := int(offsetSecs/60) - hour*60
-	if mins < 0 {
-		mins = -mins
-	}
-	name := fmt.Sprintf("%+02d:%02d", hour, mins)
-
-	loc := time.FixedZone(name, offsetSecs)
-
-	return date.In(loc)
 }
