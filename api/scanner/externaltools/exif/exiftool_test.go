@@ -532,7 +532,7 @@ func TestExtractDateShot(t *testing.T) {
 			[]string{
 				"CreateDate",
 			},
-			"2025-09-01T08:00:05" + time.Now().Local().Format("-07:00"),
+			"2025-09-01T08:00:05" + time.Now().Local().Format("Z07:00"),
 			false,
 		},
 	}
