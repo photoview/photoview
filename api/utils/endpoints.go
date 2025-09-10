@@ -8,18 +8,12 @@ import (
 	"strings"
 )
 
-const apiPrefix = "/api"
+const defaultIP = "127.0.0.1"
+const defaultPort = "4001"
+const defaultAPIPrefix = "/api"
 
 func ApiListenUrl() *url.URL {
-	const defaultIP = "127.0.0.1"
-	const defaultPort = "4001"
-
-	// Reuse the normalization logic so absolute/relative values are both supported.
-	// If EnvAPIEndpoint contains a full URL, use its path component.
 	apiPath := ApiEndpointUrl().Path
-	if apiPath == "" {
-		apiPath = apiPrefix
-	}
 
 	var listenAddr string
 
@@ -54,7 +48,7 @@ func ApiListenUrl() *url.URL {
 func ApiEndpointUrl() *url.URL {
 	apiEndpointStr := EnvAPIEndpoint.GetValue()
 	if apiEndpointStr == "" {
-		apiEndpointStr = apiPrefix
+		apiEndpointStr = defaultAPIPrefix
 	}
 
 	apiEndpointURL, err := url.Parse(apiEndpointStr)
@@ -65,7 +59,7 @@ func ApiEndpointUrl() *url.URL {
 
 	// If absolute URL with empty path (e.g. "https://host"), default to /api for backward compatibility.
 	if apiEndpointURL.Scheme != "" && apiEndpointURL.Host != "" && apiEndpointURL.Path == "" {
-		apiEndpointURL.Path = apiPrefix
+		apiEndpointURL.Path = defaultAPIPrefix
 	}
 	// Ensure relative paths start with a leading slash.
 	if apiEndpointURL.Scheme == "" &&
