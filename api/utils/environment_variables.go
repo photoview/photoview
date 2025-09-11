@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,6 +16,14 @@ const (
 	EnvUIPath                    EnvironmentVariable = "PHOTOVIEW_UI_PATH"
 	EnvMediaCachePath            EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
 	EnvFaceRecognitionModelsPath EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH"
+)
+
+// Logging
+const (
+	EnvAccessLogLevel    EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_LEVEL"
+	EnvAccessLogPath     EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_PATH"
+	EnvAccessLogMaxSize  EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_SIZE"
+	EnvAccessLogMaxFiles EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_FILES"
 )
 
 // Network related
@@ -65,6 +74,19 @@ func (v EnvironmentVariable) GetBool() bool {
 	return false
 }
 
+// GetInt returns the environment variable as an integer (defaults to 0 if not defined or invalid)
+func (v EnvironmentVariable) GetInt() int {
+	value := os.Getenv(string(v))
+	if value == "" {
+		return 0
+	}
+	i, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
+	}
+	return i
+}
+
 // ShouldServeUI whether or not the "serve ui" option is enabled
 func ShouldServeUI() bool {
 	return EnvServeUI.GetBool()
@@ -83,4 +105,28 @@ func UIPath() string {
 	}
 
 	return "./ui"
+}
+
+func AccessLogLevel() string {
+	return EnvAccessLogLevel.GetValue()
+}
+
+func AccessLogPath() string {
+	return EnvAccessLogPath.GetValue()
+}
+
+func AccessLogMaxSize() int64 {
+	// Default: 10MB in bytes
+	if size := EnvAccessLogMaxSize.GetInt(); size > 0 {
+		return int64(size) * 1024 * 1024 // Convert MB to bytes
+	}
+	return 10 * 1024 * 1024
+}
+
+func AccessLogMaxFiles() int {
+	// Default: keep 5 rotated files
+	if files := EnvAccessLogMaxFiles.GetInt(); files > 0 {
+		return files
+	}
+	return 5
 }

@@ -108,6 +108,9 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     # Create a user to run Photoview server
     && groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview \
+    # Create log folder
+    && mkdir -p /var/log/photoview \
+    && chown -R photoview:photoview /var/log/photoview \
     # Install required dependencies
     && /app/scripts/install_runtime_dependencies.sh \
     # Install self-building libs
@@ -138,6 +141,7 @@ ENV PHOTOVIEW_API_ENDPOINT=/api
 
 ENV PHOTOVIEW_SERVE_UI=1
 ENV PHOTOVIEW_UI_PATH=/app/ui
+ENV PHOTOVIEW_ACCESS_LOG_PATH=/var/log/photoview/access.log
 ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH=/app/data/models
 ENV PHOTOVIEW_MEDIA_CACHE=/home/photoview/media-cache
 
