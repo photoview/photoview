@@ -15,6 +15,8 @@
     "build:dev": "vite build --mode development --sourcemap --minify=false",
     "lint": "eslint ./src --max-warnings 0 --config .eslintrc.js",
     "lint:ci": "eslint ./src --config .eslintrc.js --no-color --fix-dry-run > eslint-report.txt",
+    "lint:staged": "lint-staged",
+    "format:check": "prettier --check .",
     "test": "vitest",
     "test:ci": "CI=true vitest --reporter=junit --reporter=verbose --run --coverage",
     "genSchemaTypes": "apollo client:codegen --target=typescript --globalTypesFile=src/__generated__/globalTypes.ts --passthroughCustomScalars && prettier --write */**/__generated__/*.ts",
