@@ -194,7 +194,7 @@ const PresentNavigationOverlay = ({
     return function cleanup() {
       document.removeEventListener('keydown', keyDownEvent)
     }
-  })
+  }, [videoRef, activeMedia])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -244,18 +244,26 @@ const PresentNavigationOverlay = ({
     setSlideInterval( (s) => (s+1) % 10 == 0 ? 1 : (s+1) % 10  ) 
   }
 
+  // Slide mode constants
+  const SLIDE_MODE = {
+    PHOTOS_ONLY: 0,
+    VIDEOS_ONLY: 1,
+    ALL_MEDIA: 2,
+    REPEAT: 3
+  };
+
   const nextSlide = () => {
     switch (smref.current) {
-      case 0:
+      case SLIDE_MODE.PHOTOS_ONLY:
         dispatchMedia({ type: 'nextSlidePhoto'})
         break;
-      case 1:
+      case SLIDE_MODE.VIDEOS_ONLY:
         dispatchMedia({ type: 'nextSlideVideo'})
         break;
-      case 2:
+      case SLIDE_MODE.ALL_MEDIA:
         dispatchMedia({ type: 'nextImage'})  
         break;
-      case 3:  
+      case SLIDE_MODE.REPEAT:  
         setAux( (a) => !a );
         break;
     }
