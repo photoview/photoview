@@ -21,13 +21,12 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
-const maxLogBodyBytes int64 = 50_000
-
 var (
-	logFile   *os.File
-	logMutex  sync.RWMutex
-	logWriter io.Writer
-	logLevel  string
+	logFile         *os.File
+	logMutex        sync.RWMutex
+	logWriter       io.Writer
+	logLevel        string
+	maxLogBodyBytes int64
 )
 
 // InitializeLogging sets up the logging system with optional file output
@@ -39,6 +38,8 @@ func InitializeLogging() error {
 	if logLevel == "" {
 		logLevel = "info"
 	}
+
+	maxLogBodyBytes = utils.AccessLogMaxBodyBytes()
 
 	// Default to console output
 	logWriter = os.Stdout
@@ -117,18 +118,27 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 			// Log request body (with size limit for safety)
 			if r.Body != nil && r.ContentLength > 0 && r.ContentLength < maxLogBodyBytes {
-				bodyBytes, err := io.ReadAll(r.Body)
-				if err == nil {
-					r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-					// Only log text-like content types
-					if isTextualContent(r.Header, bodyBytes) {
-						writeLog("Body: %s\n", string(bodyBytes))
-					} else {
-						writeLog("Body: [binary content, %d bytes]\n", len(bodyBytes))
-					}
+				var buf bytes.Buffer
+				tee := io.TeeReader(r.Body, &buf)
+				r.Body = io.NopCloser(io.MultiReader(&buf, tee))
+
+				// Read a preview for content type detection
+				preview := make([]byte, 512)
+				n, _ := buf.Read(preview)
+				preview = preview[:n]
+
+				// Only log text-like content types
+				if isTextualContent(r.Header, preview) {
+					bodyBytes, _ := io.ReadAll(&buf)
+					writeLog("Body: %s\n", string(bodyBytes))
+				} else {
+					writeLog("Body: [binary content, %d bytes]\n", r.ContentLength)
 				}
-			} else if r.ContentLength >= maxLogBodyBytes {
-				writeLog("Body: [large content, %d bytes - not logged]\n", r.ContentLength)
+
+				// Reset buffer for the actual handler
+				buf.Reset()
+				io.Copy(&buf, tee)
+				r.Body = io.NopCloser(&buf)
 			}
 			writeLog("=== PROCESSING ===\n")
 		}

@@ -20,10 +20,11 @@ const (
 
 // Logging
 const (
-	EnvAccessLogLevel    EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_LEVEL"
-	EnvAccessLogPath     EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_PATH"
-	EnvAccessLogMaxSize  EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_SIZE"
-	EnvAccessLogMaxFiles EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_FILES"
+	EnvAccessLogLevel     EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_LEVEL"
+	EnvAccessLogMaxBodyKB EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_BODY_KB"
+	EnvAccessLogPath      EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_PATH"
+	EnvAccessLogMaxSize   EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_SIZE"
+	EnvAccessLogMaxFiles  EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_FILES"
 )
 
 // Network related
@@ -109,6 +110,14 @@ func UIPath() string {
 
 func AccessLogLevel() string {
 	return EnvAccessLogLevel.GetValue()
+}
+
+func AccessLogMaxBodyBytes() int64 {
+	// Default: 50KB in bytes
+	if size := EnvAccessLogMaxBodyKB.GetInt(); size > 0 {
+		return int64(size) * 1024 // Convert KB to bytes
+	}
+	return 50_000
 }
 
 func AccessLogPath() string {
