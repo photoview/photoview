@@ -82,7 +82,7 @@ func main() {
 	endpointRouter := rootRouter.PathPrefix(apiListenURL.Path).Subrouter()
 
 	if devMode {
-		endpointRouter.Handle("/", playground.Handler("GraphQL playground", path.Join(apiListenURL.Path, "/graphql")))
+		endpointRouter.Handle("/", playground.Handler("GraphQL playground", path.Join(apiListenURL.Path, "graphql")))
 	} else {
 		endpointRouter.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte("photoview api endpoint"))
@@ -118,7 +118,7 @@ func main() {
 		logUIendpointURL()
 
 		if !shouldServeUI {
-			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
+			log.Printf("Notice: UI is not served by the API (%s=0)", utils.EnvServeUI.GetName())
 		}
 
 	}
@@ -135,7 +135,7 @@ func main() {
 	}
 }
 
-func setupGracefulShutdown(server *http.Server) {
+func setupGracefulShutdown(svr *http.Server) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -149,7 +149,7 @@ func setupGracefulShutdown(server *http.Server) {
 		periodic_scanner.ShutdownPeriodicScanner()
 		scanner_queue.CloseScannerQueue()
 
-		if err := server.Shutdown(ctx); err != nil {
+		if err := svr.Shutdown(ctx); err != nil {
 			log.Printf("Server shutdown error: %s", err)
 		} else {
 			log.Println("Shutdown complete")
