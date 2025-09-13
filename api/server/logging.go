@@ -136,29 +136,52 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			}
 
 			// Log request body (with size limit for safety)
-			if r.Body != nil && r.ContentLength > 0 && r.ContentLength < maxLogBodyBytes {
-				var buf bytes.Buffer
-				tee := io.TeeReader(r.Body, &buf)
-				r.Body = io.NopCloser(io.MultiReader(&buf, tee))
+			if r.Body != nil && r.ContentLength > 0 {
+				var bodyBytes []byte
+				var readErr error
 
-				// Read a preview for content type detection
-				preview := make([]byte, 512)
-				n, _ := buf.Read(preview)
-				preview = preview[:n]
+				bodyBytes, readErr = io.ReadAll(io.LimitReader(r.Body, maxLogBodyBytes))
 
-				// Only log text-like content types
-				if isTextualContent(r.Header, preview) {
-					bodyBytes, _ := io.ReadAll(&buf)
-					logBuf.WriteString(fmt.Sprintf("Body: %s\n", string(bodyBytes)))
+				if readErr != nil {
+					logBuf.WriteString(fmt.Sprintf("Body: [error reading request body: %v]\n", readErr))
+					if closeErr := r.Body.Close(); closeErr != nil {
+						log.Error(context.Background(), "Failed to close request body after read error", "error", closeErr)
+					}
+					r.Body = io.NopCloser(strings.NewReader(""))
 				} else {
-					logBuf.WriteString(fmt.Sprintf("Body: [binary content, %d bytes]\n", r.ContentLength))
-				}
+					if len(bodyBytes) == 0 {
+						logBuf.WriteString("Body: [empty]\n")
+					} else {
+						// Log based on content analysis
+						if isTextualContent(r.Header, bodyBytes) {
+							logBuf.WriteString(fmt.Sprintf("Body: %s\n", string(bodyBytes)))
+						} else {
+							logBuf.WriteString(fmt.Sprintf("Body: [binary content, %d bytes]\n", len(bodyBytes)))
+						}
 
-				// Reset buffer for the actual handler
-				buf.Reset()
-				io.Copy(&buf, tee)
-				r.Body = io.NopCloser(&buf)
+						// Indicate if content was truncated
+						if r.ContentLength > maxLogBodyBytes {
+							logBuf.WriteString(fmt.Sprintf(
+								"Body: [Note: logged first %d of %d total bytes]\n", len(bodyBytes), r.ContentLength,
+							))
+						}
+					}
+
+					// Restore body for downstream handlers
+					if r.ContentLength <= maxLogBodyBytes {
+						r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+					} else {
+						// Large body: restore read portion + remaining unread portion
+						// Calculate remaining bytes to read
+						remainingBytes := r.ContentLength - int64(len(bodyBytes))
+						remaining := io.LimitReader(r.Body, remainingBytes)
+						r.Body = io.NopCloser(io.MultiReader(bytes.NewReader(bodyBytes), remaining))
+					}
+				}
+			} else if r.Body != nil && r.ContentLength == 0 {
+				logBuf.WriteString("Body: WARN [is not empty, but Content-Length: 0]\n")
 			}
+
 			logBuf.WriteString("===^ INCOMING REQUEST ^===\n")
 
 			// Use debug writer with capture capabilities
@@ -209,6 +232,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			}
 			logBuf.WriteString("===^ RESPONSE ^===\n\n")
 			writeLog("%s", logBuf.String())
+			logBuf.Reset()
 
 			// Standard logging
 			logStandardRequest(r, debugWriter.status, elapsedMs)
@@ -415,7 +439,7 @@ func (w *simpleStatusResponseWriter) WriteHeader(status int) {
 func (w *debugStatusResponseWriter) WriteHeader(status int) {
 	w.status = status
 	for k, v := range w.ResponseWriter.Header() {
-		w.capturedHeaders[k] = v
+		w.capturedHeaders[k] = append([]string(nil), v...)
 	}
 	w.ResponseWriter.WriteHeader(status)
 }
@@ -432,7 +456,7 @@ func (w *debugStatusResponseWriter) Write(b []byte) (int, error) {
 		w.status = 200
 		// Capture headers on implicit WriteHeader
 		for k, v := range w.ResponseWriter.Header() {
-			w.capturedHeaders[k] = v
+			w.capturedHeaders[k] = append([]string(nil), v...)
 		}
 	}
 
