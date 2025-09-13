@@ -43,16 +43,19 @@ const AlbumsPage = () => {
     }
   )
 
-  const sortingOptions = [
-    {
-      value: 'updated_at',
-      label: t('album_filter.sorting_options.date_imported', 'Date imported'),
-    },
-    {
-      value: 'title',
-      label: t('album_filter.sorting_options.title', 'Title'),
-    },
-  ]
+  const sortingOptions = React.useMemo(
+    () => [
+      {
+        value: 'updated_at',
+        label: t('album_filter.sorting_options.date_imported', 'Date imported'),
+      },
+      {
+        value: 'title',
+        label: t('album_filter.sorting_options.title', 'Title'),
+      },
+    ],
+    [t]
+  )
 
   return (
     <Layout title="Albums">

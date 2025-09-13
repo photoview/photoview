@@ -16,10 +16,12 @@ function useOrderingParams(
   { getParam, setParams }: UrlParams,
   defaultOrderBy = 'date_shot'
 ) {
-  const orderBy = getParam('orderBy', defaultOrderBy)
+  const rawOrderBy = getParam('orderBy', defaultOrderBy)
+  const orderBy = rawOrderBy === '' ? defaultOrderBy : rawOrderBy
 
-  const orderDirStr = getParam('orderDirection', 'ASC') || 'hello'
-  const orderDirection = orderDirStr as OrderDirection
+  const rawOrderDir = getParam('orderDirection', 'ASC')
+  const orderDirection =
+    rawOrderDir === '' ? OrderDirection.ASC : (rawOrderDir as OrderDirection)
 
   const setOrdering: SetOrderingFn = useCallback(
     ({ orderBy, orderDirection }) => {

@@ -64,24 +64,27 @@ const SortingOptions = ({
     }
   }
 
-  const defaultOptions: SortingOption[] = [
-    {
-      value: 'date_shot',
-      label: t('album_filter.sorting_options.date_shot', 'Date shot'),
-    },
-    {
-      value: 'updated_at',
-      label: t('album_filter.sorting_options.date_imported', 'Date imported'),
-    },
-    {
-      value: 'title',
-      label: t('album_filter.sorting_options.title', 'Title'),
-    },
-    {
-      value: 'type',
-      label: t('album_filter.sorting_options.type', 'Kind'),
-    },
-  ]
+  const defaultOptions = React.useMemo(
+    () => [
+      {
+        value: 'date_shot',
+        label: t('album_filter.sorting_options.date_shot', 'Date shot'),
+      },
+      {
+        value: 'updated_at',
+        label: t('album_filter.sorting_options.date_imported', 'Date imported'),
+      },
+      {
+        value: 'title',
+        label: t('album_filter.sorting_options.title', 'Title'),
+      },
+      {
+        value: 'type',
+        label: t('album_filter.sorting_options.type', 'Kind'),
+      },
+    ],
+    [t]
+  )
 
   const sortingOptions = items ?? defaultOptions
 
@@ -140,11 +143,13 @@ const AlbumFilter = ({
 }: AlbumFilterProps) => {
   return (
     <div className="flex items-end gap-4 flex-wrap mb-4">
-      <SortingOptions
-        ordering={ordering}
-        setOrdering={setOrdering}
-        items={sortingOptions}
-      />
+      {ordering && setOrdering ? (
+        <SortingOptions
+          ordering={ordering}
+          setOrdering={setOrdering}
+          items={sortingOptions}
+        />
+      ) : null}
       {authToken() && setOnlyFavorites && (
         <FavoritesCheckbox
           onlyFavorites={onlyFavorites}
