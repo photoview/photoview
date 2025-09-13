@@ -108,6 +108,12 @@ const OverlayButton = styled.button`
     transition: stroke 300ms;
     fill-opacity: 0;
   }
+
+  &.hide svg circle {
+    stroke: rgba(255, 255, 255, 0);
+    transition: stroke 300ms;
+    fill-opacity: 0;
+  }
 `
 
 const ExitButton = styled(OverlayButton)`
