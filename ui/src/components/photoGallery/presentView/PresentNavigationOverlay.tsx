@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { MediaType } from '../../../__generated__/globalTypes'
 import styled from 'styled-components'
 import { debounce, DebouncedFn } from '../../../helpers/utils'
 import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
@@ -6,13 +7,57 @@ import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { useSwipeable } from 'react-swipeable'
 
 import ExitIcon from './icons/Exit'
+import PlayIcon from './icons/Play'
+import PauseIcon from './icons/Pause'
 import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
+import PhotoIcon from './icons/Photo'
+import VideoIcon from './icons/Video'
+import RepeatIcon from './icons/Repeat'
+import PhotoVideoIcon from './icons/PhotoVideo'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 
 const StyledOverlayContainer = styled.div`
   width: 100%;
   height: 100%;
   position: relative;
+`
+
+
+const OverlayIconContainer = styled.button`
+  width: 64px;
+  height: 64px;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  display: inline-grid;
+
+  & h1 {
+    font-size: 32px;
+    font-weight: bolder;
+    opacity: 40%;
+    display: flex;
+    overflow: visible !important;
+    transition-property: stroke, filter;
+    transition-duration: 140ms;
+    filter: drop-shadow( 4px 4px 4px rgba(0, 0, 0, 1));
+  }
+
+  &:hover h1 {
+    visibility: unset;
+    opacity: 100%;
+    filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  &.hide h1 {
+    visibility: hidden;
+    transition: stroke 300ms;
+    transition: fill 300ms;
+  }
 `
 
 const OverlayButton = styled.button`
@@ -23,11 +68,15 @@ const OverlayButton = styled.button`
   outline: none;
   cursor: pointer;
   position: absolute;
+  align-items: center;
+  justify-content: center;
+  display: inline-grid;
 
   & svg {
     width: 32px;
     height: 32px;
     overflow: visible !important;
+    filter: drop-shadow( 4px 4px 4px rgba(0, 0, 0, 1));
   }
 
   & svg path {
@@ -38,17 +87,31 @@ const OverlayButton = styled.button`
 
   &:hover svg path {
     stroke: rgba(255, 255, 255, 1);
+    fill-opacity: .8;
     filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.6));
   }
 
   &.hide svg path {
     stroke: rgba(255, 255, 255, 0);
     transition: stroke 300ms;
+    fill-opacity: 0;
   }
 `
 
 const ExitButton = styled(OverlayButton)`
   left: 28px;
+  top: 28px;
+`
+const SlideButton = styled(OverlayButton)<{active: boolean}>`
+  left: 92px;
+  top: 28px;
+`
+const SlideModeButton = styled(OverlayButton)<{active?: boolean}>`
+  left: 220px;
+  top: 28px;
+`
+const IntervalButton = styled(OverlayIconContainer)<{time: number}>`
+  left: 156px;
   top: 28px;
 `
 
@@ -71,15 +134,24 @@ type PresentNavigationOverlayProps = {
   children?: React.ReactChild
   dispatchMedia: React.Dispatch<GalleryAction>
   disableSaveCloseInHistory?: boolean
+  activeMedia: MediaGalleryFields
+  videoRef: React.MutableRefObject<HTMLVideoElement | null>
 }
 
 const PresentNavigationOverlay = ({
   children,
   dispatchMedia,
   disableSaveCloseInHistory,
+  videoRef,
+  activeMedia,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
+  const [slide, setSlide] = useState<boolean>(false)
+  const [aux, setAux] = useState<boolean>(false)
+  const [slideInterval, setSlideInterval] = useState<number>(3)
+  const [slideMode, setSlideMode] = useState<number>(2)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
+  const smref = React.useRef(slideMode)
 
   useEffect(() => {
     onMouseMove.current = debounce(
@@ -89,11 +161,120 @@ const PresentNavigationOverlay = ({
       2000,
       true
     )
-
+    
     return () => {
       onMouseMove.current?.cancel()
     }
   }, [])
+
+  useEffect(() => {
+    const keyDownEvent = (e: KeyboardEvent) => {
+
+      if (e.code == 'Space') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        handleSpace();
+      }
+    }
+
+    const handleSpace = () => {
+      if (videoRef.current && activeMedia.type === MediaType.Video && ! slide ) {
+        if (videoRef.current.paused ){
+          videoRef.current.play()
+        } else {
+          videoRef.current.pause()
+        } 
+      } else {
+        toggle()
+      } 
+    };
+
+    document.addEventListener('keydown', keyDownEvent)
+
+    return function cleanup() {
+      document.removeEventListener('keydown', keyDownEvent)
+    }
+  }, [videoRef, activeMedia])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (slide && activeMedia.type === MediaType.Photo) { 
+        nextSlide()
+      }
+    }, slideInterval*1000)
+
+    if (videoRef != null) {
+      if (videoRef.current != null) {
+    	if (videoRef.current && slide && activeMedia.type === MediaType.Video) {
+      	   videoRef.current.play();
+	}
+      }
+    }
+
+    // if video, register playEnd at 'ended'
+    if (videoRef != null) {
+      if (videoRef.current != null) 
+        videoRef.current.addEventListener('ended', playEnd);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if ( videoRef != null )
+        if ( videoRef.current != null ) 
+          videoRef.current.removeEventListener('ended', playEnd);
+    }
+
+  }, [slide,slideInterval,activeMedia,aux,videoRef])
+  
+
+  // Continue after Video played
+  const playEnd = () => {
+    if (slide && smref.current < 3) {
+      setAux( (a) => !a ); // single repeat might destroy basic repeat
+      nextSlide();
+    } else if (videoRef.current && smref.current == 3 && activeMedia.type === MediaType.Video) {
+      videoRef.current.play();
+    }
+  }
+
+  const toggle = () => {
+    setSlide( (s) => !s );
+  }
+  const toggleSlideInterval = () => {
+    setSlideInterval( (s) => (s+1) % 10 == 0 ? 1 : (s+1) % 10  ) 
+  }
+
+  // Slide mode constants
+  const SLIDE_MODE = {
+    PHOTOS_ONLY: 0,
+    VIDEOS_ONLY: 1,
+    ALL_MEDIA: 2,
+    REPEAT: 3
+  };
+
+  const nextSlide = () => {
+    switch (smref.current) {
+      case SLIDE_MODE.PHOTOS_ONLY:
+        dispatchMedia({ type: 'nextSlidePhoto'})
+        break;
+      case SLIDE_MODE.VIDEOS_ONLY:
+        dispatchMedia({ type: 'nextSlideVideo'})
+        break;
+      case SLIDE_MODE.ALL_MEDIA:
+        dispatchMedia({ type: 'nextImage'})  
+        break;
+      case SLIDE_MODE.REPEAT:  
+        setAux( (a) => !a );
+        break;
+    }
+  }
+
+  const toggleSlideMode = () => {
+    setSlideMode( (s) => {
+      smref.current = (s+1) % 4;
+      return (s+1) % 4;
+    });
+  }
 
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
@@ -139,7 +320,34 @@ const PresentNavigationOverlay = ({
         }}
       >
         <ExitIcon />
-      </ExitButton>
+      </ExitButton>      
+      <SlideButton
+        aria-label="Slideshow Control Button"
+        className={hide ? 'hide' : undefined}
+        active={slide}
+        onClick={toggle}
+      >
+        {slide ? <PauseIcon /> : <PlayIcon />}
+      </SlideButton>
+      <IntervalButton
+        aria-label="Slideshow Interval Control Button"
+        className={hide ? 'hide' : undefined}
+	      time={slideInterval}
+        onClick={toggleSlideInterval}
+      >
+        <h1 
+          className={hide ? 'hide' : undefined}
+	      > {slideInterval}s </h1>
+      </IntervalButton>
+      <SlideModeButton
+        aria-label="Slideshow Mode Control Button"
+        className={hide ? 'hide' : undefined}
+	      onClick={toggleSlideMode}
+      >
+        { slideMode > 2 ? <RepeatIcon /> : 
+          (slideMode > 1 ? <PhotoVideoIcon /> :
+           (slideMode > 0 ? <VideoIcon /> : <PhotoIcon />)) }
+      </SlideModeButton>
     </div>
     </StyledOverlayContainer>
   )

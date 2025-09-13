@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react'
 import { MediaGalleryFields } from './__generated__/MediaGalleryFields'
+import { MediaType } from '../../__generated__/globalTypes'
+
 
 export interface MediaGalleryState {
+  videoMediaIndices: number[]
+  photoMediaIndices: number[]
   presenting: boolean
   activeIndex: number
   media: MediaGalleryFields[]
@@ -11,12 +15,27 @@ export type GalleryAction =
   | { type: 'nextImage' }
   | { type: 'previousImage' }
   | { type: 'closePresentMode' }
+  | { type: 'nextSlidePhoto' }
+  | { type: 'nextSlideVideo' }
 
 export type PhotoGalleryAction =
   | GalleryAction
   | { type: 'openPresentMode'; activeIndex: number }
   | { type: 'selectImage'; index: number }
   | { type: 'replaceMedia'; media: MediaGalleryFields[] }
+
+function getNextSlideState(state: MediaGalleryState, type: MediaType): MediaGalleryState {
+  const indices = type === MediaType.Photo ? state.photoMediaIndices : state.videoMediaIndices
+  let nextIndex = indices.find(i => i > state.activeIndex) ?? indices.at(0)
+
+  if (nextIndex === undefined)
+    return state
+  
+  return {
+    ...state,
+    activeIndex: nextIndex
+  }
+}
 
 export function mediaGalleryReducer(
   state: MediaGalleryState,
@@ -66,6 +85,19 @@ export function mediaGalleryReducer(
         activeIndex: -1,
         presenting: false,
       }
+    case 'nextSlidePhoto':
+     // Do nothing if all media are videos
+     if (state.photoMediaIndices.length === 0)
+      return {...state}
+     
+     return getNextSlideState(state, MediaType.Photo)
+      
+    case 'nextSlideVideo':
+      // Do nothing if there are no videos
+      if (state.videoMediaIndices.length === 0)
+        return {...state}
+      
+      return getNextSlideState(state, MediaType.Video)
   }
 }
 
