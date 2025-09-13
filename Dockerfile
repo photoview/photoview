@@ -109,8 +109,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     && groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview \
     # Create log folder
-    && mkdir -p -m 0755 /var/log/photoview \
-    && chown -R photoview:photoview /var/log/photoview \
+    && install --directory -m 0755 -o photoview -g photoview /var/log/photoview \
     # Install required dependencies
     && /app/scripts/install_runtime_dependencies.sh \
     # Install self-building libs

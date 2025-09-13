@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -121,7 +122,7 @@ func AccessLogMaxBodyBytes() int64 {
 }
 
 func AccessLogPath() string {
-	return EnvAccessLogPath.GetValue()
+	return path.Join(EnvAccessLogPath.GetValue(), "access.log")
 }
 
 func AccessLogMaxSize() int64 {
