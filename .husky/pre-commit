@@ -1,8 +1,0 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-## Lint UI
-sh "$(dirname "$0")/lint-ui.sh"
-
-## Lint API
-sh "$(dirname "$0")/lint-api.sh"
