@@ -21,11 +21,13 @@ const (
 
 // Logging
 const (
-	EnvAccessLogLevel     EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_LEVEL"
-	EnvAccessLogMaxBodyKB EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_BODY_KB"
-	EnvAccessLogPath      EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_PATH"
-	EnvAccessLogMaxSize   EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_SIZE"
-	EnvAccessLogMaxFiles  EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_FILES"
+	EnvAccessLogLevel        EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_LEVEL"
+	EnvAccessLogMaxBodyKB    EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_BODY_KB"
+	EnvAccessLogPath         EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_PATH"
+	EnvAccessLogMaxSize      EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_SIZE_MB"
+	EnvAccessLogMaxFiles     EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_FILES"
+	EnvAccessLogMaxDays      EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_MAX_DAYS"
+	EnvAccessLogIsCompressed EnvironmentVariable = "PHOTOVIEW_ACCESS_LOG_IS_COMPRESSED"
 )
 
 // Network related
@@ -125,12 +127,12 @@ func AccessLogPath() string {
 	return path.Join(EnvAccessLogPath.GetValue(), "access.log")
 }
 
-func AccessLogMaxSize() int64 {
-	// Default: 10MB in bytes
+func AccessLogMaxSize() int {
+	// Default: 10MB
 	if size := EnvAccessLogMaxSize.GetInt(); size > 0 {
-		return int64(size) * 1024 * 1024 // Convert MB to bytes
+		return size
 	}
-	return 10 * 1024 * 1024
+	return 10
 }
 
 func AccessLogMaxFiles() int {
@@ -139,4 +141,12 @@ func AccessLogMaxFiles() int {
 		return files
 	}
 	return 5
+}
+
+func AccessLogMaxDays() int {
+	// Default: 0 (never delete old logfiles)
+	if days := EnvAccessLogMaxDays.GetInt(); days > 0 {
+		return days
+	}
+	return 0
 }

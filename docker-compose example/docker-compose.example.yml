@@ -57,8 +57,10 @@ services:
       ## To disable writing to file, uncomment and set it to the empty value.
       # PHOTOVIEW_ACCESS_LOG_PATH: /var/log/photoview
       ## To manipulate the access logfile size and number of rotated files, you can set the following variables:
-      # PHOTOVIEW_ACCESS_LOG_MAX_SIZE: 10    ## in MB, should be > 0, else falls back to default value of 10
+      # PHOTOVIEW_ACCESS_LOG_MAX_SIZE_MB: 10    ## in MB, should be > 0, else falls back to default value of 10
       # PHOTOVIEW_ACCESS_LOG_MAX_FILES: 5    ## should be > 0, else falls back to default value of 5
+      # PHOTOVIEW_ACCESS_LOG_MAX_DAYS: 0   ## in days, should be > 0, else falls back to default 0 (means no age limit)
+      # PHOTOVIEW_ACCESS_LOG_IS_COMPRESSED: "false"  ## "true", 1 or "false", 0. If true, rotated log files are gzipped.
       ## Uncomment the next variable and set a different value to set the location of the media cache inside the container.
       ## Make sure that you know why you are doing this.
       ## If you change this, remember to update the corresponding paths in:

@@ -19,10 +19,11 @@ import (
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/wsxiaoys/terminal/color"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
-	logFile         *os.File
+	logFile         io.WriteCloser
 	logMutex        sync.RWMutex
 	logWriter       io.Writer
 	logLevel        string
@@ -44,15 +45,28 @@ func InitializeLogging() error {
 	// Default to console output
 	logWriter = os.Stdout
 
-	// If log path is configured, open file and create multi-writer
+	// If log path is configured, set up rotating file logger as part of multi-writer
 	if logPath := utils.AccessLogPath(); logPath != "" {
-		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return fmt.Errorf("failed to open access log file %s: %w", logPath, err)
+		rotatingLogger := &lumberjack.Logger{
+			Filename:   logPath,
+			MaxSize:    utils.AccessLogMaxSize(),
+			MaxBackups: utils.AccessLogMaxFiles(),
+			MaxAge:     utils.AccessLogMaxDays(),
+			Compress:   utils.EnvAccessLogIsCompressed.GetBool(),
+			LocalTime:  true,
 		}
-		logFile = file
-		logWriter = io.MultiWriter(os.Stdout, file)
-		log.Info(context.Background(), "Access logging enabled to file", "logfile", logPath)
+
+		logFile = rotatingLogger
+		logWriter = io.MultiWriter(os.Stdout, logFile)
+		log.Info(
+			context.Background(),
+			"Access logging enabled to file",
+			"logfile", logPath,
+			"max size in MB", utils.AccessLogMaxSize(),
+			"max files", utils.AccessLogMaxFiles(),
+			"max age in days", utils.AccessLogMaxDays(),
+			"compressed", utils.EnvAccessLogIsCompressed.GetBool(),
+		)
 	}
 
 	if logLevel == "debug" {
