@@ -124,12 +124,16 @@ func AccessLogMaxBodyBytes() int64 {
 }
 
 func AccessLogPath() string {
-	return path.Join(EnvAccessLogPath.GetValue(), "access.log")
+	if logpath := EnvAccessLogPath.GetValue(); logpath != "" {
+		return path.Join(EnvAccessLogPath.GetValue(), "access.log")
+	}
+	// Default: no access logfile, only STDOUT
+	return ""
 }
 
 func AccessLogMaxSize() int {
 	// Default: 10MB
-	if size := EnvAccessLogMaxSize.GetInt(); size > 0 {
+	if size := EnvAccessLogMaxSize.GetInt(); size >= 0 {
 		return size
 	}
 	return 10
@@ -137,7 +141,7 @@ func AccessLogMaxSize() int {
 
 func AccessLogMaxFiles() int {
 	// Default: keep 5 rotated files
-	if files := EnvAccessLogMaxFiles.GetInt(); files > 0 {
+	if files := EnvAccessLogMaxFiles.GetInt(); files >= 0 {
 		return files
 	}
 	return 5

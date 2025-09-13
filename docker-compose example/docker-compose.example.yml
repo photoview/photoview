@@ -7,7 +7,7 @@ services:
     user: root
     entrypoint: []
     ## If you enabled the Photoview access log in the main Photoview service, add the " /var/log/photoview"
-    ## folder too the end of the command below
+    ## to the end of the command below
     command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache"
     cap_add:
       - CHOWN
@@ -55,12 +55,15 @@ services:
       # PHOTOVIEW_LISTEN_PORT: 80
       ## HTTP server's access logfile location inside the container. By default is under the /var/log/photoview/ folder.
       ## To disable writing to file, uncomment and set it to the empty value.
-      # PHOTOVIEW_ACCESS_LOG_PATH: /var/log/photoview
-      ## To manipulate the access logfile size and number of rotated files, you can set the following variables:
-      # PHOTOVIEW_ACCESS_LOG_MAX_SIZE_MB: 10    ## in MB, should be > 0, else falls back to default value of 10
-      # PHOTOVIEW_ACCESS_LOG_MAX_FILES: 5    ## should be > 0, else falls back to default value of 5
-      # PHOTOVIEW_ACCESS_LOG_MAX_DAYS: 0   ## in days, should be > 0, else falls back to default 0 (means no age limit)
-      # PHOTOVIEW_ACCESS_LOG_IS_COMPRESSED: "false"  ## "true", 1 or "false", 0. If true, rotated log files are gzipped.
+      # PHOTOVIEW_ACCESS_LOG_PATH: "/var/log/photoview"
+      ## Max logfile size in MB, should be >= 0, else falls back to default 10. If 0, log rotation is disabled.
+      # PHOTOVIEW_ACCESS_LOG_MAX_SIZE_MB: 10
+      ## Max number of rotated files should be >= 0, else falls back to default 5. If 0, rotated files never get deleted.
+      # PHOTOVIEW_ACCESS_LOG_MAX_FILES: 5
+      ## Max age in days, should be > 0, else falls back to default 0 (means no age limit)
+      # PHOTOVIEW_ACCESS_LOG_MAX_DAYS: 0
+      ## If true, rotated log files are gzipped. Accepts "true", 1 or "false", 0.
+      # PHOTOVIEW_ACCESS_LOG_IS_COMPRESSED: "false"
       ## Uncomment the next variable and set a different value to set the location of the media cache inside the container.
       ## Make sure that you know why you are doing this.
       ## If you change this, remember to update the corresponding paths in:
@@ -98,7 +101,7 @@ services:
       ## - "/host/folder:/container/folder"
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
-      ## Uncomment the next line if you want to access the Photoview access log
+      ## Uncomment the next line if you want to access the Photoview access log on the host system
       # - "${HOST_PHOTOVIEW_LOCATION}/logs/api:/var/log/photoview"
       ## Uncomment the next line if PHOTOVIEW_DATABASE_DRIVER is set to `sqlite` in the .env
       # - "${HOST_PHOTOVIEW_LOCATION}/database:/home/photoview/database"
