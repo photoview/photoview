@@ -2,7 +2,7 @@ package utils
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -125,7 +125,7 @@ func AccessLogMaxBodyBytes() int64 {
 
 func AccessLogPath() string {
 	if logpath := EnvAccessLogPath.GetValue(); logpath != "" {
-		return path.Join(EnvAccessLogPath.GetValue(), "access.log")
+		return filepath.Join(EnvAccessLogPath.GetValue(), "access.log")
 	}
 	// Default: no access logfile, only STDOUT
 	return ""

@@ -110,22 +110,27 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		// Debug logging: incoming request
 		if debugEnabled {
-			writeLog("\n=== INCOMING REQUEST [%d ms] ===\n", time.Now().UnixMilli()) //TODO: replace with human-readable time
-			writeLog("Method: %s\n", r.Method)
-			writeLog("URI: %s\n", r.URL.RequestURI())
-			writeLog("Host: %s\n", r.Host)
-			writeLog("RemoteAddr: %s\n", r.RemoteAddr)
-			writeLog("User-Agent: %s\n", r.UserAgent())
-			writeLog("Content-Length: %d\n", r.ContentLength)
+			var logBuf bytes.Buffer
+
+			logBuf.WriteString(fmt.Sprintf(
+				"\n===v INCOMING REQUEST [%s] v===\n",
+				time.Now().Format("2006 Jan 02, 15:04:05.000 (MST) -07:00"),
+			))
+			logBuf.WriteString(fmt.Sprintf("Method: %s\n", r.Method))
+			logBuf.WriteString(fmt.Sprintf("URI: %s\n", r.URL.RequestURI()))
+			logBuf.WriteString(fmt.Sprintf("Host: %s\n", r.Host))
+			logBuf.WriteString(fmt.Sprintf("RemoteAddr: %s\n", r.RemoteAddr))
+			logBuf.WriteString(fmt.Sprintf("User-Agent: %s\n", r.UserAgent()))
+			logBuf.WriteString(fmt.Sprintf("Content-Length: %d\n", r.ContentLength))
 
 			// Log all headers
-			writeLog("Headers:\n")
+			logBuf.WriteString("Headers:\n")
 			for name, values := range r.Header {
 				for _, value := range values {
 					if isSensitiveHeader(name) {
-						writeLog("  %s: [REDACTED]\n", name)
+						logBuf.WriteString(fmt.Sprintf("  %s: [REDACTED]\n", name))
 					} else {
-						writeLog("  %s: %s\n", name, value)
+						logBuf.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
 					}
 				}
 			}
@@ -144,9 +149,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 				// Only log text-like content types
 				if isTextualContent(r.Header, preview) {
 					bodyBytes, _ := io.ReadAll(&buf)
-					writeLog("Body: %s\n", string(bodyBytes))
+					logBuf.WriteString(fmt.Sprintf("Body: %s\n", string(bodyBytes)))
 				} else {
-					writeLog("Body: [binary content, %d bytes]\n", r.ContentLength)
+					logBuf.WriteString(fmt.Sprintf("Body: [binary content, %d bytes]\n", r.ContentLength))
 				}
 
 				// Reset buffer for the actual handler
@@ -154,11 +159,8 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 				io.Copy(&buf, tee)
 				r.Body = io.NopCloser(&buf)
 			}
-			writeLog("=== PROCESSING ===\n")
-		}
+			logBuf.WriteString("===^ INCOMING REQUEST ^===\n")
 
-		// Choose appropriate response writer based on debug mode
-		if debugEnabled {
 			// Use debug writer with capture capabilities
 			debugWriter := newDebugStatusResponseWriter(&w)
 			next.ServeHTTP(debugWriter, r)
@@ -167,20 +169,23 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			elapsedMs := elapsed.Nanoseconds() / 1e6 // Convert to milliseconds
 
 			// Debug logging: response
-			writeLog("=== RESPONSE [%d ms] ===\n", time.Now().UnixMilli()) //TODO: replace with human-readable time
-			writeLog("Status: %d\n", debugWriter.status)
-			writeLog("Duration: %d ms\n", elapsedMs)
-			writeLog("Response-Size: %d bytes\n", debugWriter.bodySize)
+			logBuf.WriteString(fmt.Sprintf(
+				"===v RESPONSE [%s] v===\n",
+				time.Now().Format("2006 Jan 02, 15:04:05.000 (MST) -07:00"),
+			))
+			logBuf.WriteString(fmt.Sprintf("Status: %d\n", debugWriter.status))
+			logBuf.WriteString(fmt.Sprintf("Duration: %d ms\n", elapsedMs))
+			logBuf.WriteString(fmt.Sprintf("Response-Size: %d bytes\n", debugWriter.bodySize))
 
 			// Log response headers if available
 			if len(debugWriter.capturedHeaders) > 0 {
-				writeLog("Response Headers:\n")
+				logBuf.WriteString("Response Headers:\n")
 				for name, values := range debugWriter.capturedHeaders {
 					for _, value := range values {
 						if isSensitiveHeader(name) {
-							writeLog("  %s: [REDACTED]\n", name)
+							logBuf.WriteString(fmt.Sprintf("  %s: [REDACTED]\n", name))
 						} else {
-							writeLog("  %s: %s\n", name, value)
+							logBuf.WriteString(fmt.Sprintf("  %s: %s\n", name, value))
 						}
 					}
 				}
@@ -190,16 +195,20 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			if debugWriter.bodyBuffer.Len() > 0 {
 				responseBody := debugWriter.bodyBuffer.Bytes()
 				if isTextualContent(debugWriter.capturedHeaders, responseBody) {
-					writeLog("Response Body: %s\n", string(responseBody))
+					logBuf.WriteString(fmt.Sprintf("Response Body: %s\n", string(responseBody)))
 				} else {
-					writeLog("Response Body: [binary content, %d bytes]\n", len(responseBody))
+					logBuf.WriteString(fmt.Sprintf("Response Body: [binary content, %d bytes]\n", len(responseBody)))
 				}
 			} else if debugWriter.bodySize > maxLogBodyBytes {
-				writeLog("Response Body: [large content, %d bytes - not logged]\n", debugWriter.bodySize)
+				logBuf.WriteString(fmt.Sprintf(
+					"Response Body: [large content, %d bytes - not logged]\n",
+					debugWriter.bodySize,
+				))
 			} else if debugWriter.bodySize > 0 {
-				writeLog("Response Body: [content was written but not captured]\n")
+				logBuf.WriteString("Response Body: [content was written but not captured]\n")
 			}
-			writeLog("========================\n\n")
+			logBuf.WriteString("===^ RESPONSE ^===\n\n")
+			writeLog("%s", logBuf.String())
 
 			// Standard logging
 			logStandardRequest(r, debugWriter.status, elapsedMs)
