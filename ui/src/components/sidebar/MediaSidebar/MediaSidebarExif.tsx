@@ -33,7 +33,7 @@ const dateToRFC3339WithTimezone = (date: Date) => {
   const offsetHours = pad(Math.floor(absOffset / 60))
   const offsetMinutes = pad(absOffset % 60)
   let offsetPart = 'Z'
-  if (offsetHours != 0 && offsetMinutes != 0) {
+  if (offsetHours != 0 || offsetMinutes != 0) {
     offsetPart = `${sign}${offsetHours}:${offsetMinutes}`
   }
 
