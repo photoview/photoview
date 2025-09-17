@@ -14,32 +14,6 @@ type ExifDetailsProps = {
   media?: MediaSidebarMedia
 }
 
-const dateToRFC3339WithTimezone = (date: Date) => {
-  const pad = (n) => String(n).padStart(2, '0')
-
-  const YYYY = date.getFullYear()
-  const MM = pad(date.getMonth() + 1) // getMonth() starts from `0`
-  const DD = pad(date.getDate())
-  const HH = pad(date.getHours())
-  const mm = pad(date.getMinutes())
-  const ss = pad(date.getSeconds())
-
-  const datePart = `${YYYY}-${MM}-${DD}`
-  const timePart = `${HH}:${mm}:${ss}`
-
-  const offset = -date.getTimezoneOffset()
-  const sign = offset >= 0 ? '+' : '-'
-  const absOffset = Math.abs(offset)
-  const offsetHours = pad(Math.floor(absOffset / 60))
-  const offsetMinutes = pad(absOffset % 60)
-  let offsetPart = 'Z'
-  if (offsetHours != 0 || offsetMinutes != 0) {
-    offsetPart = `${sign}${offsetHours}:${offsetMinutes}`
-  }
-
-  return `${datePart} ${timePart}${offsetPart}`
-}
-
 const ExifDetails = ({ media }: ExifDetailsProps) => {
   const { t } = useTranslation()
   let exifItems: JSX.Element[] = []
@@ -65,9 +39,10 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    if (!isNil(exif.dateShot)) {
-      exif.dateShot = dateToRFC3339WithTimezone(new Date(exif.dateShot))
-    }
+    // Use the original date from server.
+    // if (!isNil(exif.dateShot)) {
+    //   exif.dateShot = exif.dateShot
+    // }
 
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
