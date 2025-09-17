@@ -71,6 +71,12 @@ const languagePreferences = [
     flag: 'ua',
     value: LanguageTranslation.Ukrainian,
   },
+  {
+    key: 17,
+    label: '日本語',
+    flag: 'ja',
+    value: LanguageTranslation.Japanese,
+  },
 ]
 
 const themePreferences = (t: TranslationFn) => [
