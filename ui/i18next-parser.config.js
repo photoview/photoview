@@ -13,6 +13,7 @@ module.exports = {
     'es',
     'fr',
     'it',
+    'ja',
     'pl',
     'pt',
     'ru',
