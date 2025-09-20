@@ -31,7 +31,7 @@ const AlbumsPage = () => {
   const { t } = useTranslation()
 
   const urlParams = useURLParameters()
-  const orderParams = useOrderingParams(urlParams, 'title')
+  const orderParams = useOrderingParams(urlParams, 'updated_at')
 
   const { error, data } = useQuery<getMyAlbums, getMyAlbumsVariables>(
     getAlbumsQuery,
@@ -46,11 +46,11 @@ const AlbumsPage = () => {
   const sortingOptions = React.useMemo(
     () => [
       {
-        value: 'updated_at',
+        value: 'updated_at' as const,
         label: t('album_filter.sorting_options.date_imported', 'Date imported'),
       },
       {
-        value: 'title',
+        value: 'title' as const,
         label: t('album_filter.sorting_options.title', 'Title'),
       },
     ],
