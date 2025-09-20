@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/photoview/photoview/api/log"
 )
 
 // EnvironmentVariable represents the name of an environment variable used to configure Photoview
@@ -86,6 +89,7 @@ func (v EnvironmentVariable) GetInt() int {
 	}
 	i, err := strconv.Atoi(value)
 	if err != nil {
+		log.Error(context.Background(), "invalid integer value for environment variable", v.GetName(), value)
 		return 0
 	}
 	return i

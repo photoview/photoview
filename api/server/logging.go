@@ -18,7 +18,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -92,9 +91,6 @@ func CloseLogging() {
 
 // Thread-safe log writing
 func writeLog(format string, args ...interface{}) {
-	logMutex.Lock()
-	defer logMutex.Unlock()
-
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, format, args...)
 	}
@@ -252,46 +248,17 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 }
 
 func logStandardRequest(r *http.Request, status int, elapsedMs int64) {
-	date := time.Now().Format("2006/01/02 15:04:05")
+	date := time.Now().Format("2006 Jan 02, 15:04:05 (MST) -07:00")
 	user := auth.UserFromContext(r.Context())
 	requestText := fmt.Sprintf("%s%s", r.Host, r.URL.RequestURI())
 
-	// Color coding for status (preserve existing logic)
-	var statusColor string
-	switch {
-	case status < 200:
-		statusColor = color.Colorize("b")
-	case status < 300:
-		statusColor = color.Colorize("g")
-	case status < 400:
-		statusColor = color.Colorize("c")
-	case status < 500:
-		statusColor = color.Colorize("y")
-	default:
-		statusColor = color.Colorize("r")
-	}
-
-	// Color coding for method
-	method := r.Method
-	var methodColor string
-	switch {
-	case method == http.MethodGet:
-		methodColor = color.Colorize("b")
-	case method == http.MethodPost:
-		methodColor = color.Colorize("g")
-	case method == http.MethodOptions:
-		methodColor = color.Colorize("y")
-	default:
-		methodColor = color.Colorize("r")
-	}
-
 	userText := "unauthenticated"
 	if user != nil {
-		userText = color.Sprintf("@ruser: %s", user.Username)
+		userText = fmt.Sprintf("@ruser: %s", user.Username)
 	}
 
-	statusText := color.Sprintf("%s%s %s%d", methodColor, r.Method, statusColor, status)
-	durationText := color.Sprintf("@c%dms", elapsedMs)
+	statusText := fmt.Sprintf("%s %d", r.Method, status)
+	durationText := fmt.Sprintf("@c%dms", elapsedMs)
 
 	writeLog("%s %s %s %s %s\n", date, statusText, requestText, durationText, userText)
 }
