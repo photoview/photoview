@@ -11,6 +11,9 @@ import { ReactComponent as DirectionIcon } from './icons/direction-arrow.svg'
 import Dropdown from '../../primitives/form/Dropdown'
 import classNames from 'classnames'
 
+export type SortingOptionValue = 'date_shot' | 'updated_at' | 'title' | 'type'
+export type SortingOption = { value: SortingOptionValue; label: string }
+
 export type FavoriteCheckboxProps = {
   onlyFavorites: boolean
   setOnlyFavorites(favorites: boolean): void
@@ -35,16 +38,21 @@ export const FavoritesCheckbox = ({
 type SortingOptionsProps = {
   ordering?: MediaOrdering
   setOrdering?: SetOrderingFn
+  items?: SortingOption[]
 }
 
-const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
+const SortingOptions = ({
+  setOrdering,
+  ordering,
+  items,
+}: SortingOptionsProps) => {
   const { t } = useTranslation()
 
   const changeOrderDirection = () => {
     if (setOrdering && ordering) {
       setOrdering({
         orderDirection:
-          ordering.orderDirection == OrderDirection.ASC
+          ordering.orderDirection === OrderDirection.ASC
             ? OrderDirection.DESC
             : OrderDirection.ASC,
       })
@@ -57,24 +65,29 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
     }
   }
 
-  const sortingOptions = [
-    {
-      value: 'date_shot',
-      label: t('album_filter.sorting_options.date_shot', 'Date shot'),
-    },
-    {
-      value: 'updated_at',
-      label: t('album_filter.sorting_options.date_imported', 'Date imported'),
-    },
-    {
-      value: 'title',
-      label: t('album_filter.sorting_options.title', 'Title'),
-    },
-    {
-      value: 'type',
-      label: t('album_filter.sorting_options.type', 'Kind'),
-    },
-  ]
+  const defaultOptions = React.useMemo(
+    () => [
+      {
+        value: 'date_shot',
+        label: t('album_filter.sorting_options.date_shot', 'Date shot'),
+      },
+      {
+        value: 'updated_at',
+        label: t('album_filter.sorting_options.date_imported', 'Date imported'),
+      },
+      {
+        value: 'title',
+        label: t('album_filter.sorting_options.title', 'Title'),
+      },
+      {
+        value: 'type',
+        label: t('album_filter.sorting_options.type', 'Kind'),
+      },
+    ],
+    [t]
+  )
+
+  const sortingOptions = items ?? defaultOptions
 
   return (
     <fieldset>
@@ -93,20 +106,21 @@ const SortingOptions = ({ setOrdering, ordering }: SortingOptionsProps) => {
           items={sortingOptions}
         />
         <button
-          title="Sort direction"
-          aria-label="Sort direction"
+          title={t('album_filter.sort_direction', 'Sort direction')}
+          aria-label={t('album_filter.sort_direction', 'Sort direction')}
+          aria-pressed={ordering?.orderDirection === OrderDirection.DESC}
           className={classNames(
             'bg-gray-50 h-[30px] align-top px-2 py-1 rounded ml-2 border border-gray-200 focus:outline-none focus:border-blue-300 text-[#8b8b8b] hover:bg-gray-100 hover:text-[#777]',
             'dark:bg-dark-input-bg dark:border-dark-input-border dark:text-dark-input-text dark:focus:border-blue-300',
-            { 'flip-y': ordering?.orderDirection == OrderDirection.ASC }
+            { 'flip-y': ordering?.orderDirection === OrderDirection.ASC }
           )}
           onClick={changeOrderDirection}
         >
           <DirectionIcon />
           <span className="sr-only">
-            {ordering?.orderDirection == OrderDirection.ASC
-              ? 'ascending'
-              : 'descending'}
+            {ordering?.orderDirection === OrderDirection.ASC
+              ? t('album_filter.order_direction.ascending', 'Ascending')
+              : t('album_filter.order_direction.descending', 'Descending')}
           </span>
         </button>
       </div>
@@ -119,6 +133,7 @@ type AlbumFilterProps = {
   setOnlyFavorites?(favorites: boolean): void
   ordering?: MediaOrdering
   setOrdering?: SetOrderingFn
+  sortingOptions?: SortingOption[]
 }
 
 const AlbumFilter = ({
@@ -126,10 +141,17 @@ const AlbumFilter = ({
   setOnlyFavorites,
   setOrdering,
   ordering,
+  sortingOptions,
 }: AlbumFilterProps) => {
   return (
     <div className="flex items-end gap-4 flex-wrap mb-4">
-      <SortingOptions ordering={ordering} setOrdering={setOrdering} />
+      {ordering && setOrdering ? (
+        <SortingOptions
+          ordering={ordering}
+          setOrdering={setOrdering}
+          items={sortingOptions}
+        />
+      ) : null}
       {authToken() && setOnlyFavorites && (
         <FavoritesCheckbox
           onlyFavorites={onlyFavorites}
