@@ -39,6 +39,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
+    //TODO: make sure that the EXIF date is reformatted, but never converted to local timezone
     if (!isNil(exif.dateShot)) {
       exif.dateShot = new Date(exif.dateShot).toLocaleString()
     }
@@ -49,9 +50,8 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
 
     const coordinates = media.exif.coordinates
     if (!isNil(coordinates)) {
-      exif.coordinates = `${
-        Math.round(coordinates.latitude * 1000000) / 1000000
-      }, ${Math.round(coordinates.longitude * 1000000) / 1000000}`
+      exif.coordinates = `${Math.round(coordinates.latitude * 1000000) / 1000000
+        }, ${Math.round(coordinates.longitude * 1000000) / 1000000}`
     }
 
     const exposurePrograms = exposureProgramsLookup(t)

@@ -18,7 +18,7 @@ import {
 import { urlPresentModeSetupHook } from '../photoGallery/mediaGalleryReducer'
 import TimelineFilters from './TimelineFilters'
 import client from '../../apolloClient'
-
+//TODO: make sure that the media date is always taken from API's `media.date_shot` field
 export const MY_TIMELINE_QUERY = gql`
   query myTimeline(
     $onlyFavorites: Boolean
@@ -128,7 +128,7 @@ const TimelineGallery = () => {
   }, [data])
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       await client.resetStore()
       await refetch({
         onlyFavorites,
@@ -146,7 +146,7 @@ const TimelineGallery = () => {
     openPresentMode: event => {
       dispatchMedia({
         type: 'openPresentMode',
-        activeIndex: event.state.activeIndex,
+        activeIndex: event.state.activeIndex, //TODO: Fix the "Type 'number' is not assignable to type 'TimelineMediaIndex'." error
       })
     },
   })
