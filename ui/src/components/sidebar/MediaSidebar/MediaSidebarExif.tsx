@@ -13,7 +13,7 @@ const MetadataInfoContainer = styled.div`
 type ExifDetailsProps = {
   media?: MediaSidebarMedia
 }
-//TODO: Let long string values wrap to multiple lines within the same cell
+
 const ExifDetails = ({ media }: ExifDetailsProps) => {
   const { t } = useTranslation()
   let exifItems: JSX.Element[] = []

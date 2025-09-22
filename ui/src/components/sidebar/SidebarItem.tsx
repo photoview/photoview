@@ -6,11 +6,13 @@ type SidebarItemProps = {
 }
 
 const SidebarItem = ({ name, value }: SidebarItemProps) => (
-  <div>
-    <div className="inline-block w-[100px] font-semibold text-sm text-[#888] text-right mr-2">
+  <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
+    <div className="font-semibold text-sm text-[#888] text-right">
       {name}
     </div>
-    <div className="inline-block text-base">{value}</div>
+    <div className="text-base break-words">
+      {value}
+    </div>
   </div>
 )
 
