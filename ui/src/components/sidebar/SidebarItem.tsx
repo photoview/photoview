@@ -6,11 +6,14 @@ type SidebarItemProps = {
 }
 
 const SidebarItem = ({ name, value }: SidebarItemProps) => (
-  <div className="grid grid-cols-[8rem_1fr] md:grid-cols-[12rem_1fr] gap-2 items-start">
-    <div className="font-semibold text-sm text-gray-500 dark:text-gray-400 text-right">
+  <div className="flex items-baseline mb-1">
+    <div className="w-[100px] flex-shrink-0 font-semibold text-sm text-gray-500 dark:text-gray-400 text-right pr-2">
       {name}
-    </div>
-    <div className="text-base break-words select-text">
+    </div >
+    <div
+      className="flex-1 text-base break-words min-w-0"
+      style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
+    >
       {value}
     </div>
   </div>
