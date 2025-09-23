@@ -323,16 +323,6 @@ type simpleStatusResponseWriter struct {
 	hijacker http.Hijacker
 }
 
-// Enhanced status response writer that captures headers
-type debugStatusResponseWriter struct {
-	http.ResponseWriter
-	status          int
-	hijacker        http.Hijacker
-	capturedHeaders http.Header
-	bodyBuffer      *bytes.Buffer
-	bodySize        int64
-}
-
 func newSimpleStatusResponseWriter(w *http.ResponseWriter) *simpleStatusResponseWriter {
 	writer := &simpleStatusResponseWriter{
 		ResponseWriter: *w,
@@ -343,6 +333,48 @@ func newSimpleStatusResponseWriter(w *http.ResponseWriter) *simpleStatusResponse
 	}
 
 	return writer
+}
+
+func (w *simpleStatusResponseWriter) WriteHeader(status int) {
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *simpleStatusResponseWriter) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = 200
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+func (w *simpleStatusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if w.hijacker == nil {
+		return nil, nil, errors.New("http.Hijacker not implemented by underlying http.ResponseWriter")
+	}
+	return w.hijacker.Hijack()
+}
+
+func (w *simpleStatusResponseWriter) Flush() {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+func (w *simpleStatusResponseWriter) Push(target string, opts *http.PushOptions) error {
+	if p, ok := w.ResponseWriter.(http.Pusher); ok {
+		return p.Push(target, opts)
+	}
+	return http.ErrNotSupported
+}
+
+// Enhanced status response writer that captures headers
+type debugStatusResponseWriter struct {
+	http.ResponseWriter
+	status          int
+	hijacker        http.Hijacker
+	capturedHeaders http.Header
+	bodyBuffer      *bytes.Buffer
+	bodySize        int64
 }
 
 func newDebugStatusResponseWriter(w *http.ResponseWriter) *debugStatusResponseWriter {
@@ -359,24 +391,12 @@ func newDebugStatusResponseWriter(w *http.ResponseWriter) *debugStatusResponseWr
 	return writer
 }
 
-func (w *simpleStatusResponseWriter) WriteHeader(status int) {
-	w.status = status
-	w.ResponseWriter.WriteHeader(status)
-}
-
 func (w *debugStatusResponseWriter) WriteHeader(status int) {
 	w.status = status
 	for k, v := range w.ResponseWriter.Header() {
 		w.capturedHeaders[k] = append([]string(nil), v...)
 	}
 	w.ResponseWriter.WriteHeader(status)
-}
-
-func (w *simpleStatusResponseWriter) Write(b []byte) (int, error) {
-	if w.status == 0 {
-		w.status = 200
-	}
-	return w.ResponseWriter.Write(b)
 }
 
 func (w *debugStatusResponseWriter) Write(b []byte) (int, error) {
@@ -403,13 +423,6 @@ func (w *debugStatusResponseWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func (w *simpleStatusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	if w.hijacker == nil {
-		return nil, nil, errors.New("http.Hijacker not implemented by underlying http.ResponseWriter")
-	}
-	return w.hijacker.Hijack()
-}
-
 func (w *debugStatusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if w.hijacker == nil {
 		return nil, nil, errors.New("http.Hijacker not implemented by underlying http.ResponseWriter")
@@ -417,23 +430,10 @@ func (w *debugStatusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error
 	return w.hijacker.Hijack()
 }
 
-func (w *simpleStatusResponseWriter) Flush() {
-	if f, ok := w.ResponseWriter.(http.Flusher); ok {
-		f.Flush()
-	}
-}
-
 func (w *debugStatusResponseWriter) Flush() {
 	if f, ok := w.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
-}
-
-func (w *simpleStatusResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if p, ok := w.ResponseWriter.(http.Pusher); ok {
-		return p.Push(target, opts)
-	}
-	return http.ErrNotSupported
 }
 
 func (w *debugStatusResponseWriter) Push(target string, opts *http.PushOptions) error {
