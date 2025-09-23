@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -112,7 +113,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 				time.Now().Format("2006 Jan 02, 15:04:05.000 (MST) -07:00"),
 			))
 			logBuf.WriteString(fmt.Sprintf("Method: %s\n", r.Method))
-			logBuf.WriteString(fmt.Sprintf("URI: %s\n", r.URL.RequestURI()))
+			logBuf.WriteString(fmt.Sprintf("URI: %s\n", sanitizeURI(r.URL)))
 			logBuf.WriteString(fmt.Sprintf("Host: %s\n", r.Host))
 			logBuf.WriteString(fmt.Sprintf("RemoteAddr: %s\n", r.RemoteAddr))
 			logBuf.WriteString(fmt.Sprintf("User-Agent: %s\n", r.UserAgent()))
@@ -253,7 +254,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 func logStandardRequest(r *http.Request, status int, elapsedMs int64) {
 	date := time.Now().Format("2006 Jan 02, 15:04:05 (MST) -07:00")
 	user := auth.UserFromContext(r.Context())
-	requestText := fmt.Sprintf("%s%s", r.Host, r.URL.RequestURI())
+	requestText := fmt.Sprintf("%s%s", r.Host, sanitizeURI(r.URL))
 
 	userText := "unauthenticated"
 	if user != nil {
@@ -264,6 +265,35 @@ func logStandardRequest(r *http.Request, status int, elapsedMs int64) {
 	durationText := fmt.Sprintf("@c%dms", elapsedMs)
 
 	writeLog("%s %s %s %s %s\n", date, statusText, requestText, durationText, userText)
+}
+
+// sanitizeURL redacts sensitive query parameters in a URL
+func sanitizeURI(url *url.URL) string {
+	if url == nil {
+		return ""
+	}
+	cloneUrl := *url
+	queryString := cloneUrl.Query()
+	if len(queryString) == 0 {
+		return cloneUrl.RequestURI()
+	}
+
+	sensitiveKeys := []string{
+		"access_token", "token", "auth", "authorization", "apikey", "api_key",
+		"password", "passwd", "secret", "signature", "session", "jwt", "code",
+	}
+
+	for name := range queryString {
+		lowerName := strings.ToLower(name)
+		for _, sensitive := range sensitiveKeys {
+			if lowerName == sensitive || strings.Contains(lowerName, sensitive) {
+				queryString[name] = []string{"[REDACTED]"}
+				break
+			}
+		}
+	}
+	cloneUrl.RawQuery = queryString.Encode()
+	return cloneUrl.RequestURI()
 }
 
 // Detect sensitive headers
@@ -291,8 +321,6 @@ type simpleStatusResponseWriter struct {
 	http.ResponseWriter
 	status   int
 	hijacker http.Hijacker
-	flusher  http.Flusher
-	pusher   http.Pusher
 }
 
 // Enhanced status response writer that captures headers
@@ -300,8 +328,6 @@ type debugStatusResponseWriter struct {
 	http.ResponseWriter
 	status          int
 	hijacker        http.Hijacker
-	flusher         http.Flusher
-	pusher          http.Pusher
 	capturedHeaders http.Header
 	bodyBuffer      *bytes.Buffer
 	bodySize        int64
@@ -316,14 +342,6 @@ func newSimpleStatusResponseWriter(w *http.ResponseWriter) *simpleStatusResponse
 		writer.hijacker = hj
 	}
 
-	if fl, ok := (*w).(http.Flusher); ok {
-		writer.flusher = fl
-	}
-
-	if pu, ok := (*w).(http.Pusher); ok {
-		writer.pusher = pu
-	}
-
 	return writer
 }
 
@@ -336,14 +354,6 @@ func newDebugStatusResponseWriter(w *http.ResponseWriter) *debugStatusResponseWr
 
 	if hj, ok := (*w).(http.Hijacker); ok {
 		writer.hijacker = hj
-	}
-
-	if fl, ok := (*w).(http.Flusher); ok {
-		writer.flusher = fl
-	}
-
-	if pu, ok := (*w).(http.Pusher); ok {
-		writer.pusher = pu
 	}
 
 	return writer
@@ -408,27 +418,27 @@ func (w *debugStatusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error
 }
 
 func (w *simpleStatusResponseWriter) Flush() {
-	if w.flusher != nil {
-		w.flusher.Flush()
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
 	}
 }
 
 func (w *debugStatusResponseWriter) Flush() {
-	if w.flusher != nil {
-		w.flusher.Flush()
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
 	}
 }
 
 func (w *simpleStatusResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if w.pusher != nil {
-		return w.pusher.Push(target, opts)
+	if p, ok := w.ResponseWriter.(http.Pusher); ok {
+		return p.Push(target, opts)
 	}
 	return http.ErrNotSupported
 }
 
 func (w *debugStatusResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if w.pusher != nil {
-		return w.pusher.Push(target, opts)
+	if p, ok := w.ResponseWriter.(http.Pusher); ok {
+		return p.Push(target, opts)
 	}
 	return http.ErrNotSupported
 }
