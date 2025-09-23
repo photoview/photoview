@@ -13,7 +13,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/log"
@@ -149,17 +148,19 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 						logBuf.WriteString("Body: [empty]\n")
 					} else {
 						// Log based on content analysis
-						if isTextualContent(r.Header, bodyBytes) {
+						contentType := detectContentTypeWithFallback(r.Header, bodyBytes)
+						if isTextualContent(contentType, bodyBytes) {
 							logBuf.WriteString(fmt.Sprintf("Body: %s\n", string(bodyBytes)))
 						} else {
-							logBuf.WriteString(fmt.Sprintf("Body: [binary content, %d bytes]\n", len(bodyBytes)))
+							logBuf.WriteString(
+								fmt.Sprintf("Body: [binary content, %d bytes, type: %s]\n", len(bodyBytes), contentType),
+							)
 						}
 
 						// Indicate if content was truncated
 						if r.ContentLength > maxLogBodyBytes {
-							logBuf.WriteString(fmt.Sprintf(
-								"Body: [Note: logged first %d of %d total bytes]\n", len(bodyBytes), r.ContentLength,
-							))
+							logBuf.WriteString(fmt.Sprintf("Body: [Note: logged first %d of %d total bytes]\n",
+								len(bodyBytes), r.ContentLength))
 						}
 					}
 
@@ -213,10 +214,12 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			// Log response body with same binary detection
 			if debugWriter.bodyBuffer.Len() > 0 {
 				responseBody := debugWriter.bodyBuffer.Bytes()
-				if isTextualContent(debugWriter.capturedHeaders, responseBody) {
+				contentType := detectContentTypeWithFallback(debugWriter.capturedHeaders, responseBody)
+				if isTextualContent(contentType, responseBody) {
 					logBuf.WriteString(fmt.Sprintf("Response Body: %s\n", string(responseBody)))
 				} else {
-					logBuf.WriteString(fmt.Sprintf("Response Body: [binary content, %d bytes]\n", len(responseBody)))
+					logBuf.WriteString(fmt.Sprintf("Response Body: [binary content, %d bytes, type: %s]\n",
+						len(responseBody), contentType))
 				}
 			} else if debugWriter.bodySize > maxLogBodyBytes {
 				logBuf.WriteString(fmt.Sprintf(
@@ -261,58 +264,6 @@ func logStandardRequest(r *http.Request, status int, elapsedMs int64) {
 	durationText := fmt.Sprintf("@c%dms", elapsedMs)
 
 	writeLog("%s %s %s %s %s\n", date, statusText, requestText, durationText, userText)
-}
-
-func isTextualContent(headers http.Header, body []byte) bool {
-	looksTextual := false
-
-	if values, ok := headers["Content-Type"]; ok {
-		for _, value := range values {
-			value = strings.ToLower(value)
-			if strings.HasPrefix(value, "multipart/") ||
-				strings.HasPrefix(value, "image/") ||
-				strings.HasPrefix(value, "audio/") ||
-				strings.HasPrefix(value, "video/") ||
-				strings.Contains(value, "octet-stream") {
-				return false
-			}
-			if strings.HasPrefix(value, "text/") ||
-				strings.Contains(value, "json") ||
-				strings.Contains(value, "xml") ||
-				strings.Contains(value, "x-www-form-urlencoded") ||
-				strings.Contains(value, "charset=") ||
-				strings.Contains(value, "utf-8") {
-				looksTextual = true
-				break
-			}
-		}
-	}
-
-	if !looksTextual {
-		return !isBinaryData(body)
-	}
-	return looksTextual
-}
-
-func isBinaryData(data []byte) bool {
-	if len(data) == 0 {
-		return false
-	}
-
-	// Check first 512 bytes (or less) for null bytes and UTF-8 validity
-	checkSize := len(data)
-	if checkSize > 512 {
-		checkSize = 512
-	}
-	// Check if it's valid UTF-8 text. If it's not, it's likely binary
-	if !utf8.Valid(data[:checkSize]) {
-		return true
-	}
-	// NUL byte is a strong binary signal
-	if bytes.IndexByte(data[:checkSize], 0x00) != -1 {
-		return true
-	}
-	return false
 }
 
 // Detect sensitive headers
