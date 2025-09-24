@@ -39,9 +39,10 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    if (!isNil(exif.dateShot)) {
-      exif.dateShot = new Date(exif.dateShot).toLocaleString()
-    }
+    // Use the original date from server.
+    // if (!isNil(exif.dateShot)) {
+    //   exif.dateShot = exif.dateShot
+    // }
 
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
