@@ -127,7 +127,7 @@ jobs:
 
       - name: Lint Dockerfile
         id: lint
-        uses: hadolint/hadolint-action@v3.2.0
+        uses: hadolint/hadolint-action@v3.3.0
         continue-on-error: true
         with:
           dockerfile: Dockerfile
@@ -152,7 +152,7 @@ jobs:
           overwrite: true
 
       - name: Lint Dockerfile (sarif)
-        uses: hadolint/hadolint-action@v3.2.0
+        uses: hadolint/hadolint-action@v3.3.0
         id: lint-report
         continue-on-error: true
         with:
