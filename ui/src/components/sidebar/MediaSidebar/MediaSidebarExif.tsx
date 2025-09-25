@@ -5,6 +5,7 @@ import { isNil } from '../../../helpers/utils'
 import { TranslationFn } from '../../../localization'
 import SidebarItem from '../SidebarItem'
 import { MediaSidebarMedia } from './MediaSidebar'
+import { DateTime } from 'luxon'
 
 const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
@@ -38,6 +39,25 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
         [curr]: value,
       }
     }, {} as { [key: string]: string | number })
+
+    if (!isNil(exif.dateShot)) {
+      // Parse as ISO (RFC3339 is a subset of ISO8601)
+      let dt = DateTime.fromISO(String(exif.dateShot), { setZone: true });
+
+      if (dt.isValid) {
+        // Format date and time parts in browser's locale, but as "naive" (no shifting)
+        const localeDate = dt.toLocaleString(DateTime.DATE_SHORT);
+        const localeTime = dt.toLocaleString(DateTime.TIME_WITH_SECONDS);
+
+        // Get the offset in ±HH:MM
+        const offset = dt.toFormat('ZZ');
+
+        // Get the abbreviation (e.g., "MSK", "UTC")
+        const abbr = dt.offsetNameShort;
+
+        exif.dateShot = `${localeDate} ${localeTime} ${offset}${abbr ? ` (${abbr})` : ''}`;
+      }
+    }
 
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
