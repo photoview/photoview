@@ -41,21 +41,34 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
     }, {} as { [key: string]: string | number })
 
     if (!isNil(exif.dateShot)) {
+      const dateString = String(exif.dateShot);
+
       // Parse as ISO (RFC3339 is a subset of ISO8601)
-      let dt = DateTime.fromISO(String(exif.dateShot), { setZone: true });
+      let dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
         // Format date and time parts in browser's locale, but as "naive" (no shifting)
-        const localeDate = dt.toLocaleString(DateTime.DATE_SHORT);
-        const localeTime = dt.toLocaleString(DateTime.TIME_WITH_SECONDS);
+        const browserLocale = navigator.language || (navigator.languages && navigator.languages[0]) || 'en-US';
+        const localeDate = dt.setLocale(browserLocale).toLocaleString(DateTime.DATE_MED);
+        const localeTime = dt.setLocale(browserLocale).toLocaleString(DateTime.TIME_WITH_SECONDS);
 
-        // Get the offset in ±HH:MM
-        const offset = dt.toFormat('ZZ');
+        // Check if the original string contains timezone information
+        const hasTimezone = dateString.includes('Z') ||
+          /[+-]\d{2}:\d{2}$/.test(dateString) ||
+          /[+-]\d{4}$/.test(dateString);
 
-        // Get the abbreviation (e.g., "MSK", "UTC")
-        const abbr = dt.offsetNameShort;
+        if (hasTimezone) {
+          // Get the offset in ±HH:MM
+          const offset = dt.toFormat('ZZ');
 
-        exif.dateShot = `${localeDate} ${localeTime} ${offset}${abbr ? ` (${abbr})` : ''}`;
+          // Get the abbreviation (e.g., "EET", "UTC")
+          const abbr = dt.offsetNameShort;
+
+          exif.dateShot = `${localeDate} ${localeTime} ${offset}${abbr ? ` (${abbr})` : ''}`;
+        } else {
+          // No timezone in original - show only date and time
+          exif.dateShot = `${localeDate} ${localeTime}`;
+        }
       }
     }
 
