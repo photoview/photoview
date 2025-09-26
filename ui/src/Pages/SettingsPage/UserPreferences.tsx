@@ -68,7 +68,7 @@ const languagePreferences = [
   {
     key: 15,
     label: 'Українська',
-    flag: 'ua',
+    flag: 'uk',
     value: LanguageTranslation.Ukrainian,
   },
   {

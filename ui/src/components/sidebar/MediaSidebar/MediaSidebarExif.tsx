@@ -49,12 +49,8 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
 
       if (dt.isValid) {
         // Format date and time parts in browser's locale, but as "naive" (no shifting)
-        const browserLocale =
-          navigator?.language ||
-          (navigator?.languages && navigator?.languages[0]) ||
-          Settings.defaultLocale ||
-          'en-US';
-        const dtLocalized = dt.setLocale(browserLocale);
+        const { i18n } = useTranslation()
+        const dtLocalized = dt.setLocale(i18n.language);
         const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
         const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);
 
