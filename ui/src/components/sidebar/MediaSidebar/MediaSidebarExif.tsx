@@ -40,8 +40,8 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    exif.dateShot = String(exif.dateShot).trim();
-    if (!isNil(exif.dateShot) && String(exif.dateShot).length > 0) {
+    if (exif.dateShot && String(exif.dateShot).trim().length > 0) {
+      exif.dateShot = String(exif.dateShot).trim();
       const dateString = String(exif.dateShot);
 
       // Parse as ISO (RFC3339 is a subset of ISO8601)
