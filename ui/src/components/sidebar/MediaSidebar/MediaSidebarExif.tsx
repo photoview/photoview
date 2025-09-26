@@ -5,7 +5,7 @@ import { isNil } from '../../../helpers/utils'
 import { TranslationFn } from '../../../localization'
 import SidebarItem from '../SidebarItem'
 import { MediaSidebarMedia } from './MediaSidebar'
-import { DateTime } from 'luxon'
+import { DateTime, Settings } from 'luxon'
 
 const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
@@ -41,30 +41,29 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
     }, {} as { [key: string]: string | number })
 
     if (!isNil(exif.dateShot)) {
-      const dateString = String(exif.dateShot);
+      const dateString = String(exif.dateShot).trim();
 
       // Parse as ISO (RFC3339 is a subset of ISO8601)
-      let dt = DateTime.fromISO(dateString, { setZone: true });
+      const dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
         // Format date and time parts in browser's locale, but as "naive" (no shifting)
-        const browserLocale = navigator.language || (navigator.languages && navigator.languages[0]) || 'en-US';
-        const localeDate = dt.setLocale(browserLocale).toLocaleString(DateTime.DATE_MED);
-        const localeTime = dt.setLocale(browserLocale).toLocaleString(DateTime.TIME_WITH_SECONDS);
+        const browserLocale =
+          navigator?.language ||
+          (navigator?.languages && navigator?.languages[0]) ||
+          Settings.defaultLocale ||
+          'en-US';
+        const dtLocalized = dt.setLocale(browserLocale);
+        const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
+        const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);
 
         // Check if the original string contains timezone information
-        const hasTimezone = dateString.includes('Z') ||
-          /[+-]\d{2}:\d{2}$/.test(dateString) ||
-          /[+-]\d{4}$/.test(dateString);
+        const hasTimezone = /(?:[zZ]|[+-]\d{2}:\d{2}|[+-]\d{4})$/.test(dateString);
 
         if (hasTimezone) {
           // Get the offset in ±HH:MM
           const offset = dt.toFormat('ZZ');
-
-          // Get the abbreviation (e.g., "EET", "UTC")
-          const abbr = dt.offsetNameShort;
-
-          exif.dateShot = `${localeDate} ${localeTime} ${offset}${abbr ? ` (${abbr})` : ''}`;
+          exif.dateShot = `${localeDate} ${localeTime} ${offset}`;
         } else {
           // No timezone in original - show only date and time
           exif.dateShot = `${localeDate} ${localeTime}`;
