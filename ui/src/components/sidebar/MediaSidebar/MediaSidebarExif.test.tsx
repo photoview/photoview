@@ -150,18 +150,6 @@ describe('ExifDetails dateShot formatting', () => {
     __typename: 'Media',
   })
 
-  // Helper function to mock navigator for locale testing
-  const mockNavigator = (language: string | string[]) => {
-    Object.defineProperty(window, 'navigator', {
-      writable: true,
-      value: {
-        ...window.navigator,
-        language: Array.isArray(language) ? language[0] : language,
-        languages: Array.isArray(language) ? language : [language],
-      },
-    })
-  }
-
   describe('RFC3339 with timezone offset', () => {
     test('formats RFC3339 with positive timezone offset', () => {
       const media = createMediaWithDateShot('2023-07-15T14:30:45+02:00')
