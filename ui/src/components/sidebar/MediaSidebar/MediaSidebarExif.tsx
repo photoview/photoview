@@ -5,7 +5,7 @@ import { isNil } from '../../../helpers/utils'
 import { TranslationFn } from '../../../localization'
 import SidebarItem from '../SidebarItem'
 import { MediaSidebarMedia } from './MediaSidebar'
-import { DateTime, Settings } from 'luxon'
+import { DateTime } from 'luxon'
 
 const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
@@ -16,7 +16,7 @@ type ExifDetailsProps = {
 }
 
 const ExifDetails = ({ media }: ExifDetailsProps) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   let exifItems: JSX.Element[] = []
 
   const exifName = exifNameLookup(t)
@@ -49,7 +49,6 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
 
       if (dt.isValid) {
         // Format date and time parts in browser's locale, but as "naive" (no shifting)
-        const { i18n } = useTranslation()
         const dtLocalized = dt.setLocale(i18n.language);
         const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
         const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);

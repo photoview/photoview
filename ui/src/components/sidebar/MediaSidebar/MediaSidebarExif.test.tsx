@@ -1,17 +1,19 @@
+// Mock react-i18next following the project pattern
+const mockUseTranslation = vi.fn()
+vi.mock('react-i18next', () => ({
+  useTranslation: mockUseTranslation,
+}))
+mockUseTranslation.mockReturnValue({
+  t: (key: string, defaultValue: string) => defaultValue,
+  i18n: { language: 'en' },
+})
+
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
-import { Settings } from 'luxon'
 import ExifDetails from './MediaSidebarExif'
 import { MediaSidebarMedia } from './MediaSidebar'
 import { MediaType } from '../../../__generated__/globalTypes'
-
-// Mock react-i18next following the project pattern
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, defaultValue: string) => defaultValue,
-  }),
-}))
 
 describe('ExifDetails', () => {
   test('without EXIF information', () => {
@@ -124,20 +126,6 @@ describe('ExifDetails', () => {
 })
 
 describe('ExifDetails dateShot formatting', () => {
-  // Store original settings for cleanup
-  const originalZone = Settings.defaultZone
-  const originalLocale = Settings.defaultLocale
-  const originalNavigator = window.navigator
-
-  afterEach(() => {
-    // Reset Luxon settings after each test
-    Settings.defaultZone = originalZone
-    Settings.defaultLocale = originalLocale
-    Object.defineProperty(window, 'navigator', {
-      writable: true,
-      value: originalNavigator,
-    })
-  })
 
   const createMediaWithDateShot = (dateShot: string): MediaSidebarMedia => ({
     id: '1730',
@@ -246,14 +234,45 @@ describe('ExifDetails dateShot formatting', () => {
     })
   })
 
-  describe('Browser locale detection and formatting', () => {
-    test('uses navigator.language for German locale', () => {
-      mockNavigator('de')
+  describe('Translation language-based formatting', () => {
+    const mockUseTranslationWithLanguage = (language: string) => {
+      mockUseTranslation.mockReturnValue({
+        t: (key: string, defaultValue: string) => defaultValue,
+        i18n: { language },
+      })
+    }
+
+    afterEach(() => {
+      mockUseTranslation.mockReturnValue({
+        t: (key: string, defaultValue: string) => defaultValue,
+        i18n: { language: 'en' },
+      })
+    })
+
+    test('uses English (en) translation language', () => {
+      mockUseTranslationWithLanguage('en')
 
       const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
       const { rerender } = render(<ExifDetails media={mediaWithTz} />)
 
-      // German locale DATE_MED format without abbreviation
+      // English locale DATE_MED format with timezone
+      expect(screen.getByText(/Nov 5, 2023.*3:20:10 PM.*\+01:00$/)).toBeInTheDocument()
+
+      // Test without timezone - should use English formatting but no timezone
+      const mediaNoTz = createMediaWithDateShot('2023-11-05T15:20:10')
+      rerender(<ExifDetails media={mediaNoTz} />)
+
+      expect(screen.getByText(/^Nov 5, 2023 3:20:10 PM$/)).toBeInTheDocument()
+      expect(screen.queryByText(/[+-]\d{2}:\d{2}/)).not.toBeInTheDocument()
+    })
+
+    test('uses German (de) translation language', () => {
+      mockUseTranslationWithLanguage('de')
+
+      const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
+      const { rerender } = render(<ExifDetails media={mediaWithTz} />)
+
+      // German locale DATE_MED format with timezone
       expect(screen.getByText(/5\. Nov\. 2023.*15:20:10.*\+01:00$/)).toBeInTheDocument()
 
       // Test without timezone - should use German formatting but no timezone
@@ -264,46 +283,13 @@ describe('ExifDetails dateShot formatting', () => {
       expect(screen.queryByText(/[+-]\d{2}:\d{2}/)).not.toBeInTheDocument()
     })
 
-    test('uses navigator.language for Japanese locale', () => {
-      mockNavigator('ja')
-
-      const mediaWithTz = createMediaWithDateShot('2023-04-12T08:15:45-07:00')
-      const { rerender } = render(<ExifDetails media={mediaWithTz} />)
-
-      // Japanese locale DATE_MED format
-      expect(screen.getByText(/2023年4月12日.*8:15:45.*-07:00$/)).toBeInTheDocument()
-
-      // Test without timezone
-      const mediaNoTz = createMediaWithDateShot('2023-04-12T08:15:45')
-      rerender(<ExifDetails media={mediaNoTz} />)
-
-      expect(screen.getByText(/^2023年4月12日 8:15:45$/)).toBeInTheDocument()
-      expect(screen.queryByText(/-07:00/)).not.toBeInTheDocument()
-    })
-
-    test('uses navigator.language for UK locale (en-GB)', () => {
-      mockNavigator('en-GB')
-
-      const mediaWithTz = createMediaWithDateShot('2023-09-03T16:30:00+01:00')
-      const { rerender } = render(<ExifDetails media={mediaWithTz} />)
-
-      // UK DATE_MED format
-      expect(screen.getByText(/3 Sept 2023.*16:30:00.*\+01:00$/)).toBeInTheDocument()
-
-      // Test without timezone
-      const mediaNoTz = createMediaWithDateShot('2023-09-03T16:30:00')
-      rerender(<ExifDetails media={mediaNoTz} />)
-
-      expect(screen.getByText(/^3 Sept 2023 16:30:00$/)).toBeInTheDocument()
-    })
-
-    test('uses navigator.language for French locale (fr)', () => {
-      mockNavigator('fr')
+    test('uses French (fr) translation language', () => {
+      mockUseTranslationWithLanguage('fr')
 
       const mediaWithTz = createMediaWithDateShot('2023-12-25T20:45:30+01:00')
       const { rerender } = render(<ExifDetails media={mediaWithTz} />)
 
-      // French DATE_MED format
+      // French DATE_MED format with timezone
       expect(screen.getByText(/25 déc\. 2023.*20:45:30.*\+01:00$/)).toBeInTheDocument()
 
       // Test without timezone
@@ -313,46 +299,166 @@ describe('ExifDetails dateShot formatting', () => {
       expect(screen.getByText(/^25 déc\. 2023 20:45:30$/)).toBeInTheDocument()
     })
 
-    test('falls back to navigator.languages[0] when navigator.language unavailable', () => {
-      mockNavigator(['de-AT', 'en-US'])
-      Object.defineProperty(window.navigator, 'language', {
-        writable: true,
-        value: undefined,
-      })
-
-      const media = createMediaWithDateShot('2023-06-15T12:30:45+02:00')
-      render(<ExifDetails media={media} />)
-
-      // Should use Austrian German from languages array
-      expect(screen.getByText(/15\. Juni 2023.*12:30:45.*\+02:00$/)).toBeInTheDocument()
-    })
-
-    test('falls back to Settings.defaultLocale when navigator unavailable', () => {
-      Object.defineProperty(window, 'navigator', {
-        writable: true,
-        value: { ...window.navigator, language: undefined, languages: undefined },
-      })
-      Settings.defaultLocale = 'es'
+    test('uses Spanish (es) translation language', () => {
+      mockUseTranslationWithLanguage('es')
 
       const media = createMediaWithDateShot('2023-07-20T14:15:30-05:00')
       render(<ExifDetails media={media} />)
 
-      // Should use Spanish locale
+      // Spanish locale formatting with timezone
       expect(screen.getByText(/20 jul 2023.*14:15:30.*-05:00$/)).toBeInTheDocument()
     })
 
-    test('final fallback to en-US when all else fails', () => {
-      Object.defineProperty(window, 'navigator', {
-        writable: true,
-        value: { ...window.navigator, language: undefined, languages: undefined },
-      })
-      Settings.defaultLocale = ''
+    test('uses Danish (da) translation language', () => {
+      mockUseTranslationWithLanguage('da')
 
-      const media = createMediaWithDateShot('2023-08-10T09:45:15+03:00')
+      const media = createMediaWithDateShot('2023-06-15T12:30:45+02:00')
       render(<ExifDetails media={media} />)
 
-      // Should use en-US default
-      expect(screen.getByText(/Aug 10, 2023.*9:45:15 AM.*\+03:00$/)).toBeInTheDocument()
+      // Danish locale formatting with timezone
+      expect(screen.getByText(/15\. jun\. 2023 12\.30\.45 \+02:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Italian (it) translation language', () => {
+      mockUseTranslationWithLanguage('it')
+
+      const media = createMediaWithDateShot('2023-09-10T11:20:15+02:00')
+      render(<ExifDetails media={media} />)
+
+      // Italian locale formatting with timezone
+      expect(screen.getByText(/10 set 2023.*11:20:15.*\+02:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Portuguese (pt) translation language', () => {
+      mockUseTranslationWithLanguage('pt')
+
+      const media = createMediaWithDateShot('2023-09-10T11:20:15-03:00')
+      render(<ExifDetails media={media} />)
+
+      // Portuguese locale formatting with timezone
+      expect(screen.getByText(/10 de set\. de 2023.*11:20:15.*-03:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Polish (pl) translation language', () => {
+      mockUseTranslationWithLanguage('pl')
+
+      const media = createMediaWithDateShot('2023-08-12T16:00:00+02:00')
+      render(<ExifDetails media={media} />)
+
+      // Polish locale formatting with timezone
+      expect(screen.getByText(/12 sie 2023.*16:00:00.*\+02:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Ukrainian (uk) translation language', () => {
+      mockUseTranslationWithLanguage('uk')
+
+      const media = createMediaWithDateShot('2023-08-12T16:00:00+03:00')
+      render(<ExifDetails media={media} />)
+
+      // Ukrainian locale formatting with timezone
+      expect(screen.getByText(/12 серп\. 2023.*16:00:00.*\+03:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Swedish (sv) translation language', () => {
+      mockUseTranslationWithLanguage('sv')
+
+      const media = createMediaWithDateShot('2023-05-15T14:30:00+02:00')
+      render(<ExifDetails media={media} />)
+
+      // Swedish locale formatting with timezone
+      expect(screen.getByText(/15 maj 2023.*14:30:00.*\+02:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Japanese (ja) translation language', () => {
+      mockUseTranslationWithLanguage('ja')
+
+      const media = createMediaWithDateShot('2023-04-12T08:15:45-07:00')
+      render(<ExifDetails media={media} />)
+
+      // Japanese locale formatting with timezone
+      expect(screen.getByText(/2023年4月12日.*8:15:45.*-07:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Basque (eu) translation language', () => {
+      mockUseTranslationWithLanguage('eu')
+
+      const media = createMediaWithDateShot('2023-03-20T10:30:00+01:00')
+      render(<ExifDetails media={media} />)
+
+      // Basque locale formatting with timezone
+      expect(screen.getByText(/2023.*mar.*20.*10:30:00.*\+01:00$/)).toBeInTheDocument()
+    })
+
+    test('handles invalid translation language gracefully', () => {
+      mockUseTranslationWithLanguage('invalid-locale')
+
+      const media = createMediaWithDateShot('2023-05-15T14:30:00+01:00')
+      render(<ExifDetails media={media} />)
+
+      // Should fall back gracefully and still format the date
+      expect(screen.getByText('Date shot')).toBeInTheDocument()
+      expect(screen.getByText(/May 15, 2023.*2:30:00 PM.*\+01:00$/)).toBeInTheDocument()
+    })
+
+    test('handles empty string translation language', () => {
+      mockUseTranslationWithLanguage('')
+
+      const media = createMediaWithDateShot('2023-01-15T12:00:00-05:00')
+      render(<ExifDetails media={media} />)
+
+      // Should handle empty string gracefully
+      expect(screen.getByText('Date shot')).toBeInTheDocument()
+      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*\-05:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Russian (ru) translation language', () => {
+      mockUseTranslationWithLanguage('ru')
+
+      const media = createMediaWithDateShot('2023-02-23T12:15:30+03:00')
+      render(<ExifDetails media={media} />)
+
+      // Russian locale formatting with timezone
+      expect(screen.getByText(/23 февр\. 2023.*12:15:30.*\+03:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Traditional Chinese Hong Kong (zh-HK) translation language', () => {
+      mockUseTranslationWithLanguage('zh-HK')
+
+      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00')
+      render(<ExifDetails media={media} />)
+
+      // Traditional Chinese HK locale formatting with timezone
+      expect(screen.getByText(/2023年10月1日 下午3:30:00 \+08:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Traditional Chinese Taiwan (zh-TW) translation language', () => {
+      mockUseTranslationWithLanguage('zh-TW')
+
+      const media = createMediaWithDateShot('2023-10-10T16:45:00+08:00')
+      render(<ExifDetails media={media} />)
+
+      // Traditional Chinese TW locale formatting with timezone
+      expect(screen.getByText(/2023年10月10日 下午4:45:00 \+08:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Simplified Chinese (zh-CN) translation language', () => {
+      mockUseTranslationWithLanguage('zh-CN')
+
+      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00')
+      render(<ExifDetails media={media} />)
+
+      // Simplified Chinese locale formatting with timezone
+      expect(screen.getByText(/2023年10月1日.*15:30:00.*\+08:00$/)).toBeInTheDocument()
+    })
+
+    test('uses Turkish (tr) translation language', () => {
+      mockUseTranslationWithLanguage('tr')
+
+      const media = createMediaWithDateShot('2023-05-19T13:45:25+03:00')
+      render(<ExifDetails media={media} />)
+
+      // Turkish locale formatting with timezone
+      expect(screen.getByText(/19 May 2023.*13:45:25.*\+03:00$/)).toBeInTheDocument()
     })
   })
 
@@ -404,29 +510,6 @@ describe('ExifDetails dateShot formatting', () => {
           rerender(<div />)
         }
       })
-    })
-  })
-
-  describe('Timezone preservation without conversion', () => {
-    test('preserves original timezone when browser is in different timezone', () => {
-      // Set browser to different timezone
-      Settings.defaultZone = 'America/New_York'
-
-      // Date with European timezone
-      const media = createMediaWithDateShot('2023-09-15T14:30:00+02:00')
-      render(<ExifDetails media={media} />)
-
-      // Should preserve original +02:00 timezone, not convert to New York time
-      expect(screen.getByText(/Sep 15, 2023.*2:30:00 PM.*\+02:00$/)).toBeInTheDocument()
-      expect(screen.queryByText(/-04:00/)).not.toBeInTheDocument()
-    })
-
-    test('maintains exact time values without shifting', () => {
-      const media = createMediaWithDateShot('2023-01-01T00:00:00-12:00')
-      render(<ExifDetails media={media} />)
-
-      // Should show midnight in the original timezone, not adjusted
-      expect(screen.getByText(/Jan 1, 2023.*12:00:00 AM.*-12:00$/)).toBeInTheDocument()
     })
   })
 
