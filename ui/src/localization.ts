@@ -98,9 +98,9 @@ export const loadTranslations = () => {
         })
         return
       case LanguageTranslation.Ukrainian:
-        import('./extractedTranslations/ua/translation.json').then(language => {
-          i18n.addResourceBundle('ua', 'translation', language)
-          i18n.changeLanguage('ua')
+        import('./extractedTranslations/uk/translation.json').then(language => {
+          i18n.addResourceBundle('uk', 'translation', language)
+          i18n.changeLanguage('uk')
         })
         return
       case LanguageTranslation.German:
@@ -163,8 +163,9 @@ export const loadTranslations = () => {
           i18n.changeLanguage('ja')
         })
         return
+      default:
+        // Throw the error if we have an unhandled language
+        exhaustiveCheck(language)
     }
-
-    exhaustiveCheck(language)
   }, [data?.myUserPreferences.language])
 }
