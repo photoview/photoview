@@ -48,14 +48,13 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       const dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
-        // Format date and time parts in browser's locale, but as "naive" (no shifting)
+        // Format date and time parts in user's translation locale, but as "naive" (no shifting)
         const dtLocalized = dt.setLocale(i18n.language);
         const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
         const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);
 
         // Check if the original string contains timezone information
         const hasTimezone = /(?:[zZ]|[+-]\d{2}:\d{2}|[+-]\d{4})$/.test(dateString);
-
         if (hasTimezone) {
           // Get the offset in ±HH:MM
           const offset = dt.toFormat('ZZ');
