@@ -39,20 +39,14 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    // Use the original date from server.
-    // if (!isNil(exif.dateShot)) {
-    //   exif.dateShot = exif.dateShot
-    // }
-
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
     }
 
-    const coordinates = media.exif.coordinates
-    if (!isNil(coordinates)) {
-      exif.coordinates = `${
-        Math.round(coordinates.latitude * 1000000) / 1000000
-      }, ${Math.round(coordinates.longitude * 1000000) / 1000000}`
+    const coords = media.exif.coordinates
+    if (!isNil(coords)) {
+      exif.coordinates =
+        `${Math.round(coords.latitude * 1000000) / 1000000}, ${Math.round(coords.longitude * 1000000) / 1000000}`
     }
 
     const exposurePrograms = exposureProgramsLookup(t)

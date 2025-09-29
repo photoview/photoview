@@ -59,7 +59,8 @@ export const MY_TIMELINE_QUERY = gql`
 `
 
 export type TimelineActiveIndex = {
-  albumGroup: number
+  date: number
+  album: number
   media: number
 }
 
@@ -92,9 +93,9 @@ const TimelineGallery = () => {
     presenting: false,
     timelineGroups: [],
     activeIndex: {
-      media: -1,
-      album: -1,
       date: -1,
+      album: -1,
+      media: -1,
     },
   })
 
@@ -128,7 +129,7 @@ const TimelineGallery = () => {
   }, [data])
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       await client.resetStore()
       await refetch({
         onlyFavorites,
@@ -146,7 +147,7 @@ const TimelineGallery = () => {
     openPresentMode: event => {
       dispatchMedia({
         type: 'openPresentMode',
-        activeIndex: event.state.activeIndex,
+        activeIndex: mediaState.activeIndex,
       })
     },
   })
