@@ -205,7 +205,10 @@ func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, err
 
 		longStr := fmt.Sprintf("%f", *longitude)
 
-		return 0, 0, fmt.Errorf("incorrect GPS data: latitude %s should be (-90, 90), longitude %s should be (-180, 180)", latStr, longStr)
+		return 0, 0, fmt.Errorf(
+			"incorrect GPS data: latitude %s should be within [-90, 90], longitude %s should be within [-180, 180]",
+			latStr, longStr,
+		)
 	}
 
 	return *latitude, *longitude, nil

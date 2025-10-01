@@ -1,12 +1,25 @@
 package exif
 
 import (
+	"sync"
 	"testing"
 
 	_ "github.com/photoview/photoview/api/test_utils/flags"
 )
 
+func resetForTest() {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	if globalExifParser != nil {
+		_ = globalExifParser.Close()
+	}
+	globalExifParser = nil
+	// Allow Initialize() to run again in subsequent tests
+	globalInit = sync.Once{}
+}
+
 func TestParseWithoutInit(t *testing.T) {
+	resetForTest()
 	if _, err := Parse("./test_data/bird.jpg"); err == nil {
 		t.Fatalf("Parse() without Init() doesn't return an error")
 	}
