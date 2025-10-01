@@ -5,7 +5,7 @@
     "sort_by": "Ordenado por",
     "sort_direction": "Sentido da ordenação",
     "order_direction": {
-      "ascending": "Crescente",
+      "ascending": "Ascendente",
       "descending": "Decrescente"
     },
     "sorting_options": {
@@ -187,7 +187,7 @@
       },
       "confirm_delete_user": {
         "action": "Apagar {{user}}",
-        "description": "<0>Tem a certeza que pretende apagar <1></1>?</0><p>Esta ação não pode ser desfeita</p>",
+        "description": "<0>Tem a certeza de que pretende apagar <1></1>?</0><p>Esta ação não pode ser desfeita.</p>",
         "title": "Apagar utilizador"
       },
       "password_reset": {
