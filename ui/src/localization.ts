@@ -164,6 +164,10 @@ export const loadTranslations = () => {
         })
         return
       default:
+        import('./extractedTranslations/en/translation.json').then(language => {
+          i18n.addResourceBundle('en', 'translation', language)
+          i18n.changeLanguage('en')
+        })
         // Throw the error if we have an unhandled language
         exhaustiveCheck(language)
     }

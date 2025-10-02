@@ -1,8 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Показать только избранные",
-    "sort": "",
+    "sort": "Сортировка",
     "sort_by": "Отсортировать по",
+    "sort_direction": "Направление сортировки",
+    "order_direction": {
+      "ascending": "По возрастанию",
+      "descending": "По убыванию"
+    },
     "sorting_options": {
       "date_imported": "Дата импортирования",
       "date_shot": "Дата снимка",

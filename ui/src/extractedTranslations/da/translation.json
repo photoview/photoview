@@ -3,6 +3,11 @@
     "only_favorites": "Vis kun favoritter",
     "sort": "Sorter",
     "sort_by": "Sorter efter",
+    "sort_direction": "Sorteringsretning",
+    "order_direction": {
+      "ascending": "Stigende",
+      "descending": "Faldende"
+    },
     "sorting_options": {
       "date_imported": "Dato for importering",
       "date_shot": "Dato",

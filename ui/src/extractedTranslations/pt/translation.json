@@ -3,6 +3,11 @@
     "only_favorites": "Mostrar apenas os favoritos",
     "sort": "Ordenar",
     "sort_by": "Ordenado por",
+    "sort_direction": "Sentido da ordenação",
+    "order_direction": {
+      "ascending": "Ascendente",
+      "descending": "Decrescente"
+    },
     "sorting_options": {
       "date_imported": "Data de importação",
       "date_shot": "Data da foto",
@@ -178,11 +183,11 @@
     },
     "users": {
       "add_user": {
-        "submit": "Adiiconar utilizador"
+        "submit": "Adicionar utilizador"
       },
       "confirm_delete_user": {
         "action": "Apagar {{user}}",
-        "description": "<0>Tem a certeza que pretende aapagar <1></1>?</0><p>Esta ação não pode ser desfeita</p>",
+        "description": "<0>Tem a certeza de que pretende apagar <1></1>?</0><p>Esta ação não pode ser desfeita.</p>",
         "title": "Apagar utilizador"
       },
       "password_reset": {

@@ -3,6 +3,11 @@
     "only_favorites": "Показати тільки улюблені",
     "sort": "Сортування",
     "sort_by": "Сортувати за",
+    "sort_direction": "Напрям сортування",
+    "order_direction": {
+      "ascending": "За зростанням",
+      "descending": "За спаданням"
+    },
     "sorting_options": {
       "date_imported": "Дата імпортування",
       "date_shot": "Дата фотографування",

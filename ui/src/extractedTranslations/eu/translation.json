@@ -3,6 +3,11 @@
     "only_favorites": "Erakutsi gogokoak bakarrik",
     "sort": "Sailkatu",
     "sort_by": "Sailkatu honen arabera",
+    "sort_direction": "Sailkatze norabidea",
+    "order_direction": {
+      "ascending": "Goranzkoa",
+      "descending": "Beheranzkoa"
+    },
     "sorting_options": {
       "date_imported": "Gehitutako data",
       "date_shot": "Egindako data",

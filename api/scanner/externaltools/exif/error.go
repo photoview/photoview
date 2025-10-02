@@ -20,7 +20,7 @@ func (e parseFailure) String() string {
 type ParseFailures []parseFailure
 
 func (e *ParseFailures) Append(key string, err error) {
-	if errors.Is(err, exiftool.ErrKeyNotFound) {
+	if err == nil || errors.Is(err, exiftool.ErrKeyNotFound) {
 		return
 	}
 

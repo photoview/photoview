@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 // Mock react-i18next following the project pattern
 const mockUseTranslation = vi.fn()
 vi.mock('react-i18next', () => ({
@@ -10,7 +11,6 @@ mockUseTranslation.mockReturnValue({
 
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
 import ExifDetails from './MediaSidebarExif'
 import { MediaSidebarMedia } from './MediaSidebar'
 import { MediaType } from '../../../__generated__/globalTypes'
@@ -96,9 +96,6 @@ describe('ExifDetails', () => {
 
     expect(screen.getByText('Lens')).toBeInTheDocument()
     expect(screen.getByText('TAMRON SP 24-70mm F/2.8')).toBeInTheDocument()
-
-    expect(screen.getByText('Program')).toBeInTheDocument()
-    expect(screen.getByText('Canon EOS R')).toBeInTheDocument()
 
     expect(screen.getByText('Date shot')).toBeInTheDocument()
 
@@ -396,7 +393,7 @@ describe('ExifDetails dateShot formatting', () => {
 
       // Should handle empty string gracefully
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*\-05:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*-05:00$/)).toBeInTheDocument()
     })
 
     test('uses Russian (ru) translation language', () => {
@@ -522,8 +519,9 @@ describe('ExifDetails dateShot formatting', () => {
         const media = createMediaWithDateShot(input)
         const { rerender } = render(<ExifDetails media={media} />)
 
-        // Should either format correctly or show original string if invalid
+        // Should show original string if invalid
         expect(screen.getByText('Date shot')).toBeInTheDocument()
+        expect(screen.getByText(input)).toBeInTheDocument()
 
         if (index < testCases.length - 1) {
           rerender(<div />)

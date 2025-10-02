@@ -3,6 +3,11 @@
     "only_favorites": "Sadece favorileri göster",
     "sort": "Sırala",
     "sort_by": "Sırala:",
+    "sort_direction": "Sıralama yönü",
+    "order_direction": {
+      "ascending": "Artan",
+      "descending": "Azalan"
+    },
     "sorting_options": {
       "date_imported": "Alındığı tarih",
       "date_shot": "Çekildiği tarih",

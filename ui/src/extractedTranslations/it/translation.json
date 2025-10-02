@@ -3,6 +3,11 @@
     "only_favorites": "Mostra solo i preferiti",
     "sort": "Ordina",
     "sort_by": "Ordina per",
+    "sort_direction": "Direzione ordinamento",
+    "order_direction": {
+      "ascending": "Crescente",
+      "descending": "Decrescente"
+    },
     "sorting_options": {
       "date_imported": "Data importazione",
       "date_shot": "Data scatto",

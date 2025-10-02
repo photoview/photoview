@@ -59,7 +59,7 @@ const SortingOptions = ({
     }
   }
 
-  const changeOrderBy = (value: string) => {
+  const changeOrderBy = (value: SortingOptionValue) => {
     if (setOrdering) {
       setOrdering({ orderBy: value })
     }
