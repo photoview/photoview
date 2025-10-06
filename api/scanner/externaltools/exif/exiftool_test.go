@@ -4,20 +4,11 @@ import (
 	"math"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/stretchr/testify/assert"
 )
-
-func mustParseTimeInLocal(t *testing.T, str string) time.Time {
-	ret, err := time.ParseInLocation(time.DateTime, str, time.Local)
-	if err != nil {
-		t.Fatalf("invalid time")
-	}
-	return ret
-}
 
 func TestExifParser(t *testing.T) {
 	parser, err := NewExifParser()
