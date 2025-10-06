@@ -2,6 +2,7 @@ package scanner_tasks
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -53,11 +54,21 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 		return fmt.Errorf("failed to save media exif to database: %w", err)
 	}
 
-	if exifData.DateShot != nil && !exifData.DateShot.Equal(media.DateShot) {
-		media.DateShot = *exifData.DateShot
-		if err := tx.Save(media).Error; err != nil {
-			return fmt.Errorf("failed to update media date_shot: %w", err)
+	if exifData.DateShotStr == nil {
+		return nil
+	}
+
+	dateShot, err := time.Parse(models.RFC3339Milli, *exifData.DateShotStr)
+	if err != nil {
+		dateShot, err = time.ParseInLocation(models.RFC3339MilliWithoutTimezone, *exifData.DateShotStr, time.Local)
+		if err != nil {
+			return fmt.Errorf("invalid dateshot when parsing exif data: %w", err)
 		}
+	}
+
+	media.DateShot = dateShot
+	if err := tx.Save(media).Error; err != nil {
+		return fmt.Errorf("failed to update media date_shot: %w", err)
 	}
 
 	return nil
