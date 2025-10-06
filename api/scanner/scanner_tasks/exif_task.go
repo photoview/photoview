@@ -62,11 +62,11 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 	if err != nil {
 		dateShot, err = time.ParseInLocation(models.RFC3339MilliWithoutTimezone, *exifData.DateShotStr, time.Local)
 		if err != nil {
-			return fmt.Errorf("invalid dateshot when parsing exif data: %w", err)
+			return fmt.Errorf("invalid dateshot %q when parsing exif data: %w", *exifData.DateShotStr, err)
 		}
 	}
 
-	media.DateShot = dateShot
+	media.DateShot = dateShot.UTC()
 	if err := tx.Save(media).Error; err != nil {
 		return fmt.Errorf("failed to update media date_shot: %w", err)
 	}
