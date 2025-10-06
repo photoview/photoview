@@ -24,7 +24,7 @@ func MigrateDateShot(db *gorm.DB) error {
 			}
 
 			if err := tx.Model(&models.MediaEXIF{}).Where("id = ?", id).Update("date_shot_str", dateShot.Format(models.RFC3339MilliWithoutTimezone)).Error; err != nil {
-				return fmt.Errorf("can't update rows for date_shot_at: %w", err)
+				return fmt.Errorf("can't update rows for date_shot_str: %w", err)
 			}
 		}
 
