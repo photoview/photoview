@@ -1,7 +1,6 @@
 package exif
 
 import (
-	"context"
 	"fmt"
 	"sync"
 
@@ -22,7 +21,7 @@ func Initialize() (func(), error) {
 		return nil, err
 	}
 
-	log.Info(context.Background(), "Found exiftool")
+	log.Info(nil, "Found exiftool")
 
 	return func() {
 		globalMu.Lock()
@@ -33,7 +32,7 @@ func Initialize() (func(), error) {
 		}
 
 		if err := globalExifParser.Close(); err != nil {
-			log.Error(context.Background(), "Cleanup exiftool error", "error", err)
+			log.Error(nil, "Cleanup exiftool error", "error", err)
 			return
 		}
 		globalExifParser = nil
@@ -56,7 +55,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	}
 
 	if len(failures) > 0 {
-		log.Warn(context.Background(), "Parse exif failures", "filepath", filepath, "errors", failures)
+		log.Warn(nil, "Parse exif failures", "file path", filepath, "errors", failures)
 	}
 
 	return exif, nil
