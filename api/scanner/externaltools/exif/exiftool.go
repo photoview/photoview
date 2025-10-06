@@ -94,7 +94,7 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 	if err != nil {
 		failures.Append("DateShot", err)
 	} else {
-		retEXIF.DateShot = &date
+		retEXIF.DateShotStr = &date
 		foundExif = true
 	}
 
@@ -192,7 +192,7 @@ func extractValidGPSData(meta *exiftool.FileMetadata) (float64, float64, error) 
 	return *latitude, *longitude, nil
 }
 
-func extractDateShot(meta *exiftool.FileMetadata) (time.Time, error) {
+func extractDateShot(meta *exiftool.FileMetadata) (string, error) {
 	var loc *time.Location
 
 TIMEZONE:
@@ -230,8 +230,8 @@ TIMEZONE:
 		{"SubSecCreateDate", true},
 		{"DateTimeOriginal", false},
 		{"GPSDateTime", false},
-		{"MediaCreateDate", false},
-		{"TrackCreateDate", false},
+		{"MediaCreateDate", true},
+		{"TrackCreateDate", true},
 		{"FileCreateDate", false},
 		{"CreateDate", false},
 	} {
@@ -242,24 +242,24 @@ TIMEZONE:
 
 		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
 			if !pattern.originalTimezone && loc != nil {
-				return date.In(loc), nil
+				return date.In(loc).Format(models.RFC3339Milli), nil
 			}
 
-			return date, nil
+			return date.Format(models.RFC3339Milli), nil
 		}
 
 		if loc != nil {
 			if date, err := time.ParseInLocation(layoutWithOffset, dateStr+loc.String(), loc); err == nil {
-				return date, nil
+				return date.Format(models.RFC3339Milli), nil
 			}
 		}
 
 		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
-			return date, nil
+			return date.Format(models.RFC3339MilliWithoutTimezone), nil
 		}
 	}
 
-	return time.Time{}, exiftool.ErrKeyNotFound
+	return "", exiftool.ErrKeyNotFound
 }
 
 func calculateTimezoneWithUtcGps(meta *exiftool.FileMetadata) (*time.Location, error) {
