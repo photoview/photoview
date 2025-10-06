@@ -429,6 +429,89 @@ func TestExtractDateShot(t *testing.T) {
 			"2025-12-01T01:00:01.000",
 			false,
 		},
+
+		{
+			"45MinuteOffset",
+			map[string]string{
+				"DateTimeOriginal":   "2023:03:15 10:00:00",
+				"OffsetTimeOriginal": "+05:45",
+			},
+			"2023-03-15T10:00:00.000+05:45",
+			false,
+		},
+		{
+			"LargePositiveOffset",
+			map[string]string{
+				"CreateDate": "2024:02:29 23:59:59",
+				"OffsetTime": "+14:00",
+			},
+			"2024-02-29T23:59:59.000+14:00",
+			false,
+		},
+		{
+			"YearTransition",
+			map[string]string{
+				"DateTimeOriginal":   "2024:12:31 23:59:59",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"2024-12-31T23:59:59.000-05:00",
+			false,
+		},
+
+		{
+			"InvalidMonth",
+			map[string]string{
+				"DateTimeOriginal":   "2025:13:00 00:00:00",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"",
+			true,
+		},
+		{
+			"InvalidDay",
+			map[string]string{
+				"DateTimeOriginal":   "2025:12:32 00:00:00",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"",
+			true,
+		},
+		{
+			"InvalidHour",
+			map[string]string{
+				"DateTimeOriginal":   "2025:12:31 24:00:00",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"",
+			true,
+		},
+		{
+			"InvalidMinute",
+			map[string]string{
+				"DateTimeOriginal":   "2025:12:31 23:60:00",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"",
+			true,
+		},
+		{
+			"InvalidSecond",
+			map[string]string{
+				"DateTimeOriginal":   "2025:12:31 23:00:60",
+				"OffsetTimeOriginal": "-05:00",
+			},
+			"",
+			true,
+		},
+		{
+			"InvalidTimezone",
+			map[string]string{
+				"DateTimeOriginal":   "2025:12:31 23:00:00",
+				"OffsetTimeOriginal": "-0a:00",
+			},
+			"2025-12-31T23:00:00.000",
+			false,
+		},
 	}
 
 	for _, tc := range tests {
