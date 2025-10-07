@@ -132,6 +132,7 @@ type ComplexityRoot struct {
 		Camera          func(childComplexity int) int
 		Coordinates     func(childComplexity int) int
 		DateShot        func(childComplexity int) int
+		DateShotStr     func(childComplexity int) int
 		Description     func(childComplexity int) int
 		Exposure        func(childComplexity int) int
 		ExposureProgram func(childComplexity int) int
@@ -705,6 +706,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MediaEXIF.DateShot(childComplexity), true
+	case "MediaEXIF.dateShotStr":
+		if e.complexity.MediaEXIF.DateShotStr == nil {
+			break
+		}
+
+		return e.complexity.MediaEXIF.DateShotStr(childComplexity), true
 	case "MediaEXIF.description":
 		if e.complexity.MediaEXIF.Description == nil {
 			break
@@ -3640,6 +3647,8 @@ func (ec *executionContext) fieldContext_Media_exif(_ context.Context, field gra
 				return ec.fieldContext_MediaEXIF_lens(ctx, field)
 			case "dateShot":
 				return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
+			case "dateShotStr":
+				return ec.fieldContext_MediaEXIF_dateShotStr(ctx, field)
 			case "exposure":
 				return ec.fieldContext_MediaEXIF_exposure(ctx, field)
 			case "aperture":
@@ -4247,6 +4256,35 @@ func (ec *executionContext) fieldContext_MediaEXIF_dateShot(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MediaEXIF_dateShotStr(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MediaEXIF_dateShotStr,
+		func(ctx context.Context) (any, error) {
+			return obj.DateShotStr, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MediaEXIF_dateShotStr(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MediaEXIF",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11657,6 +11695,8 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._MediaEXIF_lens(ctx, field, obj)
 		case "dateShot":
 			out.Values[i] = ec._MediaEXIF_dateShot(ctx, field, obj)
+		case "dateShotStr":
+			out.Values[i] = ec._MediaEXIF_dateShotStr(ctx, field, obj)
 		case "exposure":
 			out.Values[i] = ec._MediaEXIF_exposure(ctx, field, obj)
 		case "aperture":

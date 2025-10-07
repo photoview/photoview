@@ -42,6 +42,8 @@ type MediaEXIF {
   lens: String
   dateShot: Time
   "The exposure time of the image"
+  dateShotStr: String
+  "The exposure time of the image, rfc3339 in string. It may not have a timezone"
   exposure: Float
   "The aperature stops of the image"
   aperture: Float
