@@ -201,6 +201,11 @@ func MigrateDatabase(db *gorm.DB) error {
 		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
 	}
 
+	// Migrate DateShot to DateShotStr
+	if err := migrations.MigrateDateShot(db); err != nil {
+		log.Printf("Failed to migrate DateShot to DateShotStr: %v", err)
+	}
+
 	return nil
 }
 
