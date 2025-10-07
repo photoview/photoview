@@ -101,7 +101,7 @@ We provide limited support for the standard deployment scenarios on the platform
 
 - [SQLite](https://sqlite.org/): built-in DBMS, no additional service or maintenance required; lowest performance and no scalability.
 - [MariaDB](https://mariadb.org/) LTS version: default choice. Runs as an additional service; good balance between performance and maintenance effort.
-- [PostgreSQL](https://www.postgresql.org/) 16 and 17: typically the best performance. Runs as an additional service; requires slightly more maintenance.
+- [PostgreSQL](https://www.postgresql.org/) 18 and 17: typically the best performance. Runs as an additional service; requires slightly more maintenance.
 
 We support running Photoview with one of these DBMSs when used as a dedicated instance for Photoview only.
 If you share a DBMS among multiple services, our support is limited to SQL issues. DB management and connection-related

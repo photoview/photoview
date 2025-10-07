@@ -159,7 +159,7 @@ services:
   ## Uncomment the `postgres-autoupgrade` service if you want to upgrade PostgreSQL automatically, or follow the
   ## official PostgreSQL upgrade guide https://www.postgresql.org/docs/current/upgrading.html manually.
   ## Don't forget to uncomment the 3 `depends_on` lines in the `postgres` service.
-  ## This service will upgrade the PostgreSQL database to the version 17.
+  ## This service will upgrade the PostgreSQL database to the version, specified in the `image` tag.
   ## Read more on the https://hub.docker.com/r/pgautoupgrade/pgautoupgrade
   ## Tip: Back up the Photoview data before autoupgrade to a new PostgreSQL version.
   ## It is an optional service to simplify the upgrade process. You can also upgrade PostgreSQL manually.
