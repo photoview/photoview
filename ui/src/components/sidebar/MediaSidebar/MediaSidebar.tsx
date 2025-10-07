@@ -70,7 +70,7 @@ export const SIDEBAR_MEDIA_QUERY = gql`
         camera
         maker
         lens
-        dateShot
+        dateShotStr
         exposure
         aperture
         iso

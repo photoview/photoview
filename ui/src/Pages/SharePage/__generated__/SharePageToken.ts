@@ -122,7 +122,7 @@ export interface SharePageToken_shareToken_media_exif {
    * The name of the lens
    */
   lens: string | null;
-  dateShot: Time | null;
+  dateShotStr: string | null;
   /**
    * The exposure time of the image
    */

@@ -72,7 +72,7 @@ export const SHARE_ALBUM_QUERY = gql`
           camera
           maker
           lens
-          dateShot
+          dateShotStr
           exposure
           aperture
           iso

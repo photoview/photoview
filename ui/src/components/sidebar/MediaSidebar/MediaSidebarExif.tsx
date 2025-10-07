@@ -40,7 +40,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    const dateShot = exif.dateShotStr ? exif.dateShotStr : exif.dateShot
+    const dateShot = exif.dateShotStr
     if (dateShot && String(dateShot).trim().length > 0) {
       const dateString = String(dateShot).trim();
 
