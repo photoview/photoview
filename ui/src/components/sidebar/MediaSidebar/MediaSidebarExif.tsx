@@ -147,7 +147,7 @@ const exifNameLookup = (t: TranslationFn): { [key: string]: string } => ({
   maker: t('sidebar.media.exif.name.maker', 'Maker'),
   lens: t('sidebar.media.exif.name.lens', 'Lens'),
   exposureProgram: t('sidebar.media.exif.name.exposure_program', 'Program'),
-  dateShot: t('sidebar.media.exif.name.date_shot', 'Date shot'),
+  dateShotStr: t('sidebar.media.exif.name.date_shot', 'Date shot'),
   exposure: t('sidebar.media.exif.name.exposure', 'Exposure'),
   aperture: t('sidebar.media.exif.name.aperture', 'Aperture'),
   iso: t('sidebar.media.exif.name.iso', 'ISO'),
