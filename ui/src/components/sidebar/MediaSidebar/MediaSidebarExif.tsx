@@ -58,10 +58,10 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
         if (hasTimezone) {
           // Get the offset in ±HH:MM
           const offset = dt.toFormat('ZZ');
-          exif.dateShot = `${localeDate} ${localeTime} ${offset}`;
+          exif.dateShotStr = `${localeDate} ${localeTime} ${offset}`;
         } else {
           // No timezone in original - show only date and time
-          exif.dateShot = `${localeDate} ${localeTime}`;
+          exif.dateShotStr = `${localeDate} ${localeTime}`;
         }
       }
     }
