@@ -72,7 +72,9 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		// Allow caching the resource
 		w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
-		w.Header().Set("Content-Type", mediaURL.ContentType)
+		if mediaURL.ContentType != "" {
+			w.Header().Set("Content-Type", mediaURL.ContentType)
+		}
 
 		http.ServeFile(w, r, cachedPath)
 	})

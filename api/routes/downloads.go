@@ -59,6 +59,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 
 		// Do not allow caching
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Content-Type", "application/zip")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", album.Title))
 

@@ -137,8 +137,8 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
         \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
     -exec sh -c 'for file; do \
         gzip -k -f -9 "$file"; \
-        brotli -f -q 11 "$file"; \
-        zstd -f -19 "$file"; \
+        brotli -k -f -q 11 -s "$file"; \
+        zstd -k -f -19 -T0 --no-progress "$file"; \
     done' sh {} +
 
 WORKDIR /home/photoview

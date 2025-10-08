@@ -90,6 +90,12 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	relPath = strings.TrimPrefix(relPath, "/")
 	fullPath := filepath.Join(h.staticPath, relPath)
 
+	// Special case: root path should serve index.html
+	if relPath == "" {
+		h.serveIndexHTML(w, r)
+		return
+	}
+
 	ctx := context.WithValue(r.Context(), ctxKeyFullPath, fullPath)
 	ctx = context.WithValue(ctx, ctxKeyRelPath, relPath)
 	r = r.WithContext(ctx)
@@ -154,24 +160,7 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
 	_, err := os.Stat(fullPath)
 	if os.IsNotExist(err) {
 		// File does not exist, serve index.html (SPA routing)
-		indexPath := filepath.Join(h.staticPath, h.indexPath)
-
-		// Try to serve pre-compressed index.html first
-		if h.servePrecompressedFile(w, r) {
-			return
-		}
-
-		// Fallback to uncompressed index.html
-		if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-			// Index file doesn't exist - this is a serious configuration error, not a regular 404
-			log.Error(r.Context(), "Error: index.html not found", "index.html path:", indexPath)
-			http.Error(w, "Application index file not found", http.StatusInternalServerError)
-			return
-		}
-
-		// Set cache headers for index.html (short cache, must revalidate)
-		w.Header().Set("Cache-Control", "public, max-age=3600, must-revalidate")
-		http.ServeFile(w, r, indexPath)
+		h.serveIndexHTML(w, r)
 		return
 	} else if err != nil {
 		// If we got an error (that wasn't that the file doesn't exist) stating the file,
@@ -199,7 +188,7 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Parse Accept-Encoding header
-	acceptEncoding := r.Header.Get("Accept-Encoding")
+	acceptEncoding := filterZeroQuality(r.Header.Get("Accept-Encoding"))
 	if acceptEncoding == "" {
 		return false
 	}
@@ -225,7 +214,7 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 				}
 
 				w.Header().Set("Content-Encoding", enc.name)
-				w.Header().Set("Vary", "Accept-Encoding")
+				w.Header().Add("Vary", "Accept-Encoding")
 				// Set cache headers based on request path
 				h.setCacheHeaders(w, getRelPath(r.Context()))
 
@@ -239,9 +228,33 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 	return false
 }
 
+// serveIndexHTML serves index.html with pre-compressed priority
+func (h SpaHandler) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
+	indexPath := filepath.Join(h.staticPath, h.indexPath)
+
+	// Try to serve pre-compressed index.html first
+	// Update context to point to index.html instead of originally requested path
+	idxCtx := context.WithValue(r.Context(), ctxKeyFullPath, indexPath)
+	idxCtx = context.WithValue(idxCtx, ctxKeyRelPath, h.indexPath)
+	if h.servePrecompressedFile(w, r.WithContext(idxCtx)) {
+		return
+	}
+
+	// Fallback to uncompressed index.html
+	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
+		// Index file doesn't exist - this is a serious configuration error, not a regular 404
+		log.Error(r.Context(), "Error: index.html not found", "index.html path:", indexPath)
+		http.Error(w, "Application index file not found", http.StatusInternalServerError)
+		return
+	}
+
+	h.setCacheHeaders(w, h.indexPath)
+	http.ServeFile(w, r, indexPath)
+}
+
 // setCacheHeaders sets appropriate cache headers based on the request path
 func (h SpaHandler) setCacheHeaders(w http.ResponseWriter, relPath string) {
-	if strings.HasPrefix(relPath, "/assets/") {
+	if strings.HasPrefix(relPath, "assets/") {
 		// Long-term cache for fingerprinted assets
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	} else {
@@ -277,4 +290,31 @@ func getRelPath(ctx context.Context) string {
 		return v.(string)
 	}
 	return ""
+}
+
+// filterZeroQuality removes encodings with q=0 or q=0.0 from Accept-Encoding header
+func filterZeroQuality(acceptEncoding string) string {
+	// If no q params, return unchanged (fast path for most requests)
+	if !strings.Contains(acceptEncoding, "q=") {
+		return acceptEncoding
+	}
+
+	var filtered []string
+	parts := strings.Split(acceptEncoding, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		// Check if this encoding has q=0 or q=0.0
+		normalized := strings.ToLower(strings.ReplaceAll(part, " ", ""))
+		if strings.HasSuffix(normalized, ";q=0") || strings.HasSuffix(normalized, ";q=0.0") {
+			continue
+		}
+
+		filtered = append(filtered, part)
+	}
+
+	return strings.Join(filtered, ",")
 }

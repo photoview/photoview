@@ -119,5 +119,6 @@ func TestPhotoRoutes(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "cached-binary", rec.Body.String())
 		assert.Equal(t, "private, max-age=31536000, immutable", rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "image/jpeg", rec.Header().Get("Content-Type"))
 	})
 }
