@@ -127,7 +127,7 @@ describe('ExifDetails', () => {
 
 describe('ExifDetails dateShot formatting', () => {
 
-  const createMediaWithDateShot = (dateShotStr: string): MediaSidebarMedia => ({
+  const createMediaWithDateShot = (dateShotStr: string | null): MediaSidebarMedia => ({
     id: '1730',
     title: 'media_name.jpg',
     type: MediaType.Photo,
