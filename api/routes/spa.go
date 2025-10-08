@@ -188,7 +188,7 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Parse Accept-Encoding header
-	acceptEncoding := filterZeroQuality(r.Header.Get("Accept-Encoding"))
+	acceptEncoding := filterZeroQuality(strings.ToLower(r.Header.Get("Accept-Encoding")))
 	if acceptEncoding == "" {
 		return false
 	}
@@ -308,7 +308,7 @@ func filterZeroQuality(acceptEncoding string) string {
 		}
 
 		// Check if this encoding has q=0 or q=0.0
-		normalized := strings.ToLower(strings.ReplaceAll(part, " ", ""))
+		normalized := strings.ReplaceAll(part, " ", "")
 		if strings.HasSuffix(normalized, ";q=0") || strings.HasSuffix(normalized, ";q=0.0") {
 			continue
 		}
