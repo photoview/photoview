@@ -27,7 +27,7 @@ describe('ExifDetails', () => {
         camera: null,
         maker: null,
         lens: null,
-        dateShot: null,
+        dateShotStr: null,
         exposure: null,
         aperture: null,
         iso: null,
@@ -67,7 +67,7 @@ describe('ExifDetails', () => {
         camera: 'Canon EOS R',
         maker: 'Canon',
         lens: 'TAMRON SP 24-70mm F/2.8',
-        dateShot: '2021-01-23T20:50:18Z',
+        dateShotStr: '2021-01-23T20:50:18Z',
         exposure: 0.016666666666666666,
         aperture: 2.8,
         iso: 100,
@@ -127,7 +127,7 @@ describe('ExifDetails', () => {
 
 describe('ExifDetails dateShot formatting', () => {
 
-  const createMediaWithDateShot = (dateShot: string): MediaSidebarMedia => ({
+  const createMediaWithDateShot = (dateShotStr: string): MediaSidebarMedia => ({
     id: '1730',
     title: 'media_name.jpg',
     type: MediaType.Photo,
@@ -137,7 +137,7 @@ describe('ExifDetails dateShot formatting', () => {
       camera: null,
       maker: null,
       lens: null,
-      dateShot,
+      dateShotStr,
       exposure: null,
       aperture: null,
       iso: null,
