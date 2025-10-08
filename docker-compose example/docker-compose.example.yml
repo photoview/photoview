@@ -159,13 +159,13 @@ services:
   ## Uncomment the `postgres-autoupgrade` service if you want to upgrade PostgreSQL automatically, or follow the
   ## official PostgreSQL upgrade guide https://www.postgresql.org/docs/current/upgrading.html manually.
   ## Don't forget to uncomment the 3 `depends_on` lines in the `postgres` service.
-  ## This service will upgrade the PostgreSQL database to the version 17.
+  ## This service will upgrade the PostgreSQL database to the version, specified in the `image` tag.
   ## Read more on the https://hub.docker.com/r/pgautoupgrade/pgautoupgrade
   ## Tip: Back up the Photoview data before autoupgrade to a new PostgreSQL version.
   ## It is an optional service to simplify the upgrade process. You can also upgrade PostgreSQL manually.
   ## It is safe to keep it enabled, as if it detects no upgrade is needed, it exits immediately.
 #   postgres-autoupgrade:
-#     image: pgautoupgrade/pgautoupgrade:17-alpine
+#     image: pgautoupgrade/pgautoupgrade:18-alpine
 #     hostname: pgsql-upg
 #     container_name: pgsql-upg
 #     restart: "no"
@@ -179,11 +179,11 @@ services:
 #       ## - "/host/folder:/container/folder"
 #       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
 #       - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
-#       - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
+#       - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql" ## DO NOT REMOVE
 
-  ## Uncomment the `postgres` service if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
+## Uncomment the `postgres` service if PHOTOVIEW_DATABASE_DRIVER is set to `postgres` in the .env
 #  postgres:
-#    image: postgres:17-alpine
+#    image: postgres:18-alpine
 #    labels:
 #      - "com.centurylinklabs.watchtower.enable=true"
 #    hostname: photoview-pgsql
@@ -211,7 +211,7 @@ services:
 #      ## - "/host/folder:/container/folder"
 #      - "/etc/localtime:/etc/localtime:ro" ## use local time from host
 #      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
-#      - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql/data" ## DO NOT REMOVE
+#      - "${HOST_PHOTOVIEW_LOCATION}/database/postgres:/var/lib/postgresql" ## DO NOT REMOVE
 #    healthcheck:
 #      test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
 #      interval: 1m
