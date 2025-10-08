@@ -89,7 +89,7 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", graphql_endpoint.GraphqlEndpoint(db))
+	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db)))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)
@@ -120,12 +120,11 @@ func main() {
 		if !shouldServeUI {
 			log.Printf("Notice: UI is not served by the API (%s=0)", utils.EnvServeUI.GetName())
 		}
-
 	}
 
 	srv := &http.Server{
 		Addr:    apiListenURL.Host,
-		Handler: handlers.CompressHandler(rootRouter),
+		Handler: rootRouter,
 	}
 
 	setupGracefulShutdown(srv)
