@@ -39,34 +39,32 @@ func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 		return SpaHandler{}, fmt.Errorf("index path %s is not valid: %w", indexPath, err)
 	}
 
-	if stat, err := os.Stat(staticPathAbs); err != nil || !stat.IsDir() {
-		if os.IsNotExist(err) {
-			return SpaHandler{}, fmt.Errorf("static path %s does not exist", staticPathAbs)
-		}
-		if os.IsPermission(err) {
-			return SpaHandler{}, fmt.Errorf("no permission to access static path %s", staticPathAbs)
-		}
-		if err != nil {
-			return SpaHandler{}, fmt.Errorf("error accessing static path %s: %w", staticPathAbs, err)
-		}
-		if !stat.IsDir() {
-			return SpaHandler{}, fmt.Errorf("static path %s is not a directory", staticPathAbs)
-		}
+	stat, err := os.Stat(staticPathAbs)
+	if os.IsNotExist(err) {
+		return SpaHandler{}, fmt.Errorf("static path %s does not exist", staticPathAbs)
+	}
+	if os.IsPermission(err) {
+		return SpaHandler{}, fmt.Errorf("no permission to access static path %s", staticPathAbs)
+	}
+	if err != nil {
+		return SpaHandler{}, fmt.Errorf("error accessing static path %s: %w", staticPathAbs, err)
+	}
+	if !stat.IsDir() {
+		return SpaHandler{}, fmt.Errorf("static path %s is not a directory", staticPathAbs)
 	}
 
-	if stat, err := os.Stat(indexPathAbs); err != nil || stat.IsDir() {
-		if os.IsNotExist(err) {
-			return SpaHandler{}, fmt.Errorf("index path %s does not exist", indexPathAbs)
-		}
-		if os.IsPermission(err) {
-			return SpaHandler{}, fmt.Errorf("no permission to access index path %s", indexPathAbs)
-		}
-		if err != nil {
-			return SpaHandler{}, fmt.Errorf("error accessing index path %s: %w", indexPathAbs, err)
-		}
-		if stat.IsDir() {
-			return SpaHandler{}, fmt.Errorf("index path %s is a directory, must be a file", indexPathAbs)
-		}
+	stat, err = os.Stat(indexPathAbs)
+	if os.IsNotExist(err) {
+		return SpaHandler{}, fmt.Errorf("index path %s does not exist", indexPathAbs)
+	}
+	if os.IsPermission(err) {
+		return SpaHandler{}, fmt.Errorf("no permission to access index path %s", indexPathAbs)
+	}
+	if err != nil {
+		return SpaHandler{}, fmt.Errorf("error accessing index path %s: %w", indexPathAbs, err)
+	}
+	if stat.IsDir() {
+		return SpaHandler{}, fmt.Errorf("index path %s is a directory, must be a file", indexPathAbs)
 	}
 
 	return SpaHandler{
