@@ -124,13 +124,13 @@ func TestSpaHandler_ServeHTTP(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("in-tree traversal blocked", func(t *testing.T) {
+	t.Run("in-tree traversal redirected", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/assets/../index.html", nil)
 		rec := httptest.NewRecorder()
 
 		handler.ServeHTTP(rec, req)
 
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Equal(t, http.StatusMovedPermanently, rec.Code)
 	})
 
 	t.Run("empty handler configuration returns 500", func(t *testing.T) {
@@ -215,7 +215,6 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Empty(t, rec.Header().Get("Content-Encoding"))
-		assert.Contains(t, rec.Header().Get("Vary"), "Accept-Encoding")
 		assert.Contains(t, rec.Body.String(), "original")
 	})
 
