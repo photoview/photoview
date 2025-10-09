@@ -29,12 +29,13 @@ corresponding example of the compose file: <https://github.com/photoview/photovi
 
 # ATTENTION to PostgreSQL users !!!
 
-We switched to PostgreSQL 17 on the `master` branch. PostgreSQL 17 will be the default recommended version
-for the next release (PostgreSQL 16 remains supported). If you follow `master`, please check the
+We switched to PostgreSQL 18 on the `master` branch. PostgreSQL 18 will be the default recommended version
+for the next release (PostgreSQL 17 remains supported). If you follow `master`, please check the
 [official PostgreSQL upgrade guide](https://www.postgresql.org/docs/current/upgrading.html), and:
 
 - For Docker users: please update your `docker-compose.yml` to match [docker-compose.example.yml](./docker-compose%20example/docker-compose.example.yml).
-- For direct host installations or external/shared PostgreSQL instances: please upgrade your PostgreSQL server and database manually to version 17 following PostgreSQL guidance.
+- Please pay attention to the DB volume mount point change inside the container: starting from version 18, the DB is mounted to the `/var/lib/postgresql`, while in earlier versions it was the `/var/lib/postgresql/data`.
+- For direct host installations or external/shared PostgreSQL instances: please upgrade your PostgreSQL server and database manually to version 18 following PostgreSQL guidance.
 
 Don't forget to back up your database before upgrading.
 
@@ -100,7 +101,7 @@ We provide limited support for the standard deployment scenarios on the platform
 
 - [SQLite](https://sqlite.org/): built-in DBMS, no additional service or maintenance required; lowest performance and no scalability.
 - [MariaDB](https://mariadb.org/) LTS version: default choice. Runs as an additional service; good balance between performance and maintenance effort.
-- [PostgreSQL](https://www.postgresql.org/) 16 and 17: typically the best performance. Runs as an additional service; requires slightly more maintenance.
+- [PostgreSQL](https://www.postgresql.org/) 18 and 17: typically the best performance. Runs as an additional service; requires slightly more maintenance.
 
 We support running Photoview with one of these DBMSs when used as a dedicated instance for Photoview only.
 If you share a DBMS among multiple services, our support is limited to SQL issues. DB management and connection-related

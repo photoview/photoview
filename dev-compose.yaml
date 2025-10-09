@@ -67,7 +67,7 @@ services:
       - "3306"
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     profiles:
       - postgres
     environment:

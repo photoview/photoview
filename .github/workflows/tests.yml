@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: ['*']
+    branches: ["*"]
   pull_request:
     branches: [master]
 
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ['sqlite', 'mysql', 'postgres']
+        database: ["sqlite", "mysql", "postgres"]
 
     services:
       mariadb:
@@ -33,7 +33,7 @@ jobs:
           - 3306:3306
 
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: photoview
           POSTGRES_PASSWORD: photosecret
