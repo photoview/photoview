@@ -103,7 +103,10 @@ func main() {
 	shouldServeUI := utils.ShouldServeUI()
 
 	if shouldServeUI {
-		spa := routes.NewSpaHandler(utils.UIPath(), "index.html")
+		spa, err := routes.NewSpaHandler(utils.UIPath(), "index.html")
+		if err != nil {
+			log.Panicf("Could not configure UI handler: %s", err)
+		}
 		rootRouter.PathPrefix("/").Handler(spa)
 	}
 

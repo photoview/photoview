@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"mime"
 	"net/http"
 	"os"
@@ -27,49 +28,51 @@ const (
 	ctxKeyRelPath  contextKey = "relPath"
 )
 
-func NewSpaHandler(staticPath string, indexPath string) SpaHandler {
+func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 	staticPathAbs, err := filepath.Abs(staticPath)
 	if err != nil {
-		log.Error(context.Background(), "static path is not valid", "static path", staticPath, "error", err)
-		return SpaHandler{}
+		return SpaHandler{}, fmt.Errorf("static path %s is not valid: %w", staticPath, err)
 	}
 
 	indexPathAbs, err := filepath.Abs(filepath.Join(staticPath, indexPath))
 	if err != nil {
-		log.Error(context.Background(), "index path is not valid", "index path", indexPath, "error", err)
-		return SpaHandler{}
+		return SpaHandler{}, fmt.Errorf("index path %s is not valid: %w", indexPath, err)
 	}
 
 	if stat, err := os.Stat(staticPathAbs); err != nil || !stat.IsDir() {
 		if os.IsNotExist(err) {
-			log.Error(context.Background(), "static path does not exist", "static path", staticPathAbs)
-		} else if os.IsPermission(err) {
-			log.Error(context.Background(), "no permission to access static path", "static path", staticPathAbs)
-		} else if err != nil {
-			log.Error(context.Background(), "error accessing static path", "static path", staticPathAbs, "error", err)
-		} else if !stat.IsDir() {
-			log.Error(context.Background(), "static path is not a directory", "static path", staticPathAbs)
+			return SpaHandler{}, fmt.Errorf("static path %s does not exist", staticPathAbs)
 		}
-		return SpaHandler{}
+		if os.IsPermission(err) {
+			return SpaHandler{}, fmt.Errorf("no permission to access static path %s", staticPathAbs)
+		}
+		if err != nil {
+			return SpaHandler{}, fmt.Errorf("error accessing static path %s: %w", staticPathAbs, err)
+		}
+		if !stat.IsDir() {
+			return SpaHandler{}, fmt.Errorf("static path %s is not a directory", staticPathAbs)
+		}
 	}
 
 	if stat, err := os.Stat(indexPathAbs); err != nil || stat.IsDir() {
 		if os.IsNotExist(err) {
-			log.Error(context.Background(), "index path does not exist", "index path", indexPathAbs)
-		} else if os.IsPermission(err) {
-			log.Error(context.Background(), "no permission to access index path", "index path", indexPathAbs)
-		} else if err != nil {
-			log.Error(context.Background(), "error accessing index path", "index path", indexPathAbs, "error", err)
-		} else if stat.IsDir() {
-			log.Error(context.Background(), "index path is a directory, must be a file", "index path", indexPathAbs)
+			return SpaHandler{}, fmt.Errorf("index path %s does not exist", indexPathAbs)
 		}
-		return SpaHandler{}
+		if os.IsPermission(err) {
+			return SpaHandler{}, fmt.Errorf("no permission to access index path %s", indexPathAbs)
+		}
+		if err != nil {
+			return SpaHandler{}, fmt.Errorf("error accessing index path %s: %w", indexPathAbs, err)
+		}
+		if stat.IsDir() {
+			return SpaHandler{}, fmt.Errorf("index path %s is a directory, must be a file", indexPathAbs)
+		}
 	}
 
 	return SpaHandler{
 		indexPath:  indexPath,
-		staticPath: staticPath,
-	}
+		staticPath: staticPathAbs,
+	}, nil
 }
 
 // ServeHTTP inspects the URL path to locate a file within the static dir
@@ -79,13 +82,6 @@ func NewSpaHandler(staticPath string, indexPath string) SpaHandler {
 // Pre-compressed files (.br, .zst, .gz) are served if the client supports
 // them, otherwise the original file is served.
 func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if h.staticPath == "" || h.indexPath == "" {
-		log.Error(r.Context(), "staticPath or indexPath not configured on SpaHandler")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	absStaticPath, _ := filepath.Abs(h.staticPath)
 	relPath := filepath.Clean(r.URL.Path)
 	relPath = strings.TrimPrefix(relPath, "/")
 	fullPath := filepath.Join(h.staticPath, relPath)
@@ -98,14 +94,14 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.WithValue(r.Context(), ctxKeyFullPath, fullPath)
 	ctx = context.WithValue(ctx, ctxKeyRelPath, relPath)
-	r = r.WithContext(ctx)
+	r = r.WithContext(log.WithAttrs(ctx, ctxKeyFullPath, fullPath, ctxKeyRelPath, relPath))
 
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		log.Error(
 			r.Context(),
 			"error building absolute path",
-			"static path", absStaticPath,
+			"static path", h.staticPath,
 			"requested path", r.URL.Path,
 			"error", err,
 		)
@@ -113,12 +109,12 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rel, err := filepath.Rel(absStaticPath, absPath)
+	rel, err := filepath.Rel(h.staticPath, absPath)
 	if err != nil || strings.Contains(rel, "..") {
 		log.Error(
 			r.Context(),
 			"requested path is outside of static path",
-			"static path", absStaticPath,
+			"static path", h.staticPath,
 			"requested path", r.URL.Path,
 			"error", err,
 		)
@@ -126,31 +122,25 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the original file exists
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		// File doesn't exist - let serveOriginal handle SPA routing
+		h.serveOriginal(w, r)
+		return
+	}
+
+	// Don't compress already-compressed files
+	if isCompressedFormat(filepath.Ext(fullPath)) {
+		h.serveOriginal(w, r)
+		return
+	}
 	// Try to serve pre-compressed file
-	if h.canServePrecompressed(w, r) {
+	if h.servePrecompressedFile(w, r) {
 		return
 	}
 
 	// Fallback to original SPA handler logic
 	h.serveOriginal(w, r)
-}
-
-func (h SpaHandler) canServePrecompressed(w http.ResponseWriter, r *http.Request) bool {
-	fullPath := getFullPath(r.Context())
-
-	// Check if the original file exists
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		// File doesn't exist - let serveOriginal handle SPA routing
-		return false
-	}
-
-	// Don't compress already-compressed files
-	if isCompressedFormat(filepath.Ext(fullPath)) {
-		return false
-	}
-
-	// Try to serve pre-compressed variant
-	return h.servePrecompressedFile(w, r)
 }
 
 func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +152,8 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
 		// File does not exist, serve index.html (SPA routing)
 		h.serveIndexHTML(w, r)
 		return
-	} else if err != nil {
+	}
+	if err != nil {
 		// If we got an error (that wasn't that the file doesn't exist) stating the file,
 		// return a 500 internal server error and stop
 		log.Error(r.Context(), "Error stating file, requested by client", "file path", fullPath, "error", err)
@@ -182,11 +173,6 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
 func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Request) bool {
 	fullPath := getFullPath(r.Context())
 
-	// Verify the file exists
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return false
-	}
-
 	// Parse Accept-Encoding header
 	acceptEncoding := filterZeroQuality(strings.ToLower(r.Header.Get("Accept-Encoding")))
 	if acceptEncoding == "" {
@@ -204,25 +190,29 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	for _, enc := range encodings {
-		if strings.Contains(acceptEncoding, enc.name) {
-			precompressedPath := fullPath + enc.extension
-			if stat, err := os.Stat(precompressedPath); err == nil && !stat.IsDir() {
-				// Detect Content-Type from the ORIGINAL file extension, not the compressed one
-				contentType := mime.TypeByExtension(filepath.Ext(fullPath))
-				if contentType != "" {
-					w.Header().Set("Content-Type", contentType)
-				}
-
-				w.Header().Set("Content-Encoding", enc.name)
-				w.Header().Add("Vary", "Accept-Encoding")
-				// Set cache headers based on request path
-				h.setCacheHeaders(w, getRelPath(r.Context()))
-
-				// Serve pre-compressed file
-				http.ServeFile(w, r, precompressedPath)
-				return true
-			}
+		if !strings.Contains(acceptEncoding, enc.name) {
+			continue
 		}
+
+		precompressedPath := fullPath + enc.extension
+		if stat, err := os.Stat(precompressedPath); err != nil || stat.IsDir() {
+			continue
+		}
+
+		// Detect Content-Type from the ORIGINAL file extension, not the compressed one
+		contentType := mime.TypeByExtension(filepath.Ext(fullPath))
+		if contentType != "" {
+			w.Header().Set("Content-Type", contentType)
+		}
+
+		w.Header().Set("Content-Encoding", enc.name)
+		w.Header().Add("Vary", "Accept-Encoding")
+		// Set cache headers based on request path
+		h.setCacheHeaders(w, getRelPath(r.Context()))
+
+		// Serve pre-compressed file
+		http.ServeFile(w, r, precompressedPath)
+		return true
 	}
 
 	return false

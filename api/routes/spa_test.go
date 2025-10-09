@@ -18,13 +18,15 @@ func TestNewSpaHandler(t *testing.T) {
 		indexPath := filepath.Join(tempDir, "index.html")
 		require.NoError(t, os.WriteFile(indexPath, []byte("index content"), 0644))
 
-		handler := NewSpaHandler(tempDir, "index.html")
+		handler, err := NewSpaHandler(tempDir, "index.html")
+		assert.NoError(t, err)
 		assert.NotEmpty(t, handler.staticPath)
 		assert.NotEmpty(t, handler.indexPath)
 	})
 
 	t.Run("invalid static path", func(t *testing.T) {
-		handler := NewSpaHandler("/nonexistent/path", "index.html")
+		handler, err := NewSpaHandler("/nonexistent/path", "index.html")
+		assert.Error(t, err)
 		assert.Empty(t, handler.staticPath)
 		assert.Empty(t, handler.indexPath)
 	})
@@ -34,14 +36,16 @@ func TestNewSpaHandler(t *testing.T) {
 		filePath := filepath.Join(tempDir, "file.txt")
 		require.NoError(t, os.WriteFile(filePath, []byte("content"), 0644))
 
-		handler := NewSpaHandler(filePath, "index.html")
+		handler, err := NewSpaHandler(filePath, "index.html")
+		assert.Error(t, err)
 		assert.Empty(t, handler.staticPath)
 		assert.Empty(t, handler.indexPath)
 	})
 
 	t.Run("index path does not exist", func(t *testing.T) {
 		tempDir := t.TempDir()
-		handler := NewSpaHandler(tempDir, "nonexistent.html")
+		handler, err := NewSpaHandler(tempDir, "nonexistent.html")
+		assert.Error(t, err)
 		assert.Empty(t, handler.staticPath)
 		assert.Empty(t, handler.indexPath)
 	})
@@ -51,7 +55,8 @@ func TestNewSpaHandler(t *testing.T) {
 		indexDir := filepath.Join(tempDir, "indexdir")
 		require.NoError(t, os.Mkdir(indexDir, 0755))
 
-		handler := NewSpaHandler(tempDir, "indexdir")
+		handler, err := NewSpaHandler(tempDir, "indexdir")
+		assert.Error(t, err)
 		assert.Empty(t, handler.staticPath)
 		assert.Empty(t, handler.indexPath)
 	})
@@ -82,7 +87,8 @@ func TestSpaHandler_ServeHTTP(t *testing.T) {
 	imgFile := filepath.Join(assetsDir, "logo.png")
 	require.NoError(t, os.WriteFile(imgFile, []byte("PNG data"), 0644))
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 	require.NotEmpty(t, handler.staticPath)
 
 	t.Run("serve root returns index.html", func(t *testing.T) {
@@ -163,7 +169,8 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 	require.NoError(t, os.WriteFile(jsFile+".zst", []byte("zst-compressed"), 0644))
 	require.NoError(t, os.WriteFile(jsFile+".gz", []byte("gz-compressed"), 0644))
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 
 	t.Run("serve brotli when accepted", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/assets/app.js", nil)
@@ -266,7 +273,8 @@ func TestSpaHandler_CacheHeaders(t *testing.T) {
 	otherFile := filepath.Join(tempDir, "manifest.json")
 	require.NoError(t, os.WriteFile(otherFile, []byte("{}"), 0644))
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 
 	t.Run("long-term cache for assets", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/assets/app.js", nil)
@@ -309,7 +317,8 @@ func TestSpaHandler_IndexHTML(t *testing.T) {
 	// Create pre-compressed index.html
 	require.NoError(t, os.WriteFile(indexPath+".br", []byte("index-br-compressed"), 0644))
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 
 	t.Run("serve pre-compressed index.html when accepted", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
@@ -479,7 +488,8 @@ func TestSpaHandler_AcceptEncodingEdgeCases(t *testing.T) {
 	require.NoError(t, os.WriteFile(jsFile+".br", []byte("br-compressed"), 0644))
 	require.NoError(t, os.WriteFile(jsFile+".gz", []byte("gz-compressed"), 0644))
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 
 	t.Run("reject encoding with q=0", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/assets/app.js", nil)
@@ -553,7 +563,8 @@ func TestSpaHandler_ContentType(t *testing.T) {
 		require.NoError(t, os.WriteFile(filePath+".br", []byte("compressed"), 0644))
 	}
 
-	handler := NewSpaHandler(tempDir, "index.html")
+	handler, err := NewSpaHandler(tempDir, "index.html")
+	require.NoError(t, err)
 
 	for filename, expectedType := range files {
 		t.Run(filename, func(t *testing.T) {
