@@ -123,14 +123,14 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the original file exists
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		// File doesn't exist - let serveOriginal handle SPA routing
 		h.serveOriginal(w, r)
 		return
 	}
 
 	// Don't compress already-compressed files
-	if isCompressedFormat(filepath.Ext(fullPath)) {
+	if isCompressedFormat(filepath.Ext(absPath)) {
 		h.serveOriginal(w, r)
 		return
 	}
