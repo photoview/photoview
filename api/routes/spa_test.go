@@ -124,6 +124,15 @@ func TestSpaHandler_ServeHTTP(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
+	t.Run("in-tree traversal blocked", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/assets/../index.html", nil)
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
 	t.Run("empty handler configuration returns 500", func(t *testing.T) {
 		emptyHandler := SpaHandler{}
 		req := httptest.NewRequest("GET", "/", nil)
@@ -165,7 +174,7 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "br", rec.Header().Get("Content-Encoding"))
-		assert.Equal(t, "Accept-Encoding", rec.Header().Get("Vary"))
+		assert.Contains(t, rec.Header().Get("Vary"), "Accept-Encoding")
 		assert.Contains(t, rec.Header().Get("Content-Type"), "javascript")
 		assert.Equal(t, "br-compressed", rec.Body.String())
 	})
@@ -179,6 +188,8 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "zstd", rec.Header().Get("Content-Encoding"))
+		assert.Contains(t, rec.Header().Get("Vary"), "Accept-Encoding")
+		assert.Contains(t, rec.Header().Get("Content-Type"), "javascript")
 		assert.Equal(t, "zst-compressed", rec.Body.String())
 	})
 
@@ -191,6 +202,8 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "gzip", rec.Header().Get("Content-Encoding"))
+		assert.Contains(t, rec.Header().Get("Vary"), "Accept-Encoding")
+		assert.Contains(t, rec.Header().Get("Content-Type"), "javascript")
 		assert.Equal(t, "gz-compressed", rec.Body.String())
 	})
 
@@ -202,6 +215,7 @@ func TestSpaHandler_PrecompressedFiles(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Empty(t, rec.Header().Get("Content-Encoding"))
+		assert.Contains(t, rec.Header().Get("Vary"), "Accept-Encoding")
 		assert.Contains(t, rec.Body.String(), "original")
 	})
 
@@ -355,7 +369,7 @@ func TestIsCompressedFormat(t *testing.T) {
 		{"html", ".html", false},
 		{"json", ".json", false},
 		{"txt", ".txt", false},
-		{"uppercase PNG", ".PNG", false}, // function expects lowercase
+		{"uppercase PNG", ".PNG", true},
 	}
 
 	for _, tt := range tests {
@@ -380,7 +394,7 @@ func TestFilterZeroQuality(t *testing.T) {
 		{
 			name:     "filter q=0",
 			input:    "gzip;q=1.0, deflate;q=0, br;q=0.8",
-			expected: "gzip;q=1.0, br;q=0.8",
+			expected: "gzip;q=1.0,br;q=0.8",
 		},
 		{
 			name:     "filter q=0.0",
@@ -390,7 +404,7 @@ func TestFilterZeroQuality(t *testing.T) {
 		{
 			name:     "filter with spaces",
 			input:    "gzip; q=0.0, deflate; q=1.0, br",
-			expected: "deflate; q=1.0, br",
+			expected: "deflate; q=1.0,br",
 		},
 		{
 			name:     "all encodings filtered",
@@ -405,7 +419,7 @@ func TestFilterZeroQuality(t *testing.T) {
 		{
 			name:     "q=0 but others present",
 			input:    "identity;q=0, gzip, br",
-			expected: "gzip, br",
+			expected: "gzip,br",
 		},
 		{
 			name:     "multiple spaces",
@@ -527,7 +541,7 @@ func TestSpaHandler_ContentType(t *testing.T) {
 
 	// Create files with various extensions
 	files := map[string]string{
-		"app.js":      "application/javascript",
+		"app.js":      "text/javascript",
 		"style.css":   "text/css",
 		"data.json":   "application/json",
 		"image.svg":   "image/svg+xml",

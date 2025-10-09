@@ -145,7 +145,7 @@ func (h SpaHandler) canServePrecompressed(w http.ResponseWriter, r *http.Request
 	}
 
 	// Don't compress already-compressed files
-	if isCompressedFormat(strings.ToLower(filepath.Ext(fullPath))) {
+	if isCompressedFormat(filepath.Ext(fullPath)) {
 		return false
 	}
 
@@ -264,6 +264,7 @@ func (h SpaHandler) setCacheHeaders(w http.ResponseWriter, relPath string) {
 }
 
 func isCompressedFormat(ext string) bool {
+	ext = strings.ToLower(ext)
 	compressedExts := []string{
 		".png", ".ico", ".jpg", ".jpeg", ".gif", ".webp",
 		".zip", ".gz", ".br", ".zst",
