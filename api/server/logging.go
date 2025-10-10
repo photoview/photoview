@@ -51,6 +51,8 @@ func InitializeLogging() {
 				)
 				return
 			}
+			// Re-stat after successful directory creation
+			stat, err = os.Stat(logParentDir)
 		}
 		if err != nil {
 			log.Error(
