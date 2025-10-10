@@ -52,15 +52,6 @@ func InitializeLogging() {
 				return
 			}
 		}
-		if !stat.IsDir() {
-			log.Error(
-				logGlobalContext,
-				"log files location is not a directory, defaulting to console logging",
-				"log files location", logParentDir,
-				"log path", logPath,
-			)
-			return
-		}
 		if err != nil {
 			log.Error(
 				logGlobalContext,
@@ -68,6 +59,15 @@ func InitializeLogging() {
 				"log directory", logParentDir,
 				"log path", logPath,
 				"error", err,
+			)
+			return
+		}
+		if !stat.IsDir() {
+			log.Error(
+				logGlobalContext,
+				"log files location is not a directory, defaulting to console logging",
+				"log files location", logParentDir,
+				"log path", logPath,
 			)
 			return
 		}
