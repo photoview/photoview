@@ -6,16 +6,14 @@ services:
     container_name: photoview-prepare
     user: root
     entrypoint: []
-    ## If you enabled the Photoview access log in the main Photoview service, add the " /var/log/photoview"
-    ## to the end of the command below
-    command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache"
+    command: /bin/bash -c "sleep 1 && chown -R photoview:photoview /home/photoview/media-cache /var/log/photoview"
     cap_add:
       - CHOWN
     volumes:
       - "/etc/localtime:/etc/localtime:ro" ## use local time from host
-      - "/etc/timezone:/etc/timezone:ro"   ## use timezone from host
+      - "/etc/timezone:/etc/timezone:ro" ## use timezone from host
       - "${HOST_PHOTOVIEW_LOCATION}/storage:/home/photoview/media-cache"
-      ## If you enabled the Photoview access log in the main Photoview service, uncomment the next line
+      ## If you mounted the Photoview access log in the main Photoview service, uncomment the next line
       # - "${HOST_PHOTOVIEW_LOCATION}/logs/api:/var/log/photoview"
 
   photoview:

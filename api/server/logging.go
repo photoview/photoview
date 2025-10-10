@@ -3,13 +3,13 @@ package server
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -24,7 +24,7 @@ type contextKey string
 
 var (
 	logFile          io.WriteCloser
-	logWriter        io.Writer
+	logWriter        io.Writer = os.Stdout
 	logMutex         sync.RWMutex
 	logGlobalContext context.Context
 )
@@ -36,11 +36,42 @@ func InitializeLogging() {
 
 	logGlobalContext = context.Background()
 
-	// Default to console output
-	logWriter = os.Stdout
-
 	// If log path is configured, set up rotating file logger as part of multi-writer
-	if logPath := utils.AccessLogPath(); logPath != "" {
+	if logPath, err := utils.AccessLogPath(); logPath != "" && err == nil {
+		logParentDir := filepath.Dir(logPath)
+		stat, err := os.Stat(logParentDir)
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(logParentDir, 0755); err != nil {
+				log.Error(
+					logGlobalContext,
+					"failed to create log directory, defaulting to console logging",
+					"log directory", logParentDir,
+					"log path", logPath,
+					"error", err,
+				)
+				return
+			}
+		}
+		if !stat.IsDir() {
+			log.Error(
+				logGlobalContext,
+				"log files location is not a directory, defaulting to console logging",
+				"log files location", logParentDir,
+				"log path", logPath,
+			)
+			return
+		}
+		if err != nil {
+			log.Error(
+				logGlobalContext,
+				"failed to stat log directory, defaulting to console logging",
+				"log directory", logParentDir,
+				"log path", logPath,
+				"error", err,
+			)
+			return
+		}
+
 		rotatingLogger := &lumberjack.Logger{
 			Filename:   logPath,
 			MaxSize:    utils.AccessLogMaxSize(),
@@ -53,6 +84,7 @@ func InitializeLogging() {
 		logFile = rotatingLogger
 		logWriter = io.MultiWriter(os.Stdout, logFile)
 
+		// Add log file and writer to global context to let them appear in the app log implicitly
 		logGlobalContext = context.WithValue(logGlobalContext, contextKey("logFile"), logFile)
 		logGlobalContext = context.WithValue(logGlobalContext, contextKey("logWriter"), logWriter)
 
@@ -64,6 +96,12 @@ func InitializeLogging() {
 			"max files", rotatingLogger.MaxBackups,
 			"max age in days", rotatingLogger.MaxAge,
 			"compressed", rotatingLogger.Compress,
+		)
+	} else if err != nil {
+		log.Error(
+			logGlobalContext,
+			"failed to build absolute path for the access log path, defaulting to console logging",
+			"error", err,
 		)
 	}
 }
@@ -85,8 +123,12 @@ func CloseLogging() {
 
 // Thread-safe log writing
 func writeLog(format string, args ...interface{}) {
-	if logWriter != nil {
-		fmt.Fprintf(logWriter, format, args...)
+	logMutex.RLock()
+	writer := logWriter
+	logMutex.RUnlock()
+
+	if writer != nil {
+		fmt.Fprintf(writer, format, args...)
 	}
 }
 
@@ -94,15 +136,14 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		// Use simple writer with minimal overhead
-		simpleWriter := newStatusResponseWriter(&w)
-		next.ServeHTTP(simpleWriter, r)
+		writer := newStatusResponseWriter(w)
+		next.ServeHTTP(writer, r)
 
 		elapsed := time.Since(start)
 		elapsedMs := elapsed.Nanoseconds() / 1e6
 
 		// Only standard logging (no debug overhead)
-		logStandardRequest(r, simpleWriter.status, elapsedMs)
+		logStandardRequest(r, writer.status, elapsedMs)
 	})
 }
 
@@ -123,11 +164,11 @@ func logStandardRequest(r *http.Request, status int, elapsedMs int64) {
 }
 
 // sanitizeURL redacts sensitive query parameters in a URL
-func sanitizeURI(url *url.URL) string {
-	if url == nil {
+func sanitizeURI(u *url.URL) string {
+	if u == nil {
 		return ""
 	}
-	cloneUrl := *url
+	cloneUrl := *u
 	queryString := cloneUrl.Query()
 	if len(queryString) == 0 {
 		return cloneUrl.RequestURI()
@@ -155,15 +196,23 @@ type statusResponseWriter struct {
 	http.ResponseWriter
 	status   int
 	hijacker http.Hijacker
+	flusher  http.Flusher
+	pusher   http.Pusher
 }
 
-func newStatusResponseWriter(w *http.ResponseWriter) *statusResponseWriter {
+func newStatusResponseWriter(w http.ResponseWriter) *statusResponseWriter {
 	writer := &statusResponseWriter{
-		ResponseWriter: *w,
+		ResponseWriter: w,
 	}
 
-	if hj, ok := (*w).(http.Hijacker); ok {
+	if hj, ok := (w).(http.Hijacker); ok {
 		writer.hijacker = hj
+	}
+	if fl, ok := (w).(http.Flusher); ok {
+		writer.flusher = fl
+	}
+	if pu, ok := (w).(http.Pusher); ok {
+		writer.pusher = pu
 	}
 
 	return writer
@@ -183,20 +232,20 @@ func (w *statusResponseWriter) Write(b []byte) (int, error) {
 
 func (w *statusResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if w.hijacker == nil {
-		return nil, nil, errors.New("http.Hijacker not implemented by underlying http.ResponseWriter")
+		return nil, nil, http.ErrNotSupported
 	}
 	return w.hijacker.Hijack()
 }
 
 func (w *statusResponseWriter) Flush() {
-	if f, ok := w.ResponseWriter.(http.Flusher); ok {
-		f.Flush()
+	if w.flusher != nil {
+		w.flusher.Flush()
 	}
 }
 
 func (w *statusResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if p, ok := w.ResponseWriter.(http.Pusher); ok {
-		return p.Push(target, opts)
+	if w.pusher != nil {
+		return w.pusher.Push(target, opts)
 	}
 	return http.ErrNotSupported
 }

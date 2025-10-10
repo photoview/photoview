@@ -100,6 +100,8 @@ ARG TARGETPLATFORM
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+ENV PHOTOVIEW_ACCESS_LOG_PATH=/var/log/photoview
+ENV PHOTOVIEW_UI_PATH=/app/ui
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 WORKDIR /dependencies
@@ -109,7 +111,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     && groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview \
     # Create log folder
-    && install --directory -m 0755 -o photoview -g photoview /var/log/photoview \
+    && install --directory -m 0755 -o photoview -g photoview "${PHOTOVIEW_ACCESS_LOG_PATH}" \
     # Install required dependencies
     && /app/scripts/install_runtime_dependencies.sh \
     # Install self-building libs
@@ -124,7 +126,7 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     && rm -rf /var/lib/apt/lists/*
 
 COPY api/data /app/data
-COPY --from=ui /app/ui/dist /app/ui
+COPY --from=ui /app/ui/dist "${PHOTOVIEW_UI_PATH}"
 COPY --from=api /app/api/photoview /app/photoview
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
@@ -139,8 +141,6 @@ ENV PHOTOVIEW_LISTEN_PORT=80
 ENV PHOTOVIEW_API_ENDPOINT=/api
 
 ENV PHOTOVIEW_SERVE_UI=1
-ENV PHOTOVIEW_UI_PATH=/app/ui
-ENV PHOTOVIEW_ACCESS_LOG_PATH=/var/log/photoview/access.log
 ENV PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH=/app/data/models
 ENV PHOTOVIEW_MEDIA_CACHE=/home/photoview/media-cache
 

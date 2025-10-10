@@ -113,12 +113,13 @@ func UIPath() string {
 	return "./ui"
 }
 
-func AccessLogPath() string {
+func AccessLogPath() (string, error) {
 	if logpath := EnvAccessLogPath.GetValue(); logpath != "" {
-		return filepath.Join(EnvAccessLogPath.GetValue(), "access.log")
+		absPath, err := filepath.Abs(filepath.Clean(EnvAccessLogPath.GetValue()))
+		return filepath.Join(absPath, "access.log"), err
 	}
 	// Default: no access logfile, only STDOUT
-	return ""
+	return "", nil
 }
 
 func AccessLogMaxSize() int {
