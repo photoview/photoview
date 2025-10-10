@@ -71,9 +71,7 @@ func main() {
 		log.Panicf("Could not initialize face detector: %s\n", err)
 	}
 
-	if err := server.InitializeLogging(); err != nil {
-		log.Printf("Warning: Could not initialize access logging: %s", err)
-	}
+	server.InitializeLogging()
 
 	rootRouter := mux.NewRouter()
 	rootRouter.Use(dataloader.Middleware(db))
