@@ -6,11 +6,19 @@ type SidebarItemProps = {
 }
 
 const SidebarItem = ({ name, value }: SidebarItemProps) => (
-  <div>
-    <div className="inline-block w-[100px] font-semibold text-sm text-[#888] text-right mr-2">
+  <div className="flex items-baseline mb-1">
+    <div
+      className="w-[110px] flex-shrink-0 font-semibold text-sm text-gray-500 dark:text-gray-400 text-right pr-2 truncate"
+      title={name}
+    >
       {name}
     </div>
-    <div className="inline-block text-base">{value}</div>
+    <div
+      className="flex-1 text-base break-words min-w-0"
+      style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
+    >
+      {value}
+    </div>
   </div>
 )
 

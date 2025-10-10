@@ -1,0 +1,366 @@
+{
+  "album_filter": {
+    "only_favorites": "お気に入りのみ表示",
+    "sort": "並び替え",
+    "sort_by": "並び替え順",
+    "sorting_options": {
+      "date_imported": "インポート日",
+      "date_shot": "撮影日",
+      "title": "タイトル",
+      "type": "種類"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "追加",
+      "cancel": "キャンセル",
+      "remove": "削除",
+      "save": "保存"
+    },
+    "loading": {
+      "album": "アルバムを読み込み中",
+      "default": "読み込み中…",
+      "page": "ページを読み込み中",
+      "paginate": {
+        "faces": "人物を読み込み中",
+        "media": "メディアを読み込み中"
+      },
+      "shares": "共有を読み込み中…"
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "検索結果を読み込み中…",
+      "no_results": "該当する結果がありません",
+      "placeholder": "検索",
+      "result_type": {
+        "albums": "アルバム",
+        "media": "メディア"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "パスワード",
+      "submit": "ログイン",
+      "username": "ユーザー名"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "写真の場所",
+          "placeholder": "/path/to/photos"
+        },
+        "submit": "Photoview を初期設定"
+      },
+      "title": "初期設定"
+    },
+    "welcome": "Photoview へようこそ"
+  },
+  "meta": {
+    "description": "個人サーバー向けのシンプルで使いやすい写真ギャラリー"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "ラベルを変更",
+      "detach_images": "顔グループを分割",
+      "merge_face": "顔グループを統合",
+      "merge_people": "顔グループを統合",
+      "move_faces": "顔グループを移動"
+    },
+    "face_group": {
+      "label_placeholder": "ラベル",
+      "unlabeled": "ラベルなし",
+      "unlabeled_person": "ラベルなしの人物"
+    },
+    "modal": {
+      "action": {
+        "merge": "統合",
+        "next": "次へ"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "顔グループを分割",
+          "select_images": "写真を選択"
+        },
+        "description": "選択した写真をこの顔グループから削除し、新しい顔グループに移動します",
+        "title": "写真の顔グループを分割"
+      },
+      "merge_face_groups": {
+        "destination_description": "統合先の顔グループを選択してください。",
+        "destination_table": {
+          "title": "統合先の顔グループを選択"
+        },
+        "sources_description": "統合する対象の顔グループをすべて選択してください。",
+        "sources_table": {
+          "title": "統合する対象の顔グループを1つ以上選択:"
+        },
+        "title": "顔グループを統合"
+      },
+      "move_image_faces": {
+        "description": "この顔グループの選択した写真を別の顔グループに移動します",
+        "destination_face_group_table": {
+          "move_action": "写真の顔グループを移動",
+          "title": "対象の顔グループを選択"
+        },
+        "image_select_table": {
+          "next_action": "次へ",
+          "title": "移動する写真を選択"
+        },
+        "title": "写真の顔グループを移動"
+      }
+    },
+    "recognize_unlabeled_faces_button": "ラベルなし顔グループの検出",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "顔グループを検索…"
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "写真を検索…"
+    }
+  },
+  "photos_page": {
+    "title": "タイムライン"
+  },
+  "places_page": {
+    "title": "場所"
+  },
+  "routes": {
+    "page_not_found": "ページが見つかりません"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "同時に実行できる自動スキャンの最大数",
+      "title": "スキャン同時実行数"
+    },
+    "logout": "ログアウト",
+    "periodic_scanner": {
+      "checkbox_label": "定期スキャンを有効にする",
+      "field": {
+        "description": "すべてのユーザーに対して自動スキャンを実行する頻度",
+        "label": "定期スキャン間隔"
+      },
+      "interval_unit": {
+        "days": "日",
+        "hour": "時間",
+        "minutes": "分",
+        "months": "か月",
+        "seconds": "秒"
+      },
+      "title": "定期スキャン"
+    },
+    "scanner": {
+      "description": "すべてのユーザーに対して新しく追加または更新されたメディアをスキャンします",
+      "scan_all_users": "すべてのユーザーをスキャン",
+      "title": "スキャン"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "このユーザーの言語を変更",
+        "label": "言語"
+      },
+      "language_selector": {
+        "placeholder": "言語を選択"
+      },
+      "theme": {
+        "auto": {
+          "label": "システム設定に従う"
+        },
+        "dark": {
+          "label": "ダーク"
+        },
+        "description": "サイトの外観を変更",
+        "light": {
+          "label": "ライト"
+        },
+        "title": "テーマの設定"
+      },
+      "title": "ユーザー設定"
+    },
+    "users": {
+      "add_user": {
+        "submit": "ユーザーを追加"
+      },
+      "confirm_delete_user": {
+        "action": "{{user}} を削除",
+        "description": "<0><1></1> を削除してもよろしいですか？</0><p>この操作は元に戻せません</p>",
+        "title": "ユーザーを削除"
+      },
+      "password_reset": {
+        "description": "<1>{{username}}</1> のパスワードを変更",
+        "form": {
+          "label": "新しいパスワード",
+          "placeholder": "パスワード",
+          "submit": "パスワードを変更"
+        },
+        "title": "パスワードを変更"
+      },
+      "table": {
+        "column_names": {
+          "action": "操作",
+          "capabilities": "権限",
+          "photo_path": "写真の場所",
+          "username": "ユーザー名"
+        },
+        "new_user": "新しいユーザー",
+        "row": {
+          "action": {
+            "change_password": "パスワードを変更",
+            "delete": "削除",
+            "edit": "編集",
+            "scan": "スキャン"
+          }
+        }
+      },
+      "title": "ユーザー"
+    },
+    "version_info": {
+      "build_date_title": "ビルド日",
+      "title": "Photoview バージョン",
+      "version_title": "リリースバージョン"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "共有メディア"
+    },
+    "protected_share": {
+      "description": "この共有はパスワードで保護されています。",
+      "password_required_error": "パスワードを入力してください",
+      "title": "保護された共有"
+    },
+    "share_not_found": "この共有が見つかりません",
+    "share_not_found_description": "この共有は期限切れまたは削除された可能性があります。",
+    "wrong_password": "パスワードが正しくありません。パスワードを確認して再試行してください。"
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "カバー",
+      "download": {
+        "high-resolutions": {
+          "description": "高解像度JPEG画像RAWファイル",
+          "title": "高解像度"
+        },
+        "originals": {
+          "description": "元の写真と動画",
+          "title": "オリジナルファイル"
+        },
+        "thumbnails": {
+          "description": "低解像度写真 (動画は含まれません)",
+          "title": "サムネイル"
+        },
+        "web-videos": {
+          "description": "Web表示用に最適化された動画",
+          "title": "変換済み動画"
+        }
+      },
+      "reset_cover": "カバー画像をリセット",
+      "set_cover": "カバー画像として設定",
+      "title_placeholder": "アルバムタイトル"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "{{count}} バイト",
+        "byte_other": "{{count}} バイト",
+        "giga_byte_one": "{{count}} GB",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "{{count}} KB",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "{{count}} MB",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "{{count}} TB",
+        "tera_byte_other": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "寸法",
+        "file_size": "サイズ",
+        "file_type": "種類",
+        "name": "名前"
+      },
+      "title": "ダウンロード"
+    },
+    "location": {
+      "title": "位置情報"
+    },
+    "media": {
+      "album_path": "アルバムの場所",
+      "exif": {
+        "description": "画像説明",
+        "exposure_program": {
+          "action_program": "アクション",
+          "aperture_priority": "絞り優先",
+          "bulb": "バルブ",
+          "creative_program": "クリエイティブ",
+          "landscape_mode": "風景",
+          "manual": "マニュアル",
+          "normal_program": "ノーマル",
+          "not_defined": "未定義",
+          "portrait_mode": "ポートレート",
+          "shutter_priority": "シャッター優先"
+        },
+        "flash": {
+          "auto": "自動",
+          "did_not_fire": "発光なし",
+          "fired": "発光",
+          "no_flash": "発光禁止",
+          "no_flash_function": "フラッシュ非対応",
+          "off": "オフ",
+          "on": "オン",
+          "red_eye_reduction": "赤目軽減",
+          "return_detected": "反射光あり",
+          "return_not_detected": "反射光なし"
+        },
+        "name": {
+          "aperture": "絞り値",
+          "camera": "カメラ名",
+          "coordinates": "位置情報",
+          "date_shot": "撮影日",
+          "exposure": "露出時間",
+          "exposure_program": "露出モード",
+          "flash": "フラッシュ",
+          "focal_length": "焦点距離",
+          "iso": "ISO感度",
+          "lens": "レンズ名",
+          "maker": "メーカー名"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "顔グループの分割",
+        "merge_face": "顔グループの統合",
+        "move_face": "顔グループの移動"
+      },
+      "confirm_image_detach": "この写真を削除してもよろしいですか？",
+      "title": "人物"
+    },
+    "sharing": {
+      "add_share": "共有を追加",
+      "copy_link": "リンクをコピー",
+      "delete": "削除",
+      "more": "その他",
+      "no_shares_found": "共有が見つかりません",
+      "public_link": "公開リンク",
+      "title": "共有オプション"
+    }
+  },
+  "sidemenu": {
+    "albums": "アルバム",
+    "people": "人物",
+    "photos": "タイムライン",
+    "places": "場所",
+    "settings": "設定"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "すべて",
+      "dropdown_year": "{{year}}年以前",
+      "label": "日付"
+    }
+  },
+  "title": {
+    "loading_album": "アルバムを読み込み中",
+    "login": "ログイン",
+    "people": "人物",
+    "settings": "設定"
+  }
+}

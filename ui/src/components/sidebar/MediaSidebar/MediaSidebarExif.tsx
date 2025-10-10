@@ -5,6 +5,7 @@ import { isNil } from '../../../helpers/utils'
 import { TranslationFn } from '../../../localization'
 import SidebarItem from '../SidebarItem'
 import { MediaSidebarMedia } from './MediaSidebar'
+import { DateTime } from 'luxon'
 
 const MetadataInfoContainer = styled.div`
   margin-bottom: 1.5rem;
@@ -15,7 +16,7 @@ type ExifDetailsProps = {
 }
 
 const ExifDetails = ({ media }: ExifDetailsProps) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   let exifItems: JSX.Element[] = []
 
   const exifName = exifNameLookup(t)
@@ -39,19 +40,40 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       }
     }, {} as { [key: string]: string | number })
 
-    if (!isNil(exif.dateShot)) {
-      exif.dateShot = new Date(exif.dateShot).toLocaleString()
+    if (exif.dateShot && String(exif.dateShot).trim().length > 0) {
+      exif.dateShot = String(exif.dateShot).trim();
+      const dateString = String(exif.dateShot);
+
+      // Parse as ISO (RFC3339 is a subset of ISO8601)
+      const dt = DateTime.fromISO(dateString, { setZone: true });
+
+      if (dt.isValid) {
+        // Format date and time parts in user's translation locale, but as "naive" (no shifting)
+        const dtLocalized = dt.setLocale(i18n.language);
+        const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
+        const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);
+
+        // Check if the original string contains timezone information
+        const hasTimezone = /(?:[zZ]|[+-]\d{2}:\d{2}|[+-]\d{4})$/.test(dateString);
+        if (hasTimezone) {
+          // Get the offset in ±HH:MM
+          const offset = dt.toFormat('ZZ');
+          exif.dateShot = `${localeDate} ${localeTime} ${offset}`;
+        } else {
+          // No timezone in original - show only date and time
+          exif.dateShot = `${localeDate} ${localeTime}`;
+        }
+      }
     }
 
     if (typeof exif.exposure === 'number' && exif.exposure !== 0) {
       exif.exposure = `1/${Math.round(1 / exif.exposure)}`
     }
 
-    const coordinates = media.exif.coordinates
-    if (!isNil(coordinates)) {
-      exif.coordinates = `${
-        Math.round(coordinates.latitude * 1000000) / 1000000
-      }, ${Math.round(coordinates.longitude * 1000000) / 1000000}`
+    const coords = media.exif.coordinates
+    if (!isNil(coords)) {
+      exif.coordinates =
+        `${Math.round(coords.latitude * 1000000) / 1000000}, ${Math.round(coords.longitude * 1000000) / 1000000}`
     }
 
     const exposurePrograms = exposureProgramsLookup(t)
