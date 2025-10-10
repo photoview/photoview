@@ -23,10 +23,14 @@ import (
 type contextKey string
 
 var (
+	logMutex         sync.RWMutex
 	logFile          io.WriteCloser
 	logWriter        io.Writer = os.Stdout
-	logMutex         sync.RWMutex
 	logGlobalContext context.Context
+	sensitiveKeys    = []string{
+		"access_token", "token", "auth", "authorization", "apikey", "api_key",
+		"password", "passwd", "secret", "signature", "session", "jwt", "code",
+	}
 )
 
 // InitializeLogging sets up the logging system with optional file output
@@ -174,11 +178,6 @@ func sanitizeURI(u *url.URL) string {
 	queryString := cloneUrl.Query()
 	if len(queryString) == 0 {
 		return cloneUrl.RequestURI()
-	}
-
-	sensitiveKeys := []string{
-		"access_token", "token", "auth", "authorization", "apikey", "api_key",
-		"password", "passwd", "secret", "signature", "session", "jwt", "code",
 	}
 
 	for name := range queryString {
