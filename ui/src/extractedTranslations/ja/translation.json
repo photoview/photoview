@@ -3,6 +3,11 @@
     "only_favorites": "お気に入りのみ表示",
     "sort": "並び替え",
     "sort_by": "並び替え順",
+    "sort_direction": "並び替え方向",
+    "order_direction": {
+      "ascending": "昇順",
+      "descending": "降順"
+    },
     "sorting_options": {
       "date_imported": "インポート日",
       "date_shot": "撮影日",
@@ -110,7 +115,7 @@
         "title": "写真の顔グループを移動"
       }
     },
-    "recognize_unlabeled_faces_button": "ラベルなし顔グループの検出",
+    "recognize_unlabeled_faces_button": "未ラベルの顔を認識",
     "tableselect_face_group": {
       "search_faces_placeholder": "顔グループを検索…"
     },
@@ -237,7 +242,7 @@
       "album_cover": "カバー",
       "download": {
         "high-resolutions": {
-          "description": "高解像度JPEG画像RAWファイル",
+          "description": "RAW ファイルから生成した高解像度 JPEG 画像",
           "title": "高解像度"
         },
         "originals": {
@@ -271,7 +276,7 @@
         "tera_byte_other": "{{count}} TB"
       },
       "table_columns": {
-        "dimensions": "寸法",
+        "dimensions": "解像度",
         "file_size": "サイズ",
         "file_type": "種類",
         "name": "名前"
@@ -284,7 +289,7 @@
     "media": {
       "album_path": "アルバムの場所",
       "exif": {
-        "description": "画像説明",
+        "description": "EXIF 情報",
         "exposure_program": {
           "action_program": "アクション",
           "aperture_priority": "絞り優先",
@@ -330,7 +335,7 @@
         "merge_face": "顔グループの統合",
         "move_face": "顔グループの移動"
       },
-      "confirm_image_detach": "この写真を削除してもよろしいですか？",
+      "confirm_image_detach": "この写真をこの顔グループから外しますか？",
       "title": "人物"
     },
     "sharing": {

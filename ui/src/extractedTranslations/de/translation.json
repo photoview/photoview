@@ -1,8 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Nur Favoriten anzeigen",
-    "sort": "",
+    "sort": "Sortierung",
     "sort_by": "Sortieren nach",
+    "sort_direction": "Sortierrichtung",
+    "order_direction": {
+      "ascending": "Aufsteigend",
+      "descending": "Absteigend"
+    },
     "sorting_options": {
       "date_imported": "Importdatum",
       "date_shot": "Aufnahmedatum",

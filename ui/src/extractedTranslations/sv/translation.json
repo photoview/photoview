@@ -1,8 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Visa endast favoriter",
-    "sort": "",
+    "sort": "Sortering",
     "sort_by": "Sortera efter",
+    "sort_direction": "Sorteringsriktning",
+    "order_direction": {
+      "ascending": "Stigande",
+      "descending": "Fallande"
+    },
     "sorting_options": {
       "date_imported": "Datum för import",
       "date_shot": "Datum",

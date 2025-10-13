@@ -111,7 +111,7 @@ const UserPreferences = () => {
   >(CHANGE_USER_PREFERENCES)
 
   const sortedLanguagePrefs = useMemo(
-    () => languagePreferences.sort((a, b) => a.label.localeCompare(b.label)),
+    () => [...languagePreferences].sort((a, b) => a.label.localeCompare(b.label)),
     []
   )
 
