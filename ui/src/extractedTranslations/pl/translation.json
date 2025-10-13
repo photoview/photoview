@@ -3,6 +3,11 @@
     "only_favorites": "Pokaż tylko ulubione",
     "sort": "Sortuj",
     "sort_by": "Sortuj",
+    "sort_direction": "Kierunek sortowania",
+    "order_direction": {
+      "ascending": "Rosnąco",
+      "descending": "Malejąco"
+    },
     "sorting_options": {
       "date_imported": "Data zaimportowania",
       "date_shot": "Data wykonania",

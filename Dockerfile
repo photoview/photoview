@@ -78,6 +78,7 @@ RUN set -a && source /env && set +a \
 
 COPY api/go.mod api/go.sum /app/api/
 WORKDIR /app/api
+# hadolint ignore=DL3062
 RUN set -a && source /env && set +a \
     && go env \
     && go mod download \

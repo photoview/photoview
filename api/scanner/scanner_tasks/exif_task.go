@@ -1,6 +1,7 @@
 package scanner_tasks
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -32,12 +33,21 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 	// Check if EXIF data already exists
 	if media.ExifID != nil {
-		var exif models.MediaEXIF
-		if err := tx.First(&exif, media.ExifID).Error; err != nil {
+		var e models.MediaEXIF
+		var err error
+		if err = tx.First(&e, media.ExifID).Error; err == nil {
+			return nil
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("failed to get EXIF for %q from database: %w", media.Path, err)
 		}
-
-		return nil
+		log.Warn(
+			tx.Statement.Context,
+			"EXIF metadata not found in database, will re-parse it",
+			"path", media.Path,
+			"error", err,
+		)
+		media.ExifID = nil
 	}
 
 	exifData, err := exif.Parse(media.Path)

@@ -24,11 +24,17 @@ func Initialize() (func(), error) {
 	log.Info(nil, "Found exiftool")
 
 	return func() {
-		if err := globalExifParser.Close(); err != nil {
-			log.Error(nil, "Cleanup exiftool error:", err)
+		globalMu.Lock()
+		defer globalMu.Unlock()
+
+		if globalExifParser == nil {
 			return
 		}
 
+		if err := globalExifParser.Close(); err != nil {
+			log.Error(nil, "Cleanup exiftool error", "error", err)
+			return
+		}
 		globalExifParser = nil
 	}, nil
 }
@@ -36,12 +42,12 @@ func Initialize() (func(), error) {
 var globalMu sync.Mutex
 
 func Parse(filepath string) (*models.MediaEXIF, error) {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+
 	if globalExifParser == nil {
 		return nil, fmt.Errorf("no exif parser initialized")
 	}
-
-	globalMu.Lock()
-	defer globalMu.Unlock()
 
 	exif, failures, err := globalExifParser.ParseExif(filepath)
 	if err != nil {
@@ -49,7 +55,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	}
 
 	if len(failures) > 0 {
-		log.Warn(nil, "Parse exif failures", "filepath", filepath, "errors", failures)
+		log.Warn(nil, "Parse exif failures", "file path", filepath, "errors", failures)
 	}
 
 	return exif, nil
