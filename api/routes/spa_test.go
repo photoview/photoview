@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -442,36 +441,6 @@ func TestFilterZeroQuality(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
-}
-
-func TestContextHelpers(t *testing.T) {
-	t.Run("getFullPath from context", func(t *testing.T) {
-		ctx := httptest.NewRequest("GET", "/", nil).Context()
-		ctx = context.WithValue(ctx, ctxKeyFullPath, "/test/path")
-
-		result := getFullPath(ctx)
-		assert.Equal(t, "/test/path", result)
-	})
-
-	t.Run("getFullPath returns empty for missing value", func(t *testing.T) {
-		ctx := httptest.NewRequest("GET", "/", nil).Context()
-		result := getFullPath(ctx)
-		assert.Empty(t, result)
-	})
-
-	t.Run("getRelPath from context", func(t *testing.T) {
-		ctx := httptest.NewRequest("GET", "/", nil).Context()
-		ctx = context.WithValue(ctx, ctxKeyRelPath, "assets/app.js")
-
-		result := getRelPath(ctx)
-		assert.Equal(t, "assets/app.js", result)
-	})
-
-	t.Run("getRelPath returns empty for missing value", func(t *testing.T) {
-		ctx := httptest.NewRequest("GET", "/", nil).Context()
-		result := getRelPath(ctx)
-		assert.Empty(t, result)
-	})
 }
 
 func TestSpaHandler_AcceptEncodingEdgeCases(t *testing.T) {
