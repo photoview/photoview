@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"fmt"
 	"mime"
 	"net/http"
@@ -20,13 +19,6 @@ type SpaHandler struct {
 	staticPath string
 	indexPath  string
 }
-
-type contextKey string
-
-const (
-	ctxKeyFullPath contextKey = "fullPath"
-	ctxKeyRelPath  contextKey = "relPath"
-)
 
 func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 	staticPathAbs, err := filepath.Abs(staticPath)
@@ -90,10 +82,6 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.WithValue(r.Context(), ctxKeyFullPath, fullPath)
-	ctx = context.WithValue(ctx, ctxKeyRelPath, relPath)
-	r = r.WithContext(log.WithAttrs(ctx, ctxKeyFullPath, fullPath, ctxKeyRelPath, relPath))
-
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		log.Error(
@@ -123,27 +111,25 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check if the original file exists
 	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		// File doesn't exist - let serveOriginal handle SPA routing
-		h.serveOriginal(w, r)
+		h.serveOriginal(w, r, fullPath, relPath)
 		return
 	}
 
 	// Don't compress already-compressed files
 	if isCompressedFormat(filepath.Ext(absPath)) {
-		h.serveOriginal(w, r)
+		h.serveOriginal(w, r, fullPath, relPath)
 		return
 	}
 	// Try to serve pre-compressed file
-	if h.servePrecompressedFile(w, r) {
+	if h.servePrecompressedFile(w, r, fullPath, relPath) {
 		return
 	}
 
 	// Fallback to original SPA handler logic
-	h.serveOriginal(w, r)
+	h.serveOriginal(w, r, fullPath, relPath)
 }
 
-func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
-	fullPath := getFullPath(r.Context())
-
+func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request, fullPath string, relPath string) {
 	// Check whether a file exists at the given path
 	_, err := os.Stat(fullPath)
 	if os.IsNotExist(err) {
@@ -160,7 +146,7 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set cache headers
-	h.setCacheHeaders(w, getRelPath(r.Context()))
+	h.setCacheHeaders(w, relPath)
 
 	// Use http.FileServer to serve the static file with no compression
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
@@ -168,9 +154,7 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request) {
 
 // servePrecompressedFile attempts to serve a pre-compressed variant of the file
 // Returns true if a pre-compressed file was served, false otherwise
-func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Request) bool {
-	fullPath := getFullPath(r.Context())
-
+func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Request, fullPath string, relPath string) bool {
 	// Parse Accept-Encoding header
 	acceptEncoding := filterZeroQuality(strings.ToLower(r.Header.Get("Accept-Encoding")))
 	if acceptEncoding == "" {
@@ -206,7 +190,7 @@ func (h SpaHandler) servePrecompressedFile(w http.ResponseWriter, r *http.Reques
 		w.Header().Set("Content-Encoding", enc.name)
 		w.Header().Add("Vary", "Accept-Encoding")
 		// Set cache headers based on request path
-		h.setCacheHeaders(w, getRelPath(r.Context()))
+		h.setCacheHeaders(w, relPath)
 
 		// Serve pre-compressed file
 		http.ServeFile(w, r, precompressedPath)
@@ -221,10 +205,8 @@ func (h SpaHandler) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	indexPath := filepath.Join(h.staticPath, h.indexPath)
 
 	// Try to serve pre-compressed index.html first
-	// Update context to point to index.html instead of originally requested path
-	idxCtx := context.WithValue(r.Context(), ctxKeyFullPath, indexPath)
-	idxCtx = context.WithValue(idxCtx, ctxKeyRelPath, h.indexPath)
-	if h.servePrecompressedFile(w, r.WithContext(idxCtx)) {
+	// Use full and relative paths to index.html instead of originally requested paths
+	if h.servePrecompressedFile(w, r, indexPath, h.indexPath) {
 		return
 	}
 
@@ -265,20 +247,6 @@ func isCompressedFormat(ext string) bool {
 		}
 	}
 	return false
-}
-
-func getFullPath(ctx context.Context) string {
-	if v := ctx.Value(ctxKeyFullPath); v != nil {
-		return v.(string)
-	}
-	return ""
-}
-
-func getRelPath(ctx context.Context) string {
-	if v := ctx.Value(ctxKeyRelPath); v != nil {
-		return v.(string)
-	}
-	return ""
 }
 
 // filterZeroQuality removes encodings with q=0 or q=0.0 from Accept-Encoding header
