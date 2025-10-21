@@ -21,42 +21,17 @@ type SpaHandler struct {
 }
 
 func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
+	// Keeping this validation here just because we need the absolute static path anyway
 	staticPathAbs, err := filepath.Abs(staticPath)
 	if err != nil {
 		return SpaHandler{}, fmt.Errorf("static path %s is not valid: %w", staticPath, err)
 	}
 
-	indexPathAbs, err := filepath.Abs(filepath.Join(staticPath, indexPath))
-	if err != nil {
-		return SpaHandler{}, fmt.Errorf("index path %s is not valid: %w", indexPath, err)
+	if err := validPath(staticPathAbs, true); err != nil {
+		return SpaHandler{}, fmt.Errorf("static path validation error", staticPath, err)
 	}
-
-	stat, err := os.Stat(staticPathAbs)
-	if os.IsNotExist(err) {
-		return SpaHandler{}, fmt.Errorf("static path %s does not exist", staticPathAbs)
-	}
-	if os.IsPermission(err) {
-		return SpaHandler{}, fmt.Errorf("no permission to access static path %s", staticPathAbs)
-	}
-	if err != nil {
-		return SpaHandler{}, fmt.Errorf("error accessing static path %s: %w", staticPathAbs, err)
-	}
-	if !stat.IsDir() {
-		return SpaHandler{}, fmt.Errorf("static path %s is not a directory", staticPathAbs)
-	}
-
-	stat, err = os.Stat(indexPathAbs)
-	if os.IsNotExist(err) {
-		return SpaHandler{}, fmt.Errorf("index path %s does not exist", indexPathAbs)
-	}
-	if os.IsPermission(err) {
-		return SpaHandler{}, fmt.Errorf("no permission to access index path %s", indexPathAbs)
-	}
-	if err != nil {
-		return SpaHandler{}, fmt.Errorf("error accessing index path %s: %w", indexPathAbs, err)
-	}
-	if stat.IsDir() {
-		return SpaHandler{}, fmt.Errorf("index path %s is a directory, must be a file", indexPathAbs)
+	if err := validPath(indexPath, false); err != nil {
+		return SpaHandler{}, fmt.Errorf("index path validation error", indexPath, err)
 	}
 
 	return SpaHandler{
@@ -76,6 +51,8 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	relPath = strings.TrimPrefix(relPath, "/")
 	fullPath := filepath.Join(h.staticPath, relPath)
 
+	r = r.WithContext(log.WithAttrs(r.Context(), "static_path", h.staticPath, "requested_path", r.URL.Path))
+
 	// Special case: root path should serve index.html
 	if relPath == "" {
 		h.serveIndexHTML(w, r)
@@ -84,26 +61,14 @@ func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
-		log.Error(
-			r.Context(),
-			"error building absolute path",
-			"static path", h.staticPath,
-			"requested path", r.URL.Path,
-			"error", err,
-		)
+		log.Error(r.Context(), "error building absolute path", "error", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
 	rel, err := filepath.Rel(h.staticPath, absPath)
 	if err != nil || strings.Contains(rel, "..") {
-		log.Error(
-			r.Context(),
-			"requested path is outside of static path",
-			"static path", h.staticPath,
-			"requested path", r.URL.Path,
-			"error", err,
-		)
+		log.Error(r.Context(), "requested path is outside of static path", "error", err)
 		http.Error(w, "Invalid request URI", http.StatusBadRequest)
 		return
 	}
@@ -140,7 +105,7 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request, fullPa
 	if err != nil {
 		// If we got an error (that wasn't that the file doesn't exist) stating the file,
 		// return a 500 internal server error and stop
-		log.Error(r.Context(), "Error stating file, requested by client", "file path", fullPath, "error", err)
+		log.Error(r.Context(), "Error stating file, requested by client", "file_path", fullPath, "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -213,7 +178,7 @@ func (h SpaHandler) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	// Fallback to uncompressed index.html
 	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
 		// Index file doesn't exist - this is a serious configuration error, not a regular 404
-		log.Error(r.Context(), "Error: index.html not found", "index.html path:", indexPath)
+		log.Error(r.Context(), "Error: index.html not found", "index.html_path:", indexPath)
 		http.Error(w, "Application index file not found", http.StatusInternalServerError)
 		return
 	}
@@ -231,6 +196,39 @@ func (h SpaHandler) setCacheHeaders(w http.ResponseWriter, relPath string) {
 		// Short cache with revalidation for other files
 		w.Header().Set("Cache-Control", "public, max-age=3600, must-revalidate")
 	}
+}
+
+// validPath validates the given path string.
+//
+// Parameters:
+//   - pathStr: The path to validate.
+//   - isDir: A boolean indicating whether the path is expected to be a directory (true) or a file (false).
+//
+// Returns:
+//   - error: An error if the path is invalid, or nil if the path is valid.
+func validPath(pathStr string, isDir bool) error {
+	pathAbs, err := filepath.Abs(pathStr)
+	if err != nil {
+		return fmt.Errorf("path %s is not valid: %w", pathStr, err)
+	}
+
+	stat, err := os.Stat(pathAbs)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("path %s does not exist", pathAbs)
+	}
+	if os.IsPermission(err) {
+		return fmt.Errorf("no permission to access path %s", pathAbs)
+	}
+	if err != nil {
+		return fmt.Errorf("error accessing path %s: %w", pathAbs, err)
+	}
+	if isDir && !stat.IsDir() {
+		return fmt.Errorf("path %s is not a directory", pathAbs)
+	}
+	if !isDir && stat.IsDir() {
+		return fmt.Errorf("path %s is a directory, must be a file", pathAbs)
+	}
+	return nil
 }
 
 func isCompressedFormat(ext string) bool {
