@@ -30,7 +30,7 @@ func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 	if err := validPath(staticPathAbs, true); err != nil {
 		return SpaHandler{}, fmt.Errorf("static path %s validation error: %w", staticPath, err)
 	}
-	if err := validPath(filepath.Join(staticPath, indexPath), false); err != nil {
+	if err := validPath(filepath.Join(staticPathAbs, indexPath), false); err != nil {
 		return SpaHandler{}, fmt.Errorf("index path %s validation error: %w", indexPath, err)
 	}
 
