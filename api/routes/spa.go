@@ -30,7 +30,7 @@ func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 	if err := validPath(staticPathAbs, true); err != nil {
 		return SpaHandler{}, fmt.Errorf("static path %s validation error: %w", staticPath, err)
 	}
-	if err := validPath(indexPath, false); err != nil {
+	if err := validPath(filepath.Join(staticPath, indexPath), false); err != nil {
 		return SpaHandler{}, fmt.Errorf("index path %s validation error: %w", indexPath, err)
 	}
 
@@ -47,8 +47,7 @@ func NewSpaHandler(staticPath string, indexPath string) (SpaHandler, error) {
 // Pre-compressed files (.br, .zst, .gz) are served if the client supports
 // them, otherwise the original file is served.
 func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	relPath := filepath.Clean(r.URL.Path)
-	relPath = strings.TrimPrefix(relPath, "/")
+	relPath := strings.TrimPrefix(filepath.Clean(r.URL.Path), "/")
 	fullPath := filepath.Join(h.staticPath, relPath)
 
 	r = r.WithContext(log.WithAttrs(r.Context(), "static_path", h.staticPath, "requested_path", r.URL.Path))
@@ -178,7 +177,7 @@ func (h SpaHandler) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	// Fallback to uncompressed index.html
 	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
 		// Index file doesn't exist - this is a serious configuration error, not a regular 404
-		log.Error(r.Context(), "Error: index.html not found", "index.html_path:", indexPath)
+		log.Error(r.Context(), "Error: index.html not found", "index_path", indexPath)
 		http.Error(w, "Application index file not found", http.StatusInternalServerError)
 		return
 	}
