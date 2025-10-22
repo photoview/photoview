@@ -11,7 +11,7 @@ import (
 	"github.com/photoview/photoview/api/test_utils"
 )
 
-func TestExifMigration(t *testing.T) {
+func TestExifGPSMigration(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 	defer db.Exec("DELETE FROM media_exif") // Clean up after test
 

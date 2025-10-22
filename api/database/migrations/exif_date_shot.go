@@ -10,7 +10,7 @@ import (
 
 func MigrateDateShot(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		rows, err := tx.Model(&models.MediaEXIF{}).Select("id", "date_shot").Where("date_shot IS NOT NULL AND date_shot_str IS NULL").Rows()
+		rows, err := db.Model(&models.MediaEXIF{}).Select("id", "date_shot").Where("date_shot IS NOT NULL AND date_shot_str IS NULL").Rows()
 		if err != nil {
 			return fmt.Errorf("can't query rows for migrating date_shot: %w", err)
 		}

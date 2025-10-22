@@ -10,6 +10,8 @@ import (
 )
 
 func parseTime(t *testing.T, timeStr string, loc *time.Location) *time.Time {
+	t.Helper()
+
 	ret, err := time.ParseInLocation("2006-01-02T15:04:05", timeStr, loc)
 	if err != nil {
 		t.Fatalf("parse time %q error: %v", timeStr, err)
