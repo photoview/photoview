@@ -188,6 +188,6 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ steps.dockle.conclusion == 'success' }}
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: dockle-results-${{ matrix.tags.tag }}.sarif

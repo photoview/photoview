@@ -76,9 +76,11 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 		}
 	}
 
-	media.DateShot = dateShot.UTC()
-	if err := tx.Save(media).Error; err != nil {
-		return fmt.Errorf("failed to update media date_shot: %w", err)
+	if !dateShot.IsZero() && !dateShot.Equal(media.DateShot) {
+		media.DateShot = dateShot.UTC()
+		if err := tx.Save(media).Error; err != nil {
+			return fmt.Errorf("failed to update media date_shot: %w", err)
+		}
 	}
 
 	return nil

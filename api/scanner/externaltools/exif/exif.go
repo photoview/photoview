@@ -55,7 +55,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	}
 
 	if len(failures) > 0 {
-		log.Warn(nil, "Parse exif failures", "file path", filepath, "errors", failures)
+		log.Warn(nil, "Parse exif failures", "file_path", filepath, "errors", failures)
 	}
 
 	return exif, nil
