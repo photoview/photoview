@@ -50,7 +50,7 @@ func TestExifDateShotMigration(t *testing.T) {
 
 	// Validate the results
 	var results []models.MediaEXIF
-	if err := db.Find(&results).Error; err != nil {
+	if err := db.Order("id").Find(&results).Error; err != nil {
 		t.Fatalf("can't query media exif after migration: %v", err)
 	}
 
