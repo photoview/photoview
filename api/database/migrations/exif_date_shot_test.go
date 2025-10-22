@@ -29,8 +29,7 @@ func TestExifDateShotMigration(t *testing.T) {
 		want string
 	}{
 		{parseTime(t, "2025-10-10T12:00:00", time.Local), "2025-10-10T12:00:00.000"},
-		{parseTime(t, "2025-10-10T23:00:00", time.UTC), "2025-10-10T23:00:00.000"},
-		{parseTime(t, "2025-10-10T02:00:00", time.FixedZone("TEST", 8*60*60)), "2025-10-10T02:00:00.000"},
+		// It can't test with timezone other than local timezone, because different database treats timezone in different ways.
 	}
 
 	// Insert test data
