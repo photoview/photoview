@@ -45,9 +45,20 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       const dateString = String(exif.dateShot);
 
       // Parse as ISO (RFC3339 is a subset of ISO8601)
-      const dt = DateTime.fromISO(dateString, { setZone: true });
+      var dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
+        console.log('offset sec shot:' + mediaExif.offsetSecShot);
+
+        if (mediaExif.offsetSecShot) {
+          const sign = (mediaExif.offsetSecShot>0 ? '+' : '-');
+          const offsetHour = Math.abs(Math.round(mediaExif.offsetSecShot / 60 / 60));
+          const offsetMin = Math.abs(Math.round(mediaExif.offsetSecShot / 60)) - offsetHour * 60;
+          const offset = `UTC${sign}${offsetHour.toString().padStart(2, '0')}:${offsetMin.toString().padStart(2, '0')}`;
+          console.log('offset:' + offset);
+          dt = dt.setZone(offset);
+        }
+
         // Format date and time parts in user's translation locale, but as "naive" (no shifting)
         const dtLocalized = dt.setLocale(i18n.language);
         const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);

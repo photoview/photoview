@@ -28,6 +28,7 @@ describe('ExifDetails', () => {
         maker: null,
         lens: null,
         dateShot: null,
+        offsetSecShot: null,
         exposure: null,
         aperture: null,
         iso: null,
@@ -68,6 +69,7 @@ describe('ExifDetails', () => {
         maker: 'Canon',
         lens: 'TAMRON SP 24-70mm F/2.8',
         dateShot: '2021-01-23T20:50:18Z',
+        offsetSecShot: 3600,
         exposure: 0.016666666666666666,
         aperture: 2.8,
         iso: 100,
@@ -124,28 +126,32 @@ describe('ExifDetails', () => {
 
 describe('ExifDetails dateShot formatting', () => {
 
-  const createMediaWithDateShot = (dateShot: string): MediaSidebarMedia => ({
-    id: '1730',
-    title: 'media_name.jpg',
-    type: MediaType.Photo,
-    exif: {
-      id: '1666',
-      description: null,
-      camera: null,
-      maker: null,
-      lens: null,
-      dateShot,
-      exposure: null,
-      aperture: null,
-      iso: null,
-      focalLength: null,
-      flash: null,
-      exposureProgram: null,
-      coordinates: null,
-      __typename: 'MediaEXIF',
-    },
-    __typename: 'Media',
-  })
+  const createMediaWithDateShot = (dateShot: string, offsetSecShot: int = null): MediaSidebarMedia => {
+    console.log('input:' + offsetSecShot);
+    return {
+      id: '1730',
+      title: 'media_name.jpg',
+      type: MediaType.Photo,
+      exif: {
+        id: '1666',
+        description: null,
+        camera: null,
+        maker: null,
+        lens: null,
+        dateShot,
+        offsetSecShot,
+        exposure: null,
+        aperture: null,
+        iso: null,
+        focalLength: null,
+        flash: null,
+        exposureProgram: null,
+        coordinates: null,
+        __typename: 'MediaEXIF',
+      },
+      __typename: 'Media',
+    };
+  }
 
   describe('RFC3339 with timezone offset', () => {
     test('formats RFC3339 with positive timezone offset', () => {
@@ -540,6 +546,28 @@ describe('ExifDetails dateShot formatting', () => {
 
       testCases.forEach(({ input, pattern }, index) => {
         const media = createMediaWithDateShot(input)
+        const { rerender } = render(<ExifDetails media={media} />)
+
+        expect(screen.getByText(pattern)).toBeInTheDocument()
+
+        if (index < testCases.length - 1) {
+          rerender(<div />)
+        }
+      })
+    })
+  })
+
+  describe('Photo with offsetSecShot', () => {
+    test('show dateShot in the timezone of offsetSecShot', () => {
+      const testCases = [
+        { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 3600, pattern: /^Apr 10, 2023 11:20:25 PM \+01:00$/ },
+        { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 7200, pattern: /^Apr 11, 2023 12:20:25 AM \+02:00$/ },
+        { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: -3600, pattern: /^Apr 10, 2023 1:20:25 PM \-01:00$/ },
+        { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 2:35:25 PM \+00:15$/ },
+      ]
+
+      testCases.forEach(({ dateShot, offsetSecShot, pattern }, index) => {
+        const media = createMediaWithDateShot(dateShot, offsetSecShot)
         const { rerender } = render(<ExifDetails media={media} />)
 
         expect(screen.getByText(pattern)).toBeInTheDocument()

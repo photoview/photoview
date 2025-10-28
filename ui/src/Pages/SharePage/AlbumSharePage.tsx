@@ -73,6 +73,7 @@ export const SHARE_ALBUM_QUERY = gql`
           maker
           lens
           dateShot
+          offsetSecShot
           exposure
           aperture
           iso
