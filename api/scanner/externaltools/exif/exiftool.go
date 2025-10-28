@@ -100,6 +100,8 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 CREATE_DATE:
 	for _, createDateKey := range []string{
 		// Keep the order for the priority to generate DateShot
+		"SubSecDateTimeOriginal",
+		"SubSecCreateDate",
 		"CreationDate",
 		"DateTimeOriginal",
 		"CreateDate",
@@ -129,6 +131,31 @@ CREATE_DATE:
 		} else {
 			failures.Append(createDateKey, err)
 		}
+	}
+
+	// Get timezone of photo
+TIMEZONE:
+	for _, field := range []string{
+		// Keep the order for the priority to generate TimezoneShot
+		"OffsetTimeOriginal",
+		"OffsetTime",
+		"TimeZone",
+	} {
+		str, err := fileInfo.GetString(field)
+		if err != nil {
+			continue TIMEZONE
+		}
+
+		t, err := time.Parse("-07:00", str)
+		if err != nil {
+			failures.Append(field, err)
+			continue TIMEZONE
+		}
+
+		_, offsetSecs := t.Zone()
+		retEXIF.OffsetSecShot = &offsetSecs
+		foundExif = true
+		break TIMEZONE
 	}
 
 	// Get GPS data

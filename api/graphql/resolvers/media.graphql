@@ -40,7 +40,10 @@ type MediaEXIF {
   maker: String
   "The name of the lens"
   lens: String
+  "The date when the photo is shot"
   dateShot: Time
+  "The time offset in seconds where the photo is shot at"
+  offsetSecShot: Int
   "The exposure time of the image"
   exposure: Float
   "The aperature stops of the image"

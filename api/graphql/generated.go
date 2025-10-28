@@ -142,6 +142,7 @@ type ComplexityRoot struct {
 		Lens            func(childComplexity int) int
 		Maker           func(childComplexity int) int
 		Media           func(childComplexity int) int
+		OffsetSecShot   func(childComplexity int) int
 	}
 
 	MediaURL struct {
@@ -765,6 +766,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MediaEXIF.Media(childComplexity), true
+	case "MediaEXIF.offsetSecShot":
+		if e.complexity.MediaEXIF.OffsetSecShot == nil {
+			break
+		}
+
+		return e.complexity.MediaEXIF.OffsetSecShot(childComplexity), true
 
 	case "MediaURL.fileSize":
 		if e.complexity.MediaURL.FileSize == nil {
@@ -3640,6 +3647,8 @@ func (ec *executionContext) fieldContext_Media_exif(_ context.Context, field gra
 				return ec.fieldContext_MediaEXIF_lens(ctx, field)
 			case "dateShot":
 				return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
+			case "offsetSecShot":
+				return ec.fieldContext_MediaEXIF_offsetSecShot(ctx, field)
 			case "exposure":
 				return ec.fieldContext_MediaEXIF_exposure(ctx, field)
 			case "aperture":
@@ -4247,6 +4256,35 @@ func (ec *executionContext) fieldContext_MediaEXIF_dateShot(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MediaEXIF_offsetSecShot(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MediaEXIF_offsetSecShot,
+		func(ctx context.Context) (any, error) {
+			return obj.OffsetSecShot, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MediaEXIF_offsetSecShot(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MediaEXIF",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11657,6 +11695,8 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._MediaEXIF_lens(ctx, field, obj)
 		case "dateShot":
 			out.Values[i] = ec._MediaEXIF_dateShot(ctx, field, obj)
+		case "offsetSecShot":
+			out.Values[i] = ec._MediaEXIF_offsetSecShot(ctx, field, obj)
 		case "exposure":
 			out.Values[i] = ec._MediaEXIF_exposure(ctx, field, obj)
 		case "aperture":
