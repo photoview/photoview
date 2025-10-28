@@ -48,7 +48,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       let dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
-        if (mediaExif.offsetSecShot != undefined) {
+        if (mediaExif.offsetSecShot != null) {
           const sign = (mediaExif.offsetSecShot>=0 ? '+' : '-');
           const offsetAbs = Math.abs(mediaExif.offsetSecShot)
           const offsetHour = Math.trunc(offsetAbs / 60 / 60);
