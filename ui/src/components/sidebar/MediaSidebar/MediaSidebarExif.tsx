@@ -45,18 +45,16 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       const dateString = String(exif.dateShot);
 
       // Parse as ISO (RFC3339 is a subset of ISO8601)
-      var dt = DateTime.fromISO(dateString, { setZone: true });
+      let dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
-        console.log('offset sec shot:' + mediaExif.offsetSecShot);
-
-        if (mediaExif.offsetSecShot) {
-          const sign = (mediaExif.offsetSecShot>0 ? '+' : '-');
-          const offsetHour = Math.abs(Math.round(mediaExif.offsetSecShot / 60 / 60));
-          const offsetMin = Math.abs(Math.round(mediaExif.offsetSecShot / 60)) - offsetHour * 60;
-          const offset = `UTC${sign}${offsetHour.toString().padStart(2, '0')}:${offsetMin.toString().padStart(2, '0')}`;
-          console.log('offset:' + offset);
-          dt = dt.setZone(offset);
+        if (mediaExif.offsetSecShot != undefined) {
+          const sign = (mediaExif.offsetSecShot>=0 ? '+' : '-');
+          const offsetAbs = Math.abs(mediaExif.offsetSecShot)
+          const offsetHour = Math.trunc(offsetAbs / 60 / 60);
+          const offsetMin = Math.trunc((offsetAbs % (60 * 60)) / 60);
+          const offsetStr = `UTC${sign}${offsetHour.toString().padStart(2, '0')}:${offsetMin.toString().padStart(2, '0')}`;
+          dt = dt.setZone(offsetStr);
         }
 
         // Format date and time parts in user's translation locale, but as "naive" (no shifting)

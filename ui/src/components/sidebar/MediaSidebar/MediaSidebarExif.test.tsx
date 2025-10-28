@@ -126,8 +126,7 @@ describe('ExifDetails', () => {
 
 describe('ExifDetails dateShot formatting', () => {
 
-  const createMediaWithDateShot = (dateShot: string, offsetSecShot: int = null): MediaSidebarMedia => {
-    console.log('input:' + offsetSecShot);
+  const createMediaWithDateShot = (dateShot: string, offsetSecShot: number | null = null): MediaSidebarMedia => {
     return {
       id: '1730',
       title: 'media_name.jpg',
@@ -564,6 +563,10 @@ describe('ExifDetails dateShot formatting', () => {
         { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 7200, pattern: /^Apr 11, 2023 12:20:25 AM \+02:00$/ },
         { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: -3600, pattern: /^Apr 10, 2023 1:20:25 PM \-01:00$/ },
         { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 2:35:25 PM \+00:15$/ },
+        { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 19800, pattern: /^Apr 10, 2023 5:30:00 PM \+05:30$/ },
+        { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 20700, pattern: /^Apr 10, 2023 5:45:00 PM \+05:45$/ },
+        { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: -12600, pattern: /^Apr 10, 2023 8:30:00 AM \-03:30$/ },
+        { dateShot: '2023-04-10T12:00:00+02:00', offsetSecShot: 0, pattern: /^Apr 10, 2023 10:00:00 AM \+00:00$/ },
       ]
 
       testCases.forEach(({ dateShot, offsetSecShot, pattern }, index) => {
