@@ -48,6 +48,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
       let dt = DateTime.fromISO(dateString, { setZone: true });
 
       if (dt.isValid) {
+        let hasTimezone = false;
         if (mediaExif.offsetSecShot != null) {
           const sign = (mediaExif.offsetSecShot>=0 ? '+' : '-');
           const offsetAbs = Math.abs(mediaExif.offsetSecShot)
@@ -55,6 +56,7 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
           const offsetMin = Math.trunc((offsetAbs % (60 * 60)) / 60);
           const offsetStr = `UTC${sign}${offsetHour.toString().padStart(2, '0')}:${offsetMin.toString().padStart(2, '0')}`;
           dt = dt.setZone(offsetStr);
+          hasTimezone = true;
         }
 
         // Format date and time parts in user's translation locale, but as "naive" (no shifting)
@@ -62,8 +64,6 @@ const ExifDetails = ({ media }: ExifDetailsProps) => {
         const localeDate = dtLocalized.toLocaleString(DateTime.DATE_MED);
         const localeTime = dtLocalized.toLocaleString(DateTime.TIME_WITH_SECONDS);
 
-        // Check if the original string contains timezone information
-        const hasTimezone = /(?:[zZ]|[+-]\d{2}:\d{2}|[+-]\d{4})$/.test(dateString);
         if (hasTimezone) {
           // Get the offset in ±HH:MM
           const offset = dt.toFormat('ZZ');
