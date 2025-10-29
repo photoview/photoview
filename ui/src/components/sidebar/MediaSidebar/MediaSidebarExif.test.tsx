@@ -509,9 +509,13 @@ describe('ExifDetails dateShot formatting', () => {
     test('show dateShot in the timezone of offsetSecShot', () => {
       const testCases = [
         { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 3600, pattern: /^Apr 10, 2023 11:20:25 PM \+01:00$/ },
+        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 3600, pattern: /^Apr 10, 2023 4:20:25 PM \+01:00$/ },
         { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 7200, pattern: /^Apr 11, 2023 12:20:25 AM \+02:00$/ },
+        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 7200, pattern: /^Apr 10, 2023 5:20:25 PM \+02:00$/ },
         { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: -3600, pattern: /^Apr 10, 2023 1:20:25 PM \-01:00$/ },
+        { dateShot: '2023-04-10T15:20:25', offsetSecShot: -3600, pattern: /^Apr 10, 2023 2:20:25 PM \-01:00$/ },
         { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 2:35:25 PM \+00:15$/ },
+        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 3:35:25 PM \+00:15$/ },
         { dateShot: '2023-04-10T12:00:00.123Z', offsetSecShot: 3600, pattern: /^Apr 10, 2023 1:00:00 PM \+01:00$/ }, // milliseconds
         { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 20700, pattern: /^Apr 10, 2023 5:45:00 PM \+05:45$/ }, // Nepal time
         { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 9*60*60 + 30*60, pattern: /^Apr 10, 2023 9:30:00 PM \+09:30$/ }, // Adelaide
