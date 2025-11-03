@@ -28,7 +28,6 @@ describe('ExifDetails', () => {
         maker: null,
         lens: null,
         dateShot: null,
-        offsetSecShot: null,
         exposure: null,
         aperture: null,
         iso: null,
@@ -69,7 +68,6 @@ describe('ExifDetails', () => {
         maker: 'Canon',
         lens: 'TAMRON SP 24-70mm F/2.8',
         dateShot: '2021-01-23T20:50:18Z',
-        offsetSecShot: 3600,
         exposure: 0.016666666666666666,
         aperture: 2.8,
         iso: 100,
@@ -126,35 +124,32 @@ describe('ExifDetails', () => {
 
 describe('ExifDetails dateShot formatting', () => {
 
-  const createMediaWithDateShot = (dateShot: string, offsetSecShot: number | null = null): MediaSidebarMedia => {
-    return {
-      id: '1730',
-      title: 'media_name.jpg',
-      type: MediaType.Photo,
-      exif: {
-        id: '1666',
-        description: null,
-        camera: null,
-        maker: null,
-        lens: null,
-        dateShot,
-        offsetSecShot,
-        exposure: null,
-        aperture: null,
-        iso: null,
-        focalLength: null,
-        flash: null,
-        exposureProgram: null,
-        coordinates: null,
-        __typename: 'MediaEXIF',
-      },
-      __typename: 'Media',
-    };
-  }
+  const createMediaWithDateShot = (dateShot: string): MediaSidebarMedia => ({
+    id: '1730',
+    title: 'media_name.jpg',
+    type: MediaType.Photo,
+    exif: {
+      id: '1666',
+      description: null,
+      camera: null,
+      maker: null,
+      lens: null,
+      dateShot,
+      exposure: null,
+      aperture: null,
+      iso: null,
+      focalLength: null,
+      flash: null,
+      exposureProgram: null,
+      coordinates: null,
+      __typename: 'MediaEXIF',
+    },
+    __typename: 'Media',
+  })
 
   describe('RFC3339 with timezone offset', () => {
     test('formats RFC3339 with positive timezone offset', () => {
-      const media = createMediaWithDateShot('2023-07-15T14:30:45+02:00', 2*60*60)
+      const media = createMediaWithDateShot('2023-07-15T14:30:45+02:00')
       render(<ExifDetails media={media} />)
 
       expect(screen.getByText('Date shot')).toBeInTheDocument()
@@ -163,14 +158,14 @@ describe('ExifDetails dateShot formatting', () => {
     })
 
     test('formats RFC3339 with negative timezone offset', () => {
-      const media = createMediaWithDateShot('2023-12-15T10:15:30-08:00', -8*60*60)
+      const media = createMediaWithDateShot('2023-12-15T10:15:30-08:00')
       render(<ExifDetails media={media} />)
 
       expect(screen.getByText(/Dec 15, 2023.*10:15:30 AM.*-08:00$/)).toBeInTheDocument()
     })
 
     test('formats RFC3339 with fractional timezone offset', () => {
-      const media = createMediaWithDateShot('2023-06-01T16:45:12+05:30', 5*60*60+30*60)
+      const media = createMediaWithDateShot('2023-06-01T16:45:12+05:30')
       render(<ExifDetails media={media} />)
 
       // India Standard Time with +05:30 offset, no abbreviation
@@ -178,7 +173,7 @@ describe('ExifDetails dateShot formatting', () => {
     })
 
     test('formats RFC3339 UTC with Z suffix', () => {
-      const media = createMediaWithDateShot('2023-05-10T12:00:00Z', 0)
+      const media = createMediaWithDateShot('2023-05-10T12:00:00Z')
       render(<ExifDetails media={media} />)
 
       // Should show UTC offset but no abbreviation
@@ -186,7 +181,7 @@ describe('ExifDetails dateShot formatting', () => {
     })
 
     test('formats RFC3339 with +0000 format', () => {
-      const media = createMediaWithDateShot('2023-01-01T12:00:00+0000', 0)
+      const media = createMediaWithDateShot('2023-01-01T12:00:00+0000')
       render(<ExifDetails media={media} />)
 
       // Should detect +0000 as timezone and show +00:00 offset
@@ -242,14 +237,14 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses English (en) translation language', () => {
       mockUseTranslationWithLanguage('en')
 
-      const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00', 60*60)
+      const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
       const { rerender } = render(<ExifDetails media={mediaWithTz} />)
 
       // English locale DATE_MED format with timezone
       expect(screen.getByText(/Nov 5, 2023.*3:20:10 PM.*\+01:00$/)).toBeInTheDocument()
 
       // Test without timezone - should use English formatting but no timezone
-      const mediaNoTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
+      const mediaNoTz = createMediaWithDateShot('2023-11-05T15:20:10')
       rerender(<ExifDetails media={mediaNoTz} />)
 
       expect(screen.getByText(/^Nov 5, 2023 3:20:10 PM$/)).toBeInTheDocument()
@@ -259,14 +254,14 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses German (de) translation language', () => {
       mockUseTranslationWithLanguage('de')
 
-      const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00', 60*60)
+      const mediaWithTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
       const { rerender } = render(<ExifDetails media={mediaWithTz} />)
 
       // German locale DATE_MED format with timezone
       expect(screen.getByText(/5\. Nov\. 2023.*15:20:10.*\+01:00$/)).toBeInTheDocument()
 
       // Test without timezone - should use German formatting but no timezone
-      const mediaNoTz = createMediaWithDateShot('2023-11-05T15:20:10+01:00')
+      const mediaNoTz = createMediaWithDateShot('2023-11-05T15:20:10')
       rerender(<ExifDetails media={mediaNoTz} />)
 
       expect(screen.getByText(/^5\. Nov\. 2023 15:20:10$/)).toBeInTheDocument()
@@ -276,7 +271,7 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses French (fr) translation language', () => {
       mockUseTranslationWithLanguage('fr')
 
-      const mediaWithTz = createMediaWithDateShot('2023-12-25T20:45:30+01:00', 60*60)
+      const mediaWithTz = createMediaWithDateShot('2023-12-25T20:45:30+01:00')
       const { rerender } = render(<ExifDetails media={mediaWithTz} />)
 
       // French DATE_MED format with timezone
@@ -292,11 +287,11 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Spanish (es) translation language', () => {
       mockUseTranslationWithLanguage('es')
 
-      const media = createMediaWithDateShot('2023-07-20T14:15:30-05:00', -5*60*60)
+      const media = createMediaWithDateShot('2023-07-20T14:15:30-05:00')
       render(<ExifDetails media={media} />)
 
       // Spanish locale formatting with timezone
-      expect(screen.getByText(/20 jul 2023.*14:15:30.*\-05:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/20 jul 2023.*14:15:30.*-05:00$/)).toBeInTheDocument()
     })
 
     test('uses Danish (da) translation language', () => {
@@ -306,13 +301,13 @@ describe('ExifDetails dateShot formatting', () => {
       render(<ExifDetails media={media} />)
 
       // Danish locale formatting with timezone
-      expect(screen.getByText(/15\. jun\. 2023 12\.30\.45$/)).toBeInTheDocument()
+      expect(screen.getByText(/15\. jun\. 2023 12\.30\.45 \+02:00$/)).toBeInTheDocument()
     })
 
     test('uses Italian (it) translation language', () => {
       mockUseTranslationWithLanguage('it')
 
-      const media = createMediaWithDateShot('2023-09-10T11:20:15+02:00', 2*60*60)
+      const media = createMediaWithDateShot('2023-09-10T11:20:15+02:00')
       render(<ExifDetails media={media} />)
 
       // Italian locale formatting with timezone
@@ -322,17 +317,17 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Portuguese (pt) translation language', () => {
       mockUseTranslationWithLanguage('pt')
 
-      const media = createMediaWithDateShot('2023-09-10T11:20:15-03:00', -3*60*60)
+      const media = createMediaWithDateShot('2023-09-10T11:20:15-03:00')
       render(<ExifDetails media={media} />)
 
       // Portuguese locale formatting with timezone
-      expect(screen.getByText(/10 de set\. de 2023.*11:20:15.*\-03:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/10 de set\. de 2023.*11:20:15.*-03:00$/)).toBeInTheDocument()
     })
 
     test('uses Polish (pl) translation language', () => {
       mockUseTranslationWithLanguage('pl')
 
-      const media = createMediaWithDateShot('2023-08-12T16:00:00+02:00', 2*60*60)
+      const media = createMediaWithDateShot('2023-08-12T16:00:00+02:00')
       render(<ExifDetails media={media} />)
 
       // Polish locale formatting with timezone
@@ -342,7 +337,7 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Ukrainian (uk) translation language', () => {
       mockUseTranslationWithLanguage('uk')
 
-      const media = createMediaWithDateShot('2023-08-12T16:00:00+03:00', 3*60*60)
+      const media = createMediaWithDateShot('2023-08-12T16:00:00+03:00')
       render(<ExifDetails media={media} />)
 
       // Ukrainian locale formatting with timezone
@@ -352,7 +347,7 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Swedish (sv) translation language', () => {
       mockUseTranslationWithLanguage('sv')
 
-      const media = createMediaWithDateShot('2023-05-15T14:30:00+02:00', 2*60*60)
+      const media = createMediaWithDateShot('2023-05-15T14:30:00+02:00')
       render(<ExifDetails media={media} />)
 
       // Swedish locale formatting with timezone
@@ -362,17 +357,17 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Japanese (ja) translation language', () => {
       mockUseTranslationWithLanguage('ja')
 
-      const media = createMediaWithDateShot('2023-04-12T08:15:45-07:00', -7*60*60)
+      const media = createMediaWithDateShot('2023-04-12T08:15:45-07:00')
       render(<ExifDetails media={media} />)
 
       // Japanese locale formatting with timezone
-      expect(screen.getByText(/2023年4月12日.*8:15:45.*\-07:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/2023年4月12日.*8:15:45.*-07:00$/)).toBeInTheDocument()
     })
 
     test('uses Basque (eu) translation language', () => {
       mockUseTranslationWithLanguage('eu')
 
-      const media = createMediaWithDateShot('2023-03-20T10:30:00+01:00', 60*60)
+      const media = createMediaWithDateShot('2023-03-20T10:30:00+01:00')
       render(<ExifDetails media={media} />)
 
       // Basque locale formatting with timezone
@@ -382,7 +377,7 @@ describe('ExifDetails dateShot formatting', () => {
     test('handles invalid translation language gracefully', () => {
       mockUseTranslationWithLanguage('invalid-locale')
 
-      const media = createMediaWithDateShot('2023-05-15T14:30:00+01:00', 60*60)
+      const media = createMediaWithDateShot('2023-05-15T14:30:00+01:00')
       render(<ExifDetails media={media} />)
 
       // Should fall back gracefully and still format the date
@@ -393,18 +388,18 @@ describe('ExifDetails dateShot formatting', () => {
     test('handles empty string translation language', () => {
       mockUseTranslationWithLanguage('')
 
-      const media = createMediaWithDateShot('2023-01-15T12:00:00-05:00', -5*60*60)
+      const media = createMediaWithDateShot('2023-01-15T12:00:00-05:00')
       render(<ExifDetails media={media} />)
 
       // Should handle empty string gracefully
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*\-05:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*-05:00$/)).toBeInTheDocument()
     })
 
     test('uses Russian (ru) translation language', () => {
       mockUseTranslationWithLanguage('ru')
 
-      const media = createMediaWithDateShot('2023-02-23T12:15:30+03:00', 3*60*60)
+      const media = createMediaWithDateShot('2023-02-23T12:15:30+03:00')
       render(<ExifDetails media={media} />)
 
       // Russian locale formatting with timezone
@@ -414,27 +409,27 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Traditional Chinese Hong Kong (zh-HK) translation language', () => {
       mockUseTranslationWithLanguage('zh-HK')
 
-      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00', 8*60*60)
+      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00')
       render(<ExifDetails media={media} />)
 
       // Traditional Chinese HK locale formatting with timezone
-      expect(screen.getByText(/2023年10月1日 下午3:30:00.*\+08:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/2023年10月1日 下午3:30:00 \+08:00$/)).toBeInTheDocument()
     })
 
     test('uses Traditional Chinese Taiwan (zh-TW) translation language', () => {
       mockUseTranslationWithLanguage('zh-TW')
 
-      const media = createMediaWithDateShot('2023-10-10T16:45:00+08:00', 8*60*60)
+      const media = createMediaWithDateShot('2023-10-10T16:45:00+08:00')
       render(<ExifDetails media={media} />)
 
       // Traditional Chinese TW locale formatting with timezone
-      expect(screen.getByText(/2023年10月10日 下午4:45:00.*\+08:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/2023年10月10日 下午4:45:00 \+08:00$/)).toBeInTheDocument()
     })
 
     test('uses Simplified Chinese (zh-CN) translation language', () => {
       mockUseTranslationWithLanguage('zh-CN')
 
-      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00', 8*60*60)
+      const media = createMediaWithDateShot('2023-10-01T15:30:00+08:00')
       render(<ExifDetails media={media} />)
 
       // Simplified Chinese locale formatting with timezone
@@ -444,11 +439,62 @@ describe('ExifDetails dateShot formatting', () => {
     test('uses Turkish (tr) translation language', () => {
       mockUseTranslationWithLanguage('tr')
 
-      const media = createMediaWithDateShot('2023-05-19T13:45:25+03:00', 3*60*60)
+      const media = createMediaWithDateShot('2023-05-19T13:45:25+03:00')
       render(<ExifDetails media={media} />)
 
       // Turkish locale formatting with timezone
       expect(screen.getByText(/19 May 2023.*13:45:25.*\+03:00$/)).toBeInTheDocument()
+    })
+  })
+
+  describe('Timezone detection edge cases', () => {
+    test('detects various timezone formats correctly with regex', () => {
+      const testCases = [
+        { input: '2023-01-01T12:00:00+0000', shouldHaveTz: true }, // +HHMM format
+        { input: '2023-01-01T12:00:00-05:00', shouldHaveTz: true }, // -HH:MM format
+        { input: '2023-01-01T12:00:00Z', shouldHaveTz: true }, // Z format
+        { input: '2023-01-01T12:00:00z', shouldHaveTz: true }, // lowercase z
+        { input: '2023-01-01T12:00:00+1400', shouldHaveTz: true }, // +HHMM max offset
+        { input: '2023-01-01T12:00:00', shouldHaveTz: false }, // No timezone
+        { input: '2023-01-01T12:00:00.123', shouldHaveTz: false }, // Milliseconds, no timezone
+        { input: '2023-01-01T12:00:00.456789', shouldHaveTz: false }, // Microseconds, no timezone
+      ]
+
+      testCases.forEach(({ input, shouldHaveTz }, index) => {
+        const media = createMediaWithDateShot(input)
+        const { rerender } = render(<ExifDetails media={media} />)
+
+        if (shouldHaveTz) {
+          expect(screen.getByText(/[+-]\d{2}:\d{2}$/)).toBeInTheDocument()
+        } else {
+          expect(screen.getByText(/^\w+ \d+, \d+ \d+:\d+:\d+ [AP]M$/)).toBeInTheDocument()
+          expect(screen.queryByText(/[+-]\d{2}:\d{2}/)).not.toBeInTheDocument()
+        }
+
+        if (index < testCases.length - 1) {
+          rerender(<div />)
+        }
+      })
+    })
+
+    test('handles edge case timezone offsets', () => {
+      const testCases = [
+        { input: '2023-01-01T12:00:00+14:00', expected: /Jan 1, 2023.*12:00:00 PM.*\+14:00$/ }, // Max positive
+        { input: '2023-01-01T12:00:00-12:00', expected: /Jan 1, 2023.*12:00:00 PM.*-12:00$/ },  // Max negative
+        { input: '2023-01-01T12:00:00+05:45', expected: /Jan 1, 2023.*12:00:00 PM.*\+05:45$/ }, // Nepal time
+        { input: '2023-01-01T12:00:00+09:30', expected: /Jan 1, 2023.*12:00:00 PM.*\+09:30$/ }, // Adelaide
+      ]
+
+      testCases.forEach(({ input, expected }, index) => {
+        const media = createMediaWithDateShot(input)
+        const { rerender } = render(<ExifDetails media={media} />)
+
+        expect(screen.getByText(expected)).toBeInTheDocument()
+
+        if (index < testCases.length - 1) {
+          rerender(<div />)
+        }
+      })
     })
   })
 
@@ -485,47 +531,15 @@ describe('ExifDetails dateShot formatting', () => {
   })
 
   describe('Format consistency validation', () => {
-    test('always follows consistent format structure without offset sec', () => {
+    test('always follows consistent format structure', () => {
       const testCases = [
-        { input: '2023-04-10T15:20:25-07:00', pattern: /^Apr 10, 2023 3:20:25 PM$/ },
+        { input: '2023-04-10T15:20:25-07:00', pattern: /^Apr 10, 2023 3:20:25 PM -07:00$/ },
         { input: '2023-04-10T15:20:25', pattern: /^Apr 10, 2023 3:20:25 PM$/ },
-        { input: '2023-04-10T15:20:25Z', pattern: /^Apr 10, 2023 3:20:25 PM$/ },
+        { input: '2023-04-10T15:20:25Z', pattern: /^Apr 10, 2023 3:20:25 PM \+00:00$/ },
       ]
 
       testCases.forEach(({ input, pattern }, index) => {
         const media = createMediaWithDateShot(input)
-        const { rerender } = render(<ExifDetails media={media} />)
-
-        expect(screen.getByText(pattern)).toBeInTheDocument()
-
-        if (index < testCases.length - 1) {
-          rerender(<div />)
-        }
-      })
-    })
-  })
-
-  describe('Photo with offsetSecShot', () => {
-    test('show dateShot in the timezone of offsetSecShot', () => {
-      const testCases = [
-        { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 3600, pattern: /^Apr 10, 2023 11:20:25 PM \+01:00$/ },
-        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 3600, pattern: /^Apr 10, 2023 4:20:25 PM \+01:00$/ },
-        { dateShot: '2023-04-10T15:20:25-07:00', offsetSecShot: 7200, pattern: /^Apr 11, 2023 12:20:25 AM \+02:00$/ },
-        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 7200, pattern: /^Apr 10, 2023 5:20:25 PM \+02:00$/ },
-        { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: -3600, pattern: /^Apr 10, 2023 1:20:25 PM \-01:00$/ },
-        { dateShot: '2023-04-10T15:20:25', offsetSecShot: -3600, pattern: /^Apr 10, 2023 2:20:25 PM \-01:00$/ },
-        { dateShot: '2023-04-10T15:20:25+01:00', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 2:35:25 PM \+00:15$/ },
-        { dateShot: '2023-04-10T15:20:25', offsetSecShot: 15*60, pattern: /^Apr 10, 2023 3:35:25 PM \+00:15$/ },
-        { dateShot: '2023-04-10T12:00:00.123Z', offsetSecShot: 3600, pattern: /^Apr 10, 2023 1:00:00 PM \+01:00$/ }, // milliseconds
-        { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 20700, pattern: /^Apr 10, 2023 5:45:00 PM \+05:45$/ }, // Nepal time
-        { dateShot: '2023-04-10T12:00:00Z', offsetSecShot: 9*60*60 + 30*60, pattern: /^Apr 10, 2023 9:30:00 PM \+09:30$/ }, // Adelaide
-        { dateShot: '2023-04-10T12:00:00+02:00', offsetSecShot: 0, pattern: /^Apr 10, 2023 10:00:00 AM \+00:00$/ }, // UTC
-        { dateShot: '2023-01-01T12:00:00+14:00', offsetSecShot: 14*60*60, pattern: /Jan 1, 2023.*12:00:00 PM.*\+14:00$/ }, // Max positive
-        { dateShot: '2023-01-01T12:00:00-12:00', offsetSecShot: -12*60*60, pattern: /Jan 1, 2023.*12:00:00 PM.*-12:00$/ },  // Max negative
-      ]
-
-      testCases.forEach(({ dateShot, offsetSecShot, pattern }, index) => {
-        const media = createMediaWithDateShot(dateShot, offsetSecShot)
         const { rerender } = render(<ExifDetails media={media} />)
 
         expect(screen.getByText(pattern)).toBeInTheDocument()

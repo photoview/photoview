@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -40,4 +41,27 @@ func (exif *MediaEXIF) Coordinates() *Coordinates {
 		Latitude:  *exif.GPSLatitude,
 		Longitude: *exif.GPSLongitude,
 	}
+}
+
+func (exif *MediaEXIF) DateShotWithOffset() time.Time {
+	if exif.DateShot == nil {
+		return time.Time{}
+	}
+
+	if exif.OffsetSecShot == nil {
+		return *exif.DateShot
+	}
+
+	offsetAbs := *exif.OffsetSecShot
+	sign := "+"
+	if offsetAbs < 0 {
+		offsetAbs = -offsetAbs
+		sign = "-"
+	}
+	hour := offsetAbs / 60 / 60
+	minute := offsetAbs / 60 % 60
+	zone := fmt.Sprintf("%s%02d:%02d", sign, hour, minute)
+
+	loc := time.FixedZone(zone, *exif.OffsetSecShot)
+	return exif.DateShot.In(loc)
 }

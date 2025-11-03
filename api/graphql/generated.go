@@ -128,21 +128,20 @@ type ComplexityRoot struct {
 	}
 
 	MediaEXIF struct {
-		Aperture        func(childComplexity int) int
-		Camera          func(childComplexity int) int
-		Coordinates     func(childComplexity int) int
-		DateShot        func(childComplexity int) int
-		Description     func(childComplexity int) int
-		Exposure        func(childComplexity int) int
-		ExposureProgram func(childComplexity int) int
-		Flash           func(childComplexity int) int
-		FocalLength     func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Iso             func(childComplexity int) int
-		Lens            func(childComplexity int) int
-		Maker           func(childComplexity int) int
-		Media           func(childComplexity int) int
-		OffsetSecShot   func(childComplexity int) int
+		Aperture           func(childComplexity int) int
+		Camera             func(childComplexity int) int
+		Coordinates        func(childComplexity int) int
+		DateShotWithOffset func(childComplexity int) int
+		Description        func(childComplexity int) int
+		Exposure           func(childComplexity int) int
+		ExposureProgram    func(childComplexity int) int
+		Flash              func(childComplexity int) int
+		FocalLength        func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Iso                func(childComplexity int) int
+		Lens               func(childComplexity int) int
+		Maker              func(childComplexity int) int
+		Media              func(childComplexity int) int
 	}
 
 	MediaURL struct {
@@ -701,11 +700,11 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.MediaEXIF.Coordinates(childComplexity), true
 	case "MediaEXIF.dateShot":
-		if e.complexity.MediaEXIF.DateShot == nil {
+		if e.complexity.MediaEXIF.DateShotWithOffset == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.DateShot(childComplexity), true
+		return e.complexity.MediaEXIF.DateShotWithOffset(childComplexity), true
 	case "MediaEXIF.description":
 		if e.complexity.MediaEXIF.Description == nil {
 			break
@@ -766,12 +765,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MediaEXIF.Media(childComplexity), true
-	case "MediaEXIF.offsetSecShot":
-		if e.complexity.MediaEXIF.OffsetSecShot == nil {
-			break
-		}
-
-		return e.complexity.MediaEXIF.OffsetSecShot(childComplexity), true
 
 	case "MediaURL.fileSize":
 		if e.complexity.MediaURL.FileSize == nil {
@@ -3647,8 +3640,6 @@ func (ec *executionContext) fieldContext_Media_exif(_ context.Context, field gra
 				return ec.fieldContext_MediaEXIF_lens(ctx, field)
 			case "dateShot":
 				return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
-			case "offsetSecShot":
-				return ec.fieldContext_MediaEXIF_offsetSecShot(ctx, field)
 			case "exposure":
 				return ec.fieldContext_MediaEXIF_exposure(ctx, field)
 			case "aperture":
@@ -4239,10 +4230,10 @@ func (ec *executionContext) _MediaEXIF_dateShot(ctx context.Context, field graph
 		field,
 		ec.fieldContext_MediaEXIF_dateShot,
 		func(ctx context.Context) (any, error) {
-			return obj.DateShot, nil
+			return obj.DateShotWithOffset(), nil
 		},
 		nil,
-		ec.marshalOTime2ᚖtimeᚐTime,
+		ec.marshalOTime2timeᚐTime,
 		true,
 		false,
 	)
@@ -4252,39 +4243,10 @@ func (ec *executionContext) fieldContext_MediaEXIF_dateShot(_ context.Context, f
 	fc = &graphql.FieldContext{
 		Object:     "MediaEXIF",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MediaEXIF_offsetSecShot(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_MediaEXIF_offsetSecShot,
-		func(ctx context.Context) (any, error) {
-			return obj.OffsetSecShot, nil
-		},
-		nil,
-		ec.marshalOInt2ᚖint,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_MediaEXIF_offsetSecShot(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11695,8 +11657,6 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._MediaEXIF_lens(ctx, field, obj)
 		case "dateShot":
 			out.Values[i] = ec._MediaEXIF_dateShot(ctx, field, obj)
-		case "offsetSecShot":
-			out.Values[i] = ec._MediaEXIF_offsetSecShot(ctx, field, obj)
 		case "exposure":
 			out.Values[i] = ec._MediaEXIF_exposure(ctx, field, obj)
 		case "aperture":
@@ -14532,6 +14492,18 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = sel
 	_ = ctx
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalTime(v)
 	return res
 }
 
