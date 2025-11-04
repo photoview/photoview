@@ -293,3 +293,82 @@ func TestSanitizeEXIF_GPS(t *testing.T) {
 		})
 	}
 }
+
+func parseTime(t *testing.T, str string) *time.Time {
+	t.Helper()
+
+	ret, err := time.Parse(layout, str)
+	if err == nil {
+		return &ret
+	}
+
+	ret, err = time.Parse(layoutWithOffset, str)
+	if err == nil {
+		return &ret
+	}
+
+	t.Fatalf("invalid time %q: %v", str, err)
+	panic(0)
+}
+
+func p[T any](v T) *T {
+	return &v
+}
+
+func TestCalculateOffsetFromGPS(t *testing.T) {
+	tests := []struct {
+		name         string
+		originalDate *time.Time
+		gpsDateStamp *string
+		gpsTimeStamp *string
+		wantOffset   *int
+		wantError    bool
+	}{
+		{"UTC+1", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), p("15:00:00"), p(60 * 60), false},
+		{"UTC-1", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), p("13:00:00"), p(-1 * 60 * 60), false},
+		{"UTC+1:15", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), p("15:15:00"), p(60*60 + 15*60), false},
+		{"UTC-1:15", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), p("12:45:00"), p(-1*60*60 - 15*60), false},
+		{"UTC+8", parseTime(t, "2025:11:04 23:00:00"), p("2025:11:05"), p("07:00:00"), p(8 * 60 * 60), false},
+		{"UTC-8", parseTime(t, "2025:11:04 01:00:00"), p("2025:11:03"), p("17:00:00"), p(-8 * 60 * 60), false},
+		{"NoOriginalDate", nil, p("2025:11:03"), p("17:00:00"), nil, false},
+		{"NoGPSDateStamp", parseTime(t, "2025:11:04 14:00:00"), nil, p("15:00:00"), nil, false},
+		{"NoGPSTimeStamp", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), nil, nil, false},
+		{"NoGPS", parseTime(t, "2025:11:04 14:00:00"), nil, nil, nil, false},
+		{"NoData", nil, nil, nil, nil, false},
+
+		{"InvalidGPSDateStamp", parseTime(t, "2025:11:04 14:00:00"), p("0000:00:00"), p("15:00:00"), nil, true},
+		{"InvalidGPSTimeStamp", parseTime(t, "2025:11:04 14:00:00"), p("2025:11:04"), p("25:00:00"), nil, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fileInfo := exiftool.EmptyFileMetadata()
+
+			if tc.gpsDateStamp != nil {
+				fileInfo.SetString("GPSDateStamp", *tc.gpsDateStamp)
+			}
+			if tc.gpsTimeStamp != nil {
+				fileInfo.SetString("GPSTimeStamp", *tc.gpsTimeStamp)
+			}
+
+			gotOffset, _, err := calculateOffsetFromGPS(&fileInfo, tc.originalDate)
+			if gotErr := err != nil; gotErr != tc.wantError {
+				t.Errorf("got error: %v, want error: %v", err, tc.wantError)
+			}
+			if err != nil || tc.wantError {
+				return
+			}
+
+			if gotOffset == nil && tc.wantOffset == nil {
+				return
+			}
+			if gotOffset == nil || tc.wantOffset == nil {
+				t.Errorf("got offset: %+v, want offset: %+v", gotOffset, tc.wantOffset)
+				return
+			}
+			if got, want := *gotOffset, *tc.wantOffset; got != want {
+				t.Errorf("got offset: %d, want offset: %d", got, want)
+			}
+		})
+	}
+}
