@@ -98,7 +98,7 @@ func TestExifParser(t *testing.T) {
 			},
 		},
 		{
-			// stripped.jpg has a file modified date with the offset.
+			// exif_subsec_timezone.heic has a file with the offset and sub sec.
 			path: "./test_data/exif_subsec_timezone.heic",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)

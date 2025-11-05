@@ -250,7 +250,7 @@ func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, err
 
 func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*int, []string, error) {
 	if date == nil {
-		// There is no orignial date, can't calculate the offset
+		// There is no original date, can't calculate the offset
 		return nil, nil, nil
 	}
 
@@ -273,6 +273,8 @@ func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*
 		return nil, []string{dateKey, timeKey}, fmt.Errorf("parse gps date \"%s %s\" error: %w", dateStr, timeStr, err)
 	}
 
+	// GPS time is always UTC per EXIF spec
+	// offset = GPS UTC time - local time
 	offset := int(gpsDate.Sub(*date).Seconds())
 	return &offset, nil, nil
 }
