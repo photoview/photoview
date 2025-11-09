@@ -114,7 +114,7 @@ CREATE_DATE:
 			continue
 		}
 
-		if date, err := time.Parse(layout, dateStr); err == nil {
+		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
 			retEXIF.DateShot = &date
 			foundExif = true
 			break CREATE_DATE
