@@ -46,7 +46,7 @@ func TestDateWithoutOffset(t *testing.T) {
 				OffsetSecShot: nil,
 			}
 
-			if got, want := exif.DateShotWithOffset(), tc.want; got != want {
+			if got, want := *exif.DateShotWithOffset(), tc.want; got != want {
 				t.Errorf("got = %q, want: %q", got, want)
 			}
 		})
@@ -89,7 +89,7 @@ func TestDatabaseReproduceDateWithOffset(t *testing.T) {
 				t.Fatalf("get exif error: %v", err)
 			}
 
-			if got, want := got.DateShotWithOffset(), tc.want; got != want {
+			if got, want := *got.DateShotWithOffset(), tc.want; got != want {
 				t.Errorf("got = %q, want: %q", got, want)
 			}
 		})
