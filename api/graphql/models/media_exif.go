@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type MediaEXIF struct {
 	Maker           *string
 	Lens            *string
 	DateShot        *time.Time
+	OffsetSecShot   *int
 	Exposure        *float64
 	Aperture        *float64
 	Iso             *int64
@@ -39,4 +41,32 @@ func (exif *MediaEXIF) Coordinates() *Coordinates {
 		Latitude:  *exif.GPSLatitude,
 		Longitude: *exif.GPSLongitude,
 	}
+}
+
+const rfc3339WithoutTimezone = "2006-01-02T15:04:05.999"
+const rfc3339WithTimezone = "2006-01-02T15:04:05.999-07:00"
+
+func (exif *MediaEXIF) DateShotWithOffset() *string {
+	if exif.DateShot == nil {
+		return nil
+	}
+
+	if exif.OffsetSecShot == nil {
+		ret := exif.DateShot.Format(rfc3339WithoutTimezone)
+		return &ret
+	}
+
+	offsetAbs := *exif.OffsetSecShot
+	sign := "+"
+	if offsetAbs < 0 {
+		offsetAbs = -offsetAbs
+		sign = "-"
+	}
+	hour := offsetAbs / 60 / 60
+	minute := offsetAbs / 60 % 60
+	zone := fmt.Sprintf("%s%02d:%02d", sign, hour, minute)
+
+	loc := time.FixedZone(zone, *exif.OffsetSecShot)
+	ret := exif.DateShot.In(loc).Format(rfc3339WithTimezone)
+	return &ret
 }

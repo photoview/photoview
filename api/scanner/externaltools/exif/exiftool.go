@@ -9,6 +9,9 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
+const layout = "2006:01:02 15:04:05.999"
+const layoutWithOffset = "2006:01:02 15:04:05.999-07:00"
+
 // ExifParser is a parser to get exif data.
 type ExifParser struct {
 	exiftool *exiftool.Exiftool
@@ -95,20 +98,15 @@ func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailur
 	}
 
 	// Get time of photo
-	layout := "2006:01:02 15:04:05"
-	layoutWithOffset := "2006:01:02 15:04:05-07:00"
 CREATE_DATE:
 	for _, createDateKey := range []string{
 		// Keep the order for the priority to generate DateShot
-		"CreationDate",
+		"SubSecDateTimeOriginal",
+		"SubSecCreateDate",
 		"DateTimeOriginal",
 		"CreateDate",
 		"TrackCreateDate",
 		"MediaCreateDate",
-		"FileCreateDate",
-		"ModifyDate",
-		"TrackModifyDate",
-		"MediaModifyDate",
 		"FileModifyDate",
 	} {
 		dateStr, err := fileInfo.GetString(createDateKey)
@@ -116,7 +114,7 @@ CREATE_DATE:
 			continue
 		}
 
-		if date, err := time.Parse(layout, dateStr); err == nil {
+		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
 			retEXIF.DateShot = &date
 			foundExif = true
 			break CREATE_DATE
@@ -128,6 +126,42 @@ CREATE_DATE:
 			break CREATE_DATE
 		} else {
 			failures.Append(createDateKey, err)
+		}
+	}
+
+	// Get timezone of photo
+TIMEZONE:
+	for _, field := range []string{
+		// Keep the order for the priority to generate TimezoneShot
+		"OffsetTimeOriginal",
+		"OffsetTime",
+		"TimeZone",
+	} {
+		str, err := fileInfo.GetString(field)
+		if err != nil {
+			continue TIMEZONE
+		}
+
+		t, err := time.Parse("-07:00", str)
+		if err != nil {
+			failures.Append(field, err)
+			continue TIMEZONE
+		}
+
+		_, offsetSecs := t.Zone()
+		retEXIF.OffsetSecShot = &offsetSecs
+		foundExif = true
+		break TIMEZONE
+	}
+
+	if retEXIF.OffsetSecShot == nil {
+		offset, errKeys, err := calculateOffsetFromGPS(&fileInfo, retEXIF.DateShot)
+		if err != nil {
+			for _, key := range errKeys {
+				failures.Append(key, err)
+			}
+		} else {
+			retEXIF.OffsetSecShot = offset
 		}
 	}
 
@@ -212,4 +246,35 @@ func extractValidGPSData(fileInfo *exiftool.FileMetadata) (float64, float64, err
 	}
 
 	return *latitude, *longitude, nil
+}
+
+func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*int, []string, error) {
+	if date == nil {
+		// There is no original date, can't calculate the offset
+		return nil, nil, nil
+	}
+
+	const dateKey = "GPSDateStamp"
+	dateStr, err := fileInfo.GetString(dateKey)
+	if err != nil {
+		// Ignore finding-tag errors
+		return nil, nil, nil
+	}
+
+	const timeKey = "GPSTimeStamp"
+	timeStr, err := fileInfo.GetString(timeKey)
+	if err != nil {
+		// Ignore finding-tag errors
+		return nil, nil, nil
+	}
+
+	gpsDate, err := time.Parse(layout, dateStr+" "+timeStr)
+	if err != nil {
+		return nil, []string{dateKey, timeKey}, fmt.Errorf("parse gps date \"%s %s\" error: %w", dateStr, timeStr, err)
+	}
+
+	// GPS time is always UTC per EXIF spec
+	// offset = GPS UTC time - local time
+	offset := int(gpsDate.Sub(*date).Seconds())
+	return &offset, nil, nil
 }
