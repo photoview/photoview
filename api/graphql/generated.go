@@ -128,20 +128,20 @@ type ComplexityRoot struct {
 	}
 
 	MediaEXIF struct {
-		Aperture        func(childComplexity int) int
-		Camera          func(childComplexity int) int
-		Coordinates     func(childComplexity int) int
-		DateShot        func(childComplexity int) int
-		Description     func(childComplexity int) int
-		Exposure        func(childComplexity int) int
-		ExposureProgram func(childComplexity int) int
-		Flash           func(childComplexity int) int
-		FocalLength     func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Iso             func(childComplexity int) int
-		Lens            func(childComplexity int) int
-		Maker           func(childComplexity int) int
-		Media           func(childComplexity int) int
+		Aperture           func(childComplexity int) int
+		Camera             func(childComplexity int) int
+		Coordinates        func(childComplexity int) int
+		DateShotWithOffset func(childComplexity int) int
+		Description        func(childComplexity int) int
+		Exposure           func(childComplexity int) int
+		ExposureProgram    func(childComplexity int) int
+		Flash              func(childComplexity int) int
+		FocalLength        func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Iso                func(childComplexity int) int
+		Lens               func(childComplexity int) int
+		Maker              func(childComplexity int) int
+		Media              func(childComplexity int) int
 	}
 
 	MediaURL struct {
@@ -700,11 +700,11 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.MediaEXIF.Coordinates(childComplexity), true
 	case "MediaEXIF.dateShot":
-		if e.complexity.MediaEXIF.DateShot == nil {
+		if e.complexity.MediaEXIF.DateShotWithOffset == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.DateShot(childComplexity), true
+		return e.complexity.MediaEXIF.DateShotWithOffset(childComplexity), true
 	case "MediaEXIF.description":
 		if e.complexity.MediaEXIF.Description == nil {
 			break
@@ -4230,10 +4230,10 @@ func (ec *executionContext) _MediaEXIF_dateShot(ctx context.Context, field graph
 		field,
 		ec.fieldContext_MediaEXIF_dateShot,
 		func(ctx context.Context) (any, error) {
-			return obj.DateShot, nil
+			return obj.DateShotWithOffset(), nil
 		},
 		nil,
-		ec.marshalOTime2ᚖtimeᚐTime,
+		ec.marshalOString2ᚖstring,
 		true,
 		false,
 	)
@@ -4243,10 +4243,10 @@ func (ec *executionContext) fieldContext_MediaEXIF_dateShot(_ context.Context, f
 	fc = &graphql.FieldContext{
 		Object:     "MediaEXIF",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
