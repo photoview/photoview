@@ -60,3 +60,20 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 
 	return exif, nil
 }
+
+func MIMEType(filepath string) (string, error) {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+
+	if globalExifParser == nil {
+		return "", fmt.Errorf("no exif parser initialized")
+	}
+
+	mime, err := globalExifParser.ParseMIMEType(filepath)
+	if err != nil {
+		return "", err
+	}
+
+	return mime, nil
+
+}

@@ -20,19 +20,21 @@ func resetForTest() {
 
 func TestParseWithoutInit(t *testing.T) {
 	resetForTest()
-	if _, err := Parse("./test_data/bird.jpg"); err == nil {
+	if _, err := Parse("./test_data/exif/bird.jpg"); err == nil {
 		t.Fatalf("Parse() without Init() doesn't return an error")
 	}
 }
 
 func TestParse(t *testing.T) {
+	resetForTest()
+
 	cleanup, err := Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() error: %v", err)
 	}
 	defer cleanup()
 
-	filename := "./test_data/bird.jpg"
+	filename := "./test_data/exif/bird.jpg"
 
 	metadata, err := Parse(filename)
 	if err != nil {
@@ -41,5 +43,26 @@ func TestParse(t *testing.T) {
 
 	if metadata == nil {
 		t.Errorf("Parse(%q) should not return nil", filename)
+	}
+}
+
+func TestMIMEType(t *testing.T) {
+	resetForTest()
+
+	cleanup, err := Initialize()
+	if err != nil {
+		t.Fatalf("Initialize() error: %v", err)
+	}
+	defer cleanup()
+
+	filename := "./test_data/real_media/raw_canon.cr3"
+
+	mime, err := MIMEType(filename)
+	if err != nil {
+		t.Fatalf("MIMEType() returns an error: %v", err)
+	}
+
+	if mime == "" {
+		t.Errorf("MIMEType(%q) should not return an empty string", filename)
 	}
 }
