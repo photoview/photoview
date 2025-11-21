@@ -103,7 +103,7 @@ services:
 
   ## Watchtower upgrades services automatically (optional)
   watchtower:
-    image: containrrr/watchtower:latest
+    image: nickfedor/watchtower:latest
     hostname: watchtower
     container_name: watchtower
     restart: unless-stopped
