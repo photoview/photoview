@@ -1,13 +1,66 @@
 package media_type
 
 import (
+	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/photoview/photoview/api/test_utils"
 )
 
 func TestMain(m *testing.M) {
-	test_utils.UnitTestRun(m)
+	test_utils.IntegrationTestRun(m)
+}
+
+func TestGetMediaType(t *testing.T) {
+	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
+
+	tests := []struct {
+		filepath string
+		filetype MediaType
+	}{
+		{"file.pdf", mediaType("text/plain")},
+
+		{"bmp.bmp", TypeBMP},
+		{"gif.gif", TypeGIF},
+		{"jpeg.jpg", TypeJPEG},
+		{"png.png", TypePNG},
+		{"webp.webp", TypeWebP},
+
+		{"heif.heif", mediaType("image/heic")},
+		{"jpg2000.jp2", mediaType("image/jp2")},
+		{"tiff.tiff", mediaType("image/tiff")},
+		{"cr3.cr3", mediaType("image/x-canon-cr3")},
+
+		{"mp4.mp4", TypeMP4},
+		{"ogg.ogg", TypeOGG},
+		{"mpeg.mpg", TypeMPEG},
+		{"webm.webm", TypeWEBM},
+
+		{"avi.avi", mediaType("video/x-msvideo")},
+		{"mkv.mkv", mediaType("video/x-matroska")},
+		{"quicktime.mov", mediaType("video/quicktime")},
+		{"wmv.wmv", mediaType("video/x-ms-wmv")},
+	}
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	for _, tc := range tests {
+		wg.Add(1)
+		input, want := tc.filepath, tc.filetype
+
+		go func() {
+			defer wg.Done()
+
+			path := filepath.Join(mediaPath, input)
+
+			got := GetMediaType(path)
+			if got != want {
+				t.Errorf("magic.Type(%q) = %v, want: %v", path, got, want)
+			}
+		}()
+	}
 }
 
 type boolImage bool

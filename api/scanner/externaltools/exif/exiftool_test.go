@@ -33,7 +33,7 @@ func TestExifParser(t *testing.T) {
 		assert func(t *testing.T, exif *models.MediaEXIF, err error)
 	}{
 		{
-			path: "./test_data/exif/bird.jpg",
+			path: "./test_data/bird.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
@@ -52,7 +52,7 @@ func TestExifParser(t *testing.T) {
 			},
 		},
 		{
-			path: "./test_data/exif/CorrectGPS.jpg",
+			path: "./test_data/CorrectGPS.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				const precision = 1e-7
 				assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestExifParser(t *testing.T) {
 		},
 		{
 			// stripped.jpg has a file modified date with the offset.
-			path: "./test_data/exif/stripped.jpg",
+			path: "./test_data/stripped.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, 0, exif.ID)
@@ -91,7 +91,7 @@ func TestExifParser(t *testing.T) {
 			},
 		},
 		{
-			path: "./test_data/exif/bad-exif.jpg",
+			path: "./test_data/bad-exif.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				assert.Nil(t, exif.Exposure)
@@ -99,7 +99,7 @@ func TestExifParser(t *testing.T) {
 		},
 		{
 			// exif_subsec_timezone.heic has a file with the offset and sub sec.
-			path: "./test_data/exif/exif_subsec_timezone.heic",
+			path: "./test_data/exif_subsec_timezone.heic",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, 0, exif.ID)
@@ -148,7 +148,7 @@ func TestExifParserWithFailure(t *testing.T) {
 		assert func(t *testing.T, exif *models.MediaEXIF, err error)
 	}{
 		{
-			path: "./test_data/exif/IncorrectGPS.jpg",
+			path: "./test_data/IncorrectGPS.jpg",
 			assert: func(t *testing.T, exif *models.MediaEXIF, err error) {
 				assert.Nil(t, exif.GPSLatitude,
 					"GPSLatitude expected to be NULL for an incorrect input data: %+v", exif.GPSLatitude)
@@ -384,28 +384,8 @@ func TestParseMIMEType(t *testing.T) {
 		file string
 		want string
 	}{
-		{"./test_data/real_media/file.pdf", "text/plain"},
-
-		{"./test_data/real_media/bmp.bmp", "image/bmp"},
-		{"./test_data/real_media/gif.gif", "image/gif"},
-		{"./test_data/real_media/jpeg.jpg", "image/jpeg"},
-		{"./test_data/real_media/png.png", "image/png"},
-		{"./test_data/real_media/webp.webp", "image/webp"},
-
-		{"./test_data/real_media/heif.heif", "image/heic"},
-		{"./test_data/real_media/jpg2000.jp2", "image/jp2"},
-		{"./test_data/real_media/tiff.tiff", "image/tiff"},
-		{"./test_data/real_media/raw_canon.cr3", "image/x-canon-cr3"},
-
-		{"./test_data/real_media/mp4.mp4", "video/mp4"},
-		{"./test_data/real_media/ogg.ogg", "video/ogg"},
-		{"./test_data/real_media/mpeg.mpg", "video/mpeg"},
-		{"./test_data/real_media/webm.webm", "video/webm"},
-
-		{"./test_data/real_media/avi.avi", "video/x-msvideo"},
-		{"./test_data/real_media/mkv.mkv", "video/x-matroska"},
-		{"./test_data/real_media/quicktime.mov", "video/quicktime"},
-		{"./test_data/real_media/wmv.wmv", "video/x-ms-wmv"},
+		{"./test_data/bird.jpg", "image/jpeg"},
+		{"./test_data/exif_subsec_timezone.heic", "image/heic"},
 	}
 
 	for _, tc := range tests {

@@ -65,6 +65,7 @@ func TestFullScan(t *testing.T) {
 		"raw_with_jpg.tiff",
 		"standalone_raw.tiff",
 		"tiff.tiff",
+		"cr3.cr3",
 
 		"left_arrow_normal_nonweb.tiff",
 		"up_arrow_90cw_nonweb.tiff",
