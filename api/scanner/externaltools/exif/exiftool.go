@@ -296,7 +296,7 @@ func (p *ExifParser) ParseMIMEType(mediaPath string) (string, error) {
 
 	mime, err := fileInfo.GetString("MIMEType")
 	if err != nil {
-		fmt.Errorf("invalid parse %q mimetype: %w", mediaPath, err)
+		return "", fmt.Errorf("invalid parse %q mimetype: %w", mediaPath, err)
 	}
 
 	return mime, nil
