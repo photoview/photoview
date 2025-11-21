@@ -24,3 +24,11 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "node"
+
+  # Disable automatic PRs with NPM updates
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "monthly"
+    ignore:
+      - dependency-name: "*"
