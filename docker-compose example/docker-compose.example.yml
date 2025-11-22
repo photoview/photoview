@@ -102,6 +102,8 @@ services:
       # - "${HOST_PHOTOVIEW_MEDIA_FAMILY}:/photos/Family:ro"
 
   ## Watchtower upgrades services automatically (optional)
+  ## WARNING: the automatic version upgrades may silently generate unexpected problems,
+  ##   so please periodically check the logs
   watchtower:
     image: nickfedor/watchtower:latest
     hostname: watchtower
