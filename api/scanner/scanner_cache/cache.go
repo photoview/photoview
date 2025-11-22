@@ -110,7 +110,7 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) 
 func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 	mediaType, err := c.GetMediaType(mediaPath)
 	if err != nil {
-		scanner_utils.ScannerError(nil, "IsPathMedia (%s): %s", mediaPath, err)
+		scanner_utils.ScannerError(nil, "IsPathMedia: %s", err)
 		return false
 	}
 
