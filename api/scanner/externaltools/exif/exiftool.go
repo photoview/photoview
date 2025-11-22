@@ -1,6 +1,7 @@
 package exif
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -296,6 +297,9 @@ func (p *ExifParser) ParseMIMEType(mediaPath string) (string, error) {
 
 	mime, err := fileInfo.GetString("MIMEType")
 	if err != nil {
+		if errors.Is(err, exiftool.ErrKeyNotFound) {
+			return "", nil // "" is media_type.TypeUnknown
+		}
 		return "", fmt.Errorf("invalid parse %q mimetype: %w", mediaPath, err)
 	}
 
