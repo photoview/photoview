@@ -41,7 +41,7 @@ func (p *ExifParser) Close() error {
 func (p *ExifParser) loadMetaData(mediaPath string) (*exiftool.FileMetadata, error) {
 	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
 	if l := len(fileInfos); l != 1 {
-		return nil, fmt.Errorf("len(fileInfos) = %d", l)
+		return nil, fmt.Errorf("expected 1 metadata entry, got %d", l)
 	}
 
 	fileInfo := fileInfos[0]
