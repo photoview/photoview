@@ -3,7 +3,7 @@ module github.com/photoview/photoview/api
 go 1.25.0
 
 require (
-	github.com/99designs/gqlgen v0.17.83
+	github.com/99designs/gqlgen v0.17.84
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/barasher/go-exiftool v1.10.0
 	github.com/buckket/go-blurhash v1.1.0
@@ -36,6 +36,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -51,11 +52,11 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/urfave/cli/v3 v3.6.0 // indirect
-	golang.org/x/mod v0.29.0 // indirect
+	github.com/urfave/cli/v3 v3.6.1 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
