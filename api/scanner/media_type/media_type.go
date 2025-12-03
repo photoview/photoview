@@ -3,9 +3,24 @@ package media_type
 import (
 	"strings"
 	"unique"
+
+	"github.com/photoview/photoview/api/log"
+	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 )
 
 type MediaType unique.Handle[string]
+
+// GetMediaType returns a media type of file `f`.
+// This function is thread-safe.
+func GetMediaType(f string) MediaType {
+	mime, err := exif.MIMEType(f)
+	if err != nil {
+		log.Warn(nil, "GetMediaType() error.", "error", err, "file", f)
+		return TypeUnknown
+	}
+
+	return mediaType(mime)
+}
 
 func mediaType(mime string) MediaType {
 	return MediaType(unique.Make(mime))

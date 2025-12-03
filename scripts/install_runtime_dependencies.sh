@@ -15,6 +15,3 @@ apt-get install -y --no-install-recommends libjxl0.11 liblcms2-2 liblqr-1-0 libd
 
 # go-face dependencies
 apt-get install -y --no-install-recommends libdlib19.2 libblas3 liblapack3 libjpeg62-turbo
-
-# gomagic dependencies
-apt-get install -y --no-install-recommends libmagic1t64

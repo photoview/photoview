@@ -1,6 +1,7 @@
 package exif
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -37,15 +38,24 @@ func (p *ExifParser) Close() error {
 	return p.exiftool.Close()
 }
 
-// ParseExif returns the exif data.
-func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
+func (p *ExifParser) loadMetaData(mediaPath string) (*exiftool.FileMetadata, error) {
 	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
 	if l := len(fileInfos); l != 1 {
-		return nil, nil, fmt.Errorf("invalid file infos with %q, len(fileInfos) = %d", mediaPath, l)
+		return nil, fmt.Errorf("expected 1 metadata entry, got %d", l)
 	}
 
 	fileInfo := fileInfos[0]
 	if err := fileInfo.Err; err != nil {
+		return nil, err
+	}
+
+	return &fileInfo, nil
+}
+
+// ParseExif returns the exif data.
+func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
+	fileInfo, err := p.loadMetaData((mediaPath))
+	if err != nil {
 		return nil, nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}
 
@@ -155,7 +165,7 @@ TIMEZONE:
 	}
 
 	if retEXIF.OffsetSecShot == nil {
-		offset, errKeys, err := calculateOffsetFromGPS(&fileInfo, retEXIF.DateShot)
+		offset, errKeys, err := calculateOffsetFromGPS(fileInfo, retEXIF.DateShot)
 		if err != nil {
 			for _, key := range errKeys {
 				failures.Append(key, err)
@@ -166,7 +176,7 @@ TIMEZONE:
 	}
 
 	// Get GPS data
-	lat, long, err := extractValidGPSData(&fileInfo)
+	lat, long, err := extractValidGPSData(fileInfo)
 	if err != nil {
 		failures.Append("gps", err)
 	} else {
@@ -277,4 +287,21 @@ func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*
 	// offset = GPS UTC time - local time
 	offset := int(gpsDate.Sub(*date).Seconds())
 	return &offset, nil, nil
+}
+
+func (p *ExifParser) ParseMIMEType(mediaPath string) (string, error) {
+	fileInfo, err := p.loadMetaData((mediaPath))
+	if err != nil {
+		return "", fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
+	}
+
+	mime, err := fileInfo.GetString("MIMEType")
+	if err != nil {
+		if errors.Is(err, exiftool.ErrKeyNotFound) {
+			return "", nil // "" is media_type.TypeUnknown
+		}
+		return "", fmt.Errorf("invalid parse %q mimetype: %w", mediaPath, err)
+	}
+
+	return mime, nil
 }

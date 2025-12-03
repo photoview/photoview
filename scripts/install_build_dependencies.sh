@@ -17,8 +17,5 @@ apt-get install -y --no-install-recommends libjxl-dev:${DEB_HOST_ARCH} liblcms2-
 # Install go-face dependencies
 apt-get install -y --no-install-recommends libdlib-dev:${DEB_HOST_ARCH} libblas-dev:${DEB_HOST_ARCH} liblapack-dev:${DEB_HOST_ARCH} libjpeg62-turbo-dev:${DEB_HOST_ARCH}
 
-# Install gomagic dependencies
-apt-get install -y --no-install-recommends libmagic-dev:${DEB_HOST_ARCH}
-
 # Install tools for development
 apt-get install -y --no-install-recommends reflex sqlite3

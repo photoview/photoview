@@ -12,6 +12,10 @@ import (
 	"github.com/photoview/photoview/api/utils"
 )
 
+func TestMain(m *testing.M) {
+	test_utils.IntegrationTestRun(m)
+}
+
 func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 

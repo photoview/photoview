@@ -1,7 +1,6 @@
 package scanner_cache
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path"
@@ -80,7 +79,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) (media_type.MediaType, err
 
 	mediaType := media_type.GetMediaType(path)
 	if mediaType == media_type.TypeUnknown {
-		return mediaType, fmt.Errorf("unknown media type (%s)", path)
+		return mediaType, nil
 	}
 
 	c.photo_types[path] = mediaType
@@ -110,7 +109,7 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) 
 func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 	mediaType, err := c.GetMediaType(mediaPath)
 	if err != nil {
-		scanner_utils.ScannerError(nil, "IsPathMedia (%s): %s", mediaPath, err)
+		scanner_utils.ScannerError(nil, "IsPathMedia: %s", err)
 		return false
 	}
 
