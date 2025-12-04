@@ -69,8 +69,8 @@
     "action_label": {
       "change_label": "Changer le label",
       "detach_images": "Détacher le visage",
-      "merge_face": "",
-      "merge_people": "Fusionner le visage",
+      "merge_face": "Fusionner le visage",
+      "merge_people": "Fusionner les personnes",
       "move_faces": "Déplacer les visages"
     },
     "face_group": {
@@ -81,24 +81,24 @@
     "modal": {
       "action": {
         "merge": "Fusionner",
-        "next": ""
+        "next": "Suivant"
       },
       "detach_image_faces": {
         "action": {
-          "detach": "Détacher les visages des image",
-          "select_images": "Sélectionner les images de visage à détacher"
+          "detach": "Détacher les visages des images",
+          "select_images": "Sélectionner les images de visages à détacher"
         },
         "description": "Détachez les images sélectionnées de ce groupe de visages et déplacez-les vers un nouveau groupe de visages",
         "title": "Détacher les visages des images"
       },
       "merge_face_groups": {
-        "destination_description": "",
+        "destination_description": "Sélectionnez le groupe de visages dans lequel les autres groupes seront fusionnés.",
         "destination_table": {
           "title": "Sélectionner le visage de destination"
         },
-        "sources_description": "",
+        "sources_description": "Sélectionnez tous les groupes de visages qui seront fusionnés dans le groupe de destination.",
         "sources_table": {
-          "title": ""
+          "title": "Sélectionnez un ou plusieurs groupes sources à fusionner :"
         },
         "title": "Fusionner des groupes de visages"
       },
@@ -135,7 +135,7 @@
   "settings": {
     "concurrent_workers": {
       "description": "Nombre maximal de tâches d'analyse simultanées.",
-      "title": "Tâches d'analyse simultannées"
+      "title": "Tâches d'analyse simultanées"
     },
     "logout": "Se déconnecter",
     "periodic_scanner": {
@@ -154,7 +154,7 @@
       "title": "Analyse périodique"
     },
     "scanner": {
-      "description": "Analyser tous les utilisateurs à la recherche de nouveaux médias ou de médias mis à jour",
+      "description": "Analyser tous les utilisateurs pour détecter de nouveaux médias ou des médias mis à jour",
       "scan_all_users": "Analyser tous les utilisateurs",
       "title": "Analyse"
     },
@@ -168,18 +168,18 @@
       },
       "theme": {
         "auto": {
-          "label": ""
+          "label": "Par defaut(système)"
         },
         "dark": {
-          "label": ""
+          "label": "Sombre"
         },
-        "description": "",
+        "description": "Changer l'apparence du site",
         "light": {
-          "label": ""
+          "label": "Clair"
         },
-        "title": ""
+        "title": "Préférences de thème"
       },
-      "title": "Paramètres d'utilisateur"
+      "title": "Préférences Utilisateur"
     },
     "users": {
       "add_user": {
@@ -191,7 +191,7 @@
         "title": "Supprimer l'utilisateur"
       },
       "password_reset": {
-        "description": "Changer le mot de passe pour <1>{{username}}</1>",
+        "description": "Modifier le mot de passe de <1>{{username}}</1>",
         "form": {
           "label": "Nouveau mot de passe",
           "placeholder": "mot de passe",
@@ -203,7 +203,7 @@
         "column_names": {
           "action": "Action",
           "capabilities": "Permissions",
-          "photo_path": "Chemin des photos",
+          "photo_path": "Emplacement des photos",
           "username": "Nom d'utilisateur"
         },
         "new_user": "Nouvel utilisateur",
@@ -219,7 +219,7 @@
       "title": "Utilisateurs"
     },
     "version_info": {
-      "build_date_title": "Date de compilation",
+      "build_date_title": "Date de build",
       "title": "Photoview Version",
       "version_title": "Version actuelle"
     }
@@ -246,7 +246,7 @@
           "title": "Hautes résolutions"
         },
         "originals": {
-          "description": "Photos et vidéos originaux",
+          "description": "Images et vidéos originales",
           "title": "Originaux"
         },
         "thumbnails": {
@@ -254,7 +254,7 @@
           "title": "Miniatures"
         },
         "web-videos": {
-          "description": "Vidéos ooptimisées pour le Web",
+          "description": "Vidéos optimisées pour le Web",
           "title": "Vidéos converties"
         }
       },
@@ -264,21 +264,21 @@
     },
     "download": {
       "filesize": {
-        "byte_one": "",
+        "byte_one": "{{count}} Octet",
         "byte_many": "",
-        "byte_other": "",
-        "giga_byte_one": "",
+        "byte_other": "{{count}} Octets",
+        "giga_byte_one": "{{count}} Go",
         "giga_byte_many": "",
-        "giga_byte_other": "",
-        "kilo_byte_one": "",
+        "giga_byte_other": "{{count}} Go",
+        "kilo_byte_one": "{{count}} Ko",
         "kilo_byte_many": "",
-        "kilo_byte_other": "",
-        "mega_byte_one": "",
+        "kilo_byte_other": "{{count}} Ko",
+        "mega_byte_one": "{{count}} Mo",
         "mega_byte_many": "",
-        "mega_byte_other": "",
-        "tera_byte_one": "",
+        "mega_byte_other": "{{count}} Mo",
+        "tera_byte_one": "{{count}} To",
         "tera_byte_many": "",
-        "tera_byte_other": ""
+        "tera_byte_other": "{{count}} To"
       },
       "table_columns": {
         "dimensions": "Dimensions",
@@ -289,12 +289,12 @@
       "title": "Télécharger"
     },
     "location": {
-      "title": ""
+      "title": "Emplacement"
     },
     "media": {
-      "album_path": "",
+      "album_path": "Emplacement de l'album",
       "exif": {
-        "description": "",
+        "description": "Description",
         "exposure_program": {
           "action_program": "Programme d'action",
           "aperture_priority": "Priorité d'ouverture",
@@ -322,26 +322,26 @@
         "name": {
           "aperture": "Ouverture",
           "camera": "Modèle",
-          "coordinates": "",
-          "date_shot": "Prise de vue",
-          "exposure": "Vitesse",
+          "coordinates": "Coordonnées",
+          "date_shot": "Date de prise de vue",
+          "exposure": "Exposition",
           "exposure_program": "Programme",
           "flash": "Flash",
           "focal_length": "Focale",
           "iso": "ISO",
           "lens": "Objectif",
-          "maker": "Fabriquant"
+          "maker": "Fabricant"
         }
       }
     },
     "people": {
       "action_label": {
-        "detach_image": "",
-        "merge_face": "",
-        "move_face": ""
+        "detach_image": "Détacher l'image",
+        "merge_face": "Fusionner le visage",
+        "move_face": "Déplacer le visage"
       },
-      "confirm_image_detach": "",
-      "title": ""
+      "confirm_image_detach": "Etes -vous sûr de vouloir détacher cette image ?",
+      "title": "Personnes"
     },
     "sharing": {
       "add_share": "Ajouter un partage",
@@ -356,14 +356,14 @@
   "sidemenu": {
     "albums": "Albums",
     "people": "Personnes",
-    "photos": "Photos",
+    "photos": "Chronologie",
     "places": "Lieux",
-    "settings": "Réglages"
+    "settings": "Paramètres"
   },
   "timeline_filter": {
     "date": {
       "dropdown_all": "Depuis aujourd'hui",
-      "dropdown_year": "",
+      "dropdown_year": "{{year}} et avant",
       "label": "Date"
     }
   },
