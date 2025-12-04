@@ -98,6 +98,14 @@ const PROTECT_SHARE_MUTATION = gql`
   }
 `
 
+const SET_EXPIRE_MUTATION = gql`
+  mutation sidebarSetExpierShare($token: String!, $expire: Time){
+    setExpireShareToken(token: $token, expire: $expire){
+      token
+    }
+  }
+`
+
 const DELETE_SHARE_MUTATION = gql`
   mutation sidebareDeleteShare($token: String!) {
     deleteShareToken(token: $token) {
@@ -109,7 +117,7 @@ const DELETE_SHARE_MUTATION = gql`
 export const ArrowPopoverPanel = styled.div.attrs({
   className:
     'absolute -top-3 bg-white dark:bg-dark-bg rounded shadow-md border border-gray-200 dark:border-dark-border z-10',
-})<{ width: number; flipped?: boolean }>`
+}) <{ width: number; flipped?: boolean }>`
   width: ${({ width }) => width}px;
 
   ${({ flipped }) =>
@@ -130,12 +138,12 @@ export const ArrowPopoverPanel = styled.div.attrs({
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpolyline stroke-width='1' stroke='%23E2E2E2' fill='%23FFFFFF' points='1 0 7 7 1 14'%3E%3C/polyline%3E%3C/svg%3E");
 
     ${({ flipped }) =>
-      flipped
-        ? `
+    flipped
+      ? `
       left: -7px;
       transform: rotate(180deg);
         `
-        : `
+      : `
       right: -7px;
     `}
   }
@@ -146,6 +154,7 @@ type MorePopoverSectionPasswordProps = {
   query: DocumentNode
   id: string
 }
+
 
 const MorePopoverSectionPassword = ({
   share,
@@ -248,6 +257,88 @@ const MorePopoverSectionPassword = ({
   )
 }
 
+
+type MorePopoverSectionExpirationProps = {
+  share: sidebarGetAlbumShares_album_shares
+  id: string
+  query: DocumentNode
+}
+
+
+const MorePopoverSectionExpiration = ({
+  share,
+  id,
+  query,
+}: MorePopoverSectionExpirationProps) => {
+  const [enabled, setEnabled] = useState(false)
+  const [date, setDate] = useState<string>('')
+
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const defaultExpire = tomorrow.toISOString()
+
+  const [setExpire, { loading }] = useMutation(SET_EXPIRE_MUTATION, {
+    refetchQueries: [{ query, variables: { id } }],
+    variables: {
+      token: share.token,
+      expire: defaultExpire,
+    },
+  })
+
+  const submit = () => {
+    if (!date) return
+    setExpire({
+      variables: {
+        token: share.token,
+        expire: new Date(date).toISOString(),
+      },
+    })
+  }
+
+  return (
+    <div className="px-4 py-2">
+      <Checkbox
+        label="Expiration date"
+        checked={enabled}
+        onChange={() => {
+          const next = !enabled
+          setEnabled(next)
+          if (!next) setDate('')
+        }}
+      />
+
+      {enabled && (
+        <div className="mt-2">
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="border rounded w-full p-2 bg-white dark:bg-dark-bg"
+          />
+
+          <button
+            onClick={submit}
+            disabled={!date || loading}
+            className="
+    mt-2 px-4 py-2
+    bg-blue-200 hover:bg-blue-300
+    text-blue-800 font-semibold
+    rounded-lg
+    flex items-center
+    transition
+    disabled:opacity-50 disabled:cursor-not-allowed
+  "
+          >
+            <span className="mr-1">Submit</span>
+            <span>➤</span>
+          </button>
+
+        </div>
+      )}
+    </div>
+  )
+}
+
 type MorePopoverProps = {
   id: string
   query: DocumentNode
@@ -269,10 +360,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
       <Popover.Panel>
         <ArrowPopoverPanel width={260}>
           <MorePopoverSectionPassword id={id} share={share} query={query} />
-          <div className="px-4 py-2 border-t border-gray-200 dark:border-dark-border mt-2 mb-2">
-            <Checkbox label="Expiration date" />
-            <TextField className="mt-2 w-full" />
-          </div>
+          <MorePopoverSectionExpiration id={id} share={share} query={query} />
         </ArrowPopoverPanel>
       </Popover.Panel>
     </Popover>

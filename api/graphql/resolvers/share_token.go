@@ -60,6 +60,16 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, token string, 
 	return actions.ProtectShareToken(r.DB(ctx), user.ID, token, password)
 }
 
+// SetExpireShareToken is the resolver for the setExpireShareToken field.
+func (r *mutationResolver) SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return actions.SetExpireShareToken(r.DB(ctx), user.ID, token, expire)
+}
+
 // ShareToken is the resolver for the shareToken field.
 func (r *queryResolver) ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error) {
 	var token models.ShareToken
