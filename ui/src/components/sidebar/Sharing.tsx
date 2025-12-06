@@ -55,6 +55,7 @@ const SHARE_PHOTO_QUERY = gql`
         id
         token
         hasPassword
+        expire
       }
     }
   }
@@ -68,6 +69,7 @@ const SHARE_ALBUM_QUERY = gql`
         id
         token
         hasPassword
+        expire
       }
     }
   }
@@ -154,7 +156,6 @@ type MorePopoverSectionPasswordProps = {
   query: DocumentNode
   id: string
 }
-
 
 const MorePopoverSectionPassword = ({
   share,
@@ -264,14 +265,18 @@ type MorePopoverSectionExpirationProps = {
   query: DocumentNode
 }
 
-
 const MorePopoverSectionExpiration = ({
   share,
   id,
   query,
 }: MorePopoverSectionExpirationProps) => {
-  const [enabled, setEnabled] = useState(false)
-  const [date, setDate] = useState<string>('')
+  // Verify whether the backend response includes an expiration time
+  // Set it to true if share.expire exists; otherwise,set it to false
+  const [enabled, setEnabled] = useState(!!share.expire)
+  
+  // format it to YYYY-MM-DD and put it into the input box
+  const initialDate = share.expire ? new Date(share.expire).toISOString().split('T')[0] : ''
+  const [date, setDate] = useState<string>(initialDate)
 
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
@@ -279,10 +284,6 @@ const MorePopoverSectionExpiration = ({
 
   const [setExpire, { loading }] = useMutation(SET_EXPIRE_MUTATION, {
     refetchQueries: [{ query, variables: { id } }],
-    variables: {
-      token: share.token,
-      expire: defaultExpire,
-    },
   })
 
   const submit = () => {
@@ -303,7 +304,17 @@ const MorePopoverSectionExpiration = ({
         onChange={() => {
           const next = !enabled
           setEnabled(next)
-          if (!next) setDate('')
+          
+          if (!next) {
+             // If the checkbox is unchecked,set the expiration time to null.
+             setDate('')
+             setExpire({
+               variables: {
+                 token: share.token,
+                 expire: null, 
+               },
+             })
+          }
         }}
       />
 

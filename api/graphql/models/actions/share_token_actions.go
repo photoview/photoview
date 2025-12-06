@@ -144,7 +144,7 @@ func SetExpireShareToken(db *gorm.DB, userID int, tokenValue string, expire *tim
 	token.Expire = expire
 
 	if err := db.Save(&token).Error; err != nil {
-		return nil, errors.Wrap(err, "failed to update expire for share token")
+		return nil, errors.Wrap(err, "failed to update the expiration date for share token")
 	}
 
 	return token, nil
