@@ -42,9 +42,9 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 
 func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
 
-	mediaType, err := ctx.GetCache().GetMediaType(mediaData.Media.Path)
-	if err != nil {
-		return ctx, fmt.Errorf("scan for counterpart file error: %w", err)
+	mediaType := ctx.GetCache().GetMediaType(mediaData.Media.Path)
+	if mediaType == media_type.TypeUnknown {
+		return ctx, fmt.Errorf("scan for counterpart file %s failed: media type is %s", mediaData.Media.Path, mediaType)
 	}
 
 	if mediaType.IsWebCompatible() {
