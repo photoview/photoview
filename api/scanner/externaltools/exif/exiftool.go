@@ -54,7 +54,7 @@ func (p *ExifParser) loadMetaData(mediaPath string) (*exiftool.FileMetadata, err
 
 // ParseExif returns the exif data.
 func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
-	fileInfo, err := p.loadMetaData((mediaPath))
+	fileInfo, err := p.loadMetaData(mediaPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}
@@ -290,7 +290,7 @@ func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*
 }
 
 func (p *ExifParser) ParseMIMEType(mediaPath string) (string, error) {
-	fileInfo, err := p.loadMetaData((mediaPath))
+	fileInfo, err := p.loadMetaData(mediaPath)
 	if err != nil {
 		return "", fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}

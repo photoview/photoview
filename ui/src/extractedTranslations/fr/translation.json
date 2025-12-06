@@ -168,7 +168,7 @@
       },
       "theme": {
         "auto": {
-          "label": "Par defaut(système)"
+          "label": "Par défaut (système)"
         },
         "dark": {
           "label": "Sombre"
@@ -340,7 +340,7 @@
         "merge_face": "Fusionner le visage",
         "move_face": "Déplacer le visage"
       },
-      "confirm_image_detach": "Etes -vous sûr de vouloir détacher cette image ?",
+      "confirm_image_detach": "Êtes-vous sûr de vouloir détacher cette image ?",
       "title": "Personnes"
     },
     "sharing": {
