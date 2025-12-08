@@ -46,6 +46,10 @@ import {
   sidebarProtectShare,
   sidebarProtectShareVariables,
 } from './__generated__/sidebarProtectShare'
+//import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import dayjs from 'dayjs'
 
 const SHARE_PHOTO_QUERY = gql`
   query sidebarGetPhotoShares($id: ID!) {
@@ -273,25 +277,29 @@ const MorePopoverSectionExpiration = ({
   // Verify whether the backend response includes an expiration time
   // Set it to true if share.expire exists; otherwise,set it to false
   const [enabled, setEnabled] = useState(!!share.expire)
-  
-  // format it to YYYY-MM-DD and put it into the input box
-  const initialDate = share.expire ? new Date(share.expire).toISOString().split('T')[0] : ''
-  const [date, setDate] = useState<string>(initialDate)
-
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const defaultExpire = tomorrow.toISOString()
-
+  const { i18n } =useTranslation()
+  const dateFormatterOptions: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  }
+  const dateFormatter=new Intl.DateTimeFormat(
+    i18n.language,
+    dateFormatterOptions
+  )
+  const oldExpireDate = share.expire ? dateFormatter.format(new Date(share.expire)) : ''
+  const [date, setDate] = useState<Date | null>(null)
   const [setExpire, { loading }] = useMutation(SET_EXPIRE_MUTATION, {
     refetchQueries: [{ query, variables: { id } }],
   })
 
   const submit = () => {
     if (!date) return
+    const formatDate=dayjs(date).format('YYYY-MM-DDTHH:mm:ssZ')
     setExpire({
       variables: {
         token: share.token,
-        expire: new Date(date).toISOString(),
+        expire: formatDate,
       },
     })
   }
@@ -307,7 +315,7 @@ const MorePopoverSectionExpiration = ({
           
           if (!next) {
              // If the checkbox is unchecked,set the expiration time to null.
-             setDate('')
+             setDate(null)
              setExpire({
                variables: {
                  token: share.token,
@@ -320,12 +328,13 @@ const MorePopoverSectionExpiration = ({
 
       {enabled && (
         <div className="mt-2">
-          <input
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            className="border rounded w-full p-2 bg-white dark:bg-dark-bg"
-          />
+          <DatePicker
+        selected={date}
+        onChange={setDate}
+        dateFormat="yyyy-MM-dd"
+        className="border rounded w-full p-2 bg-white dark:bg-dark-bg"
+        placeholderText={oldExpireDate}
+      />
 
           <button
             onClick={submit}
