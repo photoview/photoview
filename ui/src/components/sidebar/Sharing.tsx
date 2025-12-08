@@ -46,7 +46,6 @@ import {
   sidebarProtectShare,
   sidebarProtectShareVariables,
 } from './__generated__/sidebarProtectShare'
-//import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import dayjs from 'dayjs'
@@ -105,7 +104,7 @@ const PROTECT_SHARE_MUTATION = gql`
 `
 
 const SET_EXPIRE_MUTATION = gql`
-  mutation sidebarSetExpierShare($token: String!, $expire: Time){
+  mutation sidebarSetExpireShare($token: String!, $expire: Time){
     setExpireShareToken(token: $token, expire: $expire){
       token
     }
@@ -277,7 +276,7 @@ const MorePopoverSectionExpiration = ({
   // Verify whether the backend response includes an expiration time
   // Set it to true if share.expire exists; otherwise,set it to false
   const [enabled, setEnabled] = useState(!!share.expire)
-  const { i18n } =useTranslation()
+  const { t,i18n } = useTranslation()
   const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: 'long',
@@ -288,7 +287,10 @@ const MorePopoverSectionExpiration = ({
     dateFormatterOptions
   )
   const oldExpireDate = share.expire ? dateFormatter.format(new Date(share.expire)) : ''
-  const [date, setDate] = useState<Date | null>(null)
+  const [date, setDate] = useState<Date | null>(
+    share.expire ? new Date(share.expire) : null
+  )
+
   const [setExpire, { loading }] = useMutation(SET_EXPIRE_MUTATION, {
     refetchQueries: [{ query, variables: { id } }],
   })
@@ -307,7 +309,7 @@ const MorePopoverSectionExpiration = ({
   return (
     <div className="px-4 py-2">
       <Checkbox
-        label="Expiration date"
+        label={t('sidebar.sharing.expiration_date', 'Expiration date')}
         checked={enabled}
         onChange={() => {
           const next = !enabled
@@ -349,7 +351,7 @@ const MorePopoverSectionExpiration = ({
     disabled:opacity-50 disabled:cursor-not-allowed
   "
           >
-            <span className="mr-1">Submit</span>
+            <span className="mr-1">{t('general.action.submit', 'Submit')}</span>
             <span>➤</span>
           </button>
 
