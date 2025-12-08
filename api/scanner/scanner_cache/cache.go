@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/photoview/photoview/api/scanner/media_type"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
 )
 
 type AlbumScannerCache struct {
@@ -68,23 +67,23 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 // 	(c.photo_types)[path] = content_type
 // }
 
-func (c *AlbumScannerCache) GetMediaType(path string) (media_type.MediaType, error) {
+func (c *AlbumScannerCache) GetMediaType(path string) media_type.MediaType {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	result, found := c.photo_types[path]
 	if found {
-		return result, nil
+		return result
 	}
 
 	mediaType := media_type.GetMediaType(path)
 	if mediaType == media_type.TypeUnknown {
-		return mediaType, nil
+		return mediaType
 	}
 
 	c.photo_types[path] = mediaType
 
-	return mediaType, nil
+	return mediaType
 }
 
 func (c *AlbumScannerCache) GetAlbumIgnore(path string) *[]string {
@@ -107,11 +106,7 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) 
 }
 
 func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
-	mediaType, err := c.GetMediaType(mediaPath)
-	if err != nil {
-		scanner_utils.ScannerError(nil, "IsPathMedia: %s", err)
-		return false
-	}
+	mediaType := c.GetMediaType(mediaPath)
 
 	// Ignore hidden files
 	if path.Base(mediaPath)[0:1] == "." {
