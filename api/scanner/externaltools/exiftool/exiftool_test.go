@@ -3,6 +3,7 @@ package exiftool
 import (
 	"fmt"
 	"maps"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -155,4 +156,43 @@ func TestQueryGPS(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSaveJPEGPreview(t *testing.T) {
+	tests := []struct {
+		file string
+	}{
+		{"./test_data/cr3.cr3"},
+	}
+
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	outputDir := t.TempDir()
+
+	for _, tc := range tests {
+		t.Run(tc.file, func(t *testing.T) {
+			err := instance.SaveJPEGPreview(tc.file, outputDir)
+			if err != nil {
+				t.Errorf("SaveJPEGPreview(%q, %q) error: %v", tc.file, outputDir, err)
+				return
+			}
+
+			output := filepath.Join(outputDir, "cr3.jpg")
+			mime, err := instance.QueryMIMEType(output)
+			if err != nil {
+				t.Errorf("QueryMIMEType(%q) error: %v", output, err)
+				return
+			}
+
+			if got, want := mime, "image/jpeg"; got != want {
+				t.Errorf("QueryMIMEType(%q) = %q, want: %q", output, got, want)
+				return
+			}
+		})
+	}
+
 }

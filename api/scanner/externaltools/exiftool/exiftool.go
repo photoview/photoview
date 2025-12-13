@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"path/filepath"
 )
 
 type Instance struct {
@@ -113,6 +114,16 @@ func (i *Instance) QueryGPS(file string) (float64, float64, error) {
 	}
 
 	return ret[0].GPSLatitude, ret[0].GPSLongitude, nil
+}
+
+func (i *Instance) SaveJPEGPreview(file string, outputDir string) error {
+	_, err := i.getRawString(file, "-JpgFromRaw", "-b", "-w", filepath.Join(outputDir, "%f.jpg"))
+	if err != nil {
+		return fmt.Errorf("query gps for file %q error: %w", file, err)
+	}
+
+	return nil
+
 }
 
 func (i *Instance) send(args ...string) error {
