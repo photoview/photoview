@@ -65,9 +65,59 @@ func (i *Instance) Close() error {
 	return nil
 }
 
+func (i *Instance) QueryMIMEType(file string) (string, error) {
+	type Response struct {
+		MIMEType string
+	}
+	var ret []Response
+
+	if err := i.getJson(&ret, file, "-mimetype"); err != nil {
+		return "", fmt.Errorf("query mimetype for file %q error: %w", file, err)
+	}
+
+	if len(ret) == 0 {
+		return "", nil
+	}
+
+	return ret[0].MIMEType, nil
+}
+
+func (i *Instance) QueryTime(file string) (map[string]string, error) {
+	var ret []map[string]string
+
+	if err := i.getJson(&ret, file, "-time:all", "--SubSecTime*"); err != nil {
+		return nil, fmt.Errorf("query time for file %q error: %w", file, err)
+	}
+
+	if len(ret) == 0 {
+		return map[string]string{}, nil
+	}
+
+	delete(ret[0], "SourceFile")
+
+	return ret[0], nil
+}
+
+func (i *Instance) QueryGPS(file string) (float64, float64, error) {
+	var ret []struct {
+		GPSLatitude  float64
+		GPSLongitude float64
+	}
+
+	if err := i.getJson(&ret, file, "-n", "-GPSLatitude", "-GPSLongitude"); err != nil {
+		return 0, 0, fmt.Errorf("query gps for file %q error: %w", file, err)
+	}
+
+	if len(ret) == 0 {
+		return 0, 0, nil
+	}
+
+	return ret[0].GPSLatitude, ret[0].GPSLongitude, nil
+}
+
 func (i *Instance) send(args ...string) error {
 	for _, arg := range args {
-		if _, err := fmt.Fprint(i.input, arg); err != nil {
+		if _, err := fmt.Fprintln(i.input, arg); err != nil {
 			return err
 		}
 	}
@@ -94,8 +144,9 @@ func (i *Instance) fetchJson(v any) error {
 
 func (i *Instance) getRawString(args ...string) (string, error) {
 	i.output.ResetFrame()
+	args = append(args, "-execute")
 
-	if err := i.send(append(args, "-execute")...); err != nil {
+	if err := i.send(args...); err != nil {
 		return "", fmt.Errorf("send command %v error: %w", args, err)
 	}
 
@@ -109,8 +160,9 @@ func (i *Instance) getRawString(args ...string) (string, error) {
 
 func (i *Instance) getJson(v any, args ...string) error {
 	i.output.ResetFrame()
+	args = append(args, "-j", "-execute")
 
-	if err := i.send(append(args, "-j", "-execute")...); err != nil {
+	if err := i.send(args...); err != nil {
 		return fmt.Errorf("send command %v error: %w", args, err)
 	}
 
