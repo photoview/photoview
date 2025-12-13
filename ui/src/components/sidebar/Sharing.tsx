@@ -333,7 +333,7 @@ const MorePopoverSectionExpiration = ({
           <DatePicker
         selected={date}
         onChange={setDate}
-        dateFormat="yyyy-MM-dd"
+        value={oldExpireDate}
         className="border rounded w-full p-2 bg-white dark:bg-dark-bg"
         placeholderText={oldExpireDate}
       />
