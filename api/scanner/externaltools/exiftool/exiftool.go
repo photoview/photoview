@@ -1,6 +1,7 @@
 package exiftool
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os/exec"
@@ -81,4 +82,41 @@ func (i *Instance) fetchString() (string, error) {
 	}
 
 	return string(ret), nil
+}
+
+func (i *Instance) fetchJson(v any) error {
+	if err := json.NewDecoder(i.output).Decode(v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *Instance) getRawString(args ...string) (string, error) {
+	i.output.ResetFrame()
+
+	if err := i.send(append(args, "-execute")...); err != nil {
+		return "", fmt.Errorf("send command %v error: %w", args, err)
+	}
+
+	ret, err := i.fetchString()
+	if err != nil {
+		return "", fmt.Errorf("fetch string from command %v error: %w", args, err)
+	}
+
+	return ret, nil
+}
+
+func (i *Instance) getJson(v any, args ...string) error {
+	i.output.ResetFrame()
+
+	if err := i.send(append(args, "-j", "-execute")...); err != nil {
+		return fmt.Errorf("send command %v error: %w", args, err)
+	}
+
+	if err := i.fetchJson(v); err != nil {
+		return fmt.Errorf("fetch json from command %v error: %w", args, err)
+	}
+
+	return nil
 }
