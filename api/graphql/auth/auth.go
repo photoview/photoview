@@ -81,7 +81,7 @@ func UserFromContext(ctx context.Context) *models.User {
 	return raw
 }
 
-func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.Context, *transport.InitPayload, error) {
+func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload) (context.Context, *transport.InitPayload, error) {
 	return func(ctx context.Context, initPayload transport.InitPayload) (context.Context, *transport.InitPayload, error) {
 
 		bearer, exists := initPayload["Authorization"].(string)
@@ -95,7 +95,13 @@ func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.C
 			return nil, nil, err
 		}
 
-		user, err := dataloader.For(ctx).UserFromAccessToken.Load(*token)
+		loaders := dataloader.For(ctx)
+		if loaders == nil {
+			loaders := dataloader.NewLoaders(db)
+			ctx = context.WithValue(ctx, dataloader.GetLoadersKey(), loaders)
+		}
+
+		user, err := loaders.UserFromAccessToken.Load(*token)
 		if err != nil {
 			log.Printf("Error loading user from token (websocket): %s\n", err)
 			return nil, nil, errors.New(INVALID_AUTH_TOKEN)

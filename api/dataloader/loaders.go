@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const loadersKey = "dataloaders"
+type contextKey string
+
+const loadersKey contextKey = "dataloaders"
 
 type Loaders struct {
 	MediaThumbnail      *MediaURLLoader
@@ -38,5 +40,23 @@ func Middleware(db *gorm.DB) mux.MiddlewareFunc {
 }
 
 func For(ctx context.Context) *Loaders {
-	return ctx.Value(loadersKey).(*Loaders)
+	loaders, ok := ctx.Value(loadersKey).(*Loaders)
+	if !ok {
+		return nil
+	}
+	return loaders
+}
+
+func NewLoaders(db *gorm.DB) *Loaders {
+	return &Loaders{
+		MediaThumbnail:      NewThumbnailMediaURLLoader(db),
+		MediaHighres:        NewHighresMediaURLLoader(db),
+		MediaVideoWeb:       NewVideoWebMediaURLLoader(db),
+		UserFromAccessToken: NewUserLoaderByToken(db),
+		UserMediaFavorite:   NewUserFavoriteLoader(db),
+	}
+}
+
+func GetLoadersKey() contextKey {
+	return loadersKey
 }
