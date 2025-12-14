@@ -97,7 +97,7 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload)
 
 		loaders := dataloader.For(ctx)
 		if loaders == nil {
-			loaders := dataloader.NewLoaders(db)
+			loaders = dataloader.NewLoaders(db)
 			ctx = context.WithValue(ctx, dataloader.GetLoadersKey(), loaders)
 		}
 
