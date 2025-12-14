@@ -46,17 +46,3 @@ func For(ctx context.Context) *Loaders {
 	}
 	return loaders
 }
-
-func NewLoaders(db *gorm.DB) *Loaders {
-	return &Loaders{
-		MediaThumbnail:      NewThumbnailMediaURLLoader(db),
-		MediaHighres:        NewHighresMediaURLLoader(db),
-		MediaVideoWeb:       NewVideoWebMediaURLLoader(db),
-		UserFromAccessToken: NewUserLoaderByToken(db),
-		UserMediaFavorite:   NewUserFavoriteLoader(db),
-	}
-}
-
-func GetLoadersKey() contextKey {
-	return loadersKey
-}
