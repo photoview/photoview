@@ -31,7 +31,14 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
-				user, err := dataloader.For(r.Context()).UserFromAccessToken.Load(tokenCookie.Value)
+				loaders := dataloader.For(r.Context())
+				if loaders == nil {
+					log.Println("Dataloader not available in HTTP context")
+					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
+					return
+				}
+
+				user, err := loaders.UserFromAccessToken.Load(tokenCookie.Value)
 				// Check for dataloader errors (database failures, etc.)
 				if err != nil {
 					log.Printf("Error loading user from token: %s\n", err)
