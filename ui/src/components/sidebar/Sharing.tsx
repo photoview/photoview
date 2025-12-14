@@ -235,7 +235,8 @@ const MorePopoverSectionPassword = ({
         disabled={!activated}
         type={passwordHidden ? 'password' : 'text'}
         value={passwordInputValue}
-        className="mt-2 w-full"
+        className="w-full"
+        wrapperClassName="mt-2"
         onKeyDown={event => {
           if (
             event.shiftKey ||
@@ -261,7 +262,6 @@ const MorePopoverSectionPassword = ({
   )
 }
 
-
 type MorePopoverSectionExpirationProps = {
   share: sidebarGetAlbumShares_album_shares
   id: string
@@ -276,17 +276,19 @@ const MorePopoverSectionExpiration = ({
   // Verify whether the backend response includes an expiration time
   // Set it to true if share.expire exists; otherwise,set it to false
   const [enabled, setEnabled] = useState(!!share.expire)
-  const { t,i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
+  
   const dateFormatterOptions: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   }
-  const dateFormatter=new Intl.DateTimeFormat(
+  const dateFormatter = new Intl.DateTimeFormat(
     i18n.language,
     dateFormatterOptions
   )
   const oldExpireDate = share.expire ? dateFormatter.format(new Date(share.expire)) : ''
+    
   const [date, setDate] = useState<Date | null>(
     share.expire ? new Date(share.expire) : null
   )
@@ -296,8 +298,8 @@ const MorePopoverSectionExpiration = ({
   })
 
   const submit = () => {
-    if (!date) return
-    const formatDate=dayjs(date).format('YYYY-MM-DDTHH:mm:ssZ')
+    if (!date && enabled) return 
+    const formatDate = date ? dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ssZ') : null
     setExpire({
       variables: {
         token: share.token,
@@ -314,47 +316,36 @@ const MorePopoverSectionExpiration = ({
         onChange={() => {
           const next = !enabled
           setEnabled(next)
-          
+
           if (!next) {
-             // If the checkbox is unchecked,set the expiration time to null.
-             setDate(null)
-             setExpire({
-               variables: {
-                 token: share.token,
-                 expire: null, 
-               },
-             })
+            // If the checkbox is unchecked,set the expiration time to null.
+            setDate(null)
+            setExpire({
+              variables: {
+                token: share.token,
+                expire: null,
+              },
+            })
           }
         }}
       />
 
       {enabled && (
-        <div className="mt-2">
+        <div className="mt-2 w-full">
           <DatePicker
-        selected={date}
-        onChange={setDate}
-        value={oldExpireDate}
-        className="border rounded w-full p-2 bg-white dark:bg-dark-bg"
-        placeholderText={oldExpireDate}
-      />
-
-          <button
-            onClick={submit}
-            disabled={!date || loading}
-            className="
-    mt-2 px-4 py-2
-    bg-blue-200 hover:bg-blue-300
-    text-blue-800 font-semibold
-    rounded-lg
-    flex items-center
-    transition
-    disabled:opacity-50 disabled:cursor-not-allowed
-  "
-          >
-            <span className="mr-1">{t('general.action.submit', 'Submit')}</span>
-            <span>➤</span>
-          </button>
-
+            selected={date}
+            onChange={setDate}
+            placeholderText={oldExpireDate}
+            value={oldExpireDate}
+            customInput={
+              <TextField
+                fullWidth
+                action={submit}
+                loading={loading}
+              />
+            }
+            
+          />
         </div>
       )}
     </div>
