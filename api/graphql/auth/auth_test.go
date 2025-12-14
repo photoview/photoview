@@ -100,7 +100,7 @@ func TestAuthWebsocketInit(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			initFunc := auth.AuthWebsocketInit(db)
+			initFunc := auth.AuthWebsocketInit()
 			ctx := context.Background()
 			req := httptest.NewRequest("GET", "/", nil)
 			req = req.WithContext(ctx)

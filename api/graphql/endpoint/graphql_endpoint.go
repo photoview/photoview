@@ -31,7 +31,7 @@ func GraphqlEndpoint(db *gorm.DB) *graphql_handler.Server {
 	graphqlServer.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader:              server.WebsocketUpgrader(utils.DevelopmentMode()),
-		InitFunc:              auth.AuthWebsocketInit(db),
+		InitFunc:              auth.AuthWebsocketInit(),
 	})
 	graphqlServer.AddTransport(transport.Options{})
 	graphqlServer.AddTransport(transport.GET{})
