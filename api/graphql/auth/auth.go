@@ -3,17 +3,18 @@ package auth
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"regexp"
 
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 	"gorm.io/gorm"
 )
 
 var ErrUnauthorized = errors.New("unauthorized")
+var bearerRegex = regexp.MustCompile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 
 const INVALID_AUTH_TOKEN = "invalid authorization token"
 
@@ -33,22 +34,22 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
 				loaders := dataloader.For(r.Context())
 				if loaders == nil {
-					log.Println("Dataloader not available in HTTP context")
-					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
+					log.Error(r.Context(), "Dataloader not available in HTTP context")
+					http.Error(w, "internal server error", http.StatusInternalServerError)
 					return
 				}
 
 				user, err := loaders.UserFromAccessToken.Load(tokenCookie.Value)
 				// Check for dataloader errors (database failures, etc.)
 				if err != nil {
-					log.Printf("Error loading user from token: %s\n", err)
+					log.Error(r.Context(), "Error loading user from token", "error", err)
 					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
 					return
 				}
 
 				// If user is nil, the token doesn't exist or is invalid
 				if user == nil {
-					log.Println("Token not found in database")
+					log.Error(r.Context(), "Token not found in database")
 					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
 					return
 				}
@@ -59,7 +60,7 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				// and call the next with our new context
 				r = r.WithContext(ctx)
 			} else {
-				log.Println("Did not find auth-token cookie")
+				log.Info(r.Context(), "Did not find auth-token cookie")
 			}
 
 			next.ServeHTTP(w, r)
@@ -72,8 +73,7 @@ func AddUserToContext(ctx context.Context, user *models.User) context.Context {
 }
 
 func TokenFromBearer(bearer *string) (*string, error) {
-	regex, _ := regexp.Compile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
-	matches := regex.FindStringSubmatch(*bearer)
+	matches := bearerRegex.FindStringSubmatch(*bearer)
 	if len(matches) != 2 {
 		return nil, errors.New("invalid bearer format")
 	}
@@ -98,7 +98,7 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload)
 
 		token, err := TokenFromBearer(&bearer)
 		if err != nil {
-			log.Printf("Invalid bearer format (websocket): %s\n", bearer)
+			log.Error(ctx, "Invalid bearer format (websocket)", "bearer", bearer)
 			return nil, nil, err
 		}
 
@@ -110,13 +110,13 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload)
 
 		user, err := loaders.UserFromAccessToken.Load(*token)
 		if err != nil {
-			log.Printf("Error loading user from token (websocket): %s\n", err)
+			log.Error(ctx, "Error loading user from token (websocket)", "error", err)
 			return nil, nil, errors.New(INVALID_AUTH_TOKEN)
 		}
 
 		// Check if token exists in database
 		if user == nil {
-			log.Print("Token not found in database (websocket)\n")
+			log.Error(ctx, "Token not found in database (websocket)")
 			return nil, nil, errors.New(INVALID_AUTH_TOKEN)
 		}
 
