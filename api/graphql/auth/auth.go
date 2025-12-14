@@ -43,14 +43,14 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				// Check for dataloader errors (database failures, etc.)
 				if err != nil {
 					log.Error(r.Context(), "Error loading user from token", "error", err)
-					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
+					http.Error(w, INVALID_AUTH_TOKEN, http.StatusUnauthorized)
 					return
 				}
 
 				// If user is nil, the token doesn't exist or is invalid
 				if user == nil {
 					log.Error(r.Context(), "Token not found in database")
-					http.Error(w, INVALID_AUTH_TOKEN, http.StatusForbidden)
+					http.Error(w, INVALID_AUTH_TOKEN, http.StatusUnauthorized)
 					return
 				}
 
@@ -98,7 +98,7 @@ func AuthWebsocketInit(db *gorm.DB) func(context.Context, transport.InitPayload)
 
 		token, err := TokenFromBearer(&bearer)
 		if err != nil {
-			log.Error(ctx, "Invalid bearer format (websocket)", "bearer", bearer)
+			log.Error(ctx, "Invalid bearer format (websocket)", "error", err)
 			return nil, nil, err
 		}
 
