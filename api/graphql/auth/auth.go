@@ -17,6 +17,7 @@ var ErrUnauthorized = errors.New("unauthorized")
 var bearerRegex = regexp.MustCompile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 
 const INVALID_AUTH_TOKEN = "invalid authorization token"
+const INTERNAL_SERVER_ERROR = "internal server error"
 
 // A private key for context that only this package can access. This is important
 // to prevent collisions between different context uses
@@ -35,7 +36,7 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				loaders := dataloader.For(r.Context())
 				if loaders == nil {
 					log.Error(r.Context(), "Dataloader not available in HTTP context")
-					http.Error(w, "internal server error", http.StatusInternalServerError)
+					http.Error(w, INTERNAL_SERVER_ERROR, http.StatusInternalServerError)
 					return
 				}
 
@@ -105,7 +106,7 @@ func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.C
 		loaders := dataloader.For(ctx)
 		if loaders == nil {
 			log.Error(ctx, "Dataloader not available in websocket context")
-			return nil, nil, errors.New("internal server error")
+			return nil, nil, errors.New(INTERNAL_SERVER_ERROR)
 		}
 
 		user, err := loaders.UserFromAccessToken.Load(*token)
