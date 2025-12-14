@@ -177,7 +177,7 @@ func TestMiddleware(t *testing.T) {
 			name:         "Invalid token",
 			cookieValue:  "INVALID_TOKEN",
 			setCookie:    true,
-			expectStatus: 403,
+			expectStatus: 401,
 			expectUser:   false,
 		},
 	}
