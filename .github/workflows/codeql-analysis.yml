@@ -110,7 +110,7 @@ jobs:
 
       - name: Anchore vulns artifact
         id: anchore-artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Anchore-vulns-report
           path: ./vulns.json
@@ -143,7 +143,7 @@ jobs:
 
       - name: Hadolint artifact
         id: hadolint-artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: hadolint-report
           path: ./hadolint.txt
