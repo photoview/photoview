@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	photoview_graphql "github.com/photoview/photoview/api/graphql"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/resolvers"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
@@ -30,6 +31,7 @@ func GraphqlEndpoint(db *gorm.DB) *graphql_handler.Server {
 	graphqlServer.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader:              server.WebsocketUpgrader(utils.DevelopmentMode()),
+		InitFunc:              auth.AuthWebsocketInit(),
 	})
 	graphqlServer.AddTransport(transport.Options{})
 	graphqlServer.AddTransport(transport.GET{})

@@ -12,7 +12,7 @@ import { onError } from '@apollo/client/link/error'
 import { WebSocketLink } from '@apollo/client/link/ws'
 
 import urlJoin from 'url-join'
-import { clearTokenCookie } from './helpers/authentication'
+import { authToken, clearTokenCookie } from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
 import { Message } from './components/messages/SubscriptionsHook'
 import { NotificationType } from './__generated__/globalTypes'
@@ -37,7 +37,19 @@ websocketUri.protocol = apiProtocol === 'https:' ? 'wss:' : 'ws:'
 
 const wsLink = new WebSocketLink({
   uri: websocketUri.toString(),
-  // credentials: 'include',
+  options: {
+    reconnect: true,
+    lazy: true,
+    connectionParams: () => {
+      const token = authToken()
+      if (token) {
+        return {
+          Authorization: `Bearer ${token}`
+        }
+      }
+      return {}
+    }
+  }
 })
 
 const link = split(
@@ -104,9 +116,8 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${
-          graphQLErrors?.length || 0
-        } errors from the server. You are being logged out in an attempt to recover.`,
+        content: `Received ${graphQLErrors?.length || 0
+          } errors from the server. You are being logged out in an attempt to recover.`,
       })
     }
   }
@@ -131,21 +142,21 @@ type PaginateCacheType = {
 
 // Modified version of Apollo's offsetLimitPagination()
 const paginateCache = (keyArgs: string[]) =>
-  ({
-    keyArgs,
-    merge(existing, incoming, { args, fieldName }) {
-      const merged = existing ? existing.slice(0) : []
-      if (args?.paginate) {
-        const { offset = 0 } = args.paginate as { offset: number }
-        for (let i = 0; i < incoming.length; ++i) {
-          merged[offset + i] = incoming[i]
-        }
-      } else {
-        throw new Error(`Paginate argument is missing for query: ${fieldName}`)
+({
+  keyArgs,
+  merge(existing, incoming, { args, fieldName }) {
+    const merged = existing ? existing.slice(0) : []
+    if (args?.paginate) {
+      const { offset = 0 } = args.paginate as { offset: number }
+      for (let i = 0; i < incoming.length; ++i) {
+        merged[offset + i] = incoming[i]
       }
-      return merged
-    },
-  } as PaginateCacheType)
+    } else {
+      throw new Error(`Paginate argument is missing for query: ${fieldName}`)
+    }
+    return merged
+  },
+} as PaginateCacheType)
 
 const memoryCache = new InMemoryCache({
   typePolicies: {
