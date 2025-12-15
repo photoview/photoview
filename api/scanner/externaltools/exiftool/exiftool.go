@@ -66,6 +66,14 @@ func (i *Instance) Close() error {
 	return nil
 }
 
+func (i *Instance) Binary() string {
+	return i.binary
+}
+
+func (i *Instance) Version() string {
+	return i.version
+}
+
 func (i *Instance) QueryMIMEType(file string) (string, error) {
 	type Response struct {
 		MIMEType string

@@ -16,10 +16,14 @@ func TestInstance(t *testing.T) {
 		t.Fatalf("create instance error: %v", err)
 	}
 
-	t.Log("bin:", instance.binary)
-	t.Log("version:", instance.version)
+	t.Log("bin:", instance.Binary())
+	t.Log("version:", instance.Version())
 
-	if instance.version == "" {
+	if instance.Binary() == "" {
+		t.Errorf("want exiftool binary, but got an emtpy string")
+	}
+
+	if instance.Version() == "" {
 		t.Errorf("want exiftool version, but got an emtpy string")
 	}
 
