@@ -14,14 +14,14 @@ func TestStdoutReader(t *testing.T) {
 	}{
 		{"NoContent", "", []string{""}},
 		{"1EmptyFrame", "{ready}\n", []string{"", ""}},
-		{"1ShortFrame", "0123\n{ready}\n", []string{"0123", ""}},
-		{"1LongFrame", "01234567890123456789\n{ready}\n", []string{"01234567890123456789", ""}},
-		{"1MultilineFrame", "012345\n67890123456789\n{ready}\n", []string{"01234567890123456789", ""}},
+		{"1ShortFrame", "0123\n{ready}\n", []string{"0123\n", ""}},
+		{"1LongFrame", "01234567890123456789\n{ready}\n", []string{"01234567890123456789\n", ""}},
+		{"1MultilineFrame", "012345\n67890123456789\n{ready}\n", []string{"012345\n67890123456789\n", ""}},
 
 		{"2EmptyFrame", "{ready}\n{ready}\n", []string{"", "", ""}},
-		{"2ShortFrame", "0123\n{ready}\nabcd\n{ready}\n", []string{"0123", "abcd", ""}},
-		{"2LongFrame", "01234567890123456789\n{ready}\nabcdefghijklmnopq\n{ready}\n", []string{"01234567890123456789", "abcdefghijklmnopq", ""}},
-		{"2MultilineFrame", "012345\n67890123456789\n{ready}\nabcdef\nghijklmnopq\n{ready}\n", []string{"01234567890123456789", "abcdefghijklmnopq", ""}},
+		{"2ShortFrame", "0123\n{ready}\nabcd\n{ready}\n", []string{"0123\n", "abcd\n", ""}},
+		{"2LongFrame", "01234567890123456789\n{ready}\nabcdefghijklmnopq\n{ready}\n", []string{"01234567890123456789\n", "abcdefghijklmnopq\n", ""}},
+		{"2MultilineFrame", "012345\n67890123456789\n{ready}\nabcdef\nghijklmnopq\n{ready}\n", []string{"012345\n67890123456789\n", "abcdef\nghijklmnopq\n", ""}},
 	}
 
 	for _, tc := range tests {

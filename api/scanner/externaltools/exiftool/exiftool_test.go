@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	_ "github.com/photoview/photoview/api/test_utils/flags"
 )
 
 func TestInstance(t *testing.T) {

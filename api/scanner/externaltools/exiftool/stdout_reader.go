@@ -55,9 +55,12 @@ func (r *stdtoutReader) Read(p []byte) (int, error) {
 			return n, r.lastError
 		}
 
-		if !prefix && string(line) == r.delimiter {
-			r.lastError = errEndOfFrame
-			return n, io.EOF
+		if !prefix {
+			if string(line) == r.delimiter {
+				r.lastError = errEndOfFrame
+				return n, io.EOF
+			}
+			line = append(line, '\n')
 		}
 
 		n += copyAndMove(&p, &line)
