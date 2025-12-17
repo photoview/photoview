@@ -166,9 +166,10 @@ func TestQueryGPS(t *testing.T) {
 
 func TestSaveJPEGPreview(t *testing.T) {
 	tests := []struct {
-		file string
+		file   string
+		output string
 	}{
-		{"./test_data/cr3.cr3"},
+		{"./test_data/cr3.cr3", "cr3.jpg"},
 	}
 
 	instance, err := New()
@@ -181,13 +182,13 @@ func TestSaveJPEGPreview(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			err := instance.SaveJPEGPreview(tc.file, outputDir)
+			output := filepath.Join(outputDir, tc.output)
+			err := instance.SaveJPEGPreview(tc.file, output)
 			if err != nil {
-				t.Errorf("SaveJPEGPreview(%q, %q) error: %v", tc.file, outputDir, err)
+				t.Errorf("SaveJPEGPreview(%q, %q) error: %v", tc.file, output, err)
 				return
 			}
 
-			output := filepath.Join(outputDir, "cr3.jpg")
 			mime, err := instance.QueryMIMEType(output)
 			if err != nil {
 				t.Errorf("QueryMIMEType(%q) error: %v", output, err)
