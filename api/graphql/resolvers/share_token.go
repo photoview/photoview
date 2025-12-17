@@ -104,6 +104,21 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credenti
 			return false, fmt.Errorf("failed to get share token from database: %w", err)
 		}
 	}
+	now := time.Now()
+	fakeTime := time.Date(
+		now.Year(),
+		now.Month(),
+		now.Day(),
+		now.Hour(),
+		now.Minute(),
+		now.Second(),
+		0,
+		time.UTC,
+	)
+	//Assume the client’s local time is UTC, without applying any timezone conversion.
+	if token.Expire != nil && fakeTime.After(*token.Expire) {
+		return false, errors.New("share expired")
+	}
 
 	if token.Password == nil {
 		return true, nil

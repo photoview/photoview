@@ -299,7 +299,8 @@ const MorePopoverSectionExpiration = ({
 
   const submit = () => {
     if (!date && enabled) return 
-    const formatDate = date ? dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ssZ') : null
+    const formatDate = date ? dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ss')+'Z' : null
+    //Save the local time while treating it as UTC.
     setExpire({
       variables: {
         token: share.token,
