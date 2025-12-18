@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"strings"
 )
 
-var errEndOfFrame = errors.New("end of the frame")
+type frameError struct {
+	error
+}
 
 // stdtoutReader is only designed to work with exiftool json output in stay_open mode.
 // Don't use it in other cases.
@@ -25,15 +28,17 @@ func newStdoutReader(stdout io.Reader, delimiter string, bufSize int) *stdtoutRe
 }
 
 func (r *stdtoutReader) ResetFrame() {
-	if r.lastError == errEndOfFrame {
+	var ferr frameError
+	if errors.As(r.lastError, &ferr) {
 		r.lastError = nil
 	}
 }
 
 func (r *stdtoutReader) Read(p []byte) (int, error) {
 	if err := r.lastError; err != nil {
-		if r.lastError == errEndOfFrame {
-			err = io.EOF
+		var ferr frameError
+		if errors.As(err, &ferr) {
+			err = ferr.error
 		}
 		return 0, err
 	}
@@ -56,9 +61,16 @@ func (r *stdtoutReader) Read(p []byte) (int, error) {
 		}
 
 		if !prefix {
-			if string(line) == r.delimiter {
-				r.lastError = errEndOfFrame
+			const errPrefix = "Error: "
+			strline := string(line)
+			switch {
+			case strline == r.delimiter:
+				r.lastError = frameError{error: io.EOF}
 				return n, io.EOF
+			case strings.HasPrefix(strline, errPrefix):
+				err := errors.New(strline[len(errPrefix):])
+				r.lastError = frameError{error: err}
+				return n, err
 			}
 			line = append(line, '\n')
 		}

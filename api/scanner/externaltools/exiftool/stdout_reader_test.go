@@ -1,6 +1,7 @@
 package exiftool
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -22,6 +23,10 @@ func TestStdoutReader(t *testing.T) {
 		{"2ShortFrame", "0123\n{ready}\nabcd\n{ready}\n", []string{"0123\n", "abcd\n", ""}},
 		{"2LongFrame", "01234567890123456789\n{ready}\nabcdefghijklmnopq\n{ready}\n", []string{"01234567890123456789\n", "abcdefghijklmnopq\n", ""}},
 		{"2MultilineFrame", "012345\n67890123456789\n{ready}\nabcdef\nghijklmnopq\n{ready}\n", []string{"012345\n67890123456789\n", "abcdef\nghijklmnopq\n", ""}},
+
+		{"1Error", "Error: some error\n{ready}\n", []string{"E: some error"}},
+		{"1Error1Empty", "Error: some error\n{ready}\n{ready}\n", []string{"E: some error", ""}},
+		{"1Empty1Error", "{ready}\nError: some error\n{ready}\n", []string{"", "E: some error"}},
 	}
 
 	for _, tc := range tests {
@@ -29,6 +34,16 @@ func TestStdoutReader(t *testing.T) {
 			r := newStdoutReader(strings.NewReader(tc.input), "{ready}", 10240)
 			for i, want := range tc.wantFrames {
 				got, err := io.ReadAll(r)
+
+				if strings.HasPrefix(want, "E: ") {
+					if fmt.Sprintf("E: %v", err) != want {
+						t.Errorf("ReadAll(r) = (%q, %v), want: %v", got, err, want)
+					}
+
+					r.ResetFrame()
+					continue
+				}
+
 				if err != nil {
 					t.Fatalf("read frame %d error: %v", i, err)
 				}

@@ -5,6 +5,7 @@ import (
 	"maps"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -167,9 +168,10 @@ func TestQueryGPS(t *testing.T) {
 func TestSaveJPEGPreview(t *testing.T) {
 	tests := []struct {
 		file   string
-		output string
+		wantOK bool
 	}{
-		{"./test_data/cr3.cr3", "cr3.jpg"},
+		{"./test_data/cr3.cr3", true},
+		{"./test_data/bird.jpg", false},
 	}
 
 	instance, err := New()
@@ -182,10 +184,18 @@ func TestSaveJPEGPreview(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			output := filepath.Join(outputDir, tc.output)
-			err := instance.SaveJPEGPreview(tc.file, output)
+			output := filepath.Join(outputDir, "preview.jpg")
+			ok, err := instance.SaveJPEGPreview(tc.file, output)
 			if err != nil {
 				t.Errorf("SaveJPEGPreview(%q, %q) error: %v", tc.file, output, err)
+				return
+			}
+
+			if ok != tc.wantOK {
+				t.Errorf("SaveJPEGPreview(%q, %q) = %v, want: %v", tc.file, output, ok, tc.wantOK)
+			}
+
+			if !ok {
 				return
 			}
 
@@ -202,4 +212,32 @@ func TestSaveJPEGPreview(t *testing.T) {
 		})
 	}
 
+}
+
+func TestInstanceError(t *testing.T) {
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	file := "./test_data/non_exist.jpg"
+	checkErr := func(err error, fmtStr string, args ...any) {
+		if want := "File not found"; err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf(fmtStr+" %v, want %v", append(args, err, want)...)
+		}
+	}
+
+	_, err = instance.QueryMIMEType(file)
+	checkErr(err, "QueryMIMEType(%q)", file)
+
+	_, _, err = instance.QueryGPS(file)
+	checkErr(err, "QueryGPS(%q)", file)
+
+	_, err = instance.QueryTime(file)
+	checkErr(err, "QueryTime(%q)", file)
+
+	output := filepath.Join(t.TempDir(), "output.jpg")
+	_, err = instance.SaveJPEGPreview(file, output)
+	checkErr(err, "SaveJPEGPreview(%q, %q)", file, output)
 }

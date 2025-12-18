@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 )
 
 type Instance struct {
@@ -22,15 +23,20 @@ func New() (*Instance, error) {
 	}
 
 	cmd := exec.Command(bin, "-stay_open", "True", "-@", "-")
+
 	input, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("create stdin pipe error: %w", err)
 	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("create stdout pipe error: %w", err)
 	}
 	reader := newStdoutReader(stdout, "{ready}", 1024*10)
+
+	cmd.Stderr = cmd.Stdout
+
 	if err := cmd.Start(); err != nil {
 		cmd.Wait()
 		return nil, fmt.Errorf("launch exiftool error: %w", err)
@@ -123,13 +129,17 @@ func (i *Instance) QueryGPS(file string) (float64, float64, error) {
 	return ret[0].GPSLatitude, ret[0].GPSLongitude, nil
 }
 
-func (i *Instance) SaveJPEGPreview(src string, preview string) error {
-	_, err := i.getRawString(src, "-JpgFromRaw", "-b", "-W", preview)
+func (i *Instance) SaveJPEGPreview(src string, preview string) (bool, error) {
+	output, err := i.getRawString(src, "-JpgFromRaw", "-b", "-W", preview)
 	if err != nil {
-		return fmt.Errorf("save preview from %q to %q error: %w", src, preview, err)
+		return false, fmt.Errorf("save preview from %q to %q error: %w", src, preview, err)
 	}
 
-	return nil
+	if strings.TrimSpace(output) != "1 output files created" {
+		return false, nil
+	}
+
+	return true, nil
 
 }
 
