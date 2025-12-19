@@ -6,39 +6,68 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
-
-	"github.com/glebarez/sqlite"
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
-func setupTestDB(t *testing.T) *gorm.DB {
-	// use memory mode
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
-	}
-	err = db.AutoMigrate(&models.ShareToken{})
-	if err != nil {
-		t.Fatalf("failed to migrate database: %v", err)
-	}
-	return db
+func TestMain(m *testing.M) {
+	test_utils.IntegrationTestRun(m)
 }
 
-func TestShareTokenValidatePassword_SQLite(t *testing.T) {
-	password := "123456"
-	hashBytes, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func TestShareTokenValidatePassword(t *testing.T) {
+	test_utils.FilesystemTest(t)
+	db := test_utils.DatabaseTest(t)
+	pass := "1234"
+	user, err := models.RegisterUser(db, "test_user", &pass, true)
+	if err != nil {
+		t.Fatal("register user error:", err)
+	}
+	hashBytes, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	hashedPassword := string(hashBytes)
 
 	now := time.Now()
 	expiredTime := now.Add(-24 * time.Hour)
+	expiredTime = time.Date(
+		expiredTime.Year(),
+		expiredTime.Month(),
+		expiredTime.Day(),
+		expiredTime.Hour(),
+		expiredTime.Minute(),
+		expiredTime.Second(),
+		0,
+		time.UTC,
+	)
 	futureTime := now.Add(24 * time.Hour)
+	futureTime = time.Date(
+		futureTime.Year(),
+		futureTime.Month(),
+		futureTime.Day(),
+		futureTime.Hour(),
+		futureTime.Minute(),
+		futureTime.Second(),
+		0,
+		time.UTC,
+	)
 
+	db.AutoMigrate(&models.ShareToken{})
+	testDataList := []models.ShareToken{
+		{
+			Value:   "EXPIRED_TOKEN",
+			OwnerID: user.ID,
+			Expire:  &expiredTime,
+		},
+		{
+			Value:    "CORRECT_PASS",
+			OwnerID:  user.ID,
+			Expire:   &futureTime,
+			Password: &hashedPassword,
+		},
+	}
+	db.Create(testDataList)
 	tests := []struct {
 		name        string
 		credentials models.ShareTokenCredentials
-		prepareData func(db *gorm.DB)
 		wantResult  bool
 		wantErr     bool
 		wantErrMsg  string
@@ -47,8 +76,6 @@ func TestShareTokenValidatePassword_SQLite(t *testing.T) {
 			name: "Case 1: Token not exist",
 			credentials: models.ShareTokenCredentials{
 				Token: "NOT_EXIST",
-			},
-			prepareData: func(db *gorm.DB) {
 			},
 			wantResult: false,
 			wantErr:    true,
@@ -59,12 +86,6 @@ func TestShareTokenValidatePassword_SQLite(t *testing.T) {
 			credentials: models.ShareTokenCredentials{
 				Token: "EXPIRED_TOKEN",
 			},
-			prepareData: func(db *gorm.DB) {
-				db.Create(&models.ShareToken{
-					Value:  "EXPIRED_TOKEN",
-					Expire: &expiredTime,
-				})
-			},
 			wantResult: false,
 			wantErr:    true,
 			wantErrMsg: "share expired",
@@ -73,14 +94,7 @@ func TestShareTokenValidatePassword_SQLite(t *testing.T) {
 			name: "Case 3: correct pass",
 			credentials: models.ShareTokenCredentials{
 				Token:    "CORRECT_PASS",
-				Password: &password,
-			},
-			prepareData: func(db *gorm.DB) {
-				db.Create(&models.ShareToken{
-					Value:    "CORRECT_PASS",
-					Expire:   &futureTime,
-					Password: &hashedPassword,
-				})
+				Password: &pass,
 			},
 			wantResult: true,
 			wantErr:    false,
@@ -89,10 +103,6 @@ func TestShareTokenValidatePassword_SQLite(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := setupTestDB(t)
-			if tt.prepareData != nil {
-				tt.prepareData(db)
-			}
 			r := &queryResolver{
 				Resolver: &Resolver{
 					database: db,
