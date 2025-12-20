@@ -16,6 +16,7 @@ import {
 
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownloadMedia'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
+import Message from '../../components/messages/Message'
 
 vi.mock('../../hooks/useScrollPagination')
 
@@ -264,4 +265,128 @@ describe('load correct share page, based on graphql query', () => {
     expect(screen.getByTestId('Layout')).toBeInTheDocument()
     expect(screen.getByTestId('AlbumSharePage')).toBeInTheDocument()
   })
+
+  test(`test the expired`, async () => {
+    const expiredValidationMock = {
+      request: {
+        query: VALIDATE_TOKEN_PASSWORD_QUERY,
+        variables: { token: 'TOKEN123', password: null },
+      },
+      error: new Error('share expired'),
+    };
+    const shareTokenMock = {
+      request: {
+        query: SHARE_TOKEN_QUERY,
+        variables: { token: 'TOKEN123', password: null },
+      },
+      result: {
+        data: {
+          shareToken: {
+            token: 'TOKEN123',
+            album: null,
+            media: null,
+          },
+        },
+      },
+    };
+
+    render(
+      <MockedProvider
+        mocks={[expiredValidationMock, shareTokenMock]}
+        addTypename={false}
+        defaultOptions={{
+          watchQuery: { fetchPolicy: 'no-cache' },
+          query: { fetchPolicy: 'no-cache' },
+        }}
+      >
+        <MemoryRouter initialEntries={historyMock}>
+          <Routes>
+            <Route path="/share/:token/*" element={<TokenRoute />} />
+          </Routes>
+        </MemoryRouter>
+      </MockedProvider>
+    )
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+
+    await waitForElementToBeRemoved(() => screen.queryByText('Loading...'))
+
+    expect(screen.getByText(/share expired/i)).toBeInTheDocument()
+  })
+
+test(`test the normal`, async () => {
+  const normalValidationMock = {
+    request: {
+      query: VALIDATE_TOKEN_PASSWORD_QUERY,
+      variables: { token: 'TOKEN123', password: null },
+    },
+    result: {
+      data: {
+        shareTokenValidatePassword: true,
+      },
+    },
+  };
+
+  const shareTokenMock = {
+    request: {
+      query: SHARE_TOKEN_QUERY,
+      variables: { token: 'TOKEN123', password: null },
+    },
+    result: {
+      data: {
+        shareToken: {
+          token: 'TOKEN123',
+          album: { id: '1' }, 
+          media: null,
+        },
+      },
+    },
+  };
+
+  const albumDataMock = {
+    request: {
+      query: SHARE_ALBUM_QUERY,
+      variables: {
+        id: '1',
+        token: 'TOKEN123',
+        password: null,
+        limit: 200,
+        offset: 0,
+        mediaOrderBy: 'date_shot',
+        mediaOrderDirection: 'ASC',
+      },
+    },
+    result: {
+      data: {
+        album: {
+          id: '1',
+          title: 'normal_album',
+          subAlbums: [],
+          thumbnail: { url: '...' },
+          media: [],
+        },
+      },
+    },
+  };
+
+  render(
+    <MockedProvider
+      mocks={[normalValidationMock, shareTokenMock, albumDataMock]}
+      addTypename={false}
+    >
+      <MemoryRouter initialEntries={historyMock}>
+        <Routes>
+          <Route path="/share/:token/*" element={<TokenRoute />} />
+        </Routes>
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  expect(screen.getByText('Loading...')).toBeInTheDocument()
+  await waitForElementToBeRemoved(() => screen.queryByText('Loading...'))
+
+  expect(screen.getByTestId('Layout')).toBeInTheDocument()
+  expect(screen.getByTestId('AlbumSharePage')).toBeInTheDocument()
+})
+
+
 })
