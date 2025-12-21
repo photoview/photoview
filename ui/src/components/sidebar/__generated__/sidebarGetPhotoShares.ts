@@ -15,6 +15,10 @@ export interface sidebarGetPhotoShares_media_shares {
    * Whether or not a password is needed to access the share
    */
   hasPassword: boolean;
+  /**
+   * Optional expire date
+   */
+  expire: Time | null;
 }
 
 export interface sidebarGetPhotoShares_media {
