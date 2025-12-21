@@ -274,25 +274,10 @@ describe('load correct share page, based on graphql query', () => {
       },
       error: new Error('share expired'),
     };
-    const shareTokenMock = {
-      request: {
-        query: SHARE_TOKEN_QUERY,
-        variables: { token: 'TOKEN123', password: null },
-      },
-      result: {
-        data: {
-          shareToken: {
-            token: 'TOKEN123',
-            album: null,
-            media: null,
-          },
-        },
-      },
-    };
-
+    
     render(
       <MockedProvider
-        mocks={[expiredValidationMock,...graphqlMocks, shareTokenMock]}
+        mocks={[expiredValidationMock]}
         addTypename={false}
         defaultOptions={{
           watchQuery: { fetchPolicy: 'no-cache' },
@@ -314,17 +299,6 @@ describe('load correct share page, based on graphql query', () => {
   })
 
 test(`test the normal`, async () => {
-  const normalValidationMock = {
-    request: {
-      query: VALIDATE_TOKEN_PASSWORD_QUERY,
-      variables: { token: 'TOKEN123', password: null },
-    },
-    result: {
-      data: {
-        shareTokenValidatePassword: true,
-      },
-    },
-  };
 
   const shareTokenMock = {
     request: {
@@ -370,7 +344,7 @@ test(`test the normal`, async () => {
 
   render(
     <MockedProvider
-      mocks={[...graphqlMocks,normalValidationMock, shareTokenMock, albumDataMock]}
+      mocks={[...graphqlMocks, shareTokenMock, albumDataMock]}
       addTypename={false}
     >
       <MemoryRouter initialEntries={historyMock}>
