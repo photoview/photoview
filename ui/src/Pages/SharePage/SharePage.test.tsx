@@ -270,7 +270,7 @@ describe('load correct share page, based on graphql query', () => {
     const expiredValidationMock = {
       request: {
         query: VALIDATE_TOKEN_PASSWORD_QUERY,
-        variables: { token: 'TOKEN123', password: null },
+        variables: { token: 'TOKEN123', password: "PASSWORD-123_@456\\" },
       },
       error: new Error('share expired'),
     };
@@ -303,7 +303,7 @@ test(`test the normal`, async () => {
   const shareTokenMock = {
     request: {
       query: SHARE_TOKEN_QUERY,
-      variables: { token: 'TOKEN123', password: null },
+      variables: { token: 'TOKEN123', password: "PASSWORD-123_@456\\" },
     },
     result: {
       data: {
@@ -322,7 +322,7 @@ test(`test the normal`, async () => {
       variables: {
         id: '1',
         token: 'TOKEN123',
-        password: null,
+        password: "PASSWORD-123_@456\\",
         limit: 200,
         offset: 0,
         mediaOrderBy: 'date_shot',
