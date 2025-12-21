@@ -292,7 +292,7 @@ describe('load correct share page, based on graphql query', () => {
 
     render(
       <MockedProvider
-        mocks={[expiredValidationMock, shareTokenMock]}
+        mocks={[expiredValidationMock,...graphqlMocks, shareTokenMock]}
         addTypename={false}
         defaultOptions={{
           watchQuery: { fetchPolicy: 'no-cache' },
@@ -370,7 +370,7 @@ test(`test the normal`, async () => {
 
   render(
     <MockedProvider
-      mocks={[normalValidationMock, shareTokenMock, albumDataMock]}
+      mocks={[...graphqlMocks,normalValidationMock, shareTokenMock, albumDataMock]}
       addTypename={false}
     >
       <MemoryRouter initialEntries={historyMock}>
