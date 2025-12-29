@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser               func(childComplexity int, username string, password string) int
-		ChangeUserPreferences       func(childComplexity int, language *string) int
+		ChangeUserPreferences       func(childComplexity int, language *string, defaultLandingPage *string) int
 		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
 		CreateUser                  func(childComplexity int, username string, password *string, admin bool) int
 		DeleteShareToken            func(childComplexity int, token string) int
@@ -259,8 +259,9 @@ type ComplexityRoot struct {
 	}
 
 	UserPreferences struct {
-		ID       func(childComplexity int) int
-		Language func(childComplexity int) int
+		DefaultLandingPage func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Language           func(childComplexity int) int
 	}
 
 	VideoMetadata struct {
@@ -334,7 +335,7 @@ type MutationResolver interface {
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 	UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error)
 	UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error)
-	ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error)
+	ChangeUserPreferences(ctx context.Context, language *string, defaultLandingPage *string) (*models.UserPreferences, error)
 }
 type QueryResolver interface {
 	MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error)
@@ -812,7 +813,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string)), true
+		return e.complexity.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string), args["defaultLandingPage"].(*string)), true
 	case "Mutation.combineFaceGroups":
 		if e.complexity.Mutation.CombineFaceGroups == nil {
 			break
@@ -1433,6 +1434,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.User.Username(childComplexity), true
 
+	case "UserPreferences.defaultLandingPage":
+		if e.complexity.UserPreferences.DefaultLandingPage == nil {
+			break
+		}
+
+		return e.complexity.UserPreferences.DefaultLandingPage(childComplexity), true
 	case "UserPreferences.id":
 		if e.complexity.UserPreferences.ID == nil {
 			break
@@ -1734,6 +1741,11 @@ func (ec *executionContext) field_Mutation_changeUserPreferences_args(ctx contex
 		return nil, err
 	}
 	args["language"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "defaultLandingPage", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["defaultLandingPage"] = arg1
 	return args, nil
 }
 
@@ -6085,7 +6097,7 @@ func (ec *executionContext) _Mutation_changeUserPreferences(ctx context.Context,
 		ec.fieldContext_Mutation_changeUserPreferences,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string))
+			return ec.resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string), fc.Args["defaultLandingPage"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -6119,6 +6131,8 @@ func (ec *executionContext) fieldContext_Mutation_changeUserPreferences(ctx cont
 				return ec.fieldContext_UserPreferences_id(ctx, field)
 			case "language":
 				return ec.fieldContext_UserPreferences_language(ctx, field)
+			case "defaultLandingPage":
+				return ec.fieldContext_UserPreferences_defaultLandingPage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
 		},
@@ -7380,6 +7394,8 @@ func (ec *executionContext) fieldContext_Query_myUserPreferences(_ context.Conte
 				return ec.fieldContext_UserPreferences_id(ctx, field)
 			case "language":
 				return ec.fieldContext_UserPreferences_language(ctx, field)
+			case "defaultLandingPage":
+				return ec.fieldContext_UserPreferences_defaultLandingPage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
 		},
@@ -8654,6 +8670,35 @@ func (ec *executionContext) fieldContext_UserPreferences_language(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type LanguageTranslation does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserPreferences_defaultLandingPage(ctx context.Context, field graphql.CollectedField, obj *models.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserPreferences_defaultLandingPage,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultLandingPage, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserPreferences_defaultLandingPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserPreferences",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12924,6 +12969,8 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 			}
 		case "language":
 			out.Values[i] = ec._UserPreferences_language(ctx, field, obj)
+		case "defaultLandingPage":
+			out.Values[i] = ec._UserPreferences_defaultLandingPage(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

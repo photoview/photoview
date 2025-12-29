@@ -42,9 +42,10 @@ type AccessToken struct {
 
 type UserPreferences struct {
 	Model
-	UserID   int  `gorm:"not null;index"`
-	User     User `gorm:"constraint:OnDelete:CASCADE;"`
-	Language *LanguageTranslation
+	UserID             int  `gorm:"not null;index"`
+	User               User `gorm:"constraint:OnDelete:CASCADE;"`
+	Language           *LanguageTranslation
+	DefaultLandingPage *string `gorm:"size:64"`
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
@@ -65,6 +66,26 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 
 		if !foundMatch {
 			return errors.New("invalid language value")
+		}
+	}
+
+	// Validate DefaultLandingPage
+	if u.DefaultLandingPage != nil && *u.DefaultLandingPage == "" {
+		u.DefaultLandingPage = nil
+	}
+
+	if u.DefaultLandingPage != nil {
+		validPages := []string{"/timeline", "/albums", "/places", "/people"}
+		foundMatch := false
+		for _, page := range validPages {
+			if *u.DefaultLandingPage == page {
+				foundMatch = true
+				break
+			}
+		}
+
+		if !foundMatch {
+			return errors.New("invalid default landing page value")
 		}
 	}
 

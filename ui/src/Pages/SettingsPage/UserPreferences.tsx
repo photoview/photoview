@@ -57,11 +57,49 @@ const themePreferences = (t: TranslationFn) => [
   },
 ]
 
+const landingPagePreferences = (
+  t: TranslationFn,
+  mapboxEnabled: boolean,
+  faceDetectionEnabled: boolean
+) => {
+  const pages = [
+    {
+      key: 1,
+      label: t('settings.user_preferences.landing_page.timeline', 'Timeline'),
+      value: '/timeline',
+    },
+    {
+      key: 2,
+      label: t('settings.user_preferences.landing_page.albums', 'Albums'),
+      value: '/albums',
+    },
+  ]
+
+  if (mapboxEnabled) {
+    pages.push({
+      key: 3,
+      label: t('settings.user_preferences.landing_page.places', 'Places'),
+      value: '/places',
+    })
+  }
+
+  if (faceDetectionEnabled) {
+    pages.push({
+      key: 4,
+      label: t('settings.user_preferences.landing_page.people', 'People'),
+      value: '/people',
+    })
+  }
+
+  return pages
+}
+
 const CHANGE_USER_PREFERENCES = gql`
-  mutation changeUserPreferences($language: String) {
-    changeUserPreferences(language: $language) {
+  mutation changeUserPreferences($language: String, $defaultLandingPage: String) {
+    changeUserPreferences(language: $language, defaultLandingPage: $defaultLandingPage) {
       id
       language
+      defaultLandingPage
     }
   }
 `
@@ -71,6 +109,7 @@ const MY_USER_PREFERENCES = gql`
     myUserPreferences {
       id
       language
+      defaultLandingPage
     }
   }
 `
@@ -102,6 +141,24 @@ const UserPreferences = () => {
     changeTheme(value)
     setTheme(value)
   }
+
+  // Detect available features
+  const { data: mapboxData } = useQuery(gql`
+    query mapboxEnabledQuery {
+      mapboxToken
+    }
+  `)
+
+  const { data: faceDetectionData } = useQuery(gql`
+    query faceDetectionEnabled {
+      siteInfo {
+        faceDetectionEnabled
+      }
+    }
+  `)
+
+  const mapboxEnabled = !!mapboxData?.mapboxToken
+  const faceDetectionEnabled = !!faceDetectionData?.siteInfo?.faceDetectionEnabled
 
   const { data } = useQuery<myUserPreferences>(MY_USER_PREFERENCES)
 
@@ -172,6 +229,37 @@ const UserPreferences = () => {
         items={themePreferences(t)}
         setSelected={changeStateTheme}
         selected={theme}
+      />
+      <label htmlFor="user_pref_change_landing_page_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.landing_page.label',
+            'Default landing page'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.landing_page.description',
+            'Choose which page to show when you first log in'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Dropdown
+        id="user_pref_change_landing_page_field"
+        placeholder={t(
+          'settings.user_preferences.landing_page.placeholder',
+          'Select default page'
+        )}
+        items={landingPagePreferences(t, mapboxEnabled, faceDetectionEnabled)}
+        setSelected={landingPage => {
+          changePrefs({
+            variables: {
+              defaultLandingPage: landingPage as string,
+            },
+          })
+        }}
+        selected={data?.myUserPreferences.defaultLandingPage || undefined}
+        disabled={loadingPrefs}
       />
     </UserPreferencesWrapper>
   )

@@ -6,6 +6,7 @@ import {
   Outlet,
   useRoutes,
 } from 'react-router-dom'
+import { useQuery, gql } from '@apollo/client'
 
 import Layout from '../layout/Layout'
 import { authToken, clearTokenCookie } from '../../helpers/authentication'
@@ -139,7 +140,24 @@ const Routes = () => {
 const IndexPage = () => {
   const token = authToken()
 
-  const dest = token ? '/timeline' : '/login'
+  if (!token) {
+    return <Navigate to="/login" />
+  }
+
+  const { data, loading } = useQuery(gql`
+    query myUserPreferences {
+      myUserPreferences {
+        id
+        defaultLandingPage
+      }
+    }
+  `)
+
+  if (loading) {
+    return null
+  }
+
+  const dest = data?.myUserPreferences?.defaultLandingPage || '/timeline'
 
   return <Navigate to={dest} />
 }
