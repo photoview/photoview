@@ -15,7 +15,7 @@ env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'jdaviev/photoview' }}
   # IS_PUSHING_IMAGES: true # Switch on when pushing images with forked repos.
   DOCKER_REGISTRY: ${{ github.repository != 'jdaviev/photoview' && 'ghcr.io/' || '' }}
-  DOCKER_USERNAME: viktorstrate
+  DOCKER_USERNAME: jdaviev
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_IMAGE: ${{ github.repository }}
   DOCKER_PLATFORMS: linux/amd64,linux/arm64
