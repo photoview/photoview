@@ -3,8 +3,10 @@ package models
 import (
 	"crypto/rand"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -86,6 +88,20 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 
 		if !foundMatch {
 			return errors.New("invalid default landing page value")
+		}
+
+		// Validate that feature-dependent pages are only allowed if the feature is enabled
+		switch *u.DefaultLandingPage {
+		case "/places":
+			// Check if Mapbox token is configured
+			if os.Getenv("MAPBOX_TOKEN") == "" {
+				return errors.New("cannot set /places as default landing page: Mapbox is not configured")
+			}
+		case "/people":
+			// Check if face detection is enabled
+			if utils.EnvDisableFaceRecognition.GetBool() {
+				return errors.New("cannot set /people as default landing page: face detection is not enabled")
+			}
 		}
 	}
 

@@ -139,11 +139,7 @@ const Routes = () => {
 
 const IndexPage = () => {
   const token = authToken()
-
-  if (!token) {
-    return <Navigate to="/login" />
-  }
-
+  
   const { data, loading } = useQuery(gql`
     query myUserPreferences {
       myUserPreferences {
@@ -152,13 +148,17 @@ const IndexPage = () => {
       }
     }
   `)
-
+  
+  if (!token) {
+    return <Navigate to="/login" />
+  }
+  
   if (loading) {
     return null
   }
-
+  
   const dest = data?.myUserPreferences?.defaultLandingPage || '/timeline'
-
+  
   return <Navigate to={dest} />
 }
 
