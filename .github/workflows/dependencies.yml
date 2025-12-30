@@ -12,7 +12,7 @@ on:
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'jdaviev/photoview' }}
   IS_CACHING: true
-  DOCKER_USERNAME: viktorstrate
+  DOCKER_USERNAME: jdaviev
   DOCKER_IMAGE: jdaviev/dependencies
   PLATFORMS: linux/amd64,linux/arm64
 
