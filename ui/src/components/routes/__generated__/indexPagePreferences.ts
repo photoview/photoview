@@ -3,22 +3,19 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { LanguageTranslation } from "./../../../__generated__/globalTypes";
-
 // ====================================================
-// GraphQL query operation: myUserPreferences
+// GraphQL query operation: indexPagePreferences
 // ====================================================
 
-export interface myUserPreferences_myUserPreferences {
+export interface indexPagePreferences_myUserPreferences {
   __typename: "UserPreferences";
   id: string;
-  language: LanguageTranslation | null;
   defaultLandingPage: string | null;
 }
 
-export interface myUserPreferences {
+export interface indexPagePreferences {
   /**
    * User preferences for the logged in user
    */
-  myUserPreferences: myUserPreferences_myUserPreferences;
+  myUserPreferences: indexPagePreferences_myUserPreferences;
 }

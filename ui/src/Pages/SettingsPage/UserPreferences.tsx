@@ -16,6 +16,7 @@ import {
   changeUserPreferencesVariables,
 } from './__generated__/changeUserPreferences'
 import { myUserPreferences } from './__generated__/myUserPreferences'
+import { availableFeatures } from './__generated__/availableFeatures'
 import { TranslationFn } from '../../localization'
 import { changeTheme, getTheme } from '../../theme'
 
@@ -122,13 +123,6 @@ const AVAILABLE_FEATURES = gql`
     }
   }
 `
-
-interface availableFeatures {
-  mapboxToken: string | null
-  siteInfo: {
-    faceDetectionEnabled: boolean
-  }
-}
 
 const LogoutButton = () => {
   const { t } = useTranslation()
