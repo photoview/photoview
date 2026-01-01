@@ -35,6 +35,7 @@ const (
 
 // Feature related
 const (
+	EnvMapboxToken               EnvironmentVariable = "MAPBOX_TOKEN"
 	EnvDisableFaceRecognition    EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"
 	EnvDisableVideoEncoding      EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
 	EnvDisableRawProcessing      EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"

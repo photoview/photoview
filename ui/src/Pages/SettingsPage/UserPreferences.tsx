@@ -143,22 +143,17 @@ const UserPreferences = () => {
   }
 
   // Detect available features
-  const { data: mapboxData } = useQuery(gql`
-    query mapboxEnabledQuery {
+  const { data: featuresData } = useQuery(gql`
+    query availableFeatures {
       mapboxToken
-    }
-  `)
-
-  const { data: faceDetectionData } = useQuery(gql`
-    query faceDetectionEnabled {
       siteInfo {
         faceDetectionEnabled
       }
     }
   `)
 
-  const mapboxEnabled = !!mapboxData?.mapboxToken
-  const faceDetectionEnabled = !!faceDetectionData?.siteInfo?.faceDetectionEnabled
+  const mapboxEnabled = !!featuresData?.mapboxToken
+  const faceDetectionEnabled = !!featuresData?.siteInfo?.faceDetectionEnabled
 
   const { data } = useQuery<myUserPreferences>(MY_USER_PREFERENCES)
 
@@ -240,7 +235,7 @@ const UserPreferences = () => {
         <InputLabelDescription>
           {t(
             'settings.user_preferences.landing_page.description',
-            'Choose which page to show when you first log in'
+            'Choose the page to be shown after login'
           )}
         </InputLabelDescription>
       </label>
