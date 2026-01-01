@@ -114,6 +114,22 @@ const MY_USER_PREFERENCES = gql`
   }
 `
 
+const AVAILABLE_FEATURES = gql`
+  query availableFeatures {
+    mapboxToken
+    siteInfo {
+      faceDetectionEnabled
+    }
+  }
+`
+
+interface availableFeatures {
+  mapboxToken: string | null
+  siteInfo: {
+    faceDetectionEnabled: boolean
+  }
+}
+
 const LogoutButton = () => {
   const { t } = useTranslation()
 
@@ -142,15 +158,7 @@ const UserPreferences = () => {
     setTheme(value)
   }
 
-  // Detect available features
-  const { data: featuresData } = useQuery(gql`
-    query availableFeatures {
-      mapboxToken
-      siteInfo {
-        faceDetectionEnabled
-      }
-    }
-  `)
+  const { data: featuresData } = useQuery<availableFeatures>(AVAILABLE_FEATURES)
 
   const mapboxEnabled = !!featuresData?.mapboxToken
   const faceDetectionEnabled = !!featuresData?.siteInfo?.faceDetectionEnabled
