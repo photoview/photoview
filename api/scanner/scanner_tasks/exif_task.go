@@ -64,10 +64,10 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 	}
 
 	if exifData.DateShot != nil && !exifData.DateShot.Equal(media.DateShot) {
+		media.DateShot = *exifData.DateShot
 		if err := tx.Save(media).Error; err != nil {
 			return fmt.Errorf("failed to update EXIF metadata for the media %s: %w", media.Path, err)
 		}
-		media.DateShot = *exifData.DateShot
 	}
 
 	return nil
