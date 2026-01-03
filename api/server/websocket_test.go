@@ -7,9 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	test_utils.UnitTestRun(m)
+}
 
 // configureTestEndpointsFromEnv reads current env vars and configures test endpoints.
 // Returns a cleanup function that should be deferred.
