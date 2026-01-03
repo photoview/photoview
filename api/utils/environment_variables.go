@@ -22,7 +22,7 @@ const (
 	EnvListenIP    EnvironmentVariable = "PHOTOVIEW_LISTEN_IP"
 	EnvListenPort  EnvironmentVariable = "PHOTOVIEW_LISTEN_PORT"
 	EnvAPIEndpoint EnvironmentVariable = "PHOTOVIEW_API_ENDPOINT"
-	EnvUIEndpoint  EnvironmentVariable = "PHOTOVIEW_UI_ENDPOINT"
+	EnvUIEndpoints EnvironmentVariable = "PHOTOVIEW_UI_ENDPOINTS"
 )
 
 // Database related
