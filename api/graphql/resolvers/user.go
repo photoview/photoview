@@ -16,6 +16,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -344,7 +345,31 @@ func (r *userResolver) RootAlbums(ctx context.Context, obj *models.User) (albums
 
 // DefaultLandingPage is the resolver for the defaultLandingPage field.
 func (r *userPreferencesResolver) DefaultLandingPage(ctx context.Context, obj *models.UserPreferences) (*string, error) {
-	panic(fmt.Errorf("not implemented: DefaultLandingPage - defaultLandingPage"))
+	// If no defaultLandingPage is set, return nil
+	if obj.DefaultLandingPage == nil {
+		return nil, nil
+	}
+
+	landingPage := *obj.DefaultLandingPage
+
+	// Validate that the page points to an enabled feature
+	switch landingPage {
+	case "/places":
+		// If Mapbox is not configured, fallback to /timeline
+		if utils.EnvMapboxToken.GetValue() == "" {
+			fallback := "/timeline"
+			return &fallback, nil
+		}
+	case "/people":
+		// If face detection is disabled, fallback to /timeline
+		if utils.EnvDisableFaceRecognition.GetBool() {
+			fallback := "/timeline"
+			return &fallback, nil
+		}
+	}
+
+	// Return the original value if the feature is enabled
+	return obj.DefaultLandingPage, nil
 }
 
 // User returns api.UserResolver implementation.
