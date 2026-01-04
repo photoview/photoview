@@ -179,7 +179,16 @@
         },
         "title": "Motyw"
       },
-      "title": "Preferencje użytkownika"
+      "title": "Preferencje użytkownika",
+      "landing_page": {
+        "timeline": "Oś czasu",
+        "albums": "Albumy",
+        "places": "Miejsca",
+        "people": "Ludzie",
+        "label": "Domyślna strona startowa",
+        "description": "Wybierz stronę, która będzie wyświetlana po zalogowaniu",
+        "placeholder": "Wybierz domyślną stronę"
+      }
     },
     "users": {
       "add_user": {

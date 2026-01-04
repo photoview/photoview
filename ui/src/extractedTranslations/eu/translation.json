@@ -173,7 +173,16 @@
         },
         "title": "Itxura-aukerak"
       },
-      "title": "Erabiltzaile-ezarpenak"
+      "title": "Erabiltzaile-ezarpenak",
+      "landing_page": {
+        "timeline": "Denbora-lerroa",
+        "albums": "Albumak",
+        "places": "Lekuak",
+        "people": "Jendea",
+        "label": "Lehenetsitako hasiera-orria",
+        "description": "Aukeratu saioa hasi ondoren erakutsiko den orria",
+        "placeholder": "Hautatu lehenetsi orria"
+      }
     },
     "users": {
       "add_user": {

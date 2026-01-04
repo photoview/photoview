@@ -179,7 +179,16 @@
         },
         "title": "Theme preferences"
       },
-      "title": "User preferences"
+      "title": "User preferences",
+      "landing_page": {
+        "timeline": "Timeline",
+        "albums": "Albums",
+        "places": "Places",
+        "people": "People",
+        "label": "Default landing page",
+        "description": "Choose the page to be shown after login",
+        "placeholder": "Select default page"
+      }
     },
     "users": {
       "add_user": {
