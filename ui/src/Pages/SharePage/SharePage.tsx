@@ -112,13 +112,20 @@ const AuthorizedTokenRoute = () => {
   if (loading) return <div>{t('general.loading.default', 'Loading...')}</div>
 
   if (data?.shareToken.album) {
+    const sharedRootAlbumId = data.shareToken.album.id
+
     const SharedSubAlbumPage = () => {
       const { subAlbum } = useParams()
       if (isNil(subAlbum))
         throw new Error('Expected `subAlbum` param to be defined')
 
       return (
-        <AlbumSharePage albumID={subAlbum} token={token} password={password} />
+        <AlbumSharePage
+          albumID={subAlbum}
+          token={token}
+          password={password}
+          sharedRootAlbumId={sharedRootAlbumId}
+        />
       )
     }
 
@@ -129,9 +136,10 @@ const AuthorizedTokenRoute = () => {
           index
           element={
             <AlbumSharePage
-              albumID={data.shareToken.album.id}
+              albumID={sharedRootAlbumId}
               token={token}
               password={password}
+              sharedRootAlbumId={sharedRootAlbumId}
             />
           }
         />
