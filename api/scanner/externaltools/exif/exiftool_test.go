@@ -372,3 +372,32 @@ func TestCalculateOffsetFromGPS(t *testing.T) {
 		})
 	}
 }
+
+func TestParseMIMEType(t *testing.T) {
+	parser, err := NewExifParser()
+	if err != nil {
+		t.Fatalf("can't init exiftool: %v", err)
+	}
+	defer parser.Close()
+
+	tests := []struct {
+		file string
+		want string
+	}{
+		{"./test_data/bird.jpg", "image/jpeg"},
+		{"./test_data/exif_subsec_timezone.heic", "image/heic"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.file, func(t *testing.T) {
+			got, err := parser.ParseMIMEType(tc.file)
+			if err != nil {
+				t.Fatalf("ParseMIMEType(%q) returns an error: %v", tc.file, err)
+			}
+
+			if got != tc.want {
+				t.Errorf("ParseMIMEType(%q) = %q, want: %q", tc.file, got, tc.want)
+			}
+		})
+	}
+}

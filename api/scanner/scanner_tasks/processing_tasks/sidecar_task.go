@@ -11,6 +11,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
@@ -25,9 +26,9 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 		return nil
 	}
 
-	mediaType, err := ctx.GetCache().GetMediaType(media.Path)
-	if err != nil {
-		return errors.Wrap(err, "scan for sidecar file")
+	mediaType := ctx.GetCache().GetMediaType(media.Path)
+	if mediaType == media_type.TypeUnknown {
+		return fmt.Errorf("scan for sidecar file %s failed: media type is %s", media.Path, mediaType)
 	}
 
 	if mediaType.IsWebCompatible() {

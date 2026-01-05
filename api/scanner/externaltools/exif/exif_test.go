@@ -26,6 +26,8 @@ func TestParseWithoutInit(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
+	resetForTest()
+
 	cleanup, err := Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() error: %v", err)
@@ -41,5 +43,26 @@ func TestParse(t *testing.T) {
 
 	if metadata == nil {
 		t.Errorf("Parse(%q) should not return nil", filename)
+	}
+}
+
+func TestMIMEType(t *testing.T) {
+	resetForTest()
+
+	cleanup, err := Initialize()
+	if err != nil {
+		t.Fatalf("Initialize() error: %v", err)
+	}
+	defer cleanup()
+
+	filename := "./test_data/bird.jpg"
+
+	mime, err := MIMEType(filename)
+	if err != nil {
+		t.Fatalf("MIMEType() returns an error: %v", err)
+	}
+
+	if mime == "" {
+		t.Errorf("MIMEType(%q) should not return an empty string", filename)
 	}
 }

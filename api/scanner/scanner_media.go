@@ -2,12 +2,14 @@ package scanner
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/pkg/errors"
@@ -37,9 +39,9 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 
 	log.Printf("Scanning media: %s\n", mediaPath)
 
-	mediaType, err := cache.GetMediaType(mediaPath)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "could determine if media was photo or video")
+	mediaType := cache.GetMediaType(mediaPath)
+	if mediaType == media_type.TypeUnknown {
+		return nil, false, fmt.Errorf("could not determine if media %s of type %s was photo or video", mediaPath, mediaType)
 	}
 
 	var mediaTypeText models.MediaType
