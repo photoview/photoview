@@ -25,10 +25,10 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
-    server: {
-      deps: {
-        inline: ['react-datepicker']
-      }
-    }
+    // server: {
+    //   deps: {
+    //     inline: ['react-datepicker']
+    //   }
+    // }
   },
 })
