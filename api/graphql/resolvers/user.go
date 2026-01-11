@@ -351,19 +351,18 @@ func (r *userPreferencesResolver) DefaultLandingPage(ctx context.Context, obj *m
 	}
 
 	landingPage := *obj.DefaultLandingPage
+	fallback := "/timeline"
 
 	// Validate that the page points to an enabled feature
 	switch landingPage {
 	case "/places":
 		// If Mapbox is not configured, fallback to /timeline
 		if utils.EnvMapboxToken.GetValue() == "" {
-			fallback := "/timeline"
 			return &fallback, nil
 		}
 	case "/people":
 		// If face detection is disabled, fallback to /timeline
 		if utils.EnvDisableFaceRecognition.GetBool() {
-			fallback := "/timeline"
 			return &fallback, nil
 		}
 	}
