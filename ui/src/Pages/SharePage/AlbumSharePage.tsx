@@ -9,7 +9,7 @@ import useOrderingParams from '../../hooks/useOrderingParams'
 import { shareAlbumQuery } from './__generated__/shareAlbumQuery'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { BreadcrumbList } from '../../components/album/AlbumTitle'
 
 export const SHARE_ALBUM_QUERY = gql`
@@ -112,7 +112,6 @@ type AlbumSharePageProps = {
 
 const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSharePageProps) => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
   const urlParams = useURLParameters()
   const orderParams = useOrderingParams(urlParams)
