@@ -287,8 +287,10 @@ const MorePopoverSectionExpiration = ({
     i18n.language,
     dateFormatterOptions
   )
-  const oldExpireDate = share.expire ? dateFormatter.format(new Date(share.expire)) : ''
-    
+  const oldExpireDate = share.expire 
+  ? dateFormatter.format(new Date(share.expire.slice(0, 19).replace(' ', 'T'))) 
+  : '';
+
   const [date, setDate] = useState<Date | null>(
     share.expire ? new Date(share.expire) : null
   )

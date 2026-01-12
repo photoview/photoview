@@ -52,7 +52,7 @@
     "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-blurhash": "^0.1.3",
-    "react-datepicker": "^8.10.0",
+    "react-datepicker": "^9.0.0",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.33.1",
