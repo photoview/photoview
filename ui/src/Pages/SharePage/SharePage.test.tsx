@@ -18,7 +18,6 @@ import {
 
 import { SIDEBAR_DOWNLOAD_QUERY } from '../../components/sidebar/SidebarDownloadMedia'
 import { SHARE_ALBUM_QUERY } from './AlbumSharePage'
-import Message from '../../components/messages/Message'
 
 
 vi.mock('../../hooks/useScrollPagination')

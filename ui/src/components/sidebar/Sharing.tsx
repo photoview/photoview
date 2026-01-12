@@ -64,7 +64,7 @@ const SHARE_PHOTO_QUERY = gql`
   }
 `
 
-const SHARE_ALBUM_QUERY = gql`
+export const SHARE_ALBUM_QUERY = gql`
   query sidebarGetAlbumShares($id: ID!) {
     album(id: $id) {
       id
@@ -103,7 +103,7 @@ const PROTECT_SHARE_MUTATION = gql`
   }
 `
 
-const SET_EXPIRE_MUTATION = gql`
+export const SET_EXPIRE_MUTATION = gql`
   mutation sidebarSetExpireShare($token: String!, $expire: Time){
     setExpireShareToken(token: $token, expire: $expire){
       token
