@@ -4,20 +4,22 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 // FindWebCounterpart returns the filename if the file `imagePath` has a counterpart file competible with the browser.
-func FindWebCounterpart(imagePath string) (string, bool) {
+func FindWebCounterpart(fs afero.Fs, imagePath string) (string, bool) {
 	return findCounterpart(imagePath, func(filename string) bool {
-		mt := GetMediaType(filename)
+		mt := GetMediaType(fs, filename)
 		return mt.IsImage() && mt.IsWebCompatible()
 	})
 }
 
 // FindRawCounterpart returns the filename if the file `imagePath` has a counterpart file which needs to be processed before showing in the browser.
-func FindRawCounterpart(imagePath string) (string, bool) {
+func FindRawCounterpart(fs afero.Fs, imagePath string) (string, bool) {
 	return findCounterpart(imagePath, func(filename string) bool {
-		mt := GetMediaType(filename)
+		mt := GetMediaType(fs, filename)
 		return mt.IsImage() && !mt.IsWebCompatible()
 	})
 }

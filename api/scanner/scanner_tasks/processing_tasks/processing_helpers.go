@@ -2,13 +2,13 @@ package processing_tasks
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -50,15 +50,15 @@ func generateUniqueMediaName(mediaPath string) string {
 	return mediaName
 }
 
-func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions media_encoding.Dimension) (*models.MediaURL, error) {
+func saveOriginalPhotoToDB(tx *gorm.DB, fs afero.Fs, photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions media_encoding.Dimension) (*models.MediaURL, error) {
 	originalImageName := generateUniqueMediaName(photo.Path)
 
-	contentType, err := imageData.ContentType()
+	contentType, err := imageData.ContentType(fs)
 	if err != nil {
 		return nil, err
 	}
 
-	fileStats, err := os.Stat(photo.Path)
+	fileStats, err := fs.Stat(photo.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of original photo")
 	}

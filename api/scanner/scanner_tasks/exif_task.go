@@ -10,6 +10,7 @@ import (
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/spf13/afero"
 )
 
 type ExifTask struct {
@@ -21,7 +22,7 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 		return nil
 	}
 
-	if err := SaveEXIF(ctx.GetDB(), media); err != nil {
+	if err := SaveEXIF(ctx.GetDB(), ctx.GetFS(), media); err != nil {
 		log.Warn(ctx, "SaveEXIF failed", "title", media.Title, "error", err, "path", media.Path)
 	}
 
@@ -29,7 +30,7 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 }
 
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
-func SaveEXIF(tx *gorm.DB, media *models.Media) error {
+func SaveEXIF(tx *gorm.DB, fs afero.Fs, media *models.Media) error {
 	// Check if EXIF data already exists
 	if media.ExifID != nil {
 		var e models.MediaEXIF
@@ -49,7 +50,7 @@ func SaveEXIF(tx *gorm.DB, media *models.Media) error {
 		media.ExifID = nil
 	}
 
-	exifData, err := exif.Parse(media.Path)
+	exifData, err := exif.Parse(fs, media.Path)
 	if err != nil {
 		return fmt.Errorf("failed to parse exif data: %w", err)
 	}

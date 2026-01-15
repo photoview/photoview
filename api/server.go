@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/spf13/afero"
 
 	"github.com/joho/godotenv"
 
@@ -29,6 +30,12 @@ import (
 	"github.com/photoview/photoview/api/utils"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	aws_s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+
+	s3 "github.com/fclairamb/afero-s3"
 )
 
 func main() {
@@ -42,6 +49,8 @@ func main() {
 	defer terminateWorkers()
 
 	devMode := utils.DevelopmentMode()
+
+	fs := setupFileSystem()
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -59,7 +68,7 @@ func main() {
 	}
 	defer exifCleanup()
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+	if err := scanner_queue.InitializeScannerQueue(db, fs); err != nil {
 		log.Panicf("Could not initialize scanner queue: %s\n", err)
 	}
 
@@ -89,16 +98,16 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db)))
+	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db, fs)))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
-	routes.RegisterPhotoRoutes(db, photoRouter)
+	routes.RegisterPhotoRoutes(db, fs, photoRouter)
 
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
-	routes.RegisterVideoRoutes(db, videoRouter)
+	routes.RegisterVideoRoutes(db, fs, videoRouter)
 
 	downloadsRouter := endpointRouter.PathPrefix("/download").Subrouter()
-	routes.RegisterDownloadRoutes(db, downloadsRouter)
+	routes.RegisterDownloadRoutes(db, fs, downloadsRouter)
 
 	shouldServeUI := utils.ShouldServeUI()
 
@@ -165,4 +174,24 @@ func logUIendpointURL() {
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}
+}
+
+func setupFileSystem() afero.Fs {
+	if utils.EnvFilesystemDriver.GetValue() == "s3" {
+		client := aws_s3.New(aws_s3.Options{
+			Region: utils.EnvFilesystemS3Region.GetValue(),
+			Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
+				utils.EnvFilesystemS3ID.GetValue(),
+				utils.EnvFilesystemS3Secret.GetValue(),
+				"",
+			)),
+		})
+
+		// Initialize the file system
+		bucket := utils.EnvFilesystemS3Bucket.GetValue()
+		return s3.NewFsFromClient(bucket, client)
+	}
+
+	// Default to local filesystem
+	return afero.NewOsFs()
 }

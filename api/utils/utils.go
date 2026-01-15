@@ -7,7 +7,8 @@ import (
 	"math/big"
 	"os"
 	"path"
-	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
 func GenerateToken() string {
@@ -65,21 +66,33 @@ func FaceRecognitionModelsPath() string {
 
 // IsDirSymlink checks that the given path is a symlink and resolves to a
 // directory.
-func IsDirSymlink(linkPath string) (bool, error) {
+func IsDirSymlink(fs afero.Fs, linkPath string) (bool, error) {
 
-	fileInfo, err := os.Lstat(linkPath)
+	lst, ok := fs.(afero.Symlinker)
+	if !ok {
+		// Not a Lstater, not a symlink
+		return false, nil
+	}
+
+	// FIXME
+	fileInfo, ok, err := lst.LstatIfPossible(linkPath)
 	if err != nil {
 		return false, fmt.Errorf("cannot get fileinfo of the symlink %q: %w", linkPath, err)
 	}
 
+	if !ok {
+		// Not a symlink
+		return false, nil
+	}
+
 	// Resolve symlinks
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		resolvedPath, err := filepath.EvalSymlinks(linkPath)
+		resolvedPath, err := lst.ReadlinkIfPossible(linkPath)
 		if err != nil {
 			return false, fmt.Errorf("cannot resolve symlink target for %q, skipping it: %w", linkPath, err)
 		}
 
-		resolvedFile, err := os.Stat(resolvedPath)
+		resolvedFile, err := fs.Stat(resolvedPath)
 		if err != nil {
 			return false, fmt.Errorf("cannot get fileinfo of the symlink %q target %q, skipping it: %w",
 				linkPath, resolvedPath, err)

@@ -3,10 +3,12 @@ package scanner_utils
 import (
 	"log"
 	"os"
+
+	"github.com/spf13/afero"
 )
 
-func FileExists(testPath string) bool {
-	_, err := os.Stat(testPath)
+func FileExists(fs afero.Fs, testPath string) bool {
+	_, err := fs.Stat(testPath)
 
 	if os.IsNotExist(err) {
 		return false

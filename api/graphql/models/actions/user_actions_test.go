@@ -12,6 +12,7 @@ import (
 func TestDeleteUser(t *testing.T) {
 	t.Run("Delete regular user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
+		fs := test_utils.FilesystemTest(t)
 
 		adminUser, err := models.RegisterUser(db, "admin", nil, true)
 		assert.NoError(t, err)
@@ -24,7 +25,7 @@ func TestDeleteUser(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, dbUsers, 2)
 
-		deletedUser, err := actions.DeleteUser(db, regularUser.ID)
+		deletedUser, err := actions.DeleteUser(db, fs, regularUser.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, regularUser.ID, deletedUser.ID)
 
@@ -36,6 +37,7 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("Try to delete sole admin user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
+		fs := test_utils.FilesystemTest(t)
 
 		adminUser, err := models.RegisterUser(db, "admin", nil, true)
 		assert.NoError(t, err)
@@ -48,7 +50,7 @@ func TestDeleteUser(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, dbUsers, 2)
 
-		_, err = actions.DeleteUser(db, adminUser.ID)
+		_, err = actions.DeleteUser(db, fs, adminUser.ID)
 		assert.Error(t, err)
 
 		err = db.Model(models.User{}).Find(&dbUsers).Error
@@ -58,6 +60,7 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("Delete admin user when multiple admins exist", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
+		fs := test_utils.FilesystemTest(t)
 
 		adminUser1, err := models.RegisterUser(db, "admin", nil, true)
 		assert.NoError(t, err)
@@ -70,7 +73,7 @@ func TestDeleteUser(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, dbUsers, 2)
 
-		deletedUser, err := actions.DeleteUser(db, adminUser1.ID)
+		deletedUser, err := actions.DeleteUser(db, fs, adminUser1.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, adminUser1.ID, deletedUser.ID)
 

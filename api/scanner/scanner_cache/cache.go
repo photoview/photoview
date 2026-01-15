@@ -2,17 +2,18 @@ package scanner_cache
 
 import (
 	"log"
-	"os"
 	"path"
 	"sync"
 
 	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/spf13/afero"
 )
 
 type AlbumScannerCache struct {
 	path_contains_photos map[string]bool
 	photo_types          map[string]media_type.MediaType
 	ignore_data          map[string][]string
+	fs                   afero.Fs
 	mutex                sync.Mutex
 }
 
@@ -76,7 +77,7 @@ func (c *AlbumScannerCache) GetMediaType(path string) media_type.MediaType {
 		return result
 	}
 
-	mediaType := media_type.GetMediaType(path)
+	mediaType := media_type.GetMediaType(c.fs, path)
 	if mediaType == media_type.TypeUnknown {
 		return mediaType
 	}
@@ -119,7 +120,7 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 	}
 
 	// Make sure file isn't empty
-	fileStats, err := os.Stat(mediaPath)
+	fileStats, err := c.fs.Stat(mediaPath)
 	if err != nil || fileStats.Size() == 0 {
 		return false
 	}

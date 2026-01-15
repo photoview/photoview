@@ -14,9 +14,10 @@ func TestMain(m *testing.M) {
 
 func TestGraphqlEndpoint(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
+	fs := test_utils.FilesystemTest(t)
 
 	t.Run("creates server successfully", func(t *testing.T) {
-		server := graphql_endpoint.GraphqlEndpoint(db)
+		server := graphql_endpoint.GraphqlEndpoint(db, fs)
 		assert.NotNil(t, server)
 	})
 }

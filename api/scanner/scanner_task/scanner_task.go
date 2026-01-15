@@ -9,6 +9,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -39,11 +40,12 @@ type TaskContext struct {
 	context.Context
 }
 
-func NewTaskContext(parent context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(parent context.Context, db *gorm.DB, fs afero.Fs, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
 	ctx := TaskContext{Context: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
 	ctx = ctx.WithDB(db)
+	ctx = ctx.WithValue(taskCtxKeyFilesystem, fs)
 
 	return ctx
 }
@@ -54,6 +56,7 @@ const (
 	taskCtxKeyAlbum      taskCtxKeyType = "task_album"
 	taskCtxKeyAlbumCache taskCtxKeyType = "task_album_cache"
 	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
+	taskCtxKeyFilesystem taskCtxKeyType = "task_filesystem"
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
@@ -62,6 +65,10 @@ func (c TaskContext) GetAlbum() *models.Album {
 
 func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {
 	return c.Context.Value(taskCtxKeyAlbumCache).(*scanner_cache.AlbumScannerCache)
+}
+
+func (c TaskContext) GetFS() afero.Fs {
+	return c.Context.Value(taskCtxKeyFilesystem).(afero.Fs)
 }
 
 func (c TaskContext) GetDB() *gorm.DB {

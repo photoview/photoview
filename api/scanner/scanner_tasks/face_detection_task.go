@@ -22,7 +22,7 @@ func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, media
 		if face_detection.GlobalFaceDetector == nil {
 			return nil
 		}
-		if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), media); err != nil {
+		if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), ctx.GetFS(), media); err != nil {
 			scanner_utils.ScannerError(ctx, "Error detecting faces in image (%s): %s", media.Path, err)
 		}
 	}

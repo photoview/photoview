@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/photoview/photoview/api/log"
+	"github.com/spf13/afero"
 	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
@@ -32,8 +33,8 @@ func (cli *MagickWand) IsInstalled() bool {
 	return cli != nil && cli.initialized
 }
 
-func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuality uint) error {
-	wand, err := cli.createWandFromFile(inputPath)
+func (cli *MagickWand) EncodeJpeg(fs afero.Fs, inputPath string, outputPath string, jpegQuality uint) error {
+	wand, err := cli.createWandFromFile(fs, inputPath)
 	if err != nil {
 		return err
 	}
@@ -47,15 +48,20 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 		return fmt.Errorf("ImagickWand set JPEG quality %d for %q error: %w", jpegQuality, inputPath, err)
 	}
 
-	if err := wand.WriteImage(outputPath); err != nil {
-		return fmt.Errorf("ImagickWand write %q error: %w", outputPath, err)
+	blob, err := wand.GetImageBlob()
+	if err != nil {
+		return fmt.Errorf("ImagickWand get image blob for %q error: %w", inputPath, err)
+	}
+
+	if err := afero.WriteFile(fs, outputPath, blob, 0644); err != nil {
+		return fmt.Errorf("ImagickWand write file %q error: %w", outputPath, err)
 	}
 
 	return nil
 }
 
-func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, width, height uint) error {
-	wand, err := cli.createWandFromFile(inputPath)
+func (cli *MagickWand) GenerateThumbnail(fs afero.Fs, inputPath string, outputPath string, width, height uint) error {
+	wand, err := cli.createWandFromFile(fs, inputPath)
 	if err != nil {
 		return err
 	}
@@ -73,15 +79,20 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 		return fmt.Errorf("ImagickWand set JPEG quality %d for %q error: %w", 70, inputPath, err)
 	}
 
-	if err := wand.WriteImage(outputPath); err != nil {
-		return fmt.Errorf("ImagickWand write %q error: %w", outputPath, err)
+	blob, err := wand.GetImageBlob()
+	if err != nil {
+		return fmt.Errorf("ImagickWand get image blob for %q error: %w", inputPath, err)
+	}
+
+	if err := afero.WriteFile(fs, outputPath, blob, 0644); err != nil {
+		return fmt.Errorf("ImagickWand write file %q error: %w", outputPath, err)
 	}
 
 	return nil
 }
 
-func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, reterr error) {
-	wand, err := cli.createWandFromFile(inputPath)
+func (cli *MagickWand) IdentifyDimension(fs afero.Fs, inputPath string) (width, height uint, reterr error) {
+	wand, err := cli.createWandFromFile(fs, inputPath)
 	if err != nil {
 		reterr = err
 		return
@@ -94,14 +105,19 @@ func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, 
 	return
 }
 
-func (cli *MagickWand) createWandFromFile(inputPath string) (*imagick.MagickWand, error) {
+func (cli *MagickWand) createWandFromFile(fs afero.Fs, inputPath string) (*imagick.MagickWand, error) {
 	if !cli.IsInstalled() {
 		return nil, fmt.Errorf("ImagickWand is not initialized")
 	}
 
 	wand := imagick.NewMagickWand()
 
-	if err := wand.ReadImage(inputPath); err != nil {
+	file, err := afero.ReadFile(fs, inputPath)
+	if err != nil {
+		return nil, fmt.Errorf("ImagickWand read file %q error: %w", inputPath, err)
+	}
+
+	if err := wand.ReadImageBlob(file); err != nil {
 		return nil, fmt.Errorf("ImagickWand read %q error: %w", inputPath, err)
 	}
 

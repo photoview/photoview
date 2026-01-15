@@ -49,7 +49,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error processing video thumbnail")
 	}
 
-	videoType, err := mediaData.ContentType()
+	videoType, err := mediaData.ContentType(ctx.GetFS())
 	if err != nil {
 		return []*models.MediaURL{}, fmt.Errorf("getting video content type error: %w", err)
 	}
@@ -63,7 +63,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for original video (%s)", video.Title)
 		}
 
-		fileStats, err := os.Stat(origVideoPath)
+		fileStats, err := ctx.GetFS().Stat(origVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of original video")
 		}
@@ -103,7 +103,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
 		}
 
-		fileStats, err := os.Stat(webVideoPath)
+		fileStats, err := ctx.GetFS().Stat(webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
 		}
@@ -143,12 +143,12 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
 
-		thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
+		thumbDimensions, err := media_encoding.GetPhotoDimensions(ctx.GetFS(), thumbImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
 
-		fileStats, err := os.Stat(thumbImagePath)
+		fileStats, err := ctx.GetFS().Stat(thumbImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
 		}
@@ -172,7 +172,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		// Verify that video thumbnail still exists in cache
 		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
 
-		if _, err := os.Stat(thumbImagePath); os.IsNotExist(err) {
+		if _, err := ctx.GetFS().Stat(thumbImagePath); os.IsNotExist(err) {
 			log.Info(ctx, "Video thumbnail found in database but not in cache, re-encoding video thumbnail to cache", "video", videoThumbnailURL.MediaName)
 			updatedURLs = append(updatedURLs, videoThumbnailURL)
 
@@ -181,12 +181,12 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 				return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
 
-			thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
+			thumbDimensions, err := media_encoding.GetPhotoDimensions(ctx.GetFS(), thumbImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 			}
 
-			fileStats, err := os.Stat(thumbImagePath)
+			fileStats, err := ctx.GetFS().Stat(thumbImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
 			}

@@ -6,16 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
+func RegisterDownloadRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
 		albumID := mux.Vars(r)["album_id"]
 		mediaPurpose := mux.Vars(r)["media_purpose"]
@@ -82,7 +82,7 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 				return
 			}
 
-			fileData, err := os.Open(filePath)
+			fileData, err := fs.Open(filePath)
 			if err != nil {
 				log.Printf("ERROR: Failed to open file to include in zip, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)

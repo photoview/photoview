@@ -1,28 +1,28 @@
 package processing_tasks
 
 import (
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_encoding.EncodeMediaData, highResName string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveHighResJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, imageData *media_encoding.EncodeMediaData, highResName string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
-	err := imageData.EncodeHighRes(imagePath)
+	err := imageData.EncodeHighRes(fs, imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
-	photoDimensions, err := media_encoding.GetPhotoDimensions(imagePath)
+	photoDimensions, err := media_encoding.GetPhotoDimensions(fs, imagePath)
 	if err != nil {
 		return nil, err
 	}
 
-	fileStats, err := os.Stat(imagePath)
+	fileStats, err := fs.Stat(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of highres photo")
 	}
@@ -55,15 +55,15 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 	return mediaURL, nil
 }
 
-func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnailName string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveThumbnailJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, thumbnailName string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(photoCachePath, thumbnailName)
 
-	thumbSize, err := media_encoding.EncodeThumbnail(tx, baseImagePath, thumbOutputPath)
+	thumbSize, err := media_encoding.EncodeThumbnail(tx, fs, baseImagePath, thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}
 
-	fileStats, err := os.Stat(thumbOutputPath)
+	fileStats, err := fs.Stat(thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of thumbnail photo")
 	}

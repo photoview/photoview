@@ -10,6 +10,7 @@ import (
 )
 
 func TestFindWebCounterpart(t *testing.T) {
+	fs := test_utils.FilesystemTest(t)
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
@@ -28,7 +29,7 @@ func TestFindWebCounterpart(t *testing.T) {
 			t.Fatalf("input %q doesn't exist: %v", input, err)
 		}
 
-		file, ok := FindWebCounterpart(input)
+		file, ok := FindWebCounterpart(fs, input)
 		got := strings.TrimLeft(strings.TrimPrefix(file, mediaPath), "/")
 
 		if got != tc.wantFile || ok != tc.wantOk {
@@ -38,6 +39,7 @@ func TestFindWebCounterpart(t *testing.T) {
 }
 
 func TestFindRawCounterpart(t *testing.T) {
+	fs := test_utils.FilesystemTest(t)
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
@@ -56,7 +58,7 @@ func TestFindRawCounterpart(t *testing.T) {
 			t.Fatalf("input %q doesn't exist: %v", input, err)
 		}
 
-		file, ok := FindRawCounterpart(input)
+		file, ok := FindRawCounterpart(fs, input)
 		got := strings.TrimLeft(strings.TrimPrefix(file, mediaPath), "/")
 
 		if got != tc.wantFile || ok != tc.wantOk {

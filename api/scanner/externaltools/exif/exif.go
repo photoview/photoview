@@ -6,6 +6,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
+	"github.com/spf13/afero"
 )
 
 var globalExifParser *ExifParser
@@ -41,7 +42,7 @@ func Initialize() (func(), error) {
 
 var globalMu sync.Mutex
 
-func Parse(filepath string) (*models.MediaEXIF, error) {
+func Parse(fs afero.Fs, filepath string) (*models.MediaEXIF, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 
@@ -49,7 +50,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		return nil, fmt.Errorf("no exif parser initialized")
 	}
 
-	exif, failures, err := globalExifParser.ParseExif(filepath)
+	exif, failures, err := globalExifParser.ParseExif(fs, filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	return exif, nil
 }
 
-func MIMEType(filepath string) (string, error) {
+func MIMEType(fs afero.Fs, filepath string) (string, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 
@@ -69,7 +70,7 @@ func MIMEType(filepath string) (string, error) {
 		return "", fmt.Errorf("no exif parser initialized")
 	}
 
-	mime, err := globalExifParser.ParseMIMEType(filepath)
+	mime, err := globalExifParser.ParseMIMEType(fs, filepath)
 	if err != nil {
 		return "", err
 	}

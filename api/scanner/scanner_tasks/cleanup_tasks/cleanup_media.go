@@ -1,7 +1,6 @@
 package cleanup_tasks
 
 import (
-	"os"
 	"path"
 	"strconv"
 
@@ -10,11 +9,12 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
 // CleanupMedia removes media entries from the database that are no longer present on the filesystem
-func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error {
+func CleanupMedia(db *gorm.DB, fs afero.Fs, albumId int, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]int, len(albumMedia))
 	for i, media := range albumMedia {
 		albumMediaIds[i] = media.ID
@@ -41,7 +41,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 
 		mediaIDs = append(mediaIDs, media.ID)
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
-		err := os.RemoveAll(cachePath)
+		err := fs.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}
@@ -65,7 +65,7 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 }
 
 // DeleteOldUserAlbums finds and deletes old albums in the database and cache that does not exist on the filesystem anymore.
-func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *models.User) []error {
+func DeleteOldUserAlbums(db *gorm.DB, fs afero.Fs, scannedAlbums []*models.Album, user *models.User) []error {
 	if len(scannedAlbums) == 0 {
 		return nil
 	}
@@ -101,7 +101,7 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	for i, album := range deleteAlbums {
 		deleteAlbumIDs[i] = album.ID
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
-		err := os.RemoveAll(cachePath)
+		err := fs.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -12,7 +13,7 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 )
 
-func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
+func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		mediaName := mux.Vars(r)["name"]
@@ -49,9 +50,9 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
+		if _, err := fs.Stat(cachedPath); os.IsNotExist(err) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, media); err != nil {
+			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fs, media); err != nil {
 				log.Error(r.Context(), "processing image not found in cache",
 					"media_cache_path", cachedPath,
 					"error", err)
@@ -60,7 +61,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 				return
 			}
 
-			if _, err = os.Stat(cachedPath); err != nil {
+			if _, err = fs.Stat(cachedPath); err != nil {
 				log.Error(r.Context(), "after reprocessing image not found in cache",
 					"media_cache_path", cachedPath,
 					"error", err)

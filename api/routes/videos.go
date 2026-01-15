@@ -13,17 +13,19 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-var processSingleMediaFn = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
-	return scanner.ProcessSingleMedia(ctx, db, media)
+var processSingleMediaFn = func(ctx context.Context, db *gorm.DB, fs afero.Fs, media *models.Media) error {
+	return scanner.ProcessSingleMedia(ctx, db, fs, media)
 }
 
 func handleVideoRequest(
 	w http.ResponseWriter,
 	r *http.Request,
 	db *gorm.DB,
+	fs afero.Fs,
 	mediaName string,
 	authenticateFn func(*models.Media, *gorm.DB, *http.Request) (bool, string, int, error),
 	getCachePathFn func(albumID, mediaID int, filename string) string,
@@ -78,7 +80,7 @@ func handleVideoRequest(
 		return
 	}
 
-	if _, err := os.Stat(cachedPath); err != nil {
+	if _, err := fs.Stat(cachedPath); err != nil {
 		if !os.IsNotExist(err) {
 			log.Error(r.Context(), "cached video access error",
 				"error", err,
@@ -89,7 +91,7 @@ func handleVideoRequest(
 			return
 		}
 
-		if err := processSingleMediaFn(r.Context(), db, media); err != nil {
+		if err := processSingleMediaFn(r.Context(), db, fs, media); err != nil {
 			// Check if error was due to context cancellation
 			if r.Context().Err() != nil && errors.Is(r.Context().Err(), context.Canceled) {
 				log.Warn(r.Context(), "video processing cancelled due to client disconnect",
@@ -107,7 +109,7 @@ func handleVideoRequest(
 			return
 		}
 
-		if _, err := os.Stat(cachedPath); err != nil {
+		if _, err := fs.Stat(cachedPath); err != nil {
 			log.Error(r.Context(), "video not found in cache after reprocessing",
 				"error", err,
 				"media ID", media.ID,
@@ -128,10 +130,10 @@ func generateCacheFilename(albumID, mediaID int, filename string) string {
 	return path.Join(utils.MediaCachePath(), strconv.Itoa(albumID), strconv.Itoa(mediaID), filename)
 }
 
-func RegisterVideoRoutes(db *gorm.DB, router *mux.Router) {
+func RegisterVideoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		mediaName := mux.Vars(r)["name"]
-		handleVideoRequest(w, r, db, mediaName, authenticateMedia, generateCacheFilename)
+		handleVideoRequest(w, r, db, fs, mediaName, authenticateMedia, generateCacheFilename)
 	})
 }

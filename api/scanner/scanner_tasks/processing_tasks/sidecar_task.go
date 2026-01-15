@@ -15,6 +15,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
 type SidecarTask struct {
@@ -38,9 +39,9 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	var sideCarPath *string = nil
 	var sideCarHash *string = nil
 
-	sideCarPath = scanForSideCarFile(media.Path)
+	sideCarPath = scanForSideCarFile(ctx.GetFS(), media.Path)
 	if sideCarPath != nil {
-		sideCarHash = hashSideCarFile(sideCarPath)
+		sideCarHash = hashSideCarFile(ctx.GetFS(), sideCarPath)
 	}
 
 	// Add sidecar data to media
@@ -54,7 +55,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 }
 
 func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
-	mediaType, err := mediaData.ContentType()
+	mediaType, err := mediaData.ContentType(ctx.GetFS())
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
 	}
@@ -67,10 +68,10 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	sideCarFileHasChanged := false
 	var currentFileHash *string
-	currentSideCarPath := scanForSideCarFile(photo.Path)
+	currentSideCarPath := scanForSideCarFile(ctx.GetFS(), photo.Path)
 
 	if currentSideCarPath != nil {
-		currentFileHash = hashSideCarFile(currentSideCarPath)
+		currentFileHash = hashSideCarFile(ctx.GetFS(), currentSideCarPath)
 		if photo.SideCarHash == nil || *photo.SideCarHash != *currentFileHash {
 			sideCarFileHasChanged = true
 		}
@@ -98,7 +99,7 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
 	os.Rename(baseImagePath, tempHighResPath)
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), ctx.GetFS(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
 	if err != nil {
 		os.Rename(tempHighResPath, baseImagePath)
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
@@ -109,7 +110,7 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
 	os.Rename(thumbPath, tempThumbPath)
-	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
+	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), ctx.GetFS(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
 	if err != nil {
 		os.Rename(tempThumbPath, thumbPath)
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
@@ -130,22 +131,22 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	}, nil
 }
 
-func scanForSideCarFile(path string) *string {
+func scanForSideCarFile(fs afero.Fs, path string) *string {
 	testPath := path + ".xmp"
 
-	if scanner_utils.FileExists(testPath) {
+	if scanner_utils.FileExists(fs, testPath) {
 		return &testPath
 	}
 
 	return nil
 }
 
-func hashSideCarFile(path *string) *string {
+func hashSideCarFile(fs afero.Fs, path *string) *string {
 	if path == nil {
 		return nil
 	}
 
-	f, err := os.Open(*path)
+	f, err := fs.Open(*path)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
 	}

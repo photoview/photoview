@@ -21,6 +21,7 @@ func TestMain(m *testing.M) {
 func TestFullScan(t *testing.T) {
 	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
+	fs := test_utils.FilesystemTest(t)
 
 	pass := "1234"
 	user, err := models.RegisterUser(db, "test_user", &pass, true)
@@ -108,7 +109,7 @@ func TestFullScan(t *testing.T) {
 		t.Fatal("initalize face detector error:", err)
 	}
 
-	scanner_utils.RunScannerOnUser(t, db, user)
+	scanner_utils.RunScannerOnUser(t, db, fs, user)
 
 	t.Run("CheckMedia", func(t *testing.T) {
 		var allMedia []*models.Media

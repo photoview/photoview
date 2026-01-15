@@ -21,7 +21,7 @@ func makeAlbumWithID(id int) *models.Album {
 }
 
 func makeScannerJob(albumID int) ScannerJob {
-	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache()))
+	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, nil, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache()))
 }
 
 func TestScannerQueueAddJob(t *testing.T) {

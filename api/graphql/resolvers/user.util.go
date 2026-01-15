@@ -1,13 +1,13 @@
 package resolvers
 
 import (
-	"os"
 	"path"
 	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -33,13 +33,13 @@ func cleanup(tx *gorm.DB, albumID int, childAlbumIDs []int) ([]int, error) {
 	return deletedAlbumIDs, nil
 }
 
-func clearCacheAndReloadFaces(db *gorm.DB, deletedAlbumIDs []int) error {
+func clearCacheAndReloadFaces(db *gorm.DB, fs afero.Fs, deletedAlbumIDs []int) error {
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {
 			cacheAlbumPath := path.Join(utils.MediaCachePath(), strconv.Itoa(id))
 
-			if err := os.RemoveAll(cacheAlbumPath); err != nil {
+			if err := fs.RemoveAll(cacheAlbumPath); err != nil {
 				return err
 			}
 		}
