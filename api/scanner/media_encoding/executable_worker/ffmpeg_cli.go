@@ -77,19 +77,33 @@ func (cli *FfmpegCli) EncodeMp4(fs afero.Fs, inputPath string, outputPath string
 		return fmt.Errorf("encoding video %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
-	// FIXME: use temporary file and move it to outputPath when done.
+	// Open the input file using afero.Fs (supports S3 and other filesystems)
+	inputFile, err := fs.Open(inputPath)
+	if err != nil {
+		return fmt.Errorf("opening input file %q error: %w", inputPath, err)
+	}
+	defer inputFile.Close()
+
+	// Create the output file using afero.Fs (supports S3 and other filesystems)
+	outputFile, err := fs.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("creating output file %q error: %w", outputPath, err)
+	}
+	defer outputFile.Close()
 
 	args := []string{
-		"-i",
-		inputPath,
+		"-i", "pipe:0", // Read from stdin
 		"-vcodec", cli.videoCodec,
 		"-acodec", "aac",
 		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
 		"-movflags", "+faststart+use_metadata_tags",
-		outputPath,
+		"-f", "mp4", // Specify format when writing to stdout
+		"pipe:1", // Write to stdout
 	}
 
 	cmd := exec.Command(cli.path, args...)
+	cmd.Stdin = inputFile   // Pipe the file content to stdin
+	cmd.Stdout = outputFile // Pipe stdout to output file
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("encoding video with %q %v error: %w", cli.path, args, err)
@@ -103,21 +117,35 @@ func (cli *FfmpegCli) EncodeVideoThumbnail(fs afero.Fs, inputPath string, output
 		return fmt.Errorf("encoding video thumbnail %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
+	// Open the input file using afero.Fs (supports S3 and other filesystems)
+	inputFile, err := fs.Open(inputPath)
+	if err != nil {
+		return fmt.Errorf("opening input file %q error: %w", inputPath, err)
+	}
+	defer inputFile.Close()
+
+	// Create the output file using afero.Fs (supports S3 and other filesystems)
+	outputFile, err := fs.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("creating output file %q error: %w", outputPath, err)
+	}
+	defer outputFile.Close()
+
 	thumbnailOffsetSeconds := fmt.Sprintf("%.f", probeData.Format.DurationSeconds*0.25)
 
-	// FIXME: Use temporary file and move it to outputPath when done.
-
 	args := []string{
-		"-ss", thumbnailOffsetSeconds, // grab frame at time offset
-		"-i",
-		inputPath,
+		"-i", "pipe:0", // Read from stdin
+		"-ss", thumbnailOffsetSeconds, // grab frame at time offset (after -i for streaming)
 		"-vframes", "1", // output one frame
 		"-an", // disable audio
 		"-vf", "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
-		outputPath,
+		"-f", "image2", // Specify format when writing to stdout
+		"pipe:1", // Write to stdout
 	}
 
 	cmd := exec.Command(cli.path, args...)
+	cmd.Stdin = inputFile   // Pipe the file content to stdin
+	cmd.Stdout = outputFile // Pipe stdout to output file
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", cli.path, args, err)

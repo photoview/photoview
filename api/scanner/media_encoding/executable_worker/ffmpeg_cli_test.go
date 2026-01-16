@@ -98,7 +98,7 @@ func TestFfmpeg(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264 .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i pipe:0 -vcodec h264 .* pipe:1\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -122,7 +122,7 @@ func TestFfmpeg(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = nil, should be an error.")
 		}
-		if got, want := err.Error(), `^encoding video thumbnail with ".*/test_data/mock_bin/ffmpeg" \[-ss 2 -i input .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+		if got, want := err.Error(), `^encoding video thumbnail with ".*/test_data/mock_bin/ffmpeg" \[-i pipe:0 -ss 2 .* pipe:1\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("Ffmpeg.EncodeVideoThumbnail(...) = %q, should be as reg pattern %q", got, want)
 		}
 	})
@@ -148,7 +148,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec h264_qsv .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i pipe:0 -vcodec h264_qsv .* pipe:1\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
 }
@@ -166,7 +166,134 @@ func TestFfmpegWithCustomCodec(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
-	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i input -vcodec custom .* output\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
+	if got, want := err.Error(), `^encoding video with ".*/test_data/mock_bin/ffmpeg" \[-i pipe:0 -vcodec custom .* pipe:1\] error: .*$`; !regexp.MustCompile(want).MatchString(got) {
 		t.Errorf("Ffmpeg.EncodeMp4(...) = %q, should be as reg pattern %q", got, want)
 	}
+}
+
+func TestFfmpegWithMemMapFs(t *testing.T) {
+	SetPathWithCurrent(t, testdataBinPath)
+
+	Ffmpeg = newFfmpegCli()
+
+	if !Ffmpeg.IsInstalled() {
+		t.Fatal("Ffmpeg should be installed")
+	}
+
+	t.Run("EncodeMp4WithMemMapFs", func(t *testing.T) {
+		// Create an in-memory filesystem
+		memFs := afero.NewMemMapFs()
+
+		// Read the actual sample video file from disk
+		sampleVideoPath := "test_data/sample_video.avi"
+		osFs := afero.NewOsFs()
+		videoData, err := afero.ReadFile(osFs, sampleVideoPath)
+		if err != nil {
+			t.Fatalf("Failed to read sample video file: %v", err)
+		}
+
+		// Copy the sample video to MemMapFs
+		inputPath := "/test/input.avi"
+		if err := memFs.MkdirAll("/test", 0755); err != nil {
+			t.Fatalf("Failed to create directory: %v", err)
+		}
+		if err := afero.WriteFile(memFs, inputPath, videoData, 0644); err != nil {
+			t.Fatalf("Failed to write input file to MemMapFs: %v", err)
+		}
+
+		outputPath := "/test/output.mp4"
+
+		// Run the encoding
+		err = Ffmpeg.EncodeMp4(memFs, inputPath, outputPath)
+		if err != nil {
+			t.Fatalf("Ffmpeg.EncodeMp4(...) with MemMapFs = %v, should be nil.", err)
+		}
+
+		// Verify output file was created
+		exists, err := afero.Exists(memFs, outputPath)
+		if err != nil {
+			t.Fatalf("Failed to check if output exists: %v", err)
+		}
+		if !exists {
+			t.Errorf("Output file %q should exist in MemMapFs", outputPath)
+		}
+
+		// Verify output file has content
+		outputData, err := afero.ReadFile(memFs, outputPath)
+		if err != nil {
+			t.Fatalf("Failed to read output file: %v", err)
+		}
+		if len(outputData) == 0 {
+			t.Error("Output file should have content")
+		}
+
+		t.Logf("Encoded video: input size=%d bytes, output size=%d bytes", len(videoData), len(outputData))
+	})
+
+	t.Run("EncodeVideoThumbnailWithMemMapFs", func(t *testing.T) {
+		// Create an in-memory filesystem
+		memFs := afero.NewMemMapFs()
+
+		// Read the actual sample video file from disk
+		sampleVideoPath := "test_data/sample_video.avi"
+		osFs := afero.NewOsFs()
+		videoData, err := afero.ReadFile(osFs, sampleVideoPath)
+		if err != nil {
+			t.Fatalf("Failed to read sample video file: %v", err)
+		}
+
+		// Copy the sample video to MemMapFs
+		inputPath := "/test/video.avi"
+		if err := memFs.MkdirAll("/test", 0755); err != nil {
+			t.Fatalf("Failed to create directory: %v", err)
+		}
+		if err := afero.WriteFile(memFs, inputPath, videoData, 0644); err != nil {
+			t.Fatalf("Failed to write input file to MemMapFs: %v", err)
+		}
+
+		outputPath := "/test/thumbnail.jpg"
+		probeData := &ffprobe.ProbeData{
+			Format: &ffprobe.Format{
+				DurationSeconds: 30,
+			},
+		}
+
+		// Run the thumbnail encoding
+		err = Ffmpeg.EncodeVideoThumbnail(memFs, inputPath, outputPath, probeData)
+		if err != nil {
+			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) with MemMapFs = %v, should be nil.", err)
+		}
+
+		// Verify output file was created
+		exists, err := afero.Exists(memFs, outputPath)
+		if err != nil {
+			t.Fatalf("Failed to check if output exists: %v", err)
+		}
+		if !exists {
+			t.Errorf("Output file %q should exist in MemMapFs", outputPath)
+		}
+
+		// Verify output file has content
+		outputData, err := afero.ReadFile(memFs, outputPath)
+		if err != nil {
+			t.Fatalf("Failed to read output file: %v", err)
+		}
+		if len(outputData) == 0 {
+			t.Error("Output file should have content")
+		}
+
+		t.Logf("Generated thumbnail: input size=%d bytes, output size=%d bytes", len(videoData), len(outputData))
+	})
+
+	t.Run("EncodeMp4WithMemMapFsInputNotFound", func(t *testing.T) {
+		memFs := afero.NewMemMapFs()
+
+		err := Ffmpeg.EncodeMp4(memFs, "/nonexistent/input.mp4", "/test/output.mp4")
+		if err == nil {
+			t.Fatal("Ffmpeg.EncodeMp4(...) should fail with non-existent input file")
+		}
+		if got, want := err.Error(), "opening input file"; !regexp.MustCompile(want).MatchString(got) {
+			t.Errorf("Error should mention input file opening, got: %q", got)
+		}
+	})
 }
