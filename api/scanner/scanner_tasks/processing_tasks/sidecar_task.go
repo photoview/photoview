@@ -99,24 +99,37 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	// update high res image may be cropped so dimentions and file size can change
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
-	fs.Rename(baseImagePath, tempHighResPath)
+	if err := fs.Rename(baseImagePath, tempHighResPath); err != nil {
+		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold high-res image: %s", baseImagePath)
+	}
+
 	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), ctx.GetFS(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
 	if err != nil {
-		fs.Rename(tempHighResPath, baseImagePath)
+		if restoreErr := fs.Rename(tempHighResPath, baseImagePath); restoreErr != nil {
+			log.Printf("ERROR: restoring high-res image failed: %s", restoreErr)
+		}
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
 	}
-	fs.Remove(tempHighResPath)
+	if err := fs.Remove(tempHighResPath); err != nil {
+		log.Printf("ERROR: removing temp high-res image failed: %s", err)
+	}
 
 	// update thumbnail image may be cropped so dimentions and file size can change
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
-	fs.Rename(thumbPath, tempThumbPath)
+	if err := fs.Rename(thumbPath, tempThumbPath); err != nil {
+		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold thumbnail image: %s", thumbPath)
+	}
 	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), ctx.GetFS(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
 	if err != nil {
-		fs.Rename(tempThumbPath, thumbPath)
+		if restoreErr := fs.Rename(tempThumbPath, thumbPath); restoreErr != nil {
+			log.Printf("ERROR: restoring thumbnail image failed: %s", restoreErr)
+		}
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
 	}
-	fs.Remove(tempThumbPath)
+	if err := fs.Remove(tempThumbPath); err != nil {
+		log.Printf("ERROR: removing temp high-res image failed: %s", err)
+	}
 
 	photo.SideCarHash = currentFileHash
 	photo.SideCarPath = currentSideCarPath

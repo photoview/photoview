@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +32,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	aws_config "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	aws_s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
@@ -50,7 +51,10 @@ func main() {
 
 	devMode := utils.DevelopmentMode()
 
-	fs := setupFileSystem()
+	fs, err := setupFileSystem()
+	if err != nil {
+		log.Panicf("Could not setup file system: %s\n", err)
+	}
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -176,22 +180,34 @@ func logUIendpointURL() {
 	}
 }
 
-func setupFileSystem() afero.Fs {
+func setupFileSystem() (afero.Fs, error) {
 	if utils.EnvFilesystemDriver.GetValue() == "s3" {
-		client := aws_s3.New(aws_s3.Options{
-			Region: utils.EnvFilesystemS3Region.GetValue(),
-			Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
+		bucket := utils.EnvFilesystemS3Bucket.GetValue()
+		if bucket == "" {
+			return nil, fmt.Errorf("%s is required", utils.EnvFilesystemS3Bucket.GetName())
+		}
+
+		cfg, err := aws_config.LoadDefaultConfig(
+			context.Background(),
+			aws_config.WithRegion(utils.EnvFilesystemS3Region.GetValue()),
+			aws_config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
 				utils.EnvFilesystemS3ID.GetValue(),
 				utils.EnvFilesystemS3Secret.GetValue(),
 				"",
 			)),
-		})
+		)
+		if err != nil {
+			return nil, err
+		}
 
-		// Initialize the file system
-		bucket := utils.EnvFilesystemS3Bucket.GetValue()
-		return s3.NewFsFromClient(bucket, client)
+		client := aws_s3.NewFromConfig(cfg, func(o *aws_s3.Options) {
+			o.UsePathStyle = utils.EnvFilesystemS3UsePathStyle.GetBool()
+			if endpoint := utils.EnvFilesystemS3BaseEndpoint.GetValue(); endpoint != "" {
+				o.BaseEndpoint = &endpoint
+			}
+		})
+		return s3.NewFsFromClient(bucket, client), nil
 	}
 
-	// Default to local filesystem
-	return afero.NewOsFs()
+	return afero.NewOsFs(), nil
 }
