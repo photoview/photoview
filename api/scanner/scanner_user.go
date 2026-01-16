@@ -264,7 +264,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 
 			isDirSymlink, err := utils.IsDirSymlink(fs, filePath)
 			if err != nil {
-				log.Warn(nil, "Cannot detect whether is symlink to a directory. Pretending it is not", "file", filePath)
+				log.Warn(nil, "Cannot detect whether is symlink to a directory. Pretending it is not", "file", filePath, "err", err)
 				isDirSymlink = false
 			}
 

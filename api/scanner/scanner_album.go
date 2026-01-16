@@ -24,12 +24,15 @@ func NewRootAlbum(db *gorm.DB, fs afero.Fs, rootPath string, owner *models.User)
 	}
 
 	if !path.IsAbs(rootPath) {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, err
+		if _, ok := fs.(*afero.OsFs); ok {
+			wd, err := os.Getwd()
+			if err != nil {
+				return nil, err
+			}
+			rootPath = path.Join(wd, rootPath)
+		} else {
+			rootPath = path.Clean(rootPath)
 		}
-
-		rootPath = path.Join(wd, rootPath)
 	}
 
 	owners := []models.User{

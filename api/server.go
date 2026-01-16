@@ -187,6 +187,14 @@ func setupFileSystem() (afero.Fs, error) {
 			return nil, fmt.Errorf("%s is required", utils.EnvFilesystemS3Bucket.GetName())
 		}
 
+		s3ID := utils.EnvFilesystemS3ID.GetValue()
+		s3Secret := utils.EnvFilesystemS3Secret.GetValue()
+		if s3ID == "" || s3Secret == "" {
+			return nil, fmt.Errorf("%s and %s are required for S3 driver",
+				utils.EnvFilesystemS3ID.GetName(),
+				utils.EnvFilesystemS3Secret.GetName())
+		}
+
 		cfg, err := aws_config.LoadDefaultConfig(
 			context.Background(),
 			aws_config.WithRegion(utils.EnvFilesystemS3Region.GetValue()),
