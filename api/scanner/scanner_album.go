@@ -135,11 +135,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		}
 
 		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			itemInfo, err := item.Info()
-			if err != nil {
-				return nil, err
-			}
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
 			if err != nil {
 				return nil, err
 			}

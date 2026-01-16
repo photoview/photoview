@@ -60,7 +60,6 @@ func (p *ExifParser) loadMetaData(fs afero.Fs, mediaPath string) (*exiftool.File
 			return nil, fmt.Errorf("failed to create temporary file: %w", err)
 		}
 		pathToRead = tmpFile.Name()
-		defer tmpFile.Close()
 
 		cleanup = func() error {
 			return os.Remove(pathToRead)

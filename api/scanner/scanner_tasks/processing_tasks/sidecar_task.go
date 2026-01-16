@@ -150,12 +150,14 @@ func hashSideCarFile(fs afero.Fs, path *string) *string {
 	f, err := fs.Open(*path)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
+		return nil
 	}
 	defer f.Close()
 
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
 		log.Printf("ERROR: %s", err)
+		return nil
 	}
 	hash := hex.EncodeToString(h.Sum(nil))
 	return &hash

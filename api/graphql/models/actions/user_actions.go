@@ -2,6 +2,7 @@ package actions
 
 import (
 	"errors"
+	"fmt"
 	"path"
 	"strconv"
 
@@ -59,13 +60,14 @@ func DeleteUser(db *gorm.DB, fs afero.Fs, userID int) (*models.User, error) {
 }
 
 func cleanup(fs afero.Fs, deletedAlbumIDs []int) error {
-	var err error
+	var errs []error
 	for _, deletedAlbumID := range deletedAlbumIDs {
-		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
-		if err = fs.RemoveAll(cachePath); err != nil {
+		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(deletedAlbumID))
+		if err := fs.RemoveAll(cachePath); err != nil {
+			errs = append(errs, fmt.Errorf("remove album cache path %q: %w", cachePath, err))
 		}
 	}
-	return err
+	return errors.Join(errs...)
 }
 
 func deleteNotOwnedAlbums(userAlbums []models.Album, tx *gorm.DB, deletedAlbumIDs []int) ([]int, error) {

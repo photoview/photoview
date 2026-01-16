@@ -8,7 +8,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/test_utils"
 	"github.com/spf13/afero"
 )
 
@@ -27,7 +26,7 @@ func makeScannerJob(fs afero.Fs, albumID int) ScannerJob {
 }
 
 func TestScannerQueueAddJob(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs := afero.NewMemMapFs()
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(fs, 100),
@@ -76,7 +75,7 @@ func TestScannerQueueAddJob(t *testing.T) {
 }
 
 func TestScannerQueueJobOnQueue(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs := afero.NewMemMapFs()
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(fs, 100),

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -37,7 +36,7 @@ func setTestCachePath(tempPath string) func() {
 // and returns a function to restore the original implementation
 var originalProcessSingleMedia = processSingleMediaFn
 
-func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, albumID int) func() {
+func mockProcessSingleMedia(t *testing.T, fs afero.Fs, shouldSucceed bool, mediaID int, albumID int) func() {
 	// Save original implementation
 	savedFn := processSingleMediaFn
 
@@ -66,12 +65,12 @@ func mockProcessSingleMedia(t *testing.T, shouldSucceed bool, mediaID int, album
 			tempCachePath := utils.GetTestCachePath()
 			albumDir := filepath.Join(tempCachePath, strconv.Itoa(albumID))
 			mediaDir := filepath.Join(albumDir, strconv.Itoa(mediaID))
-			if err := os.MkdirAll(mediaDir, 0755); err != nil {
+			if err := fs.MkdirAll(mediaDir, 0755); err != nil {
 				return err
 			}
 
 			videoPath := filepath.Join(mediaDir, mediaURLs[0].MediaName)
-			if err := os.WriteFile(videoPath, []byte("mocked processed video content"), 0644); err != nil {
+			if err := afero.WriteFile(fs, videoPath, []byte("mocked processed video content"), 0644); err != nil {
 				return fmt.Errorf("failed to write mock video file: %w", err)
 			}
 			return nil
@@ -108,7 +107,7 @@ func registerMockVideoRoutesForTesting(db *gorm.DB, fs afero.Fs, router *mux.Rou
 
 // createTestResources creates all the necessary test resources for a single test case
 // and returns cleanup functions to be called with t.Cleanup()
-func createTestResources(t *testing.T, db *gorm.DB, testID string) (
+func createTestResources(t *testing.T, db *gorm.DB, fs afero.Fs, testID string) (
 	*models.User,
 	*models.Album,
 	*models.Media,
@@ -179,9 +178,9 @@ func createTestResources(t *testing.T, db *gorm.DB, testID string) (
 
 	// Create a unique cache path for this test
 	cachePath := filepath.Join(t.TempDir(), fmt.Sprintf("cache-%s", testID))
-	require.NoError(t, os.MkdirAll(cachePath, 0755))
+	require.NoError(t, fs.MkdirAll(cachePath, 0755))
 	t.Cleanup(func() {
-		os.RemoveAll(cachePath)
+		fs.RemoveAll(cachePath)
 	})
 
 	// Prepare share token for auth tests
@@ -209,13 +208,13 @@ func TestVideoRoutes(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
-		testFunc func(*testing.T, *gorm.DB)
+		testFunc func(*testing.T, *gorm.DB, afero.Fs)
 	}{
 		{
 			name: "Valid video retrieval",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "valid")
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "valid")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -224,10 +223,10 @@ func TestVideoRoutes(t *testing.T) {
 				// Create cache directory and file
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				videoPath := filepath.Join(mediaDir, mediaName)
-				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
+				require.NoError(t, afero.WriteFile(fs, videoPath, []byte("test video content"), 0644))
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
@@ -245,9 +244,9 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video not found",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, _, _, _, _, cachePath, _, _ := createTestResources(t, db, "notfound")
+				_, _, _, _, _, cachePath, _, _ := createTestResources(t, db, fs, "notfound")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -269,9 +268,9 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Authentication with share token",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, tokenValue, tokenPassword := createTestResources(t, db, "auth")
+				_, album, media, _, mediaName, cachePath, tokenValue, tokenPassword := createTestResources(t, db, fs, "auth")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -280,10 +279,10 @@ func TestVideoRoutes(t *testing.T) {
 				// Create the file in cache
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				videoPath := filepath.Join(mediaDir, mediaName)
-				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
+				require.NoError(t, afero.WriteFile(fs, videoPath, []byte("test video content"), 0644))
 
 				// Create real router with auth for this test
 				router := mux.NewRouter()
@@ -307,9 +306,9 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Multiple media URLs with same name",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "multiple")
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "multiple")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -334,10 +333,10 @@ func TestVideoRoutes(t *testing.T) {
 				// Create cache directory and file
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				videoPath := filepath.Join(mediaDir, mediaName)
-				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
+				require.NoError(t, afero.WriteFile(fs, videoPath, []byte("test video content"), 0644))
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
@@ -355,9 +354,9 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video file not in cache, processing succeeds",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "process-success")
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "process-success")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -366,10 +365,10 @@ func TestVideoRoutes(t *testing.T) {
 				// Ensure cache directory exists but file doesn't exist
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				// Mock processing to succeed
-				restoreProcessingFn := mockProcessSingleMedia(t, true, int(media.ID), int(album.ID))
+				restoreProcessingFn := mockProcessSingleMedia(t, fs, true, int(media.ID), int(album.ID))
 				t.Cleanup(restoreProcessingFn)
 
 				// Create mock router without auth for this test
@@ -388,9 +387,9 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video file not in cache, processing fails",
-			testFunc: func(t *testing.T, db *gorm.DB) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
 				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "process-fail")
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "process-fail")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -399,10 +398,10 @@ func TestVideoRoutes(t *testing.T) {
 				// Ensure cache directory exists but file doesn't exist
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				// Mock processing to fail
-				restoreProcessingFn := mockProcessSingleMedia(t, false, int(media.ID), int(album.ID))
+				restoreProcessingFn := mockProcessSingleMedia(t, fs, false, int(media.ID), int(album.ID))
 				t.Cleanup(restoreProcessingFn)
 
 				// Create mock router without auth for this test
@@ -420,8 +419,8 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Context cancellation during processing",
-			testFunc: func(t *testing.T, db *gorm.DB) {
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "cancellation")
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "cancellation")
 
 				// Setup cache path for this test
 				restorePath := setTestCachePath(cachePath)
@@ -430,7 +429,7 @@ func TestVideoRoutes(t *testing.T) {
 				// Ensure cache directory exists but file doesn't exist to trigger processing
 				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
 				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
+				require.NoError(t, fs.MkdirAll(mediaDir, 0755))
 
 				// Create cancellable context
 				ctx, cancel := context.WithCancel(context.Background())
@@ -467,7 +466,7 @@ func TestVideoRoutes(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.testFunc(t, db)
+			tc.testFunc(t, db, fs)
 		})
 	}
 }
