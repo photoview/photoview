@@ -77,6 +77,10 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	if currentSideCarPath != nil {
 		currentFileHash = hashSideCarFile(ctx.GetFS(), currentSideCarPath)
+		if currentFileHash == nil {
+			return []*models.MediaURL{}, errors.New("sidecar task, hash sidecar file failed")
+		}
+
 		if photo.SideCarHash == nil || *photo.SideCarHash != *currentFileHash {
 			sideCarFileHasChanged = true
 		}

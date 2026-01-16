@@ -9,6 +9,7 @@ import (
 
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -77,8 +78,8 @@ func (m *Media) GetHighRes() (*MediaURL, error) {
 	return nil, nil
 }
 
-func (m *Media) CachePath() (string, error) {
-	return utils.CachePathForMedia(m.AlbumID, m.ID)
+func (m *Media) CachePath(fs afero.Fs) (string, error) {
+	return utils.CachePathForMedia(fs, m.AlbumID, m.ID)
 }
 
 type MediaType string

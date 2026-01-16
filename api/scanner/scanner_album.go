@@ -131,7 +131,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 		log.Info(ctx, "Check the media", "media_path", mediaPath)
 
-		isDirSymlink, err := utils.IsDirSymlink(ctx.GetFS(), mediaPath)
+		isDirSymlink, err := utils.IsDirSymlink(fs, mediaPath)
 		if err != nil {
 			log.Warn(ctx, "Cannot detect whether the path is symlink to a directory. Pretending it is not", "media_path", mediaPath)
 			isDirSymlink = false
@@ -147,7 +147,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			}
 
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), ctx.GetFS(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
@@ -173,9 +173,10 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 }
 
 func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
+	fs := ctx.GetFS()
 
 	// Make sure media cache directory exists
-	mediaCachePath, err := mediaData.Media.CachePath()
+	mediaCachePath, err := mediaData.Media.CachePath(fs)
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
 	}
