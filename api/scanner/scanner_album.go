@@ -115,10 +115,11 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
+	fs := ctx.GetFS()
 
 	albumMedia := make([]*models.Media, 0)
 
-	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
+	dirContent, err := afero.ReadDir(fs, ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}

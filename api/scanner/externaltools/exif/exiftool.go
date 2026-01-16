@@ -60,6 +60,7 @@ func (p *ExifParser) loadMetaData(fs afero.Fs, mediaPath string) (*exiftool.File
 			return nil, fmt.Errorf("failed to create temporary file: %w", err)
 		}
 		pathToRead = tmpFile.Name()
+		defer tmpFile.Close()
 
 		cleanup = func() error {
 			return os.Remove(pathToRead)
@@ -68,12 +69,14 @@ func (p *ExifParser) loadMetaData(fs afero.Fs, mediaPath string) (*exiftool.File
 		// Copy file content from afero.Fs to temporary file
 		srcFile, err := fs.Open(mediaPath)
 		if err != nil {
+			_ = tmpFile.Close()
 			cleanup()
 			return nil, fmt.Errorf("failed to open source file: %w", err)
 		}
 		defer srcFile.Close()
 
 		if _, err := io.Copy(tmpFile, srcFile); err != nil {
+			_ = tmpFile.Close()
 			cleanup()
 			return nil, fmt.Errorf("failed to copy file content: %w", err)
 		}
@@ -171,7 +174,7 @@ CREATE_DATE:
 			continue
 		}
 
-		if date, err := time.Parse(layout, dateStr); err == nil {
+		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
 			retEXIF.DateShot = &date
 			foundExif = true
 			break CREATE_DATE

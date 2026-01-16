@@ -18,11 +18,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func getPhotoviewIgnore(ignorePath string) ([]string, error) {
+func getPhotoviewIgnore(fs afero.Fs, ignorePath string) ([]string, error) {
 	var photoviewIgnore []string
 
 	// Open .photoviewignore file, if exists
-	photoviewIgnoreFile, err := os.Open(path.Join(ignorePath, ".photoviewignore"))
+	photoviewIgnoreFile, err := fs.Open(path.Join(ignorePath, ".photoviewignore"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return photoviewIgnore, nil
@@ -115,7 +115,7 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 		}
 
 		// Update ignore dir list
-		photoviewIgnore, err := getPhotoviewIgnore(albumPath)
+		photoviewIgnore, err := getPhotoviewIgnore(fs, albumPath)
 		if err != nil {
 			log.Printf("Failed to get ignore file, err = %s", err)
 		} else {
@@ -245,7 +245,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 		scannedDirectories = append(scannedDirectories, dirPath)
 
 		// Update ignore dir list
-		photoviewIgnore, err := getPhotoviewIgnore(dirPath)
+		photoviewIgnore, err := getPhotoviewIgnore(fs, dirPath)
 		if err != nil {
 			log.Printf("Failed to get ignore file, err = %s", err)
 		} else {
@@ -253,7 +253,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 		}
 		ignoreEntries := ignore.CompileIgnoreLines(albumIgnore...)
 
-		dirContent, err := os.ReadDir(dirPath)
+		dirContent, err := afero.ReadDir(fs, dirPath)
 		if err != nil {
 			scanner_utils.ScannerError(nil, "Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false

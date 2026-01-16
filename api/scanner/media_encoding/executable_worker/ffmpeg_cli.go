@@ -7,6 +7,7 @@ import (
 
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
@@ -71,10 +72,12 @@ func (cli *FfmpegCli) IsInstalled() bool {
 	return cli.err == nil
 }
 
-func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
+func (cli *FfmpegCli) EncodeMp4(fs afero.Fs, inputPath string, outputPath string) error {
 	if cli.err != nil {
 		return fmt.Errorf("encoding video %q error: ffmpeg: %w", inputPath, cli.err)
 	}
+
+	// FIXME: use temporary file and move it to outputPath when done.
 
 	args := []string{
 		"-i",
@@ -95,12 +98,14 @@ func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
 	return nil
 }
 
-func (cli *FfmpegCli) EncodeVideoThumbnail(inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
+func (cli *FfmpegCli) EncodeVideoThumbnail(fs afero.Fs, inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
 	if cli.err != nil {
 		return fmt.Errorf("encoding video thumbnail %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
 	thumbnailOffsetSeconds := fmt.Sprintf("%.f", probeData.Format.DurationSeconds*0.25)
+
+	// FIXME: Use temporary file and move it to outputPath when done.
 
 	args := []string{
 		"-ss", thumbnailOffsetSeconds, // grab frame at time offset

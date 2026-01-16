@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"io"
 	"net/http"
 	"os"
 
@@ -77,6 +78,32 @@ func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 			w.Header().Set("Content-Type", mediaURL.ContentType)
 		}
 
-		http.ServeFile(w, r, cachedPath)
+		file, err := fs.Open(cachedPath)
+		if err != nil {
+			log.Error(r.Context(), "error opening cached media",
+				"media_cache_path", cachedPath,
+				"error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return
+		}
+		defer file.Close()
+
+		stat, err := file.Stat()
+		if err != nil {
+			log.Error(r.Context(), "error statting cached media",
+				"media_cache_path", cachedPath,
+				"error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
+			return
+		}
+
+		if seeker, ok := file.(io.ReadSeeker); ok {
+			http.ServeContent(w, r, stat.Name(), stat.ModTime(), seeker)
+			return
+		}
+
+		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 	})
 }

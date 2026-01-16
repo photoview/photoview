@@ -68,6 +68,10 @@ func TestParseWithMemMapFs(t *testing.T) {
 		t.Fatalf("Failed to read test file: %v", err)
 	}
 
+	if err := memFs.MkdirAll("./test_data", 0o755); err != nil {
+		t.Fatalf("Failed to create test_data dir in memFs: %v", err)
+	}
+
 	err = afero.WriteFile(memFs, filename, data, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write test file to memFs: %v", err)

@@ -19,7 +19,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestFullScan(t *testing.T) {
-	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
 	fs := test_utils.FilesystemTest(t)
 

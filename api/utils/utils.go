@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/spf13/afero"
 )
@@ -74,15 +75,9 @@ func IsDirSymlink(fs afero.Fs, linkPath string) (bool, error) {
 		return false, nil
 	}
 
-	// FIXME
-	fileInfo, ok, err := lst.LstatIfPossible(linkPath)
+	fileInfo, _, err := lst.LstatIfPossible(linkPath)
 	if err != nil {
 		return false, fmt.Errorf("cannot get fileinfo of the symlink %q: %w", linkPath, err)
-	}
-
-	if !ok {
-		// Not a symlink
-		return false, nil
 	}
 
 	// Resolve symlinks
@@ -90,6 +85,10 @@ func IsDirSymlink(fs afero.Fs, linkPath string) (bool, error) {
 		resolvedPath, err := lst.ReadlinkIfPossible(linkPath)
 		if err != nil {
 			return false, fmt.Errorf("cannot resolve symlink target for %q, skipping it: %w", linkPath, err)
+		}
+
+		if !filepath.IsAbs(resolvedPath) {
+			resolvedPath = filepath.Join(filepath.Dir(linkPath), resolvedPath)
 		}
 
 		resolvedFile, err := fs.Stat(resolvedPath)

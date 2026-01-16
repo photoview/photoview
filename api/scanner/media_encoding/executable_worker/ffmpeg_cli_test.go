@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func TestFfmpegNotExist(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, "")
 
 	Ffmpeg = newFfmpegCli()
@@ -22,16 +24,17 @@ func TestFfmpegNotExist(t *testing.T) {
 		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
 	}
 
-	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrNoDependency; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeMp4(fs, "input", "output"), ErrNoDependency; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 
-	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeVideoThumbnail(fs, "input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 }
 
 func TestFfmpegVersionFail(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("FAIL_WITH", "expect failure")
 
@@ -45,16 +48,17 @@ func TestFfmpegVersionFail(t *testing.T) {
 		t.Error("Ffmpeg should not be installed, but is found:", Ffmpeg)
 	}
 
-	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrNoDependency; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeMp4(fs, "input", "output"), ErrNoDependency; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 
-	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeVideoThumbnail(fs, "input", "output", nil), ErrNoDependency; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 }
 
 func TestFfmpegIgnore(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv("PHOTOVIEW_DISABLE_VIDEO_ENCODING", "true")
 
@@ -68,16 +72,17 @@ func TestFfmpegIgnore(t *testing.T) {
 		t.Error("Ffmpeg should be ignored (as it is disabled), but is initialized:", Ffmpeg)
 	}
 
-	if got, want := Ffmpeg.EncodeMp4("input", "output"), ErrDisabledFunction; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeMp4(fs, "input", "output"), ErrDisabledFunction; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 
-	if got, want := Ffmpeg.EncodeVideoThumbnail("input", "output", nil), ErrDisabledFunction; !errors.Is(got, want) {
+	if got, want := Ffmpeg.EncodeVideoThumbnail(fs, "input", "output", nil), ErrDisabledFunction; !errors.Is(got, want) {
 		t.Errorf("Ffmpge.EncodeMp4() = %v, want: %v", got, want)
 	}
 }
 
 func TestFfmpeg(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, testdataBinPath)
 
 	Ffmpeg = newFfmpegCli()
@@ -89,7 +94,7 @@ func TestFfmpeg(t *testing.T) {
 	t.Run("EncodeMp4Failed", func(t *testing.T) {
 		t.Setenv("FAIL_WITH", "expect failure")
 
-		err := Ffmpeg.EncodeMp4("input", "output")
+		err := Ffmpeg.EncodeMp4(fs, "input", "output")
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 		}
@@ -99,7 +104,7 @@ func TestFfmpeg(t *testing.T) {
 	})
 
 	t.Run("EncodeMp4Succeeded", func(t *testing.T) {
-		err := Ffmpeg.EncodeMp4("input", "output")
+		err := Ffmpeg.EncodeMp4(fs, "input", "output")
 		if err != nil {
 			t.Fatalf("Ffmpeg.EncodeMp4(...) = %v, should be nil.", err)
 		}
@@ -113,7 +118,7 @@ func TestFfmpeg(t *testing.T) {
 	t.Run("EncodeVideoThumbnailMp4Failed", func(t *testing.T) {
 		t.Setenv("FAIL_WITH", "expect failure")
 
-		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
+		err := Ffmpeg.EncodeVideoThumbnail(fs, "input", "output", probeData)
 		if err == nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = nil, should be an error.")
 		}
@@ -123,7 +128,7 @@ func TestFfmpeg(t *testing.T) {
 	})
 
 	t.Run("EncodeVideoThumbnailSucceeded", func(t *testing.T) {
-		err := Ffmpeg.EncodeVideoThumbnail("input", "output", probeData)
+		err := Ffmpeg.EncodeVideoThumbnail(fs, "input", "output", probeData)
 		if err != nil {
 			t.Fatalf("Ffmpeg.EncodeVideoThumbnail(...) = %v, should be nil.", err)
 		}
@@ -131,6 +136,7 @@ func TestFfmpeg(t *testing.T) {
 }
 
 func TestFfmpegWithHWAcc(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "qsv")
 
@@ -138,7 +144,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 
 	t.Setenv("FAIL_WITH", "expect failure")
 
-	err := Ffmpeg.EncodeMp4("input", "output")
+	err := Ffmpeg.EncodeMp4(fs, "input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}
@@ -148,6 +154,7 @@ func TestFfmpegWithHWAcc(t *testing.T) {
 }
 
 func TestFfmpegWithCustomCodec(t *testing.T) {
+	fs := afero.NewOsFs()
 	SetPathWithCurrent(t, testdataBinPath)
 	t.Setenv(utils.EnvVideoHardwareAcceleration.GetName(), "_custom")
 
@@ -155,7 +162,7 @@ func TestFfmpegWithCustomCodec(t *testing.T) {
 
 	t.Setenv("FAIL_WITH", "expect failure")
 
-	err := Ffmpeg.EncodeMp4("input", "output")
+	err := Ffmpeg.EncodeMp4(fs, "input", "output")
 	if err == nil {
 		t.Fatalf("Ffmpeg.EncodeMp4(...) = nil, should be an error.")
 	}

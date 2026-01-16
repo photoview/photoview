@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -55,6 +54,8 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 }
 
 func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+	fs := ctx.GetFS()
+
 	mediaType, err := mediaData.ContentType(ctx.GetFS())
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
@@ -98,24 +99,24 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	// update high res image may be cropped so dimentions and file size can change
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
-	os.Rename(baseImagePath, tempHighResPath)
+	fs.Rename(baseImagePath, tempHighResPath)
 	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), ctx.GetFS(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
 	if err != nil {
-		os.Rename(tempHighResPath, baseImagePath)
+		fs.Rename(tempHighResPath, baseImagePath)
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
 	}
-	os.Remove(tempHighResPath)
+	fs.Remove(tempHighResPath)
 
 	// update thumbnail image may be cropped so dimentions and file size can change
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
-	os.Rename(thumbPath, tempThumbPath)
+	fs.Rename(thumbPath, tempThumbPath)
 	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), ctx.GetFS(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
 	if err != nil {
-		os.Rename(tempThumbPath, thumbPath)
+		fs.Rename(tempThumbPath, thumbPath)
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
 	}
-	os.Remove(tempThumbPath)
+	fs.Remove(tempThumbPath)
 
 	photo.SideCarHash = currentFileHash
 	photo.SideCarPath = currentSideCarPath

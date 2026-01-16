@@ -153,7 +153,7 @@ func (img *EncodeMediaData) EncodeHighRes(fs afero.Fs, outputPath string) error 
 	return nil
 }
 
-func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
+func (enc *EncodeMediaData) VideoMetadata(fs afero.Fs) (*ffprobe.ProbeData, error) {
 
 	if enc._videoMetadata != nil {
 		return enc._videoMetadata, nil
@@ -161,7 +161,16 @@ func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
 
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
-	data, err := ffprobe.ProbeURL(ctx, enc.Media.Path)
+
+	// read file
+	videoFile, err := fs.Open(enc.Media.Path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not read video file (%s)", enc.Media.Title)
+	}
+	defer videoFile.Close()
+
+	// probe file
+	data, err := ffprobe.ProbeReader(ctx, videoFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.Media.Title)
 	}

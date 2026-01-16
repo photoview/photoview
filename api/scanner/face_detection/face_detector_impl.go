@@ -128,7 +128,9 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, media *models.Medi
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(db, fs, &face, media, thumbnailPath)
+		if err := fd.classifyFace(db, fs, &face, media, thumbnailPath); err != nil {
+			return err
+		}
 	}
 
 	return nil
