@@ -47,7 +47,11 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	media.SideCarPath = sideCarPath
 	media.SideCarHash = sideCarHash
 	if err := ctx.GetDB().Save(media).Error; err != nil {
-		return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
+		if sideCarPath != nil {
+			return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
+		}
+
+		return errors.Wrapf(err, "update media sidecar info")
 	}
 
 	return nil
