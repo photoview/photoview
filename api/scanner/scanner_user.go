@@ -110,7 +110,7 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 		// Skip this dir if in ignore list
 		ignorePaths := ignore.CompileIgnoreLines(albumIgnore...)
 		if ignorePaths.MatchesPath(albumPath + "/") {
-			log.Info(nil, "Skip, directroy is in ignore file", "directory", albumPath)
+			log.Info(nil, "Skip, directory is in ignore file", "directory", albumPath)
 			continue
 		}
 

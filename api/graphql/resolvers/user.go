@@ -97,7 +97,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	if transactionError != nil {
 		return &models.AuthorizeResult{
 			Success: false,
-			Status:  err.Error(),
+			Status:  transactionError.Error(),
 		}, nil
 	}
 

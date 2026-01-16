@@ -96,7 +96,7 @@ func (cli *FfmpegCli) EncodeMp4(fs afero.Fs, inputPath string, outputPath string
 		"-vcodec", cli.videoCodec,
 		"-acodec", "aac",
 		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
-		"-movflags", "+faststart+use_metadata_tags",
+		"-movflags", "frag_keyframe+empty_moov+default_base_moof", // Fragmented MP4 for non-seekable output
 		"-f", "mp4", // Specify format when writing to stdout
 		"pipe:1", // Write to stdout
 	}
@@ -105,8 +105,31 @@ func (cli *FfmpegCli) EncodeMp4(fs afero.Fs, inputPath string, outputPath string
 	cmd.Stdin = inputFile   // Pipe the file content to stdin
 	cmd.Stdout = outputFile // Pipe stdout to output file
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("encoding video with %q %v error: %w", cli.path, args, err)
+	// Capture stderr for better error messages
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("creating stderr pipe error: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("starting video encoding with %q %v error: %w", cli.path, args, err)
+	}
+
+	// Read stderr
+	stderrOutput := make([]byte, 0, 4096)
+	buf := make([]byte, 1024)
+	for {
+		n, readErr := stderr.Read(buf)
+		if n > 0 {
+			stderrOutput = append(stderrOutput, buf[:n]...)
+		}
+		if readErr != nil {
+			break
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("encoding video with %q %v error: %w, stderr: %s", cli.path, args, err, string(stderrOutput))
 	}
 
 	return nil
@@ -147,8 +170,31 @@ func (cli *FfmpegCli) EncodeVideoThumbnail(fs afero.Fs, inputPath string, output
 	cmd.Stdin = inputFile   // Pipe the file content to stdin
 	cmd.Stdout = outputFile // Pipe stdout to output file
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", cli.path, args, err)
+	// Capture stderr for better error messages
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("creating stderr pipe error: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("starting video thumbnail encoding with %q %v error: %w", cli.path, args, err)
+	}
+
+	// Read stderr
+	stderrOutput := make([]byte, 0, 4096)
+	buf := make([]byte, 1024)
+	for {
+		n, readErr := stderr.Read(buf)
+		if n > 0 {
+			stderrOutput = append(stderrOutput, buf[:n]...)
+		}
+		if readErr != nil {
+			break
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("encoding video thumbnail with %q %v error: %w, stderr: %s", cli.path, args, err, string(stderrOutput))
 	}
 
 	return nil
