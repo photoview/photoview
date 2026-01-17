@@ -22,7 +22,7 @@ require (
 	golang.org/x/crypto v0.47.0
 	golang.org/x/text v0.33.0
 	gopkg.in/gographics/imagick.v3 v3.7.2
-	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
+	gopkg.in/vansante/go-ffprobe.v2 v2.3.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0

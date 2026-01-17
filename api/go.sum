@@ -113,8 +113,8 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntN
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
 gopkg.in/gographics/imagick.v3 v3.7.2 h1:PmsYCf60YS/7f1omBTDaoS6yp4817Wv61S0JpWH4cMc=
 gopkg.in/gographics/imagick.v3 v3.7.2/go.mod h1:7I4S9VWdwr88yzYi7g+ZL4H8oZuH9cmSQI7GsZCcYFM=
-gopkg.in/vansante/go-ffprobe.v2 v2.2.1 h1:sFV08OT1eZ1yroLCZVClIVd9YySgCh9eGjBWO0oRayI=
-gopkg.in/vansante/go-ffprobe.v2 v2.2.1/go.mod h1:qF0AlAjk7Nqzqf3y333Ly+KxN3cKF2JqA3JT5ZheUGE=
+gopkg.in/vansante/go-ffprobe.v2 v2.3.0 h1:YhEzASq5eN8m73j/WqhRbqzJrx5gaqRueHZ9ZC53o/o=
+gopkg.in/vansante/go-ffprobe.v2 v2.3.0/go.mod h1:qF0AlAjk7Nqzqf3y333Ly+KxN3cKF2JqA3JT5ZheUGE=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
