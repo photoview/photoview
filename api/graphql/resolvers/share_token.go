@@ -81,6 +81,22 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 		}
 	}
 
+	now := time.Now()
+	fakeTime := time.Date(
+		now.Year(),
+		now.Month(),
+		now.Day(),
+		now.Hour(),
+		now.Minute(),
+		now.Second(),
+		0,
+		time.UTC,
+	)
+
+	if token.Expire != nil && fakeTime.After(*token.Expire) {
+		return nil, errors.New("share expired")
+	}
+
 	if token.Password != nil {
 		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {

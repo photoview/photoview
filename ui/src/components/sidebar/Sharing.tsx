@@ -276,6 +276,10 @@ const MorePopoverSectionExpiration = ({
   // Verify whether the backend response includes an expiration time
   // Set it to true if share.expire exists; otherwise,set it to false
   const [enabled, setEnabled] = useState(!!share.expire)
+   useEffect(() => {
+   setEnabled(!!share.expire)
+   setDate(share.expire ? new Date(share.expire) : null)
+  }, [share.expire])
   const { t, i18n } = useTranslation()
   
   const dateFormatterOptions: Intl.DateTimeFormatOptions = {
@@ -338,6 +342,7 @@ const MorePopoverSectionExpiration = ({
           <DatePicker
             selected={date}
             onChange={setDate}
+            minDate={new Date()}
             placeholderText={oldExpireDate}
             value={oldExpireDate}
             customInput={
