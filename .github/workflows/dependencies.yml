@@ -7,7 +7,7 @@ on:
     branches: [master]
   schedule:
     # At 23:18 every Wednesday, 2 hours before `photoview`. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
-    - cron: '18 23 * * 3'
+    - cron: "18 23 * * 3"
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
@@ -59,9 +59,11 @@ jobs:
           set -euo pipefail
           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           # Fetch latest version tags from GitHub releases
-          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
+          # Pin to 0.21.2 until ImageMagick supports LibRaw 0.22 API changes
+          LIBRAW_VERSION="0.21.2"
+          # LIBRAW_VERSION=$(curl "${CURL_FLAGS[@]}" \
+          #   ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+          #   "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -er '.tag_name')
           LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')

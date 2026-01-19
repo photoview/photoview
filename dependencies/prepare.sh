@@ -6,7 +6,7 @@ set -euo pipefail
 TARGETARCH="$(echo "$TARGETPLATFORM" | cut -d"/" -f2)"
 
 DEBIAN_ARCH=$TARGETARCH
-if [ "$TARGETARCH" = "arm" ]; then
+if [[ "$TARGETARCH" = "arm" ]]; then
   DEBIAN_ARCH=armel
 fi
 
