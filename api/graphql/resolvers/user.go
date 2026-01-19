@@ -16,6 +16,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -244,7 +245,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 }
 
 // ChangeUserPreferences is the resolver for the changeUserPreferences field.
-func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string, defaultLandingPage *string) (*models.UserPreferences, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -264,6 +265,11 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 
 	userPref.UserID = user.ID
 	userPref.Language = langTrans
+
+	// Handle defaultLandingPage
+	if defaultLandingPage != nil {
+		userPref.DefaultLandingPage = defaultLandingPage
+	}
 
 	if err := db.Save(&userPref).Error; err != nil {
 		return nil, err
@@ -337,7 +343,39 @@ func (r *userResolver) RootAlbums(ctx context.Context, obj *models.User) (albums
 	return
 }
 
+// DefaultLandingPage is the resolver for the defaultLandingPage field.
+func (r *userPreferencesResolver) DefaultLandingPage(ctx context.Context, obj *models.UserPreferences) (*string, error) {
+	// If no defaultLandingPage is set, return nil
+	if obj.DefaultLandingPage == nil {
+		return nil, nil
+	}
+
+	landingPage := *obj.DefaultLandingPage
+	fallback := "/timeline"
+
+	// Validate that the page points to an enabled feature
+	switch landingPage {
+	case "/places":
+		// If Mapbox is not configured, fallback to /timeline
+		if utils.EnvMapboxToken.GetValue() == "" {
+			return &fallback, nil
+		}
+	case "/people":
+		// If face detection is disabled, fallback to /timeline
+		if utils.EnvDisableFaceRecognition.GetBool() {
+			return &fallback, nil
+		}
+	}
+
+	// Return the original value if the feature is enabled
+	return obj.DefaultLandingPage, nil
+}
+
 // User returns api.UserResolver implementation.
 func (r *Resolver) User() api.UserResolver { return &userResolver{r} }
 
+// UserPreferences returns api.UserPreferencesResolver implementation.
+func (r *Resolver) UserPreferences() api.UserPreferencesResolver { return &userPreferencesResolver{r} }
+
 type userResolver struct{ *Resolver }
+type userPreferencesResolver struct{ *Resolver }

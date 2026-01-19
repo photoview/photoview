@@ -16,6 +16,7 @@ import {
   changeUserPreferencesVariables,
 } from './__generated__/changeUserPreferences'
 import { myUserPreferences } from './__generated__/myUserPreferences'
+import { availableFeatures } from './__generated__/availableFeatures'
 import { TranslationFn } from '../../localization'
 import { changeTheme, getTheme } from '../../theme'
 
@@ -57,11 +58,49 @@ const themePreferences = (t: TranslationFn) => [
   },
 ]
 
+const landingPagePreferences = (
+  t: TranslationFn,
+  mapboxEnabled: boolean,
+  faceDetectionEnabled: boolean
+) => {
+  const pages = [
+    {
+      key: 1,
+      label: t('settings.user_preferences.landing_page.timeline', 'Timeline'),
+      value: '/timeline',
+    },
+    {
+      key: 2,
+      label: t('settings.user_preferences.landing_page.albums', 'Albums'),
+      value: '/albums',
+    },
+  ]
+
+  if (mapboxEnabled) {
+    pages.push({
+      key: 3,
+      label: t('settings.user_preferences.landing_page.places', 'Places'),
+      value: '/places',
+    })
+  }
+
+  if (faceDetectionEnabled) {
+    pages.push({
+      key: 4,
+      label: t('settings.user_preferences.landing_page.people', 'People'),
+      value: '/people',
+    })
+  }
+
+  return pages
+}
+
 const CHANGE_USER_PREFERENCES = gql`
-  mutation changeUserPreferences($language: String) {
-    changeUserPreferences(language: $language) {
+  mutation changeUserPreferences($language: String, $defaultLandingPage: String) {
+    changeUserPreferences(language: $language, defaultLandingPage: $defaultLandingPage) {
       id
       language
+      defaultLandingPage
     }
   }
 `
@@ -71,6 +110,16 @@ const MY_USER_PREFERENCES = gql`
     myUserPreferences {
       id
       language
+      defaultLandingPage
+    }
+  }
+`
+
+const AVAILABLE_FEATURES = gql`
+  query availableFeatures {
+    mapboxToken
+    siteInfo {
+      faceDetectionEnabled
     }
   }
 `
@@ -102,6 +151,11 @@ const UserPreferences = () => {
     changeTheme(value)
     setTheme(value)
   }
+
+  const { data: featuresData } = useQuery<availableFeatures>(AVAILABLE_FEATURES)
+
+  const mapboxEnabled = !!featuresData?.mapboxToken
+  const faceDetectionEnabled = !!featuresData?.siteInfo?.faceDetectionEnabled
 
   const { data } = useQuery<myUserPreferences>(MY_USER_PREFERENCES)
 
@@ -172,6 +226,37 @@ const UserPreferences = () => {
         items={themePreferences(t)}
         setSelected={changeStateTheme}
         selected={theme}
+      />
+      <label htmlFor="user_pref_change_landing_page_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.landing_page.label',
+            'Default landing page'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.landing_page.description',
+            'Choose the page to be shown after login'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Dropdown
+        id="user_pref_change_landing_page_field"
+        placeholder={t(
+          'settings.user_preferences.landing_page.placeholder',
+          'Select default page'
+        )}
+        items={landingPagePreferences(t, mapboxEnabled, faceDetectionEnabled)}
+        setSelected={landingPage => {
+          changePrefs({
+            variables: {
+              defaultLandingPage: landingPage as string,
+            },
+          })
+        }}
+        selected={data?.myUserPreferences.defaultLandingPage || undefined}
+        disabled={loadingPrefs}
       />
     </UserPreferencesWrapper>
   )

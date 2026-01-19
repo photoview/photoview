@@ -34,6 +34,7 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
+  defaultLandingPage: String
 }
 
 type AuthorizeResult {
@@ -95,5 +96,5 @@ extend type Mutation {
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+  changeUserPreferences(language: String, defaultLandingPage: String): UserPreferences! @isAuthorized
 }

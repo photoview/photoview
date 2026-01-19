@@ -173,7 +173,16 @@
         },
         "title": "Tema tercihleri"
       },
-      "title": "Kullanıcı tercihleri"
+      "title": "Kullanıcı tercihleri",
+      "landing_page": {
+        "timeline": "Zaman çizelgesi",
+        "albums": "Albümler",
+        "places": "Yerler",
+        "people": "İnsanlar",
+        "label": "Varsayılan açılış sayfası",
+        "description": "Giriş yaptıktan sonra gösterilecek sayfayı seçin",
+        "placeholder": "Varsayılan sayfayı seç"
+      }
     },
     "users": {
       "add_user": {

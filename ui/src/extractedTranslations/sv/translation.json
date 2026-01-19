@@ -179,7 +179,16 @@
         },
         "title": ""
       },
-      "title": "Användarinställningar"
+      "title": "Användarinställningar",
+      "landing_page": {
+        "timeline": "Tidslinje",
+        "albums": "Album",
+        "places": "Platser",
+        "people": "Personer",
+        "label": "Standard startsida",
+        "description": "Välj sidan som ska visas efter inloggning",
+        "placeholder": "Välj standardsida"
+      }
     },
     "users": {
       "add_user": {

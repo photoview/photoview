@@ -179,7 +179,16 @@
         },
         "title": "佈景主題偏好設定"
       },
-      "title": "使用者偏好設定"
+      "title": "使用者偏好設定",
+      "landing_page": {
+        "timeline": "時間線",
+        "albums": "相簿",
+        "places": "地點",
+        "people": "人物",
+        "label": "預設首頁",
+        "description": "選擇登入後顯示的頁面",
+        "placeholder": "選擇預設頁面"
+      }
     },
     "users": {
       "add_user": {
