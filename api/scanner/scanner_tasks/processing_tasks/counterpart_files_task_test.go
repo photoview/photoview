@@ -16,7 +16,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestCounterpartFilesTaskMediaFound(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs, cacheFs := test_utils.FilesystemTest(t)
+
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
@@ -79,7 +80,7 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv(string(utils.EnvDisableRawProcessing), fmt.Sprintf("%v", tc.disableRawProcessing))
 
-			ctx := scanner_task.NewTaskContext(context.Background(), nil, fs, nil, nil)
+			ctx := scanner_task.NewTaskContext(context.Background(), nil, fs, cacheFs, nil, nil)
 
 			fname := filepath.Join(mediaPath, tc.file)
 			fi, err := fs.Stat(fname)

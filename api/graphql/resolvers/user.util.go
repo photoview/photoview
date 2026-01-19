@@ -33,13 +33,13 @@ func cleanup(tx *gorm.DB, albumID int, childAlbumIDs []int) ([]int, error) {
 	return deletedAlbumIDs, nil
 }
 
-func clearCacheAndReloadFaces(db *gorm.DB, fs afero.Fs, deletedAlbumIDs []int) error {
+func clearCacheAndReloadFaces(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, deletedAlbumIDs []int) error {
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {
 			cacheAlbumPath := path.Join(utils.MediaCachePath(), strconv.Itoa(id))
 
-			if err := fs.RemoveAll(cacheAlbumPath); err != nil {
+			if err := cacheFs.RemoveAll(cacheAlbumPath); err != nil {
 				return err
 			}
 		}

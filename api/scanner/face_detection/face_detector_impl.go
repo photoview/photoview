@@ -91,7 +91,7 @@ func (fd *faceDetector) ReloadFacesFromDatabase(db *gorm.DB) error {
 }
 
 // DetectFaces finds the faces in the given image and saves them to the database
-func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, media *models.Media) error {
+func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 	if err := db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, media *models.Medi
 		return err
 	}
 
-	thumbData, err := afero.ReadFile(fs, thumbnailPath)
+	thumbData, err := afero.ReadFile(cacheFs, thumbnailPath)
 	if err != nil {
 		return fmt.Errorf("thumbnail file error: %w", err)
 	}
@@ -128,7 +128,7 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, media *models.Medi
 	}
 
 	for _, face := range faces {
-		if err := fd.classifyFace(db, fs, &face, media, thumbnailPath); err != nil {
+		if err := fd.classifyFace(db, &face, media, thumbnailPath); err != nil {
 			return err
 		}
 	}
@@ -140,13 +140,13 @@ func (fd *faceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
 }
 
-func (fd *faceDetector) classifyFace(db *gorm.DB, fs afero.Fs, face *face.Face, media *models.Media, imagePath string) error {
+func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
 	fd.mutex.Lock()
 	defer fd.mutex.Unlock()
 
 	match := fd.classifyDescriptor(face.Descriptor)
 
-	dimension, err := media_encoding.GetPhotoDimensions(fs, imagePath)
+	dimension, err := media_encoding.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return err
 	}

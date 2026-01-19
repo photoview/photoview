@@ -15,9 +15,12 @@ import (
 
 type Media struct {
 	Model
-	Title           string         `gorm:"not null"`
-	Path            string         `gorm:"not null"`
-	PathHash        string         `gorm:"not null;unique"`
+	Title    string `gorm:"not null"`
+	Path     string `gorm:"not null"`
+	PathHash string `gorm:"not null;unique"`
+	// LocalPath is only used for temporary files that are not stored in the main media storage
+	// It's a local filesystem path copy of the media file for faster access and external tool processing
+	LocalPath       string
 	AlbumID         int            `gorm:"not null;index"`
 	Album           Album          `gorm:"constraint:OnDelete:CASCADE;"`
 	ExifID          *int           `gorm:"index"`
@@ -78,8 +81,8 @@ func (m *Media) GetHighRes() (*MediaURL, error) {
 	return nil, nil
 }
 
-func (m *Media) CachePath(fs afero.Fs) (string, error) {
-	return utils.CachePathForMedia(fs, m.AlbumID, m.ID)
+func (m *Media) CachePath(cacheFs afero.Fs) (string, error) {
+	return utils.CachePathForMedia(cacheFs, m.AlbumID, m.ID)
 }
 
 type MediaType string

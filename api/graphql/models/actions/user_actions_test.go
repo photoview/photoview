@@ -12,7 +12,7 @@ import (
 func TestDeleteUser(t *testing.T) {
 	t.Run("Delete regular user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
-		fs := test_utils.FilesystemTest(t)
+		fs, _ := test_utils.FilesystemTest(t)
 
 		adminUser, err := models.RegisterUser(db, "admin", nil, true)
 		assert.NoError(t, err)
@@ -37,7 +37,7 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("Try to delete sole admin user", func(t *testing.T) {
 		db := test_utils.DatabaseTest(t)
-		fs := test_utils.FilesystemTest(t)
+		fs, _ := test_utils.FilesystemTest(t)
 
 		adminUser, err := models.RegisterUser(db, "admin", nil, true)
 		assert.NoError(t, err)

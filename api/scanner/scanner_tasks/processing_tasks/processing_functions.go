@@ -1,6 +1,7 @@
 package processing_tasks
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -10,19 +11,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func generateSaveHighResJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, imageData *media_encoding.EncodeMediaData, highResName string, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_encoding.EncodeMediaData, highResName string, cacheFs afero.Fs, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
-	err := imageData.EncodeHighRes(fs, imagePath)
+	err := imageData.EncodeHighRes(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
 
-	photoDimensions, err := media_encoding.GetPhotoDimensions(fs, imagePath)
+	photoDimensions, err := media_encoding.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return nil, err
 	}
 
-	fileStats, err := fs.Stat(imagePath)
+	fileStats, err := cacheFs.Stat(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of highres photo")
 	}
@@ -55,15 +56,15 @@ func generateSaveHighResJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, imag
 	return mediaURL, nil
 }
 
-func generateSaveThumbnailJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, thumbnailName string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, cacheFs afero.Fs, thumbnailName string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(photoCachePath, thumbnailName)
 
-	thumbSize, err := media_encoding.EncodeThumbnail(tx, fs, baseImagePath, thumbOutputPath)
+	thumbSize, err := media_encoding.EncodeThumbnail(tx, baseImagePath, thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}
 
-	fileStats, err := fs.Stat(thumbOutputPath)
+	fileStats, err := cacheFs.Stat(thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of thumbnail photo")
 	}
@@ -92,6 +93,8 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, fs afero.Fs, media *models.Media, th
 			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnailName)
 		}
 	}
+
+	fmt.Printf("Generated high-res: %s (%dx%d)\n", thumbOutputPath, thumbSize.Width, thumbSize.Height)
 
 	return mediaURL, nil
 }

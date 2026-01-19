@@ -53,7 +53,7 @@ func generateUniqueMediaName(mediaPath string) string {
 func saveOriginalPhotoToDB(tx *gorm.DB, fs afero.Fs, photo *models.Media, imageData *media_encoding.EncodeMediaData, photoDimensions media_encoding.Dimension) (*models.MediaURL, error) {
 	originalImageName := generateUniqueMediaName(photo.Path)
 
-	contentType, err := imageData.ContentType(fs)
+	contentType, err := imageData.ContentType()
 	if err != nil {
 		return nil, err
 	}

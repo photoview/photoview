@@ -52,6 +52,7 @@ type ScannerQueue struct {
 	up_next     []ScannerJob
 	db          *gorm.DB
 	fs          afero.Fs
+	cacheFs     afero.Fs
 	settings    ScannerQueueSettings
 	close_chan  *chan bool
 	running     bool
@@ -59,7 +60,7 @@ type ScannerQueue struct {
 
 var global_scanner_queue ScannerQueue
 
-func InitializeScannerQueue(db *gorm.DB, fs afero.Fs) error {
+func InitializeScannerQueue(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) error {
 
 	var concurrentWorkers int
 	{
@@ -78,6 +79,7 @@ func InitializeScannerQueue(db *gorm.DB, fs afero.Fs) error {
 		up_next:     make([]ScannerJob, 0),
 		db:          db,
 		fs:          fs,
+		cacheFs:     cacheFs,
 		settings:    ScannerQueueSettings{max_concurrent_tasks: concurrentWorkers},
 		close_chan:  nil,
 		running:     true,
@@ -242,6 +244,7 @@ func AddUserToQueue(user *models.User) error {
 				context.Background(),
 				global_scanner_queue.db,
 				global_scanner_queue.fs,
+				global_scanner_queue.cacheFs,
 				album,
 				albumCache,
 			),

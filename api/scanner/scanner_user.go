@@ -271,7 +271,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 			if fileInfo.IsDir() || isDirSymlink {
 				scanQueue.PushBack(filePath)
 			} else {
-				if cache.IsPathMedia(filePath) {
+				if cache.IsPathMedia(fs, filePath) {
 					if ignoreEntries.MatchesPath(fileInfo.Name()) {
 						log.Debug(nil, "Match found, continue search for media", "file", fileInfo.Name())
 						continue

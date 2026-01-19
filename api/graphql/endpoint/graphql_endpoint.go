@@ -17,8 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func GraphqlEndpoint(db *gorm.DB, fs afero.Fs) *graphql_handler.Server {
-	graphqlResolver := resolvers.NewRootResolver(db, fs)
+func GraphqlEndpoint(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs) *graphql_handler.Server {
+	graphqlResolver := resolvers.NewRootResolver(db, fileFs, cacheFs)
 	graphqlDirective := photoview_graphql.DirectiveRoot{}
 	graphqlDirective.IsAdmin = photoview_graphql.IsAdmin
 	graphqlDirective.IsAuthorized = photoview_graphql.IsAuthorized

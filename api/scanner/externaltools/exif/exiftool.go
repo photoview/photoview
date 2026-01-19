@@ -3,15 +3,11 @@ package exif
 import (
 	"errors"
 	"fmt"
-	"io"
 	"math"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/spf13/afero"
 )
 
 const layout = "2006:01:02 15:04:05.999"
@@ -42,68 +38,21 @@ func (p *ExifParser) Close() error {
 	return p.exiftool.Close()
 }
 
-func (p *ExifParser) loadMetaData(fs afero.Fs, mediaPath string) (*exiftool.FileMetadata, error) {
-	// Check if we're using the OS filesystem directly
-	_, isOsFs := fs.(*afero.OsFs)
-
-	var pathToRead string
-	var cleanup func() error
-
-	if isOsFs {
-		// Direct access to the real filesystem
-		pathToRead = mediaPath
-		cleanup = func() error { return nil }
-	} else {
-		// Create a temporary file and copy the content from afero.Fs
-		tmpFile, err := os.CreateTemp("", "exiftool-*"+filepath.Ext(mediaPath))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create temporary file: %w", err)
-		}
-		pathToRead = tmpFile.Name()
-
-		cleanup = func() error {
-			return os.Remove(pathToRead)
-		}
-
-		// Copy file content from afero.Fs to temporary file
-		srcFile, err := fs.Open(mediaPath)
-		if err != nil {
-			_ = tmpFile.Close()
-			cleanup()
-			return nil, fmt.Errorf("failed to open source file: %w", err)
-		}
-		defer srcFile.Close()
-
-		if _, err := io.Copy(tmpFile, srcFile); err != nil {
-			_ = tmpFile.Close()
-			cleanup()
-			return nil, fmt.Errorf("failed to copy file content: %w", err)
-		}
-
-		if err := tmpFile.Close(); err != nil {
-			cleanup()
-			return nil, fmt.Errorf("failed to close temporary file: %w", err)
-		}
-	}
-
-	defer cleanup()
-
-	fileInfos := p.exiftool.ExtractMetadata(pathToRead)
+func (p *ExifParser) loadMetaData(mediaPath string) (*exiftool.FileMetadata, error) {
+	fileInfos := p.exiftool.ExtractMetadata(mediaPath)
 	if l := len(fileInfos); l != 1 {
 		return nil, fmt.Errorf("expected 1 metadata entry, got %d", l)
 	}
-
 	fileInfo := fileInfos[0]
 	if err := fileInfo.Err; err != nil {
 		return nil, err
 	}
-
 	return &fileInfo, nil
 }
 
 // ParseExif returns the exif data.
-func (p *ExifParser) ParseExif(fs afero.Fs, mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
-	fileInfo, err := p.loadMetaData(fs, mediaPath)
+func (p *ExifParser) ParseExif(mediaPath string) (*models.MediaEXIF, ParseFailures, error) {
+	fileInfo, err := p.loadMetaData(mediaPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}
@@ -338,8 +287,8 @@ func calculateOffsetFromGPS(fileInfo *exiftool.FileMetadata, date *time.Time) (*
 	return &offset, nil, nil
 }
 
-func (p *ExifParser) ParseMIMEType(fs afero.Fs, mediaPath string) (string, error) {
-	fileInfo, err := p.loadMetaData(fs, mediaPath)
+func (p *ExifParser) ParseMIMEType(mediaPath string) (string, error) {
+	fileInfo, err := p.loadMetaData(mediaPath)
 	if err != nil {
 		return "", fmt.Errorf("invalid parse %q exif: %w", mediaPath, err)
 	}

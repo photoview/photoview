@@ -60,12 +60,12 @@ func IntegrationTestRun(m *testing.M) {
 	exitCode = m.Run()
 }
 
-func FilesystemTest(t *testing.T) afero.Fs {
+func FilesystemTest(t *testing.T) (afero.Fs, afero.Fs) {
 	if !flags.Filesystem {
 		t.Skip("Filesystem integration tests disabled")
 	}
 
-	return afero.NewOsFs()
+	return afero.NewOsFs(), afero.NewOsFs()
 }
 
 func DatabaseTest(t *testing.T) *gorm.DB {

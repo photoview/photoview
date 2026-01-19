@@ -14,7 +14,7 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 )
 
-func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
+func RegisterPhotoRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router *mux.Router) {
 
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		mediaName := mux.Vars(r)["name"]
@@ -51,9 +51,17 @@ func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 			return
 		}
 
-		if _, err := fs.Stat(cachedPath); os.IsNotExist(err) {
+		var fs afero.Fs
+		if mediaURL.Purpose == models.MediaOriginal {
+			fs = fileFs
+		} else {
+			fs = cacheFs
+		}
+
+		stat, err := fs.Stat(cachedPath)
+		if os.IsNotExist(err) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fs, media); err != nil {
+			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fs, cacheFs, media); err != nil {
 				log.Error(r.Context(), "processing image not found in cache",
 					"media_cache_path", cachedPath,
 					"error", err)
@@ -62,7 +70,7 @@ func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 				return
 			}
 
-			if _, err = fs.Stat(cachedPath); err != nil {
+			if stat, err = fs.Stat(cachedPath); err != nil {
 				log.Error(r.Context(), "after reprocessing image not found in cache",
 					"media_cache_path", cachedPath,
 					"error", err)
@@ -88,16 +96,6 @@ func RegisterPhotoRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 			return
 		}
 		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil {
-			log.Error(r.Context(), "error statting cached media",
-				"media_cache_path", cachedPath,
-				"error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(internalServerError))
-			return
-		}
 
 		if seeker, ok := file.(io.ReadSeeker); ok {
 			http.ServeContent(w, r, stat.Name(), stat.ModTime(), seeker)

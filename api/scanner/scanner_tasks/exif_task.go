@@ -18,11 +18,13 @@ type ExifTask struct {
 }
 
 func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+	filesFs := ctx.GetFileFS()
+
 	if !newMedia {
 		return nil
 	}
 
-	if err := SaveEXIF(ctx.GetDB(), ctx.GetFS(), media); err != nil {
+	if err := saveEXIF(ctx.GetDB(), filesFs, media); err != nil {
 		log.Warn(ctx, "SaveEXIF failed", "title", media.Title, "error", err, "path", media.Path)
 	}
 
@@ -30,7 +32,7 @@ func (t ExifTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Me
 }
 
 // SaveEXIF scans the media file for exif metadata and saves it in the database if found
-func SaveEXIF(tx *gorm.DB, fs afero.Fs, media *models.Media) error {
+func saveEXIF(tx *gorm.DB, fs afero.Fs, media *models.Media) error {
 	// Check if EXIF data already exists
 	if media.ExifID != nil {
 		var e models.MediaEXIF
@@ -50,7 +52,7 @@ func SaveEXIF(tx *gorm.DB, fs afero.Fs, media *models.Media) error {
 		media.ExifID = nil
 	}
 
-	exifData, err := exif.Parse(fs, media.Path)
+	exifData, err := exif.Parse(media.Path)
 	if err != nil {
 		return fmt.Errorf("failed to parse exif data: %w", err)
 	}

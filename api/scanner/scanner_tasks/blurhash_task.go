@@ -18,7 +18,7 @@ type BlurhashTask struct {
 }
 
 func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
-	fs := ctx.GetFS()
+	cacheFs := ctx.GetCacheFS()
 
 	hasThumbnailUpdated := false
 	for _, url := range updatedURLs {
@@ -43,7 +43,7 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 		return fmt.Errorf("failed to get thumbnail of image %q: %w", mediaData.Media.Path, err)
 	}
 
-	hashStr, err := generateBlurhashFromThumbnail(fs, thumbnail)
+	hashStr, err := generateBlurhashFromThumbnail(cacheFs, thumbnail)
 	if err != nil {
 		return fmt.Errorf("failed to generate blurhash of image %q: %w", mediaData.Media.Path, err)
 	}

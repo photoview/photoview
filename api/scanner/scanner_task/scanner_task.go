@@ -40,12 +40,20 @@ type TaskContext struct {
 	context.Context
 }
 
-func NewTaskContext(parent context.Context, db *gorm.DB, fs afero.Fs, album *models.Album, cache *scanner_cache.AlbumScannerCache) TaskContext {
+func NewTaskContext(
+	parent context.Context,
+	db *gorm.DB,
+	fs afero.Fs,
+	cacheFs afero.Fs,
+	album *models.Album,
+	cache *scanner_cache.AlbumScannerCache,
+) TaskContext {
 	ctx := TaskContext{Context: parent}
 	ctx = ctx.WithValue(taskCtxKeyAlbum, album)
 	ctx = ctx.WithValue(taskCtxKeyAlbumCache, cache)
 	ctx = ctx.WithDB(db)
-	ctx = ctx.WithValue(taskCtxKeyFilesystem, fs)
+	ctx = ctx.WithValue(taskCtxKeyFileFilesystem, fs)
+	ctx = ctx.WithValue(taskCtxKeyCacheFilesystem, cacheFs)
 
 	return ctx
 }
@@ -53,10 +61,11 @@ func NewTaskContext(parent context.Context, db *gorm.DB, fs afero.Fs, album *mod
 type taskCtxKeyType string
 
 const (
-	taskCtxKeyAlbum      taskCtxKeyType = "task_album"
-	taskCtxKeyAlbumCache taskCtxKeyType = "task_album_cache"
-	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
-	taskCtxKeyFilesystem taskCtxKeyType = "task_filesystem"
+	taskCtxKeyAlbum           taskCtxKeyType = "task_album"
+	taskCtxKeyAlbumCache      taskCtxKeyType = "task_album_cache"
+	taskCtxKeyDatabase        taskCtxKeyType = "task_database"
+	taskCtxKeyFileFilesystem  taskCtxKeyType = "task_file_filesystem"
+	taskCtxKeyCacheFilesystem taskCtxKeyType = "task_cache_filesystem"
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
@@ -67,8 +76,12 @@ func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {
 	return c.Context.Value(taskCtxKeyAlbumCache).(*scanner_cache.AlbumScannerCache)
 }
 
-func (c TaskContext) GetFS() afero.Fs {
-	return c.Context.Value(taskCtxKeyFilesystem).(afero.Fs)
+func (c TaskContext) GetFileFS() afero.Fs {
+	return c.Context.Value(taskCtxKeyFileFilesystem).(afero.Fs)
+}
+
+func (c TaskContext) GetCacheFS() afero.Fs {
+	return c.Context.Value(taskCtxKeyCacheFilesystem).(afero.Fs)
 }
 
 func (c TaskContext) GetDB() *gorm.DB {

@@ -13,7 +13,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetMediaType(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs, _ := test_utils.FilesystemTest(t)
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
@@ -56,7 +56,7 @@ func TestGetMediaType(t *testing.T) {
 
 			path := filepath.Join(mediaPath, input)
 
-			got := GetMediaType(fs, path)
+			got := GetMediaType(path)
 			if got != want {
 				t.Errorf("magic.Type(%q) = %v, want: %v", path, got, want)
 			}

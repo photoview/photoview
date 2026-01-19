@@ -11,6 +11,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"gorm.io/gorm"
@@ -57,12 +58,19 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 		return nil, false, err
 	}
 
+	// Download to temporary local path if needed
+	tempPath, err := scanner_utils.DownloadToLocalIfNeeded(fs, mediaPath)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "ensure local media path for media: %s", mediaPath)
+	}
+
 	media := models.Media{
-		Title:    mediaName,
-		Path:     mediaPath,
-		AlbumID:  albumId,
-		Type:     mediaTypeText,
-		DateShot: stat.ModTime(),
+		Title:     mediaName,
+		Path:      mediaPath,
+		LocalPath: tempPath,
+		AlbumID:   albumId,
+		Type:      mediaTypeText,
+		DateShot:  stat.ModTime(),
 	}
 
 	if err := tx.Create(&media).Error; err != nil {
@@ -74,7 +82,7 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
 // Function waits for processing to finish before returning.
-func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, media *models.Media) error {
+func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 	albumCache := scanner_cache.MakeAlbumCache(fs)
 
 	var album models.Album
@@ -82,9 +90,9 @@ func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, media *mo
 		return err
 	}
 
-	mediaData := media_encoding.NewEncodeMediaData(fs, media)
+	mediaData := media_encoding.NewEncodeMediaData(media)
 
-	taskContext := scanner_task.NewTaskContext(ctx, db, fs, &album, albumCache)
+	taskContext := scanner_task.NewTaskContext(ctx, db, fs, cacheFs, &album, albumCache)
 	if err := scanMedia(taskContext, media, &mediaData, 0, 1); err != nil {
 		return errors.Wrap(err, "single media scan")
 	}

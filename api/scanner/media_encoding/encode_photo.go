@@ -10,7 +10,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	"gorm.io/gorm"
@@ -52,8 +51,9 @@ func (d *Dimension) ThumbnailScale() Dimension {
 }
 
 // GetPhotoDimensions returns the dimension of the image `imagePath`.
-func GetPhotoDimensions(fs afero.Fs, imagePath string) (Dimension, error) {
-	w, h, err := executable_worker.Magick.IdentifyDimension(fs, imagePath)
+func GetPhotoDimensions(imagePath string) (Dimension, error) {
+
+	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
@@ -66,8 +66,8 @@ func GetPhotoDimensions(fs afero.Fs, imagePath string) (Dimension, error) {
 
 // EncodeThumbnail encodes a thumbnail of `inputPath`, and store it as `outputPath`.
 // It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
-func EncodeThumbnail(db *gorm.DB, fs afero.Fs, inputPath string, outputPath string) (Dimension, error) {
-	w, h, err := executable_worker.Magick.IdentifyDimension(fs, inputPath)
+func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
+	w, h, err := executable_worker.Magick.IdentifyDimension(inputPath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
@@ -78,11 +78,11 @@ func EncodeThumbnail(db *gorm.DB, fs afero.Fs, inputPath string, outputPath stri
 	}
 	thumbnail := origin.ThumbnailScale()
 
-	if err := executable_worker.Magick.GenerateThumbnail(fs, inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
-	w, h, err = executable_worker.Magick.IdentifyDimension(fs, outputPath)
+	w, h, err = executable_worker.Magick.IdentifyDimension(outputPath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
@@ -103,8 +103,8 @@ type EncodeMediaData struct {
 	_videoMetadata  *ffprobe.ProbeData
 }
 
-func NewEncodeMediaData(fs afero.Fs, media *models.Media) EncodeMediaData {
-	fileType := media_type.GetMediaType(fs, media.Path)
+func NewEncodeMediaData(media *models.Media) EncodeMediaData {
+	fileType := media_type.GetMediaType(media.Path)
 
 	return EncodeMediaData{
 		Media:        media,
@@ -113,12 +113,12 @@ func NewEncodeMediaData(fs afero.Fs, media *models.Media) EncodeMediaData {
 }
 
 // ContentType reads the image to determine its content type
-func (img *EncodeMediaData) ContentType(fs afero.Fs) (media_type.MediaType, error) {
+func (img *EncodeMediaData) ContentType() (media_type.MediaType, error) {
 	if img._contentType != media_type.TypeUnknown {
 		return img._contentType, nil
 	}
 
-	imgType := media_type.GetMediaType(fs, img.Media.Path)
+	imgType := media_type.GetMediaType(img.Media.Path)
 	if imgType == media_type.TypeUnknown {
 		return imgType, fmt.Errorf("unknown type of %q", img.Media.Path)
 	}
@@ -127,8 +127,8 @@ func (img *EncodeMediaData) ContentType(fs afero.Fs) (media_type.MediaType, erro
 	return imgType, nil
 }
 
-func (img *EncodeMediaData) EncodeHighRes(fs afero.Fs, outputPath string) error {
-	contentType, err := img.ContentType(fs)
+func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
+	contentType, err := img.ContentType()
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (img *EncodeMediaData) EncodeHighRes(fs afero.Fs, outputPath string) error 
 			imgPath = *img.CounterpartPath
 		}
 
-		err := executable_worker.Magick.EncodeJpeg(fs, imgPath, outputPath, 70)
+		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
 		if err != nil {
 			return fmt.Errorf("failed to convert RAW photo %q to JPEG: %w", imgPath, err)
 		}
@@ -153,24 +153,14 @@ func (img *EncodeMediaData) EncodeHighRes(fs afero.Fs, outputPath string) error 
 	return nil
 }
 
-func (enc *EncodeMediaData) VideoMetadata(fs afero.Fs) (*ffprobe.ProbeData, error) {
-
+func (enc *EncodeMediaData) VideoMetadata(filePath string) (*ffprobe.ProbeData, error) {
 	if enc._videoMetadata != nil {
 		return enc._videoMetadata, nil
 	}
 
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
-
-	// read file
-	videoFile, err := fs.Open(enc.Media.Path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not read video file (%s)", enc.Media.Title)
-	}
-	defer videoFile.Close()
-
-	// probe file
-	data, err := ffprobe.ProbeReader(ctx, videoFile)
+	data, err := ffprobe.ProbeURL(ctx, filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.Media.Title)
 	}

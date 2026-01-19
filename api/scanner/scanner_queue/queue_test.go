@@ -21,8 +21,8 @@ func makeAlbumWithID(id int) *models.Album {
 	return &album
 }
 
-func makeScannerJob(fs afero.Fs, albumID int) ScannerJob {
-	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, fs, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache(fs)))
+func makeScannerJob(fs afero.Fs, cacheFs afero.Fs, albumID int) ScannerJob {
+	return NewScannerJob(scanner_task.NewTaskContext(context.Background(), nil, fs, cacheFs, makeAlbumWithID(albumID), scanner_cache.MakeAlbumCache(fs)))
 }
 
 func TestScannerQueueAddJob(t *testing.T) {

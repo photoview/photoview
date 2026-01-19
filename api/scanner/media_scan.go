@@ -9,14 +9,14 @@ import (
 )
 
 func scanMedia(ctx scanner_task.TaskContext, media *models.Media, mediaData *media_encoding.EncodeMediaData, mediaIndex int, mediaTotal int) error {
-	fs := ctx.GetFS()
+	cacheFs := ctx.GetCacheFS()
 
 	newCtx, err := scanner_tasks.Tasks.BeforeProcessMedia(ctx, mediaData)
 	if err != nil {
 		return errors.Wrapf(err, "before process media (%s)", media.Path)
 	}
 
-	mediaCachePath, err := media.CachePath(fs)
+	mediaCachePath, err := media.CachePath(cacheFs)
 	if err != nil {
 		return errors.Wrapf(err, "cache directory error (%s)", media.Path)
 	}

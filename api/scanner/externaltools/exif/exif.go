@@ -42,7 +42,7 @@ func Initialize() (func(), error) {
 
 var globalMu sync.Mutex
 
-func Parse(fs afero.Fs, filepath string) (*models.MediaEXIF, error) {
+func Parse(filepath string) (*models.MediaEXIF, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 
@@ -50,7 +50,7 @@ func Parse(fs afero.Fs, filepath string) (*models.MediaEXIF, error) {
 		return nil, fmt.Errorf("no exif parser initialized")
 	}
 
-	exif, failures, err := globalExifParser.ParseExif(fs, filepath)
+	exif, failures, err := globalExifParser.ParseExif(filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func MIMEType(fs afero.Fs, filepath string) (string, error) {
 		return "", fmt.Errorf("no exif parser initialized")
 	}
 
-	mime, err := globalExifParser.ParseMIMEType(fs, filepath)
+	mime, err := globalExifParser.ParseMIMEType(filepath)
 	if err != nil {
 		return "", err
 	}

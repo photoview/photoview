@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterDownloadRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
+func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
 		albumID := mux.Vars(r)["album_id"]
 		mediaPurpose := mux.Vars(r)["media_purpose"]
@@ -80,6 +80,13 @@ func RegisterDownloadRoutes(db *gorm.DB, fs afero.Fs, router *mux.Router) {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
+			}
+
+			var fs afero.Fs
+			if media.Purpose == models.MediaOriginal {
+				fs = fileFs
+			} else {
+				fs = cacheFs
 			}
 
 			fileData, err := fs.Open(filePath)

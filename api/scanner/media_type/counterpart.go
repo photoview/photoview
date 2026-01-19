@@ -10,7 +10,7 @@ import (
 // FindWebCounterpart returns the filename if the file `imagePath` has a counterpart file competible with the browser.
 func FindWebCounterpart(fs afero.Fs, imagePath string) (string, bool) {
 	return findCounterpart(fs, imagePath, func(filename string) bool {
-		mt := GetMediaType(fs, filename)
+		mt := GetMediaType(filename)
 		return mt.IsImage() && mt.IsWebCompatible()
 	})
 }
@@ -18,7 +18,7 @@ func FindWebCounterpart(fs afero.Fs, imagePath string) (string, bool) {
 // FindRawCounterpart returns the filename if the file `imagePath` has a counterpart file which needs to be processed before showing in the browser.
 func FindRawCounterpart(fs afero.Fs, imagePath string) (string, bool) {
 	return findCounterpart(fs, imagePath, func(filename string) bool {
-		mt := GetMediaType(fs, filename)
+		mt := GetMediaType(filename)
 		return mt.IsImage() && !mt.IsWebCompatible()
 	})
 }

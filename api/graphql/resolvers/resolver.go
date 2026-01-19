@@ -10,14 +10,16 @@ import (
 //go:generate go tool github.com/99designs/gqlgen
 
 type Resolver struct {
-	database   *gorm.DB
-	filesystem afero.Fs
+	database *gorm.DB
+	fileFs   afero.Fs
+	cacheFs  afero.Fs
 }
 
-func NewRootResolver(db *gorm.DB, fs afero.Fs) Resolver {
+func NewRootResolver(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs) Resolver {
 	return Resolver{
-		database:   db,
-		filesystem: fs,
+		database: db,
+		fileFs:   fileFs,
+		cacheFs:  cacheFs,
 	}
 }
 
@@ -26,6 +28,10 @@ func (r *Resolver) DB(ctx context.Context) *gorm.DB {
 	return r.database.WithContext(ctx)
 }
 
-func (r *Resolver) FS(ctx context.Context) afero.Fs {
-	return r.filesystem
+func (r *Resolver) FileFS(ctx context.Context) afero.Fs {
+	return r.fileFs
+}
+
+func (r *Resolver) CacheFS(ctx context.Context) afero.Fs {
+	return r.cacheFs
 }

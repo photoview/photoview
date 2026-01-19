@@ -22,6 +22,8 @@ type SidecarTask struct {
 }
 
 func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+	fileFs := ctx.GetFileFS()
+
 	if media.Type != models.MediaTypePhoto || !newMedia {
 		return nil
 	}
@@ -38,9 +40,9 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	var sideCarPath *string = nil
 	var sideCarHash *string = nil
 
-	sideCarPath = scanForSideCarFile(ctx.GetFS(), media.Path)
+	sideCarPath = scanForSideCarFile(fileFs, media.Path)
 	if sideCarPath != nil {
-		sideCarHash = hashSideCarFile(ctx.GetFS(), sideCarPath)
+		sideCarHash = hashSideCarFile(fileFs, sideCarPath)
 	}
 
 	// Add sidecar data to media
@@ -58,9 +60,10 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 }
 
 func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
-	fs := ctx.GetFS()
+	fs := ctx.GetFileFS()
+	cacheFs := ctx.GetCacheFS()
 
-	mediaType, err := mediaData.ContentType(ctx.GetFS())
+	mediaType, err := mediaData.ContentType()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
 	}
@@ -73,10 +76,10 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	sideCarFileHasChanged := false
 	var currentFileHash *string
-	currentSideCarPath := scanForSideCarFile(ctx.GetFS(), photo.Path)
+	currentSideCarPath := scanForSideCarFile(fs, photo.Path)
 
 	if currentSideCarPath != nil {
-		currentFileHash = hashSideCarFile(ctx.GetFS(), currentSideCarPath)
+		currentFileHash = hashSideCarFile(fs, currentSideCarPath)
 		if currentFileHash == nil {
 			return []*models.MediaURL{}, errors.New("sidecar task, hash sidecar file failed")
 		}
@@ -107,36 +110,36 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	// update high res image may be cropped so dimentions and file size can change
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
-	if err := fs.Rename(baseImagePath, tempHighResPath); err != nil {
+	if err := cacheFs.Rename(baseImagePath, tempHighResPath); err != nil {
 		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold high-res image: %s", baseImagePath)
 	}
 
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), ctx.GetFS(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, cacheFs, baseImagePath, highResURL)
 	if err != nil {
-		if restoreErr := fs.Rename(tempHighResPath, baseImagePath); restoreErr != nil {
+		if restoreErr := cacheFs.Rename(tempHighResPath, baseImagePath); restoreErr != nil {
 			log.Printf("ERROR: restoring high-res image failed: %s", restoreErr)
 		}
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
 	}
-	if err := fs.Remove(tempHighResPath); err != nil {
+	if err := cacheFs.Remove(tempHighResPath); err != nil {
 		log.Printf("ERROR: removing temp high-res image failed: %s", err)
 	}
 
 	// update thumbnail image may be cropped so dimentions and file size can change
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
-	if err := fs.Rename(thumbPath, tempThumbPath); err != nil {
+	if err := cacheFs.Rename(thumbPath, tempThumbPath); err != nil {
 		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold thumbnail image: %s", thumbPath)
 	}
-	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), ctx.GetFS(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
+	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, cacheFs, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
 	if err != nil {
-		if restoreErr := fs.Rename(tempThumbPath, thumbPath); restoreErr != nil {
+		if restoreErr := cacheFs.Rename(tempThumbPath, thumbPath); restoreErr != nil {
 			log.Printf("ERROR: restoring thumbnail image failed: %s", restoreErr)
 		}
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
 	}
-	if err := fs.Remove(tempThumbPath); err != nil {
-		log.Printf("ERROR: removing temp high-res image failed: %s", err)
+	if err := cacheFs.Remove(tempThumbPath); err != nil {
+		log.Printf("ERROR: removing temp thumbnail image failed: %s", err)
 	}
 
 	photo.SideCarHash = currentFileHash

@@ -7,7 +7,6 @@ import (
 
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/utils"
-	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
@@ -72,130 +71,56 @@ func (cli *FfmpegCli) IsInstalled() bool {
 	return cli.err == nil
 }
 
-func (cli *FfmpegCli) EncodeMp4(fs afero.Fs, inputPath string, outputPath string) error {
+func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
 	if cli.err != nil {
 		return fmt.Errorf("encoding video %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
-	// Open the input file using afero.Fs (supports S3 and other filesystems)
-	inputFile, err := fs.Open(inputPath)
-	if err != nil {
-		return fmt.Errorf("opening input file %q error: %w", inputPath, err)
-	}
-	defer inputFile.Close()
-
-	// Create the output file using afero.Fs (supports S3 and other filesystems)
-	outputFile, err := fs.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("creating output file %q error: %w", outputPath, err)
-	}
-	defer outputFile.Close()
-
 	args := []string{
-		"-i", "pipe:0", // Read from stdin
+		"-i",
+		inputPath,
 		"-vcodec", cli.videoCodec,
 		"-acodec", "aac",
 		"-vf", "scale='min(1080,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
-		"-movflags", "frag_keyframe+empty_moov+default_base_moof", // Fragmented MP4 for non-seekable output
-		"-f", "mp4", // Specify format when writing to stdout
-		"pipe:1", // Write to stdout
+		"-movflags", "+faststart+use_metadata_tags",
+		outputPath,
 	}
 
 	cmd := exec.Command(cli.path, args...)
-	cmd.Stdin = inputFile   // Pipe the file content to stdin
-	cmd.Stdout = outputFile // Pipe stdout to output file
 
-	// Capture stderr for better error messages
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("creating stderr pipe error: %w", err)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("encoding video with %q %v error: %w", cli.path, args, err)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("starting video encoding with %q %v error: %w", cli.path, args, err)
-	}
-
-	// Read stderr
-	stderrOutput := make([]byte, 0, 4096)
-	buf := make([]byte, 1024)
-	for {
-		n, readErr := stderr.Read(buf)
-		if n > 0 {
-			stderrOutput = append(stderrOutput, buf[:n]...)
-		}
-		if readErr != nil {
-			break
-		}
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("encoding video with %q %v error: %w, stderr: %s", cli.path, args, err, string(stderrOutput))
-	}
+	fmt.Printf("Encoded video %q to %q\n", inputPath, outputPath)
 
 	return nil
 }
 
-func (cli *FfmpegCli) EncodeVideoThumbnail(fs afero.Fs, inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
+func (cli *FfmpegCli) EncodeVideoThumbnail(inputPath string, outputPath string, probeData *ffprobe.ProbeData) error {
 	if cli.err != nil {
 		return fmt.Errorf("encoding video thumbnail %q error: ffmpeg: %w", inputPath, cli.err)
 	}
 
-	// Open the input file using afero.Fs (supports S3 and other filesystems)
-	inputFile, err := fs.Open(inputPath)
-	if err != nil {
-		return fmt.Errorf("opening input file %q error: %w", inputPath, err)
-	}
-	defer inputFile.Close()
-
-	// Create the output file using afero.Fs (supports S3 and other filesystems)
-	outputFile, err := fs.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("creating output file %q error: %w", outputPath, err)
-	}
-	defer outputFile.Close()
-
 	thumbnailOffsetSeconds := fmt.Sprintf("%.f", probeData.Format.DurationSeconds*0.25)
 
 	args := []string{
-		"-i", "pipe:0", // Read from stdin
-		"-ss", thumbnailOffsetSeconds, // grab frame at time offset (after -i for streaming)
+		"-ss", thumbnailOffsetSeconds, // grab frame at time offset
+		"-i",
+		inputPath,
 		"-vframes", "1", // output one frame
 		"-an", // disable audio
 		"-vf", "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
-		"-f", "image2", // Specify format when writing to stdout
-		"pipe:1", // Write to stdout
+		outputPath,
 	}
 
 	cmd := exec.Command(cli.path, args...)
-	cmd.Stdin = inputFile   // Pipe the file content to stdin
-	cmd.Stdout = outputFile // Pipe stdout to output file
 
-	// Capture stderr for better error messages
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("creating stderr pipe error: %w", err)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", cli.path, args, err)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("starting video thumbnail encoding with %q %v error: %w", cli.path, args, err)
-	}
-
-	// Read stderr
-	stderrOutput := make([]byte, 0, 4096)
-	buf := make([]byte, 1024)
-	for {
-		n, readErr := stderr.Read(buf)
-		if n > 0 {
-			stderrOutput = append(stderrOutput, buf[:n]...)
-		}
-		if readErr != nil {
-			break
-		}
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("encoding video thumbnail with %q %v error: %w, stderr: %s", cli.path, args, err, string(stderrOutput))
-	}
+	fmt.Printf("Encoded video thumbnail %q to %q\n", inputPath, outputPath)
 
 	return nil
 }

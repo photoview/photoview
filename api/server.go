@@ -51,10 +51,13 @@ func main() {
 
 	devMode := utils.DevelopmentMode()
 
-	fs, err := setupFileSystem()
+	filesFs, err := setupFileSystem()
 	if err != nil {
 		log.Panicf("Could not setup file system: %s\n", err)
 	}
+
+	// We use local fs for cache
+	cacheFs := afero.NewOsFs()
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -72,7 +75,7 @@ func main() {
 	}
 	defer exifCleanup()
 
-	if err := scanner_queue.InitializeScannerQueue(db, fs); err != nil {
+	if err := scanner_queue.InitializeScannerQueue(db, filesFs, cacheFs); err != nil {
 		log.Panicf("Could not initialize scanner queue: %s\n", err)
 	}
 
@@ -102,16 +105,16 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db, fs)))
+	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db, filesFs, cacheFs)))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
-	routes.RegisterPhotoRoutes(db, fs, photoRouter)
+	routes.RegisterPhotoRoutes(db, filesFs, cacheFs, photoRouter)
 
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
-	routes.RegisterVideoRoutes(db, fs, videoRouter)
+	routes.RegisterVideoRoutes(db, filesFs, cacheFs, videoRouter)
 
 	downloadsRouter := endpointRouter.PathPrefix("/download").Subrouter()
-	routes.RegisterDownloadRoutes(db, fs, downloadsRouter)
+	routes.RegisterDownloadRoutes(db, filesFs, cacheFs, downloadsRouter)
 
 	shouldServeUI := utils.ShouldServeUI()
 
@@ -214,7 +217,7 @@ func setupFileSystem() (afero.Fs, error) {
 				o.BaseEndpoint = &endpoint
 			}
 		})
-		return s3.NewFsFromClient(bucket, client), nil
+		return afero.NewCacheOnReadFs(s3.NewFsFromClient(bucket, client), afero.NewMemMapFs(), 5*time.Minute), nil
 	}
 
 	return afero.NewOsFs(), nil

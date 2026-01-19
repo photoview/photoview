@@ -89,6 +89,8 @@ func ValidRootPath(fs afero.Fs, rootPath string) bool {
 }
 
 func ScanAlbum(ctx scanner_task.TaskContext) error {
+	fs := ctx.GetFileFS()
+
 	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
@@ -103,7 +105,13 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
-		mediaData := media_encoding.NewEncodeMediaData(ctx.GetFS(), media)
+		// Download to temporary local path if needed
+		media.LocalPath, err = scanner_utils.DownloadToLocalIfNeeded(fs, media.Path)
+		if err != nil {
+			return errors.Wrapf(err, "ensure local media path for media: %s", media.Path)
+		}
+
+		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
 			scanner_utils.ScannerError(ctx, "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
@@ -118,7 +126,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
-	fs := ctx.GetFS()
+	fs := ctx.GetFileFS()
 
 	albumMedia := make([]*models.Media, 0)
 
@@ -137,7 +145,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			isDirSymlink = false
 		}
 
-		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
+		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(fs, mediaPath) {
 			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
 			if err != nil {
 				return nil, err
@@ -170,16 +178,4 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	}
 
 	return albumMedia, nil
-}
-
-func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
-	fs := ctx.GetFS()
-
-	// Make sure media cache directory exists
-	mediaCachePath, err := mediaData.Media.CachePath(fs)
-	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
-	}
-
-	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
 }

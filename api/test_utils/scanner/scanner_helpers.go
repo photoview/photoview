@@ -11,14 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func RunScannerOnUser(t *testing.T, db *gorm.DB, fs afero.Fs, user *models.User) {
+func RunScannerOnUser(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, user *models.User) {
 	start := time.Now()
 	defer func() {
 		dur := time.Now().Sub(start)
 		t.Logf("RunScannerOnUser(user(id:%d)) took %s.", user.ID, dur)
 	}()
 
-	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db, fs)) {
+	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db, fs, cacheFs)) {
 		return
 	}
 
@@ -30,14 +30,14 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, fs afero.Fs, user *models.User)
 	scanner_queue.CloseScannerQueue()
 }
 
-func RunScannerAll(t *testing.T, db *gorm.DB, fs afero.Fs) {
+func RunScannerAll(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 	start := time.Now()
 	defer func() {
 		dur := time.Now().Sub(start)
 		t.Logf("RunScannerAll() took %s.", dur)
 	}()
 
-	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db, fs)) {
+	if !assert.NoError(t, scanner_queue.InitializeScannerQueue(db, fs, cacheFs)) {
 		return
 	}
 

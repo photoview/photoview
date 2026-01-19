@@ -24,7 +24,13 @@ type ProcessVideoTask struct {
 }
 
 func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
-	fs := ctx.GetFS()
+	fs := ctx.GetFileFS()
+	cacheFs := ctx.GetCacheFS()
+
+	// Assert that cacheFs is a local filesystem
+	if _, ok := cacheFs.(*afero.OsFs); !ok {
+		return []*models.MediaURL{}, errors.New("cacheFs is not a local filesystem")
+	}
 
 	if mediaData.Media.Type != models.MediaTypeVideo {
 		return []*models.MediaURL{}, nil
@@ -52,21 +58,20 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error processing video thumbnail")
 	}
 
-	videoType, err := mediaData.ContentType(fs)
+	videoType, err := mediaData.ContentType()
 	if err != nil {
 		return []*models.MediaURL{}, fmt.Errorf("getting video content type error: %w", err)
 	}
 
 	if videoOriginalURL == nil && videoType.IsWebCompatible() {
-		origVideoPath := video.Path
 		videoMediaName := generateUniqueMediaName(video.Path)
 
-		webMetadata, err := ReadVideoStreamMetadata(fs, origVideoPath)
+		webMetadata, err := ReadVideoStreamMetadata(video.LocalPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for original video (%s)", video.Title)
 		}
 
-		fileStats, err := fs.Stat(origVideoPath)
+		fileStats, err := fs.Stat(video.LocalPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of original video")
 		}
@@ -96,17 +101,17 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		webVideoPath := path.Join(mediaCachePath, webVideoName)
 
-		err = executable_worker.Ffmpeg.EncodeMp4(fs, video.Path, webVideoPath)
+		err = executable_worker.Ffmpeg.EncodeMp4(video.LocalPath, webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
 		}
 
-		webMetadata, err := ReadVideoStreamMetadata(fs, webVideoPath)
+		webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
 		}
 
-		fileStats, err := fs.Stat(webVideoPath)
+		fileStats, err := cacheFs.Stat(webVideoPath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
 		}
@@ -128,7 +133,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		updatedURLs = append(updatedURLs, &mediaURL)
 	}
 
-	probeData, err := mediaData.VideoMetadata(fs)
+	probeData, err := mediaData.VideoMetadata(video.LocalPath)
 	if err != nil {
 		return []*models.MediaURL{}, err
 	}
@@ -141,17 +146,17 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		thumbImagePath := path.Join(mediaCachePath, videoThumbName)
 
-		err = executable_worker.Ffmpeg.EncodeVideoThumbnail(fs, video.Path, thumbImagePath, probeData)
+		err = executable_worker.Ffmpeg.EncodeVideoThumbnail(video.LocalPath, thumbImagePath, probeData)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 		}
 
-		thumbDimensions, err := media_encoding.GetPhotoDimensions(fs, thumbImagePath)
+		thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 		}
 
-		fileStats, err := fs.Stat(thumbImagePath)
+		fileStats, err := cacheFs.Stat(thumbImagePath)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
 		}
@@ -175,21 +180,21 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		// Verify that video thumbnail still exists in cache
 		thumbImagePath := path.Join(mediaCachePath, videoThumbnailURL.MediaName)
 
-		if _, err := fs.Stat(thumbImagePath); os.IsNotExist(err) {
+		if _, err := cacheFs.Stat(thumbImagePath); os.IsNotExist(err) {
 			log.Info(ctx, "Video thumbnail found in database but not in cache, re-encoding video thumbnail to cache", "video", videoThumbnailURL.MediaName)
 			updatedURLs = append(updatedURLs, videoThumbnailURL)
 
-			err = executable_worker.Ffmpeg.EncodeVideoThumbnail(fs, video.Path, thumbImagePath, probeData)
+			err = executable_worker.Ffmpeg.EncodeVideoThumbnail(video.LocalPath, thumbImagePath, probeData)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrapf(err, "failed to generate thumbnail for video (%s)", video.Title)
 			}
 
-			thumbDimensions, err := media_encoding.GetPhotoDimensions(fs, thumbImagePath)
+			thumbDimensions, err := media_encoding.GetPhotoDimensions(thumbImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "get dimensions of video thumbnail image")
 			}
 
-			fileStats, err := fs.Stat(thumbImagePath)
+			fileStats, err := cacheFs.Stat(thumbImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of video thumbnail")
 			}
@@ -207,33 +212,27 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	return updatedURLs, nil
 }
 
-func ReadVideoMetadata(fs afero.Fs, videoPath string) (*ffprobe.ProbeData, error) {
+func ReadVideoMetadata(localVideoPath string) (*ffprobe.ProbeData, error) {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 
-	videoFile, err := fs.Open(videoPath)
+	data, err := ffprobe.ProbeURL(ctx, localVideoPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not read video file (%s)", path.Base(videoPath))
-	}
-	defer videoFile.Close()
-
-	data, err := ffprobe.ProbeReader(ctx, videoFile)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not read video metadata (%s)", path.Base(videoPath))
+		return nil, errors.Wrapf(err, "could not read video metadata (%s)", path.Base(localVideoPath))
 	}
 
 	return data, nil
 }
 
-func ReadVideoStreamMetadata(fs afero.Fs, videoPath string) (*ffprobe.Stream, error) {
-	data, err := ReadVideoMetadata(fs, videoPath)
+func ReadVideoStreamMetadata(localVideoPath string) (*ffprobe.Stream, error) {
+	data, err := ReadVideoMetadata(localVideoPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "read video stream metadata")
 	}
 
 	stream := data.FirstVideoStream()
 	if stream == nil {
-		return nil, fmt.Errorf("could not get stream from file metadata (%s)", path.Base(videoPath))
+		return nil, fmt.Errorf("could not get stream from file metadata (%s)", path.Base(localVideoPath))
 	}
 
 	return stream, nil

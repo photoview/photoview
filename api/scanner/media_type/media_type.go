@@ -1,26 +1,39 @@
 package media_type
 
 import (
+	"path/filepath"
 	"strings"
 	"unique"
-
-	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/externaltools/exif"
-	"github.com/spf13/afero"
 )
 
 type MediaType unique.Handle[string]
 
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
-func GetMediaType(fs afero.Fs, f string) MediaType {
-	mime, err := exif.MIMEType(fs, f)
-	if err != nil {
-		log.Warn(nil, "GetMediaType() error.", "error", err, "file", f)
+func GetMediaType(f string) MediaType {
+	ext := strings.ToLower(filepath.Ext(f))
+	switch ext {
+	case ".jpg", ".jpeg":
+		return TypeJPEG
+	case ".png":
+		return TypePNG
+	case ".webp":
+		return TypeWebP
+	case ".bmp":
+		return TypeBMP
+	case ".gif":
+		return TypeGIF
+	case ".mp4":
+		return TypeMP4
+	case ".mpeg", ".mpg":
+		return TypeMPEG
+	case ".ogg", ".ogv":
+		return TypeOGG
+	case ".webm":
+		return TypeWEBM
+	default:
 		return TypeUnknown
 	}
-
-	return mediaType(mime)
 }
 
 func mediaType(mime string) MediaType {
