@@ -53,6 +53,8 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		}
 	}
 
+	fmt.Printf("Generated high-res: %s (%dx%d)\n", mediaURL.Media.Path, mediaURL.Width, mediaURL.Height)
+
 	return mediaURL, nil
 }
 
@@ -94,7 +96,7 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, cacheFs afero.F
 		}
 	}
 
-	fmt.Printf("Generated high-res: %s (%dx%d)\n", thumbOutputPath, thumbSize.Width, thumbSize.Height)
+	fmt.Printf("Generated thumbnails: %s (%dx%d)\n", thumbOutputPath, thumbSize.Width, thumbSize.Height)
 
 	return mediaURL, nil
 }

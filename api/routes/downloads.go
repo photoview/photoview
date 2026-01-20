@@ -82,10 +82,8 @@ func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, rout
 				return
 			}
 
-			var fs afero.Fs
-			if media.Purpose == models.MediaOriginal {
-				fs = fileFs
-			} else {
+			fs := fileFs
+			if media.Purpose != models.MediaOriginal {
 				fs = cacheFs
 			}
 
@@ -96,17 +94,11 @@ func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, rout
 				w.Write([]byte(internalServerError))
 				return
 			}
+			defer fileData.Close()
 
 			_, err = io.Copy(zipFile, fileData)
 			if err != nil {
 				log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
-			}
-
-			if err := fileData.Close(); err != nil {
-				log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return

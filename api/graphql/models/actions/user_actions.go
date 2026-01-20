@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func DeleteUser(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, userID int) (*models.User, error) {
+func DeleteUser(db *gorm.DB, _ afero.Fs, cacheFs afero.Fs, userID int) (*models.User, error) {
 
 	// make sure the last admin user is not deleted
 	var adminUsers []*models.User

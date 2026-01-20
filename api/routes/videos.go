@@ -81,7 +81,7 @@ func handleVideoRequest(
 		return
 	}
 
-	if _, err := fs.Stat(cachedPath); err != nil {
+	if _, err := cacheFs.Stat(cachedPath); err != nil {
 		if !os.IsNotExist(err) {
 			log.Error(r.Context(), "cached video access error",
 				"error", err,

@@ -33,7 +33,7 @@ func cleanup(tx *gorm.DB, albumID int, childAlbumIDs []int) ([]int, error) {
 	return deletedAlbumIDs, nil
 }
 
-func clearCacheAndReloadFaces(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, deletedAlbumIDs []int) error {
+func clearCacheAndReloadFaces(db *gorm.DB, _ afero.Fs, cacheFs afero.Fs, deletedAlbumIDs []int) error {
 	if deletedAlbumIDs != nil {
 		// Delete albums from cache
 		for _, id := range deletedAlbumIDs {

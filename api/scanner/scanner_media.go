@@ -90,6 +90,8 @@ func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs a
 		return err
 	}
 
+	// FIXME: Download to local path ?
+
 	mediaData := media_encoding.NewEncodeMediaData(media)
 
 	taskContext := scanner_task.NewTaskContext(ctx, db, fs, cacheFs, &album, albumCache)
