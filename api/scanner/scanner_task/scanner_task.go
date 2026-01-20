@@ -25,7 +25,7 @@ type ScannerTask interface {
 	// MediaFound will run for each media file found on the filesystem.
 	// It will run even when the media is already present in the database.
 	// If the returned skip value is true, the media will be skipped and further steps will not be executed for the given file.
-	MediaFound(ctx TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error)
+	MediaFound(ctx TaskContext, fileInfo fs.FileInfo, mediaPath string, localMediaPath string) (skip bool, err error)
 
 	// AfterMediaFound will run each media file after is has been saved to the database, but not processed yet.
 	// It will run even when the media is already present in the database, in that case `newMedia` will be true.

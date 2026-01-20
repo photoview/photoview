@@ -19,7 +19,7 @@ import (
 
 var ProcessSingleMediaFunc = ProcessSingleMedia
 
-func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, localMediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if media already exists
@@ -40,7 +40,7 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 
 	log.Printf("Scanning media: %s\n", mediaPath)
 
-	mediaType := cache.GetMediaType(mediaPath)
+	mediaType := cache.GetMediaType(localMediaPath)
 	if mediaType == media_type.TypeUnknown {
 		return nil, false, fmt.Errorf("could not determine if media %s of type %s was photo or video", mediaPath, mediaType)
 	}
@@ -53,21 +53,21 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 		mediaTypeText = models.MediaTypePhoto
 	}
 
+	// Download to temporary local path if needed
+	localMediaPath, err := scanner_utils.DownloadToLocalIfNeeded(fs, mediaPath)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "could not download local media path: %s", mediaPath)
+	}
+
 	stat, err := fs.Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
 	}
 
-	// Download to temporary local path if needed
-	tempPath, err := scanner_utils.DownloadToLocalIfNeeded(fs, mediaPath)
-	if err != nil {
-		return nil, false, errors.Wrapf(err, "ensure local media path for media: %s", mediaPath)
-	}
-
 	media := models.Media{
 		Title:     mediaName,
 		Path:      mediaPath,
-		LocalPath: tempPath,
+		LocalPath: localMediaPath,
 		AlbumID:   albumId,
 		Type:      mediaTypeText,
 		DateShot:  stat.ModTime(),

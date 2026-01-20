@@ -14,11 +14,11 @@ type CounterpartFilesTask struct {
 	scanner_task.ScannerTaskBase
 }
 
-func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
+func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string, localMediaPath string) (skip bool, err error) {
 	fs := ctx.GetFileFS()
 
-	fileType := media_type.GetMediaType(mediaPath)
-
+	// FIXME : ensure mediaPath is local path
+	fileType := media_type.GetMediaType(localMediaPath)
 	if !fileType.IsSupported() {
 		return true, nil
 	}
@@ -45,7 +45,7 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
 	fs := ctx.GetFileFS()
 
-	mediaType := ctx.GetCache().GetMediaType(mediaData.Media.Path)
+	mediaType := ctx.GetCache().GetMediaType(mediaData.Media.LocalPath)
 	if mediaType == media_type.TypeUnknown {
 		return ctx, fmt.Errorf("scan for counterpart file %s failed: media type is %s", mediaData.Media.Path, mediaType)
 	}

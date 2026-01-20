@@ -21,7 +21,7 @@ var allTasks []scanner_task.ScannerTask = []scanner_task.ScannerTask{
 	processing_tasks.ProcessVideoTask{},
 	FaceDetectionTask{},
 	BlurhashTask{},
-	// ExifTask{},
+	ExifTask{},
 	VideoMetadataTask{},
 	cleanup_tasks.MediaCleanupTask{},
 }
@@ -68,7 +68,7 @@ func (t scannerTasks) BeforeScanAlbum(ctx scanner_task.TaskContext) (scanner_tas
 	return ctx, nil
 }
 
-func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (bool, error) {
+func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string, localMediaPath string) (bool, error) {
 	for _, task := range allTasks {
 		select {
 		case <-ctx.Done():
@@ -76,7 +76,7 @@ func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileI
 		default:
 		}
 
-		skip, err := task.MediaFound(ctx, fileInfo, mediaPath)
+		skip, err := task.MediaFound(ctx, fileInfo, mediaPath, localMediaPath)
 
 		if err != nil {
 			return false, err

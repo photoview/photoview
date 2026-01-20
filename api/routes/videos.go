@@ -110,7 +110,7 @@ func handleVideoRequest(
 			return
 		}
 
-		if _, err := fs.Stat(cachedPath); err != nil {
+		if _, err := cacheFs.Stat(cachedPath); err != nil {
 			log.Error(r.Context(), "video not found in cache after reprocessing",
 				"error", err,
 				"media ID", media.ID,

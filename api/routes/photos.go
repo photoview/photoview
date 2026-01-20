@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"io"
 	"net/http"
 	"os"
 
@@ -43,7 +42,7 @@ func RegisterPhotoRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router 
 			return
 		}
 
-		cachedPath, err := mediaURL.CachedPath()
+		filePath, err := mediaURL.CachedPath()
 		if err != nil {
 			log.Error(r.Context(), "error getting cached path for media URL", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -51,28 +50,26 @@ func RegisterPhotoRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router 
 			return
 		}
 
-		var fs afero.Fs
-		if mediaURL.Purpose == models.MediaOriginal {
-			fs = fileFs
-		} else {
+		var fs afero.Fs = fileFs
+		if mediaURL.Purpose != models.MediaOriginal {
 			fs = cacheFs
 		}
 
-		stat, err := fs.Stat(cachedPath)
+		stat, err := fs.Stat(filePath)
 		if os.IsNotExist(err) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
 			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fs, cacheFs, media); err != nil {
 				log.Error(r.Context(), "processing image not found in cache",
-					"media_cache_path", cachedPath,
+					"media_cache_path", filePath,
 					"error", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
 			}
 
-			if stat, err = fs.Stat(cachedPath); err != nil {
+			if stat, err = fs.Stat(filePath); err != nil {
 				log.Error(r.Context(), "after reprocessing image not found in cache",
-					"media_cache_path", cachedPath,
+					"media_cache_path", filePath,
 					"error", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
@@ -86,21 +83,16 @@ func RegisterPhotoRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router 
 			w.Header().Set("Content-Type", mediaURL.ContentType)
 		}
 
-		file, err := fs.Open(cachedPath)
+		file, err := fs.Open(filePath)
 		if err != nil {
 			log.Error(r.Context(), "error opening cached media",
-				"media_cache_path", cachedPath,
+				"media_cache_path", filePath,
 				"error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(internalServerError))
 			return
 		}
 		defer file.Close()
-
-		if seeker, ok := file.(io.ReadSeeker); ok {
-			http.ServeContent(w, r, stat.Name(), stat.ModTime(), seeker)
-			return
-		}
 
 		http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)
 	})

@@ -18,7 +18,7 @@ func (t ScannerTaskBase) AfterScanAlbum(ctx TaskContext, changedMedia []*models.
 	return nil
 }
 
-func (t ScannerTaskBase) MediaFound(ctx TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
+func (t ScannerTaskBase) MediaFound(ctx TaskContext, fileInfo fs.FileInfo, mediaPath string, localMediaPath string) (skip bool, err error) {
 	return false, nil
 }
 

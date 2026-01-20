@@ -20,7 +20,7 @@ type Media struct {
 	PathHash string `gorm:"not null;unique"`
 	// LocalPath is only used for temporary files that are not stored in the main media storage
 	// It's a local filesystem path copy of the media file for faster access and external tool processing
-	LocalPath       string
+	LocalPath       string         `gorm:"-"`
 	AlbumID         int            `gorm:"not null;index"`
 	Album           Album          `gorm:"constraint:OnDelete:CASCADE;"`
 	ExifID          *int           `gorm:"index"`

@@ -1,6 +1,7 @@
 package media_type
 
 import (
+	"mime"
 	"path/filepath"
 	"strings"
 	"unique"
@@ -11,29 +12,7 @@ type MediaType unique.Handle[string]
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
 func GetMediaType(f string) MediaType {
-	ext := strings.ToLower(filepath.Ext(f))
-	switch ext {
-	case ".jpg", ".jpeg":
-		return TypeJPEG
-	case ".png":
-		return TypePNG
-	case ".webp":
-		return TypeWebP
-	case ".bmp":
-		return TypeBMP
-	case ".gif":
-		return TypeGIF
-	case ".mp4":
-		return TypeMP4
-	case ".mpeg", ".mpg":
-		return TypeMPEG
-	case ".ogg", ".ogv":
-		return TypeOGG
-	case ".webm":
-		return TypeWEBM
-	default:
-		return TypeUnknown
-	}
+	return mediaType(mime.TypeByExtension(strings.ToLower(filepath.Ext(f))))
 }
 
 func mediaType(mime string) MediaType {
@@ -53,11 +32,23 @@ var (
 	TypeBMP  = mediaType("image/bmp")
 	TypeGIF  = mediaType("image/gif")
 
+	// Non-web image formats
+	TypeHEIF    = mediaType("image/heic")
+	TypeJPG2000 = mediaType("image/jp2")
+	TypeTIFF    = mediaType("image/tiff")
+	TypeCR3     = mediaType("image/x-canon-cr3")
+
 	// Web Video formats
 	TypeMP4  = mediaType("video/mp4")
 	TypeMPEG = mediaType("video/mpeg")
 	TypeOGG  = mediaType("video/ogg")
 	TypeWEBM = mediaType("video/webm")
+
+	// Non-web video formats
+	TypeMOV = mediaType("video/quicktime")
+	TypeAVI = mediaType("video/x-msvideo")
+	TypeMKV = mediaType("video/x-matroska")
+	TypeWMV = mediaType("video/x-ms-wmv")
 )
 
 var webImageMimetypes = arrayToSet([]MediaType{

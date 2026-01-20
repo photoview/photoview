@@ -104,7 +104,7 @@ type EncodeMediaData struct {
 }
 
 func NewEncodeMediaData(media *models.Media) EncodeMediaData {
-	fileType := media_type.GetMediaType(media.Path)
+	fileType := media_type.GetMediaType(media.LocalPath)
 
 	return EncodeMediaData{
 		Media:        media,
@@ -118,7 +118,7 @@ func (img *EncodeMediaData) ContentType() (media_type.MediaType, error) {
 		return img._contentType, nil
 	}
 
-	imgType := media_type.GetMediaType(img.Media.Path)
+	imgType := media_type.GetMediaType(img.Media.LocalPath)
 	if imgType == media_type.TypeUnknown {
 		return imgType, fmt.Errorf("unknown type of %q", img.Media.Path)
 	}

@@ -1,14 +1,17 @@
 package scanner_utils
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/afero"
 )
 
-func fileExistsLocally(fs afero.Fs, testPath string) bool {
+func fileExistsLocally(testPath string) bool {
 	_, err := os.Stat(testPath)
 
 	if os.IsNotExist(err) {
@@ -23,7 +26,10 @@ func fileExistsLocally(fs afero.Fs, testPath string) bool {
 
 func downloadToTempLocalPath(fs afero.Fs, mediaPath string) (string, error) {
 	// Create a temporary file
-	tempFile, err := os.CreateTemp("", "photoview_media_*")
+	baseFilePath := filepath.Base(mediaPath)
+	fileName := strings.TrimSuffix(baseFilePath, filepath.Ext(mediaPath))
+	fileExt := strings.TrimPrefix(filepath.Ext(mediaPath), ".")
+	tempFile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("%s_*.%s", fileName, fileExt))
 	if err != nil {
 		return "", err
 	}

@@ -43,10 +43,12 @@ func (p *ExifParser) loadMetaData(mediaPath string) (*exiftool.FileMetadata, err
 	if l := len(fileInfos); l != 1 {
 		return nil, fmt.Errorf("expected 1 metadata entry, got %d", l)
 	}
+
 	fileInfo := fileInfos[0]
 	if err := fileInfo.Err; err != nil {
 		return nil, err
 	}
+
 	return &fileInfo, nil
 }
 

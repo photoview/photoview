@@ -6,7 +6,6 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/spf13/afero"
 )
 
 var globalExifParser *ExifParser
@@ -62,7 +61,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	return exif, nil
 }
 
-func MIMEType(fs afero.Fs, filepath string) (string, error) {
+func MIMEType(filepath string) (string, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 

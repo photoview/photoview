@@ -108,7 +108,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		// Download to temporary local path if needed
 		media.LocalPath, err = scanner_utils.DownloadToLocalIfNeeded(fs, media.Path)
 		if err != nil {
-			return errors.Wrapf(err, "ensure local media path for media: %s", media.Path)
+			return errors.Wrapf(err, "could not download local media path: %s", media.Path)
 		}
 
 		mediaData := media_encoding.NewEncodeMediaData(media)
@@ -145,8 +145,10 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			isDirSymlink = false
 		}
 
-		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(fs, mediaPath) {
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
+		// FIXME: should we download to local path here?
+
+		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath, mediaPath)
 			if err != nil {
 				return nil, err
 			}
@@ -155,7 +157,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			}
 
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
