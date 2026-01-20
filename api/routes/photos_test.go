@@ -23,7 +23,7 @@ import (
 
 func TestPhotoRoutes(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
-	fs := test_utils.FilesystemTest(t)
+	fs, cacheFs := test_utils.FilesystemTest(t)
 
 	user, err := models.RegisterUser(db, "testuser", nil, false)
 	assert.NoError(t, err)
@@ -57,7 +57,7 @@ func TestPhotoRoutes(t *testing.T) {
 	defer utils.ConfigureTestCache(orig)
 
 	router := mux.NewRouter()
-	RegisterPhotoRoutes(db, fs, router)
+	RegisterPhotoRoutes(db, fs, cacheFs, router)
 
 	// -- Test cases --
 

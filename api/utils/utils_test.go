@@ -1,12 +1,12 @@
 package utils_test
 
 import (
-	"os"
 	"path"
 	"testing"
 
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 )
 
 func TestMain(m *testing.M) {
@@ -14,14 +14,19 @@ func TestMain(m *testing.M) {
 }
 
 func TestIsDirSymlink(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs, _ := test_utils.FilesystemTest(t)
+
+	symlinker, ok := fs.(afero.Symlinker)
+	if !ok {
+		t.Fatalf("filesystem does not support symlinks")
+	}
 
 	// Prepare a temporary directory for testing purposes
-	dir, err := os.MkdirTemp("", "testing")
+	dir, err := afero.TempDir(fs, "", "testing")
 	if err != nil {
 		t.Fatalf("unable to create temp directory for testing")
 	}
-	defer os.RemoveAll(dir)
+	defer fs.RemoveAll(dir)
 
 	// Create regular file
 	_, err = fs.Create(path.Join(dir, "regular_file"))
@@ -36,13 +41,13 @@ func TestIsDirSymlink(t *testing.T) {
 	}
 
 	// Create symlink to regular file
-	err = os.Symlink(path.Join(dir, "regular_file"), path.Join(dir, "file_link"))
+	err = symlinker.SymlinkIfPossible(path.Join(dir, "regular_file"), path.Join(dir, "file_link"))
 	if err != nil {
 		t.Fatalf("unable to create file link for testing")
 	}
 
 	// Create symlink to directory
-	err = os.Symlink(path.Join(dir, "directory"), path.Join(dir, "dir_link"))
+	err = symlinker.SymlinkIfPossible(path.Join(dir, "directory"), path.Join(dir, "dir_link"))
 	if err != nil {
 		t.Fatalf("unable to create dir link for testing")
 	}

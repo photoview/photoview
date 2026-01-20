@@ -13,7 +13,7 @@ const testDataPath = "./test_media/library"
 
 func TestNewRootPath(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
-	fs := test_utils.FilesystemTest(t)
+	fs, _ := test_utils.FilesystemTest(t)
 
 	user := models.User{
 		Username: "user1",

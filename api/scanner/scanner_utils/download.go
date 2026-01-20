@@ -53,7 +53,7 @@ func downloadToTempLocalPath(fs afero.Fs, mediaPath string) (string, error) {
 
 func DownloadToLocalIfNeeded(fs afero.Fs, mediaPath string) (string, error) {
 	// Check if the file is already local
-	if fileExistsLocally(fs, mediaPath) {
+	if fileExistsLocally(mediaPath) {
 		return mediaPath, nil
 	}
 

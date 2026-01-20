@@ -27,10 +27,11 @@ func makeScannerJob(fs afero.Fs, cacheFs afero.Fs, albumID int) ScannerJob {
 
 func TestScannerQueueAddJob(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	cacheFs := afero.NewOsFs()
 
 	scannerJobs := []ScannerJob{
-		makeScannerJob(fs, 100),
-		makeScannerJob(fs, 20),
+		makeScannerJob(fs, cacheFs, 100),
+		makeScannerJob(fs, cacheFs, 20),
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -41,7 +42,7 @@ func TestScannerQueueAddJob(t *testing.T) {
 	}
 
 	t.Run("add new job to scanner queue", func(t *testing.T) {
-		newJob := makeScannerJob(fs, 42)
+		newJob := makeScannerJob(fs, cacheFs, 42)
 
 		startingJobs := len(mockScannerQueue.up_next)
 
@@ -61,7 +62,7 @@ func TestScannerQueueAddJob(t *testing.T) {
 	t.Run("add existing job to scanner queue", func(t *testing.T) {
 		startingJobs := len(mockScannerQueue.up_next)
 
-		job := makeScannerJob(fs, 20)
+		job := makeScannerJob(fs, cacheFs, 20)
 		err := mockScannerQueue.addJob(&job)
 		if err != nil {
 			t.Errorf(".AddJob() returned an unexpected error: %s", err)
@@ -76,10 +77,11 @@ func TestScannerQueueAddJob(t *testing.T) {
 
 func TestScannerQueueJobOnQueue(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	cacheFs := afero.NewOsFs()
 
 	scannerJobs := []ScannerJob{
-		makeScannerJob(fs, 100),
-		makeScannerJob(fs, 20),
+		makeScannerJob(fs, cacheFs, 100),
+		makeScannerJob(fs, cacheFs, 20),
 	}
 
 	mockScannerQueue := ScannerQueue{
@@ -94,8 +96,8 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 		bool
 		ScannerJob
 	}{
-		{"album which owner is already on the queue", true, makeScannerJob(fs, 100)},
-		{"album that is not on the queue", false, makeScannerJob(fs, 321)},
+		{"album which owner is already on the queue", true, makeScannerJob(fs, cacheFs, 100)},
+		{"album that is not on the queue", false, makeScannerJob(fs, cacheFs, 321)},
 	}
 
 	for _, test := range onQueueTests {

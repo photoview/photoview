@@ -89,7 +89,7 @@ func TestCounterpartFilesTaskMediaFound(t *testing.T) {
 			}
 
 			var task CounterpartFilesTask
-			got, err := task.MediaFound(ctx, fi, fname)
+			got, err := task.MediaFound(ctx, fi, fname, fname)
 			if err != nil {
 				t.Fatalf("task.MediaFound(ctx, %q) error: %v", fname, err)
 			}

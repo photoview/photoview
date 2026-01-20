@@ -10,7 +10,7 @@ import (
 )
 
 func TestFindWebCounterpart(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs, _ := test_utils.FilesystemTest(t)
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
@@ -39,7 +39,7 @@ func TestFindWebCounterpart(t *testing.T) {
 }
 
 func TestFindRawCounterpart(t *testing.T) {
-	fs := test_utils.FilesystemTest(t)
+	fs, _ := test_utils.FilesystemTest(t)
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {

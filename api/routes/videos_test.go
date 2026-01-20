@@ -41,7 +41,7 @@ func mockProcessSingleMedia(t *testing.T, fs afero.Fs, shouldSucceed bool, media
 	savedFn := processSingleMediaFn
 
 	// Replace with mock implementation
-	processSingleMediaFn = func(ctx context.Context, db *gorm.DB, fs afero.Fs, media *models.Media) error {
+	processSingleMediaFn = func(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 		// Check if context is already cancelled before starting work
 		select {
 		case <-ctx.Done():
@@ -86,13 +86,13 @@ func mockProcessSingleMedia(t *testing.T, fs afero.Fs, shouldSucceed bool, media
 	}
 }
 
-func registerMockVideoRoutesForTesting(db *gorm.DB, fs afero.Fs, router *mux.Router, tempCachePath string) {
+func registerMockVideoRoutesForTesting(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, router *mux.Router, tempCachePath string) {
 	router.HandleFunc("/{name}", func(w http.ResponseWriter, r *http.Request) {
 		mediaName := mux.Vars(r)["name"]
 
 		// Use no-op auth and test cache path
 		handleVideoRequest(
-			w, r, db, fs, mediaName,
+			w, r, db, fs, cacheFs, mediaName,
 			// Skip authentication for tests
 			func(media *models.Media, db *gorm.DB, r *http.Request) (bool, string, int, error) {
 				return true, "success", http.StatusOK, nil
@@ -203,16 +203,16 @@ func TestVideoRoutes(t *testing.T) {
 
 	// Setup test database
 	db := test_utils.DatabaseTest(t)
-	fs := test_utils.FilesystemTest(t)
+	fs, cacheFs := test_utils.FilesystemTest(t)
 
 	// Define test cases
 	testCases := []struct {
 		name     string
-		testFunc func(*testing.T, *gorm.DB, afero.Fs)
+		testFunc func(*testing.T, *gorm.DB, afero.Fs, afero.Fs)
 	}{
 		{
 			name: "Valid video retrieval",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "valid")
 
@@ -230,7 +230,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, fs, router, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, router, cachePath)
 
 				// Make request
 				req := httptest.NewRequest("GET", "/"+mediaName, nil)
@@ -244,7 +244,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video not found",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, _, _, _, _, cachePath, _, _ := createTestResources(t, db, fs, "notfound")
 
@@ -254,7 +254,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, fs, router, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, router, cachePath)
 
 				// Make request with nonexistent video name
 				req := httptest.NewRequest("GET", "/nonexistent.mp4", nil)
@@ -268,7 +268,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Authentication with share token",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, album, media, _, mediaName, cachePath, tokenValue, tokenPassword := createTestResources(t, db, fs, "auth")
 
@@ -286,7 +286,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create real router with auth for this test
 				router := mux.NewRouter()
-				RegisterVideoRoutes(db, fs, router)
+				RegisterVideoRoutes(db, fs, cacheFs, router)
 
 				// Make request with token
 				req := httptest.NewRequest("GET", "/"+mediaName+"?token="+tokenValue, nil)
@@ -306,7 +306,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Multiple media URLs with same name",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "multiple")
 
@@ -340,7 +340,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, fs, router, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, router, cachePath)
 
 				// Make request
 				req := httptest.NewRequest("GET", "/"+mediaName, nil)
@@ -354,7 +354,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video file not in cache, processing succeeds",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "process-success")
 
@@ -373,7 +373,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, fs, router, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, router, cachePath)
 
 				// Make request
 				req := httptest.NewRequest("GET", "/"+mediaName, nil)
@@ -387,7 +387,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Video file not in cache, processing fails",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				// Create unique resources for this test
 				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "process-fail")
 
@@ -406,7 +406,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Create mock router without auth for this test
 				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, fs, router, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, router, cachePath)
 
 				// Make request
 				req := httptest.NewRequest("GET", "/"+mediaName, nil)
@@ -419,7 +419,7 @@ func TestVideoRoutes(t *testing.T) {
 		},
 		{
 			name: "Context cancellation during processing",
-			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs) {
+			testFunc: func(t *testing.T, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs) {
 				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, fs, "cancellation")
 
 				// Setup cache path for this test
@@ -436,7 +436,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Mock processing that simulates context cancellation
 				savedFn := processSingleMediaFn
-				processSingleMediaFn = func(reqCtx context.Context, db *gorm.DB, fs afero.Fs, media *models.Media) error {
+				processSingleMediaFn = func(reqCtx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 					cancel()
 					return fmt.Errorf("processing interrupted by cancellation")
 				}
@@ -449,7 +449,7 @@ func TestVideoRoutes(t *testing.T) {
 
 				// Use testing router without auth
 				mockRouter := mux.NewRouter().PathPrefix("/video").Subrouter()
-				registerMockVideoRoutesForTesting(db, fs, mockRouter, cachePath)
+				registerMockVideoRoutesForTesting(db, fs, cacheFs, mockRouter, cachePath)
 
 				mockRouter.ServeHTTP(w, req)
 
@@ -466,7 +466,7 @@ func TestVideoRoutes(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.testFunc(t, db, fs)
+			tc.testFunc(t, db, fs, cacheFs)
 		})
 	}
 }

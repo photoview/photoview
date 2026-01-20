@@ -8,7 +8,6 @@ import (
 
 	"github.com/barasher/go-exiftool"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +22,6 @@ func parseRFC3339(t *testing.T, str string) time.Time {
 }
 
 func TestExifParser(t *testing.T) {
-	fs := afero.NewOsFs()
-
 	parser, err := NewExifParser()
 	if err != nil {
 		t.Fatalf("can't init exiftool: %v", err)
@@ -42,7 +39,7 @@ func TestExifParser(t *testing.T) {
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")
-				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0), time.Minute)
+				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
 				assert.Nil(t, exif.OffsetSecShot, "OffsetSecShot should be calculated from GPS data")
 				assert.InDelta(t, *exif.Exposure, 1.0/4000.0, 0.0001)
 				assert.EqualValues(t, *exif.Aperture, 6.3)
@@ -129,7 +126,7 @@ func TestExifParser(t *testing.T) {
 
 	for _, img := range images {
 		t.Run(path.Base(img.path), func(t *testing.T) {
-			exif, failures, err := parser.ParseExif(fs, img.path)
+			exif, failures, err := parser.ParseExif(img.path)
 			if len(failures) != 0 {
 				t.Errorf("parse failures: %v", failures)
 			}
@@ -140,8 +137,6 @@ func TestExifParser(t *testing.T) {
 }
 
 func TestExifParserWithFailure(t *testing.T) {
-	fs := afero.NewOsFs()
-
 	parser, err := NewExifParser()
 	if err != nil {
 		t.Fatalf("can't init exiftool: %v", err)
@@ -165,7 +160,7 @@ func TestExifParserWithFailure(t *testing.T) {
 
 	for _, img := range imagesWithFailures {
 		t.Run(path.Base(img.path), func(t *testing.T) {
-			exif, failures, err := parser.ParseExif(fs, img.path)
+			exif, failures, err := parser.ParseExif(img.path)
 			if len(failures) == 0 {
 				t.Errorf("parse failures: %v, should have at least one failure", failures)
 			}
@@ -379,8 +374,6 @@ func TestCalculateOffsetFromGPS(t *testing.T) {
 }
 
 func TestParseMIMEType(t *testing.T) {
-	fs := afero.NewOsFs()
-
 	parser, err := NewExifParser()
 	if err != nil {
 		t.Fatalf("can't init exiftool: %v", err)
@@ -397,7 +390,7 @@ func TestParseMIMEType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			got, err := parser.ParseMIMEType(fs, tc.file)
+			got, err := parser.ParseMIMEType(tc.file)
 			if err != nil {
 				t.Fatalf("ParseMIMEType(%q) returns an error: %v", tc.file, err)
 			}

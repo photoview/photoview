@@ -12,7 +12,7 @@ type MediaType unique.Handle[string]
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
 func GetMediaType(f string) MediaType {
-	return mediaType(mime.TypeByExtension(strings.ToLower(filepath.Ext(f))))
+	return mediaType(mime.TypeByExtension(filepath.Ext(f)))
 }
 
 func mediaType(mime string) MediaType {
