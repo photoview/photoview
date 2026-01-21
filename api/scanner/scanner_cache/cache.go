@@ -16,7 +16,7 @@ type AlbumScannerCache struct {
 	mutex                sync.Mutex
 }
 
-func MakeAlbumCache(fs afero.Fs) *AlbumScannerCache {
+func MakeAlbumCache() *AlbumScannerCache {
 	return &AlbumScannerCache{
 		path_contains_photos: make(map[string]bool),
 		photo_types:          make(map[string]media_type.MediaType),

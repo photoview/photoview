@@ -140,20 +140,20 @@ func (img *EncodeMediaData) EncodeHighRes(fileFs afero.Fs, cacheFs afero.Fs, out
 
 	// Use magick if there is no counterpart JPEG file to use instead
 	if contentType.IsImage() && !contentType.IsWebCompatible() {
-		localImgPath, err := img.Media.GetLocalPath(fileFs)
-		if err != nil {
-			return errors.Wrapf(err, "could not get local path for photo (%s)", img.Media.Path)
-		}
-
+		var localImgPath string
 		if img.CounterpartPath != nil {
-
 			// We need to download the counterpart file
-			localCounterpartPath, err := downloader.DownloadToLocalIfNeeded(img.Media.AlbumID, fileFs, *img.CounterpartPath)
+			localImgPath, err = downloader.DownloadToLocalIfNeeded(img.Media.AlbumID, fileFs, *img.CounterpartPath)
 			if err != nil {
 				return errors.Wrapf(err, "could not get local path for counterpart photo (%s)", *img.CounterpartPath)
 			}
+		} else {
+			localImgPathPtr, err := img.Media.GetLocalPath(fileFs)
+			if err != nil {
+				return errors.Wrapf(err, "could not get local path for photo (%s)", img.Media.Path)
+			}
 
-			localImgPath = &localCounterpartPath
+			localImgPath = *localImgPathPtr
 		}
 
 		err = executable_worker.Magick.EncodeJpeg(*localImgPath, outputPath, 70)

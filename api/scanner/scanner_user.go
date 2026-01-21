@@ -43,7 +43,7 @@ func getPhotoviewIgnore(fs afero.Fs, ignorePath string) ([]string, error) {
 	return photoviewIgnore, scanner.Err()
 }
 
-func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+func FindAlbumsForUser(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, user *models.User, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, []error{err}
@@ -75,7 +75,7 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 
 	for _, album := range userRootAlbums {
 		// Check if user album directory exists on the file system
-		if _, err := fs.Stat(album.Path); err != nil {
+		if _, err := fileFs.Stat(album.Path); err != nil {
 			if os.IsNotExist(err) {
 				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
 			} else {
@@ -101,7 +101,7 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 		albumIgnore := albumInfo.ignore
 
 		// Read path
-		dirContent, err := afero.ReadDir(fs, albumPath)
+		dirContent, err := afero.ReadDir(fileFs, albumPath)
 		if err != nil {
 			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
@@ -115,7 +115,7 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 		}
 
 		// Update ignore dir list
-		photoviewIgnore, err := getPhotoviewIgnore(fs, albumPath)
+		photoviewIgnore, err := getPhotoviewIgnore(fileFs, albumPath)
 		if err != nil {
 			log.Warn(nil, "Failed to get ignore file", "err", err)
 		} else {
@@ -204,13 +204,13 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 				continue
 			}
 
-			isDirSymlink, err := utils.IsDirSymlink(fs, subalbumPath)
+			isDirSymlink, err := utils.IsDirSymlink(fileFs, subalbumPath)
 			if err != nil {
 				scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
 				continue
 			}
 
-			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(fs, subalbumPath, albumCache, albumIgnore) {
+			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(fileFs, subalbumPath, albumCache, albumIgnore) {
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
@@ -220,13 +220,13 @@ func FindAlbumsForUser(db *gorm.DB, fs afero.Fs, user *models.User, albumCache *
 		}
 	}
 
-	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, fs, userAlbums, user)
+	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, cacheFs, userAlbums, user)
 	scanErrors = append(scanErrors, deleteErrors...)
 
 	return userAlbums, scanErrors
 }
 
-func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
+func directoryContainsPhotos(fileFs afero.Fs, rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
 
 	if containsImage := cache.AlbumContainsPhotos(rootPath); containsImage != nil {
 		return *containsImage
@@ -245,7 +245,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 		scannedDirectories = append(scannedDirectories, dirPath)
 
 		// Update ignore dir list
-		photoviewIgnore, err := getPhotoviewIgnore(fs, dirPath)
+		photoviewIgnore, err := getPhotoviewIgnore(fileFs, dirPath)
 		if err != nil {
 			log.Warn(nil, "Failed to get ignore file", "err", err)
 		} else {
@@ -253,7 +253,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 		}
 		ignoreEntries := ignore.CompileIgnoreLines(albumIgnore...)
 
-		dirContent, err := afero.ReadDir(fs, dirPath)
+		dirContent, err := afero.ReadDir(fileFs, dirPath)
 		if err != nil {
 			scanner_utils.ScannerError(nil, "Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false
@@ -262,7 +262,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 		for _, fileInfo := range dirContent {
 			filePath := path.Join(dirPath, fileInfo.Name())
 
-			isDirSymlink, err := utils.IsDirSymlink(fs, filePath)
+			isDirSymlink, err := utils.IsDirSymlink(fileFs, filePath)
 			if err != nil {
 				log.Warn(nil, "Cannot detect whether is symlink to a directory. Pretending it is not", "file", filePath, "err", err)
 				isDirSymlink = false
@@ -271,7 +271,7 @@ func directoryContainsPhotos(fs afero.Fs, rootPath string, cache *scanner_cache.
 			if fileInfo.IsDir() || isDirSymlink {
 				scanQueue.PushBack(filePath)
 			} else {
-				if cache.IsPathMedia(fs, filePath) {
+				if cache.IsPathMedia(fileFs, filePath) {
 					if ignoreEntries.MatchesPath(fileInfo.Name()) {
 						log.Debug(nil, "Match found, continue search for media", "file", fileInfo.Name())
 						continue

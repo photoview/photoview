@@ -65,7 +65,7 @@ func CleanupMedia(db *gorm.DB, cacheFs afero.Fs, albumId int, albumMedia []*mode
 }
 
 // DeleteOldUserAlbums finds and deletes old albums in the database and cache that does not exist on the filesystem anymore.
-func DeleteOldUserAlbums(db *gorm.DB, fs afero.Fs, scannedAlbums []*models.Album, user *models.User) []error {
+func DeleteOldUserAlbums(db *gorm.DB, cacheFs afero.Fs, scannedAlbums []*models.Album, user *models.User) []error {
 	if len(scannedAlbums) == 0 {
 		return nil
 	}
@@ -101,7 +101,7 @@ func DeleteOldUserAlbums(db *gorm.DB, fs afero.Fs, scannedAlbums []*models.Album
 	for i, album := range deleteAlbums {
 		deleteAlbumIDs[i] = album.ID
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
-		err := fs.RemoveAll(cachePath)
+		err := cacheFs.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}

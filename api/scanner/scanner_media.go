@@ -75,7 +75,7 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
 // Function waits for processing to finish before returning.
 func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
-	albumCache := scanner_cache.MakeAlbumCache(fs)
+	albumCache := scanner_cache.MakeAlbumCache()
 
 	var album models.Album
 	if err := db.Model(media).Association("Album").Find(&album); err != nil {
