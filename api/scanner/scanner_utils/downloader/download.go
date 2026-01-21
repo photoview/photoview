@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -29,7 +28,7 @@ func fileExistsLocally(testPath string) bool {
 }
 
 func getTempDir(albumID int) string {
-	return path.Join(os.TempDir(), TempSubdir, strconv.Itoa(albumID))
+	return filepath.Join(os.TempDir(), TempSubdir, strconv.Itoa(albumID))
 }
 
 func downloadToTempLocalPath(albumID int, fs afero.Fs, mediaPath string) (string, error) {
@@ -40,7 +39,7 @@ func downloadToTempLocalPath(albumID int, fs afero.Fs, mediaPath string) (string
 	tmpDir := getTempDir(albumID)
 
 	// Ensure the temp directory exists
-	if err := os.MkdirAll(tmpDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(tmpDir, 0o700); err != nil {
 		return "", err
 	}
 

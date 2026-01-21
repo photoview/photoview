@@ -94,14 +94,19 @@ func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, rout
 				w.Write([]byte(internalServerError))
 				return
 			}
-			defer fileData.Close()
 
 			_, err = io.Copy(zipFile, fileData)
 			if err != nil {
+				_ = fileData.Close()
 				log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
+			}
+
+			// Close the file directly after copying (instead of deferring) to avoid too many open files
+			if err := fileData.Close(); err != nil {
+				log.Printf("WARN: Failed to close file after zip write: %v\n", err)
 			}
 		}
 

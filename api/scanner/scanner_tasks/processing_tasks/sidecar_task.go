@@ -95,8 +95,6 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 		return []*models.MediaURL{}, nil
 	}
 
-	fmt.Printf("Detected changed sidecar file for %s recreating JPG's to reflect changes\n", photo.Path)
-
 	highResURL, err := photo.GetHighRes()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, get high-res media_url")

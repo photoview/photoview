@@ -1,7 +1,6 @@
 package processing_tasks
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -54,8 +53,6 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, fileFs afero.Fs, 
 		}
 	}
 
-	fmt.Printf("Generated high-res: %s (%dx%d)\n", mediaURL.Media.Path, mediaURL.Width, mediaURL.Height)
-
 	return mediaURL, nil
 }
 
@@ -96,8 +93,6 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, cacheFs afero.F
 			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnailName)
 		}
 	}
-
-	fmt.Printf("Generated thumbnails: %s (%dx%d)\n", thumbOutputPath, thumbSize.Width, thumbSize.Height)
 
 	return mediaURL, nil
 }

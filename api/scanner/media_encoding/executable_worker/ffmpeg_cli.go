@@ -92,8 +92,6 @@ func (cli *FfmpegCli) EncodeMp4(inputPath string, outputPath string) error {
 		return fmt.Errorf("encoding video with %q %v error: %w", cli.path, args, err)
 	}
 
-	fmt.Printf("Encoded video %q to %q\n", inputPath, outputPath)
-
 	return nil
 }
 
@@ -119,8 +117,6 @@ func (cli *FfmpegCli) EncodeVideoThumbnail(inputPath string, outputPath string, 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("encoding video thumbnail with %q %v error: %w", cli.path, args, err)
 	}
-
-	fmt.Printf("Encoded video thumbnail %q to %q\n", inputPath, outputPath)
 
 	return nil
 }

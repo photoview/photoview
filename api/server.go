@@ -219,7 +219,7 @@ func setupFileSystem() (afero.Fs, error) {
 				o.BaseEndpoint = &endpoint
 			}
 		})
-		return afero.NewCacheOnReadFs(s3.NewFsFromClient(bucket, client), afero.NewMemMapFs(), 5*time.Minute), nil
+		return s3.NewFsFromClient(bucket, client), nil
 	}
 
 	return afero.NewOsFs(), nil

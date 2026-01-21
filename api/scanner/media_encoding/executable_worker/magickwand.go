@@ -51,8 +51,6 @@ func (cli *MagickWand) EncodeJpeg(inputPath string, outputPath string, jpegQuali
 		return fmt.Errorf("ImagickWand write %q error: %w", outputPath, err)
 	}
 
-	fmt.Printf("Encoded JPEG %q to %q\n", inputPath, outputPath)
-
 	return nil
 }
 
@@ -79,8 +77,6 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 		return fmt.Errorf("ImagickWand write %q error: %w", outputPath, err)
 	}
 
-	fmt.Printf("Generated thumbnail %q to %q\n", inputPath, outputPath)
-
 	return nil
 }
 
@@ -94,8 +90,6 @@ func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, 
 
 	width = wand.GetImageWidth()
 	height = wand.GetImageHeight()
-
-	fmt.Printf("Identified dimensions for %q: %dx%d\n", inputPath, width, height)
 
 	return
 }

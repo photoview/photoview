@@ -18,7 +18,11 @@ func Init() {
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
 func GetMediaType(f string) MediaType {
-	return mediaType(mime.TypeByExtension(filepath.Ext(f)))
+	mt := mime.TypeByExtension(filepath.Ext(f))
+	if mt == "" {
+		return TypeUnknown
+	}
+	return mediaType(mt)
 }
 
 func mediaType(mime string) MediaType {
@@ -39,7 +43,7 @@ var (
 	TypeGIF  = mediaType("image/gif")
 
 	// Non-web image formats
-	TypeHEIF    = mediaType("image/heic")
+	TypeHEIF    = mediaType("image/heif")
 	TypeJPG2000 = mediaType("image/jp2")
 	TypeTIFF    = mediaType("image/tiff")
 	TypeCR3     = mediaType("image/x-canon-cr3")
@@ -52,7 +56,7 @@ var (
 
 	// Non-web video formats
 	TypeMOV = mediaType("video/quicktime")
-	TypeAVI = mediaType("video/x-msvideo")
+	TypeAVI = mediaType("video/vnd.avi")
 	TypeMKV = mediaType("video/x-matroska")
 	TypeWMV = mediaType("video/x-ms-wmv")
 )

@@ -28,6 +28,8 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	cacheFs := ctx.GetCacheFS()
 
 	// Assert that cacheFs is a local filesystem
+	// This is required because ffmpeg and other external tools need local file paths.
+	// If cacheFs needs to support wrappers, consider using afero.FullBaseFsPath or similar.
 	if _, ok := cacheFs.(*afero.OsFs); !ok {
 		return []*models.MediaURL{}, errors.New("cacheFs is not a local filesystem")
 	}

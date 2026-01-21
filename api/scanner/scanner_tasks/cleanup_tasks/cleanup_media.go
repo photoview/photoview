@@ -14,7 +14,7 @@ import (
 )
 
 // CleanupMedia removes media entries from the database that are no longer present on the filesystem
-func CleanupMedia(db *gorm.DB, fs afero.Fs, albumId int, albumMedia []*models.Media) []error {
+func CleanupMedia(db *gorm.DB, cacheFs afero.Fs, albumId int, albumMedia []*models.Media) []error {
 	albumMediaIds := make([]int, len(albumMedia))
 	for i, media := range albumMedia {
 		albumMediaIds[i] = media.ID
@@ -41,7 +41,7 @@ func CleanupMedia(db *gorm.DB, fs afero.Fs, albumId int, albumMedia []*models.Me
 
 		mediaIDs = append(mediaIDs, media.ID)
 		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(albumId)), strconv.Itoa(int(media.ID)))
-		err := fs.RemoveAll(cachePath)
+		err := cacheFs.RemoveAll(cachePath)
 		if err != nil {
 			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
 		}

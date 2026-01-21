@@ -58,7 +58,7 @@ func RegisterPhotoRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router 
 		stat, err := fs.Stat(filePath)
 		if os.IsNotExist(err) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fs, cacheFs, media); err != nil {
+			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, fileFs, cacheFs, media); err != nil {
 				log.Error(r.Context(), "processing image not found in cache",
 					"media_cache_path", filePath,
 					"error", err)

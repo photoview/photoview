@@ -33,7 +33,6 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *s
 
 		if result.RowsAffected > 0 {
 			log.Printf("Media already scanned: %s\n", mediaPath)
-			// FIXME: Download local path if needed
 			return media[0], false, nil
 		}
 	}
@@ -82,8 +81,6 @@ func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs a
 	if err := db.Model(media).Association("Album").Find(&album); err != nil {
 		return err
 	}
-
-	// FIXME: Download to local path ?
 
 	mediaData := media_encoding.NewEncodeMediaData(media)
 

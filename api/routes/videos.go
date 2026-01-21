@@ -81,7 +81,8 @@ func handleVideoRequest(
 		return
 	}
 
-	if _, err := cacheFs.Stat(cachedPath); err != nil {
+	fileInfo, err := cacheFs.Stat(cachedPath)
+	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Error(r.Context(), "cached video access error",
 				"error", err,
@@ -121,10 +122,20 @@ func handleVideoRequest(
 		}
 	}
 
+	file, err := cacheFs.Open(cachedPath)
+	if err != nil {
+		log.Error(r.Context(), "error opening cached video",
+			"media_cache_path", cachedPath,
+			"error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(internalServerError))
+		return
+	}
+
 	// Allow caching the resource
 	w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
 	w.Header().Set("Content-Type", mediaURL.ContentType)
-	http.ServeFile(w, r, cachedPath)
+	http.ServeContent(w, r, fileInfo.Name(), fileInfo.ModTime(), file)
 }
 
 func generateCacheFilename(albumID, mediaID int, filename string) string {
