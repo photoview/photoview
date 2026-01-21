@@ -89,8 +89,6 @@ func ValidRootPath(fs afero.Fs, rootPath string) bool {
 }
 
 func ScanAlbum(ctx scanner_task.TaskContext) error {
-	fs := ctx.GetFileFS()
-
 	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
@@ -105,12 +103,6 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
-		// Download to temporary local path if needed
-		media.LocalPath, err = scanner_utils.DownloadToLocalIfNeeded(fs, media.Path)
-		if err != nil {
-			return errors.Wrapf(err, "could not download local media path: %s", media.Path)
-		}
-
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
@@ -118,6 +110,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		}
 	}
 
+	// FIXME: changedMedia is never populated
 	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
 		return errors.Wrap(err, "after scan album")
 	}
@@ -145,10 +138,8 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			isDirSymlink = false
 		}
 
-		// FIXME: should we download to local path here?
-
-		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath, mediaPath)
+		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(fs, mediaPath) {
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
 			if err != nil {
 				return nil, err
 			}
@@ -157,7 +148,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			}
 
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}

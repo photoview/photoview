@@ -28,7 +28,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 		return nil
 	}
 
-	mediaType := ctx.GetCache().GetMediaType(media.LocalPath)
+	mediaType := ctx.GetCache().GetMediaType(media.Path)
 	if mediaType == media_type.TypeUnknown {
 		return fmt.Errorf("scan for sidecar file %s failed: media type is %s", media.Path, mediaType)
 	}
@@ -114,7 +114,7 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold high-res image: %s", baseImagePath)
 	}
 
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, cacheFs, baseImagePath, highResURL)
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, fs, mediaData, highResURL.MediaName, cacheFs, baseImagePath, highResURL)
 	if err != nil {
 		if restoreErr := cacheFs.Rename(tempHighResPath, baseImagePath); restoreErr != nil {
 			log.Printf("ERROR: restoring high-res image failed: %s", restoreErr)

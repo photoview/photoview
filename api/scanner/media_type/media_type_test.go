@@ -13,6 +13,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetMediaType(t *testing.T) {
+	Init()
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {

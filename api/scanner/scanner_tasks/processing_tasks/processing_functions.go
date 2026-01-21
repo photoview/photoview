@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_encoding.EncodeMediaData, highResName string, cacheFs afero.Fs, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, fileFs afero.Fs, imageData *media_encoding.EncodeMediaData, highResName string, cacheFs afero.Fs, imagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 
-	err := imageData.EncodeHighRes(imagePath)
+	err := imageData.EncodeHighRes(fileFs, cacheFs, imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating high-res cached image")
 	}
@@ -33,6 +33,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		mediaURL = &models.MediaURL{
 			MediaID:     media.ID,
 			MediaName:   highResName,
+			Media:       imageData.Media,
 			Width:       photoDimensions.Width,
 			Height:      photoDimensions.Height,
 			Purpose:     models.PhotoHighRes,
@@ -58,10 +59,10 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 	return mediaURL, nil
 }
 
-func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, cacheFs afero.Fs, thumbnailName string, photoCachePath string, baseImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
+func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, cacheFs afero.Fs, thumbnailName string, photoCachePath string, localImagePath string, mediaURL *models.MediaURL) (*models.MediaURL, error) {
 	thumbOutputPath := path.Join(photoCachePath, thumbnailName)
 
-	thumbSize, err := media_encoding.EncodeThumbnail(tx, baseImagePath, thumbOutputPath)
+	thumbSize, err := media_encoding.EncodeThumbnail(tx, localImagePath, thumbOutputPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create thumbnail cached image")
 	}

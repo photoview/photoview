@@ -25,7 +25,7 @@ func (t IgnorefileTask) BeforeScanAlbum(ctx scanner_task.TaskContext) (scanner_t
 	return ctx.WithValue(albumIgnoreKey, albumIgnore), nil
 }
 
-func (t IgnorefileTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string, localMediaPath string) (bool, error) {
+func (t IgnorefileTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (bool, error) {
 
 	// Match file against ignore data
 	if getAlbumIgnore(ctx).MatchesPath(fileInfo.Name()) {

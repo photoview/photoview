@@ -9,6 +9,12 @@ import (
 
 type MediaType unique.Handle[string]
 
+func Init() {
+	// We override ogg extension to be video/ogg
+	// as the default is audio/ogg
+	mime.AddExtensionType(".ogg", "video/ogg")
+}
+
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
 func GetMediaType(f string) MediaType {

@@ -105,7 +105,7 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) 
 	c.ignore_data[path] = ignoreData
 }
 
-func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
+func (c *AlbumScannerCache) IsPathMedia(fs afero.Fs, mediaPath string) bool {
 	mediaType := c.GetMediaType(mediaPath)
 
 	// Ignore hidden files
@@ -118,12 +118,10 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 		return false
 	}
 
-	// Make sure file isn't empty
-	// FIXME: Is this useful here as we check the media type before
-	// fileStats, err := os.Stat(mediaPath)
-	// if err != nil || fileStats.Size() == 0 {
-	// 	return false
-	// }
+	fileStats, err := fs.Stat(mediaPath)
+	if err != nil || fileStats.Size() == 0 {
+		return false
+	}
 
 	return true
 }

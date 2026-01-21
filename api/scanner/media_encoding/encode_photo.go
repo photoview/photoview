@@ -9,7 +9,9 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/scanner/scanner_utils/downloader"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	"gorm.io/gorm"
@@ -52,7 +54,6 @@ func (d *Dimension) ThumbnailScale() Dimension {
 
 // GetPhotoDimensions returns the dimension of the image `imagePath`.
 func GetPhotoDimensions(imagePath string) (Dimension, error) {
-
 	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
@@ -104,7 +105,7 @@ type EncodeMediaData struct {
 }
 
 func NewEncodeMediaData(media *models.Media) EncodeMediaData {
-	fileType := media_type.GetMediaType(media.LocalPath)
+	fileType := media_type.GetMediaType(media.Path)
 
 	return EncodeMediaData{
 		Media:        media,
@@ -118,7 +119,7 @@ func (img *EncodeMediaData) ContentType() (media_type.MediaType, error) {
 		return img._contentType, nil
 	}
 
-	imgType := media_type.GetMediaType(img.Media.LocalPath)
+	imgType := media_type.GetMediaType(img.Media.Path)
 	if imgType == media_type.TypeUnknown {
 		return imgType, fmt.Errorf("unknown type of %q", img.Media.Path)
 	}
@@ -127,7 +128,7 @@ func (img *EncodeMediaData) ContentType() (media_type.MediaType, error) {
 	return imgType, nil
 }
 
-func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
+func (img *EncodeMediaData) EncodeHighRes(fileFs afero.Fs, cacheFs afero.Fs, outputPath string) error {
 	contentType, err := img.ContentType()
 	if err != nil {
 		return err
@@ -139,14 +140,25 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 
 	// Use magick if there is no counterpart JPEG file to use instead
 	if contentType.IsImage() && !contentType.IsWebCompatible() {
-		imgPath := img.Media.Path
-		if img.CounterpartPath != nil {
-			imgPath = *img.CounterpartPath
+		localImgPath, err := img.Media.GetLocalPath(fileFs)
+		if err != nil {
+			return errors.Wrapf(err, "could not get local path for photo (%s)", img.Media.Path)
 		}
 
-		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
+		if img.CounterpartPath != nil {
+
+			// We need to download the counterpart file
+			localCounterpartPath, err := downloader.DownloadToLocalIfNeeded(img.Media.AlbumID, fileFs, *img.CounterpartPath)
+			if err != nil {
+				return errors.Wrapf(err, "could not get local path for counterpart photo (%s)", *img.CounterpartPath)
+			}
+
+			localImgPath = &localCounterpartPath
+		}
+
+		err = executable_worker.Magick.EncodeJpeg(*localImgPath, outputPath, 70)
 		if err != nil {
-			return fmt.Errorf("failed to convert RAW photo %q to JPEG: %w", imgPath, err)
+			return fmt.Errorf("failed to convert RAW photo %q (%q) to JPEG: %w", *localImgPath, img.Media.Path, err)
 		}
 	}
 

@@ -17,7 +17,7 @@ type ProcessPhotoTask struct {
 }
 
 func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) ([]*models.MediaURL, error) {
-	fs := ctx.GetFileFS()
+	fileFs := ctx.GetFileFS()
 	cacheFs := ctx.GetCacheFS()
 
 	// Assert that cacheFs is a local filesystem
@@ -54,8 +54,6 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		return []*models.MediaURL{}, errors.Wrap(err, "error processing photo highres")
 	}
 
-	var baseImagePath string = photo.LocalPath
-
 	// Generate high res jpeg
 	if highResURL == nil {
 
@@ -66,9 +64,9 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 		if !contentType.IsWebCompatible() {
 			highresName := generateUniqueMediaNamePrefixed("highres", photo.Path, ".jpg")
-			baseImagePath = path.Join(mediaCachePath, highresName)
+			baseImagePath := path.Join(mediaCachePath, highresName)
 
-			highRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highresName, cacheFs, baseImagePath, nil)
+			highRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, fileFs, mediaData, highresName, cacheFs, baseImagePath, nil)
 			if err != nil {
 				return []*models.MediaURL{}, err
 			}
@@ -77,13 +75,13 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 		}
 	} else {
 		// Verify that highres photo still exists in cache
-		baseImagePath = path.Join(mediaCachePath, highResURL.MediaName)
+		baseImagePath := path.Join(mediaCachePath, highResURL.MediaName)
 
 		if _, err := cacheFs.Stat(baseImagePath); os.IsNotExist(err) {
 			log.Info(ctx, "High-res photo found in database but not in cache, re-encoding photo to cache", "media_name", highResURL.MediaName)
 			updatedURLs = append(updatedURLs, highResURL)
 
-			err = mediaData.EncodeHighRes(baseImagePath)
+			err = mediaData.EncodeHighRes(fileFs, cacheFs, baseImagePath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "creating high-res cached image")
 			}
@@ -92,14 +90,18 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 
 	// Save original photo to database
 	if origURL == nil {
+		localPath, err := photo.GetLocalPath(fileFs)
+		if err != nil {
+			return []*models.MediaURL{}, errors.Wrapf(err, "could not get local path for original photo (%s)", photo.Path)
+		}
 
 		// Make sure photo dimensions is set
-		photoDimensions, err := media_encoding.GetPhotoDimensions(photo.LocalPath)
+		photoDimensions, err := media_encoding.GetPhotoDimensions(*localPath)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}
 
-		original, err := saveOriginalPhotoToDB(ctx.GetDB(), fs, photo, mediaData, photoDimensions)
+		original, err := saveOriginalPhotoToDB(ctx.GetDB(), fileFs, photo, mediaData, photoDimensions)
 		if err != nil {
 			return []*models.MediaURL{}, errors.Wrap(err, "saving original photo to database")
 		}
@@ -110,7 +112,13 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	// Save thumbnail to cache
 	if thumbURL == nil {
 		thumbnailName := generateUniqueMediaNamePrefixed("thumbnail", photo.Path, ".jpg")
-		thumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, cacheFs, thumbnailName, mediaCachePath, baseImagePath, nil)
+
+		localPath, err := photo.GetLocalPath(fileFs)
+		if err != nil {
+			return []*models.MediaURL{}, errors.Wrapf(err, "could not get local path for original photo (%s)", photo.Path)
+		}
+
+		thumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, cacheFs, thumbnailName, mediaCachePath, *localPath, nil)
 		if err != nil {
 			return []*models.MediaURL{}, err
 		}
@@ -124,7 +132,12 @@ func (t ProcessPhotoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			updatedURLs = append(updatedURLs, thumbURL)
 			log.Info(ctx, "Thumbnail photo found in database but not in cache, re-encoding photo to cache", "media_name", thumbURL.MediaName)
 
-			_, err := media_encoding.EncodeThumbnail(ctx.GetDB(), baseImagePath, thumbPath)
+			localPath, err := photo.GetLocalPath(fileFs)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "could not get local path for original photo (%s)", photo.Path)
+			}
+
+			_, err = media_encoding.EncodeThumbnail(ctx.GetDB(), *localPath, thumbPath)
 			if err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "could not create thumbnail cached image")
 			}

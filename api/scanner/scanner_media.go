@@ -11,7 +11,6 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"gorm.io/gorm"
@@ -19,7 +18,7 @@ import (
 
 var ProcessSingleMediaFunc = ProcessSingleMedia
 
-func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, localMediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if media already exists
@@ -33,14 +32,15 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, localMediaPath string
 		}
 
 		if result.RowsAffected > 0 {
-			// log.Printf("Media already scanned: %s\n", mediaPath)
+			log.Printf("Media already scanned: %s\n", mediaPath)
+			// FIXME: Download local path if needed
 			return media[0], false, nil
 		}
 	}
 
 	log.Printf("Scanning media: %s\n", mediaPath)
 
-	mediaType := cache.GetMediaType(localMediaPath)
+	mediaType := cache.GetMediaType(mediaPath)
 	if mediaType == media_type.TypeUnknown {
 		return nil, false, fmt.Errorf("could not determine if media %s of type %s was photo or video", mediaPath, mediaType)
 	}
@@ -53,24 +53,17 @@ func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, localMediaPath string
 		mediaTypeText = models.MediaTypePhoto
 	}
 
-	// Download to temporary local path if needed
-	localMediaPath, err := scanner_utils.DownloadToLocalIfNeeded(fs, mediaPath)
-	if err != nil {
-		return nil, false, errors.Wrapf(err, "could not download local media path: %s", mediaPath)
-	}
-
 	stat, err := fs.Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
 	}
 
 	media := models.Media{
-		Title:     mediaName,
-		Path:      mediaPath,
-		LocalPath: localMediaPath,
-		AlbumID:   albumId,
-		Type:      mediaTypeText,
-		DateShot:  stat.ModTime(),
+		Title:    mediaName,
+		Path:     mediaPath,
+		AlbumID:  albumId,
+		Type:     mediaTypeText,
+		DateShot: stat.ModTime(),
 	}
 
 	if err := tx.Create(&media).Error; err != nil {

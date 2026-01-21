@@ -39,7 +39,7 @@ func TestExifParser(t *testing.T) {
 				assert.EqualValues(t, *exif.Description, "Photo of a Bird")
 				assert.EqualValues(t, *exif.Camera, "Canon EOS 600D")
 				assert.EqualValues(t, *exif.Maker, "Canon")
-				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318784, 0).UTC(), time.Minute)
+				assert.WithinDuration(t, *exif.DateShot, time.Unix(1336318774, 0).UTC(), time.Minute)
 				assert.Nil(t, exif.OffsetSecShot, "OffsetSecShot should be calculated from GPS data")
 				assert.InDelta(t, *exif.Exposure, 1.0/4000.0, 0.0001)
 				assert.EqualValues(t, *exif.Aperture, 6.3)
