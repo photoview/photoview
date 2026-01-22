@@ -27,7 +27,7 @@ func makeScannerJob(fs afero.Fs, cacheFs afero.Fs, albumID int) ScannerJob {
 
 func TestScannerQueueAddJob(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	cacheFs := afero.NewOsFs()
+	cacheFs := afero.NewMemMapFs()
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(fs, cacheFs, 100),
@@ -77,7 +77,7 @@ func TestScannerQueueAddJob(t *testing.T) {
 
 func TestScannerQueueJobOnQueue(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	cacheFs := afero.NewOsFs()
+	cacheFs := afero.NewMemMapFs()
 
 	scannerJobs := []ScannerJob{
 		makeScannerJob(fs, cacheFs, 100),

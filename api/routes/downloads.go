@@ -106,10 +106,8 @@ func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, rout
 
 			// Close the file directly after copying (instead of deferring) to avoid too many open files
 			if err := fileData.Close(); err != nil {
-				log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
+				log.Printf("WARN: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
+				// Response is already streaming; avoid writing HTTP error headers here.
 			}
 		}
 
