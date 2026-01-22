@@ -3,11 +3,11 @@ package scanner
 import (
 	"bufio"
 	"container/list"
+	"log"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
@@ -37,7 +37,7 @@ func getPhotoviewIgnore(fs afero.Fs, ignorePath string) ([]string, error) {
 	scanner := bufio.NewScanner(photoviewIgnoreFile)
 	for scanner.Scan() {
 		photoviewIgnore = append(photoviewIgnore, scanner.Text())
-		log.Debug(nil, "Ignore found", "file", scanner.Text())
+		log.Printf("Ignore found: %s", scanner.Text())
 	}
 
 	return photoviewIgnore, scanner.Err()
@@ -110,14 +110,14 @@ func FindAlbumsForUser(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, user *mod
 		// Skip this dir if in ignore list
 		ignorePaths := ignore.CompileIgnoreLines(albumIgnore...)
 		if ignorePaths.MatchesPath(albumPath + "/") {
-			log.Info(nil, "Skip, directory is in ignore file", "directory", albumPath)
+			log.Printf("Skip, directroy %s is in ignore file", albumPath)
 			continue
 		}
 
 		// Update ignore dir list
 		photoviewIgnore, err := getPhotoviewIgnore(fileFs, albumPath)
 		if err != nil {
-			log.Warn(nil, "Failed to get ignore file", "err", err)
+			log.Printf("Failed to get ignore file, err = %s", err)
 		} else {
 			albumIgnore = append(albumIgnore, photoviewIgnore...)
 		}
@@ -126,8 +126,7 @@ func FindAlbumsForUser(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, user *mod
 		var album *models.Album
 
 		transErr := db.Transaction(func(tx *gorm.DB) error {
-			log.Debug(nil, "Scanning directory", "directory", albumPath)
-
+			log.Printf("Scanning directory: %s", albumPath)
 			// check if album already exists
 			var albumResult []models.Album
 			result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
@@ -247,7 +246,7 @@ func directoryContainsPhotos(fileFs afero.Fs, rootPath string, cache *scanner_ca
 		// Update ignore dir list
 		photoviewIgnore, err := getPhotoviewIgnore(fileFs, dirPath)
 		if err != nil {
-			log.Warn(nil, "Failed to get ignore file", "err", err)
+			log.Printf("Failed to get ignore file, err = %s", err)
 		} else {
 			albumIgnore = append(albumIgnore, photoviewIgnore...)
 		}
@@ -264,7 +263,7 @@ func directoryContainsPhotos(fileFs afero.Fs, rootPath string, cache *scanner_ca
 
 			isDirSymlink, err := utils.IsDirSymlink(fileFs, filePath)
 			if err != nil {
-				log.Warn(nil, "Cannot detect whether is symlink to a directory. Pretending it is not", "file", filePath, "err", err)
+				log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", filePath)
 				isDirSymlink = false
 			}
 
@@ -273,10 +272,10 @@ func directoryContainsPhotos(fileFs afero.Fs, rootPath string, cache *scanner_ca
 			} else {
 				if cache.IsPathMedia(fileFs, filePath) {
 					if ignoreEntries.MatchesPath(fileInfo.Name()) {
-						log.Debug(nil, "Match found, continue search for media", "file", fileInfo.Name())
+						log.Printf("Match found %s, continue search for media", fileInfo.Name())
 						continue
 					}
-					log.Debug(nil, "Insert Album, contains photo is true", "directory", dirPath, "root", rootPath)
+					log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
 					cache.InsertAlbumPaths(dirPath, rootPath, true)
 					return true
 				}
@@ -286,7 +285,7 @@ func directoryContainsPhotos(fileFs afero.Fs, rootPath string, cache *scanner_ca
 	}
 
 	for _, scanned_path := range scannedDirectories {
-		log.Debug(nil, "Insert Album, contains photo is false", "directory", scanned_path)
+		log.Printf("Insert Album %s, contains photo is false", scanned_path)
 		cache.InsertAlbumPath(scanned_path, false)
 	}
 	return false
