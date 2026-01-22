@@ -156,9 +156,9 @@ func (img *EncodeMediaData) EncodeHighRes(fileFs afero.Fs, cacheFs afero.Fs, out
 			localImgPath = *localImgPathPtr
 		}
 
-		err = executable_worker.Magick.EncodeJpeg(*localImgPath, outputPath, 70)
+		err = executable_worker.Magick.EncodeJpeg(localImgPath, outputPath, 70)
 		if err != nil {
-			return fmt.Errorf("failed to convert RAW photo %q (%q) to JPEG: %w", *localImgPath, img.Media.Path, err)
+			return fmt.Errorf("failed to convert RAW photo %q (%q) to JPEG: %w", localImgPath, img.Media.Path, err)
 		}
 	}
 
