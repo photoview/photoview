@@ -33,6 +33,17 @@ const (
 	EnvSqlitePath     EnvironmentVariable = "PHOTOVIEW_SQLITE_PATH"
 )
 
+// Filesystem related
+const (
+	EnvFilesystemDriver         EnvironmentVariable = "PHOTOVIEW_FS_DRIVER"
+	EnvFilesystemS3BaseEndpoint EnvironmentVariable = "PHOTOVIEW_FS_S3_BASE_ENDPOINT"
+	EnvFilesystemS3UsePathStyle EnvironmentVariable = "PHOTOVIEW_FS_S3_USE_PATH_STYLE"
+	EnvFilesystemS3Region       EnvironmentVariable = "PHOTOVIEW_FS_S3_REGION"
+	EnvFilesystemS3Bucket       EnvironmentVariable = "PHOTOVIEW_FS_S3_BUCKET"
+	EnvFilesystemS3ID           EnvironmentVariable = "PHOTOVIEW_FS_S3_ID"
+	EnvFilesystemS3Secret       EnvironmentVariable = "PHOTOVIEW_FS_S3_SECRET"
+)
+
 // Feature related
 const (
 	EnvDisableFaceRecognition    EnvironmentVariable = "PHOTOVIEW_DISABLE_FACE_RECOGNITION"

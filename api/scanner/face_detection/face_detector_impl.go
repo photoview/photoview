@@ -3,6 +3,7 @@
 package face_detection
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -89,7 +91,7 @@ func (fd *faceDetector) ReloadFacesFromDatabase(db *gorm.DB) error {
 }
 
 // DetectFaces finds the faces in the given image and saves them to the database
-func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
+func (fd *faceDetector) DetectFaces(db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 	if err := db.Model(media).Preload("MediaURL").First(&media).Error; err != nil {
 		return err
 	}
@@ -112,8 +114,13 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
+	thumbData, err := afero.ReadFile(cacheFs, thumbnailPath)
+	if err != nil {
+		return fmt.Errorf("thumbnail file error: %w", err)
+	}
+
 	fd.mutex.Lock()
-	faces, err := fd.rec.RecognizeFile(thumbnailPath)
+	faces, err := fd.rec.Recognize(thumbData)
 	fd.mutex.Unlock()
 
 	if err != nil {
@@ -121,7 +128,9 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(db, &face, media, thumbnailPath)
+		if err := fd.classifyFace(db, &face, media, thumbnailPath); err != nil {
+			return err
+		}
 	}
 
 	return nil
