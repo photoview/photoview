@@ -64,14 +64,14 @@ const AlbumTitle = ({ album, disableLink = false, shareBreadcrumbPath, customBre
     if (!album) return
 
     // Only fetch path if authenticated and no share breadcrumb provided
-    if (authToken() && disableLink == true && !shareBreadcrumbPath) {
+    if (authToken() && disableLink === true && !shareBreadcrumbPath) {
       fetchPath({
         variables: {
           id: album.id,
         },
       })
     }
-  }, [album, shareBreadcrumbPath])
+  }, [album, shareBreadcrumbPath, disableLink, fetchPath])
 
   const delay = useDelay(200, [album])
 
