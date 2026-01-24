@@ -38,15 +38,24 @@ const ALBUM_PATH_QUERY = gql`
   }
 `
 
+type BreadcrumbAlbum = {
+  id: string
+  title: string
+}
+
 type AlbumTitleProps = {
   album?: {
     id: string
     title: string
   }
   disableLink: boolean
+  // Optional breadcrumb path for share pages (avoids needing auth)
+  shareBreadcrumbPath?: BreadcrumbAlbum[]
+  // Custom link builder for share pages
+  customBreadcrumbLink?: (albumId: string) => string
 }
 
-const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
+const AlbumTitle = ({ album, disableLink = false, shareBreadcrumbPath, customBreadcrumbLink }: AlbumTitleProps) => {
   const [fetchPath, { data: pathData }] =
     useLazyQuery<albumPathQuery>(ALBUM_PATH_QUERY)
   const { updateSidebar } = useContext(SidebarContext)
@@ -54,14 +63,15 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   useEffect(() => {
     if (!album) return
 
-    if (authToken() && disableLink == true) {
+    // Only fetch path if authenticated and no share breadcrumb provided
+    if (authToken() && disableLink === true && !shareBreadcrumbPath) {
       fetchPath({
         variables: {
           id: album.id,
         },
       })
     }
-  }, [album])
+  }, [album, shareBreadcrumbPath, disableLink, fetchPath])
 
   const delay = useDelay(200, [album])
 
@@ -80,16 +90,22 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
 
   let title = <span>{album.title}</span>
 
-  const path = pathData?.album.path || []
+  // Use share breadcrumb path if provided, otherwise use fetched path
+  const path = shareBreadcrumbPath || pathData?.album.path || []
 
   const breadcrumbSections = path
     .slice()
     .reverse()
-    .map(x => (
-      <li key={x.id} className="inline-block hover:underline">
-        <Link to={`/album/${x.id}`}>{x.title}</Link>
-      </li>
-    ))
+    .map(x => {
+      const link = customBreadcrumbLink
+        ? customBreadcrumbLink(x.id)
+        : `/album/${x.id}`
+      return (
+        <li key={x.id} className="inline-block hover:underline">
+          <Link to={link}>{x.title}</Link>
+        </li>
+      )
+    })
 
   if (!disableLink) {
     title = <Link to={`/album/${album.id}`}>{title}</Link>
