@@ -9,7 +9,7 @@ import { OrderDirection, MediaType } from "./../../../__generated__/globalTypes"
 // GraphQL query operation: shareAlbumQuery
 // ====================================================
 
-export interface shareAlbumQuery_album_parentAlbum {
+export interface shareAlbumQuery_album_pathForShare {
   __typename: "Album";
   id: string;
   title: string;
@@ -209,9 +209,9 @@ export interface shareAlbumQuery_album {
   id: string;
   title: string;
   /**
-   * The album which contains this album
+   * Breadcrumb path for shared albums, limited to the share root
    */
-  parentAlbum: shareAlbumQuery_album_parentAlbum | null;
+  pathForShare: shareAlbumQuery_album_pathForShare[];
   /**
    * The albums contained in this album
    */
@@ -234,6 +234,7 @@ export interface shareAlbumQueryVariables {
   id: string;
   token: string;
   password?: string | null;
+  rootAlbumId: string;
   mediaOrderBy?: string | null;
   mediaOrderDirection?: OrderDirection | null;
   limit?: number | null;

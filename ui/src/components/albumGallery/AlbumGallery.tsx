@@ -39,6 +39,11 @@ export const ALBUM_GALLERY_FRAGMENT = gql`
   }
 `
 
+type BreadcrumbAlbum = {
+  id: string
+  title: string
+}
+
 type AlbumGalleryProps = {
   album?: AlbumGalleryFields
   loading?: boolean
@@ -49,6 +54,8 @@ type AlbumGalleryProps = {
   ordering?: MediaOrdering
   onlyFavorites?: boolean
   onFavorite?(): void
+  // Optional breadcrumb path for share pages
+  shareBreadcrumbPath?: BreadcrumbAlbum[]
 }
 
 const AlbumGallery = React.forwardRef(
@@ -62,6 +69,7 @@ const AlbumGallery = React.forwardRef(
       setOrdering,
       ordering,
       onlyFavorites = false,
+      shareBreadcrumbPath,
     }: AlbumGalleryProps,
     ref: React.ForwardedRef<HTMLDivElement>
   ) => {
@@ -109,7 +117,12 @@ const AlbumGallery = React.forwardRef(
             ordering={ordering}
           />
         )}
-        <AlbumTitle album={album} disableLink />
+        <AlbumTitle
+          album={album}
+          disableLink
+          shareBreadcrumbPath={shareBreadcrumbPath}
+          customBreadcrumbLink={customAlbumLink}
+        />
         {subAlbumElement}
         <MediaGallery
           loading={loading}

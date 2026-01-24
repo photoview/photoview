@@ -59,16 +59,17 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Album struct {
-		FilePath    func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Media       func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
-		Owner       func(childComplexity int) int
-		ParentAlbum func(childComplexity int) int
-		Path        func(childComplexity int) int
-		Shares      func(childComplexity int) int
-		SubAlbums   func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
-		Thumbnail   func(childComplexity int) int
-		Title       func(childComplexity int) int
+		FilePath     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Media        func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
+		Owner        func(childComplexity int) int
+		ParentAlbum  func(childComplexity int) int
+		Path         func(childComplexity int) int
+		PathForShare func(childComplexity int, token string, rootAlbumID int) int
+		Shares       func(childComplexity int) int
+		SubAlbums    func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
+		Thumbnail    func(childComplexity int) int
+		Title        func(childComplexity int) int
 	}
 
 	AuthorizeResult struct {
@@ -285,6 +286,7 @@ type AlbumResolver interface {
 
 	Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error)
 	Path(ctx context.Context, obj *models.Album) ([]*models.Album, error)
+	PathForShare(ctx context.Context, obj *models.Album, token string, rootAlbumID int) ([]*models.Album, error)
 	Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error)
 }
 type FaceGroupResolver interface {
@@ -429,6 +431,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Album.Path(childComplexity), true
+	case "Album.pathForShare":
+		if e.complexity.Album.PathForShare == nil {
+			break
+		}
+
+		args, err := ec.field_Album_pathForShare_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Album.PathForShare(childComplexity, args["token"].(string), args["rootAlbumId"].(int)), true
 	case "Album.shares":
 		if e.complexity.Album.Shares == nil {
 			break
@@ -1683,6 +1696,22 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Album_pathForShare_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["token"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "rootAlbumId", ec.unmarshalNID2int)
+	if err != nil {
+		return nil, err
+	}
+	args["rootAlbumId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2478,6 +2507,8 @@ func (ec *executionContext) fieldContext_Album_subAlbums(ctx context.Context, fi
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -2540,6 +2571,8 @@ func (ec *executionContext) fieldContext_Album_parentAlbum(_ context.Context, fi
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -2724,11 +2757,78 @@ func (ec *executionContext) fieldContext_Album_path(_ context.Context, field gra
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Album_pathForShare(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Album_pathForShare,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Album().PathForShare(ctx, obj, fc.Args["token"].(string), fc.Args["rootAlbumId"].(int))
+		},
+		nil,
+		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Album_pathForShare(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Album",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Album_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Album_title(ctx, field)
+			case "media":
+				return ec.fieldContext_Album_media(ctx, field)
+			case "subAlbums":
+				return ec.fieldContext_Album_subAlbums(ctx, field)
+			case "parentAlbum":
+				return ec.fieldContext_Album_parentAlbum(ctx, field)
+			case "owner":
+				return ec.fieldContext_Album_owner(ctx, field)
+			case "filePath":
+				return ec.fieldContext_Album_filePath(ctx, field)
+			case "thumbnail":
+				return ec.fieldContext_Album_thumbnail(ctx, field)
+			case "path":
+				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
+			case "shares":
+				return ec.fieldContext_Album_shares(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Album_pathForShare_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3593,6 +3693,8 @@ func (ec *executionContext) fieldContext_Media_album(_ context.Context, field gr
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -4633,6 +4735,8 @@ func (ec *executionContext) fieldContext_Mutation_resetAlbumCover(ctx context.Co
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -4709,6 +4813,8 @@ func (ec *executionContext) fieldContext_Mutation_setAlbumCover(ctx context.Cont
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -5981,6 +6087,8 @@ func (ec *executionContext) fieldContext_Mutation_userAddRootPath(ctx context.Co
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -6057,6 +6165,8 @@ func (ec *executionContext) fieldContext_Mutation_userRemoveRootAlbum(ctx contex
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -6425,6 +6535,8 @@ func (ec *executionContext) fieldContext_Query_myAlbums(ctx context.Context, fie
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -6488,6 +6600,8 @@ func (ec *executionContext) fieldContext_Query_album(ctx context.Context, field 
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -7682,6 +7796,8 @@ func (ec *executionContext) fieldContext_SearchResult_albums(_ context.Context, 
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -7953,6 +8069,8 @@ func (ec *executionContext) fieldContext_ShareToken_album(_ context.Context, fie
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -8256,6 +8374,8 @@ func (ec *executionContext) fieldContext_TimelineGroup_album(_ context.Context, 
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -8499,6 +8619,8 @@ func (ec *executionContext) fieldContext_User_albums(_ context.Context, field gr
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -8563,6 +8685,8 @@ func (ec *executionContext) fieldContext_User_rootAlbums(_ context.Context, fiel
 				return ec.fieldContext_Album_thumbnail(ctx, field)
 			case "path":
 				return ec.fieldContext_Album_path(ctx, field)
+			case "pathForShare":
+				return ec.fieldContext_Album_pathForShare(ctx, field)
 			case "shares":
 				return ec.fieldContext_Album_shares(ctx, field)
 			}
@@ -10718,6 +10842,42 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Album_path(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "pathForShare":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_pathForShare(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

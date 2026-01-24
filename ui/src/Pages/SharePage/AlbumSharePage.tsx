@@ -9,14 +9,13 @@ import useOrderingParams from '../../hooks/useOrderingParams'
 import { shareAlbumQuery } from './__generated__/shareAlbumQuery'
 import useScrollPagination from '../../hooks/useScrollPagination'
 import PaginateLoader from '../../components/PaginateLoader'
-import { Link } from 'react-router-dom'
-import { BreadcrumbList } from '../../components/album/AlbumTitle'
 
 export const SHARE_ALBUM_QUERY = gql`
   query shareAlbumQuery(
     $id: ID!
     $token: String!
     $password: String
+    $rootAlbumId: ID!
     $mediaOrderBy: String
     $mediaOrderDirection: OrderDirection
     $limit: Int
@@ -25,7 +24,7 @@ export const SHARE_ALBUM_QUERY = gql`
     album(id: $id, tokenCredentials: { token: $token, password: $password }) {
       id
       title
-      parentAlbum {
+      pathForShare(token: $token, rootAlbumId: $rootAlbumId) {
         id
         title
       }
@@ -99,10 +98,6 @@ const AlbumSharePageWrapper = styled.div`
   height: 100%;
 `
 
-const AlbumHeader = styled.div`
-  margin-bottom: 24px;
-`
-
 type AlbumSharePageProps = {
   albumID: string
   token: string
@@ -123,6 +118,7 @@ const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSh
         id: albumID,
         token,
         password,
+        rootAlbumId: sharedRootAlbumId,
         limit: 200,
         offset: 0,
         mediaOrderBy: orderParams.orderBy,
@@ -144,21 +140,7 @@ const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSh
   }
 
   const album = data?.album
-  const parentAlbum = album?.parentAlbum
-
-  // Build breadcrumb path - only show parent if it exists and we're not at shared root
-  const breadcrumbSections = []
-  if (parentAlbum && albumID !== sharedRootAlbumId) {
-    const parentLink = parentAlbum.id === sharedRootAlbumId
-      ? `/share/${token}`
-      : `/share/${token}/${parentAlbum.id}`
-
-    breadcrumbSections.push(
-      <li key={parentAlbum.id} className="inline-block hover:underline">
-        <Link to={parentLink}>{parentAlbum.title}</Link>
-      </li>
-    )
-  }
+  const pathForShare = album?.pathForShare ?? []
 
   return (
     <AlbumSharePageWrapper data-testid="AlbumSharePage">
@@ -167,16 +149,6 @@ const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSh
           album ? album.title : t('general.loading.album', 'Loading album')
         }
       >
-        {album && (
-          <AlbumHeader>
-            {breadcrumbSections.length > 0 && (
-              <nav aria-label="Album breadcrumb">
-                <BreadcrumbList>{breadcrumbSections}</BreadcrumbList>
-              </nav>
-            )}
-            <h1 className="text-2xl">{album.title}</h1>
-          </AlbumHeader>
-        )}
         <AlbumGallery
           ref={containerElem}
           album={album}
@@ -184,6 +156,7 @@ const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSh
           showFilter
           setOrdering={orderParams.setOrdering}
           ordering={orderParams}
+          shareBreadcrumbPath={pathForShare}
         />
         <PaginateLoader
           active={!finishedLoadingMore && !loading}

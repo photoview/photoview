@@ -27,6 +27,9 @@ type Album {
   "A breadcrumb list of all parent albums down to this one"
   path: [Album!]!
 
+  "A breadcrumb list of parent albums for shared album navigation, limited to the share root"
+  pathForShare(token: String!, rootAlbumId: ID!): [Album!]!
+
   "A list of share tokens pointing to this album, owned by the logged in user"
   shares: [ShareToken!]!
 }

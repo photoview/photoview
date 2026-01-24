@@ -151,6 +151,7 @@ describe('load correct share page, based on graphql query', () => {
             id: '1',
             token,
             password,
+            rootAlbumId: '1',
             limit: 200,
             offset: 0,
             mediaOrderBy: 'date_shot',
@@ -162,6 +163,7 @@ describe('load correct share page, based on graphql query', () => {
             album: {
               id: '1',
               title: 'album_title',
+              pathForShare: [],
               subAlbums: [],
               thumbnail: {
                 url: 'https://photoview.example.com/album_thumbnail.jpg',
@@ -230,6 +232,7 @@ describe('load correct share page, based on graphql query', () => {
             id: subalbumID,
             token,
             password,
+            rootAlbumId: subalbumID,
             limit: 200,
             offset: 0,
             mediaOrderBy: 'date_shot',
@@ -241,6 +244,7 @@ describe('load correct share page, based on graphql query', () => {
             album: {
               id: '1',
               title: 'album_title',
+              pathForShare: [],
               subAlbums: [],
               thumbnail: {
                 url: 'https://photoview.example.com/album_thumbnail.jpg',
