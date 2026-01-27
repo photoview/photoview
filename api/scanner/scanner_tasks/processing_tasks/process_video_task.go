@@ -86,43 +86,51 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 	}
 
 	if videoWebURL == nil && !videoType.IsWebCompatible() {
-		webVideoName := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
-		webVideoName = strings.ReplaceAll(webVideoName, ".", "_")
-		webVideoName = strings.ReplaceAll(webVideoName, " ", "_")
-		webVideoName = webVideoName + ".mp4"
 
-		webVideoPath := path.Join(mediaCachePath, webVideoName)
+		if utils.EnvVideoThumbnailOnly.GetBool() {
+			log.Info(ctx,
+				"Video transcoding disabled (thumbnail-only mode)",
+				"video", video.Path,
+			)
+		} else {
+			webVideoName := fmt.Sprintf("web_video_%s_%s", path.Base(video.Path), utils.GenerateToken())
+			webVideoName = strings.ReplaceAll(webVideoName, ".", "_")
+			webVideoName = strings.ReplaceAll(webVideoName, " ", "_")
+			webVideoName = webVideoName + ".mp4"
 
-		err = executable_worker.Ffmpeg.EncodeMp4(video.Path, webVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
+			webVideoPath := path.Join(mediaCachePath, webVideoName)
+
+			err = executable_worker.Ffmpeg.EncodeMp4(video.Path, webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "could not encode mp4 video (%s)", video.Path)
+			}
+
+			webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
+			}
+
+			fileStats, err := os.Stat(webVideoPath)
+			if err != nil {
+				return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
+			}
+
+			mediaURL := models.MediaURL{
+				MediaID:     video.ID,
+				MediaName:   webVideoName,
+				Width:       webMetadata.Width,
+				Height:      webMetadata.Height,
+				Purpose:     models.VideoWeb,
+				ContentType: "video/mp4",
+				FileSize:    fileStats.Size(),
+			}
+
+			if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
+				return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
+			}
+
+			updatedURLs = append(updatedURLs, &mediaURL)
 		}
-
-		webMetadata, err := ReadVideoStreamMetadata(webVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to read metadata for encoded web-video (%s)", video.Title)
-		}
-
-		fileStats, err := os.Stat(webVideoPath)
-		if err != nil {
-			return []*models.MediaURL{}, errors.Wrap(err, "reading file stats of web-optimized video")
-		}
-
-		mediaURL := models.MediaURL{
-			MediaID:     video.ID,
-			MediaName:   webVideoName,
-			Width:       webMetadata.Width,
-			Height:      webMetadata.Height,
-			Purpose:     models.VideoWeb,
-			ContentType: "video/mp4",
-			FileSize:    fileStats.Size(),
-		}
-
-		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
-			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
-		}
-
-		updatedURLs = append(updatedURLs, &mediaURL)
 	}
 
 	probeData, err := mediaData.VideoMetadata()
