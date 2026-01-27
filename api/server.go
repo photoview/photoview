@@ -170,7 +170,10 @@ func logUIendpointURL() {
 	}
 }
 
+// HealthHandler responds to health check requests with a 200 OK status.
+// It is used by Docker health checks and monitoring systems.
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"ok"}`))
 }
