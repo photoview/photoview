@@ -61,7 +61,9 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				// and call the next with our new context
 				r = r.WithContext(ctx)
 			} else {
-				log.Info(r.Context(), "Did not find auth-token cookie")
+				if r.URL.Path != "/api/healthz" { // skip logging for health
+					log.Info(r.Context(), "Did not find auth-token cookie")
+				}
 			}
 
 			next.ServeHTTP(w, r)
