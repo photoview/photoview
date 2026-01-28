@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
@@ -16,6 +17,14 @@ type CounterpartFilesTask struct {
 
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
 	fileType := media_type.GetMediaType(mediaPath)
+	rawPath, rawExists := media_type.FindRawCounterpart(mediaPath)
+	log.Info(ctx, "fileType", fileType,
+		"media_path", mediaPath,
+		"supported", fileType.IsSupported(),
+		"DisableRawProcessing", utils.EnvDisableRawProcessing.GetBool(),
+		"fileType.IsWebCompatible()", fileType.IsWebCompatible(),
+		"raw_counterpart_path", rawPath,
+		"raw_counterpart_exists", rawExists)
 
 	if !fileType.IsSupported() {
 		return true, nil
