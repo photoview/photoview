@@ -91,6 +91,9 @@ func main() {
 
 	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db)))
 
+	// Health endpoint (silent)
+	endpointRouter.HandleFunc("/healthz", HealthHandler)
+
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)
 
@@ -165,4 +168,12 @@ func logUIendpointURL() {
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}
+}
+
+// HealthHandler responds to health check requests with a 200 OK status.
+// It is used by Docker health checks and monitoring systems.
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"ok"}`))
 }

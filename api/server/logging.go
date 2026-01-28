@@ -14,6 +14,12 @@ import (
 
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("X-Health-Check") == "true" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		start := time.Now()
 
 		statusWriter := newStatusResponseWriter(&w)
