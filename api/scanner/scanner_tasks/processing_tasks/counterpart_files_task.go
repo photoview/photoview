@@ -18,7 +18,8 @@ type CounterpartFilesTask struct {
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
 	fileType := media_type.GetMediaType(mediaPath)
 	rawPath, rawExists := media_type.FindRawCounterpart(mediaPath)
-	log.Info(ctx, "fileType", fileType,
+	log.Info(ctx, "media found",
+		"fileType", fileType,
 		"media_path", mediaPath,
 		"supported", fileType.IsSupported(),
 		"DisableRawProcessing", utils.EnvDisableRawProcessing.GetBool(),
