@@ -85,6 +85,51 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 	return actions.AlbumPath(r.DB(ctx), user, obj)
 }
 
+// PathForShare is the resolver for the pathForShare field.
+// Returns the breadcrumb path for shared albums, limited to the share root.
+func (r *albumResolver) PathForShare(ctx context.Context, obj *models.Album, token string, rootAlbumID int) ([]*models.Album, error) {
+	db := r.DB(ctx)
+
+	// Validate the share token exists and matches the rootAlbumID
+	var shareToken models.ShareToken
+	if err := db.Where("value = ?", token).First(&shareToken).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("share not found")
+		}
+		return nil, fmt.Errorf("failed to validate share token: %w", err)
+	}
+
+	// Verify that rootAlbumID matches the share token's album
+	if shareToken.AlbumID == nil || *shareToken.AlbumID != rootAlbumID {
+		return nil, errors.New("invalid root album for this share")
+	}
+
+	// If we're at the root album, return empty path
+	if obj.ID == rootAlbumID {
+		return make([]*models.Album, 0), nil
+	}
+
+	// Get all parent albums using existing GetParents function
+	parents, err := obj.GetParents(db, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter: exclude current album and stop at root album
+	var limitedPath []*models.Album
+	for _, p := range parents {
+		if p.ID == obj.ID {
+			continue
+		}
+		limitedPath = append(limitedPath, p)
+		if p.ID == rootAlbumID {
+			break
+		}
+	}
+
+	return limitedPath, nil
+}
+
 // Shares is the resolver for the shares field.
 func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error) {
 	var shareTokens []*models.ShareToken

@@ -15,6 +15,7 @@ export const SHARE_ALBUM_QUERY = gql`
     $id: ID!
     $token: String!
     $password: String
+    $rootAlbumId: ID!
     $mediaOrderBy: String
     $mediaOrderDirection: OrderDirection
     $limit: Int
@@ -23,6 +24,10 @@ export const SHARE_ALBUM_QUERY = gql`
     album(id: $id, tokenCredentials: { token: $token, password: $password }) {
       id
       title
+      pathForShare(token: $token, rootAlbumId: $rootAlbumId) {
+        id
+        title
+      }
       subAlbums(order: { order_by: "title" }) {
         id
         title
@@ -97,9 +102,10 @@ type AlbumSharePageProps = {
   albumID: string
   token: string
   password: string | null
+  sharedRootAlbumId: string
 }
 
-const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
+const AlbumSharePage = ({ albumID, token, password, sharedRootAlbumId }: AlbumSharePageProps) => {
   const { t } = useTranslation()
 
   const urlParams = useURLParameters()
@@ -112,6 +118,7 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
         id: albumID,
         token,
         password,
+        rootAlbumId: sharedRootAlbumId,
         limit: 200,
         offset: 0,
         mediaOrderBy: orderParams.orderBy,
@@ -133,6 +140,7 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
   }
 
   const album = data?.album
+  const pathForShare = album?.pathForShare ?? []
 
   return (
     <AlbumSharePageWrapper data-testid="AlbumSharePage">
@@ -148,6 +156,7 @@ const AlbumSharePage = ({ albumID, token, password }: AlbumSharePageProps) => {
           showFilter
           setOrdering={orderParams.setOrdering}
           ordering={orderParams}
+          shareBreadcrumbPath={pathForShare}
         />
         <PaginateLoader
           active={!finishedLoadingMore && !loading}
