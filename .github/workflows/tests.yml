@@ -47,113 +47,115 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Checkout repo
-      uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-    - name: Build test image
-      uses: docker/build-push-action@v6
-      with:
-        pull:       true
-        push:       false
-        load:       true
-        target:     api
-        tags:       photoview/api
-        cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
+      - name: Build test image
+        uses: docker/build-push-action@v6
+        with:
+          pull: true
+          push: false
+          load: true
+          target: api
+          tags: photoview/api
+          cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
 
-    - name: Test
-      id: test
-      run: |
-        docker run --name test --network host \
-            -v "${{ github.workspace }}:/app" \
-            -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
-            -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
-            -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
-            -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
-          photoview/api \
-          /app/scripts/test_all.sh
-        docker cp test:/app/api/coverage.txt ./api/
-        docker cp test:/app/api/test-api-coverage-report.xml ./api/
+      - name: Test
+        id: test
+        run: |
+          docker run --name test --network host \
+              -v "${{ github.workspace }}:/app" \
+              -e PHOTOVIEW_DATABASE_DRIVER=${{ matrix.database }} \
+              -e PHOTOVIEW_MYSQL_URL='photoview:photosecret@tcp(localhost:3306)/photoview_test' \
+              -e PHOTOVIEW_POSTGRES_URL='postgres://photoview:photosecret@localhost:5432/photoview_test' \
+              -e PHOTOVIEW_SQLITE_PATH=/tmp/photoview.db \
+            photoview/api \
+            /app/scripts/test_all.sh
+          docker cp test:/app/api/coverage.txt ./api/
+          docker cp test:/app/api/test-api-coverage-report.xml ./api/
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v5
-      if: ${{ steps.test.conclusion == 'success' }}
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: api-${{ matrix.database }}
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: api-${{ matrix.database }}
 
-    - name: Upload test execution results
-      uses: codecov/test-results-action@v1
-      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: api-${{ matrix.database }}
-        files: ./api/test-api-coverage-report.xml
+      - name: Upload test execution results
+        uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: api-${{ matrix.database }}
+          report_type: test_results
+          files: ./api/test-api-coverage-report.xml
 
   test-ui:
     name: Test UI
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Checkout repo
-      uses: actions/checkout@v6
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-    - name: Build test image
-      uses: docker/build-push-action@v6
-      with:
-        pull:       true
-        push:       false
-        load:       true
-        target:     ui
-        tags:       photoview/ui
-        cache-from: type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-        cache-to:   type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
-        build-args: |
-          NODE_ENV=testing
+      - name: Build test image
+        uses: docker/build-push-action@v6
+        with:
+          pull: true
+          push: false
+          load: true
+          target: ui
+          tags: photoview/ui
+          cache-from: type=gha,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
+          cache-to: type=gha,mode=max,scope=test-ui-${{ hashFiles('ui/package-lock.json') }}
+          build-args: |
+            NODE_ENV=testing
 
-    - name: Test
-      id: test
-      run: |
-        docker run --name test photoview/ui npm run test:ci
-        docker cp test:/app/ui/coverage ./ui/
-        docker cp test:/app/ui/junit-report.xml ./ui/
+      - name: Test
+        id: test
+        run: |
+          docker run --name test photoview/ui npm run test:ci
+          docker cp test:/app/ui/coverage ./ui/
+          docker cp test:/app/ui/junit-report.xml ./ui/
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v5
-      if: ${{ steps.test.conclusion == 'success' }}
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ui
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ui
 
-    - name: Upload test execution results
-      uses: codecov/test-results-action@v1
-      if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ui
-        directory: ./ui
+      - name: Upload test execution results
+        uses: codecov/codecov-action@v5
+        if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ui
+          report_type: test_results
+          directory: ./ui
 
-    - name: Run ESLint
-      working-directory: ui
-      run: |
-        docker run --name eslint photoview/ui npm run lint:ci || true
-        docker cp eslint:/app/ui/eslint-report.txt ./
-        echo "--------------------------"
-        echo "ESLint execution results :"
-        echo "--------------------------"
-        cat ./eslint-report.txt || echo "ESLint report file not found."
+      - name: Run ESLint
+        working-directory: ui
+        run: |
+          docker run --name eslint photoview/ui npm run lint:ci || true
+          docker cp eslint:/app/ui/eslint-report.txt ./
+          echo "--------------------------"
+          echo "ESLint execution results :"
+          echo "--------------------------"
+          cat ./eslint-report.txt || echo "ESLint report file not found."
 
-    - name: ESLint artifact
-      id: eslint-artifact
-      uses: actions/upload-artifact@v6
-      with:
-        name: ESLint-report
-        path: ./ui/eslint-report.txt
-        if-no-files-found: warn
-        compression-level: 9
-        overwrite: true
+      - name: ESLint artifact
+        id: eslint-artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ESLint-report
+          path: ./ui/eslint-report.txt
+          if-no-files-found: warn
+          compression-level: 9
+          overwrite: true
