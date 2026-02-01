@@ -179,7 +179,16 @@
         },
         "title": "Temaindstillinger"
       },
-      "title": "Brugerindstillinger"
+      "title": "Brugerindstillinger",
+      "landing_page": {
+        "timeline": "Tidslinje",
+        "albums": "Albummer",
+        "places": "Steder",
+        "people": "Personer",
+        "label": "Standard landingsside",
+        "description": "Vælg siden, der skal vises efter login",
+        "placeholder": "Vælg standardside"
+      }
     },
     "users": {
       "add_user": {

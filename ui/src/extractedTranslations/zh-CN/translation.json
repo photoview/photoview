@@ -179,7 +179,16 @@
         },
         "title": "主题设置"
       },
-      "title": "用户选项"
+      "title": "用户选项",
+      "landing_page": {
+        "timeline": "时间线",
+        "albums": "相册",
+        "places": "地点",
+        "people": "人物",
+        "label": "默认首页",
+        "description": "选择登录后显示的页面",
+        "placeholder": "选择默认页面"
+      }
     },
     "users": {
       "add_user": {

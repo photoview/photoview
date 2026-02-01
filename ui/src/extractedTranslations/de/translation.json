@@ -179,7 +179,16 @@
         },
         "title": "Darstellung Einstellungen"
       },
-      "title": "Persönliche Einstellungen"
+      "title": "Persönliche Einstellungen",
+      "landing_page": {
+        "timeline": "Zeitleiste",
+        "albums": "Alben",
+        "places": "Orte",
+        "people": "Personen",
+        "label": "Standard-Startseite",
+        "description": "Wählen Sie die Seite aus, die nach der Anmeldung angezeigt werden soll",
+        "placeholder": "Standardseite auswählen"
+      }
     },
     "users": {
       "add_user": {

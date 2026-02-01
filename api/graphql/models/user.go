@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -42,9 +43,10 @@ type AccessToken struct {
 
 type UserPreferences struct {
 	Model
-	UserID   int  `gorm:"not null;index"`
-	User     User `gorm:"constraint:OnDelete:CASCADE;"`
-	Language *LanguageTranslation
+	UserID             int  `gorm:"not null;index"`
+	User               User `gorm:"constraint:OnDelete:CASCADE;"`
+	Language           *LanguageTranslation
+	DefaultLandingPage *string `gorm:"size:64"`
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
@@ -65,6 +67,39 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 
 		if !foundMatch {
 			return errors.New("invalid language value")
+		}
+	}
+
+	// Validate DefaultLandingPage
+	if u.DefaultLandingPage != nil && *u.DefaultLandingPage == "" {
+		u.DefaultLandingPage = nil
+	}
+
+	if u.DefaultLandingPage != nil {
+		// Build list of valid pages based on enabled features
+		validPages := []string{"/timeline", "/albums"}
+
+		// Add /places if Mapbox is configured
+		if utils.EnvMapboxToken.GetValue() != "" {
+			validPages = append(validPages, "/places")
+		}
+
+		// Add /people if face detection is enabled
+		if !utils.EnvDisableFaceRecognition.GetBool() {
+			validPages = append(validPages, "/people")
+		}
+
+		// Check if the selected page is in the valid pages list
+		foundMatch := false
+		for _, page := range validPages {
+			if *u.DefaultLandingPage == page {
+				foundMatch = true
+				break
+			}
+		}
+
+		if !foundMatch {
+			return errors.New("invalid default landing page value")
 		}
 	}
 

@@ -28,6 +28,9 @@ models:
         resolver: true
   UserPreferences:
     model: github.com/photoview/photoview/api/graphql/models.UserPreferences
+    fields:
+      defaultLandingPage:
+        resolver: true
   Media:
     model: github.com/photoview/photoview/api/graphql/models.Media
     fields:
