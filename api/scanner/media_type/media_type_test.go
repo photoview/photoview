@@ -13,13 +13,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetMediaType(t *testing.T) {
+	Init()
 	mediaPath := test_utils.PathFromAPIRoot("scanner", "test_media", "real_media")
 
 	tests := []struct {
 		filepath string
 		filetype MediaType
 	}{
-		{"file.pdf", mediaType("text/plain")},
+		{"file.pdf", mediaType("application/pdf")},
 
 		{"bmp.bmp", TypeBMP},
 		{"gif.gif", TypeGIF},
@@ -27,7 +28,7 @@ func TestGetMediaType(t *testing.T) {
 		{"png.png", TypePNG},
 		{"webp.webp", TypeWebP},
 
-		{"heif.heif", mediaType("image/heic")},
+		{"heif.heif", mediaType("image/heif")},
 		{"jpg2000.jp2", mediaType("image/jp2")},
 		{"tiff.tiff", mediaType("image/tiff")},
 		{"cr3.cr3", mediaType("image/x-canon-cr3")},
@@ -37,7 +38,7 @@ func TestGetMediaType(t *testing.T) {
 		{"mpeg.mpg", TypeMPEG},
 		{"webm.webm", TypeWEBM},
 
-		{"avi.avi", mediaType("video/x-msvideo")},
+		{"avi.avi", mediaType("video/vnd.avi")},
 		{"mkv.mkv", mediaType("video/x-matroska")},
 		{"quicktime.mov", mediaType("video/quicktime")},
 		{"wmv.wmv", mediaType("video/x-ms-wmv")},

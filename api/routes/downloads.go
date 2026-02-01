@@ -6,16 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
+func RegisterDownloadRoutes(db *gorm.DB, fileFs afero.Fs, cacheFs afero.Fs, router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
 		albumID := mux.Vars(r)["album_id"]
 		mediaPurpose := mux.Vars(r)["media_purpose"]
@@ -82,7 +82,12 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 				return
 			}
 
-			fileData, err := os.Open(filePath)
+			fs := fileFs
+			if media.Purpose != models.MediaOriginal {
+				fs = cacheFs
+			}
+
+			fileData, err := fs.Open(filePath)
 			if err != nil {
 				log.Printf("ERROR: Failed to open file to include in zip, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -92,17 +97,17 @@ func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 
 			_, err = io.Copy(zipFile, fileData)
 			if err != nil {
+				_ = fileData.Close()
 				log.Printf("ERROR: Failed to copy file data, when downloading album (%d): %v\n", album.ID, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(internalServerError))
 				return
 			}
 
+			// Close the file directly after copying (instead of deferring) to avoid too many open files
 			if err := fileData.Close(); err != nil {
-				log.Printf("ERROR: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(internalServerError))
-				return
+				log.Printf("WARN: Failed to close file, when downloading album (%d): %v\n", album.ID, err)
+				// Response is already streaming; avoid writing HTTP error headers here.
 			}
 		}
 

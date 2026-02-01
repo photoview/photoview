@@ -9,7 +9,9 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/scanner/scanner_utils/downloader"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
 	"gorm.io/gorm"
@@ -126,7 +128,7 @@ func (img *EncodeMediaData) ContentType() (media_type.MediaType, error) {
 	return imgType, nil
 }
 
-func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
+func (img *EncodeMediaData) EncodeHighRes(fileFs afero.Fs, cacheFs afero.Fs, outputPath string) error {
 	contentType, err := img.ContentType()
 	if err != nil {
 		return err
@@ -138,29 +140,39 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 
 	// Use magick if there is no counterpart JPEG file to use instead
 	if contentType.IsImage() && !contentType.IsWebCompatible() {
-		imgPath := img.Media.Path
+		var localImgPath string
 		if img.CounterpartPath != nil {
-			imgPath = *img.CounterpartPath
+			// We need to download the counterpart file
+			localImgPath, err = downloader.DownloadToLocalIfNeeded(img.Media.AlbumID, fileFs, *img.CounterpartPath)
+			if err != nil {
+				return errors.Wrapf(err, "could not get local path for counterpart photo (%s)", *img.CounterpartPath)
+			}
+		} else {
+			localImgPathPtr, err := img.Media.GetLocalPath(fileFs)
+			if err != nil {
+				return errors.Wrapf(err, "could not get local path for photo (%s)", img.Media.Path)
+			}
+
+			localImgPath = *localImgPathPtr
 		}
 
-		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
+		err = executable_worker.Magick.EncodeJpeg(localImgPath, outputPath, 70)
 		if err != nil {
-			return fmt.Errorf("failed to convert RAW photo %q to JPEG: %w", imgPath, err)
+			return fmt.Errorf("failed to convert RAW photo %q (%q) to JPEG: %w", localImgPath, img.Media.Path, err)
 		}
 	}
 
 	return nil
 }
 
-func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
-
+func (enc *EncodeMediaData) VideoMetadata(filePath string) (*ffprobe.ProbeData, error) {
 	if enc._videoMetadata != nil {
 		return enc._videoMetadata, nil
 	}
 
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
-	data, err := ffprobe.ProbeURL(ctx, enc.Media.Path)
+	data, err := ffprobe.ProbeURL(ctx, filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read video metadata (%s)", enc.Media.Title)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/test_utils/flags"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
@@ -59,11 +60,12 @@ func IntegrationTestRun(m *testing.M) {
 	exitCode = m.Run()
 }
 
-func FilesystemTest(t *testing.T) {
+func FilesystemTest(t *testing.T) (afero.Fs, afero.Fs) {
 	if !flags.Filesystem {
 		t.Skip("Filesystem integration tests disabled")
 	}
-	utils.ConfigureTestCache(t.TempDir())
+
+	return afero.NewOsFs(), afero.NewOsFs()
 }
 
 func DatabaseTest(t *testing.T) *gorm.DB {

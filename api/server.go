@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/spf13/afero"
 
 	"github.com/joho/godotenv"
 
@@ -23,16 +25,24 @@ import (
 	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+
+	aws_config "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	aws_s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+
+	s3 "github.com/fclairamb/afero-s3"
 )
 
 func main() {
 	log.Println("Starting Photoview...")
+	media_type.Init()
 
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found. If Photoview runs in Docker, this is expected and correct.")
@@ -42,6 +52,14 @@ func main() {
 	defer terminateWorkers()
 
 	devMode := utils.DevelopmentMode()
+
+	filesFs, err := setupFileSystem()
+	if err != nil {
+		log.Panicf("Could not setup file system: %s\n", err)
+	}
+
+	// We use local fs for cache
+	cacheFs := afero.NewOsFs()
 
 	db, err := database.SetupDatabase()
 	if err != nil {
@@ -59,7 +77,7 @@ func main() {
 	}
 	defer exifCleanup()
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+	if err := scanner_queue.InitializeScannerQueue(db, filesFs, cacheFs); err != nil {
 		log.Panicf("Could not initialize scanner queue: %s\n", err)
 	}
 
@@ -89,16 +107,16 @@ func main() {
 		})
 	}
 
-	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db)))
+	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db, filesFs, cacheFs)))
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
-	routes.RegisterPhotoRoutes(db, photoRouter)
+	routes.RegisterPhotoRoutes(db, filesFs, cacheFs, photoRouter)
 
 	videoRouter := endpointRouter.PathPrefix("/video").Subrouter()
-	routes.RegisterVideoRoutes(db, videoRouter)
+	routes.RegisterVideoRoutes(db, filesFs, cacheFs, videoRouter)
 
 	downloadsRouter := endpointRouter.PathPrefix("/download").Subrouter()
-	routes.RegisterDownloadRoutes(db, downloadsRouter)
+	routes.RegisterDownloadRoutes(db, filesFs, cacheFs, downloadsRouter)
 
 	shouldServeUI := utils.ShouldServeUI()
 
@@ -165,4 +183,44 @@ func logUIendpointURL() {
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}
+}
+
+func setupFileSystem() (afero.Fs, error) {
+	if utils.EnvFilesystemDriver.GetValue() == "s3" {
+		bucket := utils.EnvFilesystemS3Bucket.GetValue()
+		if bucket == "" {
+			return nil, fmt.Errorf("%s is required", utils.EnvFilesystemS3Bucket.GetName())
+		}
+
+		s3ID := utils.EnvFilesystemS3ID.GetValue()
+		s3Secret := utils.EnvFilesystemS3Secret.GetValue()
+		if s3ID == "" || s3Secret == "" {
+			return nil, fmt.Errorf("%s and %s are required for S3 driver",
+				utils.EnvFilesystemS3ID.GetName(),
+				utils.EnvFilesystemS3Secret.GetName())
+		}
+
+		cfg, err := aws_config.LoadDefaultConfig(
+			context.Background(),
+			aws_config.WithRegion(utils.EnvFilesystemS3Region.GetValue()),
+			aws_config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+				utils.EnvFilesystemS3ID.GetValue(),
+				utils.EnvFilesystemS3Secret.GetValue(),
+				"",
+			)),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		client := aws_s3.NewFromConfig(cfg, func(o *aws_s3.Options) {
+			o.UsePathStyle = utils.EnvFilesystemS3UsePathStyle.GetBool()
+			if endpoint := utils.EnvFilesystemS3BaseEndpoint.GetValue(); endpoint != "" {
+				o.BaseEndpoint = &endpoint
+			}
+		})
+		return s3.NewFsFromClient(bucket, client), nil
+	}
+
+	return afero.NewOsFs(), nil
 }

@@ -15,8 +15,9 @@ type CounterpartFilesTask struct {
 }
 
 func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (skip bool, err error) {
-	fileType := media_type.GetMediaType(mediaPath)
+	fs := ctx.GetFileFS()
 
+	fileType := media_type.GetMediaType(mediaPath)
 	if !fileType.IsSupported() {
 		return true, nil
 	}
@@ -31,7 +32,7 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 	}
 
 	if fileType.IsWebCompatible() {
-		_, existed := media_type.FindRawCounterpart(mediaPath)
+		_, existed := media_type.FindRawCounterpart(fs, mediaPath)
 		if existed {
 			return true, nil
 		}
@@ -41,6 +42,7 @@ func (t CounterpartFilesTask) MediaFound(ctx scanner_task.TaskContext, fileInfo 
 }
 
 func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) (scanner_task.TaskContext, error) {
+	fs := ctx.GetFileFS()
 
 	mediaType := ctx.GetCache().GetMediaType(mediaData.Media.Path)
 	if mediaType == media_type.TypeUnknown {
@@ -51,7 +53,7 @@ func (t CounterpartFilesTask) BeforeProcessMedia(ctx scanner_task.TaskContext, m
 		return ctx, nil
 	}
 
-	counterpartFile, ok := media_type.FindWebCounterpart(mediaData.Media.Path)
+	counterpartFile, ok := media_type.FindWebCounterpart(fs, mediaData.Media.Path)
 	if !ok {
 		return ctx, nil
 	}
