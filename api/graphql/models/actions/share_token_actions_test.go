@@ -104,4 +104,17 @@ func TestShareToken(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Empty(t, share.Password)
 	})
+
+	t.Run("Set Expiration date for share token", func(t *testing.T) {
+		assert.NotEmpty(t, albumShare.Expire)
+		time_ := time.Date(2025, 12, 6, 0, 0, 0, 0, time.UTC)
+
+		share, err := actions.SetExpireShareToken(db, user.ID, albumShare.Value, &time_)
+		assert.NoError(t, err)
+		assert.Equal(t, time_, *share.Expire)
+
+		share, err = actions.SetExpireShareToken(db, user.ID, albumShare.Value, nil)
+		assert.NoError(t, err)
+		assert.Nil(t, share.Expire)
+	})
 }

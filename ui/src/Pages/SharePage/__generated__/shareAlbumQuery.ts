@@ -136,7 +136,10 @@ export interface shareAlbumQuery_album_media_exif {
    * The name of the lens
    */
   lens: string | null;
-  dateShot: Time | null;
+  /**
+   * The date when the photo is shot
+   */
+  dateShot: string | null;
   /**
    * The exposure time of the image
    */
