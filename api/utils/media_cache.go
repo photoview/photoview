@@ -55,6 +55,10 @@ func ConfigureTestCache(tmpDir string) {
 	testCachePath = tmpDir
 }
 
+var cachedMediaCachePath = sync.OnceValue(func() string {
+	return computeMediaCachePath()
+})
+
 // MediaCachePath returns the path for where the media cache is located on the file system
 func MediaCachePath() string {
 	testCachePathLocker.RLock()
@@ -64,10 +68,13 @@ func MediaCachePath() string {
 		return cachedPath
 	}
 
+	return cachedMediaCachePath()
+}
+
+func computeMediaCachePath() string {
 	photoCache := EnvMediaCachePath.GetValue()
 	if photoCache == "" {
 		photoCache = "./media_cache"
 	}
-
 	return photoCache
 }
