@@ -62,9 +62,6 @@ services:
       ## - the `photoview-prepare` service's right side of the storage volume mount (under the `volumes:`)
       ## - the right side of the storage volume mount (under the `volumes:`) below
       # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
-      ## Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
-      ## Enable the following Godebug
-      # GODEBUG: "asyncpreemptoff=1"
       ## Optional: To enable map related features, you need to create a mapbox token.
       ## A token can be generated for free here https://account.mapbox.com/access-tokens/
       ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
@@ -76,7 +73,7 @@ services:
     ## Share hardware devices with FFmpeg (optional):
     # devices:
     ## Uncomment next devices mappings if they are available in your host system
-    ## Intel QSV
+    ## Intel QSV and/or AMD VA-API
     # - "/dev/dri:/dev/dri"
     ## Nvidia CUDA
     # - "/dev/nvidia0:/dev/nvidia0"
