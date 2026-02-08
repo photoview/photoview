@@ -168,6 +168,7 @@ type ComplexityRoot struct {
 		ScanAll                     func(childComplexity int) int
 		ScanUser                    func(childComplexity int, userID int) int
 		SetAlbumCover               func(childComplexity int, coverID int) int
+		SetExpireShareToken         func(childComplexity int, token string, expire *time.Time) int
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
@@ -327,6 +328,7 @@ type MutationResolver interface {
 	ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
+	SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
@@ -957,6 +959,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetAlbumCover(childComplexity, args["coverID"].(int)), true
+	case "Mutation.setExpireShareToken":
+		if e.complexity.Mutation.SetExpireShareToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setExpireShareToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetExpireShareToken(childComplexity, args["token"].(string), args["expire"].(*time.Time)), true
 	case "Mutation.setFaceGroupLabel":
 		if e.complexity.Mutation.SetFaceGroupLabel == nil {
 			break
@@ -1906,6 +1919,22 @@ func (ec *executionContext) field_Mutation_setAlbumCover_args(ctx context.Contex
 		return nil, err
 	}
 	args["coverID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setExpireShareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["token"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire", ec.unmarshalOTime2ᚖtimeᚐTime)
+	if err != nil {
+		return nil, err
+	}
+	args["expire"] = arg1
 	return args, nil
 }
 
@@ -5623,6 +5652,76 @@ func (ec *executionContext) fieldContext_Mutation_protectShareToken(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_protectShareToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setExpireShareToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setExpireShareToken,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetExpireShareToken(ctx, fc.Args["token"].(string), fc.Args["expire"].(*time.Time))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.IsAuthorized == nil {
+					var zeroVal *models.ShareToken
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setExpireShareToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ShareToken_id(ctx, field)
+			case "token":
+				return ec.fieldContext_ShareToken_token(ctx, field)
+			case "owner":
+				return ec.fieldContext_ShareToken_owner(ctx, field)
+			case "expire":
+				return ec.fieldContext_ShareToken_expire(ctx, field)
+			case "hasPassword":
+				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
+			case "album":
+				return ec.fieldContext_ShareToken_album(ctx, field)
+			case "media":
+				return ec.fieldContext_ShareToken_media(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setExpireShareToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11875,6 +11974,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "protectShareToken":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_protectShareToken(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setExpireShareToken":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setExpireShareToken(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
