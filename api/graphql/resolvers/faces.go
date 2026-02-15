@@ -192,7 +192,18 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		if err := deleteFaceGroups(sourceFaceGroups, tx); err != nil {
 			return err
 		}
+		subQuery := tx.Model(&models.ImageFace{}).
+			Select("MIN(id)").
+			Where("face_group_id = ?", destinationFaceGroup.ID).
+			Group("media_id")
 
+		err := tx.Where("face_group_id = ?", destinationFaceGroup.ID).
+			Where("id NOT IN (?)", subQuery).
+			Delete(&models.ImageFace{}).
+			Error
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 
