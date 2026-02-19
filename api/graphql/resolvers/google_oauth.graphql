@@ -1,0 +1,4 @@
+extend type Query {
+  "Get the Google OAuth client ID, returns null if Google OAuth is not enabled"
+  googleOAuthClientID: String
+}

@@ -11,6 +11,13 @@ import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'
+
+const GOOGLE_OAUTH_CLIENT_ID_QUERY = gql`
+  query GoogleOAuthClientID {
+    googleOAuthClientID
+  }
+`
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -127,6 +134,9 @@ const LoginPage = () => {
     { variables: {} }
   )
 
+  const { data: googleOAuthData } = useQuery(GOOGLE_OAUTH_CLIENT_ID_QUERY)
+  const googleClientId = googleOAuthData?.googleOAuthClientID
+
   useEffect(() => {
     if (authToken()) navigate('/')
   }, [])
@@ -148,6 +158,18 @@ const LoginPage = () => {
         <LogoHeader />
         <LoginForm />
       </div>
+      {googleClientId && (
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <GoogleLogin
+            onSuccess={credentialResponse => {
+              console.log(credentialResponse);
+            }}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+          />
+        </GoogleOAuthProvider>
+      )}
     </>
   )
 }
