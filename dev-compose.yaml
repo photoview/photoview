@@ -10,6 +10,8 @@ services:
       args:
         - NODE_ENV=development
     env_file: ui/example.env
+    environment:
+      REACT_APP_API_ENDPOINT: http://localhost:4001/api
     volumes:
       - .:/app:rw
     ports:
@@ -29,6 +31,7 @@ services:
       target: api
     env_file: api/example.env
     environment:
+      PHOTOVIEW_DEVELOPMENT_MODE: 1 # Enable development mode (disables CORS restrictions)
       PHOTOVIEW_DATABASE_DRIVER: sqlite # Change to the right database driver
       PHOTOVIEW_SQLITE_PATH: photoview.db
       PHOTOVIEW_MYSQL_URL: photoview:photosecret@tcp(mariadb)/photoview_test

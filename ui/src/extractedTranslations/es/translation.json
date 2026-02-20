@@ -179,7 +179,16 @@
         },
         "title": ""
       },
-      "title": "Preferencias de usuario"
+      "title": "Preferencias de usuario",
+      "landing_page": {
+        "timeline": "Línea de tiempo",
+        "albums": "Álbumes",
+        "places": "Lugares",
+        "people": "Personas",
+        "label": "Página de inicio predeterminada",
+        "description": "Elige la página que se mostrará después de iniciar sesión",
+        "placeholder": "Seleccionar página predeterminada"
+      }
     },
     "users": {
       "add_user": {

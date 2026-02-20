@@ -179,7 +179,16 @@
         },
         "title": "テーマの設定"
       },
-      "title": "ユーザー設定"
+      "title": "ユーザー設定",
+      "landing_page": {
+        "timeline": "タイムライン",
+        "albums": "アルバム",
+        "places": "場所",
+        "people": "人物",
+        "label": "デフォルトのランディングページ",
+        "description": "ログイン後に表示するページを選択してください",
+        "placeholder": "デフォルトページを選択"
+      }
     },
     "users": {
       "add_user": {

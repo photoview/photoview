@@ -13,6 +13,7 @@ export interface changeUserPreferences_changeUserPreferences {
   __typename: "UserPreferences";
   id: string;
   language: LanguageTranslation | null;
+  defaultLandingPage: string | null;
 }
 
 export interface changeUserPreferences {
@@ -24,4 +25,5 @@ export interface changeUserPreferences {
 
 export interface changeUserPreferencesVariables {
   language?: string | null;
+  defaultLandingPage?: string | null;
 }
