@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 	"time"
 
@@ -160,8 +161,16 @@ func setupGracefulShutdown(svr *http.Server) {
 }
 
 func logUIendpointURL() {
-	if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
-		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+	if uiEndpoints := utils.UiEndpointUrls(); uiEndpoints != nil && len(uiEndpoints) > 0 {
+		if len(uiEndpoints) == 1 {
+			log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoints[0].String())
+		} else {
+			urls := make([]string, len(uiEndpoints))
+			for i, ep := range uiEndpoints {
+				urls[i] = ep.String()
+			}
+			log.Printf("Photoview UI public endpoints ready at: %s\n", strings.Join(urls, ", "))
+		}
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}

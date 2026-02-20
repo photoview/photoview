@@ -134,7 +134,7 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
     && find /app/ui -type f \( \
         -name "*.js" -o -name "*.mjs" -o -name "*.json" \
         -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
-    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
+        -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
         \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
     -exec sh -c 'for file; do \
         gzip -k -f -9 "$file"; \
