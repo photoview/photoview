@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,20 +23,10 @@ import (
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
-	return &executableSchema{
-		schema:     cfg.Schema,
-		resolvers:  cfg.Resolvers,
-		directives: cfg.Directives,
-		complexity: cfg.Complexity,
-	}
+	return &executableSchema{SchemaData: cfg.Schema, Resolvers: cfg.Resolvers, Directives: cfg.Directives, ComplexityRoot: cfg.Complexity}
 }
 
-type Config struct {
-	Schema     *ast.Schema
-	Resolvers  ResolverRoot
-	Directives DirectiveRoot
-	Complexity ComplexityRoot
-}
+type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
 	Album() AlbumResolver
@@ -371,39 +360,34 @@ type UserResolver interface {
 	RootAlbums(ctx context.Context, obj *models.User) ([]*models.Album, error)
 }
 
-type executableSchema struct {
-	schema     *ast.Schema
-	resolvers  ResolverRoot
-	directives DirectiveRoot
-	complexity ComplexityRoot
-}
+type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 func (e *executableSchema) Schema() *ast.Schema {
-	if e.schema != nil {
-		return e.schema
+	if e.SchemaData != nil {
+		return e.SchemaData
 	}
 	return parsedSchema
 }
 
 func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
-	ec := executionContext{nil, e, 0, 0, nil}
+	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
 
 	case "Album.filePath":
-		if e.complexity.Album.FilePath == nil {
+		if e.ComplexityRoot.Album.FilePath == nil {
 			break
 		}
 
-		return e.complexity.Album.FilePath(childComplexity), true
+		return e.ComplexityRoot.Album.FilePath(childComplexity), true
 	case "Album.id":
-		if e.complexity.Album.ID == nil {
+		if e.ComplexityRoot.Album.ID == nil {
 			break
 		}
 
-		return e.complexity.Album.ID(childComplexity), true
+		return e.ComplexityRoot.Album.ID(childComplexity), true
 	case "Album.media":
-		if e.complexity.Album.Media == nil {
+		if e.ComplexityRoot.Album.Media == nil {
 			break
 		}
 
@@ -412,33 +396,33 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Album.Media(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
+		return e.ComplexityRoot.Album.Media(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
 	case "Album.owner":
-		if e.complexity.Album.Owner == nil {
+		if e.ComplexityRoot.Album.Owner == nil {
 			break
 		}
 
-		return e.complexity.Album.Owner(childComplexity), true
+		return e.ComplexityRoot.Album.Owner(childComplexity), true
 	case "Album.parentAlbum":
-		if e.complexity.Album.ParentAlbum == nil {
+		if e.ComplexityRoot.Album.ParentAlbum == nil {
 			break
 		}
 
-		return e.complexity.Album.ParentAlbum(childComplexity), true
+		return e.ComplexityRoot.Album.ParentAlbum(childComplexity), true
 	case "Album.path":
-		if e.complexity.Album.Path == nil {
+		if e.ComplexityRoot.Album.Path == nil {
 			break
 		}
 
-		return e.complexity.Album.Path(childComplexity), true
+		return e.ComplexityRoot.Album.Path(childComplexity), true
 	case "Album.shares":
-		if e.complexity.Album.Shares == nil {
+		if e.ComplexityRoot.Album.Shares == nil {
 			break
 		}
 
-		return e.complexity.Album.Shares(childComplexity), true
+		return e.ComplexityRoot.Album.Shares(childComplexity), true
 	case "Album.subAlbums":
-		if e.complexity.Album.SubAlbums == nil {
+		if e.ComplexityRoot.Album.SubAlbums == nil {
 			break
 		}
 
@@ -447,66 +431,66 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Album.SubAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Album.SubAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 	case "Album.thumbnail":
-		if e.complexity.Album.Thumbnail == nil {
+		if e.ComplexityRoot.Album.Thumbnail == nil {
 			break
 		}
 
-		return e.complexity.Album.Thumbnail(childComplexity), true
+		return e.ComplexityRoot.Album.Thumbnail(childComplexity), true
 	case "Album.title":
-		if e.complexity.Album.Title == nil {
+		if e.ComplexityRoot.Album.Title == nil {
 			break
 		}
 
-		return e.complexity.Album.Title(childComplexity), true
+		return e.ComplexityRoot.Album.Title(childComplexity), true
 
 	case "AuthorizeResult.status":
-		if e.complexity.AuthorizeResult.Status == nil {
+		if e.ComplexityRoot.AuthorizeResult.Status == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Status(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Status(childComplexity), true
 	case "AuthorizeResult.success":
-		if e.complexity.AuthorizeResult.Success == nil {
+		if e.ComplexityRoot.AuthorizeResult.Success == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Success(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Success(childComplexity), true
 	case "AuthorizeResult.token":
-		if e.complexity.AuthorizeResult.Token == nil {
+		if e.ComplexityRoot.AuthorizeResult.Token == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Token(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Token(childComplexity), true
 
 	case "Coordinates.latitude":
-		if e.complexity.Coordinates.Latitude == nil {
+		if e.ComplexityRoot.Coordinates.Latitude == nil {
 			break
 		}
 
-		return e.complexity.Coordinates.Latitude(childComplexity), true
+		return e.ComplexityRoot.Coordinates.Latitude(childComplexity), true
 	case "Coordinates.longitude":
-		if e.complexity.Coordinates.Longitude == nil {
+		if e.ComplexityRoot.Coordinates.Longitude == nil {
 			break
 		}
 
-		return e.complexity.Coordinates.Longitude(childComplexity), true
+		return e.ComplexityRoot.Coordinates.Longitude(childComplexity), true
 
 	case "FaceGroup.id":
-		if e.complexity.FaceGroup.ID == nil {
+		if e.ComplexityRoot.FaceGroup.ID == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.ID(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.ID(childComplexity), true
 	case "FaceGroup.imageFaceCount":
-		if e.complexity.FaceGroup.ImageFaceCount == nil {
+		if e.ComplexityRoot.FaceGroup.ImageFaceCount == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.ImageFaceCount(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.ImageFaceCount(childComplexity), true
 	case "FaceGroup.imageFaces":
-		if e.complexity.FaceGroup.ImageFaces == nil {
+		if e.ComplexityRoot.FaceGroup.ImageFaces == nil {
 			break
 		}
 
@@ -515,286 +499,286 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.FaceGroup.ImageFaces(childComplexity, args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.FaceGroup.ImageFaces(childComplexity, args["paginate"].(*models.Pagination)), true
 	case "FaceGroup.label":
-		if e.complexity.FaceGroup.Label == nil {
+		if e.ComplexityRoot.FaceGroup.Label == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.Label(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.Label(childComplexity), true
 
 	case "FaceRectangle.maxX":
-		if e.complexity.FaceRectangle.MaxX == nil {
+		if e.ComplexityRoot.FaceRectangle.MaxX == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MaxX(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MaxX(childComplexity), true
 	case "FaceRectangle.maxY":
-		if e.complexity.FaceRectangle.MaxY == nil {
+		if e.ComplexityRoot.FaceRectangle.MaxY == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MaxY(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MaxY(childComplexity), true
 	case "FaceRectangle.minX":
-		if e.complexity.FaceRectangle.MinX == nil {
+		if e.ComplexityRoot.FaceRectangle.MinX == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MinX(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MinX(childComplexity), true
 	case "FaceRectangle.minY":
-		if e.complexity.FaceRectangle.MinY == nil {
+		if e.ComplexityRoot.FaceRectangle.MinY == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MinY(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MinY(childComplexity), true
 
 	case "ImageFace.faceGroup":
-		if e.complexity.ImageFace.FaceGroup == nil {
+		if e.ComplexityRoot.ImageFace.FaceGroup == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.FaceGroup(childComplexity), true
+		return e.ComplexityRoot.ImageFace.FaceGroup(childComplexity), true
 	case "ImageFace.id":
-		if e.complexity.ImageFace.ID == nil {
+		if e.ComplexityRoot.ImageFace.ID == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.ID(childComplexity), true
+		return e.ComplexityRoot.ImageFace.ID(childComplexity), true
 	case "ImageFace.media":
-		if e.complexity.ImageFace.Media == nil {
+		if e.ComplexityRoot.ImageFace.Media == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.Media(childComplexity), true
+		return e.ComplexityRoot.ImageFace.Media(childComplexity), true
 	case "ImageFace.rectangle":
-		if e.complexity.ImageFace.Rectangle == nil {
+		if e.ComplexityRoot.ImageFace.Rectangle == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.Rectangle(childComplexity), true
+		return e.ComplexityRoot.ImageFace.Rectangle(childComplexity), true
 
 	case "Media.album":
-		if e.complexity.Media.Album == nil {
+		if e.ComplexityRoot.Media.Album == nil {
 			break
 		}
 
-		return e.complexity.Media.Album(childComplexity), true
+		return e.ComplexityRoot.Media.Album(childComplexity), true
 	case "Media.blurhash":
-		if e.complexity.Media.Blurhash == nil {
+		if e.ComplexityRoot.Media.Blurhash == nil {
 			break
 		}
 
-		return e.complexity.Media.Blurhash(childComplexity), true
+		return e.ComplexityRoot.Media.Blurhash(childComplexity), true
 	case "Media.date":
-		if e.complexity.Media.Date == nil {
+		if e.ComplexityRoot.Media.Date == nil {
 			break
 		}
 
-		return e.complexity.Media.Date(childComplexity), true
+		return e.ComplexityRoot.Media.Date(childComplexity), true
 	case "Media.downloads":
-		if e.complexity.Media.Downloads == nil {
+		if e.ComplexityRoot.Media.Downloads == nil {
 			break
 		}
 
-		return e.complexity.Media.Downloads(childComplexity), true
+		return e.ComplexityRoot.Media.Downloads(childComplexity), true
 	case "Media.exif":
-		if e.complexity.Media.Exif == nil {
+		if e.ComplexityRoot.Media.Exif == nil {
 			break
 		}
 
-		return e.complexity.Media.Exif(childComplexity), true
+		return e.ComplexityRoot.Media.Exif(childComplexity), true
 	case "Media.faces":
-		if e.complexity.Media.Faces == nil {
+		if e.ComplexityRoot.Media.Faces == nil {
 			break
 		}
 
-		return e.complexity.Media.Faces(childComplexity), true
+		return e.ComplexityRoot.Media.Faces(childComplexity), true
 	case "Media.favorite":
-		if e.complexity.Media.Favorite == nil {
+		if e.ComplexityRoot.Media.Favorite == nil {
 			break
 		}
 
-		return e.complexity.Media.Favorite(childComplexity), true
+		return e.ComplexityRoot.Media.Favorite(childComplexity), true
 	case "Media.highRes":
-		if e.complexity.Media.HighRes == nil {
+		if e.ComplexityRoot.Media.HighRes == nil {
 			break
 		}
 
-		return e.complexity.Media.HighRes(childComplexity), true
+		return e.ComplexityRoot.Media.HighRes(childComplexity), true
 	case "Media.id":
-		if e.complexity.Media.ID == nil {
+		if e.ComplexityRoot.Media.ID == nil {
 			break
 		}
 
-		return e.complexity.Media.ID(childComplexity), true
+		return e.ComplexityRoot.Media.ID(childComplexity), true
 	case "Media.path":
-		if e.complexity.Media.Path == nil {
+		if e.ComplexityRoot.Media.Path == nil {
 			break
 		}
 
-		return e.complexity.Media.Path(childComplexity), true
+		return e.ComplexityRoot.Media.Path(childComplexity), true
 	case "Media.shares":
-		if e.complexity.Media.Shares == nil {
+		if e.ComplexityRoot.Media.Shares == nil {
 			break
 		}
 
-		return e.complexity.Media.Shares(childComplexity), true
+		return e.ComplexityRoot.Media.Shares(childComplexity), true
 	case "Media.thumbnail":
-		if e.complexity.Media.Thumbnail == nil {
+		if e.ComplexityRoot.Media.Thumbnail == nil {
 			break
 		}
 
-		return e.complexity.Media.Thumbnail(childComplexity), true
+		return e.ComplexityRoot.Media.Thumbnail(childComplexity), true
 	case "Media.title":
-		if e.complexity.Media.Title == nil {
+		if e.ComplexityRoot.Media.Title == nil {
 			break
 		}
 
-		return e.complexity.Media.Title(childComplexity), true
+		return e.ComplexityRoot.Media.Title(childComplexity), true
 	case "Media.type":
-		if e.complexity.Media.Type == nil {
+		if e.ComplexityRoot.Media.Type == nil {
 			break
 		}
 
-		return e.complexity.Media.Type(childComplexity), true
+		return e.ComplexityRoot.Media.Type(childComplexity), true
 	case "Media.videoMetadata":
-		if e.complexity.Media.VideoMetadata == nil {
+		if e.ComplexityRoot.Media.VideoMetadata == nil {
 			break
 		}
 
-		return e.complexity.Media.VideoMetadata(childComplexity), true
+		return e.ComplexityRoot.Media.VideoMetadata(childComplexity), true
 	case "Media.videoWeb":
-		if e.complexity.Media.VideoWeb == nil {
+		if e.ComplexityRoot.Media.VideoWeb == nil {
 			break
 		}
 
-		return e.complexity.Media.VideoWeb(childComplexity), true
+		return e.ComplexityRoot.Media.VideoWeb(childComplexity), true
 
 	case "MediaDownload.mediaUrl":
-		if e.complexity.MediaDownload.MediaURL == nil {
+		if e.ComplexityRoot.MediaDownload.MediaURL == nil {
 			break
 		}
 
-		return e.complexity.MediaDownload.MediaURL(childComplexity), true
+		return e.ComplexityRoot.MediaDownload.MediaURL(childComplexity), true
 	case "MediaDownload.title":
-		if e.complexity.MediaDownload.Title == nil {
+		if e.ComplexityRoot.MediaDownload.Title == nil {
 			break
 		}
 
-		return e.complexity.MediaDownload.Title(childComplexity), true
+		return e.ComplexityRoot.MediaDownload.Title(childComplexity), true
 
 	case "MediaEXIF.aperture":
-		if e.complexity.MediaEXIF.Aperture == nil {
+		if e.ComplexityRoot.MediaEXIF.Aperture == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Aperture(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Aperture(childComplexity), true
 	case "MediaEXIF.camera":
-		if e.complexity.MediaEXIF.Camera == nil {
+		if e.ComplexityRoot.MediaEXIF.Camera == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Camera(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Camera(childComplexity), true
 	case "MediaEXIF.coordinates":
-		if e.complexity.MediaEXIF.Coordinates == nil {
+		if e.ComplexityRoot.MediaEXIF.Coordinates == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Coordinates(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Coordinates(childComplexity), true
 	case "MediaEXIF.dateShot":
-		if e.complexity.MediaEXIF.DateShotWithOffset == nil {
+		if e.ComplexityRoot.MediaEXIF.DateShotWithOffset == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.DateShotWithOffset(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.DateShotWithOffset(childComplexity), true
 	case "MediaEXIF.description":
-		if e.complexity.MediaEXIF.Description == nil {
+		if e.ComplexityRoot.MediaEXIF.Description == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Description(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Description(childComplexity), true
 	case "MediaEXIF.exposure":
-		if e.complexity.MediaEXIF.Exposure == nil {
+		if e.ComplexityRoot.MediaEXIF.Exposure == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Exposure(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Exposure(childComplexity), true
 	case "MediaEXIF.exposureProgram":
-		if e.complexity.MediaEXIF.ExposureProgram == nil {
+		if e.ComplexityRoot.MediaEXIF.ExposureProgram == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.ExposureProgram(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.ExposureProgram(childComplexity), true
 	case "MediaEXIF.flash":
-		if e.complexity.MediaEXIF.Flash == nil {
+		if e.ComplexityRoot.MediaEXIF.Flash == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Flash(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Flash(childComplexity), true
 	case "MediaEXIF.focalLength":
-		if e.complexity.MediaEXIF.FocalLength == nil {
+		if e.ComplexityRoot.MediaEXIF.FocalLength == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.FocalLength(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.FocalLength(childComplexity), true
 	case "MediaEXIF.id":
-		if e.complexity.MediaEXIF.ID == nil {
+		if e.ComplexityRoot.MediaEXIF.ID == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.ID(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.ID(childComplexity), true
 	case "MediaEXIF.iso":
-		if e.complexity.MediaEXIF.Iso == nil {
+		if e.ComplexityRoot.MediaEXIF.Iso == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Iso(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Iso(childComplexity), true
 	case "MediaEXIF.lens":
-		if e.complexity.MediaEXIF.Lens == nil {
+		if e.ComplexityRoot.MediaEXIF.Lens == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Lens(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Lens(childComplexity), true
 	case "MediaEXIF.maker":
-		if e.complexity.MediaEXIF.Maker == nil {
+		if e.ComplexityRoot.MediaEXIF.Maker == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Maker(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Maker(childComplexity), true
 	case "MediaEXIF.media":
-		if e.complexity.MediaEXIF.Media == nil {
+		if e.ComplexityRoot.MediaEXIF.Media == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Media(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Media(childComplexity), true
 
 	case "MediaURL.fileSize":
-		if e.complexity.MediaURL.FileSize == nil {
+		if e.ComplexityRoot.MediaURL.FileSize == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.FileSize(childComplexity), true
+		return e.ComplexityRoot.MediaURL.FileSize(childComplexity), true
 	case "MediaURL.height":
-		if e.complexity.MediaURL.Height == nil {
+		if e.ComplexityRoot.MediaURL.Height == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.Height(childComplexity), true
+		return e.ComplexityRoot.MediaURL.Height(childComplexity), true
 	case "MediaURL.url":
-		if e.complexity.MediaURL.URL == nil {
+		if e.ComplexityRoot.MediaURL.URL == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.URL(childComplexity), true
+		return e.ComplexityRoot.MediaURL.URL(childComplexity), true
 	case "MediaURL.width":
-		if e.complexity.MediaURL.Width == nil {
+		if e.ComplexityRoot.MediaURL.Width == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.Width(childComplexity), true
+		return e.ComplexityRoot.MediaURL.Width(childComplexity), true
 
 	case "Mutation.authorizeUser":
-		if e.complexity.Mutation.AuthorizeUser == nil {
+		if e.ComplexityRoot.Mutation.AuthorizeUser == nil {
 			break
 		}
 
@@ -803,9 +787,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+		return e.ComplexityRoot.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
 	case "Mutation.changeUserPreferences":
-		if e.complexity.Mutation.ChangeUserPreferences == nil {
+		if e.ComplexityRoot.Mutation.ChangeUserPreferences == nil {
 			break
 		}
 
@@ -814,9 +798,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string)), true
+		return e.ComplexityRoot.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string)), true
 	case "Mutation.combineFaceGroups":
-		if e.complexity.Mutation.CombineFaceGroups == nil {
+		if e.ComplexityRoot.Mutation.CombineFaceGroups == nil {
 			break
 		}
 
@@ -825,9 +809,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupIDs"].([]int)), true
+		return e.ComplexityRoot.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupIDs"].([]int)), true
 	case "Mutation.createUser":
-		if e.complexity.Mutation.CreateUser == nil {
+		if e.ComplexityRoot.Mutation.CreateUser == nil {
 			break
 		}
 
@@ -836,9 +820,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool)), true
+		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool)), true
 	case "Mutation.deleteShareToken":
-		if e.complexity.Mutation.DeleteShareToken == nil {
+		if e.ComplexityRoot.Mutation.DeleteShareToken == nil {
 			break
 		}
 
@@ -847,9 +831,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteShareToken(childComplexity, args["token"].(string)), true
+		return e.ComplexityRoot.Mutation.DeleteShareToken(childComplexity, args["token"].(string)), true
 	case "Mutation.deleteUser":
-		if e.complexity.Mutation.DeleteUser == nil {
+		if e.ComplexityRoot.Mutation.DeleteUser == nil {
 			break
 		}
 
@@ -858,9 +842,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
+		return e.ComplexityRoot.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
 	case "Mutation.detachImageFaces":
-		if e.complexity.Mutation.DetachImageFaces == nil {
+		if e.ComplexityRoot.Mutation.DetachImageFaces == nil {
 			break
 		}
 
@@ -869,9 +853,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DetachImageFaces(childComplexity, args["imageFaceIDs"].([]int)), true
+		return e.ComplexityRoot.Mutation.DetachImageFaces(childComplexity, args["imageFaceIDs"].([]int)), true
 	case "Mutation.favoriteMedia":
-		if e.complexity.Mutation.FavoriteMedia == nil {
+		if e.ComplexityRoot.Mutation.FavoriteMedia == nil {
 			break
 		}
 
@@ -880,9 +864,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FavoriteMedia(childComplexity, args["mediaId"].(int), args["favorite"].(bool)), true
+		return e.ComplexityRoot.Mutation.FavoriteMedia(childComplexity, args["mediaId"].(int), args["favorite"].(bool)), true
 	case "Mutation.initialSetupWizard":
-		if e.complexity.Mutation.InitialSetupWizard == nil {
+		if e.ComplexityRoot.Mutation.InitialSetupWizard == nil {
 			break
 		}
 
@@ -891,9 +875,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
+		return e.ComplexityRoot.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 	case "Mutation.moveImageFaces":
-		if e.complexity.Mutation.MoveImageFaces == nil {
+		if e.ComplexityRoot.Mutation.MoveImageFaces == nil {
 			break
 		}
 
@@ -902,9 +886,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MoveImageFaces(childComplexity, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int)), true
+		return e.ComplexityRoot.Mutation.MoveImageFaces(childComplexity, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int)), true
 	case "Mutation.protectShareToken":
-		if e.complexity.Mutation.ProtectShareToken == nil {
+		if e.ComplexityRoot.Mutation.ProtectShareToken == nil {
 			break
 		}
 
@@ -913,15 +897,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 	case "Mutation.recognizeUnlabeledFaces":
-		if e.complexity.Mutation.RecognizeUnlabeledFaces == nil {
+		if e.ComplexityRoot.Mutation.RecognizeUnlabeledFaces == nil {
 			break
 		}
 
-		return e.complexity.Mutation.RecognizeUnlabeledFaces(childComplexity), true
+		return e.ComplexityRoot.Mutation.RecognizeUnlabeledFaces(childComplexity), true
 	case "Mutation.resetAlbumCover":
-		if e.complexity.Mutation.ResetAlbumCover == nil {
+		if e.ComplexityRoot.Mutation.ResetAlbumCover == nil {
 			break
 		}
 
@@ -930,15 +914,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ResetAlbumCover(childComplexity, args["albumID"].(int)), true
+		return e.ComplexityRoot.Mutation.ResetAlbumCover(childComplexity, args["albumID"].(int)), true
 	case "Mutation.scanAll":
-		if e.complexity.Mutation.ScanAll == nil {
+		if e.ComplexityRoot.Mutation.ScanAll == nil {
 			break
 		}
 
-		return e.complexity.Mutation.ScanAll(childComplexity), true
+		return e.ComplexityRoot.Mutation.ScanAll(childComplexity), true
 	case "Mutation.scanUser":
-		if e.complexity.Mutation.ScanUser == nil {
+		if e.ComplexityRoot.Mutation.ScanUser == nil {
 			break
 		}
 
@@ -947,9 +931,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
+		return e.ComplexityRoot.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
 	case "Mutation.setAlbumCover":
-		if e.complexity.Mutation.SetAlbumCover == nil {
+		if e.ComplexityRoot.Mutation.SetAlbumCover == nil {
 			break
 		}
 
@@ -958,9 +942,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetAlbumCover(childComplexity, args["coverID"].(int)), true
+		return e.ComplexityRoot.Mutation.SetAlbumCover(childComplexity, args["coverID"].(int)), true
 	case "Mutation.setExpireShareToken":
-		if e.complexity.Mutation.SetExpireShareToken == nil {
+		if e.ComplexityRoot.Mutation.SetExpireShareToken == nil {
 			break
 		}
 
@@ -969,9 +953,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetExpireShareToken(childComplexity, args["token"].(string), args["expire"].(*time.Time)), true
+		return e.ComplexityRoot.Mutation.SetExpireShareToken(childComplexity, args["token"].(string), args["expire"].(*time.Time)), true
 	case "Mutation.setFaceGroupLabel":
-		if e.complexity.Mutation.SetFaceGroupLabel == nil {
+		if e.ComplexityRoot.Mutation.SetFaceGroupLabel == nil {
 			break
 		}
 
@@ -980,9 +964,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
+		return e.ComplexityRoot.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
 	case "Mutation.setPeriodicScanInterval":
-		if e.complexity.Mutation.SetPeriodicScanInterval == nil {
+		if e.ComplexityRoot.Mutation.SetPeriodicScanInterval == nil {
 			break
 		}
 
@@ -991,9 +975,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
+		return e.ComplexityRoot.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
 	case "Mutation.setScannerConcurrentWorkers":
-		if e.complexity.Mutation.SetScannerConcurrentWorkers == nil {
+		if e.ComplexityRoot.Mutation.SetScannerConcurrentWorkers == nil {
 			break
 		}
 
@@ -1002,9 +986,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
+		return e.ComplexityRoot.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
 	case "Mutation.shareAlbum":
-		if e.complexity.Mutation.ShareAlbum == nil {
+		if e.ComplexityRoot.Mutation.ShareAlbum == nil {
 			break
 		}
 
@@ -1013,9 +997,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 	case "Mutation.shareMedia":
-		if e.complexity.Mutation.ShareMedia == nil {
+		if e.ComplexityRoot.Mutation.ShareMedia == nil {
 			break
 		}
 
@@ -1024,9 +1008,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
+		if e.ComplexityRoot.Mutation.UpdateUser == nil {
 			break
 		}
 
@@ -1035,9 +1019,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
 	case "Mutation.userAddRootPath":
-		if e.complexity.Mutation.UserAddRootPath == nil {
+		if e.ComplexityRoot.Mutation.UserAddRootPath == nil {
 			break
 		}
 
@@ -1046,9 +1030,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UserAddRootPath(childComplexity, args["id"].(int), args["rootPath"].(string)), true
+		return e.ComplexityRoot.Mutation.UserAddRootPath(childComplexity, args["id"].(int), args["rootPath"].(string)), true
 	case "Mutation.userRemoveRootAlbum":
-		if e.complexity.Mutation.UserRemoveRootAlbum == nil {
+		if e.ComplexityRoot.Mutation.UserRemoveRootAlbum == nil {
 			break
 		}
 
@@ -1057,59 +1041,59 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UserRemoveRootAlbum(childComplexity, args["userId"].(int), args["albumId"].(int)), true
+		return e.ComplexityRoot.Mutation.UserRemoveRootAlbum(childComplexity, args["userId"].(int), args["albumId"].(int)), true
 
 	case "Notification.content":
-		if e.complexity.Notification.Content == nil {
+		if e.ComplexityRoot.Notification.Content == nil {
 			break
 		}
 
-		return e.complexity.Notification.Content(childComplexity), true
+		return e.ComplexityRoot.Notification.Content(childComplexity), true
 	case "Notification.header":
-		if e.complexity.Notification.Header == nil {
+		if e.ComplexityRoot.Notification.Header == nil {
 			break
 		}
 
-		return e.complexity.Notification.Header(childComplexity), true
+		return e.ComplexityRoot.Notification.Header(childComplexity), true
 	case "Notification.key":
-		if e.complexity.Notification.Key == nil {
+		if e.ComplexityRoot.Notification.Key == nil {
 			break
 		}
 
-		return e.complexity.Notification.Key(childComplexity), true
+		return e.ComplexityRoot.Notification.Key(childComplexity), true
 	case "Notification.negative":
-		if e.complexity.Notification.Negative == nil {
+		if e.ComplexityRoot.Notification.Negative == nil {
 			break
 		}
 
-		return e.complexity.Notification.Negative(childComplexity), true
+		return e.ComplexityRoot.Notification.Negative(childComplexity), true
 	case "Notification.positive":
-		if e.complexity.Notification.Positive == nil {
+		if e.ComplexityRoot.Notification.Positive == nil {
 			break
 		}
 
-		return e.complexity.Notification.Positive(childComplexity), true
+		return e.ComplexityRoot.Notification.Positive(childComplexity), true
 	case "Notification.progress":
-		if e.complexity.Notification.Progress == nil {
+		if e.ComplexityRoot.Notification.Progress == nil {
 			break
 		}
 
-		return e.complexity.Notification.Progress(childComplexity), true
+		return e.ComplexityRoot.Notification.Progress(childComplexity), true
 	case "Notification.timeout":
-		if e.complexity.Notification.Timeout == nil {
+		if e.ComplexityRoot.Notification.Timeout == nil {
 			break
 		}
 
-		return e.complexity.Notification.Timeout(childComplexity), true
+		return e.ComplexityRoot.Notification.Timeout(childComplexity), true
 	case "Notification.type":
-		if e.complexity.Notification.Type == nil {
+		if e.ComplexityRoot.Notification.Type == nil {
 			break
 		}
 
-		return e.complexity.Notification.Type(childComplexity), true
+		return e.ComplexityRoot.Notification.Type(childComplexity), true
 
 	case "Query.album":
-		if e.complexity.Query.Album == nil {
+		if e.ComplexityRoot.Query.Album == nil {
 			break
 		}
 
@@ -1118,9 +1102,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Album(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.Album(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 	case "Query.faceGroup":
-		if e.complexity.Query.FaceGroup == nil {
+		if e.ComplexityRoot.Query.FaceGroup == nil {
 			break
 		}
 
@@ -1129,15 +1113,16 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FaceGroup(childComplexity, args["id"].(int)), true
+		return e.ComplexityRoot.Query.FaceGroup(childComplexity, args["id"].(int)), true
+
 	case "Query.mapboxToken":
-		if e.complexity.Query.MapboxToken == nil {
+		if e.ComplexityRoot.Query.MapboxToken == nil {
 			break
 		}
 
-		return e.complexity.Query.MapboxToken(childComplexity), true
+		return e.ComplexityRoot.Query.MapboxToken(childComplexity), true
 	case "Query.media":
-		if e.complexity.Query.Media == nil {
+		if e.ComplexityRoot.Query.Media == nil {
 			break
 		}
 
@@ -1146,9 +1131,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Media(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.Media(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 	case "Query.mediaList":
-		if e.complexity.Query.MediaList == nil {
+		if e.ComplexityRoot.Query.MediaList == nil {
 			break
 		}
 
@@ -1157,9 +1142,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MediaList(childComplexity, args["ids"].([]int)), true
+		return e.ComplexityRoot.Query.MediaList(childComplexity, args["ids"].([]int)), true
 	case "Query.myAlbums":
-		if e.complexity.Query.MyAlbums == nil {
+		if e.ComplexityRoot.Query.MyAlbums == nil {
 			break
 		}
 
@@ -1168,9 +1153,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
+		return e.ComplexityRoot.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
 	case "Query.myFaceGroups":
-		if e.complexity.Query.MyFaceGroups == nil {
+		if e.ComplexityRoot.Query.MyFaceGroups == nil {
 			break
 		}
 
@@ -1179,9 +1164,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyFaceGroups(childComplexity, args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.MyFaceGroups(childComplexity, args["paginate"].(*models.Pagination)), true
 	case "Query.myMedia":
-		if e.complexity.Query.MyMedia == nil {
+		if e.ComplexityRoot.Query.MyMedia == nil {
 			break
 		}
 
@@ -1190,15 +1175,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyMedia(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.MyMedia(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 	case "Query.myMediaGeoJson":
-		if e.complexity.Query.MyMediaGeoJSON == nil {
+		if e.ComplexityRoot.Query.MyMediaGeoJSON == nil {
 			break
 		}
 
-		return e.complexity.Query.MyMediaGeoJSON(childComplexity), true
+		return e.ComplexityRoot.Query.MyMediaGeoJSON(childComplexity), true
 	case "Query.myTimeline":
-		if e.complexity.Query.MyTimeline == nil {
+		if e.ComplexityRoot.Query.MyTimeline == nil {
 			break
 		}
 
@@ -1207,21 +1192,21 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time)), true
+		return e.ComplexityRoot.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time)), true
 	case "Query.myUser":
-		if e.complexity.Query.MyUser == nil {
+		if e.ComplexityRoot.Query.MyUser == nil {
 			break
 		}
 
-		return e.complexity.Query.MyUser(childComplexity), true
+		return e.ComplexityRoot.Query.MyUser(childComplexity), true
 	case "Query.myUserPreferences":
-		if e.complexity.Query.MyUserPreferences == nil {
+		if e.ComplexityRoot.Query.MyUserPreferences == nil {
 			break
 		}
 
-		return e.complexity.Query.MyUserPreferences(childComplexity), true
+		return e.ComplexityRoot.Query.MyUserPreferences(childComplexity), true
 	case "Query.search":
-		if e.complexity.Query.Search == nil {
+		if e.ComplexityRoot.Query.Search == nil {
 			break
 		}
 
@@ -1230,9 +1215,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Search(childComplexity, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int)), true
+		return e.ComplexityRoot.Query.Search(childComplexity, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int)), true
 	case "Query.shareToken":
-		if e.complexity.Query.ShareToken == nil {
+		if e.ComplexityRoot.Query.ShareToken == nil {
 			break
 		}
 
@@ -1241,9 +1226,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareToken(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.ShareToken(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 	case "Query.shareTokenValidatePassword":
-		if e.complexity.Query.ShareTokenValidatePassword == nil {
+		if e.ComplexityRoot.Query.ShareTokenValidatePassword == nil {
 			break
 		}
 
@@ -1252,15 +1237,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareTokenValidatePassword(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.ShareTokenValidatePassword(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 	case "Query.siteInfo":
-		if e.complexity.Query.SiteInfo == nil {
+		if e.ComplexityRoot.Query.SiteInfo == nil {
 			break
 		}
 
-		return e.complexity.Query.SiteInfo(childComplexity), true
+		return e.ComplexityRoot.Query.SiteInfo(childComplexity), true
 	case "Query.user":
-		if e.complexity.Query.User == nil {
+		if e.ComplexityRoot.Query.User == nil {
 			break
 		}
 
@@ -1269,256 +1254,256 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 
 	case "ScannerResult.finished":
-		if e.complexity.ScannerResult.Finished == nil {
+		if e.ComplexityRoot.ScannerResult.Finished == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Finished(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Finished(childComplexity), true
 	case "ScannerResult.message":
-		if e.complexity.ScannerResult.Message == nil {
+		if e.ComplexityRoot.ScannerResult.Message == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Message(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Message(childComplexity), true
 	case "ScannerResult.progress":
-		if e.complexity.ScannerResult.Progress == nil {
+		if e.ComplexityRoot.ScannerResult.Progress == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Progress(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Progress(childComplexity), true
 	case "ScannerResult.success":
-		if e.complexity.ScannerResult.Success == nil {
+		if e.ComplexityRoot.ScannerResult.Success == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Success(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Success(childComplexity), true
 
 	case "SearchResult.albums":
-		if e.complexity.SearchResult.Albums == nil {
+		if e.ComplexityRoot.SearchResult.Albums == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Albums(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Albums(childComplexity), true
 	case "SearchResult.media":
-		if e.complexity.SearchResult.Media == nil {
+		if e.ComplexityRoot.SearchResult.Media == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Media(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Media(childComplexity), true
 	case "SearchResult.query":
-		if e.complexity.SearchResult.Query == nil {
+		if e.ComplexityRoot.SearchResult.Query == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Query(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Query(childComplexity), true
 
 	case "ShareToken.album":
-		if e.complexity.ShareToken.Album == nil {
+		if e.ComplexityRoot.ShareToken.Album == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Album(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Album(childComplexity), true
 	case "ShareToken.expire":
-		if e.complexity.ShareToken.Expire == nil {
+		if e.ComplexityRoot.ShareToken.Expire == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Expire(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Expire(childComplexity), true
 	case "ShareToken.hasPassword":
-		if e.complexity.ShareToken.HasPassword == nil {
+		if e.ComplexityRoot.ShareToken.HasPassword == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.HasPassword(childComplexity), true
+		return e.ComplexityRoot.ShareToken.HasPassword(childComplexity), true
 	case "ShareToken.id":
-		if e.complexity.ShareToken.ID == nil {
+		if e.ComplexityRoot.ShareToken.ID == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.ID(childComplexity), true
+		return e.ComplexityRoot.ShareToken.ID(childComplexity), true
 	case "ShareToken.media":
-		if e.complexity.ShareToken.Media == nil {
+		if e.ComplexityRoot.ShareToken.Media == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Media(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Media(childComplexity), true
 	case "ShareToken.owner":
-		if e.complexity.ShareToken.Owner == nil {
+		if e.ComplexityRoot.ShareToken.Owner == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Owner(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Owner(childComplexity), true
 	case "ShareToken.token":
-		if e.complexity.ShareToken.Token == nil {
+		if e.ComplexityRoot.ShareToken.Token == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Token(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Token(childComplexity), true
 
 	case "SiteInfo.concurrentWorkers":
-		if e.complexity.SiteInfo.ConcurrentWorkers == nil {
+		if e.ComplexityRoot.SiteInfo.ConcurrentWorkers == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.ConcurrentWorkers(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.ConcurrentWorkers(childComplexity), true
 	case "SiteInfo.faceDetectionEnabled":
-		if e.complexity.SiteInfo.FaceDetectionEnabled == nil {
+		if e.ComplexityRoot.SiteInfo.FaceDetectionEnabled == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.FaceDetectionEnabled(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.FaceDetectionEnabled(childComplexity), true
 	case "SiteInfo.initialSetup":
-		if e.complexity.SiteInfo.InitialSetup == nil {
+		if e.ComplexityRoot.SiteInfo.InitialSetup == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.InitialSetup(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.InitialSetup(childComplexity), true
 	case "SiteInfo.periodicScanInterval":
-		if e.complexity.SiteInfo.PeriodicScanInterval == nil {
+		if e.ComplexityRoot.SiteInfo.PeriodicScanInterval == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.PeriodicScanInterval(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.PeriodicScanInterval(childComplexity), true
 
 	case "Subscription.notification":
-		if e.complexity.Subscription.Notification == nil {
+		if e.ComplexityRoot.Subscription.Notification == nil {
 			break
 		}
 
-		return e.complexity.Subscription.Notification(childComplexity), true
+		return e.ComplexityRoot.Subscription.Notification(childComplexity), true
 
 	case "TimelineGroup.album":
-		if e.complexity.TimelineGroup.Album == nil {
+		if e.ComplexityRoot.TimelineGroup.Album == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Album(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Album(childComplexity), true
 	case "TimelineGroup.date":
-		if e.complexity.TimelineGroup.Date == nil {
+		if e.ComplexityRoot.TimelineGroup.Date == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Date(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Date(childComplexity), true
 	case "TimelineGroup.media":
-		if e.complexity.TimelineGroup.Media == nil {
+		if e.ComplexityRoot.TimelineGroup.Media == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Media(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Media(childComplexity), true
 	case "TimelineGroup.mediaTotal":
-		if e.complexity.TimelineGroup.MediaTotal == nil {
+		if e.ComplexityRoot.TimelineGroup.MediaTotal == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.MediaTotal(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.MediaTotal(childComplexity), true
 
 	case "User.admin":
-		if e.complexity.User.Admin == nil {
+		if e.ComplexityRoot.User.Admin == nil {
 			break
 		}
 
-		return e.complexity.User.Admin(childComplexity), true
+		return e.ComplexityRoot.User.Admin(childComplexity), true
 	case "User.albums":
-		if e.complexity.User.Albums == nil {
+		if e.ComplexityRoot.User.Albums == nil {
 			break
 		}
 
-		return e.complexity.User.Albums(childComplexity), true
+		return e.ComplexityRoot.User.Albums(childComplexity), true
 	case "User.id":
-		if e.complexity.User.ID == nil {
+		if e.ComplexityRoot.User.ID == nil {
 			break
 		}
 
-		return e.complexity.User.ID(childComplexity), true
+		return e.ComplexityRoot.User.ID(childComplexity), true
 	case "User.rootAlbums":
-		if e.complexity.User.RootAlbums == nil {
+		if e.ComplexityRoot.User.RootAlbums == nil {
 			break
 		}
 
-		return e.complexity.User.RootAlbums(childComplexity), true
+		return e.ComplexityRoot.User.RootAlbums(childComplexity), true
 	case "User.username":
-		if e.complexity.User.Username == nil {
+		if e.ComplexityRoot.User.Username == nil {
 			break
 		}
 
-		return e.complexity.User.Username(childComplexity), true
+		return e.ComplexityRoot.User.Username(childComplexity), true
 
 	case "UserPreferences.id":
-		if e.complexity.UserPreferences.ID == nil {
+		if e.ComplexityRoot.UserPreferences.ID == nil {
 			break
 		}
 
-		return e.complexity.UserPreferences.ID(childComplexity), true
+		return e.ComplexityRoot.UserPreferences.ID(childComplexity), true
 	case "UserPreferences.language":
-		if e.complexity.UserPreferences.Language == nil {
+		if e.ComplexityRoot.UserPreferences.Language == nil {
 			break
 		}
 
-		return e.complexity.UserPreferences.Language(childComplexity), true
+		return e.ComplexityRoot.UserPreferences.Language(childComplexity), true
 
 	case "VideoMetadata.audio":
-		if e.complexity.VideoMetadata.Audio == nil {
+		if e.ComplexityRoot.VideoMetadata.Audio == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Audio(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Audio(childComplexity), true
 	case "VideoMetadata.bitrate":
-		if e.complexity.VideoMetadata.Bitrate == nil {
+		if e.ComplexityRoot.VideoMetadata.Bitrate == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Bitrate(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Bitrate(childComplexity), true
 	case "VideoMetadata.codec":
-		if e.complexity.VideoMetadata.Codec == nil {
+		if e.ComplexityRoot.VideoMetadata.Codec == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Codec(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Codec(childComplexity), true
 	case "VideoMetadata.colorProfile":
-		if e.complexity.VideoMetadata.ColorProfile == nil {
+		if e.ComplexityRoot.VideoMetadata.ColorProfile == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.ColorProfile(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.ColorProfile(childComplexity), true
 	case "VideoMetadata.duration":
-		if e.complexity.VideoMetadata.Duration == nil {
+		if e.ComplexityRoot.VideoMetadata.Duration == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Duration(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Duration(childComplexity), true
 	case "VideoMetadata.framerate":
-		if e.complexity.VideoMetadata.Framerate == nil {
+		if e.ComplexityRoot.VideoMetadata.Framerate == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Framerate(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Framerate(childComplexity), true
 	case "VideoMetadata.height":
-		if e.complexity.VideoMetadata.Height == nil {
+		if e.ComplexityRoot.VideoMetadata.Height == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Height(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Height(childComplexity), true
 	case "VideoMetadata.id":
-		if e.complexity.VideoMetadata.ID == nil {
+		if e.ComplexityRoot.VideoMetadata.ID == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.ID(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.ID(childComplexity), true
 	case "VideoMetadata.media":
-		if e.complexity.VideoMetadata.Media == nil {
+		if e.ComplexityRoot.VideoMetadata.Media == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Media(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Media(childComplexity), true
 	case "VideoMetadata.width":
-		if e.complexity.VideoMetadata.Width == nil {
+		if e.ComplexityRoot.VideoMetadata.Width == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Width(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Width(childComplexity), true
 
 	}
 	return 0, false
@@ -1526,7 +1511,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
-	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
+	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputOrdering,
 		ec.unmarshalInputPagination,
@@ -1544,9 +1529,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
-				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
-					result := <-ec.deferredResults
-					atomic.AddInt32(&ec.pendingDeferred, -1)
+				if atomic.LoadInt32(&ec.PendingDeferred) > 0 {
+					result := <-ec.DeferredResults
+					atomic.AddInt32(&ec.PendingDeferred, -1)
 					data = result.Result
 					response.Path = result.Path
 					response.Label = result.Label
@@ -1558,8 +1543,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 			response.Data = buf.Bytes()
-			if atomic.LoadInt32(&ec.deferred) > 0 {
-				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+			if atomic.LoadInt32(&ec.Deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.PendingDeferred) > 0
 				response.HasNext = &hasNext
 			}
 
@@ -1604,44 +1589,22 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 }
 
 type executionContext struct {
-	*graphql.OperationContext
-	*executableSchema
-	deferred        int32
-	pendingDeferred int32
-	deferredResults chan graphql.DeferredResult
+	*graphql.ExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 }
 
-func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
-	atomic.AddInt32(&ec.pendingDeferred, 1)
-	go func() {
-		ctx := graphql.WithFreshResponseContext(dg.Context)
-		dg.FieldSet.Dispatch(ctx)
-		ds := graphql.DeferredResult{
-			Path:   dg.Path,
-			Label:  dg.Label,
-			Result: dg.FieldSet,
-			Errors: graphql.GetErrors(ctx),
-		}
-		// null fields should bubble up
-		if dg.FieldSet.Invalids > 0 {
-			ds.Result = graphql.Null
-		}
-		ec.deferredResults <- ds
-	}()
-}
-
-func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
+func newExecutionContext(
+	opCtx *graphql.OperationContext,
+	execSchema *executableSchema,
+	deferredResults chan graphql.DeferredResult,
+) executionContext {
+	return executionContext{
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+			opCtx,
+			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
+			parsedSchema,
+			deferredResults,
+		),
 	}
-	return introspection.WrapSchema(ec.Schema()), nil
-}
-
-func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
-	}
-	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 //go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
@@ -2397,7 +2360,7 @@ func (ec *executionContext) _Album_media(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Album_media,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Album().Media(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool))
+			return ec.Resolvers.Album().Media(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool))
 		},
 		nil,
 		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
@@ -2472,7 +2435,7 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 		ec.fieldContext_Album_subAlbums,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Album().SubAlbums(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Album().SubAlbums(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		nil,
 		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
@@ -2585,7 +2548,7 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 		field,
 		ec.fieldContext_Album_owner,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Owner(ctx, obj)
+			return ec.Resolvers.Album().Owner(ctx, obj)
 		},
 		nil,
 		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
@@ -2655,7 +2618,7 @@ func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Album_thumbnail,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Thumbnail(ctx, obj)
+			return ec.Resolvers.Album().Thumbnail(ctx, obj)
 		},
 		nil,
 		ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
@@ -2718,7 +2681,7 @@ func (ec *executionContext) _Album_path(ctx context.Context, field graphql.Colle
 		field,
 		ec.fieldContext_Album_path,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Path(ctx, obj)
+			return ec.Resolvers.Album().Path(ctx, obj)
 		},
 		nil,
 		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
@@ -2769,7 +2732,7 @@ func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Album_shares,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Shares(ctx, obj)
+			return ec.Resolvers.Album().Shares(ctx, obj)
 		},
 		nil,
 		ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ,
@@ -3018,7 +2981,7 @@ func (ec *executionContext) _FaceGroup_imageFaces(ctx context.Context, field gra
 		ec.fieldContext_FaceGroup_imageFaces,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.FaceGroup().ImageFaces(ctx, obj, fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.FaceGroup().ImageFaces(ctx, obj, fc.Args["paginate"].(*models.Pagination))
 		},
 		nil,
 		ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ,
@@ -3068,7 +3031,7 @@ func (ec *executionContext) _FaceGroup_imageFaceCount(ctx context.Context, field
 		field,
 		ec.fieldContext_FaceGroup_imageFaceCount,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.FaceGroup().ImageFaceCount(ctx, obj)
+			return ec.Resolvers.FaceGroup().ImageFaceCount(ctx, obj)
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -3242,7 +3205,7 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_ImageFace_media,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ImageFace().Media(ctx, obj)
+			return ec.Resolvers.ImageFace().Media(ctx, obj)
 		},
 		nil,
 		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
@@ -3344,7 +3307,7 @@ func (ec *executionContext) _ImageFace_faceGroup(ctx context.Context, field grap
 		field,
 		ec.fieldContext_ImageFace_faceGroup,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ImageFace().FaceGroup(ctx, obj)
+			return ec.Resolvers.ImageFace().FaceGroup(ctx, obj)
 		},
 		nil,
 		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
@@ -3470,7 +3433,7 @@ func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Media_thumbnail,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Thumbnail(ctx, obj)
+			return ec.Resolvers.Media().Thumbnail(ctx, obj)
 		},
 		nil,
 		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
@@ -3509,7 +3472,7 @@ func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.Co
 		field,
 		ec.fieldContext_Media_highRes,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().HighRes(ctx, obj)
+			return ec.Resolvers.Media().HighRes(ctx, obj)
 		},
 		nil,
 		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
@@ -3548,7 +3511,7 @@ func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Media_videoWeb,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().VideoWeb(ctx, obj)
+			return ec.Resolvers.Media().VideoWeb(ctx, obj)
 		},
 		nil,
 		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
@@ -3587,7 +3550,7 @@ func (ec *executionContext) _Media_album(ctx context.Context, field graphql.Coll
 		field,
 		ec.fieldContext_Media_album,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Album(ctx, obj)
+			return ec.Resolvers.Media().Album(ctx, obj)
 		},
 		nil,
 		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
@@ -3638,7 +3601,7 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 		field,
 		ec.fieldContext_Media_exif,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Exif(ctx, obj)
+			return ec.Resolvers.Media().Exif(ctx, obj)
 		},
 		nil,
 		ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF,
@@ -3748,7 +3711,7 @@ func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Media_favorite,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Favorite(ctx, obj)
+			return ec.Resolvers.Media().Favorite(ctx, obj)
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -3777,7 +3740,7 @@ func (ec *executionContext) _Media_type(ctx context.Context, field graphql.Colle
 		field,
 		ec.fieldContext_Media_type,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Type(ctx, obj)
+			return ec.Resolvers.Media().Type(ctx, obj)
 		},
 		nil,
 		ec.marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType,
@@ -3864,7 +3827,7 @@ func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Media_shares,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Shares(ctx, obj)
+			return ec.Resolvers.Media().Shares(ctx, obj)
 		},
 		nil,
 		ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ,
@@ -3909,7 +3872,7 @@ func (ec *executionContext) _Media_downloads(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Media_downloads,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Downloads(ctx, obj)
+			return ec.Resolvers.Media().Downloads(ctx, obj)
 		},
 		nil,
 		ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ,
@@ -3944,7 +3907,7 @@ func (ec *executionContext) _Media_faces(ctx context.Context, field graphql.Coll
 		field,
 		ec.fieldContext_Media_faces,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Faces(ctx, obj)
+			return ec.Resolvers.Media().Faces(ctx, obj)
 		},
 		nil,
 		ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ,
@@ -4614,17 +4577,17 @@ func (ec *executionContext) _Mutation_resetAlbumCover(ctx context.Context, field
 		ec.fieldContext_Mutation_resetAlbumCover,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ResetAlbumCover(ctx, fc.Args["albumID"].(int))
+			return ec.Resolvers.Mutation().ResetAlbumCover(ctx, fc.Args["albumID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -4690,17 +4653,17 @@ func (ec *executionContext) _Mutation_setAlbumCover(ctx context.Context, field g
 		ec.fieldContext_Mutation_setAlbumCover,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetAlbumCover(ctx, fc.Args["coverID"].(int))
+			return ec.Resolvers.Mutation().SetAlbumCover(ctx, fc.Args["coverID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -4766,17 +4729,17 @@ func (ec *executionContext) _Mutation_setFaceGroupLabel(ctx context.Context, fie
 		ec.fieldContext_Mutation_setFaceGroupLabel,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetFaceGroupLabel(ctx, fc.Args["faceGroupID"].(int), fc.Args["label"].(*string))
+			return ec.Resolvers.Mutation().SetFaceGroupLabel(ctx, fc.Args["faceGroupID"].(int), fc.Args["label"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -4830,17 +4793,17 @@ func (ec *executionContext) _Mutation_combineFaceGroups(ctx context.Context, fie
 		ec.fieldContext_Mutation_combineFaceGroups,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CombineFaceGroups(ctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupIDs"].([]int))
+			return ec.Resolvers.Mutation().CombineFaceGroups(ctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupIDs"].([]int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -4894,17 +4857,17 @@ func (ec *executionContext) _Mutation_moveImageFaces(ctx context.Context, field 
 		ec.fieldContext_Mutation_moveImageFaces,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().MoveImageFaces(ctx, fc.Args["imageFaceIDs"].([]int), fc.Args["destinationFaceGroupID"].(int))
+			return ec.Resolvers.Mutation().MoveImageFaces(ctx, fc.Args["imageFaceIDs"].([]int), fc.Args["destinationFaceGroupID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -4957,17 +4920,17 @@ func (ec *executionContext) _Mutation_recognizeUnlabeledFaces(ctx context.Contex
 		field,
 		ec.fieldContext_Mutation_recognizeUnlabeledFaces,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().RecognizeUnlabeledFaces(ctx)
+			return ec.Resolvers.Mutation().RecognizeUnlabeledFaces(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.ImageFace
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5010,17 +4973,17 @@ func (ec *executionContext) _Mutation_detachImageFaces(ctx context.Context, fiel
 		ec.fieldContext_Mutation_detachImageFaces,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DetachImageFaces(ctx, fc.Args["imageFaceIDs"].([]int))
+			return ec.Resolvers.Mutation().DetachImageFaces(ctx, fc.Args["imageFaceIDs"].([]int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5074,17 +5037,17 @@ func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field g
 		ec.fieldContext_Mutation_favoriteMedia,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().FavoriteMedia(ctx, fc.Args["mediaId"].(int), fc.Args["favorite"].(bool))
+			return ec.Resolvers.Mutation().FavoriteMedia(ctx, fc.Args["mediaId"].(int), fc.Args["favorite"].(bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5161,17 +5124,17 @@ func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql
 		field,
 		ec.fieldContext_Mutation_scanAll,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().ScanAll(ctx)
+			return ec.Resolvers.Mutation().ScanAll(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.ScannerResult
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5214,17 +5177,17 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 		ec.fieldContext_Mutation_scanUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ScanUser(ctx, fc.Args["userId"].(int))
+			return ec.Resolvers.Mutation().ScanUser(ctx, fc.Args["userId"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.ScannerResult
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5278,17 +5241,17 @@ func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Contex
 		ec.fieldContext_Mutation_setPeriodicScanInterval,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetPeriodicScanInterval(ctx, fc.Args["interval"].(int))
+			return ec.Resolvers.Mutation().SetPeriodicScanInterval(ctx, fc.Args["interval"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5332,17 +5295,17 @@ func (ec *executionContext) _Mutation_setScannerConcurrentWorkers(ctx context.Co
 		ec.fieldContext_Mutation_setScannerConcurrentWorkers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetScannerConcurrentWorkers(ctx, fc.Args["workers"].(int))
+			return ec.Resolvers.Mutation().SetScannerConcurrentWorkers(ctx, fc.Args["workers"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5386,17 +5349,17 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 		ec.fieldContext_Mutation_shareAlbum,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5456,17 +5419,17 @@ func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field grap
 		ec.fieldContext_Mutation_shareMedia,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5526,17 +5489,17 @@ func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, fiel
 		ec.fieldContext_Mutation_deleteShareToken,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteShareToken(ctx, fc.Args["token"].(string))
+			return ec.Resolvers.Mutation().DeleteShareToken(ctx, fc.Args["token"].(string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5596,17 +5559,17 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 		ec.fieldContext_Mutation_protectShareToken,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ProtectShareToken(ctx, fc.Args["token"].(string), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ProtectShareToken(ctx, fc.Args["token"].(string), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5666,17 +5629,17 @@ func (ec *executionContext) _Mutation_setExpireShareToken(ctx context.Context, f
 		ec.fieldContext_Mutation_setExpireShareToken,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetExpireShareToken(ctx, fc.Args["token"].(string), fc.Args["expire"].(*time.Time))
+			return ec.Resolvers.Mutation().SetExpireShareToken(ctx, fc.Args["token"].(string), fc.Args["expire"].(*time.Time))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5736,7 +5699,7 @@ func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field g
 		ec.fieldContext_Mutation_authorizeUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AuthorizeUser(ctx, fc.Args["username"].(string), fc.Args["password"].(string))
+			return ec.Resolvers.Mutation().AuthorizeUser(ctx, fc.Args["username"].(string), fc.Args["password"].(string))
 		},
 		nil,
 		ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
@@ -5785,7 +5748,7 @@ func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, fi
 		ec.fieldContext_Mutation_initialSetupWizard,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().InitialSetupWizard(ctx, fc.Args["username"].(string), fc.Args["password"].(string), fc.Args["rootPath"].(string))
+			return ec.Resolvers.Mutation().InitialSetupWizard(ctx, fc.Args["username"].(string), fc.Args["password"].(string), fc.Args["rootPath"].(string))
 		},
 		nil,
 		ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
@@ -5834,17 +5797,17 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool))
+			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5900,17 +5863,17 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_createUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool))
+			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5966,17 +5929,17 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deleteUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["id"].(int))
+			return ec.Resolvers.Mutation().DeleteUser(ctx, fc.Args["id"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6032,17 +5995,17 @@ func (ec *executionContext) _Mutation_userAddRootPath(ctx context.Context, field
 		ec.fieldContext_Mutation_userAddRootPath,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UserAddRootPath(ctx, fc.Args["id"].(int), fc.Args["rootPath"].(string))
+			return ec.Resolvers.Mutation().UserAddRootPath(ctx, fc.Args["id"].(int), fc.Args["rootPath"].(string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6108,17 +6071,17 @@ func (ec *executionContext) _Mutation_userRemoveRootAlbum(ctx context.Context, f
 		ec.fieldContext_Mutation_userRemoveRootAlbum,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UserRemoveRootAlbum(ctx, fc.Args["userId"].(int), fc.Args["albumId"].(int))
+			return ec.Resolvers.Mutation().UserRemoveRootAlbum(ctx, fc.Args["userId"].(int), fc.Args["albumId"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6184,17 +6147,17 @@ func (ec *executionContext) _Mutation_changeUserPreferences(ctx context.Context,
 		ec.fieldContext_Mutation_changeUserPreferences,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string))
+			return ec.Resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.UserPreferences
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6476,17 +6439,17 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_myAlbums,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyAlbums(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyRoot"].(*bool), fc.Args["showEmpty"].(*bool), fc.Args["onlyWithFavorites"].(*bool))
+			return ec.Resolvers.Query().MyAlbums(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyRoot"].(*bool), fc.Args["showEmpty"].(*bool), fc.Args["onlyWithFavorites"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6552,7 +6515,7 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_album,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Album(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
+			return ec.Resolvers.Query().Album(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
 		},
 		nil,
 		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
@@ -6615,17 +6578,17 @@ func (ec *executionContext) _Query_myFaceGroups(ctx context.Context, field graph
 		ec.fieldContext_Query_myFaceGroups,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyFaceGroups(ctx, fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().MyFaceGroups(ctx, fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6679,17 +6642,17 @@ func (ec *executionContext) _Query_faceGroup(ctx context.Context, field graphql.
 		ec.fieldContext_Query_faceGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FaceGroup(ctx, fc.Args["id"].(int))
+			return ec.Resolvers.Query().FaceGroup(ctx, fc.Args["id"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6743,17 +6706,17 @@ func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_myMedia,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyMedia(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().MyMedia(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6831,7 +6794,7 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_media,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Media(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
+			return ec.Resolvers.Query().Media(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
 		},
 		nil,
 		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
@@ -6906,7 +6869,7 @@ func (ec *executionContext) _Query_mediaList(ctx context.Context, field graphql.
 		ec.fieldContext_Query_mediaList,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MediaList(ctx, fc.Args["ids"].([]int))
+			return ec.Resolvers.Query().MediaList(ctx, fc.Args["ids"].([]int))
 		},
 		nil,
 		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
@@ -6980,17 +6943,17 @@ func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field gra
 		field,
 		ec.fieldContext_Query_myMediaGeoJson,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyMediaGeoJSON(ctx)
+			return ec.Resolvers.Query().MyMediaGeoJSON(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal any
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7022,7 +6985,7 @@ func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphq
 		field,
 		ec.fieldContext_Query_mapboxToken,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MapboxToken(ctx)
+			return ec.Resolvers.Query().MapboxToken(ctx)
 		},
 		nil,
 		ec.marshalOString2ᚖstring,
@@ -7052,7 +7015,7 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query_search,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Search(ctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
+			return ec.Resolvers.Query().Search(ctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
 		},
 		nil,
 		ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult,
@@ -7101,7 +7064,7 @@ func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql
 		ec.fieldContext_Query_shareToken,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ShareToken(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
+			return ec.Resolvers.Query().ShareToken(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
 		},
 		nil,
 		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
@@ -7158,7 +7121,7 @@ func (ec *executionContext) _Query_shareTokenValidatePassword(ctx context.Contex
 		ec.fieldContext_Query_shareTokenValidatePassword,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ShareTokenValidatePassword(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
+			return ec.Resolvers.Query().ShareTokenValidatePassword(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -7198,7 +7161,7 @@ func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query_siteInfo,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().SiteInfo(ctx)
+			return ec.Resolvers.Query().SiteInfo(ctx)
 		},
 		nil,
 		ec.marshalNSiteInfo2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo,
@@ -7238,17 +7201,17 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 		ec.fieldContext_Query_myTimeline,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyTimeline(ctx, fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool), fc.Args["fromDate"].(*time.Time))
+			return ec.Resolvers.Query().MyTimeline(ctx, fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool), fc.Args["fromDate"].(*time.Time))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7326,17 +7289,17 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		ec.fieldContext_Query_user,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().User(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().User(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7391,17 +7354,17 @@ func (ec *executionContext) _Query_myUser(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Query_myUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyUser(ctx)
+			return ec.Resolvers.Query().MyUser(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7445,17 +7408,17 @@ func (ec *executionContext) _Query_myUserPreferences(ctx context.Context, field 
 		field,
 		ec.fieldContext_Query_myUserPreferences,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyUserPreferences(ctx)
+			return ec.Resolvers.Query().MyUserPreferences(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.UserPreferences
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7494,7 +7457,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query___type,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.introspectType(fc.Args["name"].(string))
+			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
 		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
@@ -7558,7 +7521,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query___schema,
 		func(ctx context.Context) (any, error) {
-			return ec.introspectSchema()
+			return ec.IntrospectSchema()
 		},
 		nil,
 		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
@@ -7988,7 +7951,7 @@ func (ec *executionContext) _ShareToken_hasPassword(ctx context.Context, field g
 		field,
 		ec.fieldContext_ShareToken_hasPassword,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ShareToken().HasPassword(ctx, obj)
+			return ec.Resolvers.ShareToken().HasPassword(ctx, obj)
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -8160,7 +8123,7 @@ func (ec *executionContext) _SiteInfo_faceDetectionEnabled(ctx context.Context, 
 		field,
 		ec.fieldContext_SiteInfo_faceDetectionEnabled,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.SiteInfo().FaceDetectionEnabled(ctx, obj)
+			return ec.Resolvers.SiteInfo().FaceDetectionEnabled(ctx, obj)
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -8195,11 +8158,11 @@ func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, 
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8237,11 +8200,11 @@ func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, fie
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8273,7 +8236,7 @@ func (ec *executionContext) _Subscription_notification(ctx context.Context, fiel
 		field,
 		ec.fieldContext_Subscription_notification,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().Notification(ctx)
+			return ec.Resolvers.Subscription().Notification(ctx)
 		},
 		nil,
 		ec.marshalNNotification2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification,
@@ -8550,17 +8513,17 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		field,
 		ec.fieldContext_User_albums,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().Albums(ctx, obj)
+			return ec.Resolvers.User().Albums(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8614,17 +8577,17 @@ func (ec *executionContext) _User_rootAlbums(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_User_rootAlbums,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().RootAlbums(ctx, obj)
+			return ec.Resolvers.User().RootAlbums(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -10558,7 +10521,6 @@ func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj any)
 			it.OrderDirection = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -10592,7 +10554,6 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj an
 			it.Offset = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -10626,7 +10587,6 @@ func (ec *executionContext) unmarshalInputShareTokenCredentials(ctx context.Cont
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -10888,10 +10848,10 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -10934,10 +10894,10 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -10978,10 +10938,10 @@ func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11091,10 +11051,10 @@ func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11145,10 +11105,10 @@ func (ec *executionContext) _FaceRectangle(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11261,10 +11221,10 @@ func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11667,10 +11627,10 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11711,10 +11671,10 @@ func (ec *executionContext) _MediaDownload(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11779,10 +11739,10 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11833,10 +11793,10 @@ func (ec *executionContext) _MediaURL(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12041,10 +12001,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12109,10 +12069,10 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12530,10 +12490,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12578,10 +12538,10 @@ func (ec *executionContext) _ScannerResult(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12627,10 +12587,10 @@ func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12718,10 +12678,10 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12803,10 +12763,10 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12877,10 +12837,10 @@ func (ec *executionContext) _TimelineGroup(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12998,10 +12958,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13039,10 +12999,10 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13108,10 +13068,10 @@ func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13164,10 +13124,10 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13212,10 +13172,10 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13270,10 +13230,10 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13325,10 +13285,10 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13380,10 +13340,10 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13439,10 +13399,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13462,39 +13422,11 @@ func (ec *executionContext) marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoview�
 }
 
 func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13572,39 +13504,11 @@ func (ec *executionContext) marshalNFaceGroup2githubᚗcomᚋphotoviewᚋphotovi
 }
 
 func (ec *executionContext) marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.FaceGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13692,39 +13596,11 @@ func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.Se
 }
 
 func (ec *executionContext) marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNImageFace2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNImageFace2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13782,39 +13658,11 @@ func (ec *executionContext) marshalNMedia2githubᚗcomᚋphotoviewᚋphotoview�
 }
 
 func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Media) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13836,39 +13684,11 @@ func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotovie
 }
 
 func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13973,39 +13793,11 @@ func (ec *executionContext) marshalNShareToken2githubᚗcomᚋphotoviewᚋphotov
 }
 
 func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14082,39 +13874,11 @@ func (ec *executionContext) marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋ
 }
 
 func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.User) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14154,39 +13918,11 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 }
 
 func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14229,39 +13965,11 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14285,39 +13993,11 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 }
 
 func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14333,39 +14013,11 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 }
 
 func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14630,39 +14282,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14677,39 +14301,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14724,39 +14320,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14778,39 +14346,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
