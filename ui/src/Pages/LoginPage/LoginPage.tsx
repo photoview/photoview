@@ -156,10 +156,6 @@ const LoginPage = () => {
     if (initialSetupData?.siteInfo?.initialSetup) navigate('/initialSetup')
   }, [initialSetupData?.siteInfo?.initialSetup])
 
-  if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
-    return null
-  }
-
   const [googleAuth] = useMutation<
     AuthorizeGoogleOAuth,
     AuthorizeGoogleOAuthVariables
@@ -173,6 +169,10 @@ const LoginPage = () => {
     },
   })
 
+  if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
+    return null
+  }
+
   return (
     <>
       <Helmet>
@@ -181,19 +181,21 @@ const LoginPage = () => {
       <div>
         <LogoHeader />
         <LoginForm />
+        {googleClientId && (
+          <div className="mt-4 mx-auto max-w-[500px] px-4">
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <GoogleLogin
+                onSuccess={credentialResponse => {
+                  googleAuth({variables: {jwt: credentialResponse.credential!}})
+                }}
+                onError={() => {
+                  console.log('Login Failed');
+                }}
+              />
+            </GoogleOAuthProvider>
+          </div>
+        )}
       </div>
-      {googleClientId && (
-        <GoogleOAuthProvider clientId={googleClientId}>
-          <GoogleLogin
-            onSuccess={credentialResponse => {
-              googleAuth({variables: {jwt: credentialResponse.credential!}})
-            }}
-            onError={() => {
-              console.log('Login Failed');
-            }}
-          />
-        </GoogleOAuthProvider>
-      )}
     </>
   )
 }
