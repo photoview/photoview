@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"path"
 
 	api "github.com/photoview/photoview/api/graphql"
@@ -16,7 +17,9 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner"
+	"github.com/photoview/photoview/api/utils"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/api/idtoken"
 	"gorm.io/gorm"
 )
 
@@ -42,6 +45,62 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 		return nil
 	})
 
+	if transactionError != nil {
+		return nil, transactionError
+	}
+
+	return &models.AuthorizeResult{
+		Success: true,
+		Status:  "ok",
+		Token:   &token.Value,
+	}, nil
+}
+
+// AuthorizeGoogleOAuth is the resolver for the authorizeGoogleOAuth field.
+func (r *mutationResolver) AuthorizeGoogleOAuth(ctx context.Context, jwt string) (*models.AuthorizeResult, error) {
+	clientID := utils.EnvGoogleOAuthClientID.GetValue()
+	if clientID == "" {
+		return &models.AuthorizeResult{
+			Success: false,
+			Status:  "Google OAuth is not configured",
+		}, nil
+	}
+
+	payload, err := idtoken.Validate(ctx, jwt, clientID)
+	if err != nil {
+		log.Printf("Google OAuth JWT validation failed: %s\n", err)
+		return &models.AuthorizeResult{
+			Success: false,
+			Status:  "invalid token",
+		}, nil
+	}
+
+	sub := payload.Subject
+	email, _ := payload.Claims["email"].(string)
+	name, _ := payload.Claims["name"].(string)
+
+	username := email
+	if username == "" {
+		username = name
+	}
+	if username == "" {
+		username = sub
+	}
+
+	db := r.DB(ctx)
+	user, err := models.AuthorizeUserGoogleOAuth(db, sub, username)
+	if err != nil {
+		return &models.AuthorizeResult{
+			Success: false,
+			Status:  err.Error(),
+		}, nil
+	}
+
+	var token *models.AccessToken
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
+		token, err = user.GenerateAccessToken(tx)
+		return err
+	})
 	if transactionError != nil {
 		return nil, transactionError
 	}

@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		AuthorizeGoogleOAuth        func(childComplexity int, jwt string) int
 		AuthorizeUser               func(childComplexity int, username string, password string) int
 		ChangeUserPreferences       func(childComplexity int, language *string) int
 		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
@@ -320,6 +321,7 @@ type MutationResolver interface {
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
+	AuthorizeGoogleOAuth(ctx context.Context, jwt string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
 	CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error)
@@ -779,6 +781,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.MediaURL.Width(childComplexity), true
 
+	case "Mutation.authorizeGoogleOAuth":
+		if e.complexity.Mutation.AuthorizeGoogleOAuth == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_authorizeGoogleOAuth_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AuthorizeGoogleOAuth(childComplexity, args["jwt"].(string)), true
 	case "Mutation.authorizeUser":
 		if e.ComplexityRoot.Mutation.AuthorizeUser == nil {
 			break
@@ -1692,6 +1705,17 @@ func (ec *executionContext) field_FaceGroup_imageFaces_args(ctx context.Context,
 		return nil, err
 	}
 	args["paginate"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_authorizeGoogleOAuth_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "jwt", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["jwt"] = arg0
 	return args, nil
 }
 
@@ -5743,6 +5767,55 @@ func (ec *executionContext) fieldContext_Mutation_authorizeUser(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_authorizeUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_authorizeGoogleOAuth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_authorizeGoogleOAuth,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().AuthorizeGoogleOAuth(ctx, fc.Args["jwt"].(string))
+		},
+		nil,
+		ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_authorizeGoogleOAuth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_AuthorizeResult_success(ctx, field)
+			case "status":
+				return ec.fieldContext_AuthorizeResult_status(ctx, field)
+			case "token":
+				return ec.fieldContext_AuthorizeResult_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthorizeResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_authorizeGoogleOAuth_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11986,6 +12059,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "authorizeUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_authorizeUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "authorizeGoogleOAuth":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_authorizeGoogleOAuth(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

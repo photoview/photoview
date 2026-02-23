@@ -11,6 +11,7 @@ import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
+import { AuthorizeGoogleOAuth, AuthorizeGoogleOAuthVariables } from './__generated__/AuthorizeGoogleOAuth'
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'
 
 const GOOGLE_OAUTH_CLIENT_ID_QUERY = gql`
@@ -22,6 +23,16 @@ const GOOGLE_OAUTH_CLIENT_ID_QUERY = gql`
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
     authorizeUser(username: $username, password: $password) {
+      success
+      status
+      token
+    }
+  }
+`
+
+const authorizeGoogleOAuthMutation = gql`
+  mutation AuthorizeGoogleOAuth($jwt: String!) {
+    authorizeGoogleOAuth(jwt: $jwt) {
       success
       status
       token
@@ -149,6 +160,19 @@ const LoginPage = () => {
     return null
   }
 
+  const [googleAuth] = useMutation<
+    AuthorizeGoogleOAuth,
+    AuthorizeGoogleOAuthVariables
+  >(authorizeGoogleOAuthMutation, {
+    onCompleted: data => {
+      const { success, token } = data.authorizeGoogleOAuth
+
+      if (success && token) {
+        login(token)
+      }
+    },
+  })
+
   return (
     <>
       <Helmet>
@@ -162,7 +186,7 @@ const LoginPage = () => {
         <GoogleOAuthProvider clientId={googleClientId}>
           <GoogleLogin
             onSuccess={credentialResponse => {
-              console.log(credentialResponse);
+              googleAuth({variables: {jwt: credentialResponse.credential!}})
             }}
             onError={() => {
               console.log('Login Failed');
