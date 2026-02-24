@@ -782,7 +782,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		return e.ComplexityRoot.MediaURL.Width(childComplexity), true
 
 	case "Mutation.authorizeGoogleOAuth":
-		if e.complexity.Mutation.AuthorizeGoogleOAuth == nil {
+		if e.ComplexityRoot.Mutation.AuthorizeGoogleOAuth == nil {
 			break
 		}
 
@@ -791,7 +791,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AuthorizeGoogleOAuth(childComplexity, args["jwt"].(string)), true
+		return e.ComplexityRoot.Mutation.AuthorizeGoogleOAuth(childComplexity, args["jwt"].(string)), true
 	case "Mutation.authorizeUser":
 		if e.ComplexityRoot.Mutation.AuthorizeUser == nil {
 			break
@@ -5781,7 +5781,7 @@ func (ec *executionContext) _Mutation_authorizeGoogleOAuth(ctx context.Context, 
 		ec.fieldContext_Mutation_authorizeGoogleOAuth,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AuthorizeGoogleOAuth(ctx, fc.Args["jwt"].(string))
+			return ec.Resolvers.Mutation().AuthorizeGoogleOAuth(ctx, fc.Args["jwt"].(string))
 		},
 		nil,
 		ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
