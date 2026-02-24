@@ -60,6 +60,7 @@ Password: **demo**
   - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
     - [Initial Setup](#initial-setup)
   - [Advanced setup](#advanced-setup)
+    - [Google OAuth Login](#google-oauth-login)
     - [Hardware Acceleration](#hardware-acceleration)
   - [Contributing](#contributing)
   - [Set up Docker development environment](#set-up-docker-development-environment)
@@ -213,6 +214,25 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 8. Set up an **Intrusion Detection/Prevention System** to monitor network traffic for suspicious activity and issue alerts when such activity is discovered.
 
 Setting up and configuring of all these protections depends on and requires a lot of info about your local network and self-hosted services. Based on this info, the configuration flow and resulting services architecture might differ a lot between cases. That is why in the scope of this project, we can only provide you with this high-level list of possible ways of webservice protection. You'll need to investigate them, find the best combination and configuration for your case, and take responsibility to configure everything in the correct and consistent way. We cannot provide you support for such highly secured setups, as a lot of things might work differently because of security limitations.
+
+### Google OAuth Login
+
+Photoview supports optional Google sign-in as an alternative to username/password authentication. To enable it:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project (or select an existing one).
+2. Navigate to **APIs & Services** > **OAuth consent screen** and configure it for your app.
+3. Navigate to **APIs & Services** > **Credentials**, click **Create Credentials**, and select **OAuth client ID**. Choose **Web application** as the application type.
+4. Under **Authorized JavaScript origins**, add the public domain name where Photoview is hosted (e.g., `https://photos.example.com`).
+5. Copy the generated **Client ID** and set it in your `.env` file:
+
+   ```env
+   PHOTOVIEW_GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   ```
+
+6. Restart Photoview. A **Sign in with Google** button will appear on the login page when the client ID is configured.
+
+> [!NOTE]
+> When a user first authenticates, they will have no photo path configured. The admin will need to configure this.
 
 ### Hardware Acceleration
 

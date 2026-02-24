@@ -26,6 +26,7 @@
     "@apollo/client": "^3.6.9",
     "@babel/preset-typescript": "^7.18.6",
     "@headlessui/react": "^1.6.6",
+    "@react-oauth/google": "^0.13.4",
     "@types/geojson": "^7946.0.8",
     "@types/jest": "^28.1.4",
     "@types/js-cookie": "^3.0.6",

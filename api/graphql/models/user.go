@@ -18,6 +18,7 @@ type User struct {
 	// RootPath string  `gorm:"size:512`
 	Albums []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
 	Admin  bool    `gorm:"default:false"`
+	Sub *string `gorm:"unique;size:256"`
 }
 
 type UserMediaData struct {
@@ -94,6 +95,35 @@ func AuthorizeUser(db *gorm.DB, username string, password string) (*User, error)
 		} else {
 			return nil, errors.Wrap(err, "compare user password hash")
 		}
+	}
+
+	return &user, nil
+}
+
+func AuthorizeUserGoogleOAuth(db *gorm.DB, sub string, username string) (*User, error) {
+	var user User
+
+	result := db.Where("sub = ?", sub).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return RegisterUserGoogleOAuth(db, sub, username);
+		}
+		return nil, errors.Wrap(result.Error, "failed to get user by jwt when authorizing")
+	}
+
+	return &user, nil
+}
+
+func RegisterUserGoogleOAuth(db *gorm.DB, sub string, username string) (*User, error) {
+	user := User{
+		Username: username,
+		Sub:      &sub,
+		Admin:    false,
+	}
+
+	result := db.Create(&user)
+	if result.Error != nil {
+		return nil, errors.Wrap(result.Error, "failed to create new user from jwt")
 	}
 
 	return &user, nil

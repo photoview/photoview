@@ -11,10 +11,28 @@ import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
+import { AuthorizeGoogleOAuth, AuthorizeGoogleOAuthVariables } from './__generated__/AuthorizeGoogleOAuth'
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'
+
+const GOOGLE_OAUTH_CLIENT_ID_QUERY = gql`
+  query GoogleOAuthClientID {
+    googleOAuthClientID
+  }
+`
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
     authorizeUser(username: $username, password: $password) {
+      success
+      status
+      token
+    }
+  }
+`
+
+const authorizeGoogleOAuthMutation = gql`
+  mutation AuthorizeGoogleOAuth($jwt: String!) {
+    authorizeGoogleOAuth(jwt: $jwt) {
       success
       status
       token
@@ -127,6 +145,9 @@ const LoginPage = () => {
     { variables: {} }
   )
 
+  const { data: googleOAuthData } = useQuery(GOOGLE_OAUTH_CLIENT_ID_QUERY)
+  const googleClientId = googleOAuthData?.googleOAuthClientID
+
   useEffect(() => {
     if (authToken()) navigate('/')
   }, [])
@@ -134,6 +155,19 @@ const LoginPage = () => {
   useEffect(() => {
     if (initialSetupData?.siteInfo?.initialSetup) navigate('/initialSetup')
   }, [initialSetupData?.siteInfo?.initialSetup])
+
+  const [googleAuth] = useMutation<
+    AuthorizeGoogleOAuth,
+    AuthorizeGoogleOAuthVariables
+  >(authorizeGoogleOAuthMutation, {
+    onCompleted: data => {
+      const { success, token } = data.authorizeGoogleOAuth
+
+      if (success && token) {
+        login(token)
+      }
+    },
+  })
 
   if (authToken() || initialSetupData?.siteInfo?.initialSetup) {
     return null
@@ -147,6 +181,20 @@ const LoginPage = () => {
       <div>
         <LogoHeader />
         <LoginForm />
+        {googleClientId && (
+          <div className="mt-4 mx-auto max-w-[500px] px-4">
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <GoogleLogin
+                onSuccess={credentialResponse => {
+                  googleAuth({variables: {jwt: credentialResponse.credential!}})
+                }}
+                onError={() => {
+                  console.log('Login Failed');
+                }}
+              />
+            </GoogleOAuthProvider>
+          </div>
+        )}
       </div>
     </>
   )
