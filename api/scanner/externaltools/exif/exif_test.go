@@ -20,6 +20,7 @@ func resetForTest() {
 
 func TestParseWithoutInit(t *testing.T) {
 	resetForTest()
+
 	if _, err := Parse("./test_data/bird.jpg"); err == nil {
 		t.Fatalf("Parse() without Init() doesn't return an error")
 	}

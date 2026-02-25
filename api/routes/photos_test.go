@@ -16,12 +16,14 @@ import (
 	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func TestPhotoRoutes(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
+	fs, cacheFs := test_utils.FilesystemTest(t)
 
 	user, err := models.RegisterUser(db, "testuser", nil, false)
 	assert.NoError(t, err)
@@ -55,7 +57,7 @@ func TestPhotoRoutes(t *testing.T) {
 	defer utils.ConfigureTestCache(orig)
 
 	router := mux.NewRouter()
-	RegisterPhotoRoutes(db, router)
+	RegisterPhotoRoutes(db, fs, cacheFs, router)
 
 	// -- Test cases --
 
@@ -90,7 +92,7 @@ func TestPhotoRoutes(t *testing.T) {
 
 		// mock scan to fail
 		origScan := scanner.ProcessSingleMediaFunc
-		scanner.ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, m *models.Media) error {
+		scanner.ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, m *models.Media) error {
 			return fmt.Errorf("scan error")
 		}
 		defer func() { scanner.ProcessSingleMediaFunc = origScan }()

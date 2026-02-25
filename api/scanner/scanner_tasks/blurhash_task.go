@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"image"
 	_ "image/jpeg"
-	"os"
 
 	"github.com/buckket/go-blurhash"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
+	"github.com/spf13/afero"
 )
 
 type BlurhashTask struct {
@@ -18,6 +18,8 @@ type BlurhashTask struct {
 }
 
 func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+	cacheFs := ctx.GetCacheFS()
+
 	hasThumbnailUpdated := false
 	for _, url := range updatedURLs {
 		if url.Purpose == models.PhotoThumbnail || url.Purpose == models.VideoThumbnail {
@@ -41,7 +43,7 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 		return fmt.Errorf("failed to get thumbnail of image %q: %w", mediaData.Media.Path, err)
 	}
 
-	hashStr, err := generateBlurhashFromThumbnail(thumbnail)
+	hashStr, err := generateBlurhashFromThumbnail(cacheFs, thumbnail)
 	if err != nil {
 		return fmt.Errorf("failed to generate blurhash of image %q: %w", mediaData.Media.Path, err)
 	}
@@ -57,13 +59,13 @@ func (t BlurhashTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData 
 }
 
 // generateBlurhashFromThumbnail generates a blurhash for a single media and stores it in the database
-func generateBlurhashFromThumbnail(thumbnail *models.MediaURL) (string, error) {
+func generateBlurhashFromThumbnail(fs afero.Fs, thumbnail *models.MediaURL) (string, error) {
 	path, err := thumbnail.CachedPath()
 	if err != nil {
 		return "", fmt.Errorf("get path of media(id:%d) error: %w", thumbnail.MediaID, err)
 	}
 
-	f, err := os.Open(path)
+	f, err := fs.Open(path)
 	if err != nil {
 		return "", fmt.Errorf("open %q error: %w", path, err)
 	}

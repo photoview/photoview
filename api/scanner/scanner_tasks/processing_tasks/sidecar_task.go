@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -15,6 +14,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
 type SidecarTask struct {
@@ -22,6 +22,8 @@ type SidecarTask struct {
 }
 
 func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+	fileFs := ctx.GetFileFS()
+
 	if media.Type != models.MediaTypePhoto || !newMedia {
 		return nil
 	}
@@ -38,22 +40,29 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 	var sideCarPath *string = nil
 	var sideCarHash *string = nil
 
-	sideCarPath = scanForSideCarFile(media.Path)
+	sideCarPath = scanForSideCarFile(fileFs, media.Path)
 	if sideCarPath != nil {
-		sideCarHash = hashSideCarFile(sideCarPath)
+		sideCarHash = hashSideCarFile(fileFs, sideCarPath)
 	}
 
 	// Add sidecar data to media
 	media.SideCarPath = sideCarPath
 	media.SideCarHash = sideCarHash
 	if err := ctx.GetDB().Save(media).Error; err != nil {
-		return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
+		if sideCarPath != nil {
+			return errors.Wrapf(err, "update media sidecar info (%s)", *sideCarPath)
+		}
+
+		return errors.Wrapf(err, "update media sidecar info")
 	}
 
 	return nil
 }
 
 func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData, mediaCachePath string) (updatedURLs []*models.MediaURL, err error) {
+	fs := ctx.GetFileFS()
+	cacheFs := ctx.GetCacheFS()
+
 	mediaType, err := mediaData.ContentType()
 	if err != nil {
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, process media")
@@ -67,10 +76,14 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 
 	sideCarFileHasChanged := false
 	var currentFileHash *string
-	currentSideCarPath := scanForSideCarFile(photo.Path)
+	currentSideCarPath := scanForSideCarFile(fs, photo.Path)
 
 	if currentSideCarPath != nil {
-		currentFileHash = hashSideCarFile(currentSideCarPath)
+		currentFileHash = hashSideCarFile(fs, currentSideCarPath)
+		if currentFileHash == nil {
+			return []*models.MediaURL{}, errors.New("sidecar task, hash sidecar file failed")
+		}
+
 		if photo.SideCarHash == nil || *photo.SideCarHash != *currentFileHash {
 			sideCarFileHasChanged = true
 		}
@@ -81,8 +94,6 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	if !sideCarFileHasChanged {
 		return []*models.MediaURL{}, nil
 	}
-
-	fmt.Printf("Detected changed sidecar file for %s recreating JPG's to reflect changes\n", photo.Path)
 
 	highResURL, err := photo.GetHighRes()
 	if err != nil {
@@ -97,24 +108,37 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	// update high res image may be cropped so dimentions and file size can change
 	baseImagePath := path.Join(mediaCachePath, highResURL.MediaName) // update base image path for thumbnail
 	tempHighResPath := baseImagePath + ".hold"
-	os.Rename(baseImagePath, tempHighResPath)
-	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, mediaData, highResURL.MediaName, baseImagePath, highResURL)
+	if err := cacheFs.Rename(baseImagePath, tempHighResPath); err != nil {
+		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold high-res image: %s", baseImagePath)
+	}
+
+	updatedHighRes, err := generateSaveHighResJPEG(ctx.GetDB(), photo, fs, mediaData, highResURL.MediaName, cacheFs, baseImagePath, highResURL)
 	if err != nil {
-		os.Rename(tempHighResPath, baseImagePath)
+		if restoreErr := cacheFs.Rename(tempHighResPath, baseImagePath); restoreErr != nil {
+			log.Printf("ERROR: restoring high-res image failed: %s", restoreErr)
+		}
 		return []*models.MediaURL{}, errors.Wrap(err, "sidecar task, recreating high-res cached image")
 	}
-	os.Remove(tempHighResPath)
+	if err := cacheFs.Remove(tempHighResPath); err != nil {
+		log.Printf("ERROR: removing temp high-res image failed: %s", err)
+	}
 
 	// update thumbnail image may be cropped so dimentions and file size can change
 	thumbPath := path.Join(mediaCachePath, thumbURL.MediaName)
 	tempThumbPath := thumbPath + ".hold" // hold onto the original image incase for some reason we fail to recreate one with the new settings
-	os.Rename(thumbPath, tempThumbPath)
-	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
+	if err := cacheFs.Rename(thumbPath, tempThumbPath); err != nil {
+		return []*models.MediaURL{}, errors.Wrapf(err, "sidecar task, hold thumbnail image: %s", thumbPath)
+	}
+	updatedThumbnail, err := generateSaveThumbnailJPEG(ctx.GetDB(), photo, cacheFs, thumbURL.MediaName, mediaCachePath, baseImagePath, thumbURL)
 	if err != nil {
-		os.Rename(tempThumbPath, thumbPath)
+		if restoreErr := cacheFs.Rename(tempThumbPath, thumbPath); restoreErr != nil {
+			log.Printf("ERROR: restoring thumbnail image failed: %s", restoreErr)
+		}
 		return []*models.MediaURL{}, errors.Wrap(err, "recreating thumbnail cached image")
 	}
-	os.Remove(tempThumbPath)
+	if err := cacheFs.Remove(tempThumbPath); err != nil {
+		log.Printf("ERROR: removing temp thumbnail image failed: %s", err)
+	}
 
 	photo.SideCarHash = currentFileHash
 	photo.SideCarPath = currentSideCarPath
@@ -130,30 +154,32 @@ func (t SidecarTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *media
 	}, nil
 }
 
-func scanForSideCarFile(path string) *string {
+func scanForSideCarFile(fs afero.Fs, path string) *string {
 	testPath := path + ".xmp"
 
-	if scanner_utils.FileExists(testPath) {
+	if scanner_utils.FileExists(fs, testPath) {
 		return &testPath
 	}
 
 	return nil
 }
 
-func hashSideCarFile(path *string) *string {
+func hashSideCarFile(fs afero.Fs, path *string) *string {
 	if path == nil {
 		return nil
 	}
 
-	f, err := os.Open(*path)
+	f, err := fs.Open(*path)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
+		return nil
 	}
 	defer f.Close()
 
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
 		log.Printf("ERROR: %s", err)
+		return nil
 	}
 	hash := hex.EncodeToString(h.Sum(nil))
 	return &hash

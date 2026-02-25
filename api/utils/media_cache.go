@@ -7,30 +7,31 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
 // CachePathForMedia is a low-level implementation for Media.CachePath()
-func CachePathForMedia(albumID int, mediaID int) (string, error) {
+func CachePathForMedia(cacheFs afero.Fs, albumID int, mediaID int) (string, error) {
 
 	// Make root cache dir if not exists
-	if _, err := os.Stat(MediaCachePath()); os.IsNotExist(err) {
-		if err := os.Mkdir(MediaCachePath(), os.ModePerm); err != nil {
+	if _, err := cacheFs.Stat(MediaCachePath()); os.IsNotExist(err) {
+		if err := cacheFs.Mkdir(MediaCachePath(), os.ModePerm); err != nil {
 			return "", errors.Wrap(err, "could not make root image cache directory")
 		}
 	}
 
 	// Make album cache dir if not exists
 	albumCachePath := path.Join(MediaCachePath(), strconv.Itoa(int(albumID)))
-	if _, err := os.Stat(albumCachePath); os.IsNotExist(err) {
-		if err := os.Mkdir(albumCachePath, os.ModePerm); err != nil {
+	if _, err := cacheFs.Stat(albumCachePath); os.IsNotExist(err) {
+		if err := cacheFs.Mkdir(albumCachePath, os.ModePerm); err != nil {
 			return "", errors.Wrap(err, "could not make album image cache directory")
 		}
 	}
 
 	// Make photo cache dir if not exists
 	photoCachePath := path.Join(albumCachePath, strconv.Itoa(int(mediaID)))
-	if _, err := os.Stat(photoCachePath); os.IsNotExist(err) {
-		if err := os.Mkdir(photoCachePath, os.ModePerm); err != nil {
+	if _, err := cacheFs.Stat(photoCachePath); os.IsNotExist(err) {
+		if err := cacheFs.Mkdir(photoCachePath, os.ModePerm); err != nil {
 			return "", errors.Wrap(err, "could not make photo image cache directory")
 		}
 	}

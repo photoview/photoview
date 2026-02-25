@@ -14,6 +14,8 @@ type FaceDetectionTask struct {
 
 func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData,
 	updatedURLs []*models.MediaURL, mediaIndex int, mediaTotal int) error {
+	fs := ctx.GetFileFS()
+	cacheFs := ctx.GetCacheFS()
 
 	didProcess := len(updatedURLs) > 0
 
@@ -22,7 +24,7 @@ func (t FaceDetectionTask) AfterProcessMedia(ctx scanner_task.TaskContext, media
 		if face_detection.GlobalFaceDetector == nil {
 			return nil
 		}
-		if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), media); err != nil {
+		if err := face_detection.GlobalFaceDetector.DetectFaces(ctx.GetDB(), fs, cacheFs, media); err != nil {
 			scanner_utils.ScannerError(ctx, "Error detecting faces in image (%s): %s", media.Path, err)
 		}
 	}

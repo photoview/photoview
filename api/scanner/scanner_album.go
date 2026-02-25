@@ -13,22 +13,26 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+func NewRootAlbum(db *gorm.DB, fs afero.Fs, rootPath string, owner *models.User) (*models.Album, error) {
 
-	if !ValidRootPath(rootPath) {
+	if !ValidRootPath(fs, rootPath) {
 		return nil, ErrorInvalidRootPath
 	}
 
 	if !path.IsAbs(rootPath) {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, err
+		if _, ok := fs.(*afero.OsFs); ok {
+			wd, err := os.Getwd()
+			if err != nil {
+				return nil, err
+			}
+			rootPath = path.Join(wd, rootPath)
+		} else {
+			rootPath = path.Clean(rootPath)
 		}
-
-		rootPath = path.Join(wd, rootPath)
 	}
 
 	owners := []models.User{
@@ -74,8 +78,8 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 
 var ErrorInvalidRootPath = errors.New("invalid root path")
 
-func ValidRootPath(rootPath string) bool {
-	_, err := os.Stat(rootPath)
+func ValidRootPath(fs afero.Fs, rootPath string) bool {
+	_, err := fs.Stat(rootPath)
 	if err != nil {
 		log.Warn(nil, "invalid root path", "root_path", rootPath, "error", err)
 		return false
@@ -106,6 +110,7 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 		}
 	}
 
+	// FIXME: changedMedia is never populated
 	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
 		return errors.Wrap(err, "after scan album")
 	}
@@ -114,10 +119,11 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 }
 
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
+	fs := ctx.GetFileFS()
 
 	albumMedia := make([]*models.Media, 0)
 
-	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
+	dirContent, err := afero.ReadDir(fs, ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}
@@ -126,18 +132,14 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 		log.Info(ctx, "Check the media", "media_path", mediaPath)
 
-		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
+		isDirSymlink, err := utils.IsDirSymlink(fs, mediaPath)
 		if err != nil {
 			log.Warn(ctx, "Cannot detect whether the path is symlink to a directory. Pretending it is not", "media_path", mediaPath)
 			isDirSymlink = false
 		}
 
-		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			itemInfo, err := item.Info()
-			if err != nil {
-				return nil, err
-			}
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
+		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(fs, mediaPath) {
+			skip, err := scanner_tasks.Tasks.MediaFound(ctx, item, mediaPath)
 			if err != nil {
 				return nil, err
 			}
@@ -146,7 +148,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			}
 
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				media, isNewMedia, err := ScanMedia(ctx.GetDB(), fs, mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
@@ -169,15 +171,4 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	}
 
 	return albumMedia, nil
-}
-
-func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
-
-	// Make sure media cache directory exists
-	mediaCachePath, err := mediaData.Media.CachePath()
-	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
-	}
-
-	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
 }

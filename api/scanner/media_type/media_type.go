@@ -1,25 +1,28 @@
 package media_type
 
 import (
+	"mime"
+	"path/filepath"
 	"strings"
 	"unique"
-
-	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 )
 
 type MediaType unique.Handle[string]
 
+func Init() {
+	// We override ogg extension to be video/ogg
+	// as the default is audio/ogg
+	mime.AddExtensionType(".ogg", "video/ogg")
+}
+
 // GetMediaType returns a media type of file `f`.
 // This function is thread-safe.
 func GetMediaType(f string) MediaType {
-	mime, err := exif.MIMEType(f)
-	if err != nil {
-		log.Warn(nil, "GetMediaType() error.", "error", err, "file", f)
+	mt := mime.TypeByExtension(filepath.Ext(f))
+	if mt == "" {
 		return TypeUnknown
 	}
-
-	return mediaType(mime)
+	return mediaType(mt)
 }
 
 func mediaType(mime string) MediaType {
@@ -39,11 +42,23 @@ var (
 	TypeBMP  = mediaType("image/bmp")
 	TypeGIF  = mediaType("image/gif")
 
+	// Non-web image formats
+	TypeHEIF    = mediaType("image/heif")
+	TypeJPG2000 = mediaType("image/jp2")
+	TypeTIFF    = mediaType("image/tiff")
+	TypeCR3     = mediaType("image/x-canon-cr3")
+
 	// Web Video formats
 	TypeMP4  = mediaType("video/mp4")
 	TypeMPEG = mediaType("video/mpeg")
 	TypeOGG  = mediaType("video/ogg")
 	TypeWEBM = mediaType("video/webm")
+
+	// Non-web video formats
+	TypeMOV = mediaType("video/quicktime")
+	TypeAVI = mediaType("video/vnd.avi")
+	TypeMKV = mediaType("video/x-matroska")
+	TypeWMV = mediaType("video/x-ms-wmv")
 )
 
 var webImageMimetypes = arrayToSet([]MediaType{

@@ -2,11 +2,11 @@ package scanner_cache
 
 import (
 	"log"
-	"os"
 	"path"
 	"sync"
 
 	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/spf13/afero"
 )
 
 type AlbumScannerCache struct {
@@ -105,7 +105,7 @@ func (c *AlbumScannerCache) InsertAlbumIgnore(path string, ignoreData []string) 
 	c.ignore_data[path] = ignoreData
 }
 
-func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
+func (c *AlbumScannerCache) IsPathMedia(fs afero.Fs, mediaPath string) bool {
 	mediaType := c.GetMediaType(mediaPath)
 
 	// Ignore hidden files
@@ -118,8 +118,7 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 		return false
 	}
 
-	// Make sure file isn't empty
-	fileStats, err := os.Stat(mediaPath)
+	fileStats, err := fs.Stat(mediaPath)
 	if err != nil || fileStats.Size() == 0 {
 		return false
 	}
