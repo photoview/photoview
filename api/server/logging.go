@@ -12,8 +12,16 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
+// LoggingMiddleware is HTTP middleware that logs incoming requests with colored status, method, path, duration, and user information.
+// If the request has header "X-Health-Check" set to "true", the middleware delegates to the next handler without logging.
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("X-Health-Check") == "true" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		start := time.Now()
 
 		statusWriter := newStatusResponseWriter(&w)
