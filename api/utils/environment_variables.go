@@ -39,6 +39,7 @@ const (
 	EnvDisableVideoEncoding      EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
 	EnvDisableRawProcessing      EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
 	EnvVideoHardwareAcceleration EnvironmentVariable = "PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION"
+	EnvScannerSkipExtensions     EnvironmentVariable = "PHOTOVIEW_SCANNER_SKIP_EXTENSIONS"
 )
 
 // GetName returns the name of the environment variable itself

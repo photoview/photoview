@@ -270,15 +270,28 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 			if fileInfo.IsDir() || isDirSymlink {
 				scanQueue.PushBack(filePath)
 			} else {
-				if cache.IsPathMedia(filePath) {
-					if ignoreEntries.MatchesPath(fileInfo.Name()) {
-						log.Printf("Match found %s, continue search for media", fileInfo.Name())
-						continue
-					}
-					log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
-					cache.InsertAlbumPaths(dirPath, rootPath, true)
-					return true
+				if cache.ShouldSkipMediaPath(filePath) {
+					continue
 				}
+
+				entryInfo, err := fileInfo.Info()
+				if err != nil {
+					log.Printf("Could not inspect %s, err = %s", filePath, err)
+					continue
+				}
+
+				if !cache.IsPathMediaWithInfo(filePath, entryInfo) {
+					continue
+				}
+
+				if ignoreEntries.MatchesPath(fileInfo.Name()) {
+					log.Printf("Match found %s, continue search for media", fileInfo.Name())
+					continue
+				}
+
+				log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
+				cache.InsertAlbumPaths(dirPath, rootPath, true)
+				return true
 			}
 		}
 

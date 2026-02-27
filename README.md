@@ -228,6 +228,18 @@ See [docker-compose.example.yml](./docker-compose%20example/docker-compose.examp
 
 If you confirm other acceleration backends, please let us know.
 
+### Scanner filtering
+
+If your mounted photo roots also contain large non-media datasets and you cannot add `.photoviewignore` files there, you can define `PHOTOVIEW_SCANNER_SKIP_EXTENSIONS` in your `.env` file. It accepts comma-, space-, or semicolon-separated extensions and skips matching files before media type detection.
+
+Example:
+
+```dotenv
+PHOTOVIEW_SCANNER_SKIP_EXTENSIONS=.gpx,.kml,.csv,.geojson
+```
+
+Use `.photoviewignore` when you control the mounted tree and need folder-specific rules. Use `PHOTOVIEW_SCANNER_SKIP_EXTENSIONS` when the mount is read-only or managed outside Photoview.
+
 ## Contributing
 
 🎉 First off, thanks for your interest in contribution! 🎉
