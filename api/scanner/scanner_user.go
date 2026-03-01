@@ -276,7 +276,12 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 
 				entryInfo, err := fileInfo.Info()
 				if err != nil {
-					log.Printf("Could not inspect %s, err = %s", filePath, err)
+					if shouldSkipMediaInfoError(err) {
+						log.Printf("Could not inspect %s due to permission error, skipping", filePath)
+						continue
+					}
+
+					scanner_utils.ScannerError(nil, "Could not inspect media candidate (%s): %s\n", filePath, err)
 					continue
 				}
 

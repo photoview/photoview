@@ -17,22 +17,30 @@ import (
 	"gorm.io/gorm"
 )
 
-func albumMediaInfo(ctx scanner_task.TaskContext, entry os.DirEntry, mediaPath string) (fs.FileInfo, bool) {
+func shouldSkipMediaInfoError(err error) bool {
+	return os.IsPermission(err)
+}
+
+func albumMediaInfo(ctx scanner_task.TaskContext, entry os.DirEntry, mediaPath string) (fs.FileInfo, bool, error) {
 	if ctx.GetCache().ShouldSkipMediaPath(mediaPath) {
-		return nil, false
+		return nil, false, nil
 	}
 
 	itemInfo, err := entry.Info()
 	if err != nil {
-		log.Warn(ctx, "Could not inspect media file, skipping", "media_path", mediaPath, "error", err)
-		return nil, false
+		if shouldSkipMediaInfoError(err) {
+			log.Warn(ctx, "Could not inspect media file due to permission error, skipping", "media_path", mediaPath, "error", err)
+			return nil, false, nil
+		}
+
+		return nil, false, errors.Wrapf(err, "inspect media file (%s)", mediaPath)
 	}
 
 	if !ctx.GetCache().IsPathMediaWithInfo(mediaPath, itemInfo) {
-		return nil, false
+		return nil, false, nil
 	}
 
-	return itemInfo, true
+	return itemInfo, true, nil
 }
 
 func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
@@ -155,7 +163,10 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 			continue
 		}
 
-		itemInfo, isMedia := albumMediaInfo(ctx, item, mediaPath)
+		itemInfo, isMedia, err := albumMediaInfo(ctx, item, mediaPath)
+		if err != nil {
+			return nil, err
+		}
 		if !isMedia {
 			continue
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"os"
 	"path"
 	"testing"
 
@@ -34,18 +35,45 @@ func (e testDirEntry) Info() (fs.FileInfo, error) {
 	return e.info, e.infoErr
 }
 
-func TestAlbumMediaInfoSkipsFilesWithInfoErrors(t *testing.T) {
+func TestAlbumMediaInfoSkipsFilesWithPermissionErrors(t *testing.T) {
 	albumPath := t.TempDir()
 	mediaPath := path.Join(albumPath, "broken.jpg")
 	ctx := scanner_task.NewTaskContext(context.Background(), nil, &models.Album{Path: albumPath}, scanner_cache.MakeAlbumCache())
 
-	itemInfo, isMedia := albumMediaInfo(ctx, testDirEntry{
+	itemInfo, isMedia, err := albumMediaInfo(ctx, testDirEntry{
 		name:    "broken.jpg",
-		infoErr: errors.New("permission denied"),
+		infoErr: os.ErrPermission,
 	}, mediaPath)
 
+	if err != nil {
+		t.Fatalf("albumMediaInfo() unexpected error for permission failure: %v", err)
+	}
+
 	if isMedia {
-		t.Fatal("albumMediaInfo() should skip files when DirEntry.Info() fails")
+		t.Fatal("albumMediaInfo() should skip files when DirEntry.Info() returns a permission error")
+	}
+
+	if itemInfo != nil {
+		t.Fatal("albumMediaInfo() should not return file info when DirEntry.Info() returns a permission error")
+	}
+}
+
+func TestAlbumMediaInfoReturnsUnexpectedInfoErrors(t *testing.T) {
+	albumPath := t.TempDir()
+	mediaPath := path.Join(albumPath, "broken.jpg")
+	ctx := scanner_task.NewTaskContext(context.Background(), nil, &models.Album{Path: albumPath}, scanner_cache.MakeAlbumCache())
+
+	itemInfo, isMedia, err := albumMediaInfo(ctx, testDirEntry{
+		name:    "broken.jpg",
+		infoErr: errors.New("stale handle"),
+	}, mediaPath)
+
+	if err == nil {
+		t.Fatal("albumMediaInfo() should return unexpected DirEntry.Info() errors")
+	}
+
+	if isMedia {
+		t.Fatal("albumMediaInfo() should not report media when DirEntry.Info() fails")
 	}
 
 	if itemInfo != nil {
