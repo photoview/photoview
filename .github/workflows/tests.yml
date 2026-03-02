@@ -152,7 +152,7 @@ jobs:
 
       - name: ESLint artifact
         id: eslint-artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ESLint-report
           path: ./ui/eslint-report.txt
