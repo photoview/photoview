@@ -3,22 +3,23 @@ package auth
 import (
 	context "context"
 	http "net/http"
+	"time"
 )
 
 type authResponseWriter struct {
 	http.ResponseWriter
 	http.Hijacker
-	userIDToResolver string
-	userIDFromCookie string
+	authTokenFromResolver string
 }
 
 func (w *authResponseWriter) Write(b []byte) (int, error) {
-	if w.userIDToResolver != w.userIDFromCookie {
+	if w.authTokenFromResolver != "" {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "auth-token",
-			Value:    w.userIDToResolver,
+			Value:    w.authTokenFromResolver,
 			Path:     "/",
 			SameSite: http.SameSiteLaxMode,
+			Expires:  time.Now().Add(14 * 24 * time.Hour),
 		})
 	}
 	return w.ResponseWriter.Write(b)
@@ -26,15 +27,10 @@ func (w *authResponseWriter) Write(b []byte) (int, error) {
 
 func AuthCookieSetter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		arw := authResponseWriter{w, w.(http.Hijacker), "", ""}
+		arw := authResponseWriter{w, w.(http.Hijacker), ""}
 		userIDContextKey := userAccessTokenCtxKey
 
-		c, _ := r.Cookie("auth-token")
-		if c != nil {
-			arw.userIDFromCookie = c.Value
-			arw.userIDToResolver = c.Value
-		}
-		ctx := context.WithValue(r.Context(), userIDContextKey, &arw.userIDToResolver)
+		ctx := context.WithValue(r.Context(), userIDContextKey, &arw.authTokenFromResolver)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(&arw, r)
