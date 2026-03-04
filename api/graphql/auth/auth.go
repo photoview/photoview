@@ -19,9 +19,11 @@ var bearerRegex = regexp.MustCompile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 const INVALID_AUTH_TOKEN = "invalid authorization token"
 const INTERNAL_SERVER_ERROR = "internal server error"
 
-// A private key for context that only this package can access. This is important
+// Private keys for context that only this package can access. This is important
 // to prevent collisions between different context uses
 var userCtxKey = &contextKey{"user"}
+
+var userAccessTokenCtxKey = &contextKey{"userAccessToken"}
 
 type contextKey struct {
 	name string
@@ -86,6 +88,11 @@ func TokenFromBearer(bearer *string) (*string, error) {
 // UserFromContext finds the user from the context. REQUIRES Middleware to have run.
 func UserFromContext(ctx context.Context) *models.User {
 	raw, _ := ctx.Value(userCtxKey).(*models.User)
+	return raw
+}
+
+func ResolverCookieFromContext(ctx context.Context) *string {
+	raw, _ := ctx.Value(userAccessTokenCtxKey).(*string)
 	return raw
 }
 
