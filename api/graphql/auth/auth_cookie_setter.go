@@ -11,10 +11,11 @@ type authResponseWriter struct {
 	http.Hijacker
 	authTokenFromResolver string
 	separateDomain        bool
+	cookieWritten         bool
 }
 
-func (w *authResponseWriter) WriteHeader(statusCode int) {
-	if w.authTokenFromResolver != "" {
+func (w *authResponseWriter) writeAuthCookieIfNeeded() {
+	if w.cookieWritten == false && w.authTokenFromResolver != "" {
 		sameSite := http.SameSiteLaxMode
 		secure := false
 		if w.separateDomain {
@@ -30,14 +31,24 @@ func (w *authResponseWriter) WriteHeader(statusCode int) {
 			Secure:   secure,
 			Expires:  time.Now().Add(14 * 24 * time.Hour),
 		})
+		w.cookieWritten = true
 	}
+}
+
+func (w *authResponseWriter) WriteHeader(statusCode int) {
+	w.writeAuthCookieIfNeeded()
 	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *authResponseWriter) Write(b []byte) (int, error) {
+	w.writeAuthCookieIfNeeded()
+	return w.ResponseWriter.Write(b)
 }
 
 func AuthCookieSetter(separateDomain bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			arw := authResponseWriter{w, w.(http.Hijacker), "", separateDomain}
+			arw := authResponseWriter{w, w.(http.Hijacker), "", separateDomain, false}
 			userIDContextKey := userAccessTokenCtxKey
 
 			ctx := context.WithValue(r.Context(), userIDContextKey, &arw.authTokenFromResolver)
