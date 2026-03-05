@@ -11,10 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// hijackableRecorder wraps httptest.ResponseRecorder with a no-op Hijack method
+// so it satisfies the http.Hijacker interface required by authResponseWriter.
 type hijackableRecorder struct {
 	*httptest.ResponseRecorder
 }
 
+// Hijack implements http.Hijacker as a no-op for testing purposes.
 func (h *hijackableRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return nil, nil, nil
 }
@@ -35,6 +38,9 @@ func noResponseAuthCookieHandler() http.HandlerFunc {
 	})
 }
 
+// TestAuthCookieSetterMiddleware verifies that AuthCookieSetter middleware sets
+// the auth-token cookie with the correct value and SameSite/Secure attributes
+// when a resolver writes a token, and omits the cookie when no token is set.
 func TestAuthCookieSetterMiddleware(t *testing.T) {
 
 	testCases := []struct {
