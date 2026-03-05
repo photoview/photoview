@@ -13,7 +13,7 @@ type authResponseWriter struct {
 	separateDomain        bool
 }
 
-func (w *authResponseWriter) Write(b []byte) (int, error) {
+func (w *authResponseWriter) WriteHeader(statusCode int) {
 	if w.authTokenFromResolver != "" {
 		sameSite := http.SameSiteLaxMode
 		secure := false
@@ -31,7 +31,7 @@ func (w *authResponseWriter) Write(b []byte) (int, error) {
 			Expires:  time.Now().Add(14 * 24 * time.Hour),
 		})
 	}
-	return w.ResponseWriter.Write(b)
+	w.ResponseWriter.WriteHeader(statusCode)
 }
 
 func AuthCookieSetter(separateDomain bool) func(http.Handler) http.Handler {
