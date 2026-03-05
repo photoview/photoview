@@ -75,7 +75,7 @@ func main() {
 	rootRouter.Use(dataloader.Middleware(db))
 	rootRouter.Use(auth.Middleware(db))
 	rootRouter.Use(server.LoggingMiddleware)
-	rootRouter.Use(auth.AuthCookieSetter)
+	rootRouter.Use(auth.AuthCookieSetter(utils.EnvUIEndpoint.GetValue() != ""))
 	rootRouter.Use(server.CORSMiddleware(devMode))
 
 	apiListenURL := utils.ApiListenUrl()

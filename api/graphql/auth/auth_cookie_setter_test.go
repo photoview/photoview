@@ -40,10 +40,17 @@ func TestAuthCookieSetterMiddleware(t *testing.T) {
 	testCases := []struct {
 		name                  string
 		responseAuthCookieVal string
+		uiOnSeparateDomain    bool
 	}{
 		{
-			name:                  "Login or initial setup endpoint sets auth cookie",
+			name:                  "Login or initial setup endpoint sets auth cookie with samesite lax",
 			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    false,
+		},
+		{
+			name:                  "Login or initial setup endpoint sets auth cookie with samesite none",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    true,
 		},
 		{
 			name:                  "Non Login or initial setup endpoint does not set auth cookie",
@@ -58,23 +65,34 @@ func TestAuthCookieSetterMiddleware(t *testing.T) {
 			var authHandler http.Handler
 
 			if tc.responseAuthCookieVal != "" {
-				authHandler = auth.AuthCookieSetter(setResponseAuthCookieHandler(tc.responseAuthCookieVal))
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(setResponseAuthCookieHandler(tc.responseAuthCookieVal))
 			} else {
-				authHandler = auth.AuthCookieSetter(noResponseAuthCookieHandler())
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(noResponseAuthCookieHandler())
 			}
 
 			recorder := &hijackableRecorder{httptest.NewRecorder()}
 			authHandler.ServeHTTP(recorder, req)
 
-			var authTokenValue string
+			var authToken *http.Cookie
 			for _, cookie := range recorder.Result().Cookies() {
 				if cookie.Name == "auth-token" {
-					authTokenValue = cookie.Value
+					authToken = cookie
 					break
 				}
 			}
 
-			assert.Equal(t, tc.responseAuthCookieVal, authTokenValue)
+			if tc.responseAuthCookieVal != "" {
+				assert.Equal(t, tc.responseAuthCookieVal, authToken.Value)
+				if tc.uiOnSeparateDomain {
+					assert.Equal(t, http.SameSiteNoneMode, authToken.SameSite)
+					assert.True(t, authToken.Secure)
+				} else {
+					assert.Equal(t, http.SameSiteLaxMode, authToken.SameSite)
+					assert.False(t, authToken.Secure)
+				}
+			} else {
+				assert.Nil(t, authToken)
+			}
 		})
 	}
 }
