@@ -24,14 +24,14 @@ func setResponseAuthCookieHandler(token string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie := auth.ResolverCookieFromContext(r.Context())
 		*cookie = token
-		w.Write([]byte("ok"))
+		w.WriteHeader(200)
 	})
 }
 
 // Emulate an endpoint that is not AuthorizeUser or InitialSetupWizard
 func noResponseAuthCookieHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
+		w.WriteHeader(200)
 	})
 }
 
