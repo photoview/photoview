@@ -31,6 +31,16 @@ func setResponseAuthCookieHandler(token string) http.HandlerFunc {
 	})
 }
 
+// setResponseAuthCookieHandlerViaWrite is like setResponseAuthCookieHandler but
+// triggers the cookie via Write instead of WriteHeader, exercising the Write intercept path.
+func setResponseAuthCookieHandlerViaWrite(token string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie := auth.ResolverCookieFromContext(r.Context())
+		*cookie = token
+		w.Write([]byte("ok"))
+	})
+}
+
 // Emulate an endpoint that is not AuthorizeUser or InitialSetupWizard
 func noResponseAuthCookieHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +57,7 @@ func TestAuthCookieSetterMiddleware(t *testing.T) {
 		name                  string
 		responseAuthCookieVal string
 		uiOnSeparateDomain    bool
+		useWrite              bool
 	}{
 		{
 			name:                  "Login or initial setup endpoint sets auth cookie with samesite lax",
@@ -62,6 +73,18 @@ func TestAuthCookieSetterMiddleware(t *testing.T) {
 			name:                  "Non Login or initial setup endpoint does not set auth cookie",
 			responseAuthCookieVal: "",
 		},
+		{
+			name:                  "Auth cookie set via Write with samesite lax",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    false,
+			useWrite:              true,
+		},
+		{
+			name:                  "Auth cookie set via Write with samesite none on separate domain",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    true,
+			useWrite:              true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -70,9 +93,12 @@ func TestAuthCookieSetterMiddleware(t *testing.T) {
 
 			var authHandler http.Handler
 
-			if tc.responseAuthCookieVal != "" {
+			switch {
+			case tc.responseAuthCookieVal != "" && tc.useWrite:
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(setResponseAuthCookieHandlerViaWrite(tc.responseAuthCookieVal))
+			case tc.responseAuthCookieVal != "":
 				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(setResponseAuthCookieHandler(tc.responseAuthCookieVal))
-			} else {
+			default:
 				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(noResponseAuthCookieHandler())
 			}
 
