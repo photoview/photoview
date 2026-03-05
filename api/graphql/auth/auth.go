@@ -91,6 +91,7 @@ func UserFromContext(ctx context.Context) *models.User {
 	return raw
 }
 
+// Find the auth-token from the context. REQUIRES AuthCookieSetter to have run.
 func ResolverCookieFromContext(ctx context.Context) *string {
 	raw, _ := ctx.Value(userAccessTokenCtxKey).(*string)
 	return raw
