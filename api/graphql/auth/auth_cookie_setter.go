@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// authResponseWriter wraps http.ResponseWriter to intercept response writes and
+// inject an auth-token cookie when a token has been set by a GraphQL resolver.
+// It also embeds http.Hijacker to support WebSocket upgrades.
 type authResponseWriter struct {
 	http.ResponseWriter
 	http.Hijacker
@@ -14,6 +17,9 @@ type authResponseWriter struct {
 	cookieWritten         bool
 }
 
+// writeAuthCookieIfNeeded sets the auth-token cookie on the response if a token
+// was provided by a resolver and the cookie has not already been written.
+// For cross-origin deployments (separateDomain=true), it uses SameSite=None;Secure.
 func (w *authResponseWriter) writeAuthCookieIfNeeded() {
 	if w.cookieWritten == false && w.authTokenFromResolver != "" {
 		sameSite := http.SameSiteLaxMode
@@ -35,16 +41,26 @@ func (w *authResponseWriter) writeAuthCookieIfNeeded() {
 	}
 }
 
+// WriteHeader intercepts the status code write to ensure the auth cookie is set
+// before headers are flushed to the client.
 func (w *authResponseWriter) WriteHeader(statusCode int) {
 	w.writeAuthCookieIfNeeded()
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
+// Write intercepts the response body write to ensure the auth cookie is set
+// before any body bytes are sent, in case WriteHeader was not called explicitly.
 func (w *authResponseWriter) Write(b []byte) (int, error) {
 	w.writeAuthCookieIfNeeded()
 	return w.ResponseWriter.Write(b)
 }
 
+// AuthCookieSetter returns HTTP middleware that automatically sets an auth-token
+// cookie on responses when a GraphQL resolver has produced an access token.
+// It stores a pointer to the token field in the request context under
+// userAccessTokenCtxKey so resolvers can populate it directly.
+// separateDomain should be true when the UI and API are served from different
+// origins, which requires SameSite=None;Secure cookie attributes.
 func AuthCookieSetter(separateDomain bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
