@@ -1,202 +1,256 @@
 package exiftool
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
-	"strings"
+	"sync"
 )
 
-type Instance struct {
-	binary  string
+type Exiftool struct {
+	path    string
 	version string
-	cmd     *exec.Cmd
-	input   io.Writer
-	output  *stdtoutReader
+	marker  string
+
+	cmd      *exec.Cmd
+	stdin    io.WriteCloser
+	stdinBuf *bufio.Writer
+	stdout   *MarkReader
+	stderr   *MarkReader
+
+	closeOnce sync.Once
 }
 
-func New() (*Instance, error) {
-	bin, err := exec.LookPath("exiftool")
+const marker = "{ready}"
+const bufferSize = 10240
+
+func New() (*Exiftool, error) {
+	path, err := exec.LookPath("exiftool")
 	if err != nil {
-		return nil, fmt.Errorf("lookup exiftool error: %w", err)
+		return nil, err
 	}
 
-	cmd := exec.Command(bin, "-stay_open", "True", "-@", "-")
-
-	input, err := cmd.StdinPipe()
+	voutput, err := exec.Command(path, "-ver").Output()
 	if err != nil {
-		return nil, fmt.Errorf("create stdin pipe error: %w", err)
+		return nil, fmt.Errorf("run `exiftool -ver` error: %w", err)
 	}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("create stdout pipe error: %w", err)
+	version := string(bytes.Trim(voutput, " \t\n\r"))
+	if version == "" {
+		return nil, fmt.Errorf("run `exiftool -ver` error: no output")
 	}
-	reader := newStdoutReader(stdout, "{ready}", 1024*10)
 
-	cmd.Stderr = cmd.Stdout
+	cmd := exec.Command(path, "-stay_open", "True", "-@", "-")
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("get `exiftool -stay_open True -@ -` stdin error: %w", err)
+	}
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		defer stdin.Close()
+		return nil, fmt.Errorf("get `exiftool -stay_open True -@ -` stdout error: %w", err)
+	}
+
+	stdout, err := NewMarkReader(stdoutPipe, bufferSize, marker)
+	if err != nil {
+		defer stdin.Close()
+		return nil, err
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		defer stdin.Close()
+		return nil, fmt.Errorf("get `exiftool -stay_open True -@ -` stderr error: %w", err)
+	}
+
+	stderr, err := NewMarkReader(stderrPipe, bufferSize, marker)
+	if err != nil {
+		defer stdin.Close()
+		return nil, err
+	}
 
 	if err := cmd.Start(); err != nil {
-		cmd.Wait()
-		return nil, fmt.Errorf("launch exiftool error: %w", err)
+		defer stdin.Close()
+		return nil, fmt.Errorf("run `exiftool -stay_open True -@ -` error: %w", err)
 	}
 
-	ret := &Instance{
-		binary: bin,
-		cmd:    cmd,
-		input:  input,
-		output: reader,
-	}
-
-	version, err := ret.getRawString("-ver")
-	if err != nil {
-		ret.Close()
-		return nil, fmt.Errorf("get exiftool version error: %w", err)
-	}
-	ret.version = version
-
-	return ret, nil
+	return &Exiftool{
+		path:     path,
+		version:  version,
+		marker:   marker,
+		cmd:      cmd,
+		stdin:    stdin,
+		stdinBuf: bufio.NewWriterSize(stdin, bufferSize),
+		stdout:   stdout,
+		stderr:   stderr,
+	}, nil
 }
 
-func (i *Instance) Close() error {
-	if err := i.send("-stay_open", "False"); err != nil {
-		return fmt.Errorf("close exiftool error: %w", err)
-	}
+func (e *Exiftool) BinaryPath() string {
+	return e.path
+}
 
-	if err := i.cmd.Wait(); err != nil {
-		return fmt.Errorf("close exiftool error: %w", err)
-	}
+func (e *Exiftool) Version() string {
+	return e.version
+}
+
+func (e *Exiftool) Close() error {
+	e.closeOnce.Do(func() {
+		_ = e.rawSendCommand("-stay_open", "False")
+		defer e.cmd.Wait()
+		defer e.stdin.Close()
+	})
 
 	return nil
 }
 
-func (i *Instance) Binary() string {
-	return i.binary
-}
+func (e *Exiftool) rawSendCommand(args ...string) error {
+	e.stdout.Reset()
+	e.stderr.Reset()
 
-func (i *Instance) Version() string {
-	return i.version
-}
-
-func (i *Instance) QueryMIMEType(file string) (string, error) {
-	type Response struct {
-		MIMEType string
-	}
-	var ret []Response
-
-	if err := i.getJson(&ret, file, "-mimetype"); err != nil {
-		return "", fmt.Errorf("query mimetype for file %q error: %w", file, err)
-	}
-
-	if len(ret) == 0 {
-		return "", nil
-	}
-
-	return ret[0].MIMEType, nil
-}
-
-func (i *Instance) QueryTime(file string) (map[string]string, error) {
-	var ret []map[string]string
-
-	if err := i.getJson(&ret, file, "-time:all", "--SubSecTime*"); err != nil {
-		return nil, fmt.Errorf("query time for file %q error: %w", file, err)
-	}
-
-	if len(ret) == 0 {
-		return map[string]string{}, nil
-	}
-
-	delete(ret[0], "SourceFile")
-
-	return ret[0], nil
-}
-
-func (i *Instance) QueryGPS(file string) (float64, float64, error) {
-	var ret []struct {
-		GPSLatitude  float64
-		GPSLongitude float64
-	}
-
-	if err := i.getJson(&ret, file, "-n", "-GPSLatitude", "-GPSLongitude"); err != nil {
-		return 0, 0, fmt.Errorf("query gps for file %q error: %w", file, err)
-	}
-
-	if len(ret) == 0 {
-		return 0, 0, nil
-	}
-
-	return ret[0].GPSLatitude, ret[0].GPSLongitude, nil
-}
-
-func (i *Instance) SaveJPEGPreview(src string, preview string) (bool, error) {
-	output, err := i.getRawString(src, "-JpgFromRaw", "-b", "-W", preview)
-	if err != nil {
-		return false, fmt.Errorf("save preview from %q to %q error: %w", src, preview, err)
-	}
-
-	if strings.TrimSpace(output) != "1 output files created" {
-		return false, nil
-	}
-
-	return true, nil
-
-}
-
-func (i *Instance) send(args ...string) error {
 	for _, arg := range args {
-		if _, err := fmt.Fprintln(i.input, arg); err != nil {
+		if _, err := e.stdinBuf.WriteString(arg); err != nil {
+			return err
+		}
+		if err := e.stdinBuf.WriteByte('\n'); err != nil {
 			return err
 		}
 	}
 
-	return nil
-}
-
-func (i *Instance) fetchString() (string, error) {
-	ret, err := io.ReadAll(i.output)
-	if err != nil {
-		return "", err
+	for _, arg := range []string{"-echo4\n", "{ready}\n", "-execute\n"} {
+		if _, err := e.stdinBuf.WriteString(arg); err != nil {
+			return err
+		}
 	}
 
-	return string(ret), nil
+	return e.stdinBuf.Flush()
 }
 
-func (i *Instance) fetchJson(v any) error {
-	if err := json.NewDecoder(i.output).Decode(v); err != nil {
+func (e *Exiftool) rawReadStderr() error {
+	stderrOutput, err := io.ReadAll(e.stderr)
+	if err != nil {
 		return err
 	}
 
+	outStr := string(bytes.Trim(stderrOutput, " \n\t\r"))
+	if outStr == "" {
+		return nil
+	}
+
+	return errors.New(outStr)
+}
+
+func (e *Exiftool) rawGetTags(v any, args ...string) (err error) {
+	if err = e.rawSendCommand(append(args, "-json")...); err != nil {
+		return
+	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, e.stdout)
+		err = e.rawReadStderr()
+	}()
+
+	if err = json.NewDecoder(e.stdout).Decode(v); err != nil {
+		return
+	}
+
 	return nil
 }
 
-func (i *Instance) getRawString(args ...string) (string, error) {
-	i.output.ResetFrame()
-	args = append(args, "-execute")
+func (e *Exiftool) rawSaveEmbedFile(outputPath string, args ...string) (hasEmbededFile bool, err error) {
+	if err = e.rawSendCommand(append(args, "-b", "-W", outputPath)...); err != nil {
+		return
+	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, e.stdout)
+		err = e.rawReadStderr()
+	}()
 
-	if err := i.send(args...); err != nil {
-		return "", fmt.Errorf("send command %v error: %w", args, err)
+	var output []byte
+	if output, err = io.ReadAll(e.stdout); err != nil {
+		return
 	}
 
-	ret, err := i.fetchString()
+	outStr := string(bytes.Trim(output, " \n\r\t"))
+	switch outStr {
+	case "0 output files created":
+		return
+	case "1 output files created":
+	default:
+		err = fmt.Errorf("invalid output: %s", outStr)
+		return
+	}
+
+	if err = e.rawReadStderr(); err != nil {
+		return
+	}
+
+	hasEmbededFile = true
+	return
+}
+
+func (e *Exiftool) QueryMIMEType(file string) (string, error) {
+	var rows []struct {
+		MIMEType string
+	}
+	if err := e.rawGetTags(&rows, "-MIMEType", file); err != nil {
+		return "", fmt.Errorf("query mimetype error: %w", err)
+	}
+
+	if len(rows) != 1 {
+		return "", fmt.Errorf("query mimetype error: return %d responses, should be only 1", len(rows))
+	}
+
+	return rows[0].MIMEType, nil
+}
+
+func (e *Exiftool) QueryGPS(file string) (GPS, bool, error) {
+	var rows []struct {
+		GPSLatitude  float64
+		GPSLongitude float64
+		GPSPosition  string
+	}
+	if err := e.rawGetTags(&rows, "-n", "-GPSLatitude", "-GPSLongitude", "-GPSPosition", file); err != nil {
+		return GPS{}, false, fmt.Errorf("query gps error: %w", err)
+	}
+
+	if len(rows) != 1 {
+		return GPS{}, false, fmt.Errorf("query gps error: return %d responses, should be only 1", len(rows))
+	}
+
+	if rows[0].GPSPosition == "" {
+		return GPS{}, false, nil
+	}
+
+	return GPS{
+		Latitude:  rows[0].GPSLatitude,
+		Longitude: rows[0].GPSLongitude,
+	}, true, nil
+}
+
+func (e *Exiftool) QueryTimeAll(file string) (TimeAll, error) {
+	var rows []TimeAll
+	if err := e.rawGetTags(&rows, "-time:all", file); err != nil {
+		return TimeAll{}, fmt.Errorf("query time:all error: %w", err)
+	}
+
+	if len(rows) != 1 {
+		return TimeAll{}, fmt.Errorf("query gps error: return %d responses, should be only 1", len(rows))
+	}
+
+	return rows[0], nil
+}
+
+func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, error) {
+	saved, err := e.rawSaveEmbedFile(previewOutput, "-JpgFromRaw", src)
 	if err != nil {
-		return "", fmt.Errorf("fetch string from command %v error: %w", args, err)
+		return false, fmt.Errorf("save jpeg preview error: %w", err)
 	}
 
-	return ret, nil
-}
-
-func (i *Instance) getJson(v any, args ...string) error {
-	i.output.ResetFrame()
-	args = append(args, "-j", "-execute")
-
-	if err := i.send(args...); err != nil {
-		return fmt.Errorf("send command %v error: %w", args, err)
-	}
-
-	if err := i.fetchJson(v); err != nil {
-		return fmt.Errorf("fetch json from command %v error: %w", args, err)
-	}
-
-	return nil
+	return saved, nil
 }

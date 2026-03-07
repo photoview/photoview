@@ -2,27 +2,24 @@ package exiftool
 
 import (
 	"fmt"
-	"maps"
 	"path/filepath"
-	"slices"
+	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 
 	_ "github.com/photoview/photoview/api/test_utils/flags"
 )
 
-func TestInstance(t *testing.T) {
+func TestExiftool(t *testing.T) {
 	instance, err := New()
 	if err != nil {
 		t.Fatalf("create instance error: %v", err)
 	}
 
-	t.Log("bin:", instance.Binary())
+	t.Log("bin:", instance.BinaryPath())
 	t.Log("version:", instance.Version())
 
-	if instance.Binary() == "" {
+	if instance.BinaryPath() == "" {
 		t.Errorf("want exiftool binary, but got an emtpy string")
 	}
 
@@ -35,7 +32,7 @@ func TestInstance(t *testing.T) {
 	}
 }
 
-func TestQueryMIMEType(t *testing.T) {
+func TestExiftoolQueryMIMEType(t *testing.T) {
 	tests := []struct {
 		file string
 		want string
@@ -66,45 +63,47 @@ func TestQueryMIMEType(t *testing.T) {
 	}
 }
 
-func TestQueryTime(t *testing.T) {
+func checkTimeallFields(t *testing.T, time TimeAll, fields []string) {
+	t.Helper()
+
+	tv := reflect.ValueOf(time)
+
+	for _, field := range fields {
+		fv := tv.FieldByName(field)
+		if !fv.IsValid() {
+			t.Errorf("can't find field %q in TimeAll", field)
+			continue
+		}
+
+		if str, ok := fv.Interface().(string); !ok || str == "" {
+			t.Errorf("field %q is string(%v) with value %q", field, ok, str)
+			continue
+		}
+	}
+}
+
+func TestExiftoolQueryTimeAll(t *testing.T) {
 	tests := []struct {
 		file     string
 		wantKeys []string
 	}{
 		{"./test_data/bird.jpg", []string{
-			"DateCreated",
-			"DateTimeCreated",
 			"DateTimeOriginal",
-			"FileAccessDate",
-			"FileInodeChangeDate",
 			"FileModifyDate",
-			"TimeCreated",
 		}},
 		{"./test_data/cr3.cr3", []string{
 			"CreateDate",
 			"DateTimeOriginal",
-			"DaylightSavings",
-			"FileAccessDate",
-			"FileInodeChangeDate",
 			"FileModifyDate",
 			"MediaCreateDate",
-			"MediaModifyDate",
-			"ModifyDate",
 			"OffsetTime",
-			"OffsetTimeDigitized",
 			"OffsetTimeOriginal",
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
-			"SubSecModifyDate",
-			"TimeStamp",
 			"TimeZone",
-			"TimeZoneCity",
 			"TrackCreateDate",
-			"TrackModifyDate",
 		}},
 		{"./test_data/stripped.jpg", []string{
-			"FileAccessDate",
-			"FileInodeChangeDate",
 			"FileModifyDate",
 		}},
 	}
@@ -117,27 +116,25 @@ func TestQueryTime(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			got, err := instance.QueryTime(tc.file)
+			got, err := instance.QueryTimeAll(tc.file)
 			if err != nil {
-				t.Errorf("QueryTime(%q) error: %v", tc.file, err)
+				t.Errorf("QueryTimeAll(%q) error: %v", tc.file, err)
 				return
 			}
 
-			gotKeys := slices.Collect(maps.Keys(got))
-			slices.Sort(gotKeys)
-			if diff := cmp.Diff(gotKeys, tc.wantKeys); diff != "" {
-				t.Errorf("QueryTime(%q), keys diff: (-got, +want)\n%s", tc.file, diff)
-			}
+			checkTimeallFields(t, got, tc.wantKeys)
 		})
 	}
 }
 
-func TestQueryGPS(t *testing.T) {
+func TestExiftoolQueryGPS(t *testing.T) {
 	tests := []struct {
 		file              string
+		hasGPS            bool
 		wantLat, wantLong float64
 	}{
-		{"./test_data/CorrectGPS.jpg", 44.4789972, 11.2979222},
+		{"./test_data/CorrectGPS.jpg", true, 44.4789972, 11.2979222},
+		{"./test_data/stripped.jpg", false, 0, 0},
 	}
 
 	instance, err := New()
@@ -148,9 +145,14 @@ func TestQueryGPS(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			gotLat, gotLong, err := instance.QueryGPS(tc.file)
+			got, existed, err := instance.QueryGPS(tc.file)
 			if err != nil {
 				t.Errorf("QueryGPS(%q) error: %v", tc.file, err)
+				return
+			}
+
+			if existed != tc.hasGPS {
+				t.Errorf("QueryGPS(%q) returns GPS: %v, want a GPS: %v", tc.file, existed, tc.hasGPS)
 				return
 			}
 
@@ -158,14 +160,14 @@ func TestQueryGPS(t *testing.T) {
 				return fmt.Sprintf("(%.7f, %.7f)", latitude, longitude)
 			}
 
-			if got, want := gpsToString(gotLat, gotLong), gpsToString(tc.wantLat, tc.wantLong); got != want {
-				t.Errorf("QUeryGPS(%q) = %s, want: %s", tc.file, got, want)
+			if got, want := gpsToString(got.Latitude, got.Longitude), gpsToString(tc.wantLat, tc.wantLong); got != want {
+				t.Errorf("QueryGPS(%q) = %s, want: %s", tc.file, got, want)
 			}
 		})
 	}
 }
 
-func TestSaveJPEGPreview(t *testing.T) {
+func TestExiftoolSaveJPEGPreview(t *testing.T) {
 	tests := []struct {
 		file   string
 		wantOK bool
@@ -214,7 +216,7 @@ func TestSaveJPEGPreview(t *testing.T) {
 
 }
 
-func TestInstanceError(t *testing.T) {
+func TestExiftoolError(t *testing.T) {
 	instance, err := New()
 	if err != nil {
 		t.Fatalf("new error: %v", err)
@@ -223,6 +225,8 @@ func TestInstanceError(t *testing.T) {
 
 	file := "./test_data/non_exist.jpg"
 	checkErr := func(err error, fmtStr string, args ...any) {
+		t.Helper()
+
 		if want := "File not found"; err == nil || !strings.Contains(err.Error(), want) {
 			t.Errorf(fmtStr+" %v, want %v", append(args, err, want)...)
 		}
@@ -234,8 +238,8 @@ func TestInstanceError(t *testing.T) {
 	_, _, err = instance.QueryGPS(file)
 	checkErr(err, "QueryGPS(%q)", file)
 
-	_, err = instance.QueryTime(file)
-	checkErr(err, "QueryTime(%q)", file)
+	_, err = instance.QueryTimeAll(file)
+	checkErr(err, "QueryTimeAll(%q)", file)
 
 	output := filepath.Join(t.TempDir(), "output.jpg")
 	_, err = instance.SaveJPEGPreview(file, output)
