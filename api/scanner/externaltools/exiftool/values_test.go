@@ -12,16 +12,19 @@ func TestGPSIsValid(t *testing.T) {
 		gps       GPS
 		wantValid bool
 	}{
-		{"LatNormalLongNormal", GPS{10.0, 10.0}, true},
+		{"LatNormalLongNormal", GPS{10.0, 10.0, "10 10"}, true},
+		{"ZeroValue", GPS{0, 0, "0 0"}, true},
 
-		{"LatNilLongNormal", GPS{math.NaN(), 10.0}, false},
-		{"LatNormalLongNil", GPS{10.0, math.NaN()}, false},
+		{"LatNilLongNormal", GPS{math.NaN(), 10.0, "NaN 10"}, false},
+		{"LatNormalLongNil", GPS{10.0, math.NaN(), "10 NaN"}, false},
 
-		{"Lat>90LongNormal", GPS{100.0, 10.0}, false},
-		{"Lat<-90LongNormal", GPS{-100.0, 10.0}, false},
+		{"Lat>90LongNormal", GPS{100.0, 10.0, "100 10"}, false},
+		{"Lat<-90LongNormal", GPS{-100.0, 10.0, "-100 10"}, false},
 
-		{"LatNormalLong>180", GPS{10.0, 190.0}, false},
-		{"LatNormalLong<-180", GPS{10.0, -190.0}, false},
+		{"LatNormalLong>180", GPS{10.0, 190.0, "10 190"}, false},
+		{"LatNormalLong<-180", GPS{10.0, -190.0, "10 -190"}, false},
+
+		{"Empty", GPS{0, 0, ""}, false},
 	}
 
 	for _, tc := range tests {

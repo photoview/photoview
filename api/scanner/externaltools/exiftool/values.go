@@ -8,21 +8,26 @@ import (
 
 // GPS stores gps-related tags.
 type GPS struct {
-	Latitude  float64
-	Longitude float64
+	GPSLatitude  float64
+	GPSLongitude float64
+	GPSPosition  string
 }
 
 // IsValid returns true when GPS data is valid.
 func (gps GPS) IsValid() bool {
-	if math.IsNaN(gps.Latitude) {
+	if gps.GPSPosition == "" {
 		return false
 	}
 
-	if math.IsNaN(gps.Longitude) {
+	if math.IsNaN(gps.GPSLatitude) {
 		return false
 	}
 
-	if math.Abs(gps.Latitude) > 90 || math.Abs(gps.Longitude) > 180 {
+	if math.IsNaN(gps.GPSLongitude) {
+		return false
+	}
+
+	if math.Abs(gps.GPSLatitude) > 90 || math.Abs(gps.GPSLongitude) > 180 {
 		return false
 	}
 
@@ -30,7 +35,7 @@ func (gps GPS) IsValid() bool {
 }
 
 func (gps GPS) String() string {
-	return fmt.Sprintf("GPS(%.9f, %.9f)", gps.Latitude, gps.Longitude)
+	return fmt.Sprintf("GPS(%.9f, %.9f)", gps.GPSLatitude, gps.GPSLongitude)
 }
 
 // TimeAll stores tags returned by -time:all.
@@ -105,4 +110,34 @@ func (t TimeAll) OffsetSecs(local time.Time) (int, bool) {
 	// offset = GPS UTC time - local time
 	offset := int(gpsDate.Sub(local).Seconds())
 	return offset, true
+}
+
+type PhotoMeta struct {
+	ImageDescription string
+	Model            string
+	Make             string
+	LensModel        string
+	ISO              int64
+	Flash            int64
+	Orientation      int64
+	ExposureProgram  int64
+	ExposureTime     float64
+	Aperture         float64
+	FocalLength      float64
+}
+
+func (m *PhotoMeta) SanitizeFloats() {
+	for _, floatPtr := range []*float64{
+		&m.ExposureTime,
+		&m.Aperture,
+		&m.FocalLength,
+	} {
+		if math.IsNaN(*floatPtr) || math.IsInf(*floatPtr, 0) {
+			*floatPtr = 0
+		}
+	}
+}
+
+type MIMEType struct {
+	MIMEType string
 }

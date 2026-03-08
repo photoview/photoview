@@ -32,6 +32,36 @@ func TestExiftool(t *testing.T) {
 	}
 }
 
+func TestExiftoolQueryJSONTagsWithEmbed(t *testing.T) {
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	file := "./test_data/CorrectGPS.jpg"
+	var value struct {
+		TimeAll
+		MIMEType
+		PhotoMeta
+	}
+
+	if err := instance.QueryJSONTags(file, &value); err != nil {
+		t.Fatalf("QueryJSONTags(%q) error: %v", file, err)
+		return
+	}
+
+	if time, _ := value.TimeAll.Time(); time.IsZero() {
+		t.Errorf("QueryJSONTags(%q) error: no valid TimeAll", file)
+	}
+	if value.MIMEType.MIMEType == "" {
+		t.Errorf("QueryJSONTags(%q) error: no valid MIMEType", file)
+	}
+	if value.PhotoMeta.Model == "" {
+		t.Errorf("QueryJSONTags(%q) error: no valid PhotoMeta", file)
+	}
+}
+
 func TestExiftoolQueryMIMEType(t *testing.T) {
 	tests := []struct {
 		file string
@@ -50,13 +80,14 @@ func TestExiftoolQueryMIMEType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			got, err := instance.QueryMIMEType(tc.file)
+			var value struct{ MIMEType }
+			err := instance.QueryJSONTags(tc.file, &value)
 			if err != nil {
 				t.Errorf("QueryMIMEType(%q) error: %v", tc.file, err)
 				return
 			}
 
-			if got != tc.want {
+			if got := value.MIMEType.MIMEType; got != tc.want {
 				t.Errorf("QueryMIMEType(%q) = %q, want: %q", tc.file, got, tc.want)
 			}
 		})
@@ -116,13 +147,14 @@ func TestExiftoolQueryTimeAll(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			got, err := instance.QueryTimeAll(tc.file)
+			var value struct{ TimeAll }
+			err := instance.QueryJSONTags(tc.file, &value)
 			if err != nil {
 				t.Errorf("QueryTimeAll(%q) error: %v", tc.file, err)
 				return
 			}
 
-			checkTimeallFields(t, got, tc.wantKeys)
+			checkTimeallFields(t, value.TimeAll, tc.wantKeys)
 		})
 	}
 }
@@ -145,7 +177,7 @@ func TestExiftoolQueryGPS(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
-			got, existed, err := instance.QueryGPS(tc.file)
+			got, existed, err := instance.QueryGPSByNumber(tc.file)
 			if err != nil {
 				t.Errorf("QueryGPS(%q) error: %v", tc.file, err)
 				return
@@ -160,7 +192,7 @@ func TestExiftoolQueryGPS(t *testing.T) {
 				return fmt.Sprintf("(%.7f, %.7f)", latitude, longitude)
 			}
 
-			if got, want := gpsToString(got.Latitude, got.Longitude), gpsToString(tc.wantLat, tc.wantLong); got != want {
+			if got, want := gpsToString(got.GPSLatitude, got.GPSLongitude), gpsToString(tc.wantLat, tc.wantLong); got != want {
 				t.Errorf("QueryGPS(%q) = %s, want: %s", tc.file, got, want)
 			}
 		})
@@ -201,13 +233,13 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 				return
 			}
 
-			mime, err := instance.QueryMIMEType(output)
-			if err != nil {
+			var mime MIMEType
+			if err := instance.QueryJSONTags(output, &mime); err != nil {
 				t.Errorf("QueryMIMEType(%q) error: %v", output, err)
 				return
 			}
 
-			if got, want := mime, "image/jpeg"; got != want {
+			if got, want := mime.MIMEType, "image/jpeg"; got != want {
 				t.Errorf("QueryMIMEType(%q) = %q, want: %q", output, got, want)
 				return
 			}
@@ -232,14 +264,12 @@ func TestExiftoolError(t *testing.T) {
 		}
 	}
 
-	_, err = instance.QueryMIMEType(file)
-	checkErr(err, "QueryMIMEType(%q)", file)
+	var value MIMEType
+	err = instance.QueryJSONTags(file, &value)
+	checkErr(err, "QueryJSONTags(%q)", file)
 
-	_, _, err = instance.QueryGPS(file)
+	_, _, err = instance.QueryGPSByNumber(file)
 	checkErr(err, "QueryGPS(%q)", file)
-
-	_, err = instance.QueryTimeAll(file)
-	checkErr(err, "QueryTimeAll(%q)", file)
 
 	output := filepath.Join(t.TempDir(), "output.jpg")
 	_, err = instance.SaveJPEGPreview(file, output)
