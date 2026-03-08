@@ -3,25 +3,27 @@ package exif
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
+	"github.com/photoview/photoview/api/scanner/externaltools/exiftool"
 )
 
-var globalExifParser *ExifParser
+var globalExifParser *exiftool.Exiftool
 var globalInit sync.Once
 
 func Initialize() (func(), error) {
 	var err error
 	globalInit.Do(func() {
-		globalExifParser, err = NewExifParser()
+		globalExifParser, err = exiftool.New()
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info(nil, "Found exiftool")
+	log.Info(nil, "Found exiftool.", "binary_path", globalExifParser.BinaryPath(), "version", globalExifParser.Version())
 
 	return func() {
 		globalMu.Lock()
@@ -49,16 +51,50 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		return nil, fmt.Errorf("no exif parser initialized")
 	}
 
-	exif, failures, err := globalExifParser.ParseExif(filepath)
+	var values struct {
+		exiftool.PhotoMeta
+		exiftool.TimeAll
+	}
+	if err := globalExifParser.QueryJSONTags(filepath, &values); err != nil {
+		return nil, err
+	}
+
+	gps, gpsExist, err := globalExifParser.QueryGPSByNumber(filepath)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(failures) > 0 {
-		log.Warn(nil, "Parse exif failures", "file_path", filepath, "errors", failures)
+	ret := models.MediaEXIF{
+		Camera:          &values.Model,
+		Maker:           &values.Make,
+		Lens:            &values.LensModel,
+		Iso:             &values.ISO,
+		Flash:           &values.Flash,
+		Orientation:     &values.Orientation,
+		ExposureProgram: &values.ExposureProgram,
+		Exposure:        &values.ExposureTime,
+		Aperture:        &values.Aperture,
+		FocalLength:     &values.FocalLength,
 	}
 
-	return exif, nil
+	dateShot, local := values.TimeAll.Time()
+	if !dateShot.IsZero() {
+		ret.DateShot = &dateShot
+	}
+	if !local {
+		dateShot = time.Time{}
+	}
+	offsetSec, ok := values.TimeAll.OffsetSecs(dateShot)
+	if ok {
+		ret.OffsetSecShot = &offsetSec
+	}
+
+	if gpsExist && gps.IsValid() {
+		ret.GPSLatitude = &gps.GPSLatitude
+		ret.GPSLongitude = &gps.GPSLongitude
+	}
+
+	return &ret, nil
 }
 
 func MIMEType(filepath string) (string, error) {
@@ -69,11 +105,11 @@ func MIMEType(filepath string) (string, error) {
 		return "", fmt.Errorf("no exif parser initialized")
 	}
 
-	mime, err := globalExifParser.ParseMIMEType(filepath)
-	if err != nil {
+	var mime exiftool.MIMEType
+	if err := globalExifParser.QueryJSONTags(filepath, &mime); err != nil {
 		return "", err
 	}
 
-	return mime, nil
+	return mime.MIMEType, nil
 
 }
