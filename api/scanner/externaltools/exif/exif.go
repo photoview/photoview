@@ -60,6 +60,8 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		return nil, err
 	}
 
+	values.PhotoMeta.SanitizeFloats()
+
 	ret := models.MediaEXIF{
 		Camera:          values.Model,
 		Maker:           values.Make,
