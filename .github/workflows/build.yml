@@ -89,7 +89,7 @@ jobs:
           echo "COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: ${{ env.QEMU_PLATFORMS }}
 
