@@ -48,7 +48,7 @@ func TestEnsureExifOrient(t *testing.T) {
 		}
 
 		if got == nil || *got != want {
-			t.Errorf("file %q orientation is %+v, want: %d", file, got, want)
+			t.Errorf("file %q orientation is %v, want: %d", file, got, want)
 		}
 	}
 }
