@@ -20,7 +20,7 @@ func TestExiftool(t *testing.T) {
 	t.Log("version:", instance.Version())
 
 	if instance.BinaryPath() == "" {
-		t.Errorf("want exiftool binary, but got an emtpy string")
+		t.Errorf("want exiftool binary, but got an empty string")
 	}
 
 	if instance.Version() == "" {
