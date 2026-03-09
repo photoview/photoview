@@ -169,7 +169,7 @@ func TestTimeAllOffsetSecs(t *testing.T) {
 	wantStr := "+01:00"
 	otherStr := "-01:00"
 	gpsDateTime := "2025:10:28 14:20:22Z"
-	otherTimezone := -60
+	otherTimezone := -120
 	localTime := mustParse(t, "2025:10:28 14:20:22"+otherStr)
 
 	tests := []struct {
@@ -189,10 +189,9 @@ func TestTimeAllOffsetSecs(t *testing.T) {
 			GPSDateTime: &gpsDateTime,
 		}, 60 * 60},
 		{"TimeZone", TimeAll{
-			OffsetTime:  &wantStr,
 			TimeZone:    &otherTimezone,
 			GPSDateTime: &gpsDateTime,
-		}, 60 * 60},
+		}, -120 * 60},
 		{"GPS", TimeAll{
 			GPSDateTime: &gpsDateTime,
 		}, -60 * 60},
