@@ -37,7 +37,7 @@ func TestEnsureExifOrient(t *testing.T) {
 		"up_arrow_90cw_nonweb.tiff",
 	} {
 		var meta exiftool.PhotoMeta
-		if err := et.QueryJSONTags(file, &meta); err != nil {
+		if err := et.QueryJSONTagsByNumber(file, &meta); err != nil {
 			t.Fatalf("exiftool.QueryJSONTags() error: %v", err)
 		}
 

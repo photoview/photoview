@@ -56,7 +56,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		exiftool.TimeAll
 		exiftool.GPS
 	}
-	if err := globalExifParser.QueryJSONTags(filepath, &values); err != nil {
+	if err := globalExifParser.QueryJSONTagsByNumber(filepath, &values); err != nil {
 		return nil, err
 	}
 
@@ -71,6 +71,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		Exposure:        values.ExposureTime,
 		Aperture:        values.Aperture,
 		FocalLength:     values.FocalLength,
+		Description:     values.ImageDescription,
 	}
 
 	dateShot, local := values.TimeAll.Time()
@@ -102,7 +103,7 @@ func MIMEType(filepath string) (string, error) {
 	}
 
 	var mime exiftool.MIMEType
-	if err := globalExifParser.QueryJSONTags(filepath, &mime); err != nil {
+	if err := globalExifParser.QueryJSONTagsByNumber(filepath, &mime); err != nil {
 		return "", err
 	}
 

@@ -46,7 +46,7 @@ func TestExiftoolQueryJSONTagsWithEmbed(t *testing.T) {
 		PhotoMeta
 	}
 
-	if err := instance.QueryJSONTags(file, &value); err != nil {
+	if err := instance.QueryJSONTagsByNumber(file, &value); err != nil {
 		t.Fatalf("QueryJSONTags(%q) error: %v", file, err)
 		return
 	}
@@ -81,7 +81,7 @@ func TestExiftoolQueryMIMEType(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
 			var value struct{ MIMEType }
-			err := instance.QueryJSONTags(tc.file, &value)
+			err := instance.QueryJSONTagsByNumber(tc.file, &value)
 			if err != nil {
 				t.Errorf("QueryMIMEType(%q) error: %v", tc.file, err)
 				return
@@ -148,7 +148,7 @@ func TestExiftoolQueryTimeAll(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
 			var value struct{ TimeAll }
-			err := instance.QueryJSONTags(tc.file, &value)
+			err := instance.QueryJSONTagsByNumber(tc.file, &value)
 			if err != nil {
 				t.Errorf("QueryTimeAll(%q) error: %v", tc.file, err)
 				return
@@ -178,7 +178,7 @@ func TestExiftoolQueryGPS(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.file, func(t *testing.T) {
 			var value struct{ GPS }
-			if err := instance.QueryJSONTags(tc.file, &value); err != nil {
+			if err := instance.QueryJSONTagsByNumber(tc.file, &value); err != nil {
 				t.Errorf("QueryGPS(%q) error: %v", tc.file, err)
 				return
 			}
@@ -240,7 +240,7 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 			}
 
 			var mime MIMEType
-			if err := instance.QueryJSONTags(output, &mime); err != nil {
+			if err := instance.QueryJSONTagsByNumber(output, &mime); err != nil {
 				t.Errorf("QueryMIMEType(%q) error: %v", output, err)
 				return
 			}
@@ -271,7 +271,7 @@ func TestExiftoolError(t *testing.T) {
 	}
 
 	var value MIMEType
-	err = instance.QueryJSONTags(file, &value)
+	err = instance.QueryJSONTagsByNumber(file, &value)
 	checkErr(err, "QueryJSONTags(%q)", file)
 
 	output := filepath.Join(t.TempDir(), "output.jpg")

@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+// Exiftool launches an external `exiftool` process to query photos' exif info.
+// It doesn't support concurrency usage.
 type Exiftool struct {
 	path    string
 	version string
@@ -25,9 +27,10 @@ type Exiftool struct {
 	closeOnce sync.Once
 }
 
-const marker = "{ready}"
+const marker = "{ready}\n"
 const bufferSize = 10240
 
+// New returns a new instance of Exiftool.
 func New() (*Exiftool, error) {
 	path, err := exec.LookPath("exiftool")
 	if err != nil {
@@ -92,14 +95,17 @@ func New() (*Exiftool, error) {
 	}, nil
 }
 
+// BinaryPath returns the path of `exiftool` binary.
 func (e *Exiftool) BinaryPath() string {
 	return e.path
 }
 
+// Version returns the version of `exiftool` binary.
 func (e *Exiftool) Version() string {
 	return e.version
 }
 
+// Close stops the external process of `exiftool`.
 func (e *Exiftool) Close() error {
 	e.closeOnce.Do(func() {
 		_ = e.rawSendCommand("-stay_open", "False")
@@ -194,7 +200,9 @@ func (e *Exiftool) rawSaveEmbedFile(outputPath string, args ...string) (hasEmbed
 	return
 }
 
-func (e *Exiftool) QueryJSONTags(file string, value any) error {
+// QueryJSONTagsByNumber queries the exif info of `file` with a given struct `value`. Tags are fields of the `value`. The values are a number if possible.
+// See values.go for example structs.
+func (e *Exiftool) QueryJSONTagsByNumber(file string, value any) error {
 	rows := []any{value}
 	if err := e.rawGetTags(&rows, "-n", file); err != nil {
 		return fmt.Errorf("query %q tags error: %w", file, err)
@@ -207,6 +215,7 @@ func (e *Exiftool) QueryJSONTags(file string, value any) error {
 	return nil
 }
 
+// SaveJPEGPreview saves a preview jpeg from `src` to `previewOutput`.
 func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, error) {
 	saved, err := e.rawSaveEmbedFile(previewOutput, "-JpgFromRaw", src)
 	if err != nil {
