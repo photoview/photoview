@@ -106,7 +106,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           context: "git"
           images: ${{ env.DOCKER_REGISTRY }}${{ env.DOCKER_IMAGE }}
