@@ -78,7 +78,7 @@ jobs:
           echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context:     ./dependencies
           platforms:   ${{ env.PLATFORMS }}

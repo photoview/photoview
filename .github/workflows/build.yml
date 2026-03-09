@@ -124,7 +124,7 @@ jobs:
             ${{ github.event_name != 'schedule' && 'type=sha' || '' }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context:     .
           #target:      release # Uncomment before releasing the new version, as the 2.4.0 doesn't have this target.
