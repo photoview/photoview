@@ -38,7 +38,7 @@ func TestEnsureExifOrient(t *testing.T) {
 	} {
 		var meta exiftool.PhotoMeta
 		if err := et.QueryJSONTagsByNumber(file, &meta); err != nil {
-			t.Fatalf("exiftool.QueryJSONTags() error: %v", err)
+			t.Fatalf("exiftool.QueryJSONTagsByNumber() error: %v", err)
 		}
 
 		got := meta.Orientation
