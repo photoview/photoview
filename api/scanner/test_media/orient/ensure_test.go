@@ -1,6 +1,7 @@
 package orient
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -48,7 +49,15 @@ func TestEnsureExifOrient(t *testing.T) {
 		}
 
 		if got == nil || *got != want {
-			t.Errorf("file %q orientation is %v, want: %d", file, got, want)
+			t.Errorf("file %q orientation is %v, want: %d", file, pointerString(got), want)
 		}
 	}
+}
+
+func pointerString[T any](v *T) string {
+	if v == nil {
+		return "(nil)"
+	}
+
+	return fmt.Sprintf("&(%v)", *v)
 }
