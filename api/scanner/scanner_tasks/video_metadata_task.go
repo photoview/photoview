@@ -10,6 +10,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/processing_tasks"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gopkg.in/vansante/go-ffprobe.v2"
 	"gorm.io/gorm"
 )
@@ -19,12 +20,14 @@ type VideoMetadataTask struct {
 }
 
 func (t VideoMetadataTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
+	db := ctx.GetDB()
+	fs := ctx.GetFileFS()
 
 	if !newMedia || media.Type != models.MediaTypeVideo {
 		return nil
 	}
 
-	err := ScanVideoMetadata(ctx.GetDB(), media)
+	err := scanVideoMetadata(db, fs, media)
 	if err != nil {
 		log.Printf("WARN: ScanVideoMetadata for %s failed: %s\n", media.Title, err)
 	}
@@ -32,9 +35,13 @@ func (t VideoMetadataTask) AfterMediaFound(ctx scanner_task.TaskContext, media *
 	return nil
 }
 
-func ScanVideoMetadata(tx *gorm.DB, video *models.Media) error {
+func scanVideoMetadata(tx *gorm.DB, fs afero.Fs, video *models.Media) error {
+	localPath, err := video.GetLocalPath(fs)
+	if err != nil {
+		return errors.Wrapf(err, "could not get local path for video (%s)", video.Path)
+	}
 
-	data, err := processing_tasks.ReadVideoMetadata(video.Path)
+	data, err := processing_tasks.ReadVideoMetadata(*localPath)
 	if err != nil {
 		return errors.Wrapf(err, "scan video metadata failed (%s)", video.Title)
 	}

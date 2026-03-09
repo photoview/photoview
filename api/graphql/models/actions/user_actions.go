@@ -2,16 +2,17 @@ package actions
 
 import (
 	"errors"
-	"os"
+	"fmt"
 	"path"
 	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
-func DeleteUser(db *gorm.DB, userID int) (*models.User, error) {
+func DeleteUser(db *gorm.DB, _ afero.Fs, cacheFs afero.Fs, userID int) (*models.User, error) {
 
 	// make sure the last admin user is not deleted
 	var adminUsers []*models.User
@@ -55,18 +56,18 @@ func DeleteUser(db *gorm.DB, userID int) (*models.User, error) {
 	}
 
 	// If there is only one associated user, clean up the cache folder and delete the album row
-	return &user, cleanup(deletedAlbumIDs)
+	return &user, cleanup(cacheFs, deletedAlbumIDs)
 }
 
-func cleanup(deletedAlbumIDs []int) error {
-	var err error
+func cleanup(cacheFs afero.Fs, deletedAlbumIDs []int) error {
+	var errs []error
 	for _, deletedAlbumID := range deletedAlbumIDs {
-		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(deletedAlbumID)))
-		if err = os.RemoveAll(cachePath); err != nil {
-			return err
+		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(deletedAlbumID))
+		if err := cacheFs.RemoveAll(cachePath); err != nil {
+			errs = append(errs, fmt.Errorf("remove album cache path %q: %w", cachePath, err))
 		}
 	}
-	return err
+	return errors.Join(errs...)
 }
 
 func deleteNotOwnedAlbums(userAlbums []models.Album, tx *gorm.DB, deletedAlbumIDs []int) ([]int, error) {

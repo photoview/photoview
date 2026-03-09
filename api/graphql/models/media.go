@@ -7,16 +7,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/photoview/photoview/api/scanner/scanner_utils/downloader"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
 type Media struct {
 	Model
-	Title           string         `gorm:"not null"`
-	Path            string         `gorm:"not null"`
-	PathHash        string         `gorm:"not null;unique"`
+	Title    string `gorm:"not null"`
+	Path     string `gorm:"not null"`
+	PathHash string `gorm:"not null;unique"`
+	// LocalPath is only used for temporary files that are not stored in the main media storage
+	// It's a local filesystem path copy of the media file for faster access and external tool processing
+	localPath       *string        `gorm:"-"`
 	AlbumID         int            `gorm:"not null;index"`
 	Album           Album          `gorm:"constraint:OnDelete:CASCADE;"`
 	ExifID          *int           `gorm:"index"`
@@ -77,8 +82,23 @@ func (m *Media) GetHighRes() (*MediaURL, error) {
 	return nil, nil
 }
 
-func (m *Media) CachePath() (string, error) {
-	return utils.CachePathForMedia(m.AlbumID, m.ID)
+func (m *Media) GetLocalPath(fileFs afero.Fs) (*string, error) {
+	if m.localPath != nil {
+		return m.localPath, nil
+	}
+
+	// Download to temporary local path if needed
+	localMediaPath, err := downloader.DownloadToLocalIfNeeded(m.AlbumID, fileFs, m.Path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not download local media path: %s", m.Path)
+	}
+	m.localPath = &localMediaPath
+
+	return m.localPath, nil
+}
+
+func (m *Media) CachePath(cacheFs afero.Fs) (string, error) {
+	return utils.CachePathForMedia(cacheFs, m.AlbumID, m.ID)
 }
 
 type MediaType string

@@ -56,6 +56,8 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 // InitialSetupWizard is the resolver for the initialSetupWizard field.
 func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error) {
 	db := r.DB(ctx)
+	fileFs := r.FileFS(ctx)
+
 	siteInfo, err := models.GetSiteInfo(db)
 	if err != nil {
 		return nil, err
@@ -79,7 +81,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 			return err
 		}
 
-		_, err = scanner.NewRootAlbum(tx, rootPath, user)
+		_, err = scanner.NewRootAlbum(tx, fileFs, rootPath, user)
 		if err != nil {
 			return err
 		}
@@ -95,7 +97,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	if transactionError != nil {
 		return &models.AuthorizeResult{
 			Success: false,
-			Status:  err.Error(),
+			Status:  transactionError.Error(),
 		}, nil
 	}
 
@@ -167,12 +169,13 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
-	return actions.DeleteUser(r.DB(ctx), id)
+	return actions.DeleteUser(r.DB(ctx), r.FileFS(ctx), r.CacheFS(ctx), id)
 }
 
 // UserAddRootPath is the resolver for the userAddRootPath field.
 func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
 	db := r.DB(ctx)
+	fileFs := r.FileFS(ctx)
 
 	rootPath = path.Clean(rootPath)
 
@@ -181,7 +184,7 @@ func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath
 		return nil, err
 	}
 
-	newAlbum, err := scanner.NewRootAlbum(db, rootPath, &user)
+	newAlbum, err := scanner.NewRootAlbum(db, fileFs, rootPath, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -192,6 +195,8 @@ func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath
 // UserRemoveRootAlbum is the resolver for the userRemoveRootAlbum field.
 func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error) {
 	db := r.DB(ctx)
+	filesFs := r.FileFS(ctx)
+	cacheFs := r.CacheFS(ctx)
 
 	var album models.Album
 	if err := db.First(&album, albumID).Error; err != nil {
@@ -236,7 +241,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 		return nil, transactionError
 	}
 
-	if err := clearCacheAndReloadFaces(db, deletedAlbumIDs); err != nil {
+	if err := clearCacheAndReloadFaces(db, filesFs, cacheFs, deletedAlbumIDs); err != nil {
 		return nil, err
 	}
 

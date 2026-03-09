@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -13,12 +12,13 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"gorm.io/gorm"
 )
 
 var ProcessSingleMediaFunc = ProcessSingleMedia
 
-func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
+func ScanMedia(tx *gorm.DB, fs afero.Fs, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
 
 	// Check if media already exists
@@ -52,7 +52,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 		mediaTypeText = models.MediaTypePhoto
 	}
 
-	stat, err := os.Stat(mediaPath)
+	stat, err := fs.Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
 	}
@@ -74,7 +74,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
 // Function waits for processing to finish before returning.
-func ProcessSingleMedia(ctx context.Context, db *gorm.DB, media *models.Media) error {
+func ProcessSingleMedia(ctx context.Context, db *gorm.DB, fs afero.Fs, cacheFs afero.Fs, media *models.Media) error {
 	albumCache := scanner_cache.MakeAlbumCache()
 
 	var album models.Album
@@ -84,7 +84,7 @@ func ProcessSingleMedia(ctx context.Context, db *gorm.DB, media *models.Media) e
 
 	mediaData := media_encoding.NewEncodeMediaData(media)
 
-	taskContext := scanner_task.NewTaskContext(ctx, db, &album, albumCache)
+	taskContext := scanner_task.NewTaskContext(ctx, db, fs, cacheFs, &album, albumCache)
 	if err := scanMedia(taskContext, media, &mediaData, 0, 1); err != nil {
 		return errors.Wrap(err, "single media scan")
 	}
