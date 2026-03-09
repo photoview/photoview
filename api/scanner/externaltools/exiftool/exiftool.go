@@ -108,12 +108,13 @@ func (e *Exiftool) Version() string {
 // Close stops the external process of `exiftool`.
 func (e *Exiftool) Close() (err error) {
 	e.closeOnce.Do(func() {
-		err = e.rawSendCommand("-stay_open", "False")
 		defer e.cmd.Wait()
 		defer e.stdin.Close()
+
+		err = e.rawSendCommand("-stay_open", "False")
 	})
 
-	return nil
+	return
 }
 
 func (e *Exiftool) rawSendCommand(args ...string) error {
