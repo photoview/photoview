@@ -94,7 +94,7 @@ jobs:
           platforms: ${{ env.QEMU_PLATFORMS }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker Login
         if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
