@@ -196,7 +196,7 @@ func (e *Exiftool) rawSaveEmbedFile(outputPath string, args ...string) (hasEmbed
 
 func (e *Exiftool) QueryJSONTags(file string, value any) error {
 	rows := []any{value}
-	if err := e.rawGetTags(&rows, file); err != nil {
+	if err := e.rawGetTags(&rows, "-n", file); err != nil {
 		return fmt.Errorf("query %q tags error: %w", file, err)
 	}
 
@@ -205,23 +205,6 @@ func (e *Exiftool) QueryJSONTags(file string, value any) error {
 	}
 
 	return nil
-}
-
-func (e *Exiftool) QueryGPSByNumber(file string) (GPS, bool, error) {
-	var rows []GPS
-	if err := e.rawGetTags(&rows, "-n", "-GPSLatitude", "-GPSLongitude", "-GPSPosition", file); err != nil {
-		return GPS{}, false, fmt.Errorf("query %q gps error: %w", file, err)
-	}
-
-	if len(rows) != 1 {
-		return GPS{}, false, fmt.Errorf("query %q gps error: return %d responses, should be only 1", file, len(rows))
-	}
-
-	if rows[0].GPSPosition == "" {
-		return GPS{}, false, nil
-	}
-
-	return rows[0], true, nil
 }
 
 func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, error) {

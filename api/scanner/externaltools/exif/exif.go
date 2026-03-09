@@ -54,27 +54,23 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 	var values struct {
 		exiftool.PhotoMeta
 		exiftool.TimeAll
+		exiftool.GPS
 	}
 	if err := globalExifParser.QueryJSONTags(filepath, &values); err != nil {
 		return nil, err
 	}
 
-	gps, gpsExist, err := globalExifParser.QueryGPSByNumber(filepath)
-	if err != nil {
-		return nil, err
-	}
-
 	ret := models.MediaEXIF{
-		Camera:          &values.Model,
-		Maker:           &values.Make,
-		Lens:            &values.LensModel,
-		Iso:             &values.ISO,
-		Flash:           &values.Flash,
-		Orientation:     &values.Orientation,
-		ExposureProgram: &values.ExposureProgram,
-		Exposure:        &values.ExposureTime,
-		Aperture:        &values.Aperture,
-		FocalLength:     &values.FocalLength,
+		Camera:          values.Model,
+		Maker:           values.Make,
+		Lens:            values.LensModel,
+		Iso:             values.ISO,
+		Flash:           values.Flash,
+		Orientation:     values.Orientation,
+		ExposureProgram: values.ExposureProgram,
+		Exposure:        values.ExposureTime,
+		Aperture:        values.Aperture,
+		FocalLength:     values.FocalLength,
 	}
 
 	dateShot, local := values.TimeAll.Time()
@@ -89,9 +85,9 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		ret.OffsetSecShot = &offsetSec
 	}
 
-	if gpsExist && gps.IsValid() {
-		ret.GPSLatitude = &gps.GPSLatitude
-		ret.GPSLongitude = &gps.GPSLongitude
+	if values.GPS.IsValid() {
+		ret.GPSLatitude = values.GPS.GPSLatitude
+		ret.GPSLongitude = values.GPS.GPSLongitude
 	}
 
 	return &ret, nil
@@ -110,6 +106,10 @@ func MIMEType(filepath string) (string, error) {
 		return "", err
 	}
 
-	return mime.MIMEType, nil
+	if mime.MIMEType == nil {
+		return "", nil
+	}
+
+	return *mime.MIMEType, nil
 
 }

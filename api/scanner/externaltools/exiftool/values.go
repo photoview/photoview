@@ -8,26 +8,25 @@ import (
 
 // GPS stores gps-related tags.
 type GPS struct {
-	GPSLatitude  float64
-	GPSLongitude float64
-	GPSPosition  string
+	GPSLatitude  *float64
+	GPSLongitude *float64
 }
 
 // IsValid returns true when GPS data is valid.
 func (gps GPS) IsValid() bool {
-	if gps.GPSPosition == "" {
+	if gps.GPSLongitude == nil || gps.GPSLatitude == nil {
 		return false
 	}
 
-	if math.IsNaN(gps.GPSLatitude) {
+	if math.IsNaN(*gps.GPSLatitude) {
 		return false
 	}
 
-	if math.IsNaN(gps.GPSLongitude) {
+	if math.IsNaN(*gps.GPSLongitude) {
 		return false
 	}
 
-	if math.Abs(gps.GPSLatitude) > 90 || math.Abs(gps.GPSLongitude) > 180 {
+	if math.Abs(*gps.GPSLatitude) > 90 || math.Abs(*gps.GPSLongitude) > 180 {
 		return false
 	}
 
@@ -35,34 +34,37 @@ func (gps GPS) IsValid() bool {
 }
 
 func (gps GPS) String() string {
-	return fmt.Sprintf("GPS(%.9f, %.9f)", gps.GPSLatitude, gps.GPSLongitude)
+	if !gps.IsValid() {
+		return "GPS(invalid)"
+	}
+
+	return fmt.Sprintf("GPS(%.9f, %.9f)", *gps.GPSLatitude, *gps.GPSLongitude)
 }
 
 // TimeAll stores tags returned by -time:all.
 type TimeAll struct {
-	SubSecDateTimeOriginal string
-	SubSecCreateDate       string
+	SubSecDateTimeOriginal *string
+	SubSecCreateDate       *string
 
-	DateTimeOriginal string
-	CreateDate       string
-	TrackCreateDate  string
-	MediaCreateDate  string
-	FileModifyDate   string
+	DateTimeOriginal *string
+	CreateDate       *string
+	TrackCreateDate  *string
+	MediaCreateDate  *string
+	FileModifyDate   *string
 
-	OffsetTimeOriginal string
-	OffsetTime         string
-	TimeZone           string
+	OffsetTimeOriginal *string
+	OffsetTime         *string
+	TimeZone           *int
 
-	GPSDateStamp string
-	GPSTimeStamp string
+	GPSDateTime *string
 }
 
 const layout = "2006:01:02 15:04:05.999"
-const layoutWithOffset = "2006:01:02 15:04:05.999-07:00"
+const layoutWithOffset = "2006:01:02 15:04:05.999Z07:00"
 
 // Time returns most likely time. True returns if the time is a local time without a timezone.
 func (t TimeAll) Time() (time.Time, bool) {
-	for _, dateStr := range []string{
+	for _, dateP := range []*string{
 		// Keep the order for the priority to generate DateShot
 		t.SubSecDateTimeOriginal,
 		t.SubSecCreateDate,
@@ -72,11 +74,15 @@ func (t TimeAll) Time() (time.Time, bool) {
 		t.MediaCreateDate,
 		t.FileModifyDate,
 	} {
-		if date, err := time.ParseInLocation(layout, dateStr, time.Local); err == nil {
+		if dateP == nil {
+			continue
+		}
+
+		if date, err := time.ParseInLocation(layout, *dateP, time.Local); err == nil {
 			return date, true
 		}
 
-		if date, err := time.Parse(layoutWithOffset, dateStr); err == nil {
+		if date, err := time.Parse(layoutWithOffset, *dateP); err == nil {
 			return date, false
 		}
 	}
@@ -86,22 +92,34 @@ func (t TimeAll) Time() (time.Time, bool) {
 
 // OffsetSecs returns seconds offset by UTC.
 func (t TimeAll) OffsetSecs(local time.Time) (int, bool) {
-	for _, str := range []string{
+	for _, offsetP := range []*string{
 		t.OffsetTimeOriginal,
 		t.OffsetTime,
-		t.TimeZone,
 	} {
-		if t, err := time.Parse("-07:00", str); err == nil {
+		if offsetP == nil {
+			continue
+		}
+
+		if t, err := time.Parse("-07:00", *offsetP); err == nil {
 			_, offsetSecs := t.Zone()
 			return offsetSecs, true
 		}
+	}
+
+	// TimeZone is in minutes
+	if t.TimeZone != nil {
+		return *t.TimeZone * 60, true
 	}
 
 	if local.IsZero() {
 		return 0, false
 	}
 
-	gpsDate, err := time.ParseInLocation(layout, t.GPSDateStamp+" "+t.GPSTimeStamp, time.UTC)
+	if t.GPSDateTime == nil {
+		return 0, false
+	}
+
+	gpsDate, err := time.Parse(layoutWithOffset, *t.GPSDateTime)
 	if err != nil {
 		return 0, false
 	}
@@ -113,31 +131,35 @@ func (t TimeAll) OffsetSecs(local time.Time) (int, bool) {
 }
 
 type PhotoMeta struct {
-	ImageDescription string
-	Model            string
-	Make             string
-	LensModel        string
-	ISO              int64
-	Flash            int64
-	Orientation      int64
-	ExposureProgram  int64
-	ExposureTime     float64
-	Aperture         float64
-	FocalLength      float64
+	ImageDescription *string
+	Model            *string
+	Make             *string
+	LensModel        *string
+	ISO              *int64
+	Flash            *int64
+	Orientation      *int64
+	ExposureProgram  *int64
+	ExposureTime     *float64
+	Aperture         *float64
+	FocalLength      *float64
 }
 
 func (m *PhotoMeta) SanitizeFloats() {
-	for _, floatPtr := range []*float64{
+	for _, value := range []**float64{
 		&m.ExposureTime,
 		&m.Aperture,
 		&m.FocalLength,
 	} {
-		if math.IsNaN(*floatPtr) || math.IsInf(*floatPtr, 0) {
-			*floatPtr = 0
+		if *value == nil {
+			continue
+		}
+
+		if math.IsNaN(**value) || math.IsInf(**value, 0) {
+			*value = nil
 		}
 	}
 }
 
 type MIMEType struct {
-	MIMEType string
+	MIMEType *string
 }

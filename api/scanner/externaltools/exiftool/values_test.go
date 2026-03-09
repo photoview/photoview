@@ -12,19 +12,21 @@ func TestGPSIsValid(t *testing.T) {
 		gps       GPS
 		wantValid bool
 	}{
-		{"LatNormalLongNormal", GPS{10.0, 10.0, "10 10"}, true},
-		{"ZeroValue", GPS{0, 0, "0 0"}, true},
+		{"LatNormalLongNormal", GPS{new(10.0), new(10.0)}, true},
+		{"ZeroValue", GPS{new(0.0), new(0.0)}, true},
 
-		{"LatNilLongNormal", GPS{math.NaN(), 10.0, "NaN 10"}, false},
-		{"LatNormalLongNil", GPS{10.0, math.NaN(), "10 NaN"}, false},
+		{"LatNilLongNormal", GPS{new(math.NaN()), new(10.0)}, false},
+		{"LatNormalLongNil", GPS{new(10.0), new(math.NaN())}, false},
 
-		{"Lat>90LongNormal", GPS{100.0, 10.0, "100 10"}, false},
-		{"Lat<-90LongNormal", GPS{-100.0, 10.0, "-100 10"}, false},
+		{"Lat>90LongNormal", GPS{new(100.0), new(10.0)}, false},
+		{"Lat<-90LongNormal", GPS{new(-100.0), new(10.0)}, false},
 
-		{"LatNormalLong>180", GPS{10.0, 190.0, "10 190"}, false},
-		{"LatNormalLong<-180", GPS{10.0, -190.0, "10 -190"}, false},
+		{"LatNormalLong>180", GPS{new(10.0), new(190.0)}, false},
+		{"LatNormalLong<-180", GPS{new(10.0), new(-190.0)}, false},
 
-		{"Empty", GPS{0, 0, ""}, false},
+		{"Empty", GPS{}, false},
+		{"EmptyLat", GPS{nil, new(0.0)}, false},
+		{"EmptyLong", GPS{new(0.0), nil}, false},
 	}
 
 	for _, tc := range tests {
@@ -58,39 +60,29 @@ func TestTimeAllTimeLocal(t *testing.T) {
 		want    time.Time
 	}{
 		{"DateTimeOriginal", TimeAll{
-			DateTimeOriginal: wantStr,
-			CreateDate:       otherStr,
-			TrackCreateDate:  otherStr,
-			MediaCreateDate:  otherStr,
-			FileModifyDate:   otherStr,
+			DateTimeOriginal: &wantStr,
+			CreateDate:       &otherStr,
+			TrackCreateDate:  &otherStr,
+			MediaCreateDate:  &otherStr,
+			FileModifyDate:   &otherStr,
 		}, mustParseInLocation(t, wantStr)},
 		{"CreateDate", TimeAll{
-			DateTimeOriginal: "",
-			CreateDate:       wantStr,
-			TrackCreateDate:  otherStr,
-			MediaCreateDate:  otherStr,
-			FileModifyDate:   otherStr,
+			CreateDate:      &wantStr,
+			TrackCreateDate: &otherStr,
+			MediaCreateDate: &otherStr,
+			FileModifyDate:  &otherStr,
 		}, mustParseInLocation(t, wantStr)},
 		{"TrackCreateDate", TimeAll{
-			DateTimeOriginal: "",
-			CreateDate:       "",
-			TrackCreateDate:  wantStr,
-			MediaCreateDate:  otherStr,
-			FileModifyDate:   otherStr,
+			TrackCreateDate: &wantStr,
+			MediaCreateDate: &otherStr,
+			FileModifyDate:  &otherStr,
 		}, mustParseInLocation(t, wantStr)},
 		{"MediaCreateDate", TimeAll{
-			DateTimeOriginal: "",
-			CreateDate:       "",
-			TrackCreateDate:  "",
-			MediaCreateDate:  wantStr,
-			FileModifyDate:   otherStr,
+			MediaCreateDate: &wantStr,
+			FileModifyDate:  &otherStr,
 		}, mustParseInLocation(t, wantStr)},
 		{"FileModifyDate", TimeAll{
-			DateTimeOriginal: "",
-			CreateDate:       "",
-			TrackCreateDate:  "",
-			MediaCreateDate:  "",
-			FileModifyDate:   wantStr,
+			FileModifyDate: &wantStr,
 		}, mustParseInLocation(t, wantStr)},
 	}
 
@@ -129,22 +121,21 @@ func TestTimeAllTimeWithTimezone(t *testing.T) {
 		want    time.Time
 	}{
 		{"SubSecDateTimeOriginal", TimeAll{
-			SubSecDateTimeOriginal: wantStr,
-			SubSecCreateDate:       otherStr,
-			DateTimeOriginal:       otherStr,
-			CreateDate:             otherStr,
-			TrackCreateDate:        otherStr,
-			MediaCreateDate:        otherStr,
-			FileModifyDate:         otherStr,
+			SubSecDateTimeOriginal: &wantStr,
+			SubSecCreateDate:       &otherStr,
+			DateTimeOriginal:       &otherStr,
+			CreateDate:             &otherStr,
+			TrackCreateDate:        &otherStr,
+			MediaCreateDate:        &otherStr,
+			FileModifyDate:         &otherStr,
 		}, mustParse(t, wantStr)},
 		{"SubSecCreateDate", TimeAll{
-			SubSecDateTimeOriginal: "",
-			SubSecCreateDate:       wantStr,
-			DateTimeOriginal:       otherStr,
-			CreateDate:             otherStr,
-			TrackCreateDate:        otherStr,
-			MediaCreateDate:        otherStr,
-			FileModifyDate:         otherStr,
+			SubSecCreateDate: &wantStr,
+			DateTimeOriginal: &otherStr,
+			CreateDate:       &otherStr,
+			TrackCreateDate:  &otherStr,
+			MediaCreateDate:  &otherStr,
+			FileModifyDate:   &otherStr,
 		}, mustParse(t, wantStr)},
 	}
 
@@ -177,9 +168,9 @@ func TestTimeAllTimeEmpty(t *testing.T) {
 func TestTimeAllOffsetSecs(t *testing.T) {
 	wantStr := "+01:00"
 	otherStr := "-01:00"
-	gpsDate := "2025:10:28"
-	gpsTime := "14:20:22"
-	localTime := mustParse(t, gpsDate+" "+gpsTime+otherStr)
+	gpsDateTime := "2025:10:28 14:20:22Z"
+	otherTimezone := -60
+	localTime := mustParse(t, "2025:10:28 14:20:22"+otherStr)
 
 	tests := []struct {
 		name    string
@@ -187,32 +178,23 @@ func TestTimeAllOffsetSecs(t *testing.T) {
 		want    int
 	}{
 		{"OffsetTimeOriginal", TimeAll{
-			OffsetTimeOriginal: wantStr,
-			OffsetTime:         otherStr,
-			TimeZone:           otherStr,
-			GPSTimeStamp:       gpsTime,
-			GPSDateStamp:       gpsDate,
+			OffsetTimeOriginal: &wantStr,
+			OffsetTime:         &otherStr,
+			TimeZone:           &otherTimezone,
+			GPSDateTime:        &gpsDateTime,
 		}, 60 * 60},
 		{"OffsetTime", TimeAll{
-			OffsetTimeOriginal: "",
-			OffsetTime:         wantStr,
-			TimeZone:           otherStr,
-			GPSTimeStamp:       gpsTime,
-			GPSDateStamp:       gpsDate,
+			OffsetTime:  &wantStr,
+			TimeZone:    &otherTimezone,
+			GPSDateTime: &gpsDateTime,
 		}, 60 * 60},
 		{"TimeZone", TimeAll{
-			OffsetTimeOriginal: "",
-			OffsetTime:         "",
-			TimeZone:           wantStr,
-			GPSTimeStamp:       gpsTime,
-			GPSDateStamp:       gpsDate,
+			OffsetTime:  &wantStr,
+			TimeZone:    &otherTimezone,
+			GPSDateTime: &gpsDateTime,
 		}, 60 * 60},
 		{"GPS", TimeAll{
-			OffsetTimeOriginal: "",
-			OffsetTime:         "",
-			TimeZone:           "",
-			GPSTimeStamp:       gpsTime,
-			GPSDateStamp:       gpsDate,
+			GPSDateTime: &gpsDateTime,
 		}, -60 * 60},
 	}
 
@@ -232,11 +214,7 @@ func TestTimeAllOffsetSecs(t *testing.T) {
 
 func TestTimeAllOffsetSecsEmptyLocal(t *testing.T) {
 	timeAll := TimeAll{
-		OffsetTimeOriginal: "",
-		OffsetTime:         "",
-		TimeZone:           "",
-		GPSTimeStamp:       "2025:10:28",
-		GPSDateStamp:       "14:20:22",
+		GPSDateTime: new("14:20:22 2025:10:28Z"),
 	}
 
 	got, ok := timeAll.OffsetSecs(time.Time{})
