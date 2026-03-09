@@ -40,7 +40,6 @@ func NewMarkReader(upstream io.Reader, bufferSize int, mark string) (*MarkReader
 }
 
 // Reset resumes reading after a previously encountered marker boundary.
-// Return true if upstream is closed.
 func (r *MarkReader) Reset() {
 	r.paused = false
 }
