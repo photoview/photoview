@@ -111,7 +111,9 @@ func (e *Exiftool) Close() (err error) {
 		defer e.cmd.Wait()
 		defer e.stdin.Close()
 
-		err = e.rawSendCommand("-stay_open", "False")
+		if err = e.rawSendCommand("-stay_open", "False"); err != nil {
+			_ = e.cmd.Process.Kill()
+		}
 	})
 
 	return
