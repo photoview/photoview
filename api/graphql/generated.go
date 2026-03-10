@@ -10493,6 +10493,10 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj any) (models.Ordering, error) {
 	var it models.Ordering
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10526,6 +10530,10 @@ func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj any)
 
 func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj any) (models.Pagination, error) {
 	var it models.Pagination
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10559,6 +10567,10 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj an
 
 func (ec *executionContext) unmarshalInputShareTokenCredentials(ctx context.Context, obj any) (models.ShareTokenCredentials, error) {
 	var it models.ShareTokenCredentials
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
