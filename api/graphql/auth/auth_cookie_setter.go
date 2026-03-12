@@ -4,58 +4,9 @@ import (
 	context "context"
 	http "net/http"
 	"time"
+
+	"github.com/felixge/httpsnoop"
 )
-
-// authResponseWriter wraps http.ResponseWriter to intercept response writes and
-// inject an auth-token cookie when a token has been set by a GraphQL resolver.
-// It also embeds http.Hijacker to support WebSocket upgrades.
-type authResponseWriter struct {
-	http.ResponseWriter
-	http.Hijacker
-	authTokenFromResolver string
-	separateDomain        bool
-	cookieWritten         bool
-}
-
-// writeAuthCookieIfNeeded sets the auth-token cookie on the response if a token
-// was provided by a resolver and the cookie has not already been written.
-// For cross-origin deployments (separateDomain=true), it uses SameSite=None;Secure.
-func (w *authResponseWriter) writeAuthCookieIfNeeded() {
-	if w.cookieWritten || w.authTokenFromResolver == "" {
-		return
-	}
-
-	sameSite := http.SameSiteLaxMode
-	secure := false
-	if w.separateDomain {
-		// SameSite=None;Secure is required for cross-origin cookies (e.g. UI and API on different domains)
-		sameSite = http.SameSiteNoneMode
-		secure = true
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth-token",
-		Value:    w.authTokenFromResolver,
-		Path:     "/",
-		SameSite: sameSite,
-		Secure:   secure,
-		Expires:  time.Now().Add(14 * 24 * time.Hour),
-	})
-	w.cookieWritten = true
-}
-
-// WriteHeader intercepts the status code write to ensure the auth cookie is set
-// before headers are flushed to the client.
-func (w *authResponseWriter) WriteHeader(statusCode int) {
-	w.writeAuthCookieIfNeeded()
-	w.ResponseWriter.WriteHeader(statusCode)
-}
-
-// Write intercepts the response body write to ensure the auth cookie is set
-// before any body bytes are sent, in case WriteHeader was not called explicitly.
-func (w *authResponseWriter) Write(b []byte) (int, error) {
-	w.writeAuthCookieIfNeeded()
-	return w.ResponseWriter.Write(b)
-}
 
 // AuthCookieSetter returns HTTP middleware that automatically sets an auth-token
 // cookie on responses when a GraphQL resolver has produced an access token.
@@ -66,13 +17,48 @@ func (w *authResponseWriter) Write(b []byte) (int, error) {
 func AuthCookieSetter(separateDomain bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			arw := authResponseWriter{w, w.(http.Hijacker), "", separateDomain, false}
-			userIDContextKey := userAccessTokenCtxKey
+			var authToken string
+			cookieWritten := false
 
-			ctx := context.WithValue(r.Context(), userIDContextKey, &arw.authTokenFromResolver)
-			r = r.WithContext(ctx)
+			writeIfNeeded := func() {
+				if cookieWritten || authToken == "" {
+					return
+				}
+				sameSite := http.SameSiteLaxMode
+				secure := false
+				if separateDomain {
+					// SameSite=None;Secure is required for cross-origin cookies (e.g. UI and API on different domains)
+					sameSite = http.SameSiteNoneMode
+					secure = true
+				}
+				http.SetCookie(w, &http.Cookie{
+					Name:     "auth-token",
+					Value:    authToken,
+					Path:     "/",
+					SameSite: sameSite,
+					Secure:   secure,
+					Expires:  time.Now().Add(14 * 24 * time.Hour),
+				})
+				cookieWritten = true
+			}
 
-			next.ServeHTTP(&arw, r)
+			wrapped := httpsnoop.Wrap(w, httpsnoop.Hooks{
+				WriteHeader: func(next httpsnoop.WriteHeaderFunc) httpsnoop.WriteHeaderFunc {
+					return func(code int) {
+						writeIfNeeded()
+						next(code)
+					}
+				},
+				Write: func(next httpsnoop.WriteFunc) httpsnoop.WriteFunc {
+					return func(b []byte) (int, error) {
+						writeIfNeeded()
+						return next(b)
+					}
+				},
+			})
+
+			ctx := context.WithValue(r.Context(), userAccessTokenCtxKey, &authToken)
+			next.ServeHTTP(wrapped, r.WithContext(ctx))
 		})
 	}
 }
