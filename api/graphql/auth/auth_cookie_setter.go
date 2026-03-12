@@ -21,24 +21,26 @@ type authResponseWriter struct {
 // was provided by a resolver and the cookie has not already been written.
 // For cross-origin deployments (separateDomain=true), it uses SameSite=None;Secure.
 func (w *authResponseWriter) writeAuthCookieIfNeeded() {
-	if w.cookieWritten == false && w.authTokenFromResolver != "" {
-		sameSite := http.SameSiteLaxMode
-		secure := false
-		if w.separateDomain {
-			// SameSite=None;Secure is required for cross-origin cookies (e.g. UI and API on different domains)
-			sameSite = http.SameSiteNoneMode
-			secure = true
-		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     "auth-token",
-			Value:    w.authTokenFromResolver,
-			Path:     "/",
-			SameSite: sameSite,
-			Secure:   secure,
-			Expires:  time.Now().Add(14 * 24 * time.Hour),
-		})
-		w.cookieWritten = true
+	if w.cookieWritten || w.authTokenFromResolver == "" {
+		return
 	}
+
+	sameSite := http.SameSiteLaxMode
+	secure := false
+	if w.separateDomain {
+		// SameSite=None;Secure is required for cross-origin cookies (e.g. UI and API on different domains)
+		sameSite = http.SameSiteNoneMode
+		secure = true
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth-token",
+		Value:    w.authTokenFromResolver,
+		Path:     "/",
+		SameSite: sameSite,
+		Secure:   secure,
+		Expires:  time.Now().Add(14 * 24 * time.Hour),
+	})
+	w.cookieWritten = true
 }
 
 // WriteHeader intercepts the status code write to ensure the auth cookie is set
