@@ -93,8 +93,12 @@ func UserFromContext(ctx context.Context) *models.User {
 
 // Find the auth-token from the context. REQUIRES AuthCookieSetter to have run.
 func ResolverCookieFromContext(ctx context.Context) *string {
-	raw, _ := ctx.Value(userAccessTokenCtxKey).(*string)
-	return raw
+	v := ctx.Value(userAccessTokenCtxKey)
+	if v == nil {
+		return nil
+	}
+
+	return v.(*string)
 }
 
 func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.Context, *transport.InitPayload, error) {
