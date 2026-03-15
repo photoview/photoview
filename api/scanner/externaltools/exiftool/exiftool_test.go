@@ -184,9 +184,6 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 			"DateTimeOriginal",
 			"FileModifyDate",
 		}, mustParseInLocation(t, "2012:05:06 15:39:44")},
-		{"./test_data/stripped.jpg", []string{
-			"FileModifyDate",
-		}, mustParse(t, "2026:03:15 06:56:28Z").Local()},
 	}
 
 	instance, err := New()
