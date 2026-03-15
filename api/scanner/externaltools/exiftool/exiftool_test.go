@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	_ "github.com/photoview/photoview/api/test_utils/flags"
 )
@@ -70,6 +71,7 @@ func TestExiftoolQueryMIMEType(t *testing.T) {
 		{"./test_data/bird.jpg", "image/jpeg"},
 		{"./test_data/exif_subsec_timezone.heic", "image/heic"},
 		{"./test_data/cr3.cr3", "image/x-canon-cr3"},
+		{"./test_data/stripped.jpg", "image/jpeg"},
 	}
 
 	instance, err := New()
@@ -113,15 +115,13 @@ func checkTimeallFieldsHasValue(t *testing.T, time TimeAll, fields []string) {
 	}
 }
 
-func TestExiftoolQueryTimeAll(t *testing.T) {
+func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 	tests := []struct {
-		file     string
-		wantKeys []string
+		file          string
+		wantKeys      []string
+		wantTime      time.Time
+		wantOffsetSec int
 	}{
-		{"./test_data/bird.jpg", []string{
-			"DateTimeOriginal",
-			"FileModifyDate",
-		}},
 		{"./test_data/cr3.cr3", []string{
 			"CreateDate",
 			"DateTimeOriginal",
@@ -133,10 +133,16 @@ func TestExiftoolQueryTimeAll(t *testing.T) {
 			"SubSecDateTimeOriginal",
 			"TimeZone",
 			"TrackCreateDate",
-		}},
-		{"./test_data/stripped.jpg", []string{
+		}, mustParse(t, "2019:09:13 14:36:48.87+02:00"), 7200},
+		{"./test_data/exif_subsec_timezone.heic", []string{
+			"CreateDate",
+			"DateTimeOriginal",
 			"FileModifyDate",
-		}},
+			"OffsetTime",
+			"OffsetTimeOriginal",
+			"SubSecCreateDate",
+			"SubSecDateTimeOriginal",
+		}, mustParse(t, "2025:10:28 14:20:22.164+01:00"), 3600},
 	}
 
 	instance, err := New()
@@ -155,6 +161,59 @@ func TestExiftoolQueryTimeAll(t *testing.T) {
 			}
 
 			checkTimeallFieldsHasValue(t, value.TimeAll, tc.wantKeys)
+
+			gotTime, _ := value.TimeAll.Time()
+			if !gotTime.Equal(tc.wantTime) {
+				t.Errorf("value.TimeAll.Time() = %v, want: %v", gotTime, tc.wantTime)
+			}
+
+			if got, ok := value.TimeAll.OffsetSecs(gotTime); !ok || got != tc.wantOffsetSec {
+				t.Errorf("value.TimeAll.OffsetSecs() = (%v, %v), want: (%v, true)", got, ok, tc.wantOffsetSec)
+			}
+		})
+	}
+}
+
+func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
+	tests := []struct {
+		file     string
+		wantKeys []string
+		wantTime time.Time
+	}{
+		{"./test_data/bird.jpg", []string{
+			"DateTimeOriginal",
+			"FileModifyDate",
+		}, mustParseInLocation(t, "2012:05:06 15:39:44")},
+		{"./test_data/stripped.jpg", []string{
+			"FileModifyDate",
+		}, mustParseInLocation(t, "2026:03:15 07:56:28")},
+	}
+
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	for _, tc := range tests {
+		t.Run(tc.file, func(t *testing.T) {
+			var value struct{ TimeAll }
+			err := instance.QueryJSONTagsByNumber(tc.file, &value)
+			if err != nil {
+				t.Errorf("QueryJSONTagsByNumber(%q) error: %v", tc.file, err)
+				return
+			}
+
+			checkTimeallFieldsHasValue(t, value.TimeAll, tc.wantKeys)
+
+			gotTime, _ := value.TimeAll.Time()
+			if !gotTime.Equal(tc.wantTime) {
+				t.Errorf("value.TimeAll.Time() = %v, want: %v", gotTime, tc.wantTime)
+			}
+
+			if _, ok := value.TimeAll.OffsetSecs(gotTime); ok {
+				t.Errorf("value.TimeAll.OffsetSecs() = (_, %v), want: (_, false)", ok)
+			}
 		})
 	}
 }
