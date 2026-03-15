@@ -2,6 +2,8 @@ package exiftool
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -40,7 +42,7 @@ func TestExiftoolQueryJSONTagsWithEmbed(t *testing.T) {
 	}
 	defer instance.Close()
 
-	file := "./test_data/CorrectGPS.jpg"
+	file := "./test_data/correct_gps.jpg"
 	var value struct {
 		TimeAll
 		MIMEType
@@ -68,10 +70,10 @@ func TestExiftoolQueryMIMEType(t *testing.T) {
 		file string
 		want string
 	}{
-		{"./test_data/bird.jpg", "image/jpeg"},
-		{"./test_data/exif_subsec_timezone.heic", "image/heic"},
-		{"./test_data/cr3.cr3", "image/x-canon-cr3"},
-		{"./test_data/stripped.jpg", "image/jpeg"},
+		{"./test_data/no_timezone.jpg", "image/jpeg"},
+		{"./test_data/subsec_timezone.heic", "image/heic"},
+		{"./test_data/raw_with_preview_jpg.cr3", "image/x-canon-cr3"},
+		{"./test_data/no_exif.jpg", "image/jpeg"},
 	}
 
 	instance, err := New()
@@ -122,7 +124,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 		wantTime      time.Time
 		wantOffsetSec int
 	}{
-		{"./test_data/cr3.cr3", []string{
+		{"./test_data/raw_with_preview_jpg.cr3", []string{
 			"CreateDate",
 			"DateTimeOriginal",
 			"FileModifyDate",
@@ -134,7 +136,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			"TimeZone",
 			"TrackCreateDate",
 		}, mustParse(t, "2019:09:13 14:36:48.87+02:00"), 7200},
-		{"./test_data/exif_subsec_timezone.heic", []string{
+		{"./test_data/subsec_timezone.heic", []string{
 			"CreateDate",
 			"DateTimeOriginal",
 			"FileModifyDate",
@@ -143,6 +145,14 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
 		}, mustParse(t, "2025:10:28 14:20:22.164+01:00"), 3600},
+		{"./test_data/createdate_timezone_separate.jpg", []string{
+			"CreateDate",
+			"DateTimeOriginal",
+			"TimeZone",
+			"FileModifyDate",
+			"SubSecCreateDate",
+			"SubSecDateTimeOriginal",
+		}, mustParseInLocation(t, "2008:03:15 07:44:21.49"), -7 * 60 * 60},
 	}
 
 	instance, err := New()
@@ -174,6 +184,20 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 	}
 }
 
+func fileModifyDate(t *testing.T, file string) time.Time {
+	t.Helper()
+
+	dir := filepath.Dir(file)
+	file = filepath.Base(file)
+
+	fsys := os.DirFS(dir)
+	info, err := fs.Stat(fsys, file)
+	if err != nil {
+		t.Fatalf("read file stat error: %v", err)
+	}
+	return info.ModTime().Truncate(time.Second)
+}
+
 func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 	tests := []struct {
 		file          string
@@ -182,11 +206,11 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 		wantHasOffset bool
 		wantOffset    int
 	}{
-		{"./test_data/bird.jpg", []string{
+		{"./test_data/no_timezone.jpg", []string{
 			"DateTimeOriginal",
 			"FileModifyDate",
 		}, mustParseInLocation(t, "2012:05:06 15:39:44"), false, 0},
-		{"./test_data/exif_subsec_no_timezone.heic", []string{
+		{"./test_data/subsec_no_timezone.heic", []string{
 			"CreateDate",
 			"DateTimeOriginal",
 			"FileModifyDate",
@@ -194,6 +218,17 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
 		}, mustParseInLocation(t, "2025:10:28 14:20:22.164"), true, 3600},
+		{"./test_data/no_exif.jpg", []string{
+			"FileModifyDate",
+		}, fileModifyDate(t, "./test_data/no_exif.jpg"), false, 0},
+		{"./test_data/sample1.dng", []string{
+			"FileModifyDate",
+			"DateTimeOriginal",
+			"CreateDate",
+		}, mustParseInLocation(t, "2008:12:14 15:54:54"), false, 0},
+		{"./test_data/sample1.heif", []string{
+			"FileModifyDate",
+		}, fileModifyDate(t, "./test_data/sample1.heif"), false, 0},
 	}
 
 	instance, err := New()
@@ -238,8 +273,9 @@ func TestExiftoolQueryGPS(t *testing.T) {
 		hasGPS            bool
 		wantLat, wantLong float64
 	}{
-		{"./test_data/CorrectGPS.jpg", true, 44.4789972, 11.2979222},
-		{"./test_data/stripped.jpg", false, 0, 0},
+		{"./test_data/correct_gps.jpg", true, 44.4789972, 11.2979222},
+		{"./test_data/incorrect_gps.jpg", false, 0, 0},
+		{"./test_data/no_exif.jpg", false, 0, 0},
 	}
 
 	instance, err := New()
@@ -283,8 +319,8 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 		file   string
 		wantOK bool
 	}{
-		{"./test_data/cr3.cr3", true},
-		{"./test_data/bird.jpg", false},
+		{"./test_data/raw_with_preview_jpg.cr3", true},
+		{"./test_data/no_timezone.jpg", false},
 	}
 
 	instance, err := New()
@@ -334,20 +370,30 @@ func TestExiftoolError(t *testing.T) {
 	}
 	defer instance.Close()
 
-	file := "./test_data/non_exist.jpg"
-	checkErr := func(err error, fmtStr string, args ...any) {
-		t.Helper()
-
-		if want := "File not found"; err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf(fmtStr+" %v, want %v", append(args, err, want)...)
-		}
+	tests := []struct {
+		file   string
+		errStr string
+	}{
+		{"./test_data/non_exist.jpg", "File not found"},
 	}
 
-	var value MIMEType
-	err = instance.QueryJSONTagsByNumber(file, &value)
-	checkErr(err, "QueryJSONTagsByNumber(%q)", file)
+	for _, tc := range tests {
+		t.Run(tc.file, func(t *testing.T) {
+			checkErr := func(err error, fmtStr string, args ...any) {
+				t.Helper()
 
-	output := filepath.Join(t.TempDir(), "output.jpg")
-	_, err = instance.SaveJPEGPreview(file, output)
-	checkErr(err, "SaveJPEGPreview(%q, %q)", file, output)
+				if want := tc.errStr; err == nil || !strings.Contains(err.Error(), want) {
+					t.Errorf(fmtStr+" %v, want %v", append(args, err, want)...)
+				}
+			}
+
+			var value MIMEType
+			err = instance.QueryJSONTagsByNumber(tc.file, &value)
+			checkErr(err, "QueryJSONTagsByNumber(%q)", tc.file)
+
+			output := filepath.Join(t.TempDir(), "output.jpg")
+			_, err = instance.SaveJPEGPreview(tc.file, output)
+			checkErr(err, "SaveJPEGPreview(%q, %q)", tc.file, output)
+		})
+	}
 }
