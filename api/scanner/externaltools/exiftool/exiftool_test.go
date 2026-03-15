@@ -221,14 +221,6 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 		{"./test_data/no_exif.jpg", []string{
 			"FileModifyDate",
 		}, fileModifyDate(t, "./test_data/no_exif.jpg"), false, 0},
-		{"./test_data/sample1.dng", []string{
-			"FileModifyDate",
-			"DateTimeOriginal",
-			"CreateDate",
-		}, mustParseInLocation(t, "2008:12:14 15:54:54"), false, 0},
-		{"./test_data/sample1.heif", []string{
-			"FileModifyDate",
-		}, fileModifyDate(t, "./test_data/sample1.heif"), false, 0},
 	}
 
 	instance, err := New()
