@@ -176,14 +176,24 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 
 func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 	tests := []struct {
-		file     string
-		wantKeys []string
-		wantTime time.Time
+		file          string
+		wantKeys      []string
+		wantTime      time.Time
+		wantHasOffset bool
+		wantOffset    int
 	}{
 		{"./test_data/bird.jpg", []string{
 			"DateTimeOriginal",
 			"FileModifyDate",
-		}, mustParseInLocation(t, "2012:05:06 15:39:44")},
+		}, mustParseInLocation(t, "2012:05:06 15:39:44"), false, 0},
+		{"./test_data/exif_subsec_no_timezone.heic", []string{
+			"CreateDate",
+			"DateTimeOriginal",
+			"FileModifyDate",
+			"OffsetTime",
+			"SubSecCreateDate",
+			"SubSecDateTimeOriginal",
+		}, mustParseInLocation(t, "2025:10:28 14:20:22.164"), true, 3600},
 	}
 
 	instance, err := New()
@@ -208,8 +218,15 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 				t.Errorf("value.TimeAll.Time() = %v, want: %v", gotTime, tc.wantTime)
 			}
 
-			if _, ok := value.TimeAll.OffsetSecs(gotTime); ok {
-				t.Errorf("value.TimeAll.OffsetSecs() = (_, %v), want: (_, false)", ok)
+			gotOffset, gotHasOffset := value.TimeAll.OffsetSecs(gotTime)
+			if gotHasOffset != tc.wantHasOffset {
+				t.Errorf("value.TimeAll.OffsetSecs() = (_, %v), want: (_, %v)", gotHasOffset, tc.wantHasOffset)
+			}
+			if !gotHasOffset {
+				return
+			}
+			if gotOffset != tc.wantOffset {
+				t.Errorf("value.TimeAll.OffsetSecs() = (%v, _), want: (%v, _)", gotOffset, tc.wantHasOffset)
 			}
 		})
 	}
