@@ -78,7 +78,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 
 	dateShot, local := values.TimeAll.Time()
 	if !dateShot.IsZero() {
-		ret.DateShot = &dateShot
+		ret.DateShot = new(dateShot)
 	}
 	if !local {
 		dateShot = time.Time{}
