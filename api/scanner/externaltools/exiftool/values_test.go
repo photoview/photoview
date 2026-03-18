@@ -39,10 +39,10 @@ func TestGPSIsValid(t *testing.T) {
 	}
 }
 
-func mustParseInLocation(t *testing.T, timeStr string) time.Time {
+func mustParseInUTC(t *testing.T, timeStr string) time.Time {
 	t.Helper()
 
-	ret, err := time.ParseInLocation(layout, timeStr, time.Local)
+	ret, err := time.ParseInLocation(layout, timeStr, time.UTC)
 	if err != nil {
 		t.Fatalf("time.ParseInLocation(%q) returns error: %v", timeStr, err)
 	}
@@ -65,55 +65,39 @@ func TestTimeAllTimeLocal(t *testing.T) {
 			TrackCreateDate:  &otherStr,
 			MediaCreateDate:  &otherStr,
 			FileModifyDate:   &otherStr,
-		}, mustParseInLocation(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 		{"CreateDate", TimeAll{
 			CreateDate:      &wantStr,
 			TrackCreateDate: &otherStr,
 			MediaCreateDate: &otherStr,
 			FileModifyDate:  &otherStr,
-		}, mustParseInLocation(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 		{"TrackCreateDate", TimeAll{
 			TrackCreateDate: &wantStr,
 			MediaCreateDate: &otherStr,
 			FileModifyDate:  &otherStr,
-		}, mustParseInLocation(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 		{"MediaCreateDate", TimeAll{
 			MediaCreateDate: &wantStr,
 			FileModifyDate:  &otherStr,
-		}, mustParseInLocation(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 		{"FileModifyDate", TimeAll{
 			FileModifyDate: &wantStr,
-		}, mustParseInLocation(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, isLocal := tc.timeAll.Time()
-			if !isLocal {
-				t.Fatalf("timeAll.Time() is not a local time, which it should be")
-			}
-
-			if !got.Equal(tc.want) {
+			if got := tc.timeAll.TimeInLocal(); !got.Equal(tc.want) {
 				t.Errorf("timeAll.Time() = %v, want: %v", got, tc.want)
 			}
 		})
 	}
 }
 
-func mustParse(t *testing.T, timeStr string) time.Time {
-	t.Helper()
-
-	ret, err := time.Parse(layoutWithOffset, timeStr)
-	if err != nil {
-		t.Fatalf("time.Parse(%q) returns error: %v", timeStr, err)
-	}
-
-	return ret
-}
-
 func TestTimeAllTimeWithTimezone(t *testing.T) {
-	wantStr := "2025:10:28 14:20:22.164+01:00"
-	otherStr := "2024:10:28 14:20:22.164+01:00"
+	wantStr := "2025:10:28 14:20:22.164"
+	otherStr := "2024:10:28 14:20:22.164"
 
 	tests := []struct {
 		name    string
@@ -128,7 +112,7 @@ func TestTimeAllTimeWithTimezone(t *testing.T) {
 			TrackCreateDate:        &otherStr,
 			MediaCreateDate:        &otherStr,
 			FileModifyDate:         &otherStr,
-		}, mustParse(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 		{"SubSecCreateDate", TimeAll{
 			SubSecCreateDate: &wantStr,
 			DateTimeOriginal: &otherStr,
@@ -136,17 +120,12 @@ func TestTimeAllTimeWithTimezone(t *testing.T) {
 			TrackCreateDate:  &otherStr,
 			MediaCreateDate:  &otherStr,
 			FileModifyDate:   &otherStr,
-		}, mustParse(t, wantStr)},
+		}, mustParseInUTC(t, wantStr)},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, isLocal := tc.timeAll.Time()
-			if isLocal {
-				t.Fatalf("timeAll.Time() is a local time, which it should not be")
-			}
-
-			if !got.Equal(tc.want) {
+			if got := tc.timeAll.TimeInLocal(); !got.Equal(tc.want) {
 				t.Errorf("timeAll.Time() = %v, want: %v", got, tc.want)
 			}
 		})
@@ -155,12 +134,7 @@ func TestTimeAllTimeWithTimezone(t *testing.T) {
 
 func TestTimeAllTimeEmpty(t *testing.T) {
 	var timeAll TimeAll
-	got, isLocal := timeAll.Time()
-	if isLocal {
-		t.Fatalf("timeAll.Time() is a local time, which it should not be")
-	}
-
-	if !got.IsZero() {
+	if got := timeAll.TimeInLocal(); !got.IsZero() {
 		t.Errorf("timeAll.Time() is a valid time, which it should not be")
 	}
 }
@@ -170,7 +144,7 @@ func TestTimeAllOffsetSecs(t *testing.T) {
 	otherStr := "-01:00"
 	gpsDateTime := "2025:10:28 14:20:22Z"
 	otherTimezone := -120
-	localTime := mustParse(t, "2025:10:28 14:20:22"+otherStr)
+	localTime := mustParseInUTC(t, "2025:10:28 13:20:22")
 
 	tests := []struct {
 		name    string

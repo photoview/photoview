@@ -3,6 +3,7 @@ package exiftool
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -60,10 +61,10 @@ type TimeAll struct {
 }
 
 const layout = "2006:01:02 15:04:05.999"
-const layoutWithOffset = "2006:01:02 15:04:05.999Z07:00"
+const layoutWithTimezone = "2006:01:02 15:04:05.999Z07:00"
 
-// Time returns most likely time. True returns if the time is a local time without a timezone.
-func (t TimeAll) Time() (time.Time, bool) {
+// TimeInLocal returns most likely time. The date and time are in local. The timezone is meaningless and always be in UTC. Use `OffsetSecs()` to determine the timezone.
+func (t TimeAll) TimeInLocal() time.Time {
 	for _, dateP := range []*string{
 		// Keep the order for the priority to generate DateShot
 		t.SubSecDateTimeOriginal,
@@ -78,16 +79,19 @@ func (t TimeAll) Time() (time.Time, bool) {
 			continue
 		}
 
-		if date, err := time.ParseInLocation(layout, *dateP, time.Local); err == nil {
-			return date, true
+		date := *dateP
+
+		// Ignore timezone
+		if zoneIndex := strings.IndexAny(date, "+-Z"); zoneIndex >= 0 {
+			date = date[:zoneIndex]
 		}
 
-		if date, err := time.Parse(layoutWithOffset, *dateP); err == nil {
-			return date, false
+		if date, err := time.ParseInLocation(layout, date, time.UTC); err == nil {
+			return date
 		}
 	}
 
-	return time.Time{}, false
+	return time.Time{}
 }
 
 // OffsetSecs returns seconds offset by UTC.
@@ -119,14 +123,15 @@ func (t TimeAll) OffsetSecs(local time.Time) (int, bool) {
 		return 0, false
 	}
 
-	gpsDate, err := time.Parse(layoutWithOffset, *t.GPSDateTime)
+	gpsDate, err := time.Parse(layoutWithTimezone, *t.GPSDateTime)
 	if err != nil {
 		return 0, false
 	}
+	gpsDate = gpsDate.UTC()
 
 	// GPS time is always UTC per EXIF spec
-	// offset = GPS UTC time - local time
-	offset := int(gpsDate.Sub(local).Seconds())
+	// offset = local time (in UTC) - GPS UTC time
+	offset := int(local.Sub(gpsDate).Seconds())
 	return offset, true
 }
 

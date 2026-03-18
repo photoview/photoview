@@ -54,7 +54,7 @@ func TestExiftoolQueryJSONTagsWithEmbed(t *testing.T) {
 		return
 	}
 
-	if time, _ := value.TimeAll.Time(); time.IsZero() {
+	if time := value.TimeAll.TimeInLocal(); time.IsZero() {
 		t.Errorf("QueryJSONTagsByNumber(%q) error: no valid TimeAll", file)
 	}
 	if value.MIMEType.MIMEType == nil {
@@ -135,7 +135,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			"SubSecDateTimeOriginal",
 			"TimeZone",
 			"TrackCreateDate",
-		}, mustParse(t, "2019:09:13 14:36:48.87+02:00"), 7200},
+		}, mustParseInUTC(t, "2019:09:13 14:36:48.87"), 7200},
 		{"./test_data/subsec_timezone.heic", []string{
 			"CreateDate",
 			"DateTimeOriginal",
@@ -144,7 +144,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			"OffsetTimeOriginal",
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
-		}, mustParse(t, "2025:10:28 14:20:22.164+01:00"), 3600},
+		}, mustParseInUTC(t, "2025:10:28 14:20:22.164"), 3600},
 		{"./test_data/createdate_timezone_separate.jpg", []string{
 			"CreateDate",
 			"DateTimeOriginal",
@@ -152,7 +152,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			"FileModifyDate",
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
-		}, mustParseInLocation(t, "2008:03:15 07:44:21.49"), -7 * 60 * 60},
+		}, mustParseInUTC(t, "2008:03:15 07:44:21.49"), -7 * 60 * 60},
 	}
 
 	instance, err := New()
@@ -172,9 +172,9 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 
 			checkTimeallFieldsHasValue(t, value.TimeAll, tc.wantKeys)
 
-			gotTime, _ := value.TimeAll.Time()
+			gotTime := value.TimeAll.TimeInLocal()
 			if !gotTime.Equal(tc.wantTime) {
-				t.Errorf("value.TimeAll.Time() = %v, want: %v", gotTime, tc.wantTime)
+				t.Errorf("value.TimeAll.TimeInLocal() = %v, want: %v", gotTime, tc.wantTime)
 			}
 
 			if got, ok := value.TimeAll.OffsetSecs(gotTime); !ok || got != tc.wantOffsetSec {
@@ -184,7 +184,7 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 	}
 }
 
-func fileModifyDate(t *testing.T, file string) time.Time {
+func fileModifyDateLiteralUTC(t *testing.T, file string) time.Time {
 	t.Helper()
 
 	dir := filepath.Dir(file)
@@ -195,7 +195,13 @@ func fileModifyDate(t *testing.T, file string) time.Time {
 	if err != nil {
 		t.Fatalf("read file stat error: %v", err)
 	}
-	return info.ModTime().Truncate(time.Second)
+
+	ret := info.ModTime().Truncate(time.Second)
+
+	_, offsetSec := ret.Zone()
+	ret = ret.Add(time.Duration(offsetSec) * time.Second).UTC()
+
+	return ret
 }
 
 func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
@@ -209,7 +215,7 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 		{"./test_data/no_timezone.jpg", []string{
 			"DateTimeOriginal",
 			"FileModifyDate",
-		}, mustParseInLocation(t, "2012:05:06 15:39:44"), false, 0},
+		}, mustParseInUTC(t, "2012:05:06 15:39:44"), false, 0},
 		{"./test_data/subsec_no_timezone.heic", []string{
 			"CreateDate",
 			"DateTimeOriginal",
@@ -217,10 +223,10 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 			"OffsetTime",
 			"SubSecCreateDate",
 			"SubSecDateTimeOriginal",
-		}, mustParseInLocation(t, "2025:10:28 14:20:22.164"), true, 3600},
+		}, mustParseInUTC(t, "2025:10:28 14:20:22.164"), true, 3600},
 		{"./test_data/no_exif.jpg", []string{
 			"FileModifyDate",
-		}, fileModifyDate(t, "./test_data/no_exif.jpg"), false, 0},
+		}, fileModifyDateLiteralUTC(t, "./test_data/no_exif.jpg"), false, 0},
 	}
 
 	instance, err := New()
@@ -240,9 +246,9 @@ func TestExiftoolQueryTimeAllNoOffset(t *testing.T) {
 
 			checkTimeallFieldsHasValue(t, value.TimeAll, tc.wantKeys)
 
-			gotTime, _ := value.TimeAll.Time()
+			gotTime := value.TimeAll.TimeInLocal()
 			if !gotTime.Equal(tc.wantTime) {
-				t.Errorf("value.TimeAll.Time() = %v, want: %v", gotTime, tc.wantTime)
+				t.Errorf("value.TimeAll.TimeInLocal() = %v, want: %v", gotTime, tc.wantTime)
 			}
 
 			gotOffset, gotHasOffset := value.TimeAll.OffsetSecs(gotTime)
