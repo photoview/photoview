@@ -3,7 +3,6 @@ package exif
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
@@ -76,13 +75,11 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		Description:     values.ImageDescription,
 	}
 
-	dateShot, local := values.TimeAll.Time()
+	dateShot := values.TimeAll.TimeInLocal()
 	if !dateShot.IsZero() {
 		ret.DateShot = new(dateShot)
 	}
-	if !local {
-		dateShot = time.Time{}
-	}
+
 	offsetSec, ok := values.TimeAll.OffsetSecs(dateShot)
 	if ok {
 		ret.OffsetSecShot = &offsetSec

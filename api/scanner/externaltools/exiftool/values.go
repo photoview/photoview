@@ -115,6 +115,7 @@ func (t TimeAll) OffsetSecs(local time.Time) (int, bool) {
 		return *t.TimeZone * 60, true
 	}
 
+	// Calculate offset sec with GPS time and local time.
 	if local.IsZero() {
 		return 0, false
 	}

@@ -69,18 +69,22 @@ func TestMIMEType(t *testing.T) {
 	}
 }
 
-func fileModifyDate(t *testing.T, file string) time.Time {
+func fileModifyDateLiteralInUTC(t *testing.T, file string) time.Time {
 	fstat, err := os.Stat(file)
 	if err != nil {
 		t.Fatalf("os.Stat(%q) error: %v", file, err)
 	}
 
-	return fstat.ModTime().Truncate(time.Second)
+	ret := fstat.ModTime().Truncate(time.Second)
+	_, offset := ret.Zone()
+	ret = ret.Add(time.Duration(offset) * time.Second).UTC()
+
+	return ret
 }
 
 func mustParseNoTimeZone(t *testing.T, timeStr string) time.Time {
 	layout := "2006:01:02 15:04:05.999"
-	ret, err := time.ParseInLocation(layout, timeStr, time.Local)
+	ret, err := time.ParseInLocation(layout, timeStr, time.UTC)
 	if err != nil {
 		t.Fatalf("time.Parse(%q) error: %v", timeStr, err)
 	}
@@ -101,7 +105,7 @@ func TestSamplesTime(t *testing.T) {
 		wantTime      time.Time
 		wantOffsetSec *int
 	}{
-		{"./test_data/sample1.heif", fileModifyDate(t, "./test_data/sample1.heif"), nil},
+		{"./test_data/sample1.heif", fileModifyDateLiteralInUTC(t, "./test_data/sample1.heif"), nil},
 		{"./test_data/sample1_nef.jpg", mustParseNoTimeZone(t, "2008:03:15 07:44:21.49"), new(-7 * 60 * 60)},
 	}
 
