@@ -98,6 +98,10 @@ func (r *queryResolver) ShareToken(ctx context.Context, credentials models.Share
 	}
 
 	if token.Password != nil {
+		if credentials.Password == nil {
+			return nil, errors.New("unauthorized")
+		}
+
 		if err := bcrypt.CompareHashAndPassword([]byte(*token.Password), []byte(*credentials.Password)); err != nil {
 			if err == bcrypt.ErrMismatchedHashAndPassword {
 				return nil, errors.New("unauthorized")
