@@ -6,8 +6,8 @@ import (
 	"image"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/externaltools/darktable"
 	"github.com/photoview/photoview/api/scanner/externaltools/exif"
-	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -78,7 +78,7 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 	}
 	thumbnail := origin.ThumbnailScale()
 
-	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
+	if err := darktable.DarktableCLI.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
@@ -144,7 +144,7 @@ func (img *EncodeMediaData) EncodeHighRes(outputPath string) error {
 			imgPath = *img.CounterpartPath
 		}
 
-		err := executable_worker.Magick.EncodeJpeg(imgPath, outputPath, 70)
+		err := darktable.DarktableCLI.EncodeJpeg(imgPath, outputPath, 70)
 		if err != nil {
 			return fmt.Errorf("failed to convert RAW photo %q to JPEG: %w", imgPath, err)
 		}

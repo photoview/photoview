@@ -71,10 +71,12 @@ RUN set -a && source /env && set +a \
     && cp -a include/* /usr/local/include/ \
     && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
+    && cp -a opt / \
     && ldconfig \
     && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
+    && ln -s /opt/darktable/bin/darktable-cli /usr/local/bin/
 
 COPY api/go.mod api/go.sum /app/api/
 WORKDIR /app/api
@@ -114,10 +116,12 @@ RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
 RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     # Install self-building libs
     cp -a lib/*.so* /usr/local/lib/ \
+    && cp -a opt / \
     && ldconfig \
     && apt-get install -y ./deb/jellyfin-ffmpeg.deb gzip brotli zstd \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
+    && ln -s /opt/darktable/bin/darktable-cli /usr/local/bin/ \
     # Cleanup
     && apt-get autoremove -y \
     && apt-get clean \

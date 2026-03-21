@@ -20,7 +20,6 @@ require (
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	golang.org/x/crypto v0.49.0
 	golang.org/x/text v0.35.0
-	gopkg.in/gographics/imagick.v3 v3.7.3
 	gopkg.in/vansante/go-ffprobe.v2 v2.3.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0

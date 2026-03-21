@@ -3,3 +3,9 @@
 // and must be cleaned up properly when finished.
 // Packages under externaltools should have as few dependencies as possible to avoid cycles.
 package externaltools
+
+import "errors"
+
+var (
+	ErrInvalidCLI = errors.New("invalid cli")
+)

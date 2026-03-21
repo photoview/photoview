@@ -15,20 +15,15 @@ var ErrDisabledFunction = errors.New("function disabled")
 
 // Initialize Initializes all workers. It returns a function to terminate workers, which should be called before the program closing.
 func Initialize() func() {
-	Magick = newMagickWand()
 	Ffmpeg = newFfmpegCli()
 
 	if err := SetFfprobePath(); err != nil {
 		log.Error(nil, "Init ffprobe fail.", "error", err)
 	}
 
-	return func() {
-		Magick.Terminate()
-		Magick = nil
-	}
+	return func() {}
 }
 
-var Magick *MagickWand = nil
 var Ffmpeg *FfmpegCli = nil
 
 type ExecutableWorker interface {
