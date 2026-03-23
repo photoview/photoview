@@ -70,6 +70,8 @@ services:
       ## Support `qsv`, `vaapi`, `nvenc`.
       ## Only `qsv` is verified with `/dev/dri` devices (see below `devices`).
       PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION: ${PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION}
+      ## Uncomment the next variable if set in the `.env` file to override the default 5s media probe timeout
+      # PHOTOVIEW_MEDIA_PROBE_TIMEOUT: ${PHOTOVIEW_MEDIA_PROBE_TIMEOUT}
     ## Share hardware devices with FFmpeg (optional):
     # devices:
     ## Uncomment next devices mappings if they are available in your host system

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -87,6 +88,7 @@ func MediaProbeTimeout() time.Duration {
 		if seconds, err := strconv.Atoi(val); err == nil && seconds > 0 {
 			return time.Duration(seconds) * time.Second
 		}
+		log.Printf("WARNING: invalid value %q for %s, using default 5s", val, EnvMediaProbeTimeout)
 	}
 	return 5 * time.Second
 }
