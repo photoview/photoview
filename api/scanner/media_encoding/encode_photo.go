@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/pkg/errors"
@@ -158,7 +158,7 @@ func (enc *EncodeMediaData) VideoMetadata() (*ffprobe.ProbeData, error) {
 		return enc._videoMetadata, nil
 	}
 
-	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancelFn := context.WithTimeout(context.Background(), utils.MediaProbeTimeout())
 	defer cancelFn()
 	data, err := ffprobe.ProbeURL(ctx, enc.Media.Path)
 	if err != nil {
