@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/photoview/photoview/api/log"
 )
 
 // EnvironmentVariable represents the name of an environment variable used to configure Photoview
@@ -88,7 +89,7 @@ func MediaProbeTimeout() time.Duration {
 		if seconds, err := strconv.Atoi(val); err == nil && seconds > 0 {
 			return time.Duration(seconds) * time.Second
 		}
-		log.Printf("WARNING: invalid value %q for %s, using default 5s", val, EnvMediaProbeTimeout)
+		log.Warn(nil, "Invalid PHOTOVIEW_MEDIA_PROBE_TIMEOUT value, using default 5s", "value", val)
 	}
 	return 5 * time.Second
 }
