@@ -306,7 +306,7 @@ func TestExiftoolQueryGPS(t *testing.T) {
 			lat := *value.GPS.GPSLatitude
 			long := *value.GPS.GPSLongitude
 			if got, want := gpsToString(lat, long), gpsToString(tc.wantLat, tc.wantLong); got != want {
-				t.Errorf("QueryGPS(%q) = %s, want: %s", tc.file, got, want)
+				t.Errorf("QueryJSONTagsByNumber(%q) = %s, want: %s", tc.file, got, want)
 			}
 		})
 	}
@@ -346,15 +346,27 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 				return
 			}
 
-			var mime MIMEType
-			if err := instance.QueryJSONTagsByNumber(output, &mime); err != nil {
-				t.Errorf("QueryMIMEType(%q) error: %v", output, err)
+			var jpg struct {
+				MIMEType
+				TimeAll
+			}
+			if err := instance.QueryJSONTagsByNumber(output, &jpg); err != nil {
+				t.Fatalf("QueryJSONTagsByNumber(%q) error: %v", output, err)
 				return
 			}
 
-			if got, want := mime.MIMEType, "image/jpeg"; got == nil || *got != want {
+			if got, want := jpg.MIMEType.MIMEType, "image/jpeg"; got == nil || *got != want {
 				t.Errorf("MIMEType(%q) = %v, want: %q", output, got, want)
 				return
+			}
+
+			var raw struct{ TimeAll }
+			if err := instance.QueryJSONTagsByNumber(tc.file, &raw); err != nil {
+				t.Fatalf("QueryJSONTagsByNumber(%q) error: %v", tc.file, err)
+			}
+
+			if got, want := jpg.TimeAll.TimeInLocal(), raw.TimeAll.TimeInLocal(); !got.Equal(want) {
+				t.Errorf("jpg.TimeAll.TimeInLocal() = %q, want: %q", got, want)
 			}
 		})
 	}

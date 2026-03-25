@@ -225,5 +225,17 @@ func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, erro
 		return false, fmt.Errorf("save jpeg preview for %q error: %w", src, err)
 	}
 
-	return saved, nil
+	if !saved {
+		return false, nil
+	}
+
+	if err = e.rawSendCommand("-TagsFromFile", src, "-overwrite_original", previewOutput); err != nil {
+		return false, fmt.Errorf("save tags to jpeg preview for %q error: %w", src, err)
+	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, e.stdout)
+		err = e.rawReadStderr()
+	}()
+
+	return true, nil
 }
