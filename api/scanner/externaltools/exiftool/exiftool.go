@@ -203,6 +203,29 @@ func (e *Exiftool) rawSaveEmbedFile(outputPath string, args ...string) (hasEmbed
 	return
 }
 
+func (e *Exiftool) rawUpdateFile(args ...string) (err error) {
+	if err = e.rawSendCommand(args...); err != nil {
+		return
+	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, e.stdout)
+		err = e.rawReadStderr()
+	}()
+
+	var output []byte
+	if output, err = io.ReadAll(e.stdout); err != nil {
+		return
+	}
+
+	outStr := string(bytes.Trim(output, " \n\r\t"))
+	if outStr != "1 image files updated" {
+		err = fmt.Errorf("invalid output: %s", outStr)
+		return
+	}
+
+	return
+}
+
 // QueryJSONTagsByNumber queries the exif info of `file` with a given struct `value`. Tags are fields of the `value`. The values are a number if possible.
 // See values.go for example structs.
 func (e *Exiftool) QueryJSONTagsByNumber(file string, value any) error {
@@ -229,13 +252,9 @@ func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, erro
 		return false, nil
 	}
 
-	if err = e.rawSendCommand("-TagsFromFile", src, "-overwrite_original", previewOutput); err != nil {
+	if err = e.rawUpdateFile("-TagsFromFile", src, "-overwrite_original", previewOutput); err != nil {
 		return false, fmt.Errorf("save tags to jpeg preview for %q error: %w", src, err)
 	}
-	defer func() {
-		_, _ = io.Copy(io.Discard, e.stdout)
-		err = e.rawReadStderr()
-	}()
 
 	return true, nil
 }
