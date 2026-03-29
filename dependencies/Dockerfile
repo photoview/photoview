@@ -5,21 +5,7 @@ COPY --chmod=0755 prepare.sh /tmp/
 RUN /tmp/prepare.sh \
     && mkdir -p /output/bin /output/lib /output/include /output/pkgconfig /output/etc /output/deb
 
-FROM base-prep AS build-libraw
-ARG LIBRAW_VERSION
-ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
-WORKDIR /tmp/build-libraw
-COPY --chmod=0755 build_libraw.sh .
-RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRAW_VERSION} \
-    --mount=type=secret,id=github_token \
-    if [ -f /run/secrets/github_token ]; then \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
-    fi \
-    && set -a && source /env && set +a \
-    && ./build_libraw.sh
-
-FROM build-libraw AS build-libheif
+FROM base-prep AS build-libheif
 ARG LIBHEIF_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
@@ -33,7 +19,21 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBH
     && set -a && source /env && set +a \
     && ./build_libheif.sh
 
-FROM build-libheif AS build-imagemagick
+FROM build-libheif AS build-libraw
+ARG LIBRAW_VERSION
+ARG TARGETARCH
+ENV BUILD_CACHE_DIR=/build-cache
+WORKDIR /tmp/build-libraw
+COPY --chmod=0755 build_libraw.sh .
+RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRAW_VERSION} \
+    --mount=type=secret,id=github_token \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
+    && set -a && source /env && set +a \
+    && ./build_libraw.sh
+
+FROM build-libraw AS build-imagemagick
 ARG IMAGEMAGICK_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
@@ -46,6 +46,20 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${
     fi \
     && set -a && source /env && set +a \
     && ./build_imagemagick.sh
+
+FROM build-libheif AS build-darktable
+ARG DARKTABLE_VERSION
+ARG TARGETARCH
+ENV BUILD_CACHE_DIR=/build-cache
+WORKDIR /tmp/build-darktable
+COPY --chmod=0755 build_darktable.sh .
+RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${DARKTABLE_VERSION} \
+    --mount=type=secret,id=github_token \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
+    && set -a && source /env && set +a \
+    && ./build_darktable.sh
 
 FROM base-prep AS download-jellyfin-ffmpeg
 ARG JELLYFIN_FFMPEG_VERSION
@@ -61,6 +75,7 @@ FROM base-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
 COPY --from=build-libheif /output/ /output/
 COPY --from=build-imagemagick /output/ /output/
+COPY --from=build-darktable /output/ /output/
 COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh
