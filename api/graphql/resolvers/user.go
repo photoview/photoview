@@ -47,8 +47,9 @@ func (r *mutationResolver) AuthorizeUser(ctx context.Context, username string, p
 	}
 
 	// This sets a value that Write will pick up later and set in response Set-Cookie headers
-	cookie := auth.ResolverCookieFromContext(ctx)
-	*cookie = token.Value
+	if cookie := auth.ResolverCookieFromContext(ctx); cookie != nil {
+		*cookie = token.Value
+	}
 
 	return &models.AuthorizeResult{
 		Success: true,
@@ -104,8 +105,9 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 	}
 
 	// This sets a value that Write will pick up later and set in response Set-Cookie headers
-	cookie := auth.ResolverCookieFromContext(ctx)
-	*cookie = token.Value
+	if cookie := auth.ResolverCookieFromContext(ctx); cookie != nil {
+		*cookie = token.Value
+	}
 
 	return &models.AuthorizeResult{
 		Success: true,
