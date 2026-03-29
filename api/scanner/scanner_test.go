@@ -126,8 +126,13 @@ func TestFullScan(t *testing.T) {
 		got := make([]string, len(allMedia))
 		for i, media := range allMedia {
 			got[i] = media.Title
+
 			if media.Blurhash == nil {
 				t.Errorf("media %q(%s) doesn't have Blurhash, while it should have", media.Title, media.Type)
+			}
+
+			if media.Date().IsZero() {
+				t.Errorf("media %q(%s) doesn't have Date, while it should have", media.Title, media.Type)
 			}
 		}
 		slices.Sort(got)
