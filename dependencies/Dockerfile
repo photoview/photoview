@@ -53,7 +53,7 @@ ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-darktable
 COPY --chmod=0755 build_darktable.sh .
-RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${DARKTABLE_VERSION} \
+RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DARKTABLE_VERSION} \
     --mount=type=secret,id=github_token \
     if [ -f /run/secrets/github_token ]; then \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
