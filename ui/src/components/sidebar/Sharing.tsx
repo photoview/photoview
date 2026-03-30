@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react'
 import {
   useMutation,
@@ -276,12 +277,12 @@ const MorePopoverSectionExpiration = ({
   // Verify whether the backend response includes an expiration time
   // Set it to true if share.expire exists; otherwise,set it to false
   const [enabled, setEnabled] = useState(!!share.expire)
-   useEffect(() => {
-   setEnabled(!!share.expire)
-   setDate(share.expire ? new Date(share.expire) : null)
+  useEffect(() => {
+    setEnabled(!!share.expire)
+    setDate(share.expire ? new Date(share.expire) : null)
   }, [share.expire])
   const { t, i18n } = useTranslation()
-  
+
   const dateFormatterOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
@@ -291,9 +292,9 @@ const MorePopoverSectionExpiration = ({
     i18n.language,
     dateFormatterOptions
   )
-  const oldExpireDate = share.expire 
-  ? dateFormatter.format(new Date(share.expire.slice(0, 19).replace(' ', 'T'))) 
-  : '';
+  const oldExpireDate = share.expire
+    ? dateFormatter.format(new Date(share.expire.slice(0, 19).replace(' ', 'T')))
+    : '';
 
   const [date, setDate] = useState<Date | null>(
     share.expire ? new Date(share.expire) : null
@@ -304,15 +305,18 @@ const MorePopoverSectionExpiration = ({
   })
 
   const submit = () => {
-    if (!date && enabled) return 
-    const formatDate = date ? dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ss')+'Z' : null
+    if (!date && enabled) return
+    const formatDate = date ? dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ss') + 'Z' : null
     //Save the local time while treating it as UTC.
     setExpire({
       variables: {
         token: share.token,
         expire: formatDate,
       },
-    })
+    }).catch(error => {
+      setDate(share.expire ? new Date(share.expire) : null)
+    }
+    )
   }
 
   return (
@@ -320,20 +324,28 @@ const MorePopoverSectionExpiration = ({
       <Checkbox
         label={t('sidebar.sharing.expiration_date', 'Expiration date')}
         checked={enabled}
-        onChange={() => {
+        onChange={async () => {
           const next = !enabled
-          setEnabled(next)
 
           if (!next) {
             // If the checkbox is unchecked,set the expiration time to null.
+            const previousDate = date
+            setEnabled(false)
             setDate(null)
-            setExpire({
-              variables: {
-                token: share.token,
-                expire: null,
-              },
-            })
+            try {
+              await setExpire({
+                variables: {
+                  token: share.token,
+                  expire: null,
+                },
+              })
+            } catch (error) {
+              setEnabled(true)
+              setDate(previousDate)
+            }
+            return
           }
+          setEnabled(true)
         }}
       />
 
@@ -352,7 +364,7 @@ const MorePopoverSectionExpiration = ({
                 loading={loading}
               />
             }
-            
+
           />
         </div>
       )}
