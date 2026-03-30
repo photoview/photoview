@@ -78,14 +78,14 @@ jobs:
           docker cp test:/app/api/test-api-coverage-report.xml ./api/
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: ${{ steps.test.conclusion == 'success' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: api-${{ matrix.database }}
 
       - name: Upload test execution results
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -125,14 +125,14 @@ jobs:
           docker cp test:/app/ui/junit-report.xml ./ui/
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: ${{ steps.test.conclusion == 'success' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ui
 
       - name: Upload test execution results
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: ${{ steps.test.conclusion == 'success' || steps.test.conclusion == 'failure' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
