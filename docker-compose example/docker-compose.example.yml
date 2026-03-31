@@ -62,10 +62,6 @@ services:
       ## - the `photoview-prepare` service's right side of the storage volume mount (under the `volumes:`)
       ## - the right side of the storage volume mount (under the `volumes:`) below
       # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
-      ## Optional: To enable map related features, you need to create a mapbox token.
-      ## A token can be generated for free here https://account.mapbox.com/access-tokens/
-      ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
-      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
       ## If you want to use it, set the correct value in the .env file.
       ## Support `qsv`, `vaapi`, `nvenc`.
       ## Only `qsv` is verified with `/dev/dri` devices (see below `devices`).

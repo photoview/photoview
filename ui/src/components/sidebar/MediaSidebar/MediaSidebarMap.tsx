@@ -1,7 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { isNil } from '../../../helpers/utils'
-import useMapboxMap from '../../mapbox/MapboxMap'
+import useMaplibreMap from '../../maplibre/MaplibreMap'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
 import { sidebarMediaQuery_media_exif_coordinates } from './__generated__/sidebarMediaQuery'
 
@@ -10,10 +9,11 @@ type MediaSidebarMapProps = {
 }
 
 const MediaSidebarMap = ({ coordinates }: MediaSidebarMapProps) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
-  const { mapContainer, mapboxToken } = useMapboxMap({
-    mapboxOptions: {
+  const { mapContainer } = useMaplibreMap({
+    locale: i18n.language,
+    mapOptions: {
       interactive: false,
       zoom: 12,
       center: {
@@ -21,13 +21,8 @@ const MediaSidebarMap = ({ coordinates }: MediaSidebarMapProps) => {
         lng: coordinates.longitude,
       },
     },
-    configureMapbox: (map, mapboxLibrary) => {
-      // todo
-      map.addControl(
-        new mapboxLibrary.NavigationControl({ showCompass: false })
-      )
-
-      const centerMarker = new mapboxLibrary.Marker({
+    configureMap: (map, maplibreLibrary) => {
+      const centerMarker = new maplibreLibrary.Marker({
         color: 'red',
         scale: 0.8,
       })
@@ -38,10 +33,6 @@ const MediaSidebarMap = ({ coordinates }: MediaSidebarMapProps) => {
       centerMarker.addTo(map)
     },
   })
-
-  if (isNil(mapboxToken)) {
-    return null
-  }
 
   return (
     <SidebarSection>

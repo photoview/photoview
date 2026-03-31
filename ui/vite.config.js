@@ -11,6 +11,9 @@ export default defineConfig({
   server: {
     port: 1234,
   },
+  build: {
+    target: 'es2022',
+  },
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
   },

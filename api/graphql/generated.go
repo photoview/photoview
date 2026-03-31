@@ -182,7 +182,6 @@ type ComplexityRoot struct {
 	Query struct {
 		Album                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		FaceGroup                  func(childComplexity int, id int) int
-		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		MediaList                  func(childComplexity int, ids []int) int
 		MyAlbums                   func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
@@ -336,7 +335,6 @@ type QueryResolver interface {
 	Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (any, error)
-	MapboxToken(ctx context.Context) (*string, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error)
@@ -1115,12 +1113,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.FaceGroup(childComplexity, args["id"].(int)), true
 
-	case "Query.mapboxToken":
-		if e.ComplexityRoot.Query.MapboxToken == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Query.MapboxToken(childComplexity), true
 	case "Query.media":
 		if e.ComplexityRoot.Query.Media == nil {
 			break
@@ -6978,35 +6970,6 @@ func (ec *executionContext) fieldContext_Query_myMediaGeoJson(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_mapboxToken,
-		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().MapboxToken(ctx)
-		},
-		nil,
-		ec.marshalOString2ᚖstring,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_mapboxToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -12281,25 +12244,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "mapboxToken":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_mapboxToken(ctx, field)
 				return res
 			}
 

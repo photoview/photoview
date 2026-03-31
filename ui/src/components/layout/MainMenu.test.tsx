@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react'
 import * as authentication from '../../helpers/authentication'
 import { ADMIN_QUERY } from './Layout'
 import { MemoryRouter } from 'react-router-dom'
-import MainMenu, { MAPBOX_QUERY } from './MainMenu'
+import MainMenu from './MainMenu'
 
 vi.mock('../../helpers/authentication.ts')
 
@@ -31,16 +31,6 @@ test('Layout sidebar component', async () => {
         },
       },
     },
-    {
-      request: {
-        query: MAPBOX_QUERY,
-      },
-      result: {
-        data: {
-          mapboxToken: true,
-        },
-      },
-    },
   ]
 
   render(
@@ -53,7 +43,7 @@ test('Layout sidebar component', async () => {
 
   expect(screen.getByText('Timeline')).toBeInTheDocument()
   expect(screen.getByText('Albums')).toBeInTheDocument()
+  expect(screen.getByText('Places')).toBeInTheDocument()
 
   expect(await screen.findByText('Settings')).toBeInTheDocument()
-  expect(await screen.findByText('Places')).toBeInTheDocument()
 })
