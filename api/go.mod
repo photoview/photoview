@@ -3,7 +3,7 @@ module github.com/photoview/photoview/api
 go 1.26.0
 
 require (
-	github.com/99designs/gqlgen v0.17.88
+	github.com/99designs/gqlgen v0.17.89
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/buckket/go-blurhash v1.1.0
 	github.com/go-sql-driver/mysql v1.9.3
