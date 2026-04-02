@@ -65,8 +65,6 @@ cd darktable
 git config submodule.src/tests/integration.update none
 git submodule update --init --recursive --depth 1 --recommend-shallow --single-branch
 
-cp /app/debian-cross.toolchain.cmake .
-
 FEATURES=" \
   --disable-kwallet \
   --disable-libsecret \
