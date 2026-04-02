@@ -36,30 +36,36 @@ apt-get install -y \
   intltool \
   iso-codes \
   xsltproc \
-  libavif-dev:"${DEB_HOST_ARCH}" \
-  libcurl4-openssl-dev:"${DEB_HOST_ARCH}" \
-  libexiv2-dev:"${DEB_HOST_ARCH}" \
-  libgmic-dev:"${DEB_HOST_ARCH}" \
-  libgraphicsmagick1-dev:"${DEB_HOST_ARCH}" \
-  libgtk-3-dev:"${DEB_HOST_ARCH}" \
-  libjpeg-dev:"${DEB_HOST_ARCH}" \
-  libjson-glib-dev:"${DEB_HOST_ARCH}" \
-  libjxl-dev:"${DEB_HOST_ARCH}" \
-  liblcms2-dev:"${DEB_HOST_ARCH}" \
-  liblensfun-dev:"${DEB_HOST_ARCH}" \
-  libopenexr-dev:"${DEB_HOST_ARCH}" \
-  libopenjp2-7-dev:"${DEB_HOST_ARCH}" \
-  libpng-dev:"${DEB_HOST_ARCH}" \
-  libpugixml-dev:"${DEB_HOST_ARCH}" \
-  librsvg2-dev:"${DEB_HOST_ARCH}" \
-  libsqlite3-dev:"${DEB_HOST_ARCH}" \
-  libtiff-dev:"${DEB_HOST_ARCH}" \
-  libwebp-dev:"${DEB_HOST_ARCH}"
+  zlib1g \
+  libavif-dev \
+  libcurl4-openssl-dev \
+  libexiv2-dev \
+  libgmic-dev \
+  libgraphicsmagick1-dev \
+  libgtk-3-dev \
+  libheif-dev \
+  libjpeg-dev \
+  libjson-glib-dev \
+  libjxl-dev \
+  liblcms2-dev \
+  liblensfun-dev \
+  libopenexr-dev \
+  libopenjp2-7-dev \
+  libpng-dev \
+  libpugixml-dev \
+  librsvg2-dev \
+  libsqlite3-dev \
+  libtiff-dev \
+  libwebp-dev
 
 URL="https://github.com/darktable-org/darktable.git"
 echo download Darktable repo from "$URL"
-git clone --depth 1 --branch ${DARKTABLE_VERSION} --recurse-submodules --shallow-submodules ${URL} darktable || true
+git clone --depth 1 --single-branch --branch ${DARKTABLE_VERSION} ${URL} darktable || true
 cd darktable
+git config submodule.src/tests/integration.update none
+git submodule update --init --recursive --depth 1 --recommend-shallow --single-branch
+
+cp /app/debian-cross.toolchain.cmake .
 
 FEATURES=" \
   --disable-kwallet \
@@ -82,7 +88,7 @@ FEATURES=" \
   --prefix "/opt/darktable" \
   --build-type "Release" \
   --install \
-  ${FEATURES}
+  ${FEATURES} \
 
 mkdir -p /output/opt
 cp -a /opt /output/

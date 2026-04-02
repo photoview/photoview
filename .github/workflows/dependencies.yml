@@ -59,12 +59,15 @@ jobs:
           set -euo pipefail
           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           # Fetch latest version tags from GitHub releases
-          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
           LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
+          DARKTABLE_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/darktable-org/darktable/releases/latest" | jq -r '.tag_name')
+          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
           IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
@@ -72,8 +75,9 @@ jobs:
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
           # Output as environment variables
-          echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "DARKTABLE_VERSION=${DARKTABLE_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
 
@@ -95,7 +99,8 @@ jobs:
           secrets: |
             github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
-            LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
             LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
+            DARKTABLE_VERSION=${{ steps.versions.outputs.DARKTABLE_VERSION }}
+            LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
             IMAGEMAGICK_VERSION=${{ steps.versions.outputs.IMAGEMAGICK_VERSION }}
             JELLYFIN_FFMPEG_VERSION=${{ steps.versions.outputs.JELLYFIN_FFMPEG_VERSION }}

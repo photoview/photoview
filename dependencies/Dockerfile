@@ -1,11 +1,11 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:trixie-slim AS base-prep
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:trixie-slim AS base-cross-prep
 ARG TARGETPLATFORM
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 COPY --chmod=0755 prepare.sh /tmp/
 RUN /tmp/prepare.sh \
     && mkdir -p /output/bin /output/lib /output/include /output/pkgconfig /output/etc /output/deb
 
-FROM base-prep AS build-libheif
+FROM base-cross-prep AS build-libheif
 ARG LIBHEIF_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
@@ -47,7 +47,24 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${
     && set -a && source /env && set +a \
     && ./build_imagemagick.sh
 
-FROM build-libheif AS build-darktable
+FROM base-cross-prep AS download-jellyfin-ffmpeg
+ARG JELLYFIN_FFMPEG_VERSION
+ARG TARGETARCH
+ENV BUILD_CACHE_DIR=/build-cache
+WORKDIR /tmp/download-ffmpeg
+COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
+RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLYFIN_FFMPEG_VERSION} \
+    set -a && source /env && set +a \
+    && ./download_jellyfin-ffmpeg.sh
+
+FROM debian:trixie-slim AS base-native-prep
+ARG TARGETPLATFORM
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+COPY --chmod=0755 prepare.sh /tmp/
+RUN /tmp/prepare.sh \
+    && mkdir -p /output/bin /output/lib /output/include /output/pkgconfig /output/etc /output/deb
+
+FROM base-native-prep AS build-native-darktable
 ARG DARKTABLE_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
@@ -61,21 +78,11 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DA
     && set -a && source /env && set +a \
     && ./build_darktable.sh
 
-FROM base-prep AS download-jellyfin-ffmpeg
-ARG JELLYFIN_FFMPEG_VERSION
-ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
-WORKDIR /tmp/download-ffmpeg
-COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
-RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLYFIN_FFMPEG_VERSION} \
-    set -a && source /env && set +a \
-    && ./download_jellyfin-ffmpeg.sh
-
-FROM base-prep AS final-assembly
+FROM base-cross-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
 COPY --from=build-libheif /output/ /output/
 COPY --from=build-imagemagick /output/ /output/
-COPY --from=build-darktable /output/ /output/
+COPY --from=build-native-darktable /output/ /output/
 COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh
