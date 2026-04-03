@@ -43,7 +43,6 @@ apt-get install -y \
   libgmic-dev \
   libgraphicsmagick1-dev \
   libgtk-3-dev \
-  libheif-dev \
   libjpeg-dev \
   libjson-glib-dev \
   libjxl-dev \

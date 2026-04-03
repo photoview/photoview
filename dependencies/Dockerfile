@@ -69,6 +69,7 @@ ARG DARKTABLE_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-darktable
+COPY --from=build-libheif /output/ /output/
 COPY --chmod=0755 build_darktable.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DARKTABLE_VERSION} \
     --mount=type=secret,id=github_token \
@@ -76,6 +77,10 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DA
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
     && set -a && source /env && set +a \
+    && cp -a /output/include/* /usr/local/include/ \
+    && cp -a /output/pkgconfig/* "${PKG_CONFIG_PATH%%:*}" \
+    && cp -a /output/lib/* /usr/local/lib/ \
+    && ldconfig \
     && ./build_darktable.sh
 
 FROM base-cross-prep AS final-assembly
