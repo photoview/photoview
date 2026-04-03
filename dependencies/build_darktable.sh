@@ -88,7 +88,7 @@ FEATURES=" \
   ${FEATURES}
 
 mkdir -p /output/opt
-cp -a /opt /output/
+cp -a /opt/darktable /output/opt/darktable
 file /output/opt/darktable/bin/darktable-cli
 
 # After successful build, cache the results
