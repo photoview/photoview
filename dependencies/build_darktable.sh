@@ -85,7 +85,7 @@ FEATURES=" \
   --prefix "/opt/darktable" \
   --build-type "Release" \
   --install \
-  ${FEATURES} \
+  ${FEATURES}
 
 mkdir -p /output/opt
 cp -a /opt /output/
