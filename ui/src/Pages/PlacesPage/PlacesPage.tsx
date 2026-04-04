@@ -1,9 +1,10 @@
 import { gql, useQuery } from '@apollo/client'
 import type maplibregl from 'maplibre-gl'
-import React, { useCallback, useEffect, useReducer } from 'react'
+import React, { useCallback, useEffect, useReducer, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
+import { findBestView, extractCoordsFromGeoJson } from '../../components/maplibre/globeCenter'
 import { registerMediaMarkers } from '../../components/maplibre/maplibreHelperFunctions'
 import useMaplibreMap from '../../components/maplibre/MaplibreMap'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/mediaGalleryReducer'
@@ -53,6 +54,8 @@ const MapPage = () => {
   const { data: mapData, loading, error } = useQuery<mediaGeoJson>(MAP_DATA_QUERY, {
     fetchPolicy: 'cache-first',
   })
+
+  const hasCentered = useRef(false)
 
   const [markerMediaState, dispatchMarkerMedia] = useReducer(placesReducer, {
     presenting: false,
@@ -119,6 +122,13 @@ const MapPage = () => {
     const source = maplibreMap.getSource('media') as maplibregl.GeoJSONSource | undefined
     if (source) {
       source.setData(mapData.myMediaGeoJson as never)
+    }
+
+    if (!hasCentered.current) {
+      const coords = extractCoordsFromGeoJson(mapData.myMediaGeoJson as GeoJSON.FeatureCollection)
+      const { center, zoom } = findBestView(coords)
+      maplibreMap.jumpTo({ center: [center.lng, center.lat], zoom })
+      hasCentered.current = true
     }
   }, [maplibreMap, mapData])
 
