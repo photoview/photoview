@@ -24,7 +24,7 @@ jobs:
   build:
     name: Build Dependencies Image
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies_image') }}
+    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'dependencies_image') }}
 
     steps:
       - name: Checkout
