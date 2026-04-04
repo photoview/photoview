@@ -60,6 +60,8 @@ const MapPage = () => {
     media: [],
   })
 
+  const cleanupMarkersRef = useRef<(() => void) | null>(null)
+
   const configureMap = useCallback(
     (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => {
       map.addControl(new maplibreLibrary.NavigationControl())
@@ -71,6 +73,9 @@ const MapPage = () => {
 
   const onStyleLoad = useCallback(
     (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => {
+      cleanupMarkersRef.current?.()
+      cleanupMarkersRef.current = null
+
       if (map.getSource('media')) return
 
       const data = mapData?.myMediaGeoJson ?? EMPTY_FEATURE_COLLECTION
@@ -92,7 +97,7 @@ const MapPage = () => {
         filter: ['!', true],
       })
 
-      registerMediaMarkers({
+      cleanupMarkersRef.current = registerMediaMarkers({
         map,
         maplibreLibrary,
         dispatchMarkerMedia,

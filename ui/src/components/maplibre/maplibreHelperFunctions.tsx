@@ -25,7 +25,7 @@ export const registerMediaMarkers = ({
   map,
   maplibreLibrary,
   dispatchMarkerMedia,
-}: registerMediaMarkersArgs) => {
+}: registerMediaMarkersArgs): (() => void) => {
   const markers: { [key: string]: MarkerEntry } = {}
   let markersOnScreen: { [key: string]: MarkerEntry } = {}
 
@@ -77,6 +77,16 @@ export const registerMediaMarkers = ({
   map.on('moveend', updateMarkers)
   map.on('sourcedata', updateMarkers)
   updateMarkers()
+
+  return () => {
+    map.off('move', updateMarkers)
+    map.off('moveend', updateMarkers)
+    map.off('sourcedata', updateMarkers)
+    for (const id in markers) {
+      markers[id].marker.remove()
+      markers[id].root.unmount()
+    }
+  }
 }
 
 function createClusterPopupElement(
