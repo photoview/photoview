@@ -1,6 +1,8 @@
 name: Dependencies builds
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   workflow_dispatch:
     inputs:
       reason:
@@ -22,6 +24,7 @@ jobs:
   build:
     name: Build Dependencies Image
     runs-on: ubuntu-latest
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies') }}
 
     steps:
       - name: Checkout
