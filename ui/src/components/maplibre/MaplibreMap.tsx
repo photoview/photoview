@@ -3,6 +3,7 @@ import type maplibregl from 'maplibre-gl'
 import styled from 'styled-components'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
+import rtlTextPluginUrl from '@mapbox/mapbox-gl-rtl-text/mapbox-gl-rtl-text.js?url'
 import { isDarkMode } from '../../theme'
 
 import geolocateIcon from './icons/geolocate.svg'
@@ -117,6 +118,10 @@ const useMaplibreMap = ({
       if (cancelled) return
 
       maplibreRef.current = maplibre
+
+      if (maplibre.getRTLTextPluginStatus() === 'unavailable') {
+        maplibre.setRTLTextPlugin(rtlTextPluginUrl, true)
+      }
 
       const m = new maplibre.Map({
         container: mapContainer.current,
