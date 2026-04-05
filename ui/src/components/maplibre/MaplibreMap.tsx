@@ -77,10 +77,12 @@ function localizeLabels(map: maplibregl.Map, locale: string) {
   }
 }
 
-function getStyleUrl() {
+import { DEFAULT_STYLE_LIGHT, DEFAULT_STYLE_DARK } from './useMapStyles'
+
+function getStyleUrl(light?: string, dark?: string) {
   return isDarkMode()
-    ? 'https://tiles.openfreemap.org/styles/dark'
-    : 'https://tiles.openfreemap.org/styles/positron'
+    ? (dark ?? DEFAULT_STYLE_DARK)
+    : (light ?? DEFAULT_STYLE_LIGHT)
 }
 
 type MaplibreMapProps = {
@@ -91,6 +93,8 @@ type MaplibreMapProps = {
     maplibreLibrary: typeof maplibregl
   ) => void
   locale?: string
+  mapStyleLight?: string
+  mapStyleDark?: string
 }
 
 const useMaplibreMap = ({
@@ -98,6 +102,8 @@ const useMaplibreMap = ({
   mapOptions,
   onStyleLoad,
   locale,
+  mapStyleLight,
+  mapStyleDark,
 }: MaplibreMapProps) => {
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const map = useRef<maplibregl.Map | null>(null)
@@ -112,6 +118,12 @@ const useMaplibreMap = ({
 
   const mapOptionsRef = useRef(mapOptions)
   mapOptionsRef.current = mapOptions
+
+  const mapStyleLightRef = useRef(mapStyleLight)
+  mapStyleLightRef.current = mapStyleLight
+  const mapStyleDarkRef = useRef(mapStyleDark)
+  mapStyleDarkRef.current = mapStyleDark
+  const lastAppliedStyleRef = useRef<string | null>(null)
 
   const [, setReady] = React.useState(false)
 
@@ -130,9 +142,12 @@ const useMaplibreMap = ({
         maplibre.setRTLTextPlugin(rtlTextPluginUrl, true)
       }
 
+      const initialStyle = getStyleUrl(mapStyleLightRef.current, mapStyleDarkRef.current)
+      lastAppliedStyleRef.current = initialStyle
+
       const m = new maplibre.Map({
         container: mapContainer.current,
-        style: getStyleUrl(),
+        style: initialStyle,
         zoom: 2,
         ...mapOptionsRef.current,
       })
@@ -151,9 +166,14 @@ const useMaplibreMap = ({
       setReady(true)
 
       // Watch for dark/light mode changes
+      let wasDark = isDarkMode()
       const observer = new MutationObserver(() => {
-        if (map.current) {
-          map.current.setStyle(getStyleUrl())
+        const nowDark = isDarkMode()
+        if (nowDark !== wasDark && map.current) {
+          wasDark = nowDark
+          const newStyle = getStyleUrl(mapStyleLightRef.current, mapStyleDarkRef.current)
+          lastAppliedStyleRef.current = newStyle
+          map.current.setStyle(newStyle)
         }
       })
 
@@ -180,6 +200,16 @@ const useMaplibreMap = ({
       }
     }
   }, [])
+
+  // Update style when map style URLs change (e.g. after query resolves)
+  useEffect(() => {
+    if (!map.current) return
+    const newStyle = getStyleUrl(mapStyleLight, mapStyleDark)
+    if (newStyle !== lastAppliedStyleRef.current) {
+      lastAppliedStyleRef.current = newStyle
+      map.current.setStyle(newStyle)
+    }
+  }, [mapStyleLight, mapStyleDark])
 
   // Re-localize when locale changes while the map is mounted
   useEffect(() => {

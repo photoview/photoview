@@ -11,7 +11,30 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"gorm.io/gorm"
 )
+
+func updateSiteInfoField(db *gorm.DB, column string, value string) (string, error) {
+	if err := db.
+		Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Model(&models.SiteInfo{}).
+		Update(column, value).
+		Error; err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
+// SetMapStyleLight is the resolver for the setMapStyleLight field.
+func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url string) (string, error) {
+	return updateSiteInfoField(r.DB(ctx), "map_style_light", url)
+}
+
+// SetMapStyleDark is the resolver for the setMapStyleDark field.
+func (r *mutationResolver) SetMapStyleDark(ctx context.Context, url string) (string, error) {
+	return updateSiteInfoField(r.DB(ctx), "map_style_dark", url)
+}
 
 // SiteInfo is the resolver for the siteInfo field.
 func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {

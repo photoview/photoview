@@ -8,8 +8,19 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "Map tile style URL for light mode"
+  mapStyleLight: String!
+  "Map tile style URL for dark mode"
+  mapStyleDark: String!
 }
 
 extend type Query {
   siteInfo: SiteInfo!
+}
+
+extend type Mutation {
+  "Set the map tile style URL for light mode"
+  setMapStyleLight(url: String!): String! @isAdmin
+  "Set the map tile style URL for dark mode"
+  setMapStyleDark(url: String!): String! @isAdmin
 }

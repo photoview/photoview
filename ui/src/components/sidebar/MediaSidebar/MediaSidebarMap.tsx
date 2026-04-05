@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import useMaplibreMap from '../../maplibre/MaplibreMap'
+import useMapStyles from '../../maplibre/useMapStyles'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
 import { sidebarMediaQuery_media_exif_coordinates } from './__generated__/sidebarMediaQuery'
 
@@ -10,9 +11,12 @@ type MediaSidebarMapProps = {
 
 const MediaSidebarMap = ({ coordinates }: MediaSidebarMapProps) => {
   const { t, i18n } = useTranslation()
+  const { mapStyleLight, mapStyleDark } = useMapStyles()
 
   const { mapContainer } = useMaplibreMap({
     locale: i18n.language,
+    mapStyleLight,
+    mapStyleDark,
     mapOptions: {
       interactive: false,
       zoom: 12,

@@ -7,6 +7,7 @@ import Layout from '../../components/layout/Layout'
 import { findBestView, extractCoordsFromGeoJson } from '../../components/maplibre/globeCenter'
 import { registerMediaMarkers } from '../../components/maplibre/maplibreHelperFunctions'
 import useMaplibreMap from '../../components/maplibre/MaplibreMap'
+import useMapStyles from '../../components/maplibre/useMapStyles'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/mediaGalleryReducer'
 import MapPresentMarker from './MapPresentMarker'
 import { PlacesAction, placesReducer } from './placesReducer'
@@ -50,6 +51,7 @@ export type PresentMarker = {
 
 const MapPage = () => {
   const { t, i18n } = useTranslation()
+  const { mapStyleLight, mapStyleDark } = useMapStyles()
 
   const { data: mapData, loading, error } = useQuery<mediaGeoJson>(MAP_DATA_QUERY, {
     fetchPolicy: 'cache-first',
@@ -116,6 +118,8 @@ const MapPage = () => {
     configureMap,
     onStyleLoad,
     locale: i18n.language,
+    mapStyleLight,
+    mapStyleDark,
   })
 
   useEffect(() => {
