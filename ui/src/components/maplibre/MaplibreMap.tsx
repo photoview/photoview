@@ -28,10 +28,14 @@ const MapContainer = styled.div`
   overflow: hidden;
 
   /* Override MapLibre accent color for geolocate active states */
-  .maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon {
+  .maplibregl-ctrl
+    button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active
+    .maplibregl-ctrl-icon {
     ${recolorIcon(geolocateIcon)}
   }
-  .maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon {
+  .maplibregl-ctrl
+    button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background
+    .maplibregl-ctrl-icon {
     ${recolorIcon(geolocateBgIcon)}
   }
 
@@ -82,7 +86,10 @@ function getStyleUrl() {
 type MaplibreMapProps = {
   configureMap(map: maplibregl.Map, maplibreLibrary: typeof maplibregl): void
   mapOptions?: Partial<maplibregl.MapOptions>
-  onStyleLoad?: (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => void
+  onStyleLoad?: (
+    map: maplibregl.Map,
+    maplibreLibrary: typeof maplibregl
+  ) => void
   locale?: string
 }
 
