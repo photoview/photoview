@@ -1,9 +1,12 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@apollo/client'
 import styled from 'styled-components'
 import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 import Layout from '../../components/layout/Layout'
 import MapStyleSettings from './MapStyleSettings'
+import { SITE_INFO_FEATURE_FLAGS_QUERY } from '../../components/layout/MainMenu'
+import { siteInfoFeatureFlags } from '../../components/layout/__generated__/siteInfoFeatureFlags'
 import ScannerSection from './ScannerSection'
 import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
@@ -39,6 +42,8 @@ export const InputLabelDescription = styled.p.attrs({
 const SettingsPage = () => {
   const { t } = useTranslation()
   const isAdmin = useIsAdmin()
+  const { data: featureFlagsData } = useQuery<siteInfoFeatureFlags>(SITE_INFO_FEATURE_FLAGS_QUERY)
+  const mapEnabled = !!featureFlagsData?.siteInfo?.mapEnabled
 
   return (
     <Layout title={t('title.settings', 'Settings')}>
@@ -46,7 +51,21 @@ const SettingsPage = () => {
       {isAdmin && (
         <>
           <ScannerSection />
-          <MapStyleSettings />
+          {mapEnabled ? (
+            <MapStyleSettings />
+          ) : (
+            <div>
+              <SectionTitle>
+                {t('settings.map_styles.title', 'Map Styles')}
+              </SectionTitle>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t(
+                  'settings.map_styles.disabled',
+                  'The map feature has been disabled by the server administrator via the PHOTOVIEW_DISABLE_MAP environment variable.'
+                )}
+              </p>
+            </div>
+          )}
           <UsersTable />
         </>
       )}

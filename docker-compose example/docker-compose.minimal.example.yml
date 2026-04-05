@@ -46,6 +46,8 @@ services:
       ## Uncomment the next variable if set in the `.env` file
       # PHOTOVIEW_UI_ENDPOINTS: ${PHOTOVIEW_UI_ENDPOINTS}
       PHOTOVIEW_LISTEN_IP: "0.0.0.0"
+      ## Uncomment the next variable to disable the map feature (Places page, sidebar map, map style settings)
+      # PHOTOVIEW_DISABLE_MAP: ${PHOTOVIEW_DISABLE_MAP}
     volumes:
       ## Example:
       ## - "/host/folder:/container/folder"

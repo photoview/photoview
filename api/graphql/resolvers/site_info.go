@@ -11,20 +11,8 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
-	"gorm.io/gorm"
+	"github.com/photoview/photoview/api/utils"
 )
-
-func updateSiteInfoField(db *gorm.DB, column string, value string) (string, error) {
-	if err := db.
-		Session(&gorm.Session{AllowGlobalUpdate: true}).
-		Model(&models.SiteInfo{}).
-		Update(column, value).
-		Error; err != nil {
-		return "", err
-	}
-
-	return value, nil
-}
 
 // SetMapStyleLight is the resolver for the setMapStyleLight field.
 func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url string) (string, error) {
@@ -44,6 +32,11 @@ func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) 
 // FaceDetectionEnabled is the resolver for the faceDetectionEnabled field.
 func (r *siteInfoResolver) FaceDetectionEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error) {
 	return face_detection.GlobalFaceDetector != nil, nil
+}
+
+// MapEnabled is the resolver for the mapEnabled field.
+func (r *siteInfoResolver) MapEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error) {
+	return !utils.EnvDisableMap.GetBool(), nil
 }
 
 // SiteInfo returns api.SiteInfoResolver implementation.

@@ -227,6 +227,7 @@ type ComplexityRoot struct {
 		ConcurrentWorkers    func(childComplexity int) int
 		FaceDetectionEnabled func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
+		MapEnabled           func(childComplexity int) int
 		MapStyleDark         func(childComplexity int) int
 		MapStyleLight        func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
@@ -355,6 +356,7 @@ type ShareTokenResolver interface {
 }
 type SiteInfoResolver interface {
 	FaceDetectionEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error)
+	MapEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error)
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
@@ -1381,6 +1383,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.SiteInfo.InitialSetup(childComplexity), true
+	case "SiteInfo.mapEnabled":
+		if e.ComplexityRoot.SiteInfo.MapEnabled == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SiteInfo.MapEnabled(childComplexity), true
 	case "SiteInfo.mapStyleDark":
 		if e.ComplexityRoot.SiteInfo.MapStyleDark == nil {
 			break
@@ -7315,6 +7323,8 @@ func (ec *executionContext) fieldContext_Query_siteInfo(_ context.Context, field
 				return ec.fieldContext_SiteInfo_initialSetup(ctx, field)
 			case "faceDetectionEnabled":
 				return ec.fieldContext_SiteInfo_faceDetectionEnabled(ctx, field)
+			case "mapEnabled":
+				return ec.fieldContext_SiteInfo_mapEnabled(ctx, field)
 			case "periodicScanInterval":
 				return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
 			case "concurrentWorkers":
@@ -8270,6 +8280,35 @@ func (ec *executionContext) _SiteInfo_faceDetectionEnabled(ctx context.Context, 
 }
 
 func (ec *executionContext) fieldContext_SiteInfo_faceDetectionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiteInfo_mapEnabled(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SiteInfo_mapEnabled,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.SiteInfo().MapEnabled(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SiteInfo_mapEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SiteInfo",
 		Field:      field,
@@ -12920,6 +12959,42 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 					}
 				}()
 				res = ec._SiteInfo_faceDetectionEnabled(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "mapEnabled":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiteInfo_mapEnabled(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

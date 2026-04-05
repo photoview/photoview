@@ -4,6 +4,8 @@ type SiteInfo {
   initialSetup: Boolean!
   "Whether or not face detection is enabled and working"
   faceDetectionEnabled: Boolean!
+  "Whether or not the map feature is enabled"
+  mapEnabled: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"

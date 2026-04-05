@@ -4,17 +4,21 @@
 // This file was automatically generated and should not be edited.
 
 // ====================================================
-// GraphQL query operation: faceDetectionEnabled
+// GraphQL query operation: siteInfoFeatureFlags
 // ====================================================
 
-export interface faceDetectionEnabled_siteInfo {
+export interface siteInfoFeatureFlags_siteInfo {
   __typename: "SiteInfo";
   /**
    * Whether or not face detection is enabled and working
    */
   faceDetectionEnabled: boolean;
+  /**
+   * Whether or not the map feature is enabled
+   */
+  mapEnabled: boolean;
 }
 
-export interface faceDetectionEnabled {
-  siteInfo: faceDetectionEnabled_siteInfo;
+export interface siteInfoFeatureFlags {
+  siteInfo: siteInfoFeatureFlags_siteInfo;
 }

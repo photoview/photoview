@@ -4,12 +4,13 @@ import { useQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
 import { tailwindClassNames } from '../../helpers/utils'
-import { faceDetectionEnabled } from './__generated__/faceDetectionEnabled'
+import { siteInfoFeatureFlags } from './__generated__/siteInfoFeatureFlags'
 
-export const FACE_DETECTION_ENABLED_QUERY = gql`
-  query faceDetectionEnabled {
+export const SITE_INFO_FEATURE_FLAGS_QUERY = gql`
+  query siteInfoFeatureFlags {
     siteInfo {
       faceDetectionEnabled
+      mapEnabled
     }
   }
 `
@@ -67,12 +68,14 @@ const MenuSeparator = () => (
 export const MainMenu = () => {
   const { t } = useTranslation()
 
-  const faceDetectionEnabledQuery = authToken()
-    ? useQuery<faceDetectionEnabled>(FACE_DETECTION_ENABLED_QUERY)
+  const featureFlagsQuery = authToken()
+    ? useQuery<siteInfoFeatureFlags>(SITE_INFO_FEATURE_FLAGS_QUERY)
     : null
 
+  const mapEnabled =
+    !!featureFlagsQuery?.data?.siteInfo?.mapEnabled
   const faceDetectionEnabled =
-    !!faceDetectionEnabledQuery?.data?.siteInfo?.faceDetectionEnabled
+    !!featureFlagsQuery?.data?.siteInfo?.faceDetectionEnabled
 
   return (
     <div className="fixed w-full bottom-0 lg:bottom-auto lg:top-[84px] z-30 bg-white dark:bg-dark-bg shadow-separator lg:shadow-none lg:w-[240px] lg:ml-8 lg:mr-5 flex-shrink-0">
@@ -103,19 +106,21 @@ export const MainMenu = () => {
             </svg>
           }
         />
-        <MenuButton
-          to="/places"
-          exact
-          label={t('sidemenu.places', 'Places')}
-          background="#92e072"
-          activeClasses="ring-[#e3fee5] bg-[#e3fee5] dark:ring-[#0c1c0f] dark:bg-[#0c1c0f]"
-          className="focus:ring-green-100 dark:focus:ring-[#368644]"
-          icon={
-            <svg viewBox="0 0 24 24" fill="white">
-              <path d="M2.4,3.34740684 C2.47896999,3.34740684 2.55617307,3.37078205 2.62188008,3.41458672 L8,7 L8,21 L2.4452998,17.2968665 C2.16710114,17.1114008 2,16.7991694 2,16.4648162 L2,3.74740684 C2,3.52649294 2.1790861,3.34740684 2.4,3.34740684 Z M14.5,3 L14.5,17 L8.5,21 L8.5,7 L14.5,3 Z M15,3 L21.4961389,6.71207939 C21.8077139,6.89012225 22,7.22146569 22,7.58032254 L22,20.3107281 C22,20.531642 21.8209139,20.7107281 21.6,20.7107281 C21.5303892,20.7107281 21.4619835,20.692562 21.4015444,20.6580254 L15,17 L15,3 Z"></path>
-            </svg>
-          }
-        />
+        {mapEnabled ? (
+          <MenuButton
+            to="/places"
+            exact
+            label={t('sidemenu.places', 'Places')}
+            background="#92e072"
+            activeClasses="ring-[#e3fee5] bg-[#e3fee5] dark:ring-[#0c1c0f] dark:bg-[#0c1c0f]"
+            className="focus:ring-green-100 dark:focus:ring-[#368644]"
+            icon={
+              <svg viewBox="0 0 24 24" fill="white">
+                <path d="M2.4,3.34740684 C2.47896999,3.34740684 2.55617307,3.37078205 2.62188008,3.41458672 L8,7 L8,21 L2.4452998,17.2968665 C2.16710114,17.1114008 2,16.7991694 2,16.4648162 L2,3.74740684 C2,3.52649294 2.1790861,3.34740684 2.4,3.34740684 Z M14.5,3 L14.5,17 L8.5,21 L8.5,7 L14.5,3 Z M15,3 L21.4961389,6.71207939 C21.8077139,6.89012225 22,7.22146569 22,7.58032254 L22,20.3107281 C22,20.531642 21.8209139,20.7107281 21.6,20.7107281 C21.5303892,20.7107281 21.4619835,20.692562 21.4015444,20.6580254 L15,17 L15,3 Z"></path>
+              </svg>
+            }
+          />
+        ) : null}
         {faceDetectionEnabled ? (
           <MenuButton
             to="/people"
