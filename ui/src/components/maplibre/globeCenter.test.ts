@@ -132,6 +132,27 @@ describe('findBestView', () => {
     )
   })
 
+  it('centers near north pole for equidistant triangle at low latitude', () => {
+    expectView(
+      findBestView([
+        { lng: 0, lat: 10 },
+        { lng: 120, lat: 10 },
+        { lng: -120, lat: 10 },
+      ]),
+      { center: { lng: 0, lat: 90 }, zoom: 2.17 }
+    )
+  })
+
+  it('centers near north pole for antipodal line at low latitude', () => {
+    expectView(
+      findBestView([
+        { lng: 0, lat: 10 },
+        { lng: 180, lat: 10 },
+      ]),
+      { center: { lng: 90, lat: 90 }, zoom: 2.17 }
+    )
+  })
+
   it('zooms way out for global spread', () => {
     expectView(
       findBestView([
