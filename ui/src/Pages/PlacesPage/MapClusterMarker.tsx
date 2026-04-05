@@ -62,11 +62,11 @@ const MapClusterMarker = ({
   }
 
   return (
-    <Wrapper onClick={presentMedia}>
+    <Wrapper data-testid="map-cluster-marker" onClick={presentMedia}>
       <PopupImage src={imagePopupSrc} />
       <ThumbnailImage src={thumbnail.url} />
       {marker.cluster && (
-        <PointCountCircle>{marker.point_count_abbreviated}</PointCountCircle>
+        <PointCountCircle data-testid="point-count-badge">{marker.point_count_abbreviated}</PointCountCircle>
       )}
     </Wrapper>
   )

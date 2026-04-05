@@ -64,6 +64,8 @@ const MapPage = () => {
   })
 
   const cleanupMarkersRef = useRef<(() => void) | null>(null)
+  const mapDataRef = useRef(mapData)
+  mapDataRef.current = mapData
 
   const configureMap = useCallback(
     (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => {
@@ -81,11 +83,12 @@ const MapPage = () => {
 
       if (map.getSource('media')) return
 
-      const data = mapData?.myMediaGeoJson ?? EMPTY_FEATURE_COLLECTION
+      const data: GeoJSON.FeatureCollection =
+        mapDataRef.current?.myMediaGeoJson ?? EMPTY_FEATURE_COLLECTION
 
       map.addSource('media', {
         type: 'geojson',
-        data: data as never,
+        data,
         cluster: true,
         clusterRadius: 50,
         clusterProperties: {
@@ -106,7 +109,7 @@ const MapPage = () => {
         dispatchMarkerMedia,
       })
     },
-    [mapData, dispatchMarkerMedia]
+    [dispatchMarkerMedia]
   )
 
   const { mapContainer, maplibreMap } = useMaplibreMap({
@@ -115,13 +118,20 @@ const MapPage = () => {
     locale: i18n.language,
   })
 
+  useEffect(() => {
+    return () => {
+      cleanupMarkersRef.current?.()
+      cleanupMarkersRef.current = null
+    }
+  }, [])
+
   // Update GeoJSON data when query resolves after map is ready
   useEffect(() => {
     if (!maplibreMap || !mapData?.myMediaGeoJson) return
 
     const source = maplibreMap.getSource('media') as maplibregl.GeoJSONSource | undefined
     if (source) {
-      source.setData(mapData.myMediaGeoJson as never)
+      source.setData(mapData.myMediaGeoJson as GeoJSON.FeatureCollection)
     }
 
     if (!hasCentered.current) {

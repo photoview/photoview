@@ -1,4 +1,4 @@
-type Coord = { lng: number; lat: number }
+export type Coord = { lng: number; lat: number }
 
 export type GlobeView = { center: Coord; zoom: number }
 

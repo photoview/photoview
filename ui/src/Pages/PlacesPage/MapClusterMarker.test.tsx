@@ -48,15 +48,15 @@ describe('MapClusterMarker', () => {
     render(
       <MapClusterMarker marker={singleMarker} dispatchMarkerMedia={dispatch} />
     )
-    expect(screen.queryByText('0')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('point-count-badge')).not.toBeInTheDocument()
   })
 
   test('dispatches replacePresentMarker with cluster info on click', async () => {
     const dispatch = vi.fn()
-    const { container } = render(
+    render(
       <MapClusterMarker marker={clusterMarker} dispatchMarkerMedia={dispatch} />
     )
-    await userEvent.click(container.firstElementChild!)
+    await userEvent.click(screen.getByTestId('map-cluster-marker'))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'replacePresentMarker',
       marker: { cluster: true, id: 'c42' },
@@ -65,10 +65,10 @@ describe('MapClusterMarker', () => {
 
   test('dispatches replacePresentMarker with media_id for non-cluster marker', async () => {
     const dispatch = vi.fn()
-    const { container } = render(
+    render(
       <MapClusterMarker marker={singleMarker} dispatchMarkerMedia={dispatch} />
     )
-    await userEvent.click(container.firstElementChild!)
+    await userEvent.click(screen.getByTestId('map-cluster-marker'))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'replacePresentMarker',
       marker: { cluster: false, id: 'm7' },
