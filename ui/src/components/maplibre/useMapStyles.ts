@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client'
 import { mapStylesQuery } from './__generated__/mapStylesQuery'
 
+// Keep in sync with DefaultMapStyleLight/DefaultMapStyleDark in api/graphql/models/site_info.go
 export const DEFAULT_STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/positron'
 export const DEFAULT_STYLE_DARK = 'https://tiles.openfreemap.org/styles/dark'
 

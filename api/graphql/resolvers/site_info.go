@@ -12,16 +12,55 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
+	"gorm.io/gorm"
 )
 
 // SetMapStyleLight is the resolver for the setMapStyleLight field.
 func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url string) (string, error) {
-	return updateSiteInfoField(r.DB(ctx), "map_style_light", url)
+	if err := validateMapStyleURL(url); err != nil {
+		return "", err
+	}
+
+	db := r.DB(ctx)
+
+	if err := db.
+		Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Model(&models.SiteInfo{}).
+		Update("map_style_light", url).
+		Error; err != nil {
+		return "", err
+	}
+
+	var siteInfo models.SiteInfo
+	if err := db.First(&siteInfo).Error; err != nil {
+		return "", err
+	}
+
+	return siteInfo.MapStyleLight, nil
 }
 
 // SetMapStyleDark is the resolver for the setMapStyleDark field.
 func (r *mutationResolver) SetMapStyleDark(ctx context.Context, url string) (string, error) {
-	return updateSiteInfoField(r.DB(ctx), "map_style_dark", url)
+	if err := validateMapStyleURL(url); err != nil {
+		return "", err
+	}
+
+	db := r.DB(ctx)
+
+	if err := db.
+		Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Model(&models.SiteInfo{}).
+		Update("map_style_dark", url).
+		Error; err != nil {
+		return "", err
+	}
+
+	var siteInfo models.SiteInfo
+	if err := db.First(&siteInfo).Error; err != nil {
+		return "", err
+	}
+
+	return siteInfo.MapStyleDark, nil
 }
 
 // SiteInfo is the resolver for the siteInfo field.

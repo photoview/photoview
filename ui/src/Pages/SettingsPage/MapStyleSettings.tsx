@@ -62,14 +62,14 @@ const MapStyleSettings = () => {
   >(SET_MAP_STYLE_DARK_MUTATION)
 
   const updateLight = (url: string) => {
-    if (lightServerValue.current != url) {
+    if (lightServerValue.current !== url) {
       lightServerValue.current = url
       setLightMutation({ variables: { url } })
     }
   }
 
   const updateDark = (url: string) => {
-    if (darkServerValue.current != url) {
+    if (darkServerValue.current !== url) {
       darkServerValue.current = url
       setDarkMutation({ variables: { url } })
     }

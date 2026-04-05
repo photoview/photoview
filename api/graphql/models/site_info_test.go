@@ -36,8 +36,8 @@ func TestSiteInfo(t *testing.T) {
 		InitialSetup:         false,
 		PeriodicScanInterval: 360,
 		ConcurrentWorkers:    10,
-		MapStyleLight:        "https://tiles.openfreemap.org/styles/positron",
-		MapStyleDark:         "https://tiles.openfreemap.org/styles/dark",
+		MapStyleLight:        models.DefaultMapStyleLight,
+		MapStyleDark:         models.DefaultMapStyleDark,
 	}, *site_info)
 
 }
@@ -50,8 +50,8 @@ func TestSiteInfoMapStyles(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "https://tiles.openfreemap.org/styles/positron", site_info.MapStyleLight)
-	assert.Equal(t, "https://tiles.openfreemap.org/styles/dark", site_info.MapStyleDark)
+	assert.Equal(t, models.DefaultMapStyleLight, site_info.MapStyleLight)
+	assert.Equal(t, models.DefaultMapStyleDark, site_info.MapStyleDark)
 
 	// Update map style URLs
 	site_info.MapStyleLight = "https://example.com/light"

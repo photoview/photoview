@@ -11,9 +11,9 @@ type SiteInfo {
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
   "Map tile style URL for light mode"
-  mapStyleLight: String!
+  mapStyleLight: String! @isAuthorized
   "Map tile style URL for dark mode"
-  mapStyleDark: String!
+  mapStyleDark: String! @isAuthorized
 }
 
 extend type Query {

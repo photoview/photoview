@@ -8414,7 +8414,20 @@ func (ec *executionContext) _SiteInfo_mapStyleLight(ctx context.Context, field g
 		func(ctx context.Context) (any, error) {
 			return obj.MapStyleLight, nil
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal string
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNString2string,
 		true,
 		true,
@@ -8443,7 +8456,20 @@ func (ec *executionContext) _SiteInfo_mapStyleDark(ctx context.Context, field gr
 		func(ctx context.Context) (any, error) {
 			return obj.MapStyleDark, nil
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal string
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNString2string,
 		true,
 		true,

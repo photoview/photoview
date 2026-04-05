@@ -1,18 +1,28 @@
 package resolvers
 
 import (
-	"github.com/photoview/photoview/api/graphql/models"
-	"gorm.io/gorm"
+	"errors"
+	"net/url"
 )
 
-func updateSiteInfoField(db *gorm.DB, column string, value string) (string, error) {
-	if err := db.
-		Session(&gorm.Session{AllowGlobalUpdate: true}).
-		Model(&models.SiteInfo{}).
-		Update(column, value).
-		Error; err != nil {
-		return "", err
+// validateMapStyleURL checks that a map style URL is valid and uses http or https.
+func validateMapStyleURL(rawURL string) error {
+	if len(rawURL) > 2048 {
+		return errors.New("map style URL must not exceed 2048 characters")
 	}
 
-	return value, nil
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return errors.New("invalid map style URL")
+	}
+
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return errors.New("map style URL scheme must be http or https")
+	}
+
+	if parsed.Host == "" {
+		return errors.New("map style URL must have a host")
+	}
+
+	return nil
 }
