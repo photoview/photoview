@@ -28,40 +28,33 @@ echo "Building Darktable ${DARKTABLE_VERSION} (cache miss)..."
 echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
 apt-get install -y \
-  clang \
-  git \
-  llvm \
-  python3-jsonschema \
-  libxml2-utils \
-  intltool \
-  iso-codes \
-  xsltproc \
-  zlib1g \
-  libavif-dev \
-  libcurl4-openssl-dev \
-  libexiv2-dev \
-  libgmic-dev \
-  libgraphicsmagick1-dev \
-  libgtk-3-dev \
-  libjpeg-dev \
-  libjson-glib-dev \
-  libjxl-dev \
-  liblcms2-dev \
-  liblensfun-dev \
-  libopenexr-dev \
-  libopenjp2-7-dev \
-  libpng-dev \
-  libpugixml-dev \
-  librsvg2-dev \
-  libsqlite3-dev \
-  libtiff-dev \
-  libwebp-dev
+  libavif-dev:"${DEB_HOST_ARCH}" \
+  libcurl4-openssl-dev:"${DEB_HOST_ARCH}" \
+  libexiv2-dev:"${DEB_HOST_ARCH}" \
+  libgmic-dev:"${DEB_HOST_ARCH}" \
+  libgraphicsmagick1-dev:"${DEB_HOST_ARCH}" \
+  libgtk-3-dev:"${DEB_HOST_ARCH}" \
+  libjpeg-dev:"${DEB_HOST_ARCH}" \
+  libjson-glib-dev:"${DEB_HOST_ARCH}" \
+  libjxl-dev:"${DEB_HOST_ARCH}" \
+  liblcms2-dev:"${DEB_HOST_ARCH}" \
+  liblensfun-dev:"${DEB_HOST_ARCH}" \
+  libopenexr-dev:"${DEB_HOST_ARCH}" \
+  libopenjp2-7-dev:"${DEB_HOST_ARCH}" \
+  libpng-dev:"${DEB_HOST_ARCH}" \
+  libpotrace-dev:"${DEB_HOST_ARCH}" \
+  libpugixml-dev:"${DEB_HOST_ARCH}" \
+  librsvg2-dev:"${DEB_HOST_ARCH}" \
+  libsqlite3-dev:"${DEB_HOST_ARCH}" \
+  libtiff-dev:"${DEB_HOST_ARCH}" \
+  libwebp-dev:"${DEB_HOST_ARCH}"
 
 URL="https://github.com/darktable-org/darktable.git"
 echo download Darktable repo from "$URL"
 git clone --depth 1 --single-branch --branch ${DARKTABLE_VERSION} ${URL} darktable || true
 cd darktable
 git config submodule.src/tests/integration.update none
+git config submodule.src/external/lua-scripts.update none
 git submodule update --init --recursive --depth 1 --recommend-shallow --single-branch
 
 FEATURES=" \
@@ -85,7 +78,12 @@ FEATURES=" \
   --prefix "/opt/darktable" \
   --build-type "Release" \
   --install \
-  ${FEATURES}
+  ${FEATURES} \
+  -- \
+  -DCMAKE_SYSTEM_PROCESSOR="${DEB_HOST_ARCH}" \
+  -DCMAKE_C_COMPILER="${DEB_HOST_GNU_TYPE}"-gcc \
+  -DCMAKE_CXX_COMPILER="${DEB_HOST_GNU_TYPE}"-g++ \
+  -DCMAKE_LIBRARY_ARCHITECTURE="${DEB_HOST_GNU_TYPE}"
 
 mkdir -p /output/opt
 cp -a /opt/darktable /output/opt/darktable

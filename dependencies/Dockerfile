@@ -57,19 +57,11 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLY
     set -a && source /env && set +a \
     && ./download_jellyfin-ffmpeg.sh
 
-FROM debian:trixie-slim AS base-native-prep
-ARG TARGETPLATFORM
-SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-COPY --chmod=0755 prepare.sh /tmp/
-RUN /tmp/prepare.sh \
-    && mkdir -p /output/bin /output/lib /output/include /output/pkgconfig /output/etc /output/deb
-
-FROM base-native-prep AS build-native-darktable
+FROM build-libheif AS build-darktable
 ARG DARKTABLE_VERSION
 ARG TARGETARCH
 ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-darktable
-COPY --from=build-libheif /output/ /output/
 COPY --chmod=0755 build_darktable.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DARKTABLE_VERSION} \
     --mount=type=secret,id=github_token \
@@ -77,17 +69,13 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DA
     export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
     && set -a && source /env && set +a \
-    && cp -a /output/include/* /usr/local/include/ \
-    && cp -a /output/pkgconfig/* "${PKG_CONFIG_PATH%%:*}" \
-    && cp -a /output/lib/* /usr/local/lib/ \
-    && ldconfig \
     && ./build_darktable.sh
 
 FROM base-cross-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
 COPY --from=build-libheif /output/ /output/
 COPY --from=build-imagemagick /output/ /output/
-COPY --from=build-native-darktable /output/ /output/
+COPY --from=build-darktable /output/ /output/
 COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh

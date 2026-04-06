@@ -32,6 +32,7 @@ apt-get install -y \
   libde265-dev:"${DEB_HOST_ARCH}" \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
   libopenh264-dev:"${DEB_HOST_ARCH}" \
+  libopenjp2-7-dev:"${DEB_HOST_ARCH}" \
   libpng-dev:"${DEB_HOST_ARCH}" \
   libnuma-dev:"${DEB_HOST_ARCH}" \
   zlib1g-dev:"${DEB_HOST_ARCH}"
@@ -45,13 +46,13 @@ tar xfv ./libheif.tar.gz
 cd ./*-libheif-*
 cmake \
   --preset=release \
+  -DENABLE_PLUGIN_LOADING=OFF \
+  -DWITH_GDK_PIXBUF=OFF \
   -DCMAKE_SYSTEM_PROCESSOR="${DEB_HOST_ARCH}" \
   -DCMAKE_C_COMPILER="${DEB_HOST_GNU_TYPE}"-gcc \
   -DCMAKE_CXX_COMPILER="${DEB_HOST_GNU_TYPE}"-g++ \
-  -DPKG_CONFIG_EXECUTABLE="${DEB_HOST_GNU_TYPE}"-pkg-config \
   -DCMAKE_LIBRARY_ARCHITECTURE="${DEB_HOST_GNU_TYPE}" \
-  -DENABLE_PLUGIN_LOADING=OFF \
-  -DWITH_GDK_PIXBUF=OFF .
+  .
 make
 make install
 cd ..

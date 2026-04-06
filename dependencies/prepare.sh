@@ -13,19 +13,28 @@ fi
 dpkg --add-architecture "$DEBIAN_ARCH"
 apt-get update
 apt-get install -y \
-  curl \
-  jq \
-  ca-certificates \
-  crossbuild-essential-"${DEBIAN_ARCH}" \
-  libc-dev:"${DEBIAN_ARCH}" \
-  dpkg-dev \
   autoconf \
   automake \
+  ca-certificates \
+  clang \
+  cmake \
+  curl \
+  dpkg-dev \
+  git \
+  intltool \
+  iso-codes \
+  jq \
+  llvm \
   libtool \
+  libxml2-utils \
   m4 \
   pkg-config \
-  cmake
+  python3-jsonschema \
+  xsltproc \
+  crossbuild-essential-"${DEBIAN_ARCH}" \
+  libc-dev:"${DEBIAN_ARCH}"
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
+echo "PKG_CONFIG=/usr/bin/pkg-config" >>/env
 echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/$(dpkg-architecture -a "$DEBIAN_ARCH" -qDEB_HOST_MULTIARCH)/pkgconfig" >>/env
 cat /env
