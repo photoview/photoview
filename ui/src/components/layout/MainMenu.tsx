@@ -68,9 +68,11 @@ const MenuSeparator = () => (
 export const MainMenu = () => {
   const { t } = useTranslation()
 
-  const featureFlagsQuery = authToken()
-    ? useQuery<siteInfoFeatureFlags>(SITE_INFO_FEATURE_FLAGS_QUERY)
-    : null
+  const isAuthenticated = !!authToken()
+  const featureFlagsQuery = useQuery<siteInfoFeatureFlags>(
+    SITE_INFO_FEATURE_FLAGS_QUERY,
+    { skip: !isAuthenticated }
+  )
 
   const mapEnabled =
     !!featureFlagsQuery?.data?.siteInfo?.mapEnabled
