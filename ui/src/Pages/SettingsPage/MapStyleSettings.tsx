@@ -61,18 +61,19 @@ const MapStyleSettings = () => {
     setMapStyleDarkVariables
   >(SET_MAP_STYLE_DARK_MUTATION)
 
-  const updateLight = (url: string) => {
+  const updateLight = async (url: string) => {
     if (lightServerValue.current !== url) {
+      await setLightMutation({ variables: { url } })
       lightServerValue.current = url
-      setLightMutation({ variables: { url } })
     }
   }
 
-  const updateDark = (url: string) => {
+  const updateDark = async (url: string) => {
     if (darkServerValue.current !== url) {
+      await setDarkMutation({ variables: { url } })
       darkServerValue.current = url
-      setDarkMutation({ variables: { url } })
     }
+  }
   }
 
   return (
