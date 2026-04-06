@@ -3,13 +3,17 @@ import type maplibregl from 'maplibre-gl'
 import styled from 'styled-components'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
-import rtlTextPluginUrl from '@mapbox/mapbox-gl-rtl-text/mapbox-gl-rtl-text.js?url'
+
 import { isDarkMode } from '../../theme'
 
 import geolocateIcon from './icons/geolocate.svg'
 import geolocateBgIcon from './icons/geolocate-background.svg'
 import globeEnabledIcon from './icons/globe-enabled.svg'
 
+const rtlTextPluginUrl = new URL(
+  '../../node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js',
+  import.meta.url
+).href
 const BRAND_ACCENT = '#ff5d43'
 
 const recolorIcon = (iconUrl: string) => `
