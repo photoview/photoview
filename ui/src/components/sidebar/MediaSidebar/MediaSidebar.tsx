@@ -20,7 +20,7 @@ import SidebarHeader from '../SidebarHeader'
 import { sidebarDownloadQuery_media_downloads } from '../__generated__/sidebarDownloadQuery'
 import ExifDetails from './MediaSidebarExif'
 import MediaSidebarPeople from './MediaSidebarPeople'
-import MediaSidebarMap from './MediaSidebarMap'
+const MediaSidebarMap = React.lazy(() => import('./MediaSidebarMap'))
 import { SITE_INFO_FEATURE_FLAGS_QUERY } from '../../layout/MainMenu'
 import { siteInfoFeatureFlags } from '../../layout/__generated__/siteInfoFeatureFlags'
 import {
@@ -181,7 +181,11 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
   let sidebarMap = null
   const mediaCoordinates = media.exif?.coordinates
   if (mediaCoordinates && mapEnabled) {
-    sidebarMap = <MediaSidebarMap coordinates={mediaCoordinates} />
+    sidebarMap = (
+      <React.Suspense fallback={null}>
+        <MediaSidebarMap coordinates={mediaCoordinates} />
+      </React.Suspense>
+    )
   }
 
   let albumPath = null

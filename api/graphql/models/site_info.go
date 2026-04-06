@@ -6,23 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	// DefaultMapStyleLight is the default map tile style URL for light mode.
-	// Keep in sync with struct tag defaults below and ui/src/components/maplibre/useMapStyles.ts
-	DefaultMapStyleLight = "https://tiles.openfreemap.org/styles/liberty"
-	// DefaultMapStyleDark is the default map tile style URL for dark mode.
-	// Keep in sync with struct tag defaults below and ui/src/components/maplibre/useMapStyles.ts
-	DefaultMapStyleDark = "https://tiles.openfreemap.org/styles/liberty"
-)
-
 type SiteInfo struct {
-	InitialSetup         bool   `gorm:"not null"`
-	PeriodicScanInterval int    `gorm:"not null"`
-	ConcurrentWorkers    int    `gorm:"not null"`
-	// Struct tag default must be a string literal; keep in sync with DefaultMapStyleLight
-	MapStyleLight string `gorm:"not null;default:https://tiles.openfreemap.org/styles/liberty"`
-	// Struct tag default must be a string literal; keep in sync with DefaultMapStyleDark
-	MapStyleDark string `gorm:"not null;default:https://tiles.openfreemap.org/styles/liberty"`
+	InitialSetup         bool    `gorm:"not null"`
+	PeriodicScanInterval int     `gorm:"not null"`
+	ConcurrentWorkers    int     `gorm:"not null"`
+	MapStyleLight        *string `gorm:"default:null"`
+	MapStyleDark         *string `gorm:"default:null"`
 }
 
 func (SiteInfo) TableName() string {
@@ -39,8 +28,8 @@ func DefaultSiteInfo(db *gorm.DB) SiteInfo {
 		InitialSetup:         true,
 		PeriodicScanInterval: 0,
 		ConcurrentWorkers:    defaultConcurrentWorkers,
-		MapStyleLight:        DefaultMapStyleLight,
-		MapStyleDark:         DefaultMapStyleDark,
+		MapStyleLight:        nil,
+		MapStyleDark:         nil,
 	}
 }
 

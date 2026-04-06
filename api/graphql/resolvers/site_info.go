@@ -16,50 +16,42 @@ import (
 )
 
 // SetMapStyleLight is the resolver for the setMapStyleLight field.
-func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url string) (string, error) {
-	if err := validateMapStyleURL(url); err != nil {
-		return "", err
+func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url *string) (*string, error) {
+	if url != nil {
+		if err := validateMapStyleURL(*url); err != nil {
+			return nil, err
+		}
 	}
 
 	db := r.DB(ctx)
-
-	if err := db.
-		Session(&gorm.Session{AllowGlobalUpdate: true}).
-		Model(&models.SiteInfo{}).
-		Update("map_style_light", url).
-		Error; err != nil {
-		return "", err
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("MapStyleLight", url).Error; err != nil {
+		return nil, err
 	}
 
-	var siteInfo models.SiteInfo
-	if err := db.First(&siteInfo).Error; err != nil {
-		return "", err
+	siteInfo, err := models.GetSiteInfo(db)
+	if err != nil {
+		return nil, err
 	}
-
 	return siteInfo.MapStyleLight, nil
 }
 
 // SetMapStyleDark is the resolver for the setMapStyleDark field.
-func (r *mutationResolver) SetMapStyleDark(ctx context.Context, url string) (string, error) {
-	if err := validateMapStyleURL(url); err != nil {
-		return "", err
+func (r *mutationResolver) SetMapStyleDark(ctx context.Context, url *string) (*string, error) {
+	if url != nil {
+		if err := validateMapStyleURL(*url); err != nil {
+			return nil, err
+		}
 	}
 
 	db := r.DB(ctx)
-
-	if err := db.
-		Session(&gorm.Session{AllowGlobalUpdate: true}).
-		Model(&models.SiteInfo{}).
-		Update("map_style_dark", url).
-		Error; err != nil {
-		return "", err
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("MapStyleDark", url).Error; err != nil {
+		return nil, err
 	}
 
-	var siteInfo models.SiteInfo
-	if err := db.First(&siteInfo).Error; err != nil {
-		return "", err
+	siteInfo, err := models.GetSiteInfo(db)
+	if err != nil {
+		return nil, err
 	}
-
 	return siteInfo.MapStyleDark, nil
 }
 

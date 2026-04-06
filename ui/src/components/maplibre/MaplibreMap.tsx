@@ -5,15 +5,12 @@ import styled from 'styled-components'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 import { isDarkMode } from '../../theme'
+import { BUILTIN_STYLE, type MapStyle } from './useMapStyles'
 
 import geolocateIcon from './icons/geolocate.svg'
 import geolocateBgIcon from './icons/geolocate-background.svg'
 import globeEnabledIcon from './icons/globe-enabled.svg'
 
-const rtlTextPluginUrl = new URL(
-  '../../node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js',
-  import.meta.url
-).href
 const BRAND_ACCENT = '#ff5d43'
 
 const recolorIcon = (iconUrl: string) => `
@@ -81,12 +78,10 @@ function localizeLabels(map: maplibregl.Map, locale: string) {
   }
 }
 
-import { DEFAULT_STYLE_LIGHT, DEFAULT_STYLE_DARK } from './useMapStyles'
-
-function getStyleUrl(light?: string, dark?: string) {
+function getStyle(light?: MapStyle, dark?: MapStyle): MapStyle {
   return isDarkMode()
-    ? (dark ?? DEFAULT_STYLE_DARK)
-    : (light ?? DEFAULT_STYLE_LIGHT)
+    ? (dark ?? BUILTIN_STYLE)
+    : (light ?? BUILTIN_STYLE)
 }
 
 type MaplibreMapProps = {
@@ -97,8 +92,8 @@ type MaplibreMapProps = {
     maplibreLibrary: typeof maplibregl
   ) => void
   locale?: string
-  mapStyleLight?: string
-  mapStyleDark?: string
+  mapStyleLight?: MapStyle
+  mapStyleDark?: MapStyle
 }
 
 const useMaplibreMap = ({
@@ -127,7 +122,7 @@ const useMaplibreMap = ({
   mapStyleLightRef.current = mapStyleLight
   const mapStyleDarkRef = useRef(mapStyleDark)
   mapStyleDarkRef.current = mapStyleDark
-  const lastAppliedStyleRef = useRef<string | null>(null)
+  const lastAppliedStyleRef = useRef<MapStyle | null>(null)
 
   const [, setReady] = React.useState(false)
 
@@ -142,11 +137,7 @@ const useMaplibreMap = ({
 
       maplibreRef.current = maplibre
 
-      if (maplibre.getRTLTextPluginStatus() === 'unavailable') {
-        maplibre.setRTLTextPlugin(rtlTextPluginUrl, true)
-      }
-
-      const initialStyle = getStyleUrl(mapStyleLightRef.current, mapStyleDarkRef.current)
+      const initialStyle = getStyle(mapStyleLightRef.current, mapStyleDarkRef.current)
       lastAppliedStyleRef.current = initialStyle
 
       const m = new maplibre.Map({
@@ -175,7 +166,7 @@ const useMaplibreMap = ({
         const nowDark = isDarkMode()
         if (nowDark !== wasDark && map.current) {
           wasDark = nowDark
-          const newStyle = getStyleUrl(mapStyleLightRef.current, mapStyleDarkRef.current)
+          const newStyle = getStyle(mapStyleLightRef.current, mapStyleDarkRef.current)
           lastAppliedStyleRef.current = newStyle
           map.current.setStyle(newStyle)
         }
@@ -208,7 +199,7 @@ const useMaplibreMap = ({
   // Update style when map style URLs change (e.g. after query resolves)
   useEffect(() => {
     if (!map.current) return
-    const newStyle = getStyleUrl(mapStyleLight, mapStyleDark)
+    const newStyle = getStyle(mapStyleLight, mapStyleDark)
     if (newStyle !== lastAppliedStyleRef.current) {
       lastAppliedStyleRef.current = newStyle
       map.current.setStyle(newStyle)

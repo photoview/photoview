@@ -9,11 +9,11 @@
 
 export interface setMapStyleLight {
   /**
-   * Set the map tile style URL for light mode
+   * Set the map tile style URL for light mode, pass null to reset to built-in style
    */
-  setMapStyleLight: string;
+  setMapStyleLight: string | null;
 }
 
 export interface setMapStyleLightVariables {
-  url: string;
+  url?: string | null;
 }

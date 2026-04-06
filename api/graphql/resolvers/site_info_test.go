@@ -9,7 +9,7 @@ import (
 
 func TestValidateMapStyleURL(t *testing.T) {
 	t.Run("valid HTTPS URL", func(t *testing.T) {
-		err := validateMapStyleURL("https://tiles.openfreemap.org/styles/liberty")
+		err := validateMapStyleURL("https://tiles.example.com/styles/custom")
 		assert.NoError(t, err)
 	})
 

@@ -9,11 +9,11 @@
 
 export interface setMapStyleDark {
   /**
-   * Set the map tile style URL for dark mode
+   * Set the map tile style URL for dark mode, pass null to reset to built-in style
    */
-  setMapStyleDark: string;
+  setMapStyleDark: string | null;
 }
 
 export interface setMapStyleDarkVariables {
-  url: string;
+  url?: string | null;
 }

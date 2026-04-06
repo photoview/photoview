@@ -382,14 +382,9 @@ describe('ExifDetails dateShot formatting', () => {
 
       // Should fall back gracefully and still format the date
       // The exact locale format depends on the system default, so just verify
-      // the key components are present (date, year, and timezone offset)
+      // the key components are present in order (year, day, and timezone offset)
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      const dateEl = screen.getAllByText((_, el) => {
-        if (el?.children.length !== 0) return false
-        const text = el?.textContent ?? ''
-        return text.includes('2023') && text.includes('15') && text.includes('+01:00')
-      })
-      expect(dateEl.length).toBeGreaterThan(0)
+      expect(screen.getByText(/2023.*15.*\+01:00$/)).toBeInTheDocument()
     })
 
     test('handles empty string translation language', () => {
@@ -400,14 +395,9 @@ describe('ExifDetails dateShot formatting', () => {
 
       // Should handle empty string gracefully
       // The exact locale format depends on the system default, so just verify
-      // the key components are present (date, year, time, and timezone offset)
+      // the key components are present in order (year, day, time, and timezone offset)
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      const dateEl = screen.getAllByText((_, el) => {
-        if (el?.children.length !== 0) return false
-        const text = el?.textContent ?? ''
-        return text.includes('2023') && text.includes('15') && text.includes('12:00:00') && text.includes('-05:00')
-      })
-      expect(dateEl.length).toBeGreaterThan(0)
+      expect(screen.getByText(/2023.*15.*12:00:00.*-05:00$/)).toBeInTheDocument()
     })
 
     test('uses Russian (ru) translation language', () => {

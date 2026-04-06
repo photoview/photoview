@@ -1,9 +1,12 @@
 import { gql, useQuery } from '@apollo/client'
+import type maplibregl from 'maplibre-gl'
 import { mapStylesQuery } from './__generated__/mapStylesQuery'
+import libertyStyle from './libertyStyle.json'
 
-// Keep in sync with DefaultMapStyleLight/DefaultMapStyleDark in api/graphql/models/site_info.go
-export const DEFAULT_STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/liberty'
-export const DEFAULT_STYLE_DARK = 'https://tiles.openfreemap.org/styles/liberty'
+export type MapStyle = NonNullable<maplibregl.MapOptions['style']>
+
+// Built-in style with hillshading, served locally
+export const BUILTIN_STYLE = libertyStyle as unknown as MapStyle
 
 const MAP_STYLES_QUERY = gql`
   query mapStylesQuery {
@@ -18,8 +21,8 @@ const useMapStyles = () => {
   const { data } = useQuery<mapStylesQuery>(MAP_STYLES_QUERY)
 
   return {
-    mapStyleLight: data?.siteInfo.mapStyleLight ?? DEFAULT_STYLE_LIGHT,
-    mapStyleDark: data?.siteInfo.mapStyleDark ?? DEFAULT_STYLE_DARK,
+    mapStyleLight: data?.siteInfo.mapStyleLight ?? BUILTIN_STYLE,
+    mapStyleDark: data?.siteInfo.mapStyleDark ?? BUILTIN_STYLE,
   }
 }
 

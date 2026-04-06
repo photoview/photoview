@@ -10,13 +10,13 @@
 export interface mapStylesQuery_siteInfo {
   __typename: "SiteInfo";
   /**
-   * Map tile style URL for light mode
+   * Custom map tile style URL for light mode, null means use the built-in style
    */
-  mapStyleLight: string;
+  mapStyleLight: string | null;
   /**
-   * Map tile style URL for dark mode
+   * Custom map tile style URL for dark mode, null means use the built-in style
    */
-  mapStyleDark: string;
+  mapStyleDark: string | null;
 }
 
 export interface mapStylesQuery {

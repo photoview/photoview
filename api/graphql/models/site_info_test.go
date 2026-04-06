@@ -36,8 +36,8 @@ func TestSiteInfo(t *testing.T) {
 		InitialSetup:         false,
 		PeriodicScanInterval: 360,
 		ConcurrentWorkers:    10,
-		MapStyleLight:        models.DefaultMapStyleLight,
-		MapStyleDark:         models.DefaultMapStyleDark,
+		MapStyleLight:        nil,
+		MapStyleDark:         nil,
 	}, *site_info)
 
 }
@@ -50,12 +50,14 @@ func TestSiteInfoMapStyles(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, models.DefaultMapStyleLight, site_info.MapStyleLight)
-	assert.Equal(t, models.DefaultMapStyleDark, site_info.MapStyleDark)
+	assert.Nil(t, site_info.MapStyleLight)
+	assert.Nil(t, site_info.MapStyleDark)
 
 	// Update map style URLs
-	site_info.MapStyleLight = "https://example.com/light"
-	site_info.MapStyleDark = "https://example.com/dark"
+	light := "https://example.com/light"
+	dark := "https://example.com/dark"
+	site_info.MapStyleLight = &light
+	site_info.MapStyleDark = &dark
 
 	if !assert.NoError(t, db.Session(&gorm.Session{AllowGlobalUpdate: true}).Save(&site_info).Error) {
 		return
@@ -66,6 +68,22 @@ func TestSiteInfoMapStyles(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "https://example.com/light", site_info.MapStyleLight)
-	assert.Equal(t, "https://example.com/dark", site_info.MapStyleDark)
+	assert.Equal(t, "https://example.com/light", *site_info.MapStyleLight)
+	assert.Equal(t, "https://example.com/dark", *site_info.MapStyleDark)
+
+	// Reset to nil
+	site_info.MapStyleLight = nil
+	site_info.MapStyleDark = nil
+
+	if !assert.NoError(t, db.Session(&gorm.Session{AllowGlobalUpdate: true}).Save(&site_info).Error) {
+		return
+	}
+
+	site_info, err = models.GetSiteInfo(db)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	assert.Nil(t, site_info.MapStyleLight)
+	assert.Nil(t, site_info.MapStyleDark)
 }

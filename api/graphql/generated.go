@@ -159,8 +159,8 @@ type ComplexityRoot struct {
 		SetAlbumCover               func(childComplexity int, coverID int) int
 		SetExpireShareToken         func(childComplexity int, token string, expire *time.Time) int
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
-		SetMapStyleDark             func(childComplexity int, url string) int
-		SetMapStyleLight            func(childComplexity int, url string) int
+		SetMapStyleDark             func(childComplexity int, url *string) int
+		SetMapStyleLight            func(childComplexity int, url *string) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
 		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
@@ -322,8 +322,8 @@ type MutationResolver interface {
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error)
-	SetMapStyleLight(ctx context.Context, url string) (string, error)
-	SetMapStyleDark(ctx context.Context, url string) (string, error)
+	SetMapStyleLight(ctx context.Context, url *string) (*string, error)
+	SetMapStyleDark(ctx context.Context, url *string) (*string, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
@@ -981,7 +981,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.SetMapStyleDark(childComplexity, args["url"].(string)), true
+		return e.ComplexityRoot.Mutation.SetMapStyleDark(childComplexity, args["url"].(*string)), true
 	case "Mutation.setMapStyleLight":
 		if e.ComplexityRoot.Mutation.SetMapStyleLight == nil {
 			break
@@ -992,7 +992,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.SetMapStyleLight(childComplexity, args["url"].(string)), true
+		return e.ComplexityRoot.Mutation.SetMapStyleLight(childComplexity, args["url"].(*string)), true
 	case "Mutation.setPeriodicScanInterval":
 		if e.ComplexityRoot.Mutation.SetPeriodicScanInterval == nil {
 			break
@@ -1960,7 +1960,7 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_args(ctx context.Co
 func (ec *executionContext) field_Mutation_setMapStyleDark_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
@@ -1971,7 +1971,7 @@ func (ec *executionContext) field_Mutation_setMapStyleDark_args(ctx context.Cont
 func (ec *executionContext) field_Mutation_setMapStyleLight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
@@ -5761,14 +5761,14 @@ func (ec *executionContext) _Mutation_setMapStyleLight(ctx context.Context, fiel
 		ec.fieldContext_Mutation_setMapStyleLight,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().SetMapStyleLight(ctx, fc.Args["url"].(string))
+			return ec.Resolvers.Mutation().SetMapStyleLight(ctx, fc.Args["url"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
 				if ec.Directives.IsAdmin == nil {
-					var zeroVal string
+					var zeroVal *string
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
 				return ec.Directives.IsAdmin(ctx, nil, directive0)
@@ -5777,9 +5777,9 @@ func (ec *executionContext) _Mutation_setMapStyleLight(ctx context.Context, fiel
 			next = directive1
 			return next
 		},
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -5815,14 +5815,14 @@ func (ec *executionContext) _Mutation_setMapStyleDark(ctx context.Context, field
 		ec.fieldContext_Mutation_setMapStyleDark,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().SetMapStyleDark(ctx, fc.Args["url"].(string))
+			return ec.Resolvers.Mutation().SetMapStyleDark(ctx, fc.Args["url"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
 				if ec.Directives.IsAdmin == nil {
-					var zeroVal string
+					var zeroVal *string
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
 				return ec.Directives.IsAdmin(ctx, nil, directive0)
@@ -5831,9 +5831,9 @@ func (ec *executionContext) _Mutation_setMapStyleDark(ctx context.Context, field
 			next = directive1
 			return next
 		},
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -8419,7 +8419,7 @@ func (ec *executionContext) _SiteInfo_mapStyleLight(ctx context.Context, field g
 
 			directive1 := func(ctx context.Context) (any, error) {
 				if ec.Directives.IsAuthorized == nil {
-					var zeroVal string
+					var zeroVal *string
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
 				return ec.Directives.IsAuthorized(ctx, obj, directive0)
@@ -8428,9 +8428,9 @@ func (ec *executionContext) _SiteInfo_mapStyleLight(ctx context.Context, field g
 			next = directive1
 			return next
 		},
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -8461,7 +8461,7 @@ func (ec *executionContext) _SiteInfo_mapStyleDark(ctx context.Context, field gr
 
 			directive1 := func(ctx context.Context) (any, error) {
 				if ec.Directives.IsAuthorized == nil {
-					var zeroVal string
+					var zeroVal *string
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
 				return ec.Directives.IsAuthorized(ctx, obj, directive0)
@@ -8470,9 +8470,9 @@ func (ec *executionContext) _SiteInfo_mapStyleDark(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -12221,16 +12221,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setMapStyleLight(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "setMapStyleDark":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setMapStyleDark(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "authorizeUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_authorizeUser(ctx, field)
@@ -13059,14 +13053,8 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "mapStyleLight":
 			out.Values[i] = ec._SiteInfo_mapStyleLight(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "mapStyleDark":
 			out.Values[i] = ec._SiteInfo_mapStyleDark(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
