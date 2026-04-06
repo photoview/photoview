@@ -16,8 +16,8 @@ test('load MapStyleSettings with defaults', async () => {
       result: {
         data: {
           siteInfo: {
-            mapStyleLight: 'https://tiles.openfreemap.org/styles/positron',
-            mapStyleDark: 'https://tiles.openfreemap.org/styles/dark',
+            mapStyleLight: 'https://tiles.openfreemap.org/styles/liberty',
+            mapStyleDark: 'https://tiles.openfreemap.org/styles/liberty',
           },
         },
       },
@@ -42,8 +42,8 @@ test('load MapStyleSettings with defaults', async () => {
   expect(screen.getByText('Dark mode style URL')).toBeInTheDocument()
 
   await waitFor(() => {
-    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/positron')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/dark')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')).toBeInTheDocument()
   })
 })
 
@@ -57,8 +57,8 @@ test('update light style URL on blur', async () => {
       result: {
         data: {
           siteInfo: {
-            mapStyleLight: 'https://tiles.openfreemap.org/styles/positron',
-            mapStyleDark: 'https://tiles.openfreemap.org/styles/dark',
+            mapStyleLight: 'https://tiles.openfreemap.org/styles/liberty',
+            mapStyleDark: 'https://tiles.openfreemap.org/styles/liberty',
           },
         },
       },
@@ -95,10 +95,10 @@ test('update light style URL on blur', async () => {
   )
 
   await waitFor(() => {
-    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/positron')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')).toBeInTheDocument()
   })
 
-  const lightInput = screen.getByDisplayValue('https://tiles.openfreemap.org/styles/positron')
+  const lightInput = screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')
   fireEvent.change(lightInput, { target: { value: 'https://example.com/custom-light' } })
   fireEvent.blur(lightInput)
 
@@ -117,8 +117,8 @@ test('update dark style URL on Enter', async () => {
       result: {
         data: {
           siteInfo: {
-            mapStyleLight: 'https://tiles.openfreemap.org/styles/positron',
-            mapStyleDark: 'https://tiles.openfreemap.org/styles/dark',
+            mapStyleLight: 'https://tiles.openfreemap.org/styles/liberty',
+            mapStyleDark: 'https://tiles.openfreemap.org/styles/liberty',
           },
         },
       },
@@ -155,10 +155,10 @@ test('update dark style URL on Enter', async () => {
   )
 
   await waitFor(() => {
-    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/dark')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')).toBeInTheDocument()
   })
 
-  const darkInput = screen.getByDisplayValue('https://tiles.openfreemap.org/styles/dark')
+  const darkInput = screen.getByDisplayValue('https://tiles.openfreemap.org/styles/liberty')
   fireEvent.change(darkInput, { target: { value: 'https://example.com/custom-dark' } })
   fireEvent.keyDown(darkInput, { key: 'Enter' })
 
