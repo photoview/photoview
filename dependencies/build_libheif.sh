@@ -45,7 +45,7 @@ curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./libheif.tar.gz \
 tar xfv ./libheif.tar.gz
 cd ./*-libheif-*
 cmake \
-  --preset=release \
+  --preset=release-noplugins \
   -DENABLE_PLUGIN_LOADING=OFF \
   -DWITH_GDK_PIXBUF=OFF \
   -DCMAKE_SYSTEM_PROCESSOR="${DEB_HOST_ARCH}" \
