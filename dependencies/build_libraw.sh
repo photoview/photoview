@@ -15,22 +15,27 @@ set -euo pipefail
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/LibRaw-${LIBRAW_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/LibRaw-${LIBRAW_VERSION}-complete"
 
+apt-get install -y \
+  libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
+  liblcms2-dev:"${DEB_HOST_ARCH}" \
+  zlib1g-dev:"${DEB_HOST_ARCH}"
+
 # Check if this specific version is already built and cached
 if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
   echo "LibRaw ${LIBRAW_VERSION} found in cache, reusing..."
-  mkdir -p /output
+  mkdir -p /output /usr/local/{bin,lib,lib/pkgconfig,include}
   cp -ra "${CACHE_DIR}/output/"* /output/
+  cp -ra /output/bin/* /usr/local/bin/
+  cp -ra /output/lib/* /usr/local/lib/
+  cp -ra /output/pkgconfig/* /usr/local/lib/pkgconfig/
+  cp -ra /output/include/* /usr/local/include/
+  ldconfig
   exit 0
 fi
 
 echo "Building LibRaw ${LIBRAW_VERSION} (cache miss)..."
 
 echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
-
-apt-get install -y \
-  libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
-  liblcms2-dev:"${DEB_HOST_ARCH}" \
-  zlib1g-dev:"${DEB_HOST_ARCH}"
 
 URL="https://api.github.com/repos/LibRaw/LibRaw/tarball/${LIBRAW_VERSION}"
 echo download libraw from "$URL"

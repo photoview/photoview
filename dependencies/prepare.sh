@@ -35,6 +35,6 @@ apt-get install -y \
   libc-dev:"${DEBIAN_ARCH}"
 
 dpkg-architecture -a "$DEBIAN_ARCH" >/env
-echo "PKG_CONFIG=/usr/bin/pkg-config" >>/env
+echo "PKG_CONFIG=$(which pkg-config)" >>/env
 echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/$(dpkg-architecture -a "$DEBIAN_ARCH" -qDEB_HOST_MULTIARCH)/pkgconfig" >>/env
 cat /env

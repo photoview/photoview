@@ -54,11 +54,11 @@ cd ImageMagick-*
 
 FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
 
+pkg-config --list-all
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
-  --without-x --without-magick-plus-plus \
-  --without-perl --disable-doc \
+  --without-x --without-magick-plus-plus --without-perl \
   --host="${DEB_HOST_GNU_TYPE}" \
   ${FEATURES}
 

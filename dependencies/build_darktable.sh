@@ -58,14 +58,14 @@ git config submodule.src/external/lua-scripts.update none
 git submodule update --init --recursive --depth 1 --recommend-shallow --single-branch
 
 FEATURES=" \
+  --disable-camera \
+  --disable-unity \
+  --disable-colord \
   --disable-kwallet \
   --disable-libsecret \
   --disable-lua \
   --disable-mac_integration \
   --disable-map \
-  --disable-unity \
-  --disable-camera \
-  --disable-colord \
   --enable-graphicsmagick \
   --enable-imagemagick \
   --enable-jxl \

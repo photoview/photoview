@@ -15,18 +15,6 @@ set -euo pipefail
 CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/libheif-${LIBHEIF_VERSION}"
 CACHE_MARKER="${CACHE_DIR}/libheif-${LIBHEIF_VERSION}-complete"
 
-# Check if this specific version is already built and cached
-if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
-  echo "libheif ${LIBHEIF_VERSION} found in cache, reusing..."
-  mkdir -p /output
-  cp -ra "${CACHE_DIR}/output/"* /output/
-  exit 0
-fi
-
-echo "Building libheif ${LIBHEIF_VERSION} (cache miss)..."
-
-echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
-
 apt-get install -y \
   libdav1d-dev:"${DEB_HOST_ARCH}" \
   libde265-dev:"${DEB_HOST_ARCH}" \
@@ -37,6 +25,23 @@ apt-get install -y \
   libnuma-dev:"${DEB_HOST_ARCH}" \
   zlib1g-dev:"${DEB_HOST_ARCH}"
 
+# Check if this specific version is already built and cached
+if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
+  echo "libheif ${LIBHEIF_VERSION} found in cache, reusing..."
+  mkdir -p /output /usr/local/{bin,lib,lib/pkgconfig,include}
+  cp -ra "${CACHE_DIR}/output/"* /output/
+  cp -ra /output/bin/* /usr/local/bin/
+  cp -ra /output/lib/* /usr/local/lib/
+  cp -ra /output/pkgconfig/* /usr/local/lib/pkgconfig/
+  cp -ra /output/include/* /usr/local/include/
+  ldconfig
+  exit 0
+fi
+
+echo "Building libheif ${LIBHEIF_VERSION} (cache miss)..."
+
+echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
+
 URL="https://api.github.com/repos/strukturag/libheif/tarball/${LIBHEIF_VERSION}"
 echo download libheif from "$URL"
 curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./libheif.tar.gz \
@@ -45,8 +50,7 @@ curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./libheif.tar.gz \
 tar xfv ./libheif.tar.gz
 cd ./*-libheif-*
 cmake \
-  --preset=release-noplugins \
-  -DENABLE_PLUGIN_LOADING=OFF \
+  --preset=release \
   -DWITH_GDK_PIXBUF=OFF \
   -DCMAKE_SYSTEM_PROCESSOR="${DEB_HOST_ARCH}" \
   -DCMAKE_C_COMPILER="${DEB_HOST_GNU_TYPE}"-gcc \

@@ -1,5 +1,6 @@
 FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:trixie-slim AS base-cross-prep
 ARG TARGETPLATFORM
+ENV BUILD_CACHE_DIR=/build-cache
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 COPY --chmod=0755 prepare.sh /tmp/
 RUN /tmp/prepare.sh \
@@ -8,7 +9,6 @@ RUN /tmp/prepare.sh \
 FROM base-cross-prep AS build-libheif
 ARG LIBHEIF_VERSION
 ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-libheif
 COPY --chmod=0755 build_libheif.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBHEIF_VERSION} \
@@ -19,10 +19,22 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libheif-${TARGETARCH}-${LIBH
     && set -a && source /env && set +a \
     && ./build_libheif.sh
 
+FROM build-libheif AS build-darktable
+ARG DARKTABLE_VERSION
+ARG TARGETARCH
+WORKDIR /tmp/build-darktable
+COPY --chmod=0755 build_darktable.sh .
+RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DARKTABLE_VERSION} \
+    --mount=type=secret,id=github_token \
+    if [ -f /run/secrets/github_token ]; then \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
+    fi \
+    && set -a && source /env && set +a \
+    && ./build_darktable.sh
+
 FROM build-libheif AS build-libraw
 ARG LIBRAW_VERSION
 ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-libraw
 COPY --chmod=0755 build_libraw.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRAW_VERSION} \
@@ -36,7 +48,6 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=libraw-${TARGETARCH}-${LIBRA
 FROM build-libraw AS build-imagemagick
 ARG IMAGEMAGICK_VERSION
 ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/build-imagemagick
 COPY --chmod=0755 build_imagemagick.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${IMAGEMAGICK_VERSION} \
@@ -50,32 +61,17 @@ RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=imagemagick-${TARGETARCH}-${
 FROM base-cross-prep AS download-jellyfin-ffmpeg
 ARG JELLYFIN_FFMPEG_VERSION
 ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
 WORKDIR /tmp/download-ffmpeg
 COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
 RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=ffmpeg-${TARGETARCH}-${JELLYFIN_FFMPEG_VERSION} \
     set -a && source /env && set +a \
     && ./download_jellyfin-ffmpeg.sh
 
-FROM build-libheif AS build-darktable
-ARG DARKTABLE_VERSION
-ARG TARGETARCH
-ENV BUILD_CACHE_DIR=/build-cache
-WORKDIR /tmp/build-darktable
-COPY --chmod=0755 build_darktable.sh .
-RUN --mount=type=cache,target=${BUILD_CACHE_DIR},id=darktable-${TARGETARCH}-${DARKTABLE_VERSION} \
-    --mount=type=secret,id=github_token \
-    if [ -f /run/secrets/github_token ]; then \
-    export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
-    fi \
-    && set -a && source /env && set +a \
-    && ./build_darktable.sh
-
 FROM base-cross-prep AS final-assembly
-COPY --from=build-libraw /output/ /output/
 COPY --from=build-libheif /output/ /output/
-COPY --from=build-imagemagick /output/ /output/
 COPY --from=build-darktable /output/ /output/
+COPY --from=build-libraw /output/ /output/
+COPY --from=build-imagemagick /output/ /output/
 COPY --from=download-jellyfin-ffmpeg /output/ /output/
 COPY --chmod=0755 output.sh /
 RUN /output.sh
