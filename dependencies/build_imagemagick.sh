@@ -54,7 +54,6 @@ cd ImageMagick-*
 
 FEATURES="--with-heic --with-jpeg --with-png --with-raw --with-tiff --with-webp"
 
-pkg-config --list-all
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static --enable-shared --enable-delegate-build \
