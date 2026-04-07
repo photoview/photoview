@@ -1,6 +1,7 @@
 package exiftool
 
 import (
+	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -193,5 +194,35 @@ func TestTimeAllOffsetSecsEmptyLocal(t *testing.T) {
 	got, ok := timeAll.OffsetSecs(time.Time{})
 	if ok || got != 0 {
 		t.Errorf("timeAll.OffsetSecs() = (%d, %v), want: (%d, %v)", got, ok, 0, false)
+	}
+}
+
+func TestDimensionOrientation(t *testing.T) {
+	tests := []struct {
+		orientation Orientation
+		imageWidth  int
+		imageHeight int
+		wantWidth   int
+		wantHeight  int
+	}{
+		{OrientationNormal, 400, 300, 400, 300},
+		{OrientationRorate90CW, 400, 300, 300, 400},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("Orientation%d", tc.orientation), func(t *testing.T) {
+			d := Dimension{
+				ImageWidth:  tc.imageWidth,
+				ImageHeight: tc.imageHeight,
+				Orientation: tc.orientation,
+			}
+
+			if got, want := d.Width(), tc.wantWidth; got != want {
+				t.Errorf("d.Width() = %d, want: %d", got, want)
+			}
+			if got, want := d.Height(), tc.wantHeight; got != want {
+				t.Errorf("d.Height() = %d, want: %d", got, want)
+			}
+		})
 	}
 }

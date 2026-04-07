@@ -72,7 +72,7 @@ func TestNewMarkReader(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewMarkReader(strings.NewReader("x"), tc.bufferSize, tc.mark)
+			_, err := newMarkReader(strings.NewReader("x"), tc.bufferSize, tc.mark)
 			if tc.wantErr == "" {
 				if err != nil {
 					t.Fatalf("NewMarkReader() returns error: %v", err)
@@ -163,7 +163,7 @@ func TestMarkReader(t *testing.T) {
 
 					up := wrapper.wrap(strings.NewReader(tc.input))
 
-					r, err := NewMarkReader(up, tc.bufferSize, tc.mark)
+					r, err := newMarkReader(up, tc.bufferSize, tc.mark)
 					if err != nil {
 						t.Fatal("NewMarkReader() returns error:", err)
 					}

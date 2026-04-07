@@ -169,3 +169,52 @@ func (m *PhotoMeta) SanitizeFloats() {
 type MIMEType struct {
 	MIMEType *string
 }
+
+type Orientation int
+
+const (
+	OrientationUnknown                     Orientation = 0
+	OrientationNormal                      Orientation = 1
+	OrientationMirroHorizontal             Orientation = 2
+	OrientationRotate180                   Orientation = 3
+	OrientationMirrorVertical              Orientation = 4
+	OrientationMirrorHorizontalRotate270CW Orientation = 5
+	OrientationRorate90CW                  Orientation = 6
+	OrientationMirrorHorizontalRotate90CW  Orientation = 7
+	OrientationRotate270CW                 Orientation = 8
+)
+
+type Dimension struct {
+	ImageWidth  int
+	ImageHeight int
+	Orientation Orientation
+}
+
+func (d *Dimension) NeedRotation() bool {
+	switch d.Orientation {
+	case
+		OrientationMirrorHorizontalRotate270CW,
+		OrientationRorate90CW,
+		OrientationMirrorHorizontalRotate90CW,
+		OrientationRotate270CW:
+		return true
+	}
+
+	return false
+}
+
+func (d *Dimension) Width() int {
+	if d.NeedRotation() {
+		return d.ImageHeight
+	}
+
+	return d.ImageWidth
+}
+
+func (d *Dimension) Height() int {
+	if d.NeedRotation() {
+		return d.ImageWidth
+	}
+
+	return d.ImageHeight
+}

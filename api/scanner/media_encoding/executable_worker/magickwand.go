@@ -80,20 +80,6 @@ func (cli *MagickWand) GenerateThumbnail(inputPath string, outputPath string, wi
 	return nil
 }
 
-func (cli *MagickWand) IdentifyDimension(inputPath string) (width, height uint, reterr error) {
-	wand, err := cli.createWandFromFile(inputPath)
-	if err != nil {
-		reterr = err
-		return
-	}
-	defer wand.Destroy()
-
-	width = wand.GetImageWidth()
-	height = wand.GetImageHeight()
-
-	return
-}
-
 func (cli *MagickWand) createWandFromFile(inputPath string) (*imagick.MagickWand, error) {
 	if !cli.IsInstalled() {
 		return nil, fmt.Errorf("ImagickWand is not initialized")

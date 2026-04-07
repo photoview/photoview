@@ -349,6 +349,7 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 			var jpg struct {
 				MIMEType
 				TimeAll
+				Dimension
 			}
 			if err := instance.QueryJSONTagsByNumber(output, &jpg); err != nil {
 				t.Fatalf("QueryJSONTagsByNumber(%q) error: %v", output, err)
@@ -360,13 +361,23 @@ func TestExiftoolSaveJPEGPreview(t *testing.T) {
 				return
 			}
 
-			var raw struct{ TimeAll }
+			var raw struct {
+				TimeAll
+				Dimension
+			}
 			if err := instance.QueryJSONTagsByNumber(tc.file, &raw); err != nil {
 				t.Fatalf("QueryJSONTagsByNumber(%q) error: %v", tc.file, err)
 			}
 
 			if got, want := jpg.TimeAll.TimeInLocal(), raw.TimeAll.TimeInLocal(); !got.Equal(want) {
 				t.Errorf("jpg.TimeAll.TimeInLocal() = %q, want: %q", got, want)
+			}
+
+			if got, want := jpg.Dimension.Width(), raw.Dimension.Width(); got != want {
+				t.Errorf("jpg.Dimension.Width() = %d, want: %d", got, want)
+			}
+			if got, want := jpg.Dimension.Height(), raw.Dimension.Height(); got != want {
+				t.Errorf("jpg.Dimension.Height() = %d, want: %d", got, want)
 			}
 		})
 	}

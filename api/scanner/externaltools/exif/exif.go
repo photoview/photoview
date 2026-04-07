@@ -111,5 +111,24 @@ func MIMEType(filepath string) (string, error) {
 	}
 
 	return *mime.MIMEType, nil
+}
 
+func Dimension(filepath string) (width, height uint, err error) {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+
+	if globalExifParser == nil {
+		err = fmt.Errorf("no exif parser initialized")
+		return
+	}
+
+	var dimension exiftool.Dimension
+	if err = globalExifParser.QueryJSONTagsByNumber(filepath, &dimension); err != nil {
+		return
+	}
+
+	width = uint(dimension.Width())
+	height = uint(dimension.Height())
+
+	return
 }

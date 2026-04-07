@@ -57,8 +57,9 @@ RUN chmod +x /app/scripts/*.sh \
     && source /app/scripts/set_compiler_env.sh
 
 COPY scripts/install_*.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-    && set -a && source /env && set +a \
+RUN set -a && source /env && set +a \
+    && chmod +x /app/scripts/*.sh \
+    && git config --global --add safe.directory /app \
     && /app/scripts/install_build_dependencies.sh \
     && /app/scripts/install_runtime_dependencies.sh
 
@@ -66,8 +67,7 @@ RUN chmod +x /app/scripts/*.sh \
 COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
 WORKDIR /dependencies
 RUN set -a && source /env && set +a \
-    && git config --global --add safe.directory /app \
-    && tar xfv artifacts.tar.gz \
+    && tar xkfv artifacts.tar.gz \
     && cp -a include/* /usr/local/include/ \
     && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
@@ -104,15 +104,16 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY scripts/install_runtime_dependencies.sh /app/scripts/
 WORKDIR /dependencies
-RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    chmod +x /app/scripts/install_runtime_dependencies.sh \
+RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
     # Create a user to run Photoview server
     && groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview \
     # Install required dependencies
-    && /app/scripts/install_runtime_dependencies.sh \
+    && /app/scripts/install_runtime_dependencies.sh
+
+RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     # Install self-building libs
-    && cp -a lib/*.so* /usr/local/lib/ \
+    cp -a lib/*.so* /usr/local/lib/ \
     && ldconfig \
     && apt-get install -y ./deb/jellyfin-ffmpeg.deb gzip brotli zstd \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \

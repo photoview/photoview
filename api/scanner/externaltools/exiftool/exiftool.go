@@ -21,8 +21,8 @@ type Exiftool struct {
 	cmd      *exec.Cmd
 	stdin    io.WriteCloser
 	stdinBuf *bufio.Writer
-	stdout   *MarkReader
-	stderr   *MarkReader
+	stdout   *markReader
+	stderr   *markReader
 
 	closeOnce sync.Once
 }
@@ -60,7 +60,7 @@ func New() (*Exiftool, error) {
 		return nil, fmt.Errorf("get `exiftool -stay_open True -@ -` stdout error: %w", err)
 	}
 
-	stdout, err := NewMarkReader(stdoutPipe, bufferSize, marker)
+	stdout, err := newMarkReader(stdoutPipe, bufferSize, marker)
 	if err != nil {
 		defer stdin.Close()
 		return nil, err
@@ -72,7 +72,7 @@ func New() (*Exiftool, error) {
 		return nil, fmt.Errorf("get `exiftool -stay_open True -@ -` stderr error: %w", err)
 	}
 
-	stderr, err := NewMarkReader(stderrPipe, bufferSize, marker)
+	stderr, err := newMarkReader(stderrPipe, bufferSize, marker)
 	if err != nil {
 		defer stdin.Close()
 		return nil, err

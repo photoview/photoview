@@ -6,9 +6,10 @@ import (
 	"image"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/utils"
+	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/vansante/go-ffprobe.v2"
 
@@ -52,7 +53,7 @@ func (d *Dimension) ThumbnailScale() Dimension {
 
 // GetPhotoDimensions returns the dimension of the image `imagePath`.
 func GetPhotoDimensions(imagePath string) (Dimension, error) {
-	w, h, err := executable_worker.Magick.IdentifyDimension(imagePath)
+	w, h, err := exif.Dimension(imagePath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("identify dimension %q error: %w", imagePath, err)
 	}
@@ -66,7 +67,7 @@ func GetPhotoDimensions(imagePath string) (Dimension, error) {
 // EncodeThumbnail encodes a thumbnail of `inputPath`, and store it as `outputPath`.
 // It returns the dimension of the thumbnail. The thumbnail will be not bigger than 1024x1024.
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimension, error) {
-	w, h, err := executable_worker.Magick.IdentifyDimension(inputPath)
+	w, h, err := exif.Dimension(inputPath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
@@ -81,7 +82,7 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
-	w, h, err = executable_worker.Magick.IdentifyDimension(outputPath)
+	w, h, err = exif.Dimension(outputPath)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}

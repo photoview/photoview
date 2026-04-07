@@ -6,8 +6,8 @@ import (
 	"io"
 )
 
-// MarkReader reads from upstream and stops at marker boundaries.
-type MarkReader struct {
+// markReader reads from upstream and stops at marker boundaries.
+type markReader struct {
 	upstream io.Reader
 	buf      []byte
 	mark     []byte
@@ -26,13 +26,13 @@ type MarkReader struct {
 	paused bool
 }
 
-// NewMarkReader creates a reader that stops at each marker and requires Reset to continue.
-func NewMarkReader(upstream io.Reader, bufferSize int, mark string) (*MarkReader, error) {
+// newMarkReader creates a reader that stops at each marker and requires Reset to continue.
+func newMarkReader(upstream io.Reader, bufferSize int, mark string) (*markReader, error) {
 	if bufferSize < 2*len(mark) {
 		return nil, errors.New("buffer too small")
 	}
 
-	return &MarkReader{
+	return &markReader{
 		upstream: upstream,
 		buf:      make([]byte, bufferSize),
 		mark:     []byte(mark),
@@ -40,12 +40,12 @@ func NewMarkReader(upstream io.Reader, bufferSize int, mark string) (*MarkReader
 }
 
 // Reset resumes reading after a previously encountered marker boundary.
-func (r *MarkReader) Reset() {
+func (r *markReader) Reset() {
 	r.paused = false
 }
 
 // Read returns bytes up to (but excluding) the next marker, then reports EOF until Reset.
-func (r *MarkReader) Read(p []byte) (int, error) {
+func (r *markReader) Read(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
@@ -100,7 +100,7 @@ func (r *MarkReader) Read(p []byte) (int, error) {
 	return n, nil
 }
 
-func (r *MarkReader) checkMarkInPending() {
+func (r *markReader) checkMarkInPending() {
 	if markAt := bytes.Index(r.buf[r.pending:r.end], r.mark); markAt >= 0 {
 		r.hasMark = true
 		r.pending = r.pending + markAt
