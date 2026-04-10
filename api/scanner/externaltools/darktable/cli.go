@@ -64,36 +64,7 @@ func (cli *Darktable) EncodeJpeg(inputPath string, outputPath string, jpegQualit
 
 	cmd := exec.Command(cli.path, args...)
 
-	if output, err := cmd.Output(); err != nil {
-		return fmt.Errorf("run darktable(configdir:%q) %v error: %w: %s", tmpDir, args, err, string(output))
-	}
-
-	return nil
-}
-
-func (cli *Darktable) GenerateThumbnail(inputPath string, outputPath string, width, height uint) error {
-	if cli.err != nil {
-		return cli.err
-	}
-
-	tmpDir, err := os.MkdirTemp("", "photoview-darktable-*")
-	if err != nil {
-		return fmt.Errorf("can't create tmp: %w", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	args := []string{
-		inputPath, outputPath,
-		"--width", fmt.Sprintf("%d", width),
-		"--height", fmt.Sprintf("%d", height),
-		"--core",
-		"--conf", "plugins/imageio/format/jpeg/quality=70",
-		"--configdir", tmpDir,
-	}
-
-	cmd := exec.Command(cli.path, args...)
-
-	if output, err := cmd.Output(); err != nil {
+	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("run darktable(configdir:%q) %v error: %w: %s", tmpDir, args, err, string(output))
 	}
 
