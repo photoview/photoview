@@ -8,7 +8,7 @@ echo Env Arch: $(dpkg --print-architecture)
 # Download Darktable
 if [ ! -f "/output/deb/darktable.deb" ]
 then
-  DARKTABLE_URL="http://download.opensuse.org/repositories/graphics:/darktable/Debian_13"
+  DARKTABLE_URL="https://download.opensuse.org/repositories/graphics:/darktable/Debian_13"
   echo "deb ${DARKTABLE_URL}/ /" | tee /etc/apt/sources.list.d/graphics:darktable.list
   curl -fsSL "${DARKTABLE_URL}/Release.key" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
   apt-get update
