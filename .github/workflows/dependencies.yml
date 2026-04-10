@@ -1,17 +1,13 @@
 name: Dependencies builds
 
 on:
+  push:
+    branches: [master]
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Why trigger building the dependencies?'
-        required: false
-        default: 'Dependencies are changed'
+    branches: [master]
   schedule:
-    # At 00:43 every Thursday, at least 2.5 hours before `photoview`. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
-    - cron: '43 00 * * 4'
+    # At 23:18 every Wednesday, 2 hours before `photoview`. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    - cron: '18 23 * * 3'
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
@@ -24,7 +20,6 @@ jobs:
   build:
     name: Build Dependencies Image
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'dependencies_image') }}
 
     steps:
       - name: Checkout
@@ -64,15 +59,12 @@ jobs:
           set -euo pipefail
           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           # Fetch latest version tags from GitHub releases
-          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
-          DARKTABLE_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/darktable-org/darktable/releases/latest" | jq -r '.tag_name')
           LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
+          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
+            "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
           IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
@@ -80,9 +72,8 @@ jobs:
             ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
             "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
           # Output as environment variables
-          echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "DARKTABLE_VERSION=${DARKTABLE_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
+          echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" | tee -a $GITHUB_OUTPUT
           echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
 
@@ -104,8 +95,7 @@ jobs:
           secrets: |
             github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
-            LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
-            DARKTABLE_VERSION=${{ steps.versions.outputs.DARKTABLE_VERSION }}
             LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
+            LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
             IMAGEMAGICK_VERSION=${{ steps.versions.outputs.IMAGEMAGICK_VERSION }}
             JELLYFIN_FFMPEG_VERSION=${{ steps.versions.outputs.JELLYFIN_FFMPEG_VERSION }}
