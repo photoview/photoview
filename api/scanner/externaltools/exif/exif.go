@@ -127,8 +127,15 @@ func Dimension(filepath string) (width, height uint, err error) {
 		return
 	}
 
-	width = uint(dimension.Width())
-	height = uint(dimension.Height())
+	w := dimension.Width()
+	h := dimension.Height()
+	if w <= 0 || h <= 0 {
+		err = fmt.Errorf("invalid dimension for %q: (%d, %d)", filepath, w, h)
+		return
+	}
+
+	width = uint(w)
+	height = uint(h)
 
 	return
 }
