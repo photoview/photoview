@@ -5,9 +5,13 @@ set -eu
 echo Target Arch: ${DEB_HOST_ARCH}
 echo Env Arch: $(dpkg --print-architecture)
 
+apt-get update
+
 # Download Darktable
 if [ ! -f "/output/deb/darktable.deb" ]
 then
+  apt-get install -y --no-install-recommends gpg curl ca-certificates
+
   DARKTABLE_URL="https://download.opensuse.org/repositories/graphics:/darktable/Debian_13"
   echo "deb ${DARKTABLE_URL}/ /" | tee /etc/apt/sources.list.d/graphics:darktable.list
   curl -fsSL "${DARKTABLE_URL}/Release.key" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
@@ -22,13 +26,13 @@ fi
 # Download FFMpeg
 if [ ! -f "/output/deb/jellyfin-ffmpeg.deb" ]
 then
+  apt-get install -y --no-install-recommends jq curl ca-certificates
+
   JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
     "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
-
   VER="${JELLYFIN_FFMPEG_VERSION#v}"
   MAJOR_VER=$(echo "${VER}" | cut -d. -f1)
   FFMPEG_URL="https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/${JELLYFIN_FFMPEG_VERSION}/jellyfin-ffmpeg${MAJOR_VER}_${VER}-trixie_${DEB_HOST_ARCH}.deb"
-  apt-get install -y --no-install-recommends curl ca-certificates
   echo download jellyfin-ffmpeg from "${FFMPEG_URL}"
   mkdir -p /output/deb
   curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o /output/deb/jellyfin-ffmpeg.deb "${FFMPEG_URL}"
@@ -43,7 +47,6 @@ then
 fi
 
 # Install binary dependencies for test in the native environment
-apt-get update
 
 # exiftool
 apt-get install -y --no-install-recommends libimage-exiftool-perl:${DEB_HOST_ARCH}
