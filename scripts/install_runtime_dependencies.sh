@@ -42,6 +42,7 @@ then
   exit 0
 fi
 
+# Install binary dependencies for test in the native environment
 apt-get update
 
 # exiftool
