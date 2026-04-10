@@ -40,6 +40,20 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
+# Archive static files for better performance
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gzip brotli zstd && \
+    find /app/ui/dist -type f \( \
+        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
+        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
+    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
+        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
+    -exec sh -c 'for file; do \
+        gzip -k -f -9 "$file"; \
+        brotli -k -f -q 11 -s "$file"; \
+        zstd -k -f -19 -T0 --no-progress "$file"; \
+    done' sh {} +
+
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
@@ -62,21 +76,6 @@ RUN set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
     && /app/scripts/install_build_dependencies.sh \
     && /app/scripts/install_runtime_dependencies.sh
-
-# hadolint ignore=DL3022
-COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
-WORKDIR /dependencies
-RUN set -a && source /env && set +a \
-    && tar xkfv artifacts.tar.gz \
-    && cp -a include/* /usr/local/include/ \
-    && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
-    && cp -a lib/* /usr/local/lib/ \
-    && cp -a opt / \
-    && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
-    && ln -s /opt/darktable/bin/darktable-cli /usr/local/bin/
 
 COPY api/go.mod api/go.sum /app/api/
 WORKDIR /app/api
@@ -104,24 +103,16 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
-WORKDIR /dependencies
-RUN chmod +x /app/scripts/install_runtime_dependencies.sh \
-    # Create a user to run Photoview server
-    && groupadd -g 999 photoview \
-    && useradd -r -u 999 -g photoview -m photoview \
-    # Install required dependencies
-    && /app/scripts/install_runtime_dependencies.sh
+# Create a user to run Photoview server
+RUN groupadd -g 999 photoview && \
+    useradd -r -u 999 -g photoview -m photoview
 
-RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    # Install self-building libs
-    cp -a lib/*.so* /usr/local/lib/ \
-    && cp -a opt / \
-    && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb gzip brotli zstd \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
-    && ln -s /opt/darktable/bin/darktable-cli /usr/local/bin/ \
+RUN --mount=type=bind,from=api,source=/app/scripts,target=/app/scripts \
+    --mount=type=bind,from=api,source=/output,target=/output \
+    if [ ! -f "/output/deb/darktable.deb" ]; then echo no darktable; fi \
+    && if [ ! -f "/output/deb/jellyfin-ffmpeg.deb" ]; then echo no ffmpeg; fi \
+    # Install required dependencies
+    && /app/scripts/install_runtime_dependencies.sh \
     # Cleanup
     && apt-get autoremove -y \
     && apt-get clean \
@@ -133,19 +124,9 @@ COPY --from=api /app/api/photoview /app/photoview
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
+
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
-        -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \; \
-    # Archive static files for better performance
-    && find /app/ui -type f \( \
-        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
-        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
-    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
-        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
-    -exec sh -c 'for file; do \
-        gzip -k -f -9 "$file"; \
-        brotli -k -f -q 11 -s "$file"; \
-        zstd -k -f -19 -T0 --no-progress "$file"; \
-    done' sh {} +
+  -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \;
 
 WORKDIR /home/photoview
 

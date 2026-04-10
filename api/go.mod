@@ -7,6 +7,7 @@ require (
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/buckket/go-blurhash v1.1.0
 	github.com/go-sql-driver/mysql v1.9.3
+	github.com/gographics/gmagick v1.0.1-0.20200509093622-f3f23b1c6cac
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1

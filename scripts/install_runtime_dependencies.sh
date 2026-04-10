@@ -1,20 +1,62 @@
 #!/bin/sh
 set -eu
 
+: ${DEB_HOST_ARCH=`dpkg --print-architecture`}
+echo Target Arch: ${DEB_HOST_ARCH}
+echo Env Arch: $(dpkg --print-architecture)
+
+# Download Darktable
+if [ ! -f "/output/deb/darktable.deb" ]
+then
+  DARKTABLE_URL="http://download.opensuse.org/repositories/graphics:/darktable/Debian_13"
+  echo "deb ${DARKTABLE_URL}/ /" | tee /etc/apt/sources.list.d/graphics:darktable.list
+  curl -fsSL "${DARKTABLE_URL}/Release.key" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
+  apt update
+  echo download darktable from "${DARKTABLE_URL}"
+  apt download darktable:${DEB_HOST_ARCH}
+
+  mkdir -p /output/deb
+  cp darktable*.deb /output/deb/darktable.deb
+fi
+
+# Download FFMpeg
+if [ ! -f "/output/deb/jellyfin-ffmpeg.deb" ]
+then
+  JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
+    "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
+
+  VER="${JELLYFIN_FFMPEG_VERSION#v}"
+  MAJOR_VER=$(echo "${VER}" | cut -d. -f1)
+  FFMPEG_URL="https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/${JELLYFIN_FFMPEG_VERSION}/jellyfin-ffmpeg${MAJOR_VER}_${VER}-trixie_${DEB_HOST_ARCH}.deb"
+  apt-get install -y --no-install-recommends curl ca-certificates
+  echo download jellyfin-ffmpeg from "${FFMPEG_URL}"
+  mkdir -p /output/deb
+  curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o /output/deb/jellyfin-ffmpeg.deb "${FFMPEG_URL}"
+fi
+
+# Don't install in cross-build environment because it can't run.
+# Since we won't develop in cross-build environment, it's fine of just downloading the deb file.
+# Downloaded deb file will be installed in the release stage, which runs in an arch-native environment.
+if [ "${DEB_HOST_ARCH}" != "$(dpkg --print-architecture)" ]
+then
+  exit 0
+fi
+
 apt-get update
-apt-get install -y --no-install-recommends curl libimage-exiftool-perl
 
-# libheif dependencies
-apt-get install -y --no-install-recommends libdav1d7 librav1e0.7 libde265-0 libx265-215 libjpeg62-turbo libopenjp2-7 libopenh264-8 libpng16-16t64 libnuma1 zlib1g
+# exiftool
+apt-get install -y --no-install-recommends libimage-exiftool-perl:${DEB_HOST_ARCH}
 
-# libraw dependencies
-apt-get install -y --no-install-recommends libjpeg62-turbo liblcms2-2 zlib1g libgomp1
-
-# ImageMagick dependencies
-apt-get install -y --no-install-recommends libjxl0.11 liblcms2-2 liblqr-1-0 libdjvulibre21 libjpeg62-turbo libopenjp2-7 libopenexr-3-1-30 libpng16-16t64 libtiff6 libwebpmux3 libwebpdemux2 libwebp7 libxml2 zlib1g liblzma5 libbz2-1.0 libgomp1
-
-# Darktable dependencies
-apt-get install -y --no-install-recommends libavif16 libcurl4t64 libexiv2-28 libgmic1 libgraphicsmagick-q16-3t64 libgtk-3-0t64 libicu76 libjpeg62-turbo libjson-glib-1.0-0 libjxl0.11 liblcms2-2 liblensfun1 libopenexr-3-1-30 libopenjp2-7 libpng16-16t64 libpugixml1v5 librsvg2-2 libsqlite3-0 libtiff6 libwebp7
+# graphicswand
+apt-get install -y --no-install-recommends libgraphicsmagick-q16-3t64:${DEB_HOST_ARCH}
 
 # go-face dependencies
-apt-get install -y --no-install-recommends libdlib19.2 libblas3 liblapack3 libjpeg62-turbo
+apt-get install -y --no-install-recommends libdlib19.2:${DEB_HOST_ARCH} libblas3:${DEB_HOST_ARCH} liblapack3:${DEB_HOST_ARCH} libjpeg62-turbo:${DEB_HOST_ARCH}
+
+# darktable
+apt install -y --no-install-recommends /output/deb/darktable.deb
+
+# ffmpeg
+apt-get install -y --no-install-recommends /output/deb/jellyfin-ffmpeg.deb
+ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/
+ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/

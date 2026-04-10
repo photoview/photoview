@@ -8,6 +8,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/externaltools/darktable"
 	"github.com/photoview/photoview/api/scanner/externaltools/exif"
+	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -78,7 +79,7 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (Dimensio
 	}
 	thumbnail := origin.ThumbnailScale()
 
-	if err := darktable.DarktableCLI.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
+	if err := executable_worker.Magick.GenerateThumbnail(inputPath, outputPath, uint(thumbnail.Width), uint(thumbnail.Height)); err != nil {
 		return Dimension{}, fmt.Errorf("can't generate thumbnail of file %q: %w", inputPath, err)
 	}
 
