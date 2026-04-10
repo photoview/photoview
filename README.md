@@ -314,14 +314,12 @@ We can't keep verifying below commands on each environment. People may need to s
   - Required packages:
     - `golang` >= 1.22
     - `g++`
-    - `libheif` >= 1.15.1
     - [go-face Requirements](https://github.com/Kagami/go-face#requirements)
       - `dlib`
-      - `libjpeg`
+      - `libjpeg-turbo` (or `libjpeg`)
       - `libblas`
       - `liblapack`
-    - `libmagic`
-    - `libmagickwand`
+    - `graphicsmagick`
   - Optional tools during developing:
     - [`reflex`](https://github.com/cespare/reflex): a source code monitoring tool, which automatically rebuilds and restarts the server, running from the code in development.
     - `sqlite`: the SQLite DBMS, useful to interact with Photoview's SQLite DB directly if you use it in your development environment.
@@ -333,7 +331,7 @@ In Debian/Ubuntu, install dependencies:
 
 ```console
 $ sudo apt update # Update the package list
-$ sudo apt install golang g++ libheif-dev libdlib-dev libjpeg-dev libblas-dev liblapack-dev libmagic-dev libmagickwand-dev # For API requirement
+$ sudo apt install golang g++ libdlib-dev libblas-dev liblapack-dev libjpeg62-turbo-dev libgraphicsmagick1-dev # For API requirement
 $ sudo apt install reflex sqlite3 # For API optional tools
 ```
 
@@ -341,7 +339,7 @@ In macOS, install dependencies:
 
 ```console
 $ brew update # Update the package list
-$ brew install golang gcc pkg-config libheif dlib jpeg libmagic imagemagick # For API
+$ brew install golang gcc pkg-config dlib lapack jpeg-turbo graphicsmagick # For API
 $ brew install reflex sqlite3 # For API optional tools
 ```
 

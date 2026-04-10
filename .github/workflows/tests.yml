@@ -61,8 +61,7 @@ jobs:
           load: true
           target: api
           tags: photoview/api
-          cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
-
+          cache-from: type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
       - name: Test
         id: test
         run: |

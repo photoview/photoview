@@ -138,10 +138,10 @@ jobs:
           annotations: ${{ steps.docker_meta.outputs.annotations }}
           cache-from: |
             type=gha,scope=ui-${{ hashFiles('ui/package-lock.json') }}
-            type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
+            type=gha,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
           cache-to: |
             type=gha,mode=max,scope=ui-${{ hashFiles('ui/package-lock.json') }}
-            type=gha,mode=max,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh', 'dependencies/*') }}
+            type=gha,mode=max,scope=test-api-${{ hashFiles('api/go.sum', 'scripts/install_*.sh') }}
           build-args: |
             NODE_ENV=production
             VERSION=${{ github.ref_name }}
