@@ -11,9 +11,9 @@ then
   DARKTABLE_URL="http://download.opensuse.org/repositories/graphics:/darktable/Debian_13"
   echo "deb ${DARKTABLE_URL}/ /" | tee /etc/apt/sources.list.d/graphics:darktable.list
   curl -fsSL "${DARKTABLE_URL}/Release.key" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/graphics_darktable.gpg > /dev/null
-  apt update
+  apt-get update
   echo download darktable from "${DARKTABLE_URL}"
-  apt download darktable:${DEB_HOST_ARCH}
+  apt-get download darktable:${DEB_HOST_ARCH}
 
   mkdir -p /output/deb
   cp darktable*.deb /output/deb/darktable.deb
@@ -55,7 +55,7 @@ apt-get install -y --no-install-recommends libgraphicsmagick-q16-3t64:${DEB_HOST
 apt-get install -y --no-install-recommends libdlib19.2:${DEB_HOST_ARCH} libblas3:${DEB_HOST_ARCH} liblapack3:${DEB_HOST_ARCH} libjpeg62-turbo:${DEB_HOST_ARCH}
 
 # darktable
-apt install -y --no-install-recommends /output/deb/darktable.deb
+apt-get install -y --no-install-recommends /output/deb/darktable.deb
 
 # ffmpeg
 apt-get install -y --no-install-recommends /output/deb/jellyfin-ffmpeg.deb
