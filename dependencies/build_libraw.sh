@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+: "${LIBRAW_VERSION:=}"
+
 # Fallback to the latest version if LIBRAW_VERSION is not set
 if [[ -z "${LIBRAW_VERSION}" ]]; then
   echo "WARN: LibRaw version is empty, most likely the script runs not on CI."

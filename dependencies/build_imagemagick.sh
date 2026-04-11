@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+: "${IMAGEMAGICK_VERSION:=}"
+
 # Fallback to the latest version if IMAGEMAGICK_VERSION is not set
 if [[ -z "${IMAGEMAGICK_VERSION}" ]]; then
   echo "WARN: ImageMagick version is empty, most likely the script runs not on CI."

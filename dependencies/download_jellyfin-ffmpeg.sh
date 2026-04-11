@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+: "${JELLYFIN_FFMPEG_VERSION:=}"
+
 # Fallback to the latest version if JELLYFIN_FFMPEG_VERSION is not set
 if [[ -z "${JELLYFIN_FFMPEG_VERSION}" ]]; then
   echo "WARN: jellyfin-ffmpeg version is empty, most likely the script runs not on CI."
