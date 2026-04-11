@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+echo ${BASH_SOURCE[0]}
+
 echo "Fetching the latest version from LibRaw repo..."
 LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
   "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | grep tag_name | sed 's/.*: "\(.*\)",*/\1/')
@@ -22,9 +24,11 @@ if [[ $# = "1" ]] && [[ -n "$1" ]]; then
   BUILD_ARGS="-t $1"
 fi
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
 docker build \
   --build-arg "LIBRAW_VERSION=${LIBRAW_VERSION}" \
   --build-arg "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" \
   --build-arg "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" \
   ${BUILD_ARGS} \
-  .
+  "${SCRIPT_DIR}"
