@@ -40,6 +40,19 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
+# Archive static files for better performance
+RUN apt-get update && apt-get install -y --no-install-recommends gzip brotli zstd
+RUN find /app/ui/dist -type f \( \
+        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
+        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
+    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
+        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
+    -exec sh -c 'for file; do \
+        gzip -k -f -9 "$file"; \
+        brotli -k -f -q 11 -s "$file"; \
+        zstd -k -f -19 -T0 --no-progress "$file"; \
+    done' sh {} +
+
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
@@ -52,14 +65,14 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/set_compiler_env.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-    && source /app/scripts/set_compiler_env.sh
+COPY --chmod=0755 scripts/set_compiler_env.sh /app/scripts/
+RUN source /app/scripts/set_compiler_env.sh
 
-COPY scripts/install_*.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-    && set -a && source /env && set +a \
-    && /app/scripts/install_build_dependencies.sh \
+COPY --chmod=0755 scripts/install_build_dependencies.sh /app/scripts/
+RUN set -a && source /env && set +a \
+    && /app/scripts/install_build_dependencies.sh
+COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
+RUN set -a && source /env && set +a \
     && /app/scripts/install_runtime_dependencies.sh
 
 # hadolint ignore=DL3022
@@ -72,7 +85,7 @@ RUN set -a && source /env && set +a \
     && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
     && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && apt-get install -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/
 
@@ -102,19 +115,21 @@ ARG TARGETPLATFORM
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
+# Create a user to run Photoview server
+RUN groupadd -g 999 photoview \
+    && useradd -r -u 999 -g photoview -m photoview
+
+COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
 WORKDIR /dependencies
+
+# One step to install dependencies and clean up to avoid storing cache in the layer.
 RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    chmod +x /app/scripts/install_runtime_dependencies.sh \
-    # Create a user to run Photoview server
-    && groupadd -g 999 photoview \
-    && useradd -r -u 999 -g photoview -m photoview \
     # Install required dependencies
-    && /app/scripts/install_runtime_dependencies.sh \
+    /app/scripts/install_runtime_dependencies.sh \
     # Install self-building libs
     && cp -a lib/*.so* /usr/local/lib/ \
     && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb gzip brotli zstd \
+    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
     # Cleanup
@@ -125,22 +140,12 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
 COPY api/data /app/data
 COPY --from=ui /app/ui/dist /app/ui
 COPY --from=api /app/api/photoview /app/photoview
+
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
-        -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \; \
-    # Archive static files for better performance
-    && find /app/ui -type f \( \
-        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
-        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
-    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
-        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
-    -exec sh -c 'for file; do \
-        gzip -k -f -9 "$file"; \
-        brotli -k -f -q 11 -s "$file"; \
-        zstd -k -f -19 -T0 --no-progress "$file"; \
-    done' sh {} +
+        -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \;
 
 WORKDIR /home/photoview
 
