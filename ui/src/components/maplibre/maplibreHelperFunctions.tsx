@@ -1,40 +1,36 @@
-import type mapboxgl from 'mapbox-gl'
+import type maplibregl from 'maplibre-gl'
 import type geojson from 'geojson'
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot, Root } from 'react-dom/client'
 import MapClusterMarker from '../../Pages/PlacesPage/MapClusterMarker'
 import { MediaMarker } from '../../Pages/PlacesPage/MapPresentMarker'
 import { PlacesAction } from '../../Pages/PlacesPage/placesReducer'
 
-const markers: { [key: string]: mapboxgl.Marker } = {}
-let markersOnScreen: typeof markers = {}
+type MarkerEntry = {
+  marker: maplibregl.Marker
+  root: Root
+}
 
 type registerMediaMarkersArgs = {
-  map: mapboxgl.Map
-  mapboxLibrary: typeof mapboxgl
+  map: maplibregl.Map
+  maplibreLibrary: typeof maplibregl
   dispatchMarkerMedia: React.Dispatch<PlacesAction>
 }
 
 /**
  * Add appropriate event handlers to the map, to render and update media markers
- * Expects the provided mapbox map to contain geojson source of media
+ * Expects the provided map to contain geojson source of media
  */
-export const registerMediaMarkers = (args: registerMediaMarkersArgs) => {
-  const updateMarkers = makeUpdateMarkers(args)
+export const registerMediaMarkers = ({
+  map,
+  maplibreLibrary,
+  dispatchMarkerMedia,
+}: registerMediaMarkersArgs): (() => void) => {
+  const markers: { [key: string]: MarkerEntry } = {}
+  let markersOnScreen: { [key: string]: MarkerEntry } = {}
 
-  args.map.on('move', updateMarkers)
-  args.map.on('moveend', updateMarkers)
-  args.map.on('sourcedata', updateMarkers)
-  updateMarkers()
-}
-
-/**
- * Make a function that can be passed to Mapbox to tell it how to render and update the image markers
- */
-const makeUpdateMarkers =
-  ({ map, mapboxLibrary, dispatchMarkerMedia }: registerMediaMarkersArgs) =>
-  () => {
-    const newMarkers: typeof markers = {}
+  const updateMarkers = () => {
+    const newMarkers: { [key: string]: MarkerEntry } = {}
     const features = map.querySourceFeatures('media')
 
     // for every media on the screen, create an HTML marker for it (if we didn't yet),
@@ -52,25 +48,46 @@ const makeUpdateMarkers =
         ? `cluster_${props.cluster_id}`
         : `media_${props.media_id}`
 
-      let marker = markers[id]
-      if (!marker) {
-        const el = createClusterPopupElement(props, {
+      let entry = markers[id]
+      if (!entry) {
+        const { el, root } = createClusterPopupElement(props, {
           dispatchMarkerMedia,
         })
-        marker = markers[id] = new mapboxLibrary.Marker({
+        const marker = new maplibreLibrary.Marker({
           element: el,
         }).setLngLat(coords)
+        entry = markers[id] = { marker, root }
       }
-      newMarkers[id] = marker
+      newMarkers[id] = entry
 
-      if (!markersOnScreen[id]) marker.addTo(map)
+      if (!markersOnScreen[id]) entry.marker.addTo(map)
     }
     // for every marker we've added previously, remove those that are no longer visible
     for (const id in markersOnScreen) {
-      if (!newMarkers[id]) markersOnScreen[id].remove()
+      if (!newMarkers[id]) {
+        markersOnScreen[id].marker.remove()
+        markersOnScreen[id].root.unmount()
+        delete markers[id]
+      }
     }
     markersOnScreen = newMarkers
   }
+
+  map.on('move', updateMarkers)
+  map.on('moveend', updateMarkers)
+  map.on('sourcedata', updateMarkers)
+  updateMarkers()
+
+  return () => {
+    map.off('move', updateMarkers)
+    map.off('moveend', updateMarkers)
+    map.off('sourcedata', updateMarkers)
+    for (const id in markers) {
+      markers[id].marker.remove()
+      markers[id].root.unmount()
+    }
+  }
+}
 
 function createClusterPopupElement(
   geojsonProps: MediaMarker,
@@ -80,14 +97,13 @@ function createClusterPopupElement(
     dispatchMarkerMedia: React.Dispatch<PlacesAction>
   }
 ) {
-  // setPresentMarker: React.Dispatch<React.SetStateAction<PresentMarker | null>>
   const el = document.createElement('div')
-  ReactDOM.render(
+  const root = createRoot(el)
+  root.render(
     <MapClusterMarker
       marker={geojsonProps}
       dispatchMarkerMedia={dispatchMarkerMedia}
-    />,
-    el
+    />
   )
-  return el
+  return { el, root }
 }

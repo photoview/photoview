@@ -11,7 +11,49 @@ import (
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/utils"
+	"gorm.io/gorm"
 )
+
+// SetMapStyleLight is the resolver for the setMapStyleLight field.
+func (r *mutationResolver) SetMapStyleLight(ctx context.Context, url *string) (*string, error) {
+	if url != nil {
+		if err := validateMapStyleURL(*url); err != nil {
+			return nil, err
+		}
+	}
+
+	db := r.DB(ctx)
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("MapStyleLight", url).Error; err != nil {
+		return nil, err
+	}
+
+	siteInfo, err := models.GetSiteInfo(db)
+	if err != nil {
+		return nil, err
+	}
+	return siteInfo.MapStyleLight, nil
+}
+
+// SetMapStyleDark is the resolver for the setMapStyleDark field.
+func (r *mutationResolver) SetMapStyleDark(ctx context.Context, url *string) (*string, error) {
+	if url != nil {
+		if err := validateMapStyleURL(*url); err != nil {
+			return nil, err
+		}
+	}
+
+	db := r.DB(ctx)
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("MapStyleDark", url).Error; err != nil {
+		return nil, err
+	}
+
+	siteInfo, err := models.GetSiteInfo(db)
+	if err != nil {
+		return nil, err
+	}
+	return siteInfo.MapStyleDark, nil
+}
 
 // SiteInfo is the resolver for the siteInfo field.
 func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) {
@@ -21,6 +63,11 @@ func (r *queryResolver) SiteInfo(ctx context.Context) (*models.SiteInfo, error) 
 // FaceDetectionEnabled is the resolver for the faceDetectionEnabled field.
 func (r *siteInfoResolver) FaceDetectionEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error) {
 	return face_detection.GlobalFaceDetector != nil, nil
+}
+
+// MapEnabled is the resolver for the mapEnabled field.
+func (r *siteInfoResolver) MapEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error) {
+	return !utils.EnvDisableMap.GetBool(), nil
 }
 
 // SiteInfo returns api.SiteInfoResolver implementation.

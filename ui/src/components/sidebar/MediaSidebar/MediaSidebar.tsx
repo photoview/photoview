@@ -1,4 +1,4 @@
-import { gql, useLazyQuery } from '@apollo/client'
+import { gql, useLazyQuery, useQuery } from '@apollo/client'
 import React, { useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -20,7 +20,9 @@ import SidebarHeader from '../SidebarHeader'
 import { sidebarDownloadQuery_media_downloads } from '../__generated__/sidebarDownloadQuery'
 import ExifDetails from './MediaSidebarExif'
 import MediaSidebarPeople from './MediaSidebarPeople'
-import MediaSidebarMap from './MediaSidebarMap'
+const MediaSidebarMap = React.lazy(() => import('./MediaSidebarMap'))
+import { SITE_INFO_FEATURE_FLAGS_QUERY } from '../../layout/MainMenu'
+import { siteInfoFeatureFlags } from '../../layout/__generated__/siteInfoFeatureFlags'
 import {
   sidebarMediaQuery,
   sidebarMediaQueryVariables,
@@ -165,6 +167,8 @@ type SidebarContentProps = {
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
 	const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
+  const { data: featureFlagsData } = useQuery<siteInfoFeatureFlags>(SITE_INFO_FEATURE_FLAGS_QUERY)
+  const mapEnabled = !!featureFlagsData?.siteInfo?.mapEnabled
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
   else if (media.thumbnail) previewImage = media.thumbnail
@@ -176,8 +180,12 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
 
   let sidebarMap = null
   const mediaCoordinates = media.exif?.coordinates
-  if (mediaCoordinates) {
-    sidebarMap = <MediaSidebarMap coordinates={mediaCoordinates} />
+  if (mediaCoordinates && mapEnabled) {
+    sidebarMap = (
+      <React.Suspense fallback={null}>
+        <MediaSidebarMap coordinates={mediaCoordinates} />
+      </React.Suspense>
+    )
   }
 
   let albumPath = null

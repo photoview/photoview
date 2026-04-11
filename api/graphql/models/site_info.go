@@ -7,9 +7,11 @@ import (
 )
 
 type SiteInfo struct {
-	InitialSetup         bool `gorm:"not null"`
-	PeriodicScanInterval int  `gorm:"not null"`
-	ConcurrentWorkers    int  `gorm:"not null"`
+	InitialSetup         bool    `gorm:"not null"`
+	PeriodicScanInterval int     `gorm:"not null"`
+	ConcurrentWorkers    int     `gorm:"not null"`
+	MapStyleLight        *string `gorm:"default:null"`
+	MapStyleDark         *string `gorm:"default:null"`
 }
 
 func (SiteInfo) TableName() string {
@@ -26,6 +28,8 @@ func DefaultSiteInfo(db *gorm.DB) SiteInfo {
 		InitialSetup:         true,
 		PeriodicScanInterval: 0,
 		ConcurrentWorkers:    defaultConcurrentWorkers,
+		MapStyleLight:        nil,
+		MapStyleDark:         nil,
 	}
 }
 

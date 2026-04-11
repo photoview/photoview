@@ -60,6 +60,7 @@ Password: **demo**
   - [Getting started — Setup with Docker](#getting-started--setup-with-docker)
     - [Initial Setup](#initial-setup)
   - [Advanced setup](#advanced-setup)
+    - [Map Feature](#map-feature)
     - [Hardware Acceleration](#hardware-acceleration)
   - [Contributing](#contributing)
   - [Set up Docker development environment](#set-up-docker-development-environment)
@@ -214,6 +215,39 @@ Possible ways of securing a self-hosted service might be (but not limited to):
 8. Set up an **Intrusion Detection/Prevention System** to monitor network traffic for suspicious activity and issue alerts when such activity is discovered.
 
 Setting up and configuring of all these protections depends on and requires a lot of info about your local network and self-hosted services. Based on this info, the configuration flow and resulting services architecture might differ a lot between cases. That is why in the scope of this project, we can only provide you with this high-level list of possible ways of webservice protection. You'll need to investigate them, find the best combination and configuration for your case, and take responsibility to configure everything in the correct and consistent way. We cannot provide you support for such highly secured setups, as a lot of things might work differently because of security limitations.
+
+### Map Feature
+
+Photoview includes a Places page that displays your geotagged photos on an interactive map powered by [MapLibre GL](https://maplibre.org/).
+By default, the map uses a built-in style based on the [OpenFreeMap Liberty](https://openfreemap.org/) style with [Mapterhorn](https://mapterhorn.com/) hillshading.
+Map tiles are fetched from `tiles.openfreemap.org` and `tiles.mapterhorn.com`, which requires an active internet connection.
+
+To use a custom map style instead of the built-in one, navigate to **Settings > Map Styles** and enable the **Customize map style** checkbox, then enter your own MapLibre style URLs.
+
+#### Disabling the map for off-grid or air-gapped setups
+
+If your Photoview instance runs on an isolated network without internet access (e.g., a NAS on an air-gapped LAN, a boat, a remote cabin), the map feature will fail to load tiles and should be disabled.
+Set the following environment variable:
+
+```env
+PHOTOVIEW_DISABLE_MAP=1
+```
+
+This removes the Places page, the sidebar map on individual photos, and the map style settings from the admin panel.
+No external tile requests will be made.
+
+#### Self-hosting map tiles with Martin and Planetiler
+
+If you want the map feature on a network without public internet access, you can self-host vector map tiles instead of disabling the map entirely. A common approach:
+
+1. **[Planetiler](https://github.com/onthegomap/planetiler)** - generates `.pmtiles` or `.mbtiles` vector tile archives from OpenStreetMap data.
+   Run it once on a machine with internet access to produce a tile file for your region (or the entire planet).
+2. **[Martin](https://github.com/maplibre/martin)** - a tile server that serves vector tiles we just generated, together with fonts, sprites and styles over HTTP.
+  Point it at the file produced by Planetiler and run it alongside Photoview on your local network.
+
+Once Martin is running, configure Photoview to use your self-hosted tiles by navigating to **Settings > Map Styles**, enabling **Customize map style**, and entering your Martin style URL (e.g., `http://martin:3000/style.json`) for both light and dark themes.
+
+This gives you a fully functional, off-grid-capable map without any dependency on external services.
 
 ### Hardware Acceleration
 

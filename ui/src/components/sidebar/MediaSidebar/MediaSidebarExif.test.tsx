@@ -381,8 +381,10 @@ describe('ExifDetails dateShot formatting', () => {
       render(<ExifDetails media={media} />)
 
       // Should fall back gracefully and still format the date
+      // The exact locale format depends on the system default, so just verify
+      // the key components are present in order (year, day, and timezone offset)
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      expect(screen.getByText(/May 15, 2023.*2:30:00 PM.*\+01:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/2023.*15.*\+01:00$/)).toBeInTheDocument()
     })
 
     test('handles empty string translation language', () => {
@@ -392,8 +394,10 @@ describe('ExifDetails dateShot formatting', () => {
       render(<ExifDetails media={media} />)
 
       // Should handle empty string gracefully
+      // The exact locale format depends on the system default, so just verify
+      // the key components are present in order (year, day, time, and timezone offset)
       expect(screen.getByText('Date shot')).toBeInTheDocument()
-      expect(screen.getByText(/Jan 15, 2023.*12:00:00 PM.*-05:00$/)).toBeInTheDocument()
+      expect(screen.getByText(/2023.*15.*12:00:00.*-05:00$/)).toBeInTheDocument()
     })
 
     test('uses Russian (ru) translation language', () => {
