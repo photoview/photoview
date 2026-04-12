@@ -11,8 +11,8 @@ fi
 
 apt-get update
 
-# exiftool
-apt-get install -y --no-install-recommends libimage-exiftool-perl
+# exiftool and health check
+apt-get install -y --no-install-recommends curl libimage-exiftool-perl
 
 # libraw dependencies
 apt-get install -y --no-install-recommends \
