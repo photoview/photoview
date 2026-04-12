@@ -48,33 +48,33 @@ curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o ./magick.tar.gz \
 tar xfv ./magick.tar.gz
 cd ImageMagick-*
 
-FEATURES="
-  --with-bzlib \
-  --with-djvu \
-  --with-heic \
-  --with-jbig \
-  --with-jpeg \
-  --with-jxl \
-  --with-lcms \
-  --with-lzma \
-  --with-openexr \
-  --with-openjp2 \
-  --with-png \
-  --with-raw \
-  --with-tiff \
-  --with-webp \
-  --with-wmf \
-  --with-xml \
-  --with-zip \
-  --with-zstd \
-"
+FEATURES=(
+  --with-bzlib
+  --with-djvu
+  --with-heic
+  --with-jbig
+  --with-jpeg
+  --with-jxl
+  --with-lcms
+  --with-lzma
+  --with-openexr
+  --with-openjp2
+  --with-png
+  --with-raw
+  --with-tiff
+  --with-webp
+  --with-wmf
+  --with-xml
+  --with-zip
+  --with-zstd
+)
 
 ./configure \
   --enable-64bit-channel-masks \
   --enable-static \
   --enable-shared \
   --enable-delegate-build \
-  ${FEATURES} \
+  ${FEATURES[@]} \
   --without-x \
   --without-magick-plus-plus \
   --without-perl \
@@ -82,9 +82,9 @@ FEATURES="
   --prefix=/usr/local
 
 # Ensure that features are enabled
-for feature in ${FEATURES}
+for feature in ${FEATURES[@]}
 do
-  grep -- ${feature}'.*yes$' config.log || (echo "Can't enable feature ${feature}"; false)
+  grep -- "${feature}.*yes$" config.log || (echo "Can't enable feature ${feature}"; false)
 done
 
 make
