@@ -74,7 +74,7 @@ FEATURES=(
   --enable-static \
   --enable-shared \
   --enable-delegate-build \
-  ${FEATURES[@]} \
+  "${FEATURES[@]}" \
   --without-x \
   --without-magick-plus-plus \
   --without-perl \
@@ -82,9 +82,9 @@ FEATURES=(
   --prefix=/usr/local
 
 # Ensure that features are enabled
-for feature in ${FEATURES[@]}
+for feature in "${FEATURES[@]}"
 do
-  grep -- "${feature}.*yes$" config.log || (echo "Can't enable feature ${feature}"; false)
+  grep -- "${feature}.*yes\$" config.log || (echo "Can't enable feature ${feature}"; false)
 done
 
 make
