@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# To inject versions into current environment:
+# $ export $(./versions.sh | xargs)
+
 set -euo pipefail
 
 : ${USER_AGENT:=}
