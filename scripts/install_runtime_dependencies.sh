@@ -11,21 +11,20 @@ fi
 
 apt-get update
 
-# For compressing static files for better performance
-apt-get install -y --no-install-recommends gzip brotli zstd
-
-# exiftool and health check
-apt-get install -y --no-install-recommends curl libimage-exiftool-perl
-
-# libraw dependencies
 apt-get install -y --no-install-recommends \
+  $(: "For compressing static files for better performance") \
+  gzip \
+  brotli \
+  zstd \
+  $(: "exiftool and health check") \
+  curl \
+  libimage-exiftool-perl \
+  $(: "libraw dependencies") \
   libgomp1 \
   libjpeg62-turbo \
   liblcms2-2 \
-  zlib1g
-
-# ImageMagick dependencies
-apt-get install -y --no-install-recommends \
+  zlib1g \
+  $(: "ImageMagick dependencies") \
   libgomp1 \
   libbz2-1.0 \
   libdjvulibre21 \
@@ -46,17 +45,13 @@ apt-get install -y --no-install-recommends \
   libxml2 \
   libzip5 \
   libzstd1 \
-  zlib1g
-
-# go-face dependencies
-apt-get install -y --no-install-recommends \
+  zlib1g \
+  $(: "go-face dependencies") \
   libblas3 \
   libdlib19.2 \
   libjpeg62-turbo \
-  liblapack3
-
-# libheif dependencies
-apt-get install -y --no-install-recommends \
+  liblapack3 \
+  $(: "libheif dependencies") \
   libdav1d7 \
   librav1e0.7 \
   libde265-0 \
@@ -65,4 +60,5 @@ apt-get install -y --no-install-recommends \
   libopenh264-8 \
   libpng16-16t64 \
   libnuma1 \
-  zlib1g
+  zlib1g \
+  $(: "end apt-get install")

@@ -5,14 +5,12 @@ set -eu
 echo Arch: ${DEB_HOST_ARCH}
 apt-get update
 
-# Install libraw dependencies
 apt-get install -y --no-install-recommends \
+  $(: "libraw dependencies") \
   libjpeg62-turbo-dev:"${DEB_HOST_ARCH}" \
   liblcms2-dev:"${DEB_HOST_ARCH}" \
-  zlib1g-dev:"${DEB_HOST_ARCH}"
-
-# Install ImageMagick dependencies
-apt-get install -y --no-install-recommends \
+  zlib1g-dev:"${DEB_HOST_ARCH}" \
+  $(: "ImageMagick dependencies") \
   libbz2-dev:"${DEB_HOST_ARCH}" \
   libdjvulibre-dev:"${DEB_HOST_ARCH}" \
   libfftw3-dev:"${DEB_HOST_ARCH}" \
@@ -31,24 +29,21 @@ apt-get install -y --no-install-recommends \
   libxml2-dev:"${DEB_HOST_ARCH}" \
   libzip-dev:"${DEB_HOST_ARCH}" \
   libzstd-dev:"${DEB_HOST_ARCH}" \
-  zlib1g-dev:"${DEB_HOST_ARCH}"
-
-# Install go-face dependencies
-apt-get install -y --no-install-recommends \
+  zlib1g-dev:"${DEB_HOST_ARCH}" \
+  $(: "go-face dependencies") \
   libdlib-dev:${DEB_HOST_ARCH} \
   libblas-dev:${DEB_HOST_ARCH} \
   liblapack-dev:${DEB_HOST_ARCH} \
-  libjpeg62-turbo-dev:${DEB_HOST_ARCH}
-
-# Install tools for development
-apt-get install -y --no-install-recommends reflex sqlite3
-
-# Install libheif dependencies
-apt-get install -y --no-install-recommends \
+  libjpeg62-turbo-dev:${DEB_HOST_ARCH} \
+  $(: "tools for development") \
+  reflex \
+  sqlite3 \
+  $(: "libheif dependencies") \
   libdav1d-dev:${DEB_HOST_ARCH} \
   libde265-dev:${DEB_HOST_ARCH} \
   libjpeg62-turbo-dev:${DEB_HOST_ARCH} \
   libopenh264-dev:${DEB_HOST_ARCH} \
   libpng-dev:${DEB_HOST_ARCH} \
   libnuma-dev:${DEB_HOST_ARCH} \
-  zlib1g-dev:${DEB_HOST_ARCH}
+  zlib1g-dev:${DEB_HOST_ARCH} \
+  $(: "end apt-get install")
