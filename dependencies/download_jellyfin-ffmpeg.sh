@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -euo pipefail
+
+: "${JELLYFIN_FFMPEG_VERSION:=}"
+
 # Fallback to the latest version if JELLYFIN_FFMPEG_VERSION is not set
 if [[ -z "${JELLYFIN_FFMPEG_VERSION}" ]]; then
   echo "WARN: jellyfin-ffmpeg version is empty, most likely the script runs not on CI."
@@ -8,22 +12,10 @@ if [[ -z "${JELLYFIN_FFMPEG_VERSION}" ]]; then
     "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
 fi
 
-set -euo pipefail
-
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
 : "${DEB_HOST_GNU_TYPE:=$(dpkg-architecture -a "$DEB_HOST_ARCH" -qDEB_HOST_GNU_TYPE)}"
-CACHE_DIR="${BUILD_CACHE_DIR:-/build-cache}/jellyfin-ffmpeg-${JELLYFIN_FFMPEG_VERSION}"
-CACHE_MARKER="${CACHE_DIR}/jellyfin-ffmpeg-${JELLYFIN_FFMPEG_VERSION}-complete"
 
-# Check if this specific version is already downloaded and cached
-if [[ -f "$CACHE_MARKER" ]] && [[ -d "${CACHE_DIR}/output" ]]; then
-  echo "jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} found in cache, reusing..."
-  mkdir -p /output
-  cp -ra "${CACHE_DIR}/output/"* /output/
-  exit 0
-fi
-
-echo "Downloading jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} (cache miss)..."
+echo "Downloading jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION}..."
 
 echo Compiler: "${DEB_HOST_GNU_TYPE}" Arch: "${DEB_HOST_ARCH}"
 
@@ -34,10 +26,4 @@ echo download jellyfin-ffmpeg from "$URL"
 mkdir -p /output/deb
 curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 -o /output/deb/jellyfin-ffmpeg.deb "$URL"
 
-# After successful download, cache the results
-echo "Caching jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} build results..."
-mkdir -p "${CACHE_DIR}/output"
-cp -ra /output/* "${CACHE_DIR}/output/"
-touch "$CACHE_MARKER"
-
-echo "jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} downloaded and cached"
+echo "jellyfin-ffmpeg ${JELLYFIN_FFMPEG_VERSION} downloaded"

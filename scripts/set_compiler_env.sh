@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 # Configure environment for cross-compiling.
 
@@ -19,9 +19,25 @@ then
   fi
 fi
 
+LIBS=(
+  autoconf
+  automake
+  cmake
+  curl
+  dpkg-dev
+  git
+  libtool
+  m4
+  pkg-config
+
+  # for crossbuild
+  crossbuild-essential-${DEBIAN_ARCH}
+  libc-dev:${DEBIAN_ARCH}
+)
+
 dpkg --add-architecture $DEBIAN_ARCH
 apt-get update
-apt-get install -y git curl crossbuild-essential-${DEBIAN_ARCH} libc-dev:${DEBIAN_ARCH} autoconf automake libtool m4 pkg-config cmake dpkg-dev
+apt-get install -y --no-install-recommends "${LIBS[@]}"
 
 dpkg-architecture -a $DEBIAN_ARCH >/env
 export $(cat /env)
