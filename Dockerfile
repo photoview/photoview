@@ -132,9 +132,8 @@ COPY --from=api /app/api/photoview /app/photoview
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
-        -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \;
-
-RUN find /app/ui/dist -type f \( \
+        -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \; \
+    find /app/ui -type f \( \
         -name "*.js" -o -name "*.mjs" -o -name "*.json" \
         -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
     -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
