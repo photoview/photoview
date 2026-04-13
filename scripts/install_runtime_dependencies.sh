@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
 : ${DEB_HOST_ARCH=`dpkg --print-architecture`}
 echo Arch: ${DEB_HOST_ARCH}
@@ -9,56 +9,62 @@ if [ ${DEB_HOST_ARCH} != $(dpkg --print-architecture) ]; then
   exit 0
 fi
 
-apt-get update
+LIBS=(
+  # compressing static files for better performance
+  gzip
+  brotli
+  zstd
 
-apt-get install -y --no-install-recommends \
-  $(: "For compressing static files for better performance") \
-  gzip \
-  brotli \
-  zstd \
-  $(: "exiftool and health check") \
-  curl \
-  libimage-exiftool-perl \
-  $(: "libraw dependencies") \
-  libgomp1 \
-  libjpeg62-turbo \
-  liblcms2-2 \
-  zlib1g \
-  $(: "ImageMagick dependencies") \
-  libgomp1 \
-  libbz2-1.0 \
-  libdjvulibre21 \
-  libheif1 \
-  libjbig0 \
-  libjpeg62-turbo \
-  libjxl0.11 \
-  liblcms2-2 \
-  liblzma5 \
-  libopenexr-3-1-30 \
-  libopenjp2-7 \
-  libpng16-16t64 \
-  libtiff6 \
-  libwmf-0.2-7 \
-  libwebpmux3 \
-  libwebpdemux2 \
-  libwebp7 \
-  libxml2 \
-  libzip5 \
-  libzstd1 \
-  zlib1g \
-  $(: "go-face dependencies") \
-  libblas3 \
-  libdlib19.2 \
-  libjpeg62-turbo \
-  liblapack3 \
-  $(: "libheif dependencies") \
-  libdav1d7 \
-  librav1e0.7 \
-  libde265-0 \
-  libx265-215 \
-  libjpeg62-turbo \
-  libopenh264-8 \
-  libpng16-16t64 \
-  libnuma1 \
-  zlib1g \
-  $(: "end apt-get install")
+  # exiftool and health check
+  curl
+  libimage-exiftool-perl
+
+  # libraw dependencies
+  libgomp1
+  libjpeg62-turbo
+  liblcms2-2
+  zlib1g
+
+  # ImageMagick dependencies
+  libgomp1
+  libbz2-1.0
+  libdjvulibre21
+  libheif1
+  libjbig0
+  libjpeg62-turbo
+  libjxl0.11
+  liblcms2-2
+  liblzma5
+  libopenexr-3-1-30
+  libopenjp2-7
+  libpng16-16t64
+  libtiff6
+  libwmf-0.2-7
+  libwebpmux3
+  libwebpdemux2
+  libwebp7
+  libxml2
+  libzip5
+  libzstd1
+  zlib1g
+
+  # go-face dependencies
+  libblas3
+  libdlib19.2
+  libjpeg62-turbo
+  liblapack3
+
+  # libheif dependencies
+  libdav1d7
+  librav1e0.7
+  libde265-0
+  libx265-215
+  libjpeg62-turbo
+  libopenh264-8
+  libpng16-16t64
+  libnuma1
+  zlib1g
+)
+
+apt-get update
+apt-get install -y --no-install-recommends "${LIBS[@]}"
