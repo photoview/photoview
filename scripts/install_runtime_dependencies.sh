@@ -11,6 +11,9 @@ fi
 
 apt-get update
 
+# For compressing static files for better performance
+apt-get install -y --no-install-recommends gzip brotli zstd
+
 # exiftool and health check
 apt-get install -y --no-install-recommends curl libimage-exiftool-perl
 

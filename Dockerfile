@@ -40,19 +40,6 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
-# Archive static files for better performance
-RUN apt-get update && apt-get install -y --no-install-recommends gzip brotli zstd
-RUN find /app/ui/dist -type f \( \
-        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
-        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
-    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
-        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
-    -exec sh -c 'for file; do \
-        gzip -k -f -9 "$file"; \
-        brotli -k -f -q 11 -s "$file"; \
-        zstd -k -f -19 -T0 --no-progress "$file"; \
-    done' sh {} +
-
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
@@ -146,6 +133,17 @@ COPY --from=api /app/api/photoview /app/photoview
 ARG COMMIT_SHA=NoCommit
 RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
         -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \;
+
+RUN find /app/ui/dist -type f \( \
+        -name "*.js" -o -name "*.mjs" -o -name "*.json" \
+        -o -name "*.css" -o -name "*.html" -o -name "*.svg" \
+    -o -name "*.txt" -o -name "*.xml" -o -name "*.wasm" -o -name "*.map" \
+        \) ! -name "*.gz" ! -name "*.br" ! -name "*.zst" \
+    -exec sh -c 'for file; do \
+        gzip -k -f -9 "$file"; \
+        brotli -k -f -q 11 -s "$file"; \
+        zstd -k -f -19 -T0 --no-progress "$file"; \
+    done' sh {} +
 
 WORKDIR /home/photoview
 
