@@ -15,8 +15,10 @@ LIBS=(
   brotli
   zstd
 
-  # exiftool and health check
+  # health check
   curl
+
+  # exiftool
   libimage-exiftool-perl
 
   # libraw dependencies
