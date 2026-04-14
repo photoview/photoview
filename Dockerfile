@@ -41,7 +41,7 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
 ### Prepare dependencies ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} photoview/dependencies:trixie AS dependencies
+FROM photoview/dependencies:trixie AS dependencies
 
 # See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
