@@ -40,6 +40,15 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
+### Prepare dependencies ###
+FROM --platform=${BUILDPLATFORM:-linux/amd64} photoview/dependencies:trixie AS dependencies
+
+# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+WORKDIR /dependencies
+RUN tar xfv /artifacts.tar.gz
+
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
@@ -63,11 +72,10 @@ RUN set -a && source /env && set +a \
     && /app/scripts/install_runtime_dependencies.sh
 
 # hadolint ignore=DL3022
-COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
 WORKDIR /dependencies
-RUN set -a && source /env && set +a \
+RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependencies/ \
+    set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
-    && tar xfv artifacts.tar.gz \
     && cp -a include/* /usr/local/include/ \
     && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
@@ -106,11 +114,22 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview
 
-WORKDIR /dependencies
-
 # Install required dependencies
 COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
-RUN /app/scripts/install_runtime_dependencies.sh
+WORKDIR /dependencies
+RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependencies/ \
+    # One step to install dependencies and clean up to avoid storing cache in the layer.
+    /app/scripts/install_runtime_dependencies.sh \
+    # Install self-building libs
+    && cp -a lib/*.so* /usr/local/lib/ \
+    && ldconfig \
+    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
+    # Cleanup
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy binary and UI assets from api and ui stages.
 COPY api/data /app/data
@@ -134,19 +153,6 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
     done' sh {} +
 
 COPY --from=api /app/api/photoview /app/photoview
-
-# One step to install dependencies and clean up to avoid storing cache in the layer.
-RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    # Install self-building libs
-    cp -a lib/*.so* /usr/local/lib/ \
-    && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
-    # Cleanup
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/photoview
 
