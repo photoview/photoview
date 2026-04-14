@@ -1,6 +1,6 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG NODE_ENV=production
@@ -33,7 +33,7 @@ ARG VERSION=unknown-branch
 ENV VERSION=${VERSION}
 ARG TARGETARCH
 ENV TARGETARCH=${TARGETARCH}
-# hadolint ignore=SC2155
+
 RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
     export REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
     export REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}"; \
@@ -43,7 +43,6 @@ RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
 ### Prepare dependencies ###
 FROM photoview/dependencies:trixie AS dependencies
 
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 WORKDIR /dependencies
@@ -52,10 +51,11 @@ RUN tar xfv /artifacts.tar.gz
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
+ARG DEBIAN_FRONTEND
 
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
+ENV DEBIAN_FRONTEND="${DEBIAN_FRONTEND}"
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
@@ -71,7 +71,6 @@ COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
 RUN set -a && source /env && set +a \
     && /app/scripts/install_runtime_dependencies.sh
 
-# hadolint ignore=DL3022
 WORKDIR /dependencies
 RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependencies/ \
     set -a && source /env && set +a \
@@ -84,9 +83,8 @@ RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependenci
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/
 
-COPY api/go.mod api/go.sum /app/api/
 WORKDIR /app/api
-# hadolint ignore=DL3062
+COPY api/go.mod api/go.sum /app/api/
 RUN set -a && source /env && set +a \
     && go env \
     && go mod download \
@@ -106,9 +104,11 @@ RUN set -a && source /env && set +a \
 ### Build release image ###
 FROM debian:trixie-slim AS release
 ARG TARGETPLATFORM
+ARG DEBIAN_FRONTEND
 
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND="${DEBIAN_FRONTEND}"
 
 # Create a user to run Photoview server
 RUN groupadd -g 999 photoview \
