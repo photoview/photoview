@@ -106,28 +106,16 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN groupadd -g 999 photoview \
     && useradd -r -u 999 -g photoview -m photoview
 
-COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
 WORKDIR /dependencies
 
-# One step to install dependencies and clean up to avoid storing cache in the layer.
-RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    # Install required dependencies
-    /app/scripts/install_runtime_dependencies.sh \
-    # Install self-building libs
-    && cp -a lib/*.so* /usr/local/lib/ \
-    && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
-    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
-    # Cleanup
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install required dependencies
+COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
+RUN /app/scripts/install_runtime_dependencies.sh
 
+# Copy binary and UI assets from api and ui stages.
 COPY api/data /app/data
-COPY --from=ui /app/ui/dist /app/ui
-COPY --from=api /app/api/photoview /app/photoview
 
+COPY --from=ui /app/ui/dist /app/ui
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
@@ -143,6 +131,21 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
         brotli -k -f -q 11 -s "$file"; \
         zstd -k -f -19 -T0 --no-progress "$file"; \
     done' sh {} +
+
+COPY --from=api /app/api/photoview /app/photoview
+
+# One step to install dependencies and clean up to avoid storing cache in the layer.
+RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
+    # Install self-building libs
+    cp -a lib/*.so* /usr/local/lib/ \
+    && ldconfig \
+    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
+    && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
+    # Cleanup
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/photoview
 
