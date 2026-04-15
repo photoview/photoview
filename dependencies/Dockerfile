@@ -15,7 +15,7 @@ RUN --mount=type=secret,id=github_token \
       export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
     && set -a && source /env && set +a \
-    && ./build_libraw.sh
+    && DEBIAN_FRONTEND=noninteractive ./build_libraw.sh
 
 FROM build-libraw AS build-imagemagick
 ARG IMAGEMAGICK_VERSION
@@ -27,7 +27,7 @@ RUN --mount=type=secret,id=github_token \
       export GITHUB_TOKEN=$(cat /run/secrets/github_token); \
     fi \
     && set -a && source /env && set +a \
-    && ./build_imagemagick.sh
+    && DEBIAN_FRONTEND=noninteractive ./build_imagemagick.sh
 
 FROM base-prep AS download-jellyfin-ffmpeg
 ARG JELLYFIN_FFMPEG_VERSION
@@ -35,7 +35,7 @@ ARG TARGETARCH
 WORKDIR /tmp/download-ffmpeg
 COPY --chmod=0755 download_jellyfin-ffmpeg.sh .
 RUN set -a && source /env && set +a \
-    && ./download_jellyfin-ffmpeg.sh
+    && DEBIAN_FRONTEND=noninteractive ./download_jellyfin-ffmpeg.sh
 
 FROM base-prep AS final-assembly
 COPY --from=build-libraw /output/ /output/
