@@ -62,7 +62,7 @@ ENV CGO_ENABLED=1
 
 # Download dependencies
 COPY --chmod=0755 scripts/set_compiler_env.sh /app/scripts/
-RUN source /app/scripts/set_compiler_env.sh
+RUN DEBIAN_FRONTEND=noninteractive source /app/scripts/set_compiler_env.sh
 
 COPY --chmod=0755 scripts/install_build_dependencies.sh /app/scripts/
 RUN set -a && source /env && set +a \
