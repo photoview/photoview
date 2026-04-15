@@ -120,7 +120,8 @@ RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependenci
     # Install self-building libs
     && cp -a lib/*.so* /usr/local/lib/ \
     && ldconfig \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+      -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
     # Cleanup
