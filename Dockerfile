@@ -34,10 +34,10 @@ ENV VERSION=${VERSION}
 ARG TARGETARCH
 ENV TARGETARCH=${TARGETARCH}
 
-RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
-    export REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
-    export REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}"; \
-    export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
+RUN REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')" \
+    REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-" \
+    REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}" \
+    REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}" \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
 
 ### Prepare dependencies ###
