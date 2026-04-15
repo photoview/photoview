@@ -51,11 +51,9 @@ RUN tar xfv /artifacts.tar.gz
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
-ARG DEBIAN_FRONTEND
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-ENV DEBIAN_FRONTEND="${DEBIAN_FRONTEND}"
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
@@ -106,11 +104,8 @@ RUN set -a && source /env && set +a \
 ### Build release image ###
 FROM debian:trixie-slim AS release
 ARG TARGETPLATFORM
-ARG DEBIAN_FRONTEND
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-
-ENV DEBIAN_FRONTEND="${DEBIAN_FRONTEND}"
 
 # Create a user to run Photoview server
 RUN groupadd -g 999 photoview \
