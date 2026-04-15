@@ -85,6 +85,8 @@ RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependenci
 
 WORKDIR /app/api
 COPY api/go.mod api/go.sum /app/api/
+# DL3062 is not right with latest Go in module-aware mode (default mode).
+# hadolint ignore=DL3062
 RUN set -a && source /env && set +a \
     && go env \
     && go mod download \
