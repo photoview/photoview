@@ -31,6 +31,7 @@ LIBS=(
   libgomp1
   libbz2-1.0
   libdjvulibre21
+  libheif-plugins-all
   libheif1
   libjbig0
   libjpeg62-turbo
@@ -55,17 +56,6 @@ LIBS=(
   libdlib19.2
   libjpeg62-turbo
   liblapack3
-
-  # libheif dependencies
-  libdav1d7
-  librav1e0.7
-  libde265-0
-  libx265-215
-  libjpeg62-turbo
-  libopenh264-8
-  libpng16-16t64
-  libnuma1
-  zlib1g
 )
 
 apt-get update
