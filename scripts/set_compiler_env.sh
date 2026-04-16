@@ -3,19 +3,19 @@ set -euo pipefail
 
 # Configure environment for cross-compiling.
 
-: ${TARGETPLATFORM=linux/`dpkg --print-architecture`}
+: "${TARGETPLATFORM=linux/`dpkg --print-architecture`}"
 
 TARGETOS="$(echo $TARGETPLATFORM | cut -d"/" -f1)"
 TARGETARCH="$(echo $TARGETPLATFORM | cut -d"/" -f2)"
 TARGETVARIANT="$(echo $TARGETPLATFORM | cut -d"/" -f3)"
 
-DEBIAN_ARCH=$TARGETARCH
-if [ "$TARGETARCH" = "arm" ]
+DEBIAN_ARCH="${TARGETARCH}"
+if [ "${TARGETARCH}" = "arm" ]
 then
-  DEBIAN_ARCH=armel
-  if [ "$TARGETVARIANT" = "v7" ]
+  DEBIAN_ARCH="armel"
+  if [ "${TARGETVARIANT}" = "v7" ]
   then
-    DEBIAN_ARCH=armhf
+    DEBIAN_ARCH="armhf"
   fi
 fi
 
@@ -31,24 +31,24 @@ LIBS=(
   pkg-config
 
   # for crossbuild
-  crossbuild-essential-${DEBIAN_ARCH}
-  libc-dev:${DEBIAN_ARCH}
+  "crossbuild-essential-${DEBIAN_ARCH}"
+  "libc-dev:${DEBIAN_ARCH}"
 )
 
-dpkg --add-architecture $DEBIAN_ARCH
+dpkg --add-architecture "${DEBIAN_ARCH}"
 apt-get update
 apt-get install -y --no-install-recommends "${LIBS[@]}"
 
-dpkg-architecture -a $DEBIAN_ARCH >/env
+dpkg-architecture -a "${DEBIAN_ARCH}" >/env
 export $(cat /env)
 
 CGO_ENABLED="1"
-GOOS="$TARGETOS"
-GOARCH="$TARGETARCH"
+GOOS="${TARGETOS}"
+GOARCH="${TARGETARCH}"
 
 GOARM="7"
-if [ "$TARGETARCH" = "arm" ] && [ ! -z "$TARGETVARIANT" ]; then
-  case "$TARGETVARIANT" in
+if [ "${TARGETARCH}" = "arm" ] && [ ! -z "${TARGETVARIANT}" ]; then
+  case "${TARGETVARIANT}" in
   "v5")
     export GOARM="5"
     ;;

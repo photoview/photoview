@@ -1,7 +1,7 @@
-#!/bin/sh
-set -eu
+#!/bin/bash
+set -euo pipefail
 
-cd $(dirname $0)/../api
+cd "$(dirname $0)/../api"
 go generate ./...
 if [ "$(git status -s 2>/dev/null | head -1)" != "" ]; then
   echo '--- FAIL: The generated API code is out of sync with the recent changes. Please run `go generate ./...` under `./api` to regenerate it and commit it to this branch.'

@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-: ${USER_AGENT:=}
-: ${GITHUB_TOKEN:=}
+: "${USER_AGENT:=}"
+: "${GITHUB_TOKEN:=}"
 
 CURL_FLAGS=(
   -fsSL

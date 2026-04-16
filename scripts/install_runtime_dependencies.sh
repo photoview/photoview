@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-: ${DEB_HOST_ARCH=`dpkg --print-architecture`}
-echo Arch: ${DEB_HOST_ARCH}
+: "${DEB_HOST_ARCH=`dpkg --print-architecture`}"
+echo "Arch: ${DEB_HOST_ARCH}"
 
-if [ ${DEB_HOST_ARCH} != $(dpkg --print-architecture) ]; then
+if [ "${DEB_HOST_ARCH}" != "$(dpkg --print-architecture)" ]; then
   echo "No need to install runtime dependencies in the cross-build environment, since it can't be run."
   exit 0
 fi
