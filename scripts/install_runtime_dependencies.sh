@@ -37,6 +37,7 @@ LIBS=(
   libjpeg62-turbo
   libjxl0.11
   liblcms2-2
+  liblqr-1-0
   liblzma5
   libopenexr-3-1-30
   libopenjp2-7
@@ -56,6 +57,17 @@ LIBS=(
   libdlib19.2
   libjpeg62-turbo
   liblapack3
+
+  # libheif dependencies
+  libdav1d7
+  libde265-0
+  libjpeg62-turbo
+  libnuma1
+  libpng16-16t64
+  librav1e0.7
+  libopenh264-8
+  libx265-215
+  zlib1g
 )
 
 apt-get update
