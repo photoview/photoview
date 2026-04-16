@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-: "${DEB_HOST_ARCH=`dpkg --print-architecture`}"
+: "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
 echo "Arch: ${DEB_HOST_ARCH}"
 
 LIBS=(

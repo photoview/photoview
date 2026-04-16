@@ -3,20 +3,41 @@ set -euo pipefail
 
 # Configure environment for cross-compiling.
 
-: "${TARGETPLATFORM=linux/$(dpkg --print-architecture)}"
+: "${TARGETPLATFORM:=linux/$(dpkg --print-architecture)}"
+
+echo "Target platform: ${TARGETPLATFORM}"
 
 TARGETOS="$(echo ${TARGETPLATFORM} | cut -d"/" -f1)"
 TARGETARCH="$(echo ${TARGETPLATFORM} | cut -d"/" -f2)"
 TARGETVARIANT="$(echo ${TARGETPLATFORM} | cut -d"/" -f3)"
 
 DEBIAN_ARCH="${TARGETARCH}"
-if [ "${TARGETARCH}" = "arm" ]
-then
+if [[ "${TARGETARCH}" != "amd64" && "${TARGETARCH}" != "arm64" ]]; then
+  echo "Warning: ${TARGETPLATFORM} is NOT supported. Just compile with the best efforts."
+
+  # best efforts
   DEBIAN_ARCH="armel"
   if [ "${TARGETVARIANT}" = "v7" ]
   then
     DEBIAN_ARCH="armhf"
   fi
+fi
+
+CGO_ENABLED="1"
+GOOS="${TARGETOS}"
+GOARCH="${TARGETARCH}"
+GOARM=""
+# best efforts
+if [ "${TARGETARCH}" = "arm" ] && [ ! -z "${TARGETVARIANT}" ]; then
+  GOARM="7"
+  case "${TARGETVARIANT}" in
+  "v5")
+    GOARM="5"
+    ;;
+  "v6")
+    GOARM="6"
+    ;;
+  esac
 fi
 
 LIBS=(
@@ -43,22 +64,6 @@ dpkg-architecture -a "${DEBIAN_ARCH}" >/env
 set -a
 source /env
 set +a
-
-CGO_ENABLED="1"
-GOOS="${TARGETOS}"
-GOARCH="${TARGETARCH}"
-
-GOARM="7"
-if [ "${TARGETARCH}" = "arm" ] && [ ! -z "${TARGETVARIANT}" ]; then
-  case "${TARGETVARIANT}" in
-  "v5")
-    export GOARM="5"
-    ;;
-  "v6")
-    export GOARM="6"
-    ;;
-  esac
-fi
 
 echo CGO_ENABLED="${CGO_ENABLED}" >>/env
 echo GOOS="${GOOS}" >>/env
