@@ -16,11 +16,11 @@ if [[ "${TARGETARCH}" != "amd64" && "${TARGETARCH}" != "arm64" ]]; then
   echo "Warning: ${TARGETPLATFORM} is NOT supported. Just compile with the best efforts."
 
   # best efforts
-  if [[ "${TARGETARCH}" = "arm" ]]
-    DEBIAN_ARCH="armel"
-    if [ "${TARGETVARIANT}" = "v7" ]
-    then
+  if [[ "${TARGETARCH}" = "arm" ]]; then
+    if [[ "${TARGETVARIANT}" = "v7" ]]; then
       DEBIAN_ARCH="armhf"
+    else
+      DEBIAN_ARCH="armel"
     fi
   fi
 fi
