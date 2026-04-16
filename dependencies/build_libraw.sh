@@ -10,6 +10,10 @@ if [[ -z "${LIBRAW_VERSION}" ]]; then
   echo "Fetching the latest version from LibRaw repo..."
   LIBRAW_VERSION="$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
     "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')"
+  if [[ -z "${LIBRAW_VERSION}" ]]; then
+    echo "ERROR: Failed to resolve latest libraw tag_name from GitHub API" >&2
+    exit 1
+  fi
 fi
 
 : "${DEB_HOST_ARCH:=$(dpkg --print-architecture)}"
