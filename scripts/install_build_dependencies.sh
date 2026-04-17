@@ -14,8 +14,15 @@ LIBS=(
   "libbz2-dev:${DEB_HOST_ARCH}"
   "libdjvulibre-dev:${DEB_HOST_ARCH}"
   "libfftw3-dev:${DEB_HOST_ARCH}"
-  # "libheif-dev:${DEB_HOST_ARCH}"
-  # "libjbig-dev:${DEB_HOST_ARCH}"
+  "libheif-plugin-aomdec:${DEB_HOST_ARCH}" \
+  "libheif-plugin-aomenc:${DEB_HOST_ARCH}" \
+  "libheif-plugin-j2kdec:${DEB_HOST_ARCH}" \
+  "libheif-plugin-j2kenc:${DEB_HOST_ARCH}" \
+  "libheif-plugin-jpegdec:${DEB_HOST_ARCH}" \
+  "libheif-plugin-jpegenc:${DEB_HOST_ARCH}" \
+  "libheif-plugin-libde265:${DEB_HOST_ARCH}" \
+  "libheif-dev:${DEB_HOST_ARCH}"
+  "libjbig-dev:${DEB_HOST_ARCH}"
   "libjpeg62-turbo-dev:${DEB_HOST_ARCH}"
   "libjxl-dev:${DEB_HOST_ARCH}"
   "liblcms2-dev:${DEB_HOST_ARCH}"
@@ -26,10 +33,10 @@ LIBS=(
   "libpng-dev:${DEB_HOST_ARCH}"
   "libtiff-dev:${DEB_HOST_ARCH}"
   "libwebp-dev:${DEB_HOST_ARCH}"
-  # "libwmf-dev:${DEB_HOST_ARCH}"
+  "libwmf-dev:${DEB_HOST_ARCH}"
   "libxml2-dev:${DEB_HOST_ARCH}"
-  # "libzip-dev:${DEB_HOST_ARCH}"
-  # "libzstd-dev:${DEB_HOST_ARCH}"
+  "libzip-dev:${DEB_HOST_ARCH}"
+  "libzstd-dev:${DEB_HOST_ARCH}"
   "zlib1g-dev:${DEB_HOST_ARCH}"
 
   # go-face dependencies

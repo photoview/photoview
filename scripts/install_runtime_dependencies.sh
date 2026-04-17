@@ -31,8 +31,15 @@ LIBS=(
   libgomp1
   libbz2-1.0
   libdjvulibre21
-  libheif-plugins-all
   libheif1
+  libheif-plugin-aomdec
+  libheif-plugin-aomenc
+  libheif-plugin-j2kdec
+  libheif-plugin-j2kenc
+  libheif-plugin-jpegdec
+  libheif-plugin-jpegenc
+  libheif-plugin-libde265
+  libheif-plugin-x265
   libjbig0
   libjpeg62-turbo
   libjxl0.11
