@@ -6,6 +6,13 @@ updates:
     schedule:
       interval: "weekly"
 
+  # Maintain dependencies for Go modules
+  - package-ecosystem: "gomod"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 999
+
   # Maintain dependencies for Dockerfiles
   - package-ecosystem: "docker"
     directories:
