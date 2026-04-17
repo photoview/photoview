@@ -7,9 +7,9 @@ set -euo pipefail
 
 echo "Target platform: ${TARGETPLATFORM}"
 
-TARGETOS="$(echo ${TARGETPLATFORM} | cut -d"/" -f1)"
-TARGETARCH="$(echo ${TARGETPLATFORM} | cut -d"/" -f2)"
-TARGETVARIANT="$(echo ${TARGETPLATFORM} | cut -d"/" -f3)"
+TARGETOS="$(echo "${TARGETPLATFORM}" | cut -d'/' -f1)"
+TARGETARCH="$(echo "${TARGETPLATFORM}" | cut -d'/' -f2)"
+TARGETVARIANT="$(echo "${TARGETPLATFORM}" | cut -d'/' -f3)"
 
 DEBIAN_ARCH="${TARGETARCH}"
 if [[ "${TARGETARCH}" != "amd64" && "${TARGETARCH}" != "arm64" ]]; then
