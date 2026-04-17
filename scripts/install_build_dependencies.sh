@@ -14,13 +14,13 @@ LIBS=(
   "libbz2-dev:${DEB_HOST_ARCH}"
   "libdjvulibre-dev:${DEB_HOST_ARCH}"
   "libfftw3-dev:${DEB_HOST_ARCH}"
-  "libheif-plugin-aomdec:${DEB_HOST_ARCH}" \
-  "libheif-plugin-aomenc:${DEB_HOST_ARCH}" \
-  "libheif-plugin-j2kdec:${DEB_HOST_ARCH}" \
-  "libheif-plugin-j2kenc:${DEB_HOST_ARCH}" \
-  "libheif-plugin-jpegdec:${DEB_HOST_ARCH}" \
-  "libheif-plugin-jpegenc:${DEB_HOST_ARCH}" \
-  "libheif-plugin-libde265:${DEB_HOST_ARCH}" \
+  "libheif-plugin-aomdec:${DEB_HOST_ARCH}"
+  "libheif-plugin-aomenc:${DEB_HOST_ARCH}"
+  "libheif-plugin-j2kdec:${DEB_HOST_ARCH}"
+  "libheif-plugin-j2kenc:${DEB_HOST_ARCH}"
+  "libheif-plugin-jpegdec:${DEB_HOST_ARCH}"
+  "libheif-plugin-jpegenc:${DEB_HOST_ARCH}"
+  "libheif-plugin-libde265:${DEB_HOST_ARCH}"
   "libheif-dev:${DEB_HOST_ARCH}"
   "libjbig-dev:${DEB_HOST_ARCH}"
   "libjpeg62-turbo-dev:${DEB_HOST_ARCH}"
