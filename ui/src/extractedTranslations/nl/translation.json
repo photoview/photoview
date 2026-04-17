@@ -246,11 +246,11 @@
           "title": "Hoge resolutie"
         },
         "originals": {
-          "description": "The originele foto's and video's",
+          "description": "De originele foto's and video's",
           "title": "Originelen"
         },
         "thumbnails": {
-          "description": "Loge resolutie foot's, geen video's",
+          "description": "Lage resolutie foto's, geen video's",
           "title": "Thumbnails"
         },
         "web-videos": {
@@ -311,8 +311,8 @@
           "off": "Uit",
           "on": "Aan",
           "red_eye_reduction": "Rode-ogenreductie",
-          "return_detected": "Return detected",
-          "return_not_detected": "Return not detected"
+          "return_detected": "Flits gedetecteerd",
+          "return_not_detected": "Flits niet gedetecteerd"
         },
         "name": {
           "aperture": "Diafragma",
