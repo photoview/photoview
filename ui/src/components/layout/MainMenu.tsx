@@ -3,20 +3,14 @@ import { NavLink } from 'react-router-dom'
 import { useQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { useTranslation } from 'react-i18next'
-import { mapboxEnabledQuery } from '../../__generated__/mapboxEnabledQuery'
 import { tailwindClassNames } from '../../helpers/utils'
-import { faceDetectionEnabled } from './__generated__/faceDetectionEnabled'
+import { siteInfoFeatureFlags } from './__generated__/siteInfoFeatureFlags'
 
-export const MAPBOX_QUERY = gql`
-  query mapboxEnabledQuery {
-    mapboxToken
-  }
-`
-
-export const FACE_DETECTION_ENABLED_QUERY = gql`
-  query faceDetectionEnabled {
+export const SITE_INFO_FEATURE_FLAGS_QUERY = gql`
+  query siteInfoFeatureFlags {
     siteInfo {
       faceDetectionEnabled
+      mapEnabled
     }
   }
 `
@@ -74,16 +68,16 @@ const MenuSeparator = () => (
 export const MainMenu = () => {
   const { t } = useTranslation()
 
-  const mapboxQuery = authToken()
-    ? useQuery<mapboxEnabledQuery>(MAPBOX_QUERY)
-    : null
-  const faceDetectionEnabledQuery = authToken()
-    ? useQuery<faceDetectionEnabled>(FACE_DETECTION_ENABLED_QUERY)
-    : null
+  const isAuthenticated = !!authToken()
+  const featureFlagsQuery = useQuery<siteInfoFeatureFlags>(
+    SITE_INFO_FEATURE_FLAGS_QUERY,
+    { skip: !isAuthenticated }
+  )
 
-  const mapboxEnabled = !!mapboxQuery?.data?.mapboxToken
+  const mapEnabled =
+    !!featureFlagsQuery?.data?.siteInfo?.mapEnabled
   const faceDetectionEnabled =
-    !!faceDetectionEnabledQuery?.data?.siteInfo?.faceDetectionEnabled
+    !!featureFlagsQuery?.data?.siteInfo?.faceDetectionEnabled
 
   return (
     <div className="fixed w-full bottom-0 lg:bottom-auto lg:top-[84px] z-30 bg-white dark:bg-dark-bg shadow-separator lg:shadow-none lg:w-[240px] lg:ml-8 lg:mr-5 flex-shrink-0">
@@ -114,7 +108,7 @@ export const MainMenu = () => {
             </svg>
           }
         />
-        {mapboxEnabled ? (
+        {mapEnabled ? (
           <MenuButton
             to="/places"
             exact

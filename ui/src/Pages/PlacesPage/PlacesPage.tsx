@@ -1,12 +1,13 @@
 import { gql, useQuery } from '@apollo/client'
-import type mapboxgl from 'mapbox-gl'
-import React, { useReducer } from 'react'
-import { Helmet } from 'react-helmet'
+import type maplibregl from 'maplibre-gl'
+import React, { useCallback, useEffect, useReducer, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import Layout from '../../components/layout/Layout'
-import { registerMediaMarkers } from '../../components/mapbox/mapboxHelperFunctions'
-import useMapboxMap from '../../components/mapbox/MapboxMap'
+import { findBestView, extractCoordsFromGeoJson } from '../../components/maplibre/globeCenter'
+import { registerMediaMarkers } from '../../components/maplibre/maplibreHelperFunctions'
+import useMaplibreMap from '../../components/maplibre/MaplibreMap'
+import useMapStyles from '../../components/maplibre/useMapStyles'
 import { urlPresentModeSetupHook } from '../../components/photoGallery/mediaGalleryReducer'
 import MapPresentMarker from './MapPresentMarker'
 import { PlacesAction, placesReducer } from './placesReducer'
@@ -15,13 +16,33 @@ import { mediaGeoJson } from './__generated__/mediaGeoJson'
 const MapWrapper = styled.div`
   width: 100%;
   height: calc(100vh - 120px);
+  position: relative;
 `
 
-const MAPBOX_DATA_QUERY = gql`
+const Overlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 1;
+
+  .dark & {
+    background: rgba(0, 0, 0, 0.5);
+  }
+`
+
+const MAP_DATA_QUERY = gql`
   query mediaGeoJson {
     myMediaGeoJson
   }
 `
+
+const EMPTY_FEATURE_COLLECTION: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [],
+}
 
 export type PresentMarker = {
   id: number | string
@@ -29,11 +50,14 @@ export type PresentMarker = {
 }
 
 const MapPage = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const { mapStyleLight, mapStyleDark } = useMapStyles()
 
-  const { data: mapboxData } = useQuery<mediaGeoJson>(MAPBOX_DATA_QUERY, {
+  const { data: mapData, loading, error } = useQuery<mediaGeoJson>(MAP_DATA_QUERY, {
     fetchPolicy: 'cache-first',
   })
+
+  const hasCentered = useRef(false)
 
   const [markerMediaState, dispatchMarkerMedia] = useReducer(placesReducer, {
     presenting: false,
@@ -41,14 +65,86 @@ const MapPage = () => {
     media: [],
   })
 
-  const { mapContainer, mapboxMap, mapboxToken } = useMapboxMap({
-    configureMapbox: configureMapbox({ mapboxData, dispatchMarkerMedia }),
-    mapboxOptions: {
-      projection: {
-        name: 'globe',
-      },
+  const cleanupMarkersRef = useRef<(() => void) | null>(null)
+  const mapDataRef = useRef(mapData)
+  mapDataRef.current = mapData
+
+  const configureMap = useCallback(
+    (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => {
+      map.addControl(new maplibreLibrary.NavigationControl())
+      map.addControl(new maplibreLibrary.GlobeControl())
+      map.addControl(new maplibreLibrary.GeolocateControl())
     },
+    []
+  )
+
+  const onStyleLoad = useCallback(
+    (map: maplibregl.Map, maplibreLibrary: typeof maplibregl) => {
+      cleanupMarkersRef.current?.()
+      cleanupMarkersRef.current = null
+
+      if (map.getSource('media')) return
+
+      const data: GeoJSON.FeatureCollection =
+        mapDataRef.current?.myMediaGeoJson ?? EMPTY_FEATURE_COLLECTION
+
+      map.addSource('media', {
+        type: 'geojson',
+        data,
+        cluster: true,
+        clusterRadius: 50,
+        clusterProperties: {
+          thumbnail: ['coalesce', ['get', 'thumbnail'], false],
+        },
+      })
+
+      map.addLayer({
+        id: 'media-points',
+        type: 'circle',
+        source: 'media',
+        filter: ['!', true],
+      })
+
+      cleanupMarkersRef.current = registerMediaMarkers({
+        map,
+        maplibreLibrary,
+        dispatchMarkerMedia,
+      })
+    },
+    [dispatchMarkerMedia]
+  )
+
+  const { mapContainer, maplibreMap } = useMaplibreMap({
+    configureMap,
+    onStyleLoad,
+    locale: i18n.language,
+    mapStyleLight,
+    mapStyleDark,
   })
+
+  useEffect(() => {
+    return () => {
+      cleanupMarkersRef.current?.()
+      cleanupMarkersRef.current = null
+    }
+  }, [])
+
+  // Update GeoJSON data when query resolves after map is ready
+  useEffect(() => {
+    if (!maplibreMap || !mapData?.myMediaGeoJson) return
+
+    const source = maplibreMap.getSource('media') as maplibregl.GeoJSONSource | undefined
+    if (source) {
+      source.setData(mapData.myMediaGeoJson as GeoJSON.FeatureCollection)
+    }
+
+    if (!hasCentered.current) {
+      const coords = extractCoordsFromGeoJson(mapData.myMediaGeoJson as GeoJSON.FeatureCollection)
+      const { center, zoom } = findBestView(coords)
+      maplibreMap.jumpTo({ center: [center.lng, center.lat], zoom })
+      hasCentered.current = true
+    }
+  }, [maplibreMap, mapData])
 
   urlPresentModeSetupHook({
     dispatchMedia: dispatchMarkerMedia,
@@ -60,81 +156,28 @@ const MapPage = () => {
     },
   })
 
-  if (mapboxData && mapboxToken == null) {
-    return (
-      <Layout title={t('places_page.title', 'Places')}>
-        <h1>Mapbox token is not set</h1>
-        <p>
-          To use map related features a mapbox token is needed.
-          <br /> A mapbox token can be created for free at{' '}
-          <a href="https://account.mapbox.com/access-tokens/">mapbox.com</a>.
-        </p>
-        <p>
-          Make sure the access token is added as the MAPBOX_TOKEN environment
-          variable.
-        </p>
-      </Layout>
-    )
-  }
-
   return (
-    <Layout title="Places">
-      <Helmet>
-        {/* <link rel="stylesheet" href="/mapbox-gl.css" /> */}
-        {/* <style type="text/css">{mapboxStyles}</style> */}
-      </Helmet>
-      <MapWrapper>{mapContainer}</MapWrapper>
+    <Layout title={t('places_page.title', 'Places')}>
+      <MapWrapper>
+        {mapContainer}
+        {loading && (
+          <Overlay>
+            <span>{t('general.loading.default', 'Loading...')}</span>
+          </Overlay>
+        )}
+        {error && (
+          <Overlay>
+            <span>{t('general.loading.error.description', 'An error occurred')}: {error.message}</span>
+          </Overlay>
+        )}
+      </MapWrapper>
       <MapPresentMarker
-        map={mapboxMap}
+        map={maplibreMap}
         markerMediaState={markerMediaState}
         dispatchMarkerMedia={dispatchMarkerMedia}
       />
     </Layout>
   )
 }
-
-const configureMapbox =
-  ({
-    mapboxData,
-    dispatchMarkerMedia,
-  }: {
-    mapboxData?: mediaGeoJson
-    dispatchMarkerMedia: React.Dispatch<PlacesAction>
-  }) =>
-  (map: mapboxgl.Map, mapboxLibrary: typeof mapboxgl) => {
-    // Add map navigation control
-    map.addControl(new mapboxLibrary.NavigationControl())
-
-    map.on('load', () => {
-      if (map == null) {
-        console.error('ERROR: map is null')
-        return
-      }
-
-      map.addSource('media', {
-        type: 'geojson',
-        data: mapboxData?.myMediaGeoJson as never,
-        cluster: true,
-        clusterRadius: 50,
-        clusterProperties: {
-          thumbnail: ['coalesce', ['get', 'thumbnail'], false],
-        },
-      })
-
-      // Add dummy layer for features to be queryable
-      map.addLayer({
-        id: 'media-points',
-        type: 'circle',
-        source: 'media',
-        filter: ['!', true],
-      })
-
-      registerMediaMarkers({
-        map: map,
-        mapboxLibrary,
-        dispatchMarkerMedia,
-      })
-    })
-  }
 
 export default MapPage

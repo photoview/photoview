@@ -4,12 +4,25 @@ type SiteInfo {
   initialSetup: Boolean!
   "Whether or not face detection is enabled and working"
   faceDetectionEnabled: Boolean!
+  "Whether or not the map feature is enabled"
+  mapEnabled: Boolean!
   "How often automatic scans should be initiated in seconds"
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "Custom map tile style URL for light mode, null means use the built-in style"
+  mapStyleLight: String @isAuthorized
+  "Custom map tile style URL for dark mode, null means use the built-in style"
+  mapStyleDark: String @isAuthorized
 }
 
 extend type Query {
   siteInfo: SiteInfo!
+}
+
+extend type Mutation {
+  "Set the map tile style URL for light mode, pass null to reset to built-in style"
+  setMapStyleLight(url: String): String @isAdmin
+  "Set the map tile style URL for dark mode, pass null to reset to built-in style"
+  setMapStyleDark(url: String): String @isAdmin
 }

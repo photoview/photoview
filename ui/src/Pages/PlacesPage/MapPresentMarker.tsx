@@ -2,7 +2,7 @@ import { gql } from '@apollo/client'
 import React, { useEffect } from 'react'
 import { useLazyQuery } from '@apollo/client'
 import PresentView from '../../components/photoGallery/presentView/PresentView'
-import type mapboxgl from 'mapbox-gl'
+import type maplibregl from 'maplibre-gl'
 import { PresentMarker } from './PlacesPage'
 import {
   placePageQueryMedia,
@@ -36,35 +36,28 @@ const QUERY_MEDIA = gql`
   }
 `
 
-const getMediaFromMarker = (map: mapboxgl.Map, presentMarker: PresentMarker) =>
-  new Promise<MediaMarker[]>((resolve, reject) => {
-    const { cluster, id } = presentMarker
+const getMediaFromMarker = async (
+  map: maplibregl.Map,
+  presentMarker: PresentMarker
+): Promise<MediaMarker[]> => {
+  const { cluster, id } = presentMarker
 
-    if (cluster) {
-      const mediaSource = map.getSource('media') as mapboxgl.GeoJSONSource
+  if (cluster) {
+    const mediaSource = map.getSource('media') as maplibregl.GeoJSONSource
+    const features = await mediaSource.getClusterLeaves(id as number, 1000, 0)
+    return features.map(feat => feat.properties) as MediaMarker[]
+  } else {
+    const features = map.querySourceFeatures('media')
+    const media = features.find(f => f.properties?.media_id == id)
+      ?.properties as MediaMarker | undefined
 
-      mediaSource.getClusterLeaves(id as number, 1000, 0, (error, features) => {
-        if (error) {
-          reject(error)
-          return
-        }
-
-        const media = features.map(feat => feat.properties) as MediaMarker[]
-        resolve(media)
-      })
-    } else {
-      const features = map.querySourceFeatures('media')
-      const media = features.find(f => f.properties?.media_id == id)
-        ?.properties as MediaMarker | undefined
-
-      if (media === undefined) {
-        reject('ERROR: media is undefined')
-        return
-      }
-
-      resolve([media])
+    if (media === undefined) {
+      throw new Error('ERROR: media is undefined')
     }
-  })
+
+    return [media]
+  }
+}
 
 export interface MediaMarker {
   id: number
@@ -76,7 +69,7 @@ export interface MediaMarker {
 }
 
 type MapPresetMarkerProps = {
-  map: mapboxgl.Map | null
+  map: maplibregl.Map | null
   markerMediaState: PlacesState
   dispatchMarkerMedia: React.Dispatch<PlacesAction>
 }

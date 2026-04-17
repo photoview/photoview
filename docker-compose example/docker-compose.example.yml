@@ -62,16 +62,14 @@ services:
       ## - the `photoview-prepare` service's right side of the storage volume mount (under the `volumes:`)
       ## - the right side of the storage volume mount (under the `volumes:`) below
       # PHOTOVIEW_MEDIA_CACHE: "/home/photoview/media-cache"
-      ## Optional: To enable map related features, you need to create a mapbox token.
-      ## A token can be generated for free here https://account.mapbox.com/access-tokens/
-      ## It's a good idea to limit the scope of the token to your own domain, to prevent others from using it.
-      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
       ## If you want to use it, set the correct value in the .env file.
       ## Support `qsv`, `vaapi`, `nvenc`.
       ## Only `qsv` is verified with `/dev/dri` devices (see below `devices`).
       PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION: ${PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION}
       ## Uncomment the next variable if set in the `.env` file to override the default 5s media probe timeout
       # PHOTOVIEW_MEDIA_PROBE_TIMEOUT: ${PHOTOVIEW_MEDIA_PROBE_TIMEOUT}
+      ## Uncomment the next variable to disable the map feature (Places page, sidebar map, map style settings)
+      # PHOTOVIEW_DISABLE_MAP: ${PHOTOVIEW_DISABLE_MAP}
     ## Share hardware devices with FFmpeg (optional):
     # devices:
     ## Uncomment next devices mappings if they are available in your host system
