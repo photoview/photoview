@@ -61,7 +61,6 @@ LIBS=(
 dpkg --add-architecture "${DEBIAN_ARCH}"
 apt-get update
 apt-get install -y --no-install-recommends "${LIBS[@]}"
-echo "/usr/local/lib" > /etc/ld.so.conf.d/00-usr-local-lib.conf
 
 dpkg-architecture -a "${DEBIAN_ARCH}" >/env
 set -a
