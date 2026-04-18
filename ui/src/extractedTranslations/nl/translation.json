@@ -1,0 +1,371 @@
+{
+  "album_filter": {
+    "only_favorites": "Toon favorieten",
+    "sort": "Sorteren",
+    "sort_by": "Sorteren op",
+    "sort_direction": "Sorteerrichting",
+    "order_direction": {
+      "ascending": "Oplopend",
+      "descending": "Aflopend"
+    },
+    "sorting_options": {
+      "date_imported": "Importdatum",
+      "date_shot": "Opnamedatum",
+      "title": "Titel",
+      "type": "Type"
+    }
+  },
+  "general": {
+    "action": {
+      "add": "Toevoegen",
+      "cancel": "Annuleren",
+      "remove": "Verwijderen",
+      "save": "Opslaan"
+    },
+    "loading": {
+      "album": "Album laden",
+      "default": "Laden...",
+      "page": "Pagina laden",
+      "paginate": {
+        "faces": "Meer personen laden",
+        "media": "Meer media laden"
+      },
+      "shares": "Laden gedeelde albums..."
+    }
+  },
+  "header": {
+    "search": {
+      "loading": "Resultaten laden...",
+      "no_results": "Geen resultaten gevonden",
+      "placeholder": "Zoeken",
+      "result_type": {
+        "albums": "Albums",
+        "media": "Media"
+      }
+    }
+  },
+  "login_page": {
+    "field": {
+      "password": "Wachtwoord",
+      "submit": "Inloggen",
+      "username": "Gebruikersnaam"
+    },
+    "initial_setup": {
+      "field": {
+        "photo_path": {
+          "label": "Foto locatie",
+          "placeholder": "/pad/naar/foto's"
+        },
+        "submit": "Photoview instellen"
+      },
+      "title": "Initiële configuratie"
+    },
+    "welcome": "Welkom bij Photoview"
+  },
+  "meta": {
+    "description": "Eenvoudige en gebruiksvriendelijke fotogalerij voor zelf hosting"
+  },
+  "people_page": {
+    "action_label": {
+      "change_label": "Label wijzigen",
+      "detach_images": "Gezicht loskoppelen",
+      "merge_face": "Gezicht samenvoegen",
+      "merge_people": "Gezichten samenvoegen",
+      "move_faces": "Gezichten verplaatsen"
+    },
+    "face_group": {
+      "label_placeholder": "Label",
+      "unlabeled": "Zonder label",
+      "unlabeled_person": "Onbekende persoon"
+    },
+    "modal": {
+      "action": {
+        "merge": "Samenvoegen",
+        "next": "Volgende"
+      },
+      "detach_image_faces": {
+        "action": {
+          "detach": "Gezichten loskoppelen",
+          "select_images": "Selecteer afbeeldingen om los te koppelen"
+        },
+        "description": "Koppel geselecteerde afbeeldingen los van deze gezichtsgroep en verplaats ze naar een nieuwe groep",
+        "title": "Gezichten loskoppelen"
+      },
+      "merge_face_groups": {
+        "destination_description": "Selecteer de gezichtsgroep waarin andere groepen worden samengevoegd.",
+        "destination_table": {
+          "title": "Selecteer doelgezicht"
+        },
+        "sources_description": "Selecteer alle gezichtsgroepen die samengevoegd worden met de doelgroep.",
+        "sources_table": {
+          "title": "Selecteer één of meer brongezichten:"
+        },
+        "title": "Gezichtsgroepen samenvoegen"
+      },
+      "move_image_faces": {
+        "description": "Verplaats geselecteerde afbeeldingen naar een andere gezichtsgroep",
+        "destination_face_group_table": {
+          "move_action": "Gezichten verplaatsen",
+          "title": "Selecteer doelgezichtsgroep"
+        },
+        "image_select_table": {
+          "next_action": "Volgende",
+          "title": "Selecteer afbeeldingen"
+        },
+        "title": "Gezichten verplaatsen"
+      }
+    },
+    "recognize_unlabeled_faces_button": "Herken onbekende gezichten",
+    "tableselect_face_group": {
+      "search_faces_placeholder": "Zoek gezichten..."
+    },
+    "tableselect_image_faces": {
+      "search_images_placeholder": "Zoek afbeeldingen..."
+    }
+  },
+  "photos_page": {
+    "title": "Tijdlijn"
+  },
+  "places_page": {
+    "title": "Locaties"
+  },
+  "routes": {
+    "page_not_found": "Pagina niet gevonden"
+  },
+  "settings": {
+    "concurrent_workers": {
+      "description": "Het maximale aantal scanprocessen dat tegelijk mag draaien",
+      "title": "Aantal gelijktijdige scans"
+    },
+    "logout": "Uitloggen",
+    "periodic_scanner": {
+      "checkbox_label": "Periodieke scan inschakelen",
+      "field": {
+        "description": "Hoe vaak automatisch alle gebruikers gescand worden",
+        "label": "Scaninterval"
+      },
+      "interval_unit": {
+        "days": "Dagen",
+        "hour": "Uur",
+        "minutes": "Minuten",
+        "months": "Maanden",
+        "seconds": "Seconden"
+      },
+      "title": "Periodieke scanner"
+    },
+    "scanner": {
+      "description": "Scant alle gebruikers op nieuwe of gewijzigde media",
+      "scan_all_users": "Scan alle gebruikers",
+      "title": "Scanner"
+    },
+    "user_preferences": {
+      "change_language": {
+        "description": "Wijzig de taal voor deze gebruiker",
+        "label": "Website taal"
+      },
+      "language_selector": {
+        "placeholder": "Selecteer taal"
+      },
+      "theme": {
+        "auto": {
+          "label": "Zelfde als systeem"
+        },
+        "dark": {
+          "label": "Donker"
+        },
+        "description": "Wijzig het uiterlijk van de website",
+        "light": {
+          "label": "Licht"
+        },
+        "title": "Thema-instellingen"
+      },
+      "title": "Gebruikersvoorkeuren"
+    },
+    "users": {
+      "add_user": {
+        "submit": "Gebruiker toevoegen"
+      },
+      "confirm_delete_user": {
+        "action": "Verwijder {{user}}",
+        "description": "<0>Weet je zeker dat je <1></1> wilt verwijderen?</0><p>Deze actie kan niet ongedaan worden gemaakt</p>",
+        "title": "Gebruiker verwijderen"
+      },
+      "password_reset": {
+        "description": "Wijzig wachtwoord voor <1>{{username}}</1>",
+        "form": {
+          "label": "Nieuw wachtwoord",
+          "placeholder": "wachtwoord",
+          "submit": "Wachtwoord wijzigen"
+        },
+        "title": "Wachtwoord wijzigen"
+      },
+      "table": {
+        "column_names": {
+          "action": "Actie",
+          "capabilities": "Rechten",
+          "photo_path": "Foto locatie",
+          "username": "Gebruikersnaam"
+        },
+        "new_user": "Nieuwe gebruiker",
+        "row": {
+          "action": {
+            "change_password": "Wachtwoord wijzigen",
+            "delete": "Verwijderen",
+            "edit": "Bewerken",
+            "scan": "Scannen"
+          }
+        }
+      },
+      "title": "Gebruikers"
+    },
+    "version_info": {
+      "build_date_title": "Builddatum",
+      "title": "Photoview versie",
+      "version_title": "Releaseversie"
+    }
+  },
+  "share_page": {
+    "media": {
+      "title": "Gedeelde media"
+    },
+    "protected_share": {
+      "description": "Dit album is beveiligd met een wachtwoord.",
+      "password_required_error": "Wachtwoord is verplicht",
+      "title": "Beveiligd album"
+    },
+    "share_not_found": "Album niet gevonden",
+    "share_not_found_description": "Misschien is het album verlopen of verwijderd.",
+    "wrong_password": "Onjuist wachtwoord, probeer opnieuw."
+  },
+  "sidebar": {
+    "album": {
+      "album_cover": "Albumhoes",
+      "download": {
+        "high-resolutions": {
+          "description": "Hoge resolutie jpegs of RAW foto's",
+          "title": "Hoge resolutie"
+        },
+        "originals": {
+          "description": "De originele foto's and video's",
+          "title": "Originelen"
+        },
+        "thumbnails": {
+          "description": "Lage resolutie foto's, geen video's",
+          "title": "Thumbnails"
+        },
+        "web-videos": {
+          "description": "Video's die geoptimaliseerd zijn voor web",
+          "title": "Geconverteerde video's"
+        }
+      },
+      "reset_cover": "Omslagfoto resetten",
+      "set_cover": "Instellen als omslagfoto",
+      "title_placeholder": "Albumtitel"
+    },
+    "download": {
+      "filesize": {
+        "byte_one": "{{count}} Byte",
+        "byte_other": "{{count}} Bytes",
+        "giga_byte_one": "{{count}} GB",
+        "giga_byte_other": "{{count}} GB",
+        "kilo_byte_one": "{{count}} KB",
+        "kilo_byte_other": "{{count}} KB",
+        "mega_byte_one": "{{count}} MB",
+        "mega_byte_other": "{{count}} MB",
+        "tera_byte_one": "{{count}} TB",
+        "tera_byte_other": "{{count}} TB"
+      },
+      "table_columns": {
+        "dimensions": "Afmetingen",
+        "file_size": "Grootte",
+        "file_type": "Type",
+        "name": "Naam"
+      },
+      "title": "Downloaden"
+    },
+    "location": {
+      "title": "Locatie"
+    },
+    "media": {
+      "album_path": "Album locatie",
+      "exif": {
+        "description": "Omschrijving",
+        "exposure_program": {
+          "action_program": "Actie programma",
+          "aperture_priority": "Diaframe prioriteit",
+          "bulb": "Bulb",
+          "creative_program": "Creatieve programma",
+          "landscape_mode": "Landschap mode",
+          "manual": "Handmatig",
+          "normal_program": "Normale programma",
+          "not_defined": "Not gedefinieerd",
+          "portrait_mode": "Portret mode",
+          "shutter_priority": "Sluitertijd prioriteit"
+        },
+        "flash": {
+          "auto": "Auto",
+          "did_not_fire": "Niet afgegaan",
+          "fired": "Flitser afgegaan",
+          "no_flash": "Niet geflitst",
+          "no_flash_function": "Geen flits functie",
+          "off": "Uit",
+          "on": "Aan",
+          "red_eye_reduction": "Rode-ogenreductie",
+          "return_detected": "Flits gedetecteerd",
+          "return_not_detected": "Flits niet gedetecteerd"
+        },
+        "name": {
+          "aperture": "Diafragma",
+          "camera": "Camera",
+          "coordinates": "Coördinaten",
+          "date_shot": "Opnamedatum",
+          "exposure": "Belichting",
+          "exposure_program": "Programma",
+          "flash": "Flitser",
+          "focal_length": "Brandpuntsafstand",
+          "iso": "ISO",
+          "lens": "Lens",
+          "maker": "Fabrikant"
+        }
+      }
+    },
+    "people": {
+      "action_label": {
+        "detach_image": "Afbeelding loskoppelen",
+        "merge_face": "Gezicht samenvoegen",
+        "move_face": "Gezicht verplaatsen"
+      },
+      "confirm_image_detach": "Weet je zeker dat je deze afbeelding wilt loskoppelen?",
+      "title": "Personen"
+    },
+    "sharing": {
+      "add_share": "Share toevoegen",
+      "copy_link": "Link kopiëren",
+      "delete": "Verwijderen",
+      "more": "Meer",
+      "no_shares_found": "Geen albums gevonden",
+      "public_link": "Publieke link",
+      "title": "Deelopties"
+    }
+  },
+  "sidemenu": {
+    "albums": "Albums",
+    "people": "Personen",
+    "photos": "Tijdlijn",
+    "places": "Locaties",
+    "settings": "Instellingen"
+  },
+  "timeline_filter": {
+    "date": {
+      "dropdown_all": "Vanaf vandaag",
+      "dropdown_year": "{{year}} en eerder",
+      "label": "Datum"
+    }
+  },
+  "title": {
+    "loading_album": "Album laden",
+    "login": "Inloggen",
+    "people": "Personen",
+    "settings": "Instellingen"
+  }
+}

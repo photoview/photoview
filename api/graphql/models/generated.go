@@ -129,6 +129,7 @@ const (
 	LanguageTranslationBasque               LanguageTranslation = "Basque"
 	LanguageTranslationTurkish              LanguageTranslation = "Turkish"
 	LanguageTranslationJapanese             LanguageTranslation = "Japanese"
+	LanguageTranslationDutch                LanguageTranslation = "Dutch"
 )
 
 var AllLanguageTranslation = []LanguageTranslation{
@@ -149,11 +150,12 @@ var AllLanguageTranslation = []LanguageTranslation{
 	LanguageTranslationBasque,
 	LanguageTranslationTurkish,
 	LanguageTranslationJapanese,
+	LanguageTranslationDutch,
 }
 
 func (e LanguageTranslation) IsValid() bool {
 	switch e {
-	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChineseTw, LanguageTranslationTraditionalChineseHk, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish, LanguageTranslationJapanese:
+	case LanguageTranslationEnglish, LanguageTranslationFrench, LanguageTranslationItalian, LanguageTranslationSwedish, LanguageTranslationDanish, LanguageTranslationSpanish, LanguageTranslationPolish, LanguageTranslationUkrainian, LanguageTranslationGerman, LanguageTranslationRussian, LanguageTranslationTraditionalChineseTw, LanguageTranslationTraditionalChineseHk, LanguageTranslationSimplifiedChinese, LanguageTranslationPortuguese, LanguageTranslationBasque, LanguageTranslationTurkish, LanguageTranslationJapanese, LanguageTranslationDutch:
 		return true
 	}
 	return false
