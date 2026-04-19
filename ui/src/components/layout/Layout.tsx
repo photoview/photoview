@@ -1,10 +1,11 @@
-import { gql } from '@apollo/client'
-import React, { useContext } from 'react'
-import { Helmet } from 'react-helmet'
+import {gql} from '@apollo/client'
+import React, {useContext} from 'react'
+import {Helmet} from 'react-helmet'
 import Header from '../header/Header'
-import { Authorized } from '../routes/AuthorizedRoute'
-import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
+import {Authorized} from '../routes/AuthorizedRoute'
+import {Sidebar, SidebarContext} from '../sidebar/Sidebar'
 import MainMenu from './MainMenu'
+import {isAuthorized} from "../../helpers/authentication";
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -21,7 +22,7 @@ type LayoutProps = {
 
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
   const { pinned, content: sidebarContent } = useContext(SidebarContext)
-
+  const menuBarOffset = isAuthorized();
   return (
     <>
       <Helmet>
@@ -34,9 +35,10 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <MainMenu />
           </Authorized>
           <div
-            className={`mx-3 my-3 lg:mt-5 lg:mr-8 lg:ml-[292px] ${
-              pinned && sidebarContent ? 'lg:pr-[420px]' : ''
-            }`}
+            className={`mx-3 my-3 lg:mt-5 lg:mr-8 
+            ${ menuBarOffset ? 'lg:ml-[292px]' : ''}
+            ${ pinned && sidebarContent ? 'lg:pr-[420px]' : ''}
+            `}
             id="layout-content"
           >
             {children}

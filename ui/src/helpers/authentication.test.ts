@@ -7,6 +7,7 @@ import {
   saveSharePassword,
   clearSharePassword,
   getSharePassword,
+  isAuthorized,
 } from './authentication'
 
 function resetCookies() {
@@ -28,10 +29,12 @@ describe('helpers/authentication', () => {
     expect(document.cookie).toEqual(`auth-token=${AUTH_TOKEN}`)
 
     expect(authToken()).toEqual(AUTH_TOKEN)
+    expect(isAuthorized()).toBeTruthy()
 
     clearTokenCookie()
 
     expect(authToken()).toBeUndefined()
+    expect(isAuthorized()).toBeFalsy()
     expect(document.cookie).toEqual('')
   })
 
