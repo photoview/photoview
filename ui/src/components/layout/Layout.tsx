@@ -18,7 +18,6 @@ export const ADMIN_QUERY = gql`
 type LayoutProps = {
   children: React.ReactNode
   title: string
-  menuBarOffset: boolean
 }
 
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
