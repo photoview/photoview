@@ -54,28 +54,11 @@ jobs:
       - name: Detect dependency versions
         id: versions
         working-directory: dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USER_AGENT: photoview-deps-ci
         shell: bash
-        run: |
-          set -euo pipefail
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          # Fetch latest version tags from GitHub releases
-          LIBRAW_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
-          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
-          IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
-          JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
-          # Output as environment variables
-          echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
+        run: ./versions.sh | tee -a $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v7
@@ -96,6 +79,5 @@ jobs:
             github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
             LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
-            LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
             IMAGEMAGICK_VERSION=${{ steps.versions.outputs.IMAGEMAGICK_VERSION }}
             JELLYFIN_FFMPEG_VERSION=${{ steps.versions.outputs.JELLYFIN_FFMPEG_VERSION }}

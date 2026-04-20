@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 cd "$(dirname $0)/../api"
 go test ./... -v -database -filesystem -p 1 \

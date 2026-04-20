@@ -1,6 +1,6 @@
 ### Build UI ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} node:18 AS ui
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
+
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG NODE_ENV=production
@@ -33,18 +33,25 @@ ARG VERSION=unknown-branch
 ENV VERSION=${VERSION}
 ARG TARGETARCH
 ENV TARGETARCH=${TARGETARCH}
-# hadolint ignore=SC2155
-RUN export REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')"; \
-    export REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-"; \
-    export REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}"; \
-    export REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}"; \
+
+RUN REACT_APP_BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00(UTC)')" \
+    REACT_APP_BUILD_COMMIT_SHA="-=<GitHub-CI-commit-sha-placeholder>=-" \
+    REACT_APP_BUILD_VERSION="${VERSION}-${TARGETARCH}" \
+    REACT_APP_API_ENDPOINT="${REACT_APP_API_ENDPOINT}" \
     npm run build"$( [ "$NODE_ENV" != "production" ] && echo :dev )" -- --base="${UI_PUBLIC_URL}"
+
+### Prepare dependencies ###
+FROM photoview/dependencies:trixie AS dependencies
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+WORKDIR /dependencies
+RUN tar xfv /artifacts.tar.gz
 
 ### Build API ###
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
 ARG TARGETPLATFORM
 
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ENV GOPATH="/go"
@@ -52,32 +59,31 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 ENV CGO_ENABLED=1
 
 # Download dependencies
-COPY scripts/set_compiler_env.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-    && source /app/scripts/set_compiler_env.sh
+COPY --chmod=0755 scripts/set_compiler_env.sh /app/scripts/
+RUN DEBIAN_FRONTEND=noninteractive source /app/scripts/set_compiler_env.sh
 
-COPY scripts/install_*.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh \
-    && set -a && source /env && set +a \
-    && /app/scripts/install_build_dependencies.sh \
-    && /app/scripts/install_runtime_dependencies.sh
-
-# hadolint ignore=DL3022
-COPY --from=photoview/dependencies:trixie /artifacts.tar.gz /dependencies/
-WORKDIR /dependencies
+COPY --chmod=0755 scripts/install_build_dependencies.sh /app/scripts/
 RUN set -a && source /env && set +a \
+    && DEBIAN_FRONTEND=noninteractive /app/scripts/install_build_dependencies.sh
+COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
+RUN set -a && source /env && set +a \
+    && DEBIAN_FRONTEND=noninteractive /app/scripts/install_runtime_dependencies.sh
+
+WORKDIR /dependencies
+RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependencies/ \
+    set -a && source /env && set +a \
     && git config --global --add safe.directory /app \
-    && tar xfv artifacts.tar.gz \
     && cp -a include/* /usr/local/include/ \
     && cp -a pkgconfig/* "${PKG_CONFIG_PATH}" \
     && cp -a lib/* /usr/local/lib/ \
     && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/
 
-COPY api/go.mod api/go.sum /app/api/
 WORKDIR /app/api
+COPY api/go.mod api/go.sum /app/api/
+# DL3062 is not right with latest Go in module-aware mode (default mode).
 # hadolint ignore=DL3062
 RUN set -a && source /env && set +a \
     && go env \
@@ -99,22 +105,23 @@ RUN set -a && source /env && set +a \
 FROM debian:trixie-slim AS release
 ARG TARGETPLATFORM
 
-# See for details: https://github.com/hadolint/hadolint/wiki/DL4006
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-COPY scripts/install_runtime_dependencies.sh /app/scripts/
+# Create a user to run Photoview server
+RUN groupadd -g 999 photoview \
+    && useradd -r -u 999 -g photoview -m photoview
+
+# Install required dependencies
+COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
 WORKDIR /dependencies
-RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
-    chmod +x /app/scripts/install_runtime_dependencies.sh \
-    # Create a user to run Photoview server
-    && groupadd -g 999 photoview \
-    && useradd -r -u 999 -g photoview -m photoview \
-    # Install required dependencies
-    && /app/scripts/install_runtime_dependencies.sh \
+RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependencies/ \
+    # One step to install dependencies and clean up to avoid storing cache in the layer.
+    DEBIAN_FRONTEND=noninteractive /app/scripts/install_runtime_dependencies.sh \
     # Install self-building libs
     && cp -a lib/*.so* /usr/local/lib/ \
     && ldconfig \
-    && apt-get install -y ./deb/jellyfin-ffmpeg.deb gzip brotli zstd \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+      -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
     # Cleanup
@@ -122,9 +129,10 @@ RUN --mount=type=bind,from=api,source=/dependencies/,target=/dependencies/ \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy binary and UI assets from api and ui stages.
 COPY api/data /app/data
+
 COPY --from=ui /app/ui/dist /app/ui
-COPY --from=api /app/api/photoview /app/photoview
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
@@ -141,6 +149,8 @@ RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
         brotli -k -f -q 11 -s "$file"; \
         zstd -k -f -19 -T0 --no-progress "$file"; \
     done' sh {} +
+
+COPY --from=api /app/api/photoview /app/photoview
 
 WORKDIR /home/photoview
 
