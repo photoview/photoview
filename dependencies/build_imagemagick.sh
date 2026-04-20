@@ -21,7 +21,7 @@ fi
 
 echo "Compiler: ${DEB_HOST_GNU_TYPE} Arch: ${DEB_HOST_ARCH}"
 
-apt-get install -y --no-install-recommends\
+apt-get install -y --no-install-recommends \
   "libbz2-dev:${DEB_HOST_ARCH}" \
   "libdjvulibre-dev:${DEB_HOST_ARCH}" \
   "libfftw3-dev:${DEB_HOST_ARCH}" \
