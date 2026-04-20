@@ -29,11 +29,11 @@ fi
 
 # Fetch latest version tags from GitHub releases
 LIBRAW_VERSION=$(curl "${CURL_FLAGS[@]}" \
-  "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')
+  "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name // ""')
 IMAGEMAGICK_VERSION=$(curl "${CURL_FLAGS[@]}" \
-  "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
+  "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name // ""')
 JELLYFIN_FFMPEG_VERSION=$(curl "${CURL_FLAGS[@]}" \
-  "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
+  "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name // ""')
 
 # Output as environment variables
 echo "LIBRAW_VERSION=${LIBRAW_VERSION}"

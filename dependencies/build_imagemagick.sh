@@ -9,7 +9,7 @@ if [[ -z "${IMAGEMAGICK_VERSION}" ]]; then
   echo "WARN: ImageMagick version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from ImageMagick repo..."
   IMAGEMAGICK_VERSION="$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-    "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')"
+    "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name // ""')"
   if [[ -z "${IMAGEMAGICK_VERSION}" ]]; then
     echo "ERROR: Failed to resolve latest ImageMagick tag_name from GitHub API" >&2
     exit 1

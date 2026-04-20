@@ -9,7 +9,7 @@ if [[ -z "${LIBRAW_VERSION}" ]]; then
   echo "WARN: LibRaw version is empty, most likely the script runs not on CI."
   echo "Fetching the latest version from LibRaw repo..."
   LIBRAW_VERSION="$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-    "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name')"
+    "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -r '.tag_name // ""')"
   if [[ -z "${LIBRAW_VERSION}" ]]; then
     echo "ERROR: Failed to resolve latest libraw tag_name from GitHub API" >&2
     exit 1
