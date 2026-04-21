@@ -1,11 +1,10 @@
-import {gql} from '@apollo/client'
-import React, {useContext} from 'react'
-import {Helmet} from 'react-helmet'
+import { gql } from '@apollo/client'
+import React, { useContext } from 'react'
+import { Helmet } from 'react-helmet'
 import Header from '../header/Header'
-import {Authorized} from '../routes/AuthorizedRoute'
-import {Sidebar, SidebarContext} from '../sidebar/Sidebar'
+import { Authorized, useIsAuthorized } from '../routes/AuthorizedRoute'
+import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
 import MainMenu from './MainMenu'
-import {isAuthorized} from "../../helpers/authentication";
 
 export const ADMIN_QUERY = gql`
   query adminQuery {
@@ -22,7 +21,7 @@ type LayoutProps = {
 
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
   const { pinned, content: sidebarContent } = useContext(SidebarContext)
-  const menuBarOffset = isAuthorized();
+  const menuBarOffset = useIsAuthorized();
   return (
     <>
       <Helmet>

@@ -28,10 +28,6 @@ export function authToken() {
   return Cookies.get(AUTH_TOKEN_COOKIE_NAME)
 }
 
-export function isAuthorized(): boolean {
-  return authToken() !== undefined
-}
-
 export function saveSharePassword(shareToken: string, password: string) {
   const cookieName = SHARE_TOKEN_COOKIE_NAME(shareToken)
 

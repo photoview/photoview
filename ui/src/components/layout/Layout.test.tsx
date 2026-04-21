@@ -1,16 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 import Layout from './Layout'
-import * as authentication from "../../helpers/authentication";
-
-vi.mock('../../helpers/authentication.ts')
-
-const isAuthorized = vi.mocked(authentication.isAuthorized)
+import * as AuthorizedRoute from '../routes/AuthorizedRoute'
 
 describe('Layout component', () => {
 
   test('with left menu bar', () => {
-    isAuthorized.mockImplementation(() => true)
+    vi.spyOn(AuthorizedRoute, 'useIsAuthorized').mockReturnValue(true)
 
     render(
         <Layout title="Test title">
@@ -27,7 +23,7 @@ describe('Layout component', () => {
   })
 
   test('without left menu bar', () => {
-    isAuthorized.mockImplementation(() => false)
+    vi.spyOn(AuthorizedRoute, 'useIsAuthorized').mockReturnValue(false)
 
     render(
         <Layout title="Test title">

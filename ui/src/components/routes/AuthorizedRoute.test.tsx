@@ -1,5 +1,5 @@
 import React from 'react'
-import AuthorizedRoute, { useIsAdmin } from './AuthorizedRoute'
+import AuthorizedRoute, { useIsAdmin, useIsAuthorized } from './AuthorizedRoute'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -15,7 +15,7 @@ describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
   test('not logged in', () => {
-    authToken.mockImplementation(() => null)
+    authToken.mockImplementation(() => undefined)
 
     render(
       <MemoryRouter initialEntries={['/authorized']}>
@@ -76,7 +76,7 @@ describe('useIsAdmin hook', () => {
   })
 
   test('not logged in', async () => {
-    authToken.mockImplementation(() => null)
+    authToken.mockImplementation(() => undefined)
 
     const TestComponent = () => {
       const isAdmin = useIsAdmin()
@@ -84,9 +84,9 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(true)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(true)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
@@ -103,9 +103,9 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(false)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(false)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
@@ -122,9 +122,9 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(true)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(true)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
@@ -132,3 +132,19 @@ describe('useIsAdmin hook', () => {
     })
   })
 })
+
+describe('useIsAuthorized hook', () => {
+
+  test('is authorized', async () => {
+    authToken.mockImplementation(() => 'token-here')
+
+    expect(useIsAuthorized()).toBeTruthy();
+  })
+
+  test('is not authorized', async () => {
+    authToken.mockImplementation(() => undefined)
+
+    expect(useIsAuthorized()).toBeFalsy();
+  })
+})
+
