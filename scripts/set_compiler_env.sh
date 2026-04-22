@@ -43,6 +43,7 @@ if [[ "${TARGETARCH}" = "arm" && -n "${TARGETVARIANT}" ]]; then
     ;;
   *)
     GOARM="7"
+    DEBIAN_ARCH="armhf"
     echo "Warning: unexpected ARM variant ${TARGETVARIANT}; defaulting GOARM to 7."
     ;;
   esac
