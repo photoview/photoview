@@ -6,7 +6,7 @@ echo "Arch: ${DEB_HOST_ARCH}"
 
 echo "/usr/local/lib" > /etc/ld.so.conf.d/00-usr-local-lib.conf
 
-if [ "${DEB_HOST_ARCH}" != "$(dpkg --print-architecture)" ]; then
+if [[ "${DEB_HOST_ARCH}" != "$(dpkg --print-architecture)" ]]; then
   echo "No need to install runtime dependencies in the cross-build environment, since it can't be run."
   exit 0
 fi

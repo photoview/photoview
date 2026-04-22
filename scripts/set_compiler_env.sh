@@ -30,14 +30,20 @@ GOOS="${TARGETOS}"
 GOARCH="${TARGETARCH}"
 GOARM=""
 # best efforts
-if [ "${TARGETARCH}" = "arm" ] && [ ! -z "${TARGETVARIANT}" ]; then
-  GOARM="7"
+if [[ "${TARGETARCH}" = "arm" && -n "${TARGETVARIANT}" ]]; then
   case "${TARGETVARIANT}" in
   "v5")
     GOARM="5"
     ;;
   "v6")
     GOARM="6"
+    ;;
+  "v7")
+    GOARM="7"
+    ;;
+  *)
+    GOARM="7"
+    echo "Warning: unexpected ARM variant ${TARGETVARIANT}; defaulting GOARM to 7."
     ;;
   esac
 fi
@@ -64,16 +70,19 @@ apt-get install -y --no-install-recommends "${LIBS[@]}"
 
 dpkg-architecture -a "${DEBIAN_ARCH}" >/env
 set -a
+# shellcheck disable=SC1091
 source /env
 set +a
 
-echo CGO_ENABLED="${CGO_ENABLED}" >>/env
-echo GOOS="${GOOS}" >>/env
-echo GOARCH="${GOARCH}" >>/env
-echo GOARM="${GOARM}" >>/env
-echo AR="${DEB_HOST_MULTIARCH}-ar" >>/env
-echo CC="${DEB_HOST_MULTIARCH}-gcc" >>/env
-echo CXX="${DEB_HOST_MULTIARCH}-g++" >>/env
-echo PKG_CONFIG_PATH="/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/" >>/env
+{
+  echo CGO_ENABLED="${CGO_ENABLED}"
+  echo GOOS="${GOOS}"
+  echo GOARCH="${GOARCH}"
+  echo GOARM="${GOARM}"
+  echo AR="${DEB_HOST_MULTIARCH}-ar"
+  echo CC="${DEB_HOST_MULTIARCH}-gcc"
+  echo CXX="${DEB_HOST_MULTIARCH}-g++"
+  echo PKG_CONFIG_PATH="/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/"
+} >> /env
 
 cat /env

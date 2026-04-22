@@ -65,6 +65,7 @@ RUN DEBIAN_FRONTEND=noninteractive source /app/scripts/set_compiler_env.sh
 COPY --chmod=0755 scripts/install_build_dependencies.sh /app/scripts/
 RUN set -a && source /env && set +a \
     && DEBIAN_FRONTEND=noninteractive /app/scripts/install_build_dependencies.sh
+
 COPY --chmod=0755 scripts/install_runtime_dependencies.sh /app/scripts/
 RUN set -a && source /env && set +a \
     && DEBIAN_FRONTEND=noninteractive /app/scripts/install_runtime_dependencies.sh
