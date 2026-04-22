@@ -58,7 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USER_AGENT: photoview-deps-ci
         shell: bash
-        run: ./versions.sh | tee -a $GITHUB_OUTPUT
+        run: ./versions.sh | tee -a "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v7
