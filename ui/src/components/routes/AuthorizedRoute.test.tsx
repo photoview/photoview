@@ -1,6 +1,6 @@
 import React from 'react'
 import AuthorizedRoute, { useIsAdmin, useIsAuthorized } from './AuthorizedRoute'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, renderHook, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import * as authentication from '../../helpers/authentication'
@@ -134,17 +134,14 @@ describe('useIsAdmin hook', () => {
 })
 
 describe('useIsAuthorized hook', () => {
-
-  test('is authorized', async () => {
+  test('is authorized', () => {
     authToken.mockImplementation(() => 'token-here')
-
-    expect(useIsAuthorized()).toBeTruthy();
+    const { result } = renderHook(() => useIsAuthorized())
+    expect(result.current).toBeTruthy()
   })
-
-  test('is not authorized', async () => {
+  test('is not authorized', () => {
     authToken.mockImplementation(() => undefined)
-
-    expect(useIsAuthorized()).toBeFalsy();
+    const { result } = renderHook(() => useIsAuthorized())
+    expect(result.current).toBeFalsy()
   })
 })
-
