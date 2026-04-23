@@ -133,7 +133,7 @@ describe('useIsAdmin hook', () => {
   })
 })
 
-describe('useIsAuthorized hook', () => {
+describe('useIsAuthorized', () => {
   test('is authorized', () => {
     authToken.mockImplementation(() => 'token-here')
     const { result } = renderHook(() => useIsAuthorized())
