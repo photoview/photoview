@@ -159,6 +159,8 @@ type ComplexityRoot struct {
 		SetAlbumCover               func(childComplexity int, coverID int) int
 		SetExpireShareToken         func(childComplexity int, token string, expire *time.Time) int
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
+		SetMapStyleDark             func(childComplexity int, url *string) int
+		SetMapStyleLight            func(childComplexity int, url *string) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
 		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
@@ -182,7 +184,6 @@ type ComplexityRoot struct {
 	Query struct {
 		Album                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		FaceGroup                  func(childComplexity int, id int) int
-		MapboxToken                func(childComplexity int) int
 		Media                      func(childComplexity int, id int, tokenCredentials *models.ShareTokenCredentials) int
 		MediaList                  func(childComplexity int, ids []int) int
 		MyAlbums                   func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) int
@@ -226,6 +227,9 @@ type ComplexityRoot struct {
 		ConcurrentWorkers    func(childComplexity int) int
 		FaceDetectionEnabled func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
+		MapEnabled           func(childComplexity int) int
+		MapStyleDark         func(childComplexity int) int
+		MapStyleLight        func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
 	}
 
@@ -318,6 +322,8 @@ type MutationResolver interface {
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error)
+	SetMapStyleLight(ctx context.Context, url *string) (*string, error)
+	SetMapStyleDark(ctx context.Context, url *string) (*string, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
@@ -336,7 +342,6 @@ type QueryResolver interface {
 	Media(ctx context.Context, id int, tokenCredentials *models.ShareTokenCredentials) (*models.Media, error)
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (any, error)
-	MapboxToken(ctx context.Context) (*string, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error)
@@ -351,6 +356,7 @@ type ShareTokenResolver interface {
 }
 type SiteInfoResolver interface {
 	FaceDetectionEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error)
+	MapEnabled(ctx context.Context, obj *models.SiteInfo) (bool, error)
 }
 type SubscriptionResolver interface {
 	Notification(ctx context.Context) (<-chan *models.Notification, error)
@@ -965,6 +971,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
+	case "Mutation.setMapStyleDark":
+		if e.ComplexityRoot.Mutation.SetMapStyleDark == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setMapStyleDark_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.SetMapStyleDark(childComplexity, args["url"].(*string)), true
+	case "Mutation.setMapStyleLight":
+		if e.ComplexityRoot.Mutation.SetMapStyleLight == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setMapStyleLight_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.SetMapStyleLight(childComplexity, args["url"].(*string)), true
 	case "Mutation.setPeriodicScanInterval":
 		if e.ComplexityRoot.Mutation.SetPeriodicScanInterval == nil {
 			break
@@ -1115,12 +1143,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.FaceGroup(childComplexity, args["id"].(int)), true
 
-	case "Query.mapboxToken":
-		if e.ComplexityRoot.Query.MapboxToken == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Query.MapboxToken(childComplexity), true
 	case "Query.media":
 		if e.ComplexityRoot.Query.Media == nil {
 			break
@@ -1361,6 +1383,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.SiteInfo.InitialSetup(childComplexity), true
+	case "SiteInfo.mapEnabled":
+		if e.ComplexityRoot.SiteInfo.MapEnabled == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SiteInfo.MapEnabled(childComplexity), true
+	case "SiteInfo.mapStyleDark":
+		if e.ComplexityRoot.SiteInfo.MapStyleDark == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SiteInfo.MapStyleDark(childComplexity), true
+	case "SiteInfo.mapStyleLight":
+		if e.ComplexityRoot.SiteInfo.MapStyleLight == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SiteInfo.MapStyleLight(childComplexity), true
 	case "SiteInfo.periodicScanInterval":
 		if e.ComplexityRoot.SiteInfo.PeriodicScanInterval == nil {
 			break
@@ -1914,6 +1954,28 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_args(ctx context.Co
 		return nil, err
 	}
 	args["label"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setMapStyleDark_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["url"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setMapStyleLight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "url", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["url"] = arg0
 	return args, nil
 }
 
@@ -5691,6 +5753,114 @@ func (ec *executionContext) fieldContext_Mutation_setExpireShareToken(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setMapStyleLight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setMapStyleLight,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().SetMapStyleLight(ctx, fc.Args["url"].(*string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAdmin == nil {
+					var zeroVal *string
+					return zeroVal, errors.New("directive isAdmin is not implemented")
+				}
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setMapStyleLight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setMapStyleLight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setMapStyleDark(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setMapStyleDark,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().SetMapStyleDark(ctx, fc.Args["url"].(*string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAdmin == nil {
+					var zeroVal *string
+					return zeroVal, errors.New("directive isAdmin is not implemented")
+				}
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setMapStyleDark(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setMapStyleDark_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6978,35 +7148,6 @@ func (ec *executionContext) fieldContext_Query_myMediaGeoJson(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_mapboxToken,
-		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().MapboxToken(ctx)
-		},
-		nil,
-		ec.marshalOString2ᚖstring,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_mapboxToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7182,10 +7323,16 @@ func (ec *executionContext) fieldContext_Query_siteInfo(_ context.Context, field
 				return ec.fieldContext_SiteInfo_initialSetup(ctx, field)
 			case "faceDetectionEnabled":
 				return ec.fieldContext_SiteInfo_faceDetectionEnabled(ctx, field)
+			case "mapEnabled":
+				return ec.fieldContext_SiteInfo_mapEnabled(ctx, field)
 			case "periodicScanInterval":
 				return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
 			case "concurrentWorkers":
 				return ec.fieldContext_SiteInfo_concurrentWorkers(ctx, field)
+			case "mapStyleLight":
+				return ec.fieldContext_SiteInfo_mapStyleLight(ctx, field)
+			case "mapStyleDark":
+				return ec.fieldContext_SiteInfo_mapStyleDark(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SiteInfo", field.Name)
 		},
@@ -8145,6 +8292,35 @@ func (ec *executionContext) fieldContext_SiteInfo_faceDetectionEnabled(_ context
 	return fc, nil
 }
 
+func (ec *executionContext) _SiteInfo_mapEnabled(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SiteInfo_mapEnabled,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.SiteInfo().MapEnabled(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SiteInfo_mapEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8224,6 +8400,90 @@ func (ec *executionContext) fieldContext_SiteInfo_concurrentWorkers(_ context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiteInfo_mapStyleLight(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SiteInfo_mapStyleLight,
+		func(ctx context.Context) (any, error) {
+			return obj.MapStyleLight, nil
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal *string
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SiteInfo_mapStyleLight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SiteInfo_mapStyleDark(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SiteInfo_mapStyleDark,
+		func(ctx context.Context) (any, error) {
+			return obj.MapStyleDark, nil
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal *string
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SiteInfo_mapStyleDark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11957,6 +12217,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "setMapStyleLight":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setMapStyleLight(ctx, field)
+			})
+		case "setMapStyleDark":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setMapStyleDark(ctx, field)
+			})
 		case "authorizeUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_authorizeUser(ctx, field)
@@ -12281,25 +12549,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "mapboxToken":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_mapboxToken(ctx, field)
 				return res
 			}
 
@@ -12756,6 +13005,42 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "mapEnabled":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SiteInfo_mapEnabled(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "periodicScanInterval":
 			out.Values[i] = ec._SiteInfo_periodicScanInterval(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12766,6 +13051,10 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "mapStyleLight":
+			out.Values[i] = ec._SiteInfo_mapStyleLight(ctx, field, obj)
+		case "mapStyleDark":
+			out.Values[i] = ec._SiteInfo_mapStyleDark(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

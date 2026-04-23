@@ -13,6 +13,7 @@ please take a moment to review this guide, which outlines the process for making
     - [Bug](#-bug-)
     - [Feature](#-feature-)
   - [Steps to contribute to the code or documentation](#steps-to-contribute-to-the-code-or-documentation)
+- [Map Style](#map-style)
 - [Code Standards](#code-standards)
 - [Documentation](#documentation)
 - [Licensing](#licensing)
@@ -134,6 +135,12 @@ from your branch to the `master` branch of the Photoview repository. Provide a d
 of your changes and reference any related issues.
 
 9. **Review and Collaborate**: Collaborate with project maintainers and address any feedback or review comments on your pull request.
+
+## Map Style
+
+Photoview ships a built-in map style based on [OpenFreeMap Liberty](https://openfreemap.org/) with [Mapterhorn](https://mapterhorn.com/) hillshading. The style definition lives at `ui/src/components/maplibre/libertyStyle.json`.
+
+To edit the map style visually, open it in [Maputnik](https://maplibre.org/maputnik) — a free, open-source style editor for MapLibre. You can load the JSON file directly, make changes in the visual editor, and export the updated style back into the repository.
 
 ## Code Standards
 

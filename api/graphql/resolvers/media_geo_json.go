@@ -7,7 +7,6 @@ package resolvers
 
 import (
 	"context"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -68,14 +67,4 @@ func (r *queryResolver) MyMediaGeoJSON(ctx context.Context) (any, error) {
 
 	featureCollection := makeGeoJSONFeatureCollection(features)
 	return featureCollection, nil
-}
-
-// MapboxToken is the resolver for the mapboxToken field.
-func (r *queryResolver) MapboxToken(ctx context.Context) (*string, error) {
-	mapboxTokenEnv := os.Getenv("MAPBOX_TOKEN")
-	if mapboxTokenEnv == "" {
-		return nil, nil
-	}
-
-	return &mapboxTokenEnv, nil
 }
