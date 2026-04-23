@@ -22,10 +22,12 @@ export const useIsAdmin = () => {
   return data?.myUser?.admin
 }
 
-export const Authorized = ({ children }: { children: JSX.Element }) => {
-  const token = authToken()
+export const useIsAuthorized = () => {
+  return authToken() !== undefined
+}
 
-  return token ? children : null
+export const Authorized = ({ children }: { children: JSX.Element }) => {
+  return useIsAuthorized() ? children : null
 }
 
 interface AuthorizedRouteProps {
