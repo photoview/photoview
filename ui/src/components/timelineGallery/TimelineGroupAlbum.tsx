@@ -36,23 +36,31 @@ const TimelineGroupAlbum = ({
 
   const [markFavorite] = useMarkFavoriteMutation()
 
-  const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar, content } = useContext(SidebarContext)
 
-  const mediaElms = media.map((media, index) => (
-    <MediaThumbnail
-      key={media.id}
-      media={media}
-      selectImage={() => {
-        dispatchMedia({
-          type: 'selectImage',
-          index: {
-            album: albumIndex,
-            date: dateIndex,
-            media: index,
-          },
-        })
-        updateSidebar(<MediaSidebar media={media} />)
-      }}
+  const mediaElms = media.map((media, index) => {
+    const isActive = media.id === getActiveTimelineImage({ mediaState })?.id
+
+    return (
+      <MediaThumbnail
+        key={media.id}
+        media={media}
+        selectImage={() => {
+          // Toggle: if clicking on the same active image with sidebar open, close it
+          if (isActive && content !== null) {
+            updateSidebar(null)
+          } else {
+            dispatchMedia({
+              type: 'selectImage',
+              index: {
+                album: albumIndex,
+                date: dateIndex,
+                media: index,
+              },
+            })
+            updateSidebar(<MediaSidebar media={media} />)
+          }
+        }}
       clickPresent={() => {
         openTimelinePresentMode({
           dispatchMedia,
@@ -63,15 +71,16 @@ const TimelineGroupAlbum = ({
           },
         })
       }}
-      clickFavorite={() => {
-        toggleFavoriteAction({
-          media,
-          markFavorite,
-        })
-      }}
-      active={media.id === getActiveTimelineImage({ mediaState })?.id}
-    />
-  ))
+        clickFavorite={() => {
+          toggleFavoriteAction({
+            media,
+            markFavorite,
+          })
+        }}
+        active={isActive}
+      />
+    )
+  })
 
   return (
     <div className="mx-2">
