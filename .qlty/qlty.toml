@@ -1,0 +1,134 @@
+config_version = "0"
+
+exclude_patterns = [
+  "*_min.*",
+  "*-min.*",
+  "*.min.*",
+  "**/.yarn/**",
+  "**/*.d.ts",
+  "**/assets/**",
+  "**/bower_components/**",
+  "**/build/**",
+  "**/cache/**",
+  "**/config/**",
+  "**/db/**",
+  "**/deps/**",
+  "**/dist/**",
+  "**/extern/**",
+  "**/external/**",
+  "**/generated/**",
+  "**/Godeps/**",
+  "**/gradlew/**",
+  "**/mvnw/**",
+  "**/node_modules/**",
+  "**/protos/**",
+  "**/seed/**",
+  "**/target/**",
+  "**/templates/**",
+  "**/testdata/**",
+  "**/vendor/**",
+]
+
+test_patterns = [
+  "**/test/**",
+  "**/spec/**",
+  "**/*.test.*",
+  "**/*.spec.*",
+  "**/*_test.*",
+  "**/*_spec.*",
+  "**/test_*.*",
+  "**/spec_*.*",
+]
+
+[smells]
+mode = "monitor"
+
+[smells.boolean_logic]
+threshold = 3
+
+[smells.nested_control_flow]
+threshold = 3
+
+[smells.function_parameters]
+threshold = 3
+
+[smells.return_statements]
+threshold = 4
+
+[smells.file_complexity]
+threshold = 35
+
+[smells.function_complexity]
+threshold = 10
+
+[smells.identical_code]
+threshold = 8
+
+[smells.similar_code]
+threshold = 8
+
+[[source]]
+name = "default"
+default = true
+
+
+[[plugin]]
+name = "actionlint"
+mode = "comment"
+
+[[plugin]]
+name = "eslint"
+version = "8.19.0"
+mode = "comment"
+package_file = "ui/package.json"
+package_filters = ["jest", "prettier", "eslint"]
+
+[[plugin]]
+name = "gofmt"
+mode = "comment"
+
+[[plugin]]
+name = "golangci-lint"
+version = "2.6.2"
+mode = "comment"
+
+[[plugin]]
+name = "hadolint"
+mode = "comment"
+
+[[plugin]]
+name = "osv-scanner"
+mode = "comment"
+
+[[plugin]]
+name = "radarlint-go"
+mode = "monitor"
+
+[[plugin]]
+name = "radarlint-iac"
+mode = "monitor"
+
+[[plugin]]
+name = "ripgrep"
+mode = "comment"
+
+[[plugin]]
+name = "shellcheck"
+mode = "comment"
+
+[[plugin]]
+name = "trivy"
+version = "0.69.2"
+mode = "comment"
+drivers = [
+  "config",
+  "fs-vuln",
+]
+
+[[plugin]]
+name = "trufflehog"
+mode = "comment"
+
+[[plugin]]
+name = "zizmor"
+mode = "comment"
