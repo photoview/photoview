@@ -1,0 +1,98 @@
+version: "2"
+run:
+  tests: false
+  allow-parallel-runners: true
+  allow-serial-runners: true
+output:
+  formats:
+    junit-xml:
+      path: golang-lint.xml
+    sarif:
+      path: golang-lint.sarif
+  sort-order:
+    - linter
+    - severity
+    - file
+linters:
+  enable:
+    - asciicheck
+    - bidichk
+    - copyloopvar
+    - cyclop
+    - decorder
+    - depguard
+    - dogsled
+    - dupl
+    - dupword
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocyclo
+    - godot
+    - godox
+    - goheader
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - grouper
+    - inamedparam
+    - interfacebloat
+    - lll
+    - maintidx
+    - misspell
+    - mnd
+    - nakedret
+    - nestif
+    - nlreturn
+    - nolintlint
+    - nosprintfhostport
+    - prealloc
+    - predeclared
+    - promlinter
+    - tagalign
+    - usestdlibvars
+    - whitespace
+    - wsl
+  disable:
+    - unused
+  exclusions:
+    rules:
+      - linters:
+          - dupl
+          - errcheck
+          - gocyclo
+          - gosec
+        path: _test\.go
+      - linters:
+          - forbidigo
+        path-except: _test\.go
+      - linters:
+          - lll
+        source: "^//go:generate "
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+severity:
+  default: error
+  rules:
+    - linters:
+        - dupl
+      severity: info
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
