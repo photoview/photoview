@@ -10,8 +10,7 @@ export const INITIAL_SETUP_QUERY = gql`
   }
 `
 
-export function login(token: string) {
-  saveTokenCookie(token)
+export function login() {
   window.location.href = `${import.meta.env.BASE_URL}`
 }
 

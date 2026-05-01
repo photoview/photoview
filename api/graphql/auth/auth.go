@@ -19,9 +19,11 @@ var bearerRegex = regexp.MustCompile("^(?i)Bearer ([a-zA-Z0-9]{24})$")
 const INVALID_AUTH_TOKEN = "invalid authorization token"
 const INTERNAL_SERVER_ERROR = "internal server error"
 
-// A private key for context that only this package can access. This is important
+// Private keys for context that only this package can access. This is important
 // to prevent collisions between different context uses
 var userCtxKey = &contextKey{"user"}
+
+var userAccessTokenCtxKey = &contextKey{"userAccessToken"}
 
 type contextKey struct {
 	name string
@@ -87,6 +89,16 @@ func TokenFromBearer(bearer *string) (*string, error) {
 func UserFromContext(ctx context.Context) *models.User {
 	raw, _ := ctx.Value(userCtxKey).(*models.User)
 	return raw
+}
+
+// Find the auth-token from the context. REQUIRES AuthCookieSetter to have run.
+func ResolverCookieFromContext(ctx context.Context) *string {
+	v := ctx.Value(userAccessTokenCtxKey)
+	if v == nil {
+		return nil
+	}
+
+	return v.(*string)
 }
 
 func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.Context, *transport.InitPayload, error) {
