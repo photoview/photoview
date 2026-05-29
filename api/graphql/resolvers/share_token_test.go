@@ -23,7 +23,10 @@ func TestShareTokenValidatePassword(t *testing.T) {
 	if err != nil {
 		t.Fatal("register user error:", err)
 	}
-	hashBytes, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	hashBytes, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatal("hash password error:", err)
+	}
 	hashedPassword := string(hashBytes)
 
 	now := time.Now()
@@ -50,7 +53,9 @@ func TestShareTokenValidatePassword(t *testing.T) {
 		time.UTC,
 	)
 
-	db.AutoMigrate(&models.ShareToken{})
+	if err := db.AutoMigrate(&models.ShareToken{}); err != nil {
+		t.Fatal("auto-migrate share token error:", err)
+	}
 	testDataList := []models.ShareToken{
 		{
 			Value:   "EXPIRED_TOKEN",
@@ -64,7 +69,9 @@ func TestShareTokenValidatePassword(t *testing.T) {
 			Password: &hashedPassword,
 		},
 	}
-	db.Create(testDataList)
+	if err := db.Create(&testDataList).Error; err != nil {
+		t.Fatal("insert share token test data error:", err)
+	}
 	tests := []struct {
 		name        string
 		credentials models.ShareTokenCredentials
