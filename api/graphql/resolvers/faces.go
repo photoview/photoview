@@ -178,6 +178,14 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		sourceFaceGroups = append(sourceFaceGroups, sourceFaceGroup)
 	}
 
+	hasDuplicateMedia, err := faceGroupsWouldContainDuplicateMedia(db, destinationFaceGroupID, sourceFaceGroupIDs)
+	if err != nil {
+		return nil, err
+	}
+	if hasDuplicateMedia {
+		return nil, errors.New("cannot merge face groups because the destination would contain duplicate images")
+	}
+
 	// Perform the merge
 	updateError := db.Transaction(func(tx *gorm.DB) error {
 
@@ -246,6 +254,14 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 
 		for _, imageFace := range userOwnedImageFaces {
 			userOwnedImageFaceIDs = append(userOwnedImageFaceIDs, imageFace.ID)
+		}
+
+		hasDuplicateMedia, err := movingImageFacesWouldCreateDuplicateMedia(tx, destFaceGroup.ID, userOwnedImageFaceIDs)
+		if err != nil {
+			return err
+		}
+		if hasDuplicateMedia {
+			return errors.New("cannot move faces because the destination would contain duplicate images")
 		}
 
 		var sourceFaceGroups []*models.FaceGroup
