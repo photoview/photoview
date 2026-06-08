@@ -180,8 +180,8 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 
 	// Perform the merge
 	updateError := db.Transaction(func(tx *gorm.DB) error {
-
-		hasDuplicateMedia, err := faceGroupsWouldContainDuplicateMedia(tx, destinationFaceGroupID, sourceFaceGroupIDs)
+		faceGroupIDs := append([]int{destinationFaceGroup.ID}, sourceFaceGroupIDs...)
+		hasDuplicateMedia, err := faceGroupsWouldContainDuplicateMedia(tx, faceGroupIDs...)
 		if err != nil {
 			return err
 		}
