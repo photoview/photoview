@@ -181,7 +181,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 	// Perform the merge
 	updateError := db.Transaction(func(tx *gorm.DB) error {
 		faceGroupIDs := append([]int{destinationFaceGroup.ID}, sourceFaceGroupIDs...)
-		hasDuplicateMedia, err := faceGroupsWouldContainDuplicateMedia(tx, faceGroupIDs...)
+		hasDuplicateMedia, err := hasDuplicateMediaInFaceGroupsUnion(tx, faceGroupIDs...)
 		if err != nil {
 			return err
 		}
@@ -256,7 +256,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 			userOwnedImageFaceIDs = append(userOwnedImageFaceIDs, imageFace.ID)
 		}
 
-		hasDuplicateMedia, err := movingImageFacesWouldCreateDuplicateMedia(tx, destFaceGroup.ID, userOwnedImageFaceIDs)
+		hasDuplicateMedia, err := doesFaceGroupContainImages(tx, destFaceGroup.ID, userOwnedImageFaceIDs)
 		if err != nil {
 			return err
 		}

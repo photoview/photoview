@@ -95,7 +95,7 @@ func getUserOwnedImageFaces(tx *gorm.DB, user *models.User, imageFaceIDs []int) 
 	return userOwnedImageFaces, nil
 }
 
-func faceGroupsWouldContainDuplicateMedia(db *gorm.DB, faceGroupIDs ...int) (bool, error) {
+func hasDuplicateMediaInFaceGroupsUnion(db *gorm.DB, faceGroupIDs ...int) (bool, error) {
 
 	duplicateMediaQuery := db.
 		Table("image_faces").
@@ -114,13 +114,13 @@ func faceGroupsWouldContainDuplicateMedia(db *gorm.DB, faceGroupIDs ...int) (boo
 	return count > 0, nil
 }
 
-func movingImageFacesWouldCreateDuplicateMedia(db *gorm.DB, destinationFaceGroupID int, imageFaceIDs []int) (bool, error) {
+func doesFaceGroupContainImages(db *gorm.DB, faceGroupID int, imageFaceIDs []int) (bool, error) {
 	duplicateMediaQuery := db.
 		Table("image_faces AS candidate").
 		Select("candidate.media_id").
 		Where(
 			"(candidate.face_group_id = ? AND candidate.id NOT IN ?) OR candidate.id IN ?",
-			destinationFaceGroupID,
+			faceGroupID,
 			imageFaceIDs,
 			imageFaceIDs,
 		).
