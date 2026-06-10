@@ -1,6 +1,6 @@
 import React from 'react'
-import AuthorizedRoute, { useIsAdmin } from './AuthorizedRoute'
-import { render, screen, waitFor } from '@testing-library/react'
+import AuthorizedRoute, { useIsAdmin, useIsAuthorized } from './AuthorizedRoute'
+import { render, renderHook, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import * as authentication from '../../helpers/authentication'
@@ -15,7 +15,7 @@ describe('AuthorizedRoute component', () => {
   const AuthorizedComponent = () => <div>authorized content</div>
 
   test('not logged in', () => {
-    authToken.mockImplementation(() => null)
+    authToken.mockImplementation(() => undefined)
 
     render(
       <MemoryRouter initialEntries={['/authorized']}>
@@ -76,7 +76,7 @@ describe('useIsAdmin hook', () => {
   })
 
   test('not logged in', async () => {
-    authToken.mockImplementation(() => null)
+    authToken.mockImplementation(() => undefined)
 
     const TestComponent = () => {
       const isAdmin = useIsAdmin()
@@ -84,9 +84,9 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(true)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(true)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
@@ -103,9 +103,9 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(false)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(false)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
@@ -122,13 +122,26 @@ describe('useIsAdmin hook', () => {
     }
 
     render(
-      <MockedProvider mocks={[graphqlMock(true)]}>
-        <TestComponent />
-      </MockedProvider>
+        <MockedProvider mocks={[graphqlMock(true)]}>
+          <TestComponent/>
+        </MockedProvider>
     )
 
     await waitFor(() => {
       expect(screen.getByText('is admin')).toBeInTheDocument()
     })
+  })
+})
+
+describe('useIsAuthorized', () => {
+  test('is authorized', () => {
+    authToken.mockImplementation(() => 'token-here')
+    const { result } = renderHook(() => useIsAuthorized())
+    expect(result.current).toBeTruthy()
+  })
+  test('is not authorized', () => {
+    authToken.mockImplementation(() => undefined)
+    const { result } = renderHook(() => useIsAuthorized())
+    expect(result.current).toBeFalsy()
   })
 })
