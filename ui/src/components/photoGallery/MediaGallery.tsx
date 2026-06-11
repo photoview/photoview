@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { MediaThumbnail, MediaPlaceholder } from './MediaThumbnail'
+import { MediaType } from '../../__generated__/globalTypes'
 import PresentView from './presentView/PresentView'
 import {
   openPresentModeAction,
@@ -67,10 +68,18 @@ const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
 
   const { updateSidebar } = useContext(SidebarContext)
 
-  let mediaElements = []
+  let mediaElements: JSX.Element[] = []
+  let videoElementIndices: number[] = []
+  let photoElementIndices: number[] = []
+
   if (media) {
     mediaElements = media.map((media, index) => {
       const active = activeIndex == index
+
+      if (media.type === MediaType.Video)
+        videoElementIndices.push(index)
+      else 
+        photoElementIndices.push(index)
 
       return (
         <MediaThumbnail
@@ -101,6 +110,9 @@ const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
       mediaElements.push(<MediaPlaceholder key={i} />)
     }
   }
+
+  mediaState.videoMediaIndices = videoElementIndices;
+  mediaState.photoMediaIndices = photoElementIndices;
 
   return (
     <>
