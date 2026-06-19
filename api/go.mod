@@ -3,7 +3,7 @@ module github.com/photoview/photoview/api
 go 1.26.0
 
 require (
-	github.com/99designs/gqlgen v0.17.90
+	github.com/99designs/gqlgen v0.17.91
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/buckket/go-blurhash v1.1.0
 	github.com/go-sql-driver/mysql v1.10.0
@@ -31,6 +31,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
@@ -43,14 +44,13 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/kr/text v0.1.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.23 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sosodev/duration v1.4.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/urfave/cli/v3 v3.8.0 // indirect
+	github.com/urfave/cli/v3 v3.9.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
