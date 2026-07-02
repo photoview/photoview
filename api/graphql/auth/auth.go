@@ -27,7 +27,10 @@ type contextKey struct {
 	name string
 }
 
-// Middleware decodes the share session cookie and packs the session into context
+// Middleware returns an HTTP middleware that authenticates requests using the "auth-token" cookie and, when valid, injects the corresponding *models.User into the request context.
+// If the cookie is present the middleware obtains the request's dataloader and loads the user from the access token; on success the user is stored in the context before calling the next handler.
+// If the dataloader is missing the middleware responds with 500 Internal Server Error. If the token is invalid or no user is found it responds with 401 Unauthorized.
+// If no cookie is present the request proceeds unchanged; logging of a missing cookie is skipped for the /api/healthz path.
 func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +64,9 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				// and call the next with our new context
 				r = r.WithContext(ctx)
 			} else {
-				log.Info(r.Context(), "Did not find auth-token cookie")
+				if r.URL.Path != "/api/healthz" { // skip logging for health
+					log.Info(r.Context(), "Did not find auth-token cookie")
+				}
 			}
 
 			next.ServeHTTP(w, r)

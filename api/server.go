@@ -31,6 +31,15 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
+// main initializes and runs the Photoview HTTP server.
+//
+// It loads environment variables, sets up background workers and application
+// components (database, migrations, EXIF parser, scanner queue, periodic
+// scanner, and face detector), and configures the HTTP router with middleware
+// and API routes (including GraphQL, photo/video/download routes and a health
+// endpoint). It optionally serves the UI, starts listening on the configured
+// address, and installs graceful shutdown handling. Critical initialization
+// failures are logged and cause process termination.
 func main() {
 	log.Println("Starting Photoview...")
 
@@ -90,6 +99,9 @@ func main() {
 	}
 
 	endpointRouter.Handle("/graphql", handlers.CompressHandler(graphql_endpoint.GraphqlEndpoint(db)))
+
+	// Health endpoint (silent)
+	endpointRouter.HandleFunc("/healthz", HealthHandler)
 
 	photoRouter := endpointRouter.PathPrefix("/photo").Subrouter()
 	routes.RegisterPhotoRoutes(db, photoRouter)
@@ -159,10 +171,17 @@ func setupGracefulShutdown(svr *http.Server) {
 	}()
 }
 
+// logUIendpointURL logs the Photoview UI public endpoint URL; if no endpoint is configured it logs that the UI is available at "/".
 func logUIendpointURL() {
 	if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
 		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}
+}
+
+// HealthHandler writes an HTTP 200 response with the JSON body `{"status":"ok"}` to indicate service health.
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"ok"}`))
 }
