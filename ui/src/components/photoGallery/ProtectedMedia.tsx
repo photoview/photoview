@@ -181,9 +181,16 @@ export interface ProtectedVideoProps_Media {
 
 export interface ProtectedVideoProps {
   media: ProtectedVideoProps_Media
+  setVideo: (ref: HTMLVideoElement | null) => void
 }
 
-export const ProtectedVideo = ({ media, ...props }: ProtectedVideoProps) => {
+export const ProtectedVideo = ({ media, setVideo, ...props }: ProtectedVideoProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  React.useEffect(() => {
+    setVideo && setVideo(videoRef.current);
+  }, [media]);
+
   if (isNil(media.videoWeb)) {
     console.error('ProetctedVideo called with media.videoWeb = null')
     return null
@@ -194,6 +201,7 @@ export const ProtectedVideo = ({ media, ...props }: ProtectedVideoProps) => {
       {...props}
       controls
       key={media.id}
+      ref={videoRef}
       crossOrigin="use-credentials"
       poster={getProtectedUrl(media.thumbnail?.url)}
     >
