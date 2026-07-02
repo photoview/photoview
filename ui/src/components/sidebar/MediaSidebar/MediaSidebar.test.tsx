@@ -4,7 +4,6 @@ import { MockedProvider } from '@apollo/client/testing'
 import MediaSidebar, { MediaSidebarMedia } from './MediaSidebar'
 import { MediaType } from '../../../__generated__/globalTypes'
 import { MemoryRouter } from 'react-router'
-
 import * as authentication from '../../../helpers/authentication'
 
 vi.mock('../../../helpers/authentication.ts')
@@ -79,7 +78,5 @@ describe('MediaSidebar', () => {
 
     expect(screen.getByText('Set as album cover photo')).toBeInTheDocument()
     expect(screen.getByText('Album path')).toBeInTheDocument()
-
-    screen.debug()
   })
 })

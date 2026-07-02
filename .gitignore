@@ -42,6 +42,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .eslintcache
+ui/junit-report.xml
+api/photoview
 
 # IDEs
 .vscode
