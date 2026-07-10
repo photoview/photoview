@@ -145,7 +145,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 }
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool) (*models.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool, rootPath *string) (*models.User, error) {
 	var user *models.User
 
 	transactionError := r.DB(ctx).Transaction(func(tx *gorm.DB) error {
@@ -153,6 +153,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 		user, err = models.RegisterUser(tx, username, password, admin)
 		if err != nil {
 			return err
+		}
+
+		if rootPath != nil && *rootPath != "" {
+			cleanedPath := path.Clean(*rootPath)
+			_, err = scanner.NewRootAlbum(tx, cleanedPath, user)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
