@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
@@ -17,6 +18,7 @@ import (
 )
 
 func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+	rootPath = filepath.Clean(rootPath)
 
 	if !ValidRootPath(rootPath) {
 		return nil, ErrorInvalidRootPath
@@ -75,9 +77,21 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 var ErrorInvalidRootPath = errors.New("invalid root path")
 
 func ValidRootPath(rootPath string) bool {
-	_, err := os.Stat(rootPath)
+	resolvedPath, err := filepath.EvalSymlinks(rootPath)
 	if err != nil {
 		log.Warn(nil, "invalid root path", "root_path", rootPath, "error", err)
+		return false
+	}
+
+	// Confirm the resolved path is actually a directory, not a file.
+	info, err := os.Stat(resolvedPath)
+	if err != nil {
+		log.Warn(nil, "invalid root path after symlink resolution",
+			"root_path", rootPath, "resolved_path", resolvedPath, "error", err)
+		return false
+	}
+	if !info.IsDir() {
+		log.Warn(nil, "root path is not a directory", "root_path", rootPath)
 		return false
 	}
 
