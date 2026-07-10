@@ -45,18 +45,25 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 // setAllowedCORSOrigin checks if the request's Origin header matches any of the allowed UI endpoint URLs.
 // If a match is found, it sets the appropriate CORS headers on the response and returns the matched origin string.
 // If no match is found, it returns an empty string.
-func setAllowedCORSOrigin(uiEndpoints []*url.URL, req *http.Request, w http.ResponseWriter) string {
+func setAllowedCORSOrigin(allowed []*url.URL, req *http.Request, w http.ResponseWriter) string {
 	var matchedOrigin string
-	if uiEndpoints != nil && len(uiEndpoints) > 0 {
-		requestOrigin := req.Header.Get("Origin")
-		if requestOrigin != "" {
-			// Check if request origin matches any allowed endpoint
-			if matchedOrigin = findMatchingOrigin(requestOrigin, uiEndpoints); matchedOrigin != "" {
-				w.Header().Set("Access-Control-Allow-Origin", matchedOrigin)
-				w.Header().Set("Vary", "Origin")
-			}
-		}
+	if len(allowed) == 0 {
+		return ""
 	}
+
+	requestOrigin := req.Header.Get("Origin")
+	if requestOrigin == "" {
+		return ""
+	}
+
+	// Check if request origin matches any allowed endpoint
+	matchedOrigin = findMatchingOrigin(requestOrigin, allowed)
+	if matchedOrigin == "" {
+		return ""
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", matchedOrigin)
+	w.Header().Set("Vary", "Origin")
 	return matchedOrigin
 }
 
