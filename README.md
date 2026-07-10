@@ -90,6 +90,7 @@ Password: **demo**
   > [!NOTE] We don’t support Portainer or other abstraction layers on top of Docker Compose. If you encounter an issue, please reproduce it on the setup with plain Docker Compose before reporting.
 - [Debian Linux](https://www.debian.org/) 12 and 13, [Ubuntu Linux](https://ubuntu.com/) LTS and newer short-term releases
 - [Arch Linux AUR](https://aur.archlinux.org/packages/photoview)
+- [NixOS](https://nixos.org/) ([PR](https://github.com/NixOS/nixpkgs/pull/488876), [Nixpkgs](https://search.nixos.org/packages?channel=unstable&query=photoview), [NixOS options](https://search.nixos.org/options?channel=unstable&query=photoview))
 - [Unraid](https://forums.unraid.net/topic/103028-support-photoview-corneliousjd-repo/)
 - EmbassyOS: [announcement](https://start9labs.medium.com/new-service-photoview-72ee681b2ff0), [repo](https://github.com/Start9Labs/embassyos-photoview-wrapper)
 - [YunoHost](https://github.com/YunoHost-Apps/photoview_ynh)

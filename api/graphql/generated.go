@@ -8,8 +8,8 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,24 +20,14 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-// region    ************************** generated!.gotpl **************************
+// region    ***************************** api!.gotpl *****************************
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
-	return &executableSchema{
-		schema:     cfg.Schema,
-		resolvers:  cfg.Resolvers,
-		directives: cfg.Directives,
-		complexity: cfg.Complexity,
-	}
+	return &executableSchema{SchemaData: cfg.Schema, Resolvers: cfg.Resolvers, Directives: cfg.Directives, ComplexityRoot: cfg.Complexity}
 }
 
-type Config struct {
-	Schema     *ast.Schema
-	Resolvers  ResolverRoot
-	Directives DirectiveRoot
-	Complexity ComplexityRoot
-}
+type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
 	Album() AlbumResolver
@@ -278,6 +268,10 @@ type ComplexityRoot struct {
 	}
 }
 
+// endregion ***************************** api!.gotpl *****************************
+
+// region    ************************** generated!.gotpl **************************
+
 type AlbumResolver interface {
 	Media(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) ([]*models.Media, error)
 	SubAlbums(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error)
@@ -371,39 +365,38 @@ type UserResolver interface {
 	RootAlbums(ctx context.Context, obj *models.User) ([]*models.Album, error)
 }
 
-type executableSchema struct {
-	schema     *ast.Schema
-	resolvers  ResolverRoot
-	directives DirectiveRoot
-	complexity ComplexityRoot
-}
+// endregion ************************** generated!.gotpl **************************
+
+// region    ************************** internal!.gotpl ***************************
+
+type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 func (e *executableSchema) Schema() *ast.Schema {
-	if e.schema != nil {
-		return e.schema
+	if e.SchemaData != nil {
+		return e.SchemaData
 	}
 	return parsedSchema
 }
 
 func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
-	ec := executionContext{nil, e, 0, 0, nil}
+	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
 
 	case "Album.filePath":
-		if e.complexity.Album.FilePath == nil {
+		if e.ComplexityRoot.Album.FilePath == nil {
 			break
 		}
 
-		return e.complexity.Album.FilePath(childComplexity), true
+		return e.ComplexityRoot.Album.FilePath(childComplexity), true
 	case "Album.id":
-		if e.complexity.Album.ID == nil {
+		if e.ComplexityRoot.Album.ID == nil {
 			break
 		}
 
-		return e.complexity.Album.ID(childComplexity), true
+		return e.ComplexityRoot.Album.ID(childComplexity), true
 	case "Album.media":
-		if e.complexity.Album.Media == nil {
+		if e.ComplexityRoot.Album.Media == nil {
 			break
 		}
 
@@ -412,33 +405,33 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Album.Media(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
+		return e.ComplexityRoot.Album.Media(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool)), true
 	case "Album.owner":
-		if e.complexity.Album.Owner == nil {
+		if e.ComplexityRoot.Album.Owner == nil {
 			break
 		}
 
-		return e.complexity.Album.Owner(childComplexity), true
+		return e.ComplexityRoot.Album.Owner(childComplexity), true
 	case "Album.parentAlbum":
-		if e.complexity.Album.ParentAlbum == nil {
+		if e.ComplexityRoot.Album.ParentAlbum == nil {
 			break
 		}
 
-		return e.complexity.Album.ParentAlbum(childComplexity), true
+		return e.ComplexityRoot.Album.ParentAlbum(childComplexity), true
 	case "Album.path":
-		if e.complexity.Album.Path == nil {
+		if e.ComplexityRoot.Album.Path == nil {
 			break
 		}
 
-		return e.complexity.Album.Path(childComplexity), true
+		return e.ComplexityRoot.Album.Path(childComplexity), true
 	case "Album.shares":
-		if e.complexity.Album.Shares == nil {
+		if e.ComplexityRoot.Album.Shares == nil {
 			break
 		}
 
-		return e.complexity.Album.Shares(childComplexity), true
+		return e.ComplexityRoot.Album.Shares(childComplexity), true
 	case "Album.subAlbums":
-		if e.complexity.Album.SubAlbums == nil {
+		if e.ComplexityRoot.Album.SubAlbums == nil {
 			break
 		}
 
@@ -447,66 +440,66 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Album.SubAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Album.SubAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 	case "Album.thumbnail":
-		if e.complexity.Album.Thumbnail == nil {
+		if e.ComplexityRoot.Album.Thumbnail == nil {
 			break
 		}
 
-		return e.complexity.Album.Thumbnail(childComplexity), true
+		return e.ComplexityRoot.Album.Thumbnail(childComplexity), true
 	case "Album.title":
-		if e.complexity.Album.Title == nil {
+		if e.ComplexityRoot.Album.Title == nil {
 			break
 		}
 
-		return e.complexity.Album.Title(childComplexity), true
+		return e.ComplexityRoot.Album.Title(childComplexity), true
 
 	case "AuthorizeResult.status":
-		if e.complexity.AuthorizeResult.Status == nil {
+		if e.ComplexityRoot.AuthorizeResult.Status == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Status(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Status(childComplexity), true
 	case "AuthorizeResult.success":
-		if e.complexity.AuthorizeResult.Success == nil {
+		if e.ComplexityRoot.AuthorizeResult.Success == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Success(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Success(childComplexity), true
 	case "AuthorizeResult.token":
-		if e.complexity.AuthorizeResult.Token == nil {
+		if e.ComplexityRoot.AuthorizeResult.Token == nil {
 			break
 		}
 
-		return e.complexity.AuthorizeResult.Token(childComplexity), true
+		return e.ComplexityRoot.AuthorizeResult.Token(childComplexity), true
 
 	case "Coordinates.latitude":
-		if e.complexity.Coordinates.Latitude == nil {
+		if e.ComplexityRoot.Coordinates.Latitude == nil {
 			break
 		}
 
-		return e.complexity.Coordinates.Latitude(childComplexity), true
+		return e.ComplexityRoot.Coordinates.Latitude(childComplexity), true
 	case "Coordinates.longitude":
-		if e.complexity.Coordinates.Longitude == nil {
+		if e.ComplexityRoot.Coordinates.Longitude == nil {
 			break
 		}
 
-		return e.complexity.Coordinates.Longitude(childComplexity), true
+		return e.ComplexityRoot.Coordinates.Longitude(childComplexity), true
 
 	case "FaceGroup.id":
-		if e.complexity.FaceGroup.ID == nil {
+		if e.ComplexityRoot.FaceGroup.ID == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.ID(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.ID(childComplexity), true
 	case "FaceGroup.imageFaceCount":
-		if e.complexity.FaceGroup.ImageFaceCount == nil {
+		if e.ComplexityRoot.FaceGroup.ImageFaceCount == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.ImageFaceCount(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.ImageFaceCount(childComplexity), true
 	case "FaceGroup.imageFaces":
-		if e.complexity.FaceGroup.ImageFaces == nil {
+		if e.ComplexityRoot.FaceGroup.ImageFaces == nil {
 			break
 		}
 
@@ -515,286 +508,286 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.FaceGroup.ImageFaces(childComplexity, args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.FaceGroup.ImageFaces(childComplexity, args["paginate"].(*models.Pagination)), true
 	case "FaceGroup.label":
-		if e.complexity.FaceGroup.Label == nil {
+		if e.ComplexityRoot.FaceGroup.Label == nil {
 			break
 		}
 
-		return e.complexity.FaceGroup.Label(childComplexity), true
+		return e.ComplexityRoot.FaceGroup.Label(childComplexity), true
 
 	case "FaceRectangle.maxX":
-		if e.complexity.FaceRectangle.MaxX == nil {
+		if e.ComplexityRoot.FaceRectangle.MaxX == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MaxX(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MaxX(childComplexity), true
 	case "FaceRectangle.maxY":
-		if e.complexity.FaceRectangle.MaxY == nil {
+		if e.ComplexityRoot.FaceRectangle.MaxY == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MaxY(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MaxY(childComplexity), true
 	case "FaceRectangle.minX":
-		if e.complexity.FaceRectangle.MinX == nil {
+		if e.ComplexityRoot.FaceRectangle.MinX == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MinX(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MinX(childComplexity), true
 	case "FaceRectangle.minY":
-		if e.complexity.FaceRectangle.MinY == nil {
+		if e.ComplexityRoot.FaceRectangle.MinY == nil {
 			break
 		}
 
-		return e.complexity.FaceRectangle.MinY(childComplexity), true
+		return e.ComplexityRoot.FaceRectangle.MinY(childComplexity), true
 
 	case "ImageFace.faceGroup":
-		if e.complexity.ImageFace.FaceGroup == nil {
+		if e.ComplexityRoot.ImageFace.FaceGroup == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.FaceGroup(childComplexity), true
+		return e.ComplexityRoot.ImageFace.FaceGroup(childComplexity), true
 	case "ImageFace.id":
-		if e.complexity.ImageFace.ID == nil {
+		if e.ComplexityRoot.ImageFace.ID == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.ID(childComplexity), true
+		return e.ComplexityRoot.ImageFace.ID(childComplexity), true
 	case "ImageFace.media":
-		if e.complexity.ImageFace.Media == nil {
+		if e.ComplexityRoot.ImageFace.Media == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.Media(childComplexity), true
+		return e.ComplexityRoot.ImageFace.Media(childComplexity), true
 	case "ImageFace.rectangle":
-		if e.complexity.ImageFace.Rectangle == nil {
+		if e.ComplexityRoot.ImageFace.Rectangle == nil {
 			break
 		}
 
-		return e.complexity.ImageFace.Rectangle(childComplexity), true
+		return e.ComplexityRoot.ImageFace.Rectangle(childComplexity), true
 
 	case "Media.album":
-		if e.complexity.Media.Album == nil {
+		if e.ComplexityRoot.Media.Album == nil {
 			break
 		}
 
-		return e.complexity.Media.Album(childComplexity), true
+		return e.ComplexityRoot.Media.Album(childComplexity), true
 	case "Media.blurhash":
-		if e.complexity.Media.Blurhash == nil {
+		if e.ComplexityRoot.Media.Blurhash == nil {
 			break
 		}
 
-		return e.complexity.Media.Blurhash(childComplexity), true
+		return e.ComplexityRoot.Media.Blurhash(childComplexity), true
 	case "Media.date":
-		if e.complexity.Media.Date == nil {
+		if e.ComplexityRoot.Media.Date == nil {
 			break
 		}
 
-		return e.complexity.Media.Date(childComplexity), true
+		return e.ComplexityRoot.Media.Date(childComplexity), true
 	case "Media.downloads":
-		if e.complexity.Media.Downloads == nil {
+		if e.ComplexityRoot.Media.Downloads == nil {
 			break
 		}
 
-		return e.complexity.Media.Downloads(childComplexity), true
+		return e.ComplexityRoot.Media.Downloads(childComplexity), true
 	case "Media.exif":
-		if e.complexity.Media.Exif == nil {
+		if e.ComplexityRoot.Media.Exif == nil {
 			break
 		}
 
-		return e.complexity.Media.Exif(childComplexity), true
+		return e.ComplexityRoot.Media.Exif(childComplexity), true
 	case "Media.faces":
-		if e.complexity.Media.Faces == nil {
+		if e.ComplexityRoot.Media.Faces == nil {
 			break
 		}
 
-		return e.complexity.Media.Faces(childComplexity), true
+		return e.ComplexityRoot.Media.Faces(childComplexity), true
 	case "Media.favorite":
-		if e.complexity.Media.Favorite == nil {
+		if e.ComplexityRoot.Media.Favorite == nil {
 			break
 		}
 
-		return e.complexity.Media.Favorite(childComplexity), true
+		return e.ComplexityRoot.Media.Favorite(childComplexity), true
 	case "Media.highRes":
-		if e.complexity.Media.HighRes == nil {
+		if e.ComplexityRoot.Media.HighRes == nil {
 			break
 		}
 
-		return e.complexity.Media.HighRes(childComplexity), true
+		return e.ComplexityRoot.Media.HighRes(childComplexity), true
 	case "Media.id":
-		if e.complexity.Media.ID == nil {
+		if e.ComplexityRoot.Media.ID == nil {
 			break
 		}
 
-		return e.complexity.Media.ID(childComplexity), true
+		return e.ComplexityRoot.Media.ID(childComplexity), true
 	case "Media.path":
-		if e.complexity.Media.Path == nil {
+		if e.ComplexityRoot.Media.Path == nil {
 			break
 		}
 
-		return e.complexity.Media.Path(childComplexity), true
+		return e.ComplexityRoot.Media.Path(childComplexity), true
 	case "Media.shares":
-		if e.complexity.Media.Shares == nil {
+		if e.ComplexityRoot.Media.Shares == nil {
 			break
 		}
 
-		return e.complexity.Media.Shares(childComplexity), true
+		return e.ComplexityRoot.Media.Shares(childComplexity), true
 	case "Media.thumbnail":
-		if e.complexity.Media.Thumbnail == nil {
+		if e.ComplexityRoot.Media.Thumbnail == nil {
 			break
 		}
 
-		return e.complexity.Media.Thumbnail(childComplexity), true
+		return e.ComplexityRoot.Media.Thumbnail(childComplexity), true
 	case "Media.title":
-		if e.complexity.Media.Title == nil {
+		if e.ComplexityRoot.Media.Title == nil {
 			break
 		}
 
-		return e.complexity.Media.Title(childComplexity), true
+		return e.ComplexityRoot.Media.Title(childComplexity), true
 	case "Media.type":
-		if e.complexity.Media.Type == nil {
+		if e.ComplexityRoot.Media.Type == nil {
 			break
 		}
 
-		return e.complexity.Media.Type(childComplexity), true
+		return e.ComplexityRoot.Media.Type(childComplexity), true
 	case "Media.videoMetadata":
-		if e.complexity.Media.VideoMetadata == nil {
+		if e.ComplexityRoot.Media.VideoMetadata == nil {
 			break
 		}
 
-		return e.complexity.Media.VideoMetadata(childComplexity), true
+		return e.ComplexityRoot.Media.VideoMetadata(childComplexity), true
 	case "Media.videoWeb":
-		if e.complexity.Media.VideoWeb == nil {
+		if e.ComplexityRoot.Media.VideoWeb == nil {
 			break
 		}
 
-		return e.complexity.Media.VideoWeb(childComplexity), true
+		return e.ComplexityRoot.Media.VideoWeb(childComplexity), true
 
 	case "MediaDownload.mediaUrl":
-		if e.complexity.MediaDownload.MediaURL == nil {
+		if e.ComplexityRoot.MediaDownload.MediaURL == nil {
 			break
 		}
 
-		return e.complexity.MediaDownload.MediaURL(childComplexity), true
+		return e.ComplexityRoot.MediaDownload.MediaURL(childComplexity), true
 	case "MediaDownload.title":
-		if e.complexity.MediaDownload.Title == nil {
+		if e.ComplexityRoot.MediaDownload.Title == nil {
 			break
 		}
 
-		return e.complexity.MediaDownload.Title(childComplexity), true
+		return e.ComplexityRoot.MediaDownload.Title(childComplexity), true
 
 	case "MediaEXIF.aperture":
-		if e.complexity.MediaEXIF.Aperture == nil {
+		if e.ComplexityRoot.MediaEXIF.Aperture == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Aperture(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Aperture(childComplexity), true
 	case "MediaEXIF.camera":
-		if e.complexity.MediaEXIF.Camera == nil {
+		if e.ComplexityRoot.MediaEXIF.Camera == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Camera(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Camera(childComplexity), true
 	case "MediaEXIF.coordinates":
-		if e.complexity.MediaEXIF.Coordinates == nil {
+		if e.ComplexityRoot.MediaEXIF.Coordinates == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Coordinates(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Coordinates(childComplexity), true
 	case "MediaEXIF.dateShot":
-		if e.complexity.MediaEXIF.DateShotWithOffset == nil {
+		if e.ComplexityRoot.MediaEXIF.DateShotWithOffset == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.DateShotWithOffset(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.DateShotWithOffset(childComplexity), true
 	case "MediaEXIF.description":
-		if e.complexity.MediaEXIF.Description == nil {
+		if e.ComplexityRoot.MediaEXIF.Description == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Description(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Description(childComplexity), true
 	case "MediaEXIF.exposure":
-		if e.complexity.MediaEXIF.Exposure == nil {
+		if e.ComplexityRoot.MediaEXIF.Exposure == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Exposure(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Exposure(childComplexity), true
 	case "MediaEXIF.exposureProgram":
-		if e.complexity.MediaEXIF.ExposureProgram == nil {
+		if e.ComplexityRoot.MediaEXIF.ExposureProgram == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.ExposureProgram(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.ExposureProgram(childComplexity), true
 	case "MediaEXIF.flash":
-		if e.complexity.MediaEXIF.Flash == nil {
+		if e.ComplexityRoot.MediaEXIF.Flash == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Flash(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Flash(childComplexity), true
 	case "MediaEXIF.focalLength":
-		if e.complexity.MediaEXIF.FocalLength == nil {
+		if e.ComplexityRoot.MediaEXIF.FocalLength == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.FocalLength(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.FocalLength(childComplexity), true
 	case "MediaEXIF.id":
-		if e.complexity.MediaEXIF.ID == nil {
+		if e.ComplexityRoot.MediaEXIF.ID == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.ID(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.ID(childComplexity), true
 	case "MediaEXIF.iso":
-		if e.complexity.MediaEXIF.Iso == nil {
+		if e.ComplexityRoot.MediaEXIF.Iso == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Iso(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Iso(childComplexity), true
 	case "MediaEXIF.lens":
-		if e.complexity.MediaEXIF.Lens == nil {
+		if e.ComplexityRoot.MediaEXIF.Lens == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Lens(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Lens(childComplexity), true
 	case "MediaEXIF.maker":
-		if e.complexity.MediaEXIF.Maker == nil {
+		if e.ComplexityRoot.MediaEXIF.Maker == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Maker(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Maker(childComplexity), true
 	case "MediaEXIF.media":
-		if e.complexity.MediaEXIF.Media == nil {
+		if e.ComplexityRoot.MediaEXIF.Media == nil {
 			break
 		}
 
-		return e.complexity.MediaEXIF.Media(childComplexity), true
+		return e.ComplexityRoot.MediaEXIF.Media(childComplexity), true
 
 	case "MediaURL.fileSize":
-		if e.complexity.MediaURL.FileSize == nil {
+		if e.ComplexityRoot.MediaURL.FileSize == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.FileSize(childComplexity), true
+		return e.ComplexityRoot.MediaURL.FileSize(childComplexity), true
 	case "MediaURL.height":
-		if e.complexity.MediaURL.Height == nil {
+		if e.ComplexityRoot.MediaURL.Height == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.Height(childComplexity), true
+		return e.ComplexityRoot.MediaURL.Height(childComplexity), true
 	case "MediaURL.url":
-		if e.complexity.MediaURL.URL == nil {
+		if e.ComplexityRoot.MediaURL.URL == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.URL(childComplexity), true
+		return e.ComplexityRoot.MediaURL.URL(childComplexity), true
 	case "MediaURL.width":
-		if e.complexity.MediaURL.Width == nil {
+		if e.ComplexityRoot.MediaURL.Width == nil {
 			break
 		}
 
-		return e.complexity.MediaURL.Width(childComplexity), true
+		return e.ComplexityRoot.MediaURL.Width(childComplexity), true
 
 	case "Mutation.authorizeUser":
-		if e.complexity.Mutation.AuthorizeUser == nil {
+		if e.ComplexityRoot.Mutation.AuthorizeUser == nil {
 			break
 		}
 
@@ -803,9 +796,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+		return e.ComplexityRoot.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
 	case "Mutation.changeUserPreferences":
-		if e.complexity.Mutation.ChangeUserPreferences == nil {
+		if e.ComplexityRoot.Mutation.ChangeUserPreferences == nil {
 			break
 		}
 
@@ -814,9 +807,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string)), true
+		return e.ComplexityRoot.Mutation.ChangeUserPreferences(childComplexity, args["language"].(*string)), true
 	case "Mutation.combineFaceGroups":
-		if e.complexity.Mutation.CombineFaceGroups == nil {
+		if e.ComplexityRoot.Mutation.CombineFaceGroups == nil {
 			break
 		}
 
@@ -825,9 +818,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupIDs"].([]int)), true
+		return e.ComplexityRoot.Mutation.CombineFaceGroups(childComplexity, args["destinationFaceGroupID"].(int), args["sourceFaceGroupIDs"].([]int)), true
 	case "Mutation.createUser":
-		if e.complexity.Mutation.CreateUser == nil {
+		if e.ComplexityRoot.Mutation.CreateUser == nil {
 			break
 		}
 
@@ -836,9 +829,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool)), true
+		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool)), true
 	case "Mutation.deleteShareToken":
-		if e.complexity.Mutation.DeleteShareToken == nil {
+		if e.ComplexityRoot.Mutation.DeleteShareToken == nil {
 			break
 		}
 
@@ -847,9 +840,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteShareToken(childComplexity, args["token"].(string)), true
+		return e.ComplexityRoot.Mutation.DeleteShareToken(childComplexity, args["token"].(string)), true
 	case "Mutation.deleteUser":
-		if e.complexity.Mutation.DeleteUser == nil {
+		if e.ComplexityRoot.Mutation.DeleteUser == nil {
 			break
 		}
 
@@ -858,9 +851,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
+		return e.ComplexityRoot.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
 	case "Mutation.detachImageFaces":
-		if e.complexity.Mutation.DetachImageFaces == nil {
+		if e.ComplexityRoot.Mutation.DetachImageFaces == nil {
 			break
 		}
 
@@ -869,9 +862,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DetachImageFaces(childComplexity, args["imageFaceIDs"].([]int)), true
+		return e.ComplexityRoot.Mutation.DetachImageFaces(childComplexity, args["imageFaceIDs"].([]int)), true
 	case "Mutation.favoriteMedia":
-		if e.complexity.Mutation.FavoriteMedia == nil {
+		if e.ComplexityRoot.Mutation.FavoriteMedia == nil {
 			break
 		}
 
@@ -880,9 +873,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.FavoriteMedia(childComplexity, args["mediaId"].(int), args["favorite"].(bool)), true
+		return e.ComplexityRoot.Mutation.FavoriteMedia(childComplexity, args["mediaId"].(int), args["favorite"].(bool)), true
 	case "Mutation.initialSetupWizard":
-		if e.complexity.Mutation.InitialSetupWizard == nil {
+		if e.ComplexityRoot.Mutation.InitialSetupWizard == nil {
 			break
 		}
 
@@ -891,9 +884,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
+		return e.ComplexityRoot.Mutation.InitialSetupWizard(childComplexity, args["username"].(string), args["password"].(string), args["rootPath"].(string)), true
 	case "Mutation.moveImageFaces":
-		if e.complexity.Mutation.MoveImageFaces == nil {
+		if e.ComplexityRoot.Mutation.MoveImageFaces == nil {
 			break
 		}
 
@@ -902,9 +895,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MoveImageFaces(childComplexity, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int)), true
+		return e.ComplexityRoot.Mutation.MoveImageFaces(childComplexity, args["imageFaceIDs"].([]int), args["destinationFaceGroupID"].(int)), true
 	case "Mutation.protectShareToken":
-		if e.complexity.Mutation.ProtectShareToken == nil {
+		if e.ComplexityRoot.Mutation.ProtectShareToken == nil {
 			break
 		}
 
@@ -913,15 +906,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ProtectShareToken(childComplexity, args["token"].(string), args["password"].(*string)), true
 	case "Mutation.recognizeUnlabeledFaces":
-		if e.complexity.Mutation.RecognizeUnlabeledFaces == nil {
+		if e.ComplexityRoot.Mutation.RecognizeUnlabeledFaces == nil {
 			break
 		}
 
-		return e.complexity.Mutation.RecognizeUnlabeledFaces(childComplexity), true
+		return e.ComplexityRoot.Mutation.RecognizeUnlabeledFaces(childComplexity), true
 	case "Mutation.resetAlbumCover":
-		if e.complexity.Mutation.ResetAlbumCover == nil {
+		if e.ComplexityRoot.Mutation.ResetAlbumCover == nil {
 			break
 		}
 
@@ -930,15 +923,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ResetAlbumCover(childComplexity, args["albumID"].(int)), true
+		return e.ComplexityRoot.Mutation.ResetAlbumCover(childComplexity, args["albumID"].(int)), true
 	case "Mutation.scanAll":
-		if e.complexity.Mutation.ScanAll == nil {
+		if e.ComplexityRoot.Mutation.ScanAll == nil {
 			break
 		}
 
-		return e.complexity.Mutation.ScanAll(childComplexity), true
+		return e.ComplexityRoot.Mutation.ScanAll(childComplexity), true
 	case "Mutation.scanUser":
-		if e.complexity.Mutation.ScanUser == nil {
+		if e.ComplexityRoot.Mutation.ScanUser == nil {
 			break
 		}
 
@@ -947,9 +940,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
+		return e.ComplexityRoot.Mutation.ScanUser(childComplexity, args["userId"].(int)), true
 	case "Mutation.setAlbumCover":
-		if e.complexity.Mutation.SetAlbumCover == nil {
+		if e.ComplexityRoot.Mutation.SetAlbumCover == nil {
 			break
 		}
 
@@ -958,9 +951,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetAlbumCover(childComplexity, args["coverID"].(int)), true
+		return e.ComplexityRoot.Mutation.SetAlbumCover(childComplexity, args["coverID"].(int)), true
 	case "Mutation.setExpireShareToken":
-		if e.complexity.Mutation.SetExpireShareToken == nil {
+		if e.ComplexityRoot.Mutation.SetExpireShareToken == nil {
 			break
 		}
 
@@ -969,9 +962,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetExpireShareToken(childComplexity, args["token"].(string), args["expire"].(*time.Time)), true
+		return e.ComplexityRoot.Mutation.SetExpireShareToken(childComplexity, args["token"].(string), args["expire"].(*time.Time)), true
 	case "Mutation.setFaceGroupLabel":
-		if e.complexity.Mutation.SetFaceGroupLabel == nil {
+		if e.ComplexityRoot.Mutation.SetFaceGroupLabel == nil {
 			break
 		}
 
@@ -980,9 +973,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
+		return e.ComplexityRoot.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
 	case "Mutation.setPeriodicScanInterval":
-		if e.complexity.Mutation.SetPeriodicScanInterval == nil {
+		if e.ComplexityRoot.Mutation.SetPeriodicScanInterval == nil {
 			break
 		}
 
@@ -991,9 +984,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
+		return e.ComplexityRoot.Mutation.SetPeriodicScanInterval(childComplexity, args["interval"].(int)), true
 	case "Mutation.setScannerConcurrentWorkers":
-		if e.complexity.Mutation.SetScannerConcurrentWorkers == nil {
+		if e.ComplexityRoot.Mutation.SetScannerConcurrentWorkers == nil {
 			break
 		}
 
@@ -1002,9 +995,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
+		return e.ComplexityRoot.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
 	case "Mutation.shareAlbum":
-		if e.complexity.Mutation.ShareAlbum == nil {
+		if e.ComplexityRoot.Mutation.ShareAlbum == nil {
 			break
 		}
 
@@ -1013,9 +1006,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 	case "Mutation.shareMedia":
-		if e.complexity.Mutation.ShareMedia == nil {
+		if e.ComplexityRoot.Mutation.ShareMedia == nil {
 			break
 		}
 
@@ -1024,9 +1017,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string)), true
 	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
+		if e.ComplexityRoot.Mutation.UpdateUser == nil {
 			break
 		}
 
@@ -1035,9 +1028,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
 	case "Mutation.userAddRootPath":
-		if e.complexity.Mutation.UserAddRootPath == nil {
+		if e.ComplexityRoot.Mutation.UserAddRootPath == nil {
 			break
 		}
 
@@ -1046,9 +1039,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UserAddRootPath(childComplexity, args["id"].(int), args["rootPath"].(string)), true
+		return e.ComplexityRoot.Mutation.UserAddRootPath(childComplexity, args["id"].(int), args["rootPath"].(string)), true
 	case "Mutation.userRemoveRootAlbum":
-		if e.complexity.Mutation.UserRemoveRootAlbum == nil {
+		if e.ComplexityRoot.Mutation.UserRemoveRootAlbum == nil {
 			break
 		}
 
@@ -1057,59 +1050,59 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UserRemoveRootAlbum(childComplexity, args["userId"].(int), args["albumId"].(int)), true
+		return e.ComplexityRoot.Mutation.UserRemoveRootAlbum(childComplexity, args["userId"].(int), args["albumId"].(int)), true
 
 	case "Notification.content":
-		if e.complexity.Notification.Content == nil {
+		if e.ComplexityRoot.Notification.Content == nil {
 			break
 		}
 
-		return e.complexity.Notification.Content(childComplexity), true
+		return e.ComplexityRoot.Notification.Content(childComplexity), true
 	case "Notification.header":
-		if e.complexity.Notification.Header == nil {
+		if e.ComplexityRoot.Notification.Header == nil {
 			break
 		}
 
-		return e.complexity.Notification.Header(childComplexity), true
+		return e.ComplexityRoot.Notification.Header(childComplexity), true
 	case "Notification.key":
-		if e.complexity.Notification.Key == nil {
+		if e.ComplexityRoot.Notification.Key == nil {
 			break
 		}
 
-		return e.complexity.Notification.Key(childComplexity), true
+		return e.ComplexityRoot.Notification.Key(childComplexity), true
 	case "Notification.negative":
-		if e.complexity.Notification.Negative == nil {
+		if e.ComplexityRoot.Notification.Negative == nil {
 			break
 		}
 
-		return e.complexity.Notification.Negative(childComplexity), true
+		return e.ComplexityRoot.Notification.Negative(childComplexity), true
 	case "Notification.positive":
-		if e.complexity.Notification.Positive == nil {
+		if e.ComplexityRoot.Notification.Positive == nil {
 			break
 		}
 
-		return e.complexity.Notification.Positive(childComplexity), true
+		return e.ComplexityRoot.Notification.Positive(childComplexity), true
 	case "Notification.progress":
-		if e.complexity.Notification.Progress == nil {
+		if e.ComplexityRoot.Notification.Progress == nil {
 			break
 		}
 
-		return e.complexity.Notification.Progress(childComplexity), true
+		return e.ComplexityRoot.Notification.Progress(childComplexity), true
 	case "Notification.timeout":
-		if e.complexity.Notification.Timeout == nil {
+		if e.ComplexityRoot.Notification.Timeout == nil {
 			break
 		}
 
-		return e.complexity.Notification.Timeout(childComplexity), true
+		return e.ComplexityRoot.Notification.Timeout(childComplexity), true
 	case "Notification.type":
-		if e.complexity.Notification.Type == nil {
+		if e.ComplexityRoot.Notification.Type == nil {
 			break
 		}
 
-		return e.complexity.Notification.Type(childComplexity), true
+		return e.ComplexityRoot.Notification.Type(childComplexity), true
 
 	case "Query.album":
-		if e.complexity.Query.Album == nil {
+		if e.ComplexityRoot.Query.Album == nil {
 			break
 		}
 
@@ -1118,9 +1111,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Album(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.Album(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 	case "Query.faceGroup":
-		if e.complexity.Query.FaceGroup == nil {
+		if e.ComplexityRoot.Query.FaceGroup == nil {
 			break
 		}
 
@@ -1129,15 +1122,16 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.FaceGroup(childComplexity, args["id"].(int)), true
+		return e.ComplexityRoot.Query.FaceGroup(childComplexity, args["id"].(int)), true
+
 	case "Query.mapboxToken":
-		if e.complexity.Query.MapboxToken == nil {
+		if e.ComplexityRoot.Query.MapboxToken == nil {
 			break
 		}
 
-		return e.complexity.Query.MapboxToken(childComplexity), true
+		return e.ComplexityRoot.Query.MapboxToken(childComplexity), true
 	case "Query.media":
-		if e.complexity.Query.Media == nil {
+		if e.ComplexityRoot.Query.Media == nil {
 			break
 		}
 
@@ -1146,9 +1140,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Media(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.Media(childComplexity, args["id"].(int), args["tokenCredentials"].(*models.ShareTokenCredentials)), true
 	case "Query.mediaList":
-		if e.complexity.Query.MediaList == nil {
+		if e.ComplexityRoot.Query.MediaList == nil {
 			break
 		}
 
@@ -1157,9 +1151,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MediaList(childComplexity, args["ids"].([]int)), true
+		return e.ComplexityRoot.Query.MediaList(childComplexity, args["ids"].([]int)), true
 	case "Query.myAlbums":
-		if e.complexity.Query.MyAlbums == nil {
+		if e.ComplexityRoot.Query.MyAlbums == nil {
 			break
 		}
 
@@ -1168,9 +1162,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
+		return e.ComplexityRoot.Query.MyAlbums(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination), args["onlyRoot"].(*bool), args["showEmpty"].(*bool), args["onlyWithFavorites"].(*bool)), true
 	case "Query.myFaceGroups":
-		if e.complexity.Query.MyFaceGroups == nil {
+		if e.ComplexityRoot.Query.MyFaceGroups == nil {
 			break
 		}
 
@@ -1179,9 +1173,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyFaceGroups(childComplexity, args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.MyFaceGroups(childComplexity, args["paginate"].(*models.Pagination)), true
 	case "Query.myMedia":
-		if e.complexity.Query.MyMedia == nil {
+		if e.ComplexityRoot.Query.MyMedia == nil {
 			break
 		}
 
@@ -1190,15 +1184,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyMedia(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.MyMedia(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 	case "Query.myMediaGeoJson":
-		if e.complexity.Query.MyMediaGeoJSON == nil {
+		if e.ComplexityRoot.Query.MyMediaGeoJSON == nil {
 			break
 		}
 
-		return e.complexity.Query.MyMediaGeoJSON(childComplexity), true
+		return e.ComplexityRoot.Query.MyMediaGeoJSON(childComplexity), true
 	case "Query.myTimeline":
-		if e.complexity.Query.MyTimeline == nil {
+		if e.ComplexityRoot.Query.MyTimeline == nil {
 			break
 		}
 
@@ -1207,21 +1201,21 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time)), true
+		return e.ComplexityRoot.Query.MyTimeline(childComplexity, args["paginate"].(*models.Pagination), args["onlyFavorites"].(*bool), args["fromDate"].(*time.Time)), true
 	case "Query.myUser":
-		if e.complexity.Query.MyUser == nil {
+		if e.ComplexityRoot.Query.MyUser == nil {
 			break
 		}
 
-		return e.complexity.Query.MyUser(childComplexity), true
+		return e.ComplexityRoot.Query.MyUser(childComplexity), true
 	case "Query.myUserPreferences":
-		if e.complexity.Query.MyUserPreferences == nil {
+		if e.ComplexityRoot.Query.MyUserPreferences == nil {
 			break
 		}
 
-		return e.complexity.Query.MyUserPreferences(childComplexity), true
+		return e.ComplexityRoot.Query.MyUserPreferences(childComplexity), true
 	case "Query.search":
-		if e.complexity.Query.Search == nil {
+		if e.ComplexityRoot.Query.Search == nil {
 			break
 		}
 
@@ -1230,9 +1224,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Search(childComplexity, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int)), true
+		return e.ComplexityRoot.Query.Search(childComplexity, args["query"].(string), args["limitMedia"].(*int), args["limitAlbums"].(*int)), true
 	case "Query.shareToken":
-		if e.complexity.Query.ShareToken == nil {
+		if e.ComplexityRoot.Query.ShareToken == nil {
 			break
 		}
 
@@ -1241,9 +1235,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareToken(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.ShareToken(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 	case "Query.shareTokenValidatePassword":
-		if e.complexity.Query.ShareTokenValidatePassword == nil {
+		if e.ComplexityRoot.Query.ShareTokenValidatePassword == nil {
 			break
 		}
 
@@ -1252,15 +1246,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ShareTokenValidatePassword(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
+		return e.ComplexityRoot.Query.ShareTokenValidatePassword(childComplexity, args["credentials"].(models.ShareTokenCredentials)), true
 	case "Query.siteInfo":
-		if e.complexity.Query.SiteInfo == nil {
+		if e.ComplexityRoot.Query.SiteInfo == nil {
 			break
 		}
 
-		return e.complexity.Query.SiteInfo(childComplexity), true
+		return e.ComplexityRoot.Query.SiteInfo(childComplexity), true
 	case "Query.user":
-		if e.complexity.Query.User == nil {
+		if e.ComplexityRoot.Query.User == nil {
 			break
 		}
 
@@ -1269,256 +1263,256 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+		return e.ComplexityRoot.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
 
 	case "ScannerResult.finished":
-		if e.complexity.ScannerResult.Finished == nil {
+		if e.ComplexityRoot.ScannerResult.Finished == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Finished(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Finished(childComplexity), true
 	case "ScannerResult.message":
-		if e.complexity.ScannerResult.Message == nil {
+		if e.ComplexityRoot.ScannerResult.Message == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Message(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Message(childComplexity), true
 	case "ScannerResult.progress":
-		if e.complexity.ScannerResult.Progress == nil {
+		if e.ComplexityRoot.ScannerResult.Progress == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Progress(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Progress(childComplexity), true
 	case "ScannerResult.success":
-		if e.complexity.ScannerResult.Success == nil {
+		if e.ComplexityRoot.ScannerResult.Success == nil {
 			break
 		}
 
-		return e.complexity.ScannerResult.Success(childComplexity), true
+		return e.ComplexityRoot.ScannerResult.Success(childComplexity), true
 
 	case "SearchResult.albums":
-		if e.complexity.SearchResult.Albums == nil {
+		if e.ComplexityRoot.SearchResult.Albums == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Albums(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Albums(childComplexity), true
 	case "SearchResult.media":
-		if e.complexity.SearchResult.Media == nil {
+		if e.ComplexityRoot.SearchResult.Media == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Media(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Media(childComplexity), true
 	case "SearchResult.query":
-		if e.complexity.SearchResult.Query == nil {
+		if e.ComplexityRoot.SearchResult.Query == nil {
 			break
 		}
 
-		return e.complexity.SearchResult.Query(childComplexity), true
+		return e.ComplexityRoot.SearchResult.Query(childComplexity), true
 
 	case "ShareToken.album":
-		if e.complexity.ShareToken.Album == nil {
+		if e.ComplexityRoot.ShareToken.Album == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Album(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Album(childComplexity), true
 	case "ShareToken.expire":
-		if e.complexity.ShareToken.Expire == nil {
+		if e.ComplexityRoot.ShareToken.Expire == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Expire(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Expire(childComplexity), true
 	case "ShareToken.hasPassword":
-		if e.complexity.ShareToken.HasPassword == nil {
+		if e.ComplexityRoot.ShareToken.HasPassword == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.HasPassword(childComplexity), true
+		return e.ComplexityRoot.ShareToken.HasPassword(childComplexity), true
 	case "ShareToken.id":
-		if e.complexity.ShareToken.ID == nil {
+		if e.ComplexityRoot.ShareToken.ID == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.ID(childComplexity), true
+		return e.ComplexityRoot.ShareToken.ID(childComplexity), true
 	case "ShareToken.media":
-		if e.complexity.ShareToken.Media == nil {
+		if e.ComplexityRoot.ShareToken.Media == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Media(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Media(childComplexity), true
 	case "ShareToken.owner":
-		if e.complexity.ShareToken.Owner == nil {
+		if e.ComplexityRoot.ShareToken.Owner == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Owner(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Owner(childComplexity), true
 	case "ShareToken.token":
-		if e.complexity.ShareToken.Token == nil {
+		if e.ComplexityRoot.ShareToken.Token == nil {
 			break
 		}
 
-		return e.complexity.ShareToken.Token(childComplexity), true
+		return e.ComplexityRoot.ShareToken.Token(childComplexity), true
 
 	case "SiteInfo.concurrentWorkers":
-		if e.complexity.SiteInfo.ConcurrentWorkers == nil {
+		if e.ComplexityRoot.SiteInfo.ConcurrentWorkers == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.ConcurrentWorkers(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.ConcurrentWorkers(childComplexity), true
 	case "SiteInfo.faceDetectionEnabled":
-		if e.complexity.SiteInfo.FaceDetectionEnabled == nil {
+		if e.ComplexityRoot.SiteInfo.FaceDetectionEnabled == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.FaceDetectionEnabled(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.FaceDetectionEnabled(childComplexity), true
 	case "SiteInfo.initialSetup":
-		if e.complexity.SiteInfo.InitialSetup == nil {
+		if e.ComplexityRoot.SiteInfo.InitialSetup == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.InitialSetup(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.InitialSetup(childComplexity), true
 	case "SiteInfo.periodicScanInterval":
-		if e.complexity.SiteInfo.PeriodicScanInterval == nil {
+		if e.ComplexityRoot.SiteInfo.PeriodicScanInterval == nil {
 			break
 		}
 
-		return e.complexity.SiteInfo.PeriodicScanInterval(childComplexity), true
+		return e.ComplexityRoot.SiteInfo.PeriodicScanInterval(childComplexity), true
 
 	case "Subscription.notification":
-		if e.complexity.Subscription.Notification == nil {
+		if e.ComplexityRoot.Subscription.Notification == nil {
 			break
 		}
 
-		return e.complexity.Subscription.Notification(childComplexity), true
+		return e.ComplexityRoot.Subscription.Notification(childComplexity), true
 
 	case "TimelineGroup.album":
-		if e.complexity.TimelineGroup.Album == nil {
+		if e.ComplexityRoot.TimelineGroup.Album == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Album(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Album(childComplexity), true
 	case "TimelineGroup.date":
-		if e.complexity.TimelineGroup.Date == nil {
+		if e.ComplexityRoot.TimelineGroup.Date == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Date(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Date(childComplexity), true
 	case "TimelineGroup.media":
-		if e.complexity.TimelineGroup.Media == nil {
+		if e.ComplexityRoot.TimelineGroup.Media == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.Media(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.Media(childComplexity), true
 	case "TimelineGroup.mediaTotal":
-		if e.complexity.TimelineGroup.MediaTotal == nil {
+		if e.ComplexityRoot.TimelineGroup.MediaTotal == nil {
 			break
 		}
 
-		return e.complexity.TimelineGroup.MediaTotal(childComplexity), true
+		return e.ComplexityRoot.TimelineGroup.MediaTotal(childComplexity), true
 
 	case "User.admin":
-		if e.complexity.User.Admin == nil {
+		if e.ComplexityRoot.User.Admin == nil {
 			break
 		}
 
-		return e.complexity.User.Admin(childComplexity), true
+		return e.ComplexityRoot.User.Admin(childComplexity), true
 	case "User.albums":
-		if e.complexity.User.Albums == nil {
+		if e.ComplexityRoot.User.Albums == nil {
 			break
 		}
 
-		return e.complexity.User.Albums(childComplexity), true
+		return e.ComplexityRoot.User.Albums(childComplexity), true
 	case "User.id":
-		if e.complexity.User.ID == nil {
+		if e.ComplexityRoot.User.ID == nil {
 			break
 		}
 
-		return e.complexity.User.ID(childComplexity), true
+		return e.ComplexityRoot.User.ID(childComplexity), true
 	case "User.rootAlbums":
-		if e.complexity.User.RootAlbums == nil {
+		if e.ComplexityRoot.User.RootAlbums == nil {
 			break
 		}
 
-		return e.complexity.User.RootAlbums(childComplexity), true
+		return e.ComplexityRoot.User.RootAlbums(childComplexity), true
 	case "User.username":
-		if e.complexity.User.Username == nil {
+		if e.ComplexityRoot.User.Username == nil {
 			break
 		}
 
-		return e.complexity.User.Username(childComplexity), true
+		return e.ComplexityRoot.User.Username(childComplexity), true
 
 	case "UserPreferences.id":
-		if e.complexity.UserPreferences.ID == nil {
+		if e.ComplexityRoot.UserPreferences.ID == nil {
 			break
 		}
 
-		return e.complexity.UserPreferences.ID(childComplexity), true
+		return e.ComplexityRoot.UserPreferences.ID(childComplexity), true
 	case "UserPreferences.language":
-		if e.complexity.UserPreferences.Language == nil {
+		if e.ComplexityRoot.UserPreferences.Language == nil {
 			break
 		}
 
-		return e.complexity.UserPreferences.Language(childComplexity), true
+		return e.ComplexityRoot.UserPreferences.Language(childComplexity), true
 
 	case "VideoMetadata.audio":
-		if e.complexity.VideoMetadata.Audio == nil {
+		if e.ComplexityRoot.VideoMetadata.Audio == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Audio(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Audio(childComplexity), true
 	case "VideoMetadata.bitrate":
-		if e.complexity.VideoMetadata.Bitrate == nil {
+		if e.ComplexityRoot.VideoMetadata.Bitrate == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Bitrate(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Bitrate(childComplexity), true
 	case "VideoMetadata.codec":
-		if e.complexity.VideoMetadata.Codec == nil {
+		if e.ComplexityRoot.VideoMetadata.Codec == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Codec(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Codec(childComplexity), true
 	case "VideoMetadata.colorProfile":
-		if e.complexity.VideoMetadata.ColorProfile == nil {
+		if e.ComplexityRoot.VideoMetadata.ColorProfile == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.ColorProfile(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.ColorProfile(childComplexity), true
 	case "VideoMetadata.duration":
-		if e.complexity.VideoMetadata.Duration == nil {
+		if e.ComplexityRoot.VideoMetadata.Duration == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Duration(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Duration(childComplexity), true
 	case "VideoMetadata.framerate":
-		if e.complexity.VideoMetadata.Framerate == nil {
+		if e.ComplexityRoot.VideoMetadata.Framerate == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Framerate(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Framerate(childComplexity), true
 	case "VideoMetadata.height":
-		if e.complexity.VideoMetadata.Height == nil {
+		if e.ComplexityRoot.VideoMetadata.Height == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Height(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Height(childComplexity), true
 	case "VideoMetadata.id":
-		if e.complexity.VideoMetadata.ID == nil {
+		if e.ComplexityRoot.VideoMetadata.ID == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.ID(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.ID(childComplexity), true
 	case "VideoMetadata.media":
-		if e.complexity.VideoMetadata.Media == nil {
+		if e.ComplexityRoot.VideoMetadata.Media == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Media(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Media(childComplexity), true
 	case "VideoMetadata.width":
-		if e.complexity.VideoMetadata.Width == nil {
+		if e.ComplexityRoot.VideoMetadata.Width == nil {
 			break
 		}
 
-		return e.complexity.VideoMetadata.Width(childComplexity), true
+		return e.ComplexityRoot.VideoMetadata.Width(childComplexity), true
 
 	}
 	return 0, false
@@ -1526,7 +1520,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
-	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
+	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputOrdering,
 		ec.unmarshalInputPagination,
@@ -1544,9 +1538,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
-				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
-					result := <-ec.deferredResults
-					atomic.AddInt32(&ec.pendingDeferred, -1)
+				if atomic.LoadInt32(&ec.PendingDeferred) > 0 {
+					result := <-ec.DeferredResults
+					atomic.AddInt32(&ec.PendingDeferred, -1)
 					data = result.Result
 					response.Path = result.Path
 					response.Label = result.Label
@@ -1558,8 +1552,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 			response.Data = buf.Bytes()
-			if atomic.LoadInt32(&ec.deferred) > 0 {
-				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+			if atomic.LoadInt32(&ec.Deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.PendingDeferred) > 0
 				response.HasNext = &hasNext
 			}
 
@@ -1604,44 +1598,22 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 }
 
 type executionContext struct {
-	*graphql.OperationContext
-	*executableSchema
-	deferred        int32
-	pendingDeferred int32
-	deferredResults chan graphql.DeferredResult
+	*graphql.ExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 }
 
-func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
-	atomic.AddInt32(&ec.pendingDeferred, 1)
-	go func() {
-		ctx := graphql.WithFreshResponseContext(dg.Context)
-		dg.FieldSet.Dispatch(ctx)
-		ds := graphql.DeferredResult{
-			Path:   dg.Path,
-			Label:  dg.Label,
-			Result: dg.FieldSet,
-			Errors: graphql.GetErrors(ctx),
-		}
-		// null fields should bubble up
-		if dg.FieldSet.Invalids > 0 {
-			ds.Result = graphql.Null
-		}
-		ec.deferredResults <- ds
-	}()
-}
-
-func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
+func newExecutionContext(
+	opCtx *graphql.OperationContext,
+	execSchema *executableSchema,
+	deferredResults chan graphql.DeferredResult,
+) *executionContext {
+	return &executionContext{
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+			opCtx,
+			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
+			parsedSchema,
+			deferredResults,
+		),
 	}
-	return introspection.WrapSchema(ec.Schema()), nil
-}
-
-func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
-	}
-	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 //go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/timeline.graphql" "resolvers/user.graphql"
@@ -1671,24 +1643,469 @@ var sources = []*ast.Source{
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
-// endregion ************************** generated!.gotpl **************************
+// childFields_* functions provide shared child field context lookups.
+// Each function is generated once per unique object type, deduplicating the
+// switch statements that were previously inlined in every fieldContext_* function.
+
+func (ec *executionContext) childFields_Album(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Album_id(ctx, field)
+	case "title":
+		return ec.fieldContext_Album_title(ctx, field)
+	case "media":
+		return ec.fieldContext_Album_media(ctx, field)
+	case "subAlbums":
+		return ec.fieldContext_Album_subAlbums(ctx, field)
+	case "parentAlbum":
+		return ec.fieldContext_Album_parentAlbum(ctx, field)
+	case "owner":
+		return ec.fieldContext_Album_owner(ctx, field)
+	case "filePath":
+		return ec.fieldContext_Album_filePath(ctx, field)
+	case "thumbnail":
+		return ec.fieldContext_Album_thumbnail(ctx, field)
+	case "path":
+		return ec.fieldContext_Album_path(ctx, field)
+	case "shares":
+		return ec.fieldContext_Album_shares(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+}
+
+func (ec *executionContext) childFields_AuthorizeResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_AuthorizeResult_success(ctx, field)
+	case "status":
+		return ec.fieldContext_AuthorizeResult_status(ctx, field)
+	case "token":
+		return ec.fieldContext_AuthorizeResult_token(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AuthorizeResult", field.Name)
+}
+
+func (ec *executionContext) childFields_Coordinates(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "latitude":
+		return ec.fieldContext_Coordinates_latitude(ctx, field)
+	case "longitude":
+		return ec.fieldContext_Coordinates_longitude(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Coordinates", field.Name)
+}
+
+func (ec *executionContext) childFields_FaceGroup(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_FaceGroup_id(ctx, field)
+	case "label":
+		return ec.fieldContext_FaceGroup_label(ctx, field)
+	case "imageFaces":
+		return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
+	case "imageFaceCount":
+		return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+}
+
+func (ec *executionContext) childFields_FaceRectangle(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "minX":
+		return ec.fieldContext_FaceRectangle_minX(ctx, field)
+	case "maxX":
+		return ec.fieldContext_FaceRectangle_maxX(ctx, field)
+	case "minY":
+		return ec.fieldContext_FaceRectangle_minY(ctx, field)
+	case "maxY":
+		return ec.fieldContext_FaceRectangle_maxY(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FaceRectangle", field.Name)
+}
+
+func (ec *executionContext) childFields_ImageFace(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_ImageFace_id(ctx, field)
+	case "media":
+		return ec.fieldContext_ImageFace_media(ctx, field)
+	case "rectangle":
+		return ec.fieldContext_ImageFace_rectangle(ctx, field)
+	case "faceGroup":
+		return ec.fieldContext_ImageFace_faceGroup(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ImageFace", field.Name)
+}
+
+func (ec *executionContext) childFields_Media(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Media_id(ctx, field)
+	case "title":
+		return ec.fieldContext_Media_title(ctx, field)
+	case "path":
+		return ec.fieldContext_Media_path(ctx, field)
+	case "thumbnail":
+		return ec.fieldContext_Media_thumbnail(ctx, field)
+	case "highRes":
+		return ec.fieldContext_Media_highRes(ctx, field)
+	case "videoWeb":
+		return ec.fieldContext_Media_videoWeb(ctx, field)
+	case "album":
+		return ec.fieldContext_Media_album(ctx, field)
+	case "exif":
+		return ec.fieldContext_Media_exif(ctx, field)
+	case "videoMetadata":
+		return ec.fieldContext_Media_videoMetadata(ctx, field)
+	case "favorite":
+		return ec.fieldContext_Media_favorite(ctx, field)
+	case "type":
+		return ec.fieldContext_Media_type(ctx, field)
+	case "date":
+		return ec.fieldContext_Media_date(ctx, field)
+	case "blurhash":
+		return ec.fieldContext_Media_blurhash(ctx, field)
+	case "shares":
+		return ec.fieldContext_Media_shares(ctx, field)
+	case "downloads":
+		return ec.fieldContext_Media_downloads(ctx, field)
+	case "faces":
+		return ec.fieldContext_Media_faces(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+}
+
+func (ec *executionContext) childFields_MediaDownload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_MediaDownload_title(ctx, field)
+	case "mediaUrl":
+		return ec.fieldContext_MediaDownload_mediaUrl(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MediaDownload", field.Name)
+}
+
+func (ec *executionContext) childFields_MediaEXIF(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_MediaEXIF_id(ctx, field)
+	case "media":
+		return ec.fieldContext_MediaEXIF_media(ctx, field)
+	case "description":
+		return ec.fieldContext_MediaEXIF_description(ctx, field)
+	case "camera":
+		return ec.fieldContext_MediaEXIF_camera(ctx, field)
+	case "maker":
+		return ec.fieldContext_MediaEXIF_maker(ctx, field)
+	case "lens":
+		return ec.fieldContext_MediaEXIF_lens(ctx, field)
+	case "dateShot":
+		return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
+	case "exposure":
+		return ec.fieldContext_MediaEXIF_exposure(ctx, field)
+	case "aperture":
+		return ec.fieldContext_MediaEXIF_aperture(ctx, field)
+	case "iso":
+		return ec.fieldContext_MediaEXIF_iso(ctx, field)
+	case "focalLength":
+		return ec.fieldContext_MediaEXIF_focalLength(ctx, field)
+	case "flash":
+		return ec.fieldContext_MediaEXIF_flash(ctx, field)
+	case "exposureProgram":
+		return ec.fieldContext_MediaEXIF_exposureProgram(ctx, field)
+	case "coordinates":
+		return ec.fieldContext_MediaEXIF_coordinates(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MediaEXIF", field.Name)
+}
+
+func (ec *executionContext) childFields_MediaURL(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "url":
+		return ec.fieldContext_MediaURL_url(ctx, field)
+	case "width":
+		return ec.fieldContext_MediaURL_width(ctx, field)
+	case "height":
+		return ec.fieldContext_MediaURL_height(ctx, field)
+	case "fileSize":
+		return ec.fieldContext_MediaURL_fileSize(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MediaURL", field.Name)
+}
+
+func (ec *executionContext) childFields_Notification(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "key":
+		return ec.fieldContext_Notification_key(ctx, field)
+	case "type":
+		return ec.fieldContext_Notification_type(ctx, field)
+	case "header":
+		return ec.fieldContext_Notification_header(ctx, field)
+	case "content":
+		return ec.fieldContext_Notification_content(ctx, field)
+	case "progress":
+		return ec.fieldContext_Notification_progress(ctx, field)
+	case "positive":
+		return ec.fieldContext_Notification_positive(ctx, field)
+	case "negative":
+		return ec.fieldContext_Notification_negative(ctx, field)
+	case "timeout":
+		return ec.fieldContext_Notification_timeout(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
+}
+
+func (ec *executionContext) childFields_ScannerResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "finished":
+		return ec.fieldContext_ScannerResult_finished(ctx, field)
+	case "success":
+		return ec.fieldContext_ScannerResult_success(ctx, field)
+	case "progress":
+		return ec.fieldContext_ScannerResult_progress(ctx, field)
+	case "message":
+		return ec.fieldContext_ScannerResult_message(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ScannerResult", field.Name)
+}
+
+func (ec *executionContext) childFields_SearchResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "query":
+		return ec.fieldContext_SearchResult_query(ctx, field)
+	case "albums":
+		return ec.fieldContext_SearchResult_albums(ctx, field)
+	case "media":
+		return ec.fieldContext_SearchResult_media(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SearchResult", field.Name)
+}
+
+func (ec *executionContext) childFields_ShareToken(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_ShareToken_id(ctx, field)
+	case "token":
+		return ec.fieldContext_ShareToken_token(ctx, field)
+	case "owner":
+		return ec.fieldContext_ShareToken_owner(ctx, field)
+	case "expire":
+		return ec.fieldContext_ShareToken_expire(ctx, field)
+	case "hasPassword":
+		return ec.fieldContext_ShareToken_hasPassword(ctx, field)
+	case "album":
+		return ec.fieldContext_ShareToken_album(ctx, field)
+	case "media":
+		return ec.fieldContext_ShareToken_media(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+}
+
+func (ec *executionContext) childFields_SiteInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "initialSetup":
+		return ec.fieldContext_SiteInfo_initialSetup(ctx, field)
+	case "faceDetectionEnabled":
+		return ec.fieldContext_SiteInfo_faceDetectionEnabled(ctx, field)
+	case "periodicScanInterval":
+		return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
+	case "concurrentWorkers":
+		return ec.fieldContext_SiteInfo_concurrentWorkers(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SiteInfo", field.Name)
+}
+
+func (ec *executionContext) childFields_User(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_User_id(ctx, field)
+	case "username":
+		return ec.fieldContext_User_username(ctx, field)
+	case "albums":
+		return ec.fieldContext_User_albums(ctx, field)
+	case "rootAlbums":
+		return ec.fieldContext_User_rootAlbums(ctx, field)
+	case "admin":
+		return ec.fieldContext_User_admin(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+}
+
+func (ec *executionContext) childFields_UserPreferences(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_UserPreferences_id(ctx, field)
+	case "language":
+		return ec.fieldContext_UserPreferences_language(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
+}
+
+func (ec *executionContext) childFields_VideoMetadata(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_VideoMetadata_id(ctx, field)
+	case "media":
+		return ec.fieldContext_VideoMetadata_media(ctx, field)
+	case "width":
+		return ec.fieldContext_VideoMetadata_width(ctx, field)
+	case "height":
+		return ec.fieldContext_VideoMetadata_height(ctx, field)
+	case "duration":
+		return ec.fieldContext_VideoMetadata_duration(ctx, field)
+	case "codec":
+		return ec.fieldContext_VideoMetadata_codec(ctx, field)
+	case "framerate":
+		return ec.fieldContext_VideoMetadata_framerate(ctx, field)
+	case "bitrate":
+		return ec.fieldContext_VideoMetadata_bitrate(ctx, field)
+	case "colorProfile":
+		return ec.fieldContext_VideoMetadata_colorProfile(ctx, field)
+	case "audio":
+		return ec.fieldContext_VideoMetadata_audio(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type VideoMetadata", field.Name)
+}
+
+func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___Directive_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Directive_description(ctx, field)
+	case "isRepeatable":
+		return ec.fieldContext___Directive_isRepeatable(ctx, field)
+	case "locations":
+		return ec.fieldContext___Directive_locations(ctx, field)
+	case "args":
+		return ec.fieldContext___Directive_args(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Directive", field.Name)
+}
+
+func (ec *executionContext) childFields___EnumValue(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___EnumValue_name(ctx, field)
+	case "description":
+		return ec.fieldContext___EnumValue_description(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __EnumValue", field.Name)
+}
+
+func (ec *executionContext) childFields___Field(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___Field_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Field_description(ctx, field)
+	case "args":
+		return ec.fieldContext___Field_args(ctx, field)
+	case "type":
+		return ec.fieldContext___Field_type(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___Field_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___Field_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Field", field.Name)
+}
+
+func (ec *executionContext) childFields___InputValue(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___InputValue_name(ctx, field)
+	case "description":
+		return ec.fieldContext___InputValue_description(ctx, field)
+	case "type":
+		return ec.fieldContext___InputValue_type(ctx, field)
+	case "defaultValue":
+		return ec.fieldContext___InputValue_defaultValue(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___InputValue_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+}
+
+func (ec *executionContext) childFields___Schema(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "description":
+		return ec.fieldContext___Schema_description(ctx, field)
+	case "types":
+		return ec.fieldContext___Schema_types(ctx, field)
+	case "queryType":
+		return ec.fieldContext___Schema_queryType(ctx, field)
+	case "mutationType":
+		return ec.fieldContext___Schema_mutationType(ctx, field)
+	case "subscriptionType":
+		return ec.fieldContext___Schema_subscriptionType(ctx, field)
+	case "directives":
+		return ec.fieldContext___Schema_directives(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+}
+
+func (ec *executionContext) childFields___Type(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "kind":
+		return ec.fieldContext___Type_kind(ctx, field)
+	case "name":
+		return ec.fieldContext___Type_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Type_description(ctx, field)
+	case "specifiedByURL":
+		return ec.fieldContext___Type_specifiedByURL(ctx, field)
+	case "fields":
+		return ec.fieldContext___Type_fields(ctx, field)
+	case "interfaces":
+		return ec.fieldContext___Type_interfaces(ctx, field)
+	case "possibleTypes":
+		return ec.fieldContext___Type_possibleTypes(ctx, field)
+	case "enumValues":
+		return ec.fieldContext___Type_enumValues(ctx, field)
+	case "inputFields":
+		return ec.fieldContext___Type_inputFields(ctx, field)
+	case "ofType":
+		return ec.fieldContext___Type_ofType(ctx, field)
+	case "isOneOf":
+		return ec.fieldContext___Type_isOneOf(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+}
+
+// endregion ************************** internal!.gotpl ***************************
 
 // region    ***************************** args.gotpl *****************************
 
 func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order", ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order",
+		func(ctx context.Context, v any) (*models.Ordering, error) {
+			return ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["order"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["paginate"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "onlyFavorites", ec.unmarshalOBoolean2ᚖbool)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "onlyFavorites",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1699,12 +2116,18 @@ func (ec *executionContext) field_Album_media_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order", ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order",
+		func(ctx context.Context, v any) (*models.Ordering, error) {
+			return ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["order"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1715,7 +2138,10 @@ func (ec *executionContext) field_Album_subAlbums_args(ctx context.Context, rawA
 func (ec *executionContext) field_FaceGroup_imageFaces_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1726,12 +2152,18 @@ func (ec *executionContext) field_FaceGroup_imageFaces_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["username"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1742,7 +2174,10 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_changeUserPreferences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "language", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "language",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1753,12 +2188,18 @@ func (ec *executionContext) field_Mutation_changeUserPreferences_args(ctx contex
 func (ec *executionContext) field_Mutation_combineFaceGroups_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "destinationFaceGroupID", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "destinationFaceGroupID",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["destinationFaceGroupID"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "sourceFaceGroupIDs", ec.unmarshalNID2ᚕintᚄ)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "sourceFaceGroupIDs",
+		func(ctx context.Context, v any) ([]int, error) {
+			return ec.unmarshalNID2ᚕintᚄ(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1769,17 +2210,26 @@ func (ec *executionContext) field_Mutation_combineFaceGroups_args(ctx context.Co
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["username"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalOString2ᚖstring)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["password"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "admin", ec.unmarshalNBoolean2bool)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "admin",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalNBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1790,7 +2240,10 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteShareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1801,7 +2254,10 @@ func (ec *executionContext) field_Mutation_deleteShareToken_args(ctx context.Con
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1812,7 +2268,10 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_detachImageFaces_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "imageFaceIDs", ec.unmarshalNID2ᚕintᚄ)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "imageFaceIDs",
+		func(ctx context.Context, v any) ([]int, error) {
+			return ec.unmarshalNID2ᚕintᚄ(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1823,12 +2282,18 @@ func (ec *executionContext) field_Mutation_detachImageFaces_args(ctx context.Con
 func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["mediaId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "favorite", ec.unmarshalNBoolean2bool)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "favorite",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalNBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1839,17 +2304,26 @@ func (ec *executionContext) field_Mutation_favoriteMedia_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["username"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["password"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath", ec.unmarshalNString2string)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1860,12 +2334,18 @@ func (ec *executionContext) field_Mutation_initialSetupWizard_args(ctx context.C
 func (ec *executionContext) field_Mutation_moveImageFaces_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "imageFaceIDs", ec.unmarshalNID2ᚕintᚄ)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "imageFaceIDs",
+		func(ctx context.Context, v any) ([]int, error) {
+			return ec.unmarshalNID2ᚕintᚄ(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["imageFaceIDs"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "destinationFaceGroupID", ec.unmarshalNID2int)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "destinationFaceGroupID",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1876,12 +2356,18 @@ func (ec *executionContext) field_Mutation_moveImageFaces_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["token"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalOString2ᚖstring)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1892,7 +2378,10 @@ func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Co
 func (ec *executionContext) field_Mutation_resetAlbumCover_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "albumID", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "albumID",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1903,7 +2392,10 @@ func (ec *executionContext) field_Mutation_resetAlbumCover_args(ctx context.Cont
 func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1914,7 +2406,10 @@ func (ec *executionContext) field_Mutation_scanUser_args(ctx context.Context, ra
 func (ec *executionContext) field_Mutation_setAlbumCover_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "coverID", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "coverID",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1925,12 +2420,18 @@ func (ec *executionContext) field_Mutation_setAlbumCover_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_setExpireShareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["token"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire", ec.unmarshalOTime2ᚖtimeᚐTime)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire",
+		func(ctx context.Context, v any) (*time.Time, error) {
+			return ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1941,12 +2442,18 @@ func (ec *executionContext) field_Mutation_setExpireShareToken_args(ctx context.
 func (ec *executionContext) field_Mutation_setFaceGroupLabel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "faceGroupID", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "faceGroupID",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["faceGroupID"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "label", ec.unmarshalOString2ᚖstring)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "label",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1957,7 +2464,10 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_args(ctx context.Co
 func (ec *executionContext) field_Mutation_setPeriodicScanInterval_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "interval", ec.unmarshalNInt2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "interval",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1968,7 +2478,10 @@ func (ec *executionContext) field_Mutation_setPeriodicScanInterval_args(ctx cont
 func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "workers", ec.unmarshalNInt2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "workers",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1979,17 +2492,26 @@ func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_args(ctx 
 func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "albumId", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "albumId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["albumId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire", ec.unmarshalOTime2ᚖtimeᚐTime)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire",
+		func(ctx context.Context, v any) (*time.Time, error) {
+			return ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["expire"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalOString2ᚖstring)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2000,17 +2522,26 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["mediaId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire", ec.unmarshalOTime2ᚖtimeᚐTime)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expire",
+		func(ctx context.Context, v any) (*time.Time, error) {
+			return ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["expire"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalOString2ᚖstring)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2021,22 +2552,34 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "username", ec.unmarshalOString2ᚖstring)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["username"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalOString2ᚖstring)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["password"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "admin", ec.unmarshalOBoolean2ᚖbool)
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "admin",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2047,12 +2590,18 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_userAddRootPath_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath", ec.unmarshalNString2string)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2063,12 +2612,18 @@ func (ec *executionContext) field_Mutation_userAddRootPath_args(ctx context.Cont
 func (ec *executionContext) field_Mutation_userRemoveRootAlbum_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["userId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "albumId", ec.unmarshalNID2int)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "albumId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2079,7 +2634,10 @@ func (ec *executionContext) field_Mutation_userRemoveRootAlbum_args(ctx context.
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2090,12 +2648,18 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "tokenCredentials", ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "tokenCredentials",
+		func(ctx context.Context, v any) (*models.ShareTokenCredentials, error) {
+			return ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2106,7 +2670,10 @@ func (ec *executionContext) field_Query_album_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_faceGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2117,7 +2684,10 @@ func (ec *executionContext) field_Query_faceGroup_args(ctx context.Context, rawA
 func (ec *executionContext) field_Query_mediaList_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ids", ec.unmarshalNID2ᚕintᚄ)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ids",
+		func(ctx context.Context, v any) ([]int, error) {
+			return ec.unmarshalNID2ᚕintᚄ(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2128,12 +2698,18 @@ func (ec *executionContext) field_Query_mediaList_args(ctx context.Context, rawA
 func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "tokenCredentials", ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "tokenCredentials",
+		func(ctx context.Context, v any) (*models.ShareTokenCredentials, error) {
+			return ec.unmarshalOShareTokenCredentials2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2144,27 +2720,42 @@ func (ec *executionContext) field_Query_media_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order", ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order",
+		func(ctx context.Context, v any) (*models.Ordering, error) {
+			return ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["order"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["paginate"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "onlyRoot", ec.unmarshalOBoolean2ᚖbool)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "onlyRoot",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["onlyRoot"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "showEmpty", ec.unmarshalOBoolean2ᚖbool)
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "showEmpty",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["showEmpty"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "onlyWithFavorites", ec.unmarshalOBoolean2ᚖbool)
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "onlyWithFavorites",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2175,7 +2766,10 @@ func (ec *executionContext) field_Query_myAlbums_args(ctx context.Context, rawAr
 func (ec *executionContext) field_Query_myFaceGroups_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2186,12 +2780,18 @@ func (ec *executionContext) field_Query_myFaceGroups_args(ctx context.Context, r
 func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order", ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order",
+		func(ctx context.Context, v any) (*models.Ordering, error) {
+			return ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["order"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2202,17 +2802,26 @@ func (ec *executionContext) field_Query_myMedia_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_myTimeline_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["paginate"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "onlyFavorites", ec.unmarshalOBoolean2ᚖbool)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "onlyFavorites",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["onlyFavorites"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate", ec.unmarshalOTime2ᚖtimeᚐTime)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*time.Time, error) {
+			return ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2223,17 +2832,26 @@ func (ec *executionContext) field_Query_myTimeline_args(ctx context.Context, raw
 func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["query"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limitMedia", ec.unmarshalOInt2ᚖint)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limitMedia",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["limitMedia"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limitAlbums", ec.unmarshalOInt2ᚖint)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limitAlbums",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2244,7 +2862,10 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "credentials", ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "credentials",
+		func(ctx context.Context, v any) (models.ShareTokenCredentials, error) {
+			return ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2255,7 +2876,10 @@ func (ec *executionContext) field_Query_shareTokenValidatePassword_args(ctx cont
 func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "credentials", ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "credentials",
+		func(ctx context.Context, v any) (models.ShareTokenCredentials, error) {
+			return ec.unmarshalNShareTokenCredentials2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenCredentials(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2266,12 +2890,18 @@ func (ec *executionContext) field_Query_shareToken_args(ctx context.Context, raw
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order", ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "order",
+		func(ctx context.Context, v any) (*models.Ordering, error) {
+			return ec.unmarshalOOrdering2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐOrdering(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["order"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate", ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "paginate",
+		func(ctx context.Context, v any) (*models.Pagination, error) {
+			return ec.unmarshalOPagination2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐPagination(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2282,7 +2912,10 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field___Directive_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2ᚖbool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2293,7 +2926,10 @@ func (ec *executionContext) field___Directive_args_args(ctx context.Context, raw
 func (ec *executionContext) field___Field_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2ᚖbool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2304,7 +2940,10 @@ func (ec *executionContext) field___Field_args_args(ctx context.Context, rawArgs
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2bool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalOBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2315,7 +2954,10 @@ func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, ra
 func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2bool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalOBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2325,10 +2967,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // endregion ***************************** args.gotpl *****************************
 
-// region    ************************** directives.gotpl **************************
-
-// endregion ************************** directives.gotpl **************************
-
 // region    **************************** field.gotpl *****************************
 
 func (ec *executionContext) _Album_id(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2336,28 +2974,22 @@ func (ec *executionContext) _Album_id(ctx context.Context, field graphql.Collect
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Album",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Album", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _Album_title(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2365,28 +2997,22 @@ func (ec *executionContext) _Album_title(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_title,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_title(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Title, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Album",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Album", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Album_media(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2394,18 +3020,21 @@ func (ec *executionContext) _Album_media(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Album().Media(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool))
+			return ec.Resolvers.Album().Media(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool))
 		},
 		nil,
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_media(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2413,41 +3042,7 @@ func (ec *executionContext) fieldContext_Album_media(ctx context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -2469,18 +3064,21 @@ func (ec *executionContext) _Album_subAlbums(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_subAlbums,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_subAlbums(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Album().SubAlbums(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Album().SubAlbums(ctx, obj, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		nil,
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_subAlbums(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2488,29 +3086,7 @@ func (ec *executionContext) fieldContext_Album_subAlbums(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -2532,17 +3108,20 @@ func (ec *executionContext) _Album_parentAlbum(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_parentAlbum,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_parentAlbum(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ParentAlbum, nil
 		},
 		nil,
-		ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_parentAlbum(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2550,29 +3129,7 @@ func (ec *executionContext) fieldContext_Album_parentAlbum(_ context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2583,17 +3140,20 @@ func (ec *executionContext) _Album_owner(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_owner,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_owner(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Owner(ctx, obj)
+			return ec.Resolvers.Album().Owner(ctx, obj)
 		},
 		nil,
-		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2601,19 +3161,7 @@ func (ec *executionContext) fieldContext_Album_owner(_ context.Context, field gr
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2624,28 +3172,22 @@ func (ec *executionContext) _Album_filePath(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_filePath,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_filePath(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.FilePath(), nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_filePath(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Album",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Album", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
@@ -2653,17 +3195,20 @@ func (ec *executionContext) _Album_thumbnail(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_thumbnail,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_thumbnail(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Thumbnail(ctx, obj)
+			return ec.Resolvers.Album().Thumbnail(ctx, obj)
 		},
 		nil,
-		ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_thumbnail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2671,41 +3216,7 @@ func (ec *executionContext) fieldContext_Album_thumbnail(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2716,17 +3227,20 @@ func (ec *executionContext) _Album_path(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_path,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_path(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Path(ctx, obj)
+			return ec.Resolvers.Album().Path(ctx, obj)
 		},
 		nil,
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_path(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2734,29 +3248,7 @@ func (ec *executionContext) fieldContext_Album_path(_ context.Context, field gra
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2767,17 +3259,20 @@ func (ec *executionContext) _Album_shares(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Album_shares,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_shares(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Album().Shares(ctx, obj)
+			return ec.Resolvers.Album().Shares(ctx, obj)
 		},
 		nil,
-		ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Album_shares(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Album",
@@ -2785,23 +3280,7 @@ func (ec *executionContext) fieldContext_Album_shares(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	return fc, nil
@@ -2812,28 +3291,22 @@ func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AuthorizeResult_success,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthorizeResult_success(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Success, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_AuthorizeResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthorizeResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AuthorizeResult", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _AuthorizeResult_status(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -2841,28 +3314,22 @@ func (ec *executionContext) _AuthorizeResult_status(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AuthorizeResult_status,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthorizeResult_status(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Status, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_AuthorizeResult_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthorizeResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AuthorizeResult", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
@@ -2870,28 +3337,22 @@ func (ec *executionContext) _AuthorizeResult_token(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AuthorizeResult_token,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthorizeResult_token(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Token, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_AuthorizeResult_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthorizeResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AuthorizeResult", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Coordinates_latitude(ctx context.Context, field graphql.CollectedField, obj *models.Coordinates) (ret graphql.Marshaler) {
@@ -2899,28 +3360,22 @@ func (ec *executionContext) _Coordinates_latitude(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Coordinates_latitude,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Coordinates_latitude(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Latitude, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Coordinates_latitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Coordinates",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Coordinates", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _Coordinates_longitude(ctx context.Context, field graphql.CollectedField, obj *models.Coordinates) (ret graphql.Marshaler) {
@@ -2928,28 +3383,22 @@ func (ec *executionContext) _Coordinates_longitude(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Coordinates_longitude,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Coordinates_longitude(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Longitude, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Coordinates_longitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Coordinates",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Coordinates", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _FaceGroup_id(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
@@ -2957,28 +3406,22 @@ func (ec *executionContext) _FaceGroup_id(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceGroup_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceGroup_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceGroup_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceGroup", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _FaceGroup_label(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
@@ -2986,28 +3429,22 @@ func (ec *executionContext) _FaceGroup_label(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceGroup_label,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceGroup_label(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Label, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceGroup_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceGroup", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _FaceGroup_imageFaces(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
@@ -3015,18 +3452,21 @@ func (ec *executionContext) _FaceGroup_imageFaces(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceGroup_imageFaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.FaceGroup().ImageFaces(ctx, obj, fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.FaceGroup().ImageFaces(ctx, obj, fc.Args["paginate"].(*models.Pagination))
 		},
 		nil,
-		ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {
+			return ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceGroup_imageFaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FaceGroup",
@@ -3034,17 +3474,7 @@ func (ec *executionContext) fieldContext_FaceGroup_imageFaces(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ImageFace_id(ctx, field)
-			case "media":
-				return ec.fieldContext_ImageFace_media(ctx, field)
-			case "rectangle":
-				return ec.fieldContext_ImageFace_rectangle(ctx, field)
-			case "faceGroup":
-				return ec.fieldContext_ImageFace_faceGroup(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ImageFace", field.Name)
+			return ec.childFields_ImageFace(ctx, field)
 		},
 	}
 	defer func() {
@@ -3066,28 +3496,22 @@ func (ec *executionContext) _FaceGroup_imageFaceCount(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceGroup_imageFaceCount,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.FaceGroup().ImageFaceCount(ctx, obj)
+			return ec.Resolvers.FaceGroup().ImageFaceCount(ctx, obj)
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceGroup_imageFaceCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceGroup",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceGroup", field, true, true, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _FaceRectangle_minX(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
@@ -3095,28 +3519,22 @@ func (ec *executionContext) _FaceRectangle_minX(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceRectangle_minX,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceRectangle_minX(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MinX, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceRectangle_minX(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceRectangle",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceRectangle", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _FaceRectangle_maxX(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
@@ -3124,28 +3542,22 @@ func (ec *executionContext) _FaceRectangle_maxX(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceRectangle_maxX,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceRectangle_maxX(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MaxX, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceRectangle_maxX(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceRectangle",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceRectangle", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _FaceRectangle_minY(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
@@ -3153,28 +3565,22 @@ func (ec *executionContext) _FaceRectangle_minY(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceRectangle_minY,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceRectangle_minY(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MinY, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceRectangle_minY(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceRectangle",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceRectangle", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _FaceRectangle_maxY(ctx context.Context, field graphql.CollectedField, obj *models.FaceRectangle) (ret graphql.Marshaler) {
@@ -3182,28 +3588,22 @@ func (ec *executionContext) _FaceRectangle_maxY(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_FaceRectangle_maxY,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FaceRectangle_maxY(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MaxY, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_FaceRectangle_maxY(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FaceRectangle",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("FaceRectangle", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _ImageFace_id(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
@@ -3211,28 +3611,22 @@ func (ec *executionContext) _ImageFace_id(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImageFace_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImageFace_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImageFace_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImageFace",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ImageFace", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.CollectedField, obj *models.ImageFace) (ret graphql.Marshaler) {
@@ -3240,17 +3634,20 @@ func (ec *executionContext) _ImageFace_media(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImageFace_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImageFace_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ImageFace().Media(ctx, obj)
+			return ec.Resolvers.ImageFace().Media(ctx, obj)
 		},
 		nil,
-		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImageFace_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageFace",
@@ -3258,41 +3655,7 @@ func (ec *executionContext) fieldContext_ImageFace_media(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3303,17 +3666,20 @@ func (ec *executionContext) _ImageFace_rectangle(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImageFace_rectangle,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImageFace_rectangle(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Rectangle, nil
 		},
 		nil,
-		ec.marshalNFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle,
+		func(ctx context.Context, selections ast.SelectionSet, v models.FaceRectangle) graphql.Marshaler {
+			return ec.marshalNFaceRectangle2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceRectangle(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImageFace_rectangle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageFace",
@@ -3321,17 +3687,7 @@ func (ec *executionContext) fieldContext_ImageFace_rectangle(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "minX":
-				return ec.fieldContext_FaceRectangle_minX(ctx, field)
-			case "maxX":
-				return ec.fieldContext_FaceRectangle_maxX(ctx, field)
-			case "minY":
-				return ec.fieldContext_FaceRectangle_minY(ctx, field)
-			case "maxY":
-				return ec.fieldContext_FaceRectangle_maxY(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceRectangle", field.Name)
+			return ec.childFields_FaceRectangle(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3342,17 +3698,20 @@ func (ec *executionContext) _ImageFace_faceGroup(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImageFace_faceGroup,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImageFace_faceGroup(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ImageFace().FaceGroup(ctx, obj)
+			return ec.Resolvers.ImageFace().FaceGroup(ctx, obj)
 		},
 		nil,
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImageFace_faceGroup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImageFace",
@@ -3360,17 +3719,7 @@ func (ec *executionContext) fieldContext_ImageFace_faceGroup(_ context.Context, 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3381,28 +3730,22 @@ func (ec *executionContext) _Media_id(ctx context.Context, field graphql.Collect
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _Media_title(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3410,28 +3753,22 @@ func (ec *executionContext) _Media_title(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_title,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_title(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Title, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Media_path(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3439,28 +3776,22 @@ func (ec *executionContext) _Media_path(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_path,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_path(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Path, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_path(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3468,17 +3799,20 @@ func (ec *executionContext) _Media_thumbnail(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_thumbnail,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_thumbnail(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Thumbnail(ctx, obj)
+			return ec.Resolvers.Media().Thumbnail(ctx, obj)
 		},
 		nil,
-		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+			return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_thumbnail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3486,17 +3820,7 @@ func (ec *executionContext) fieldContext_Media_thumbnail(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "url":
-				return ec.fieldContext_MediaURL_url(ctx, field)
-			case "width":
-				return ec.fieldContext_MediaURL_width(ctx, field)
-			case "height":
-				return ec.fieldContext_MediaURL_height(ctx, field)
-			case "fileSize":
-				return ec.fieldContext_MediaURL_fileSize(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaURL", field.Name)
+			return ec.childFields_MediaURL(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3507,17 +3831,20 @@ func (ec *executionContext) _Media_highRes(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_highRes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_highRes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().HighRes(ctx, obj)
+			return ec.Resolvers.Media().HighRes(ctx, obj)
 		},
 		nil,
-		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+			return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_highRes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3525,17 +3852,7 @@ func (ec *executionContext) fieldContext_Media_highRes(_ context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "url":
-				return ec.fieldContext_MediaURL_url(ctx, field)
-			case "width":
-				return ec.fieldContext_MediaURL_width(ctx, field)
-			case "height":
-				return ec.fieldContext_MediaURL_height(ctx, field)
-			case "fileSize":
-				return ec.fieldContext_MediaURL_fileSize(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaURL", field.Name)
+			return ec.childFields_MediaURL(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3546,17 +3863,20 @@ func (ec *executionContext) _Media_videoWeb(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_videoWeb,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_videoWeb(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().VideoWeb(ctx, obj)
+			return ec.Resolvers.Media().VideoWeb(ctx, obj)
 		},
 		nil,
-		ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+			return ec.marshalOMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_videoWeb(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3564,17 +3884,7 @@ func (ec *executionContext) fieldContext_Media_videoWeb(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "url":
-				return ec.fieldContext_MediaURL_url(ctx, field)
-			case "width":
-				return ec.fieldContext_MediaURL_width(ctx, field)
-			case "height":
-				return ec.fieldContext_MediaURL_height(ctx, field)
-			case "fileSize":
-				return ec.fieldContext_MediaURL_fileSize(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaURL", field.Name)
+			return ec.childFields_MediaURL(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3585,17 +3895,20 @@ func (ec *executionContext) _Media_album(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_album,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_album(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Album(ctx, obj)
+			return ec.Resolvers.Media().Album(ctx, obj)
 		},
 		nil,
-		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_album(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3603,29 +3916,7 @@ func (ec *executionContext) fieldContext_Media_album(_ context.Context, field gr
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3636,17 +3927,20 @@ func (ec *executionContext) _Media_exif(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_exif,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_exif(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Exif(ctx, obj)
+			return ec.Resolvers.Media().Exif(ctx, obj)
 		},
 		nil,
-		ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.MediaEXIF) graphql.Marshaler {
+			return ec.marshalOMediaEXIF2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaEXIF(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_exif(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3654,37 +3948,7 @@ func (ec *executionContext) fieldContext_Media_exif(_ context.Context, field gra
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_MediaEXIF_id(ctx, field)
-			case "media":
-				return ec.fieldContext_MediaEXIF_media(ctx, field)
-			case "description":
-				return ec.fieldContext_MediaEXIF_description(ctx, field)
-			case "camera":
-				return ec.fieldContext_MediaEXIF_camera(ctx, field)
-			case "maker":
-				return ec.fieldContext_MediaEXIF_maker(ctx, field)
-			case "lens":
-				return ec.fieldContext_MediaEXIF_lens(ctx, field)
-			case "dateShot":
-				return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
-			case "exposure":
-				return ec.fieldContext_MediaEXIF_exposure(ctx, field)
-			case "aperture":
-				return ec.fieldContext_MediaEXIF_aperture(ctx, field)
-			case "iso":
-				return ec.fieldContext_MediaEXIF_iso(ctx, field)
-			case "focalLength":
-				return ec.fieldContext_MediaEXIF_focalLength(ctx, field)
-			case "flash":
-				return ec.fieldContext_MediaEXIF_flash(ctx, field)
-			case "exposureProgram":
-				return ec.fieldContext_MediaEXIF_exposureProgram(ctx, field)
-			case "coordinates":
-				return ec.fieldContext_MediaEXIF_coordinates(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaEXIF", field.Name)
+			return ec.childFields_MediaEXIF(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3695,17 +3959,20 @@ func (ec *executionContext) _Media_videoMetadata(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_videoMetadata,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_videoMetadata(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.VideoMetadata, nil
 		},
 		nil,
-		ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.VideoMetadata) graphql.Marshaler {
+			return ec.marshalOVideoMetadata2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐVideoMetadata(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_videoMetadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3713,29 +3980,7 @@ func (ec *executionContext) fieldContext_Media_videoMetadata(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VideoMetadata_id(ctx, field)
-			case "media":
-				return ec.fieldContext_VideoMetadata_media(ctx, field)
-			case "width":
-				return ec.fieldContext_VideoMetadata_width(ctx, field)
-			case "height":
-				return ec.fieldContext_VideoMetadata_height(ctx, field)
-			case "duration":
-				return ec.fieldContext_VideoMetadata_duration(ctx, field)
-			case "codec":
-				return ec.fieldContext_VideoMetadata_codec(ctx, field)
-			case "framerate":
-				return ec.fieldContext_VideoMetadata_framerate(ctx, field)
-			case "bitrate":
-				return ec.fieldContext_VideoMetadata_bitrate(ctx, field)
-			case "colorProfile":
-				return ec.fieldContext_VideoMetadata_colorProfile(ctx, field)
-			case "audio":
-				return ec.fieldContext_VideoMetadata_audio(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VideoMetadata", field.Name)
+			return ec.childFields_VideoMetadata(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3746,28 +3991,22 @@ func (ec *executionContext) _Media_favorite(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_favorite,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_favorite(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Favorite(ctx, obj)
+			return ec.Resolvers.Media().Favorite(ctx, obj)
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_favorite(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Media_type(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3775,28 +4014,22 @@ func (ec *executionContext) _Media_type(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Type(ctx, obj)
+			return ec.Resolvers.Media().Type(ctx, obj)
 		},
 		nil,
-		ec.marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType,
+		func(ctx context.Context, selections ast.SelectionSet, v models.MediaType) graphql.Marshaler {
+			return ec.marshalNMediaType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MediaType does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, true, true, errors.New("field of type MediaType does not have child fields"))
 }
 
 func (ec *executionContext) _Media_date(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3804,28 +4037,22 @@ func (ec *executionContext) _Media_date(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_date,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_date(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Date(), nil
 		},
 		nil,
-		ec.marshalNTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, true, false, errors.New("field of type Time does not have child fields"))
 }
 
 func (ec *executionContext) _Media_blurhash(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3833,28 +4060,22 @@ func (ec *executionContext) _Media_blurhash(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_blurhash,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_blurhash(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Blurhash, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_blurhash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Media",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Media", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
@@ -3862,17 +4083,20 @@ func (ec *executionContext) _Media_shares(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_shares,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_shares(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Shares(ctx, obj)
+			return ec.Resolvers.Media().Shares(ctx, obj)
 		},
 		nil,
-		ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_shares(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3880,23 +4104,7 @@ func (ec *executionContext) fieldContext_Media_shares(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3907,17 +4115,20 @@ func (ec *executionContext) _Media_downloads(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_downloads,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_downloads(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Downloads(ctx, obj)
+			return ec.Resolvers.Media().Downloads(ctx, obj)
 		},
 		nil,
-		ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
+			return ec.marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_downloads(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3925,13 +4136,7 @@ func (ec *executionContext) fieldContext_Media_downloads(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "title":
-				return ec.fieldContext_MediaDownload_title(ctx, field)
-			case "mediaUrl":
-				return ec.fieldContext_MediaDownload_mediaUrl(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaDownload", field.Name)
+			return ec.childFields_MediaDownload(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3942,17 +4147,20 @@ func (ec *executionContext) _Media_faces(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Media_faces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_faces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Media().Faces(ctx, obj)
+			return ec.Resolvers.Media().Faces(ctx, obj)
 		},
 		nil,
-		ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {
+			return ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Media_faces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Media",
@@ -3960,17 +4168,7 @@ func (ec *executionContext) fieldContext_Media_faces(_ context.Context, field gr
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ImageFace_id(ctx, field)
-			case "media":
-				return ec.fieldContext_ImageFace_media(ctx, field)
-			case "rectangle":
-				return ec.fieldContext_ImageFace_rectangle(ctx, field)
-			case "faceGroup":
-				return ec.fieldContext_ImageFace_faceGroup(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ImageFace", field.Name)
+			return ec.childFields_ImageFace(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3981,28 +4179,22 @@ func (ec *executionContext) _MediaDownload_title(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaDownload_title,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaDownload_title(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Title, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaDownload_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaDownload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaDownload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaDownload_mediaUrl(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
@@ -4010,17 +4202,20 @@ func (ec *executionContext) _MediaDownload_mediaUrl(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaDownload_mediaUrl,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaDownload_mediaUrl(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MediaURL, nil
 		},
 		nil,
-		ec.marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.MediaURL) graphql.Marshaler {
+			return ec.marshalNMediaURL2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaURL(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaDownload_mediaUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MediaDownload",
@@ -4028,17 +4223,7 @@ func (ec *executionContext) fieldContext_MediaDownload_mediaUrl(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "url":
-				return ec.fieldContext_MediaURL_url(ctx, field)
-			case "width":
-				return ec.fieldContext_MediaURL_width(ctx, field)
-			case "height":
-				return ec.fieldContext_MediaURL_height(ctx, field)
-			case "fileSize":
-				return ec.fieldContext_MediaURL_fileSize(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MediaURL", field.Name)
+			return ec.childFields_MediaURL(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4049,28 +4234,22 @@ func (ec *executionContext) _MediaEXIF_id(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4078,17 +4257,20 @@ func (ec *executionContext) _MediaEXIF_media(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Media(), nil
 		},
 		nil,
-		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MediaEXIF",
@@ -4096,41 +4278,7 @@ func (ec *executionContext) fieldContext_MediaEXIF_media(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4141,28 +4289,22 @@ func (ec *executionContext) _MediaEXIF_description(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_camera(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4170,28 +4312,22 @@ func (ec *executionContext) _MediaEXIF_camera(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_camera,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_camera(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Camera, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_camera(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_maker(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4199,28 +4335,22 @@ func (ec *executionContext) _MediaEXIF_maker(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_maker,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_maker(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Maker, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_maker(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_lens(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4228,28 +4358,22 @@ func (ec *executionContext) _MediaEXIF_lens(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_lens,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_lens(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Lens, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_lens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_dateShot(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4257,28 +4381,22 @@ func (ec *executionContext) _MediaEXIF_dateShot(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_dateShot,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_dateShot(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DateShotWithOffset(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_dateShot(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_exposure(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4286,28 +4404,22 @@ func (ec *executionContext) _MediaEXIF_exposure(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_exposure,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_exposure(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Exposure, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_exposure(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_aperture(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4315,28 +4427,22 @@ func (ec *executionContext) _MediaEXIF_aperture(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_aperture,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_aperture(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Aperture, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_aperture(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_iso(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4344,28 +4450,22 @@ func (ec *executionContext) _MediaEXIF_iso(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_iso,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_iso(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Iso, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint64,
+		func(ctx context.Context, selections ast.SelectionSet, v *int64) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_iso(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_focalLength(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4373,28 +4473,22 @@ func (ec *executionContext) _MediaEXIF_focalLength(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_focalLength,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_focalLength(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.FocalLength, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_focalLength(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_flash(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4402,28 +4496,22 @@ func (ec *executionContext) _MediaEXIF_flash(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_flash,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_flash(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Flash, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint64,
+		func(ctx context.Context, selections ast.SelectionSet, v *int64) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_flash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_exposureProgram(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4431,28 +4519,22 @@ func (ec *executionContext) _MediaEXIF_exposureProgram(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_exposureProgram,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_exposureProgram(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ExposureProgram, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint64,
+		func(ctx context.Context, selections ast.SelectionSet, v *int64) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_exposureProgram(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaEXIF",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaEXIF", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _MediaEXIF_coordinates(ctx context.Context, field graphql.CollectedField, obj *models.MediaEXIF) (ret graphql.Marshaler) {
@@ -4460,17 +4542,20 @@ func (ec *executionContext) _MediaEXIF_coordinates(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaEXIF_coordinates,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaEXIF_coordinates(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Coordinates(), nil
 		},
 		nil,
-		ec.marshalOCoordinates2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐCoordinates,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Coordinates) graphql.Marshaler {
+			return ec.marshalOCoordinates2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐCoordinates(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaEXIF_coordinates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MediaEXIF",
@@ -4478,13 +4563,7 @@ func (ec *executionContext) fieldContext_MediaEXIF_coordinates(_ context.Context
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "latitude":
-				return ec.fieldContext_Coordinates_latitude(ctx, field)
-			case "longitude":
-				return ec.fieldContext_Coordinates_longitude(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Coordinates", field.Name)
+			return ec.childFields_Coordinates(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4495,28 +4574,22 @@ func (ec *executionContext) _MediaURL_url(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaURL_url,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaURL_url(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.URL(), nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaURL_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaURL",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaURL", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _MediaURL_width(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
@@ -4524,28 +4597,22 @@ func (ec *executionContext) _MediaURL_width(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaURL_width,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaURL_width(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Width, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaURL_width(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaURL",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaURL", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _MediaURL_height(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
@@ -4553,28 +4620,22 @@ func (ec *executionContext) _MediaURL_height(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaURL_height,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaURL_height(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Height, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaURL_height(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaURL",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaURL", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _MediaURL_fileSize(ctx context.Context, field graphql.CollectedField, obj *models.MediaURL) (ret graphql.Marshaler) {
@@ -4582,28 +4643,22 @@ func (ec *executionContext) _MediaURL_fileSize(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_MediaURL_fileSize,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MediaURL_fileSize(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.FileSize, nil
 		},
 		nil,
-		ec.marshalNInt2int64,
+		func(ctx context.Context, selections ast.SelectionSet, v int64) graphql.Marshaler {
+			return ec.marshalNInt2int64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_MediaURL_fileSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MediaURL",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("MediaURL", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Mutation_resetAlbumCover(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4611,31 +4666,34 @@ func (ec *executionContext) _Mutation_resetAlbumCover(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_resetAlbumCover,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_resetAlbumCover(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ResetAlbumCover(ctx, fc.Args["albumID"].(int))
+			return ec.Resolvers.Mutation().ResetAlbumCover(ctx, fc.Args["albumID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_resetAlbumCover(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4643,29 +4701,7 @@ func (ec *executionContext) fieldContext_Mutation_resetAlbumCover(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -4687,31 +4723,34 @@ func (ec *executionContext) _Mutation_setAlbumCover(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_setAlbumCover,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setAlbumCover(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetAlbumCover(ctx, fc.Args["coverID"].(int))
+			return ec.Resolvers.Mutation().SetAlbumCover(ctx, fc.Args["coverID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_setAlbumCover(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4719,29 +4758,7 @@ func (ec *executionContext) fieldContext_Mutation_setAlbumCover(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -4763,31 +4780,34 @@ func (ec *executionContext) _Mutation_setFaceGroupLabel(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_setFaceGroupLabel,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setFaceGroupLabel(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetFaceGroupLabel(ctx, fc.Args["faceGroupID"].(int), fc.Args["label"].(*string))
+			return ec.Resolvers.Mutation().SetFaceGroupLabel(ctx, fc.Args["faceGroupID"].(int), fc.Args["label"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_setFaceGroupLabel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4795,17 +4815,7 @@ func (ec *executionContext) fieldContext_Mutation_setFaceGroupLabel(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -4827,31 +4837,34 @@ func (ec *executionContext) _Mutation_combineFaceGroups(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_combineFaceGroups,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_combineFaceGroups(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CombineFaceGroups(ctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupIDs"].([]int))
+			return ec.Resolvers.Mutation().CombineFaceGroups(ctx, fc.Args["destinationFaceGroupID"].(int), fc.Args["sourceFaceGroupIDs"].([]int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_combineFaceGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4859,17 +4872,7 @@ func (ec *executionContext) fieldContext_Mutation_combineFaceGroups(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -4891,31 +4894,34 @@ func (ec *executionContext) _Mutation_moveImageFaces(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_moveImageFaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_moveImageFaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().MoveImageFaces(ctx, fc.Args["imageFaceIDs"].([]int), fc.Args["destinationFaceGroupID"].(int))
+			return ec.Resolvers.Mutation().MoveImageFaces(ctx, fc.Args["imageFaceIDs"].([]int), fc.Args["destinationFaceGroupID"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_moveImageFaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4923,17 +4929,7 @@ func (ec *executionContext) fieldContext_Mutation_moveImageFaces(ctx context.Con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -4955,30 +4951,33 @@ func (ec *executionContext) _Mutation_recognizeUnlabeledFaces(ctx context.Contex
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_recognizeUnlabeledFaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_recognizeUnlabeledFaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().RecognizeUnlabeledFaces(ctx)
+			return ec.Resolvers.Mutation().RecognizeUnlabeledFaces(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.ImageFace
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {
+			return ec.marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_recognizeUnlabeledFaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -4986,17 +4985,7 @@ func (ec *executionContext) fieldContext_Mutation_recognizeUnlabeledFaces(_ cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ImageFace_id(ctx, field)
-			case "media":
-				return ec.fieldContext_ImageFace_media(ctx, field)
-			case "rectangle":
-				return ec.fieldContext_ImageFace_rectangle(ctx, field)
-			case "faceGroup":
-				return ec.fieldContext_ImageFace_faceGroup(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ImageFace", field.Name)
+			return ec.childFields_ImageFace(ctx, field)
 		},
 	}
 	return fc, nil
@@ -5007,31 +4996,34 @@ func (ec *executionContext) _Mutation_detachImageFaces(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_detachImageFaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_detachImageFaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DetachImageFaces(ctx, fc.Args["imageFaceIDs"].([]int))
+			return ec.Resolvers.Mutation().DetachImageFaces(ctx, fc.Args["imageFaceIDs"].([]int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_detachImageFaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5039,17 +5031,7 @@ func (ec *executionContext) fieldContext_Mutation_detachImageFaces(ctx context.C
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -5071,31 +5053,34 @@ func (ec *executionContext) _Mutation_favoriteMedia(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_favoriteMedia,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_favoriteMedia(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().FavoriteMedia(ctx, fc.Args["mediaId"].(int), fc.Args["favorite"].(bool))
+			return ec.Resolvers.Mutation().FavoriteMedia(ctx, fc.Args["mediaId"].(int), fc.Args["favorite"].(bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_favoriteMedia(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5103,41 +5088,7 @@ func (ec *executionContext) fieldContext_Mutation_favoriteMedia(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -5159,30 +5110,33 @@ func (ec *executionContext) _Mutation_scanAll(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_scanAll,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_scanAll(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().ScanAll(ctx)
+			return ec.Resolvers.Mutation().ScanAll(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.ScannerResult
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ScannerResult) graphql.Marshaler {
+			return ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_scanAll(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5190,17 +5144,7 @@ func (ec *executionContext) fieldContext_Mutation_scanAll(_ context.Context, fie
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "finished":
-				return ec.fieldContext_ScannerResult_finished(ctx, field)
-			case "success":
-				return ec.fieldContext_ScannerResult_success(ctx, field)
-			case "progress":
-				return ec.fieldContext_ScannerResult_progress(ctx, field)
-			case "message":
-				return ec.fieldContext_ScannerResult_message(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ScannerResult", field.Name)
+			return ec.childFields_ScannerResult(ctx, field)
 		},
 	}
 	return fc, nil
@@ -5211,31 +5155,34 @@ func (ec *executionContext) _Mutation_scanUser(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_scanUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_scanUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ScanUser(ctx, fc.Args["userId"].(int))
+			return ec.Resolvers.Mutation().ScanUser(ctx, fc.Args["userId"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.ScannerResult
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ScannerResult) graphql.Marshaler {
+			return ec.marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_scanUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5243,17 +5190,7 @@ func (ec *executionContext) fieldContext_Mutation_scanUser(ctx context.Context, 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "finished":
-				return ec.fieldContext_ScannerResult_finished(ctx, field)
-			case "success":
-				return ec.fieldContext_ScannerResult_success(ctx, field)
-			case "progress":
-				return ec.fieldContext_ScannerResult_progress(ctx, field)
-			case "message":
-				return ec.fieldContext_ScannerResult_message(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ScannerResult", field.Name)
+			return ec.childFields_ScannerResult(ctx, field)
 		},
 	}
 	defer func() {
@@ -5275,31 +5212,34 @@ func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Contex
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_setPeriodicScanInterval,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setPeriodicScanInterval(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetPeriodicScanInterval(ctx, fc.Args["interval"].(int))
+			return ec.Resolvers.Mutation().SetPeriodicScanInterval(ctx, fc.Args["interval"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_setPeriodicScanInterval(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5329,31 +5269,34 @@ func (ec *executionContext) _Mutation_setScannerConcurrentWorkers(ctx context.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_setScannerConcurrentWorkers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setScannerConcurrentWorkers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetScannerConcurrentWorkers(ctx, fc.Args["workers"].(int))
+			return ec.Resolvers.Mutation().SetScannerConcurrentWorkers(ctx, fc.Args["workers"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_setScannerConcurrentWorkers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5383,31 +5326,34 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_shareAlbum,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_shareAlbum(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_shareAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5415,23 +5361,7 @@ func (ec *executionContext) fieldContext_Mutation_shareAlbum(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -5453,31 +5383,34 @@ func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_shareMedia,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_shareMedia(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_shareMedia(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5485,23 +5418,7 @@ func (ec *executionContext) fieldContext_Mutation_shareMedia(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -5523,31 +5440,34 @@ func (ec *executionContext) _Mutation_deleteShareToken(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteShareToken,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteShareToken(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteShareToken(ctx, fc.Args["token"].(string))
+			return ec.Resolvers.Mutation().DeleteShareToken(ctx, fc.Args["token"].(string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deleteShareToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5555,23 +5475,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteShareToken(ctx context.C
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -5593,31 +5497,34 @@ func (ec *executionContext) _Mutation_protectShareToken(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_protectShareToken,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_protectShareToken(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ProtectShareToken(ctx, fc.Args["token"].(string), fc.Args["password"].(*string))
+			return ec.Resolvers.Mutation().ProtectShareToken(ctx, fc.Args["token"].(string), fc.Args["password"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_protectShareToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5625,23 +5532,7 @@ func (ec *executionContext) fieldContext_Mutation_protectShareToken(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -5663,31 +5554,34 @@ func (ec *executionContext) _Mutation_setExpireShareToken(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_setExpireShareToken,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setExpireShareToken(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetExpireShareToken(ctx, fc.Args["token"].(string), fc.Args["expire"].(*time.Time))
+			return ec.Resolvers.Mutation().SetExpireShareToken(ctx, fc.Args["token"].(string), fc.Args["expire"].(*time.Time))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ShareToken
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_setExpireShareToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5695,23 +5589,7 @@ func (ec *executionContext) fieldContext_Mutation_setExpireShareToken(ctx contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -5733,18 +5611,21 @@ func (ec *executionContext) _Mutation_authorizeUser(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_authorizeUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_authorizeUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AuthorizeUser(ctx, fc.Args["username"].(string), fc.Args["password"].(string))
+			return ec.Resolvers.Mutation().AuthorizeUser(ctx, fc.Args["username"].(string), fc.Args["password"].(string))
 		},
 		nil,
-		ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
+			return ec.marshalNAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_authorizeUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5752,15 +5633,7 @@ func (ec *executionContext) fieldContext_Mutation_authorizeUser(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "success":
-				return ec.fieldContext_AuthorizeResult_success(ctx, field)
-			case "status":
-				return ec.fieldContext_AuthorizeResult_status(ctx, field)
-			case "token":
-				return ec.fieldContext_AuthorizeResult_token(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AuthorizeResult", field.Name)
+			return ec.childFields_AuthorizeResult(ctx, field)
 		},
 	}
 	defer func() {
@@ -5782,18 +5655,21 @@ func (ec *executionContext) _Mutation_initialSetupWizard(ctx context.Context, fi
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_initialSetupWizard,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_initialSetupWizard(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().InitialSetupWizard(ctx, fc.Args["username"].(string), fc.Args["password"].(string), fc.Args["rootPath"].(string))
+			return ec.Resolvers.Mutation().InitialSetupWizard(ctx, fc.Args["username"].(string), fc.Args["password"].(string), fc.Args["rootPath"].(string))
 		},
 		nil,
-		ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.AuthorizeResult) graphql.Marshaler {
+			return ec.marshalOAuthorizeResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAuthorizeResult(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_initialSetupWizard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5801,15 +5677,7 @@ func (ec *executionContext) fieldContext_Mutation_initialSetupWizard(ctx context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "success":
-				return ec.fieldContext_AuthorizeResult_success(ctx, field)
-			case "status":
-				return ec.fieldContext_AuthorizeResult_status(ctx, field)
-			case "token":
-				return ec.fieldContext_AuthorizeResult_token(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AuthorizeResult", field.Name)
+			return ec.childFields_AuthorizeResult(ctx, field)
 		},
 	}
 	defer func() {
@@ -5831,31 +5699,34 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool))
+			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5863,19 +5734,7 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	defer func() {
@@ -5897,31 +5756,34 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool))
+			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5929,19 +5791,7 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	defer func() {
@@ -5963,31 +5813,34 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["id"].(int))
+			return ec.Resolvers.Mutation().DeleteUser(ctx, fc.Args["id"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5995,19 +5848,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	defer func() {
@@ -6029,31 +5870,34 @@ func (ec *executionContext) _Mutation_userAddRootPath(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_userAddRootPath,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_userAddRootPath(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UserAddRootPath(ctx, fc.Args["id"].(int), fc.Args["rootPath"].(string))
+			return ec.Resolvers.Mutation().UserAddRootPath(ctx, fc.Args["id"].(int), fc.Args["rootPath"].(string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_userAddRootPath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -6061,29 +5905,7 @@ func (ec *executionContext) fieldContext_Mutation_userAddRootPath(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -6105,31 +5927,34 @@ func (ec *executionContext) _Mutation_userRemoveRootAlbum(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_userRemoveRootAlbum,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_userRemoveRootAlbum(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UserRemoveRootAlbum(ctx, fc.Args["userId"].(int), fc.Args["albumId"].(int))
+			return ec.Resolvers.Mutation().UserRemoveRootAlbum(ctx, fc.Args["userId"].(int), fc.Args["albumId"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal *models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_userRemoveRootAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -6137,29 +5962,7 @@ func (ec *executionContext) fieldContext_Mutation_userRemoveRootAlbum(ctx contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -6181,31 +5984,34 @@ func (ec *executionContext) _Mutation_changeUserPreferences(ctx context.Context,
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_changeUserPreferences,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_changeUserPreferences(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string))
+			return ec.Resolvers.Mutation().ChangeUserPreferences(ctx, fc.Args["language"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.UserPreferences
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUserPreferences2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserPreferences,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.UserPreferences) graphql.Marshaler {
+			return ec.marshalNUserPreferences2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserPreferences(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_changeUserPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -6213,13 +6019,7 @@ func (ec *executionContext) fieldContext_Mutation_changeUserPreferences(ctx cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserPreferences_id(ctx, field)
-			case "language":
-				return ec.fieldContext_UserPreferences_language(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
+			return ec.childFields_UserPreferences(ctx, field)
 		},
 	}
 	defer func() {
@@ -6241,28 +6041,22 @@ func (ec *executionContext) _Notification_key(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_key,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_key(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Key, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_type(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6270,28 +6064,22 @@ func (ec *executionContext) _Notification_type(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType,
+		func(ctx context.Context, selections ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
+			return ec.marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type NotificationType does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type NotificationType does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_header(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6299,28 +6087,22 @@ func (ec *executionContext) _Notification_header(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_header,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_header(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Header, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_header(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_content(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6328,28 +6110,22 @@ func (ec *executionContext) _Notification_content(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_content,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_content(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Content, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_progress(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6357,28 +6133,22 @@ func (ec *executionContext) _Notification_progress(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_progress,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_progress(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Progress, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_progress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_positive(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6386,28 +6156,22 @@ func (ec *executionContext) _Notification_positive(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_positive,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_positive(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Positive, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_positive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_negative(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6415,28 +6179,22 @@ func (ec *executionContext) _Notification_negative(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_negative,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_negative(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Negative, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_negative(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_timeout(ctx context.Context, field graphql.CollectedField, obj *models.Notification) (ret graphql.Marshaler) {
@@ -6444,28 +6202,22 @@ func (ec *executionContext) _Notification_timeout(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Notification_timeout,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Notification_timeout(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Timeout, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Notification_timeout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Notification",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Notification", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6473,31 +6225,34 @@ func (ec *executionContext) _Query_myAlbums(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myAlbums,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myAlbums(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyAlbums(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyRoot"].(*bool), fc.Args["showEmpty"].(*bool), fc.Args["onlyWithFavorites"].(*bool))
+			return ec.Resolvers.Query().MyAlbums(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination), fc.Args["onlyRoot"].(*bool), fc.Args["showEmpty"].(*bool), fc.Args["onlyWithFavorites"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myAlbums(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6505,29 +6260,7 @@ func (ec *executionContext) fieldContext_Query_myAlbums(ctx context.Context, fie
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -6549,18 +6282,21 @@ func (ec *executionContext) _Query_album(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_album,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_album(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Album(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
+			return ec.Resolvers.Query().Album(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
 		},
 		nil,
-		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_album(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6568,29 +6304,7 @@ func (ec *executionContext) fieldContext_Query_album(ctx context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	defer func() {
@@ -6612,31 +6326,34 @@ func (ec *executionContext) _Query_myFaceGroups(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myFaceGroups,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myFaceGroups(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyFaceGroups(ctx, fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().MyFaceGroups(ctx, fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myFaceGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6644,17 +6361,7 @@ func (ec *executionContext) fieldContext_Query_myFaceGroups(ctx context.Context,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -6676,31 +6383,34 @@ func (ec *executionContext) _Query_faceGroup(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_faceGroup,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_faceGroup(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().FaceGroup(ctx, fc.Args["id"].(int))
+			return ec.Resolvers.Query().FaceGroup(ctx, fc.Args["id"].(int))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.FaceGroup
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.FaceGroup) graphql.Marshaler {
+			return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_faceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6708,17 +6418,7 @@ func (ec *executionContext) fieldContext_Query_faceGroup(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FaceGroup_id(ctx, field)
-			case "label":
-				return ec.fieldContext_FaceGroup_label(ctx, field)
-			case "imageFaces":
-				return ec.fieldContext_FaceGroup_imageFaces(ctx, field)
-			case "imageFaceCount":
-				return ec.fieldContext_FaceGroup_imageFaceCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FaceGroup", field.Name)
+			return ec.childFields_FaceGroup(ctx, field)
 		},
 	}
 	defer func() {
@@ -6740,31 +6440,34 @@ func (ec *executionContext) _Query_myMedia(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myMedia,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myMedia(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyMedia(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().MyMedia(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myMedia(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6772,41 +6475,7 @@ func (ec *executionContext) fieldContext_Query_myMedia(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -6828,18 +6497,21 @@ func (ec *executionContext) _Query_media(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Media(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
+			return ec.Resolvers.Query().Media(ctx, fc.Args["id"].(int), fc.Args["tokenCredentials"].(*models.ShareTokenCredentials))
 		},
 		nil,
-		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_media(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6847,41 +6519,7 @@ func (ec *executionContext) fieldContext_Query_media(ctx context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -6903,18 +6541,21 @@ func (ec *executionContext) _Query_mediaList(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_mediaList,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_mediaList(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MediaList(ctx, fc.Args["ids"].([]int))
+			return ec.Resolvers.Query().MediaList(ctx, fc.Args["ids"].([]int))
 		},
 		nil,
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_mediaList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -6922,41 +6563,7 @@ func (ec *executionContext) fieldContext_Query_mediaList(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -6978,41 +6585,35 @@ func (ec *executionContext) _Query_myMediaGeoJson(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myMediaGeoJson,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myMediaGeoJson(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyMediaGeoJSON(ctx)
+			return ec.Resolvers.Query().MyMediaGeoJSON(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal any
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAny2interface,
+		func(ctx context.Context, selections ast.SelectionSet, v any) graphql.Marshaler {
+			return ec.marshalNAny2interface(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myMediaGeoJson(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Any does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Query", field, true, true, errors.New("field of type Any does not have child fields"))
 }
 
 func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7020,28 +6621,22 @@ func (ec *executionContext) _Query_mapboxToken(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_mapboxToken,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_mapboxToken(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MapboxToken(ctx)
+			return ec.Resolvers.Query().MapboxToken(ctx)
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_mapboxToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Query", field, true, true, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7049,18 +6644,21 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_search,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_search(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Search(ctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
+			return ec.Resolvers.Query().Search(ctx, fc.Args["query"].(string), fc.Args["limitMedia"].(*int), fc.Args["limitAlbums"].(*int))
 		},
 		nil,
-		ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.SearchResult) graphql.Marshaler {
+			return ec.marshalNSearchResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSearchResult(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7068,15 +6666,7 @@ func (ec *executionContext) fieldContext_Query_search(ctx context.Context, field
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "query":
-				return ec.fieldContext_SearchResult_query(ctx, field)
-			case "albums":
-				return ec.fieldContext_SearchResult_albums(ctx, field)
-			case "media":
-				return ec.fieldContext_SearchResult_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchResult", field.Name)
+			return ec.childFields_SearchResult(ctx, field)
 		},
 	}
 	defer func() {
@@ -7098,18 +6688,21 @@ func (ec *executionContext) _Query_shareToken(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_shareToken,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_shareToken(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ShareToken(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
+			return ec.Resolvers.Query().ShareToken(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
 		},
 		nil,
-		ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.ShareToken) graphql.Marshaler {
+			return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_shareToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7117,23 +6710,7 @@ func (ec *executionContext) fieldContext_Query_shareToken(ctx context.Context, f
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ShareToken_id(ctx, field)
-			case "token":
-				return ec.fieldContext_ShareToken_token(ctx, field)
-			case "owner":
-				return ec.fieldContext_ShareToken_owner(ctx, field)
-			case "expire":
-				return ec.fieldContext_ShareToken_expire(ctx, field)
-			case "hasPassword":
-				return ec.fieldContext_ShareToken_hasPassword(ctx, field)
-			case "album":
-				return ec.fieldContext_ShareToken_album(ctx, field)
-			case "media":
-				return ec.fieldContext_ShareToken_media(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ShareToken", field.Name)
+			return ec.childFields_ShareToken(ctx, field)
 		},
 	}
 	defer func() {
@@ -7155,18 +6732,21 @@ func (ec *executionContext) _Query_shareTokenValidatePassword(ctx context.Contex
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_shareTokenValidatePassword,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_shareTokenValidatePassword(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ShareTokenValidatePassword(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
+			return ec.Resolvers.Query().ShareTokenValidatePassword(ctx, fc.Args["credentials"].(models.ShareTokenCredentials))
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_shareTokenValidatePassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7196,17 +6776,20 @@ func (ec *executionContext) _Query_siteInfo(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_siteInfo,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_siteInfo(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().SiteInfo(ctx)
+			return ec.Resolvers.Query().SiteInfo(ctx)
 		},
 		nil,
-		ec.marshalNSiteInfo2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.SiteInfo) graphql.Marshaler {
+			return ec.marshalNSiteInfo2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐSiteInfo(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_siteInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7214,17 +6797,7 @@ func (ec *executionContext) fieldContext_Query_siteInfo(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "initialSetup":
-				return ec.fieldContext_SiteInfo_initialSetup(ctx, field)
-			case "faceDetectionEnabled":
-				return ec.fieldContext_SiteInfo_faceDetectionEnabled(ctx, field)
-			case "periodicScanInterval":
-				return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
-			case "concurrentWorkers":
-				return ec.fieldContext_SiteInfo_concurrentWorkers(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SiteInfo", field.Name)
+			return ec.childFields_SiteInfo(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7235,31 +6808,34 @@ func (ec *executionContext) _Query_myTimeline(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myTimeline,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myTimeline(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().MyTimeline(ctx, fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool), fc.Args["fromDate"].(*time.Time))
+			return ec.Resolvers.Query().MyTimeline(ctx, fc.Args["paginate"].(*models.Pagination), fc.Args["onlyFavorites"].(*bool), fc.Args["fromDate"].(*time.Time))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal []*models.Media
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myTimeline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7267,41 +6843,7 @@ func (ec *executionContext) fieldContext_Query_myTimeline(ctx context.Context, f
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	defer func() {
@@ -7323,31 +6865,34 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_user,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_user(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().User(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
+			return ec.Resolvers.Query().User(ctx, fc.Args["order"].(*models.Ordering), fc.Args["paginate"].(*models.Pagination))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.User
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAdmin(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7355,19 +6900,7 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	defer func() {
@@ -7389,30 +6922,33 @@ func (ec *executionContext) _Query_myUser(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyUser(ctx)
+			return ec.Resolvers.Query().MyUser(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.User
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7420,19 +6956,7 @@ func (ec *executionContext) fieldContext_Query_myUser(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7443,30 +6967,33 @@ func (ec *executionContext) _Query_myUserPreferences(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_myUserPreferences,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_myUserPreferences(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MyUserPreferences(ctx)
+			return ec.Resolvers.Query().MyUserPreferences(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAuthorized == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.UserPreferences
 					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.directives.IsAuthorized(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNUserPreferences2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserPreferences,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.UserPreferences) graphql.Marshaler {
+			return ec.marshalNUserPreferences2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserPreferences(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_myUserPreferences(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7474,13 +7001,7 @@ func (ec *executionContext) fieldContext_Query_myUserPreferences(_ context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserPreferences_id(ctx, field)
-			case "language":
-				return ec.fieldContext_UserPreferences_language(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
+			return ec.childFields_UserPreferences(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7491,18 +7012,21 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query___type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query___type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.introspectType(fc.Args["name"].(string))
+			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7510,31 +7034,7 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	defer func() {
@@ -7556,17 +7056,20 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query___schema,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query___schema(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.introspectSchema()
+			return ec.IntrospectSchema()
 		},
 		nil,
-		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Schema) graphql.Marshaler {
+			return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7574,21 +7077,7 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "description":
-				return ec.fieldContext___Schema_description(ctx, field)
-			case "types":
-				return ec.fieldContext___Schema_types(ctx, field)
-			case "queryType":
-				return ec.fieldContext___Schema_queryType(ctx, field)
-			case "mutationType":
-				return ec.fieldContext___Schema_mutationType(ctx, field)
-			case "subscriptionType":
-				return ec.fieldContext___Schema_subscriptionType(ctx, field)
-			case "directives":
-				return ec.fieldContext___Schema_directives(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+			return ec.childFields___Schema(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7599,28 +7088,22 @@ func (ec *executionContext) _ScannerResult_finished(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ScannerResult_finished,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerResult_finished(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Finished, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ScannerResult_finished(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ScannerResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ScannerResult", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ScannerResult_success(ctx context.Context, field graphql.CollectedField, obj *models.ScannerResult) (ret graphql.Marshaler) {
@@ -7628,28 +7111,22 @@ func (ec *executionContext) _ScannerResult_success(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ScannerResult_success,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerResult_success(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Success, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ScannerResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ScannerResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ScannerResult", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ScannerResult_progress(ctx context.Context, field graphql.CollectedField, obj *models.ScannerResult) (ret graphql.Marshaler) {
@@ -7657,28 +7134,22 @@ func (ec *executionContext) _ScannerResult_progress(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ScannerResult_progress,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerResult_progress(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Progress, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ScannerResult_progress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ScannerResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ScannerResult", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _ScannerResult_message(ctx context.Context, field graphql.CollectedField, obj *models.ScannerResult) (ret graphql.Marshaler) {
@@ -7686,28 +7157,22 @@ func (ec *executionContext) _ScannerResult_message(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ScannerResult_message,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerResult_message(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Message, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ScannerResult_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ScannerResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ScannerResult", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _SearchResult_query(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
@@ -7715,28 +7180,22 @@ func (ec *executionContext) _SearchResult_query(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SearchResult_query,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SearchResult_query(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Query, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SearchResult_query(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SearchResult", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _SearchResult_albums(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
@@ -7744,17 +7203,20 @@ func (ec *executionContext) _SearchResult_albums(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SearchResult_albums,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SearchResult_albums(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Albums, nil
 		},
 		nil,
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SearchResult_albums(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SearchResult",
@@ -7762,29 +7224,7 @@ func (ec *executionContext) fieldContext_SearchResult_albums(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7795,17 +7235,20 @@ func (ec *executionContext) _SearchResult_media(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SearchResult_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SearchResult_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Media, nil
 		},
 		nil,
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SearchResult_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SearchResult",
@@ -7813,41 +7256,7 @@ func (ec *executionContext) fieldContext_SearchResult_media(_ context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7858,28 +7267,22 @@ func (ec *executionContext) _ShareToken_id(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ShareToken",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ShareToken", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _ShareToken_token(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -7887,28 +7290,22 @@ func (ec *executionContext) _ShareToken_token(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_token,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_token(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Token(), nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ShareToken",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ShareToken", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ShareToken_owner(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -7916,17 +7313,20 @@ func (ec *executionContext) _ShareToken_owner(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_owner,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_owner(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Owner, nil
 		},
 		nil,
-		ec.marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v models.User) graphql.Marshaler {
+			return ec.marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ShareToken",
@@ -7934,19 +7334,7 @@ func (ec *executionContext) fieldContext_ShareToken_owner(_ context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "albums":
-				return ec.fieldContext_User_albums(ctx, field)
-			case "rootAlbums":
-				return ec.fieldContext_User_rootAlbums(ctx, field)
-			case "admin":
-				return ec.fieldContext_User_admin(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7957,28 +7345,22 @@ func (ec *executionContext) _ShareToken_expire(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_expire,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_expire(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Expire, nil
 		},
 		nil,
-		ec.marshalOTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalOTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_expire(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ShareToken",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ShareToken", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
 func (ec *executionContext) _ShareToken_hasPassword(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -7986,28 +7368,22 @@ func (ec *executionContext) _ShareToken_hasPassword(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_hasPassword,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_hasPassword(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ShareToken().HasPassword(ctx, obj)
+			return ec.Resolvers.ShareToken().HasPassword(ctx, obj)
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_hasPassword(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ShareToken",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ShareToken", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
@@ -8015,17 +7391,20 @@ func (ec *executionContext) _ShareToken_album(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_album,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_album(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Album, nil
 		},
 		nil,
-		ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalOAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_album(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ShareToken",
@@ -8033,29 +7412,7 @@ func (ec *executionContext) fieldContext_ShareToken_album(_ context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8066,17 +7423,20 @@ func (ec *executionContext) _ShareToken_media(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ShareToken_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareToken_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Media, nil
 		},
 		nil,
-		ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalOMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ShareToken_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ShareToken",
@@ -8084,41 +7444,7 @@ func (ec *executionContext) fieldContext_ShareToken_media(_ context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8129,28 +7455,22 @@ func (ec *executionContext) _SiteInfo_initialSetup(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SiteInfo_initialSetup,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SiteInfo_initialSetup(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.InitialSetup, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SiteInfo_initialSetup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiteInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SiteInfo", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _SiteInfo_faceDetectionEnabled(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
@@ -8158,28 +7478,22 @@ func (ec *executionContext) _SiteInfo_faceDetectionEnabled(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SiteInfo_faceDetectionEnabled,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SiteInfo_faceDetectionEnabled(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.SiteInfo().FaceDetectionEnabled(ctx, obj)
+			return ec.Resolvers.SiteInfo().FaceDetectionEnabled(ctx, obj)
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SiteInfo_faceDetectionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiteInfo",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SiteInfo", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
@@ -8187,7 +7501,9 @@ func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SiteInfo_periodicScanInterval,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SiteInfo_periodicScanInterval(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PeriodicScanInterval, nil
 		},
@@ -8195,33 +7511,25 @@ func (ec *executionContext) _SiteInfo_periodicScanInterval(ctx context.Context, 
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SiteInfo_periodicScanInterval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiteInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SiteInfo", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
@@ -8229,7 +7537,9 @@ func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SiteInfo_concurrentWorkers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SiteInfo_concurrentWorkers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ConcurrentWorkers, nil
 		},
@@ -8237,33 +7547,25 @@ func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, fie
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal int
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SiteInfo_concurrentWorkers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SiteInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SiteInfo", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Subscription_notification(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
@@ -8271,17 +7573,20 @@ func (ec *executionContext) _Subscription_notification(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_notification,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_notification(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().Notification(ctx)
+			return ec.Resolvers.Subscription().Notification(ctx)
 		},
 		nil,
-		ec.marshalNNotification2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Notification) graphql.Marshaler {
+			return ec.marshalNNotification2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotification(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_notification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
@@ -8289,25 +7594,7 @@ func (ec *executionContext) fieldContext_Subscription_notification(_ context.Con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "key":
-				return ec.fieldContext_Notification_key(ctx, field)
-			case "type":
-				return ec.fieldContext_Notification_type(ctx, field)
-			case "header":
-				return ec.fieldContext_Notification_header(ctx, field)
-			case "content":
-				return ec.fieldContext_Notification_content(ctx, field)
-			case "progress":
-				return ec.fieldContext_Notification_progress(ctx, field)
-			case "positive":
-				return ec.fieldContext_Notification_positive(ctx, field)
-			case "negative":
-				return ec.fieldContext_Notification_negative(ctx, field)
-			case "timeout":
-				return ec.fieldContext_Notification_timeout(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
+			return ec.childFields_Notification(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8318,17 +7605,20 @@ func (ec *executionContext) _TimelineGroup_album(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_TimelineGroup_album,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimelineGroup_album(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Album, nil
 		},
 		nil,
-		ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_TimelineGroup_album(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TimelineGroup",
@@ -8336,29 +7626,7 @@ func (ec *executionContext) fieldContext_TimelineGroup_album(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8369,17 +7637,20 @@ func (ec *executionContext) _TimelineGroup_media(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_TimelineGroup_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimelineGroup_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Media, nil
 		},
 		nil,
-		ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_TimelineGroup_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TimelineGroup",
@@ -8387,41 +7658,7 @@ func (ec *executionContext) fieldContext_TimelineGroup_media(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8432,28 +7669,22 @@ func (ec *executionContext) _TimelineGroup_mediaTotal(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_TimelineGroup_mediaTotal,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimelineGroup_mediaTotal(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MediaTotal, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_TimelineGroup_mediaTotal(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TimelineGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("TimelineGroup", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _TimelineGroup_date(ctx context.Context, field graphql.CollectedField, obj *models.TimelineGroup) (ret graphql.Marshaler) {
@@ -8461,28 +7692,22 @@ func (ec *executionContext) _TimelineGroup_date(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_TimelineGroup_date,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimelineGroup_date(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Date, nil
 		},
 		nil,
-		ec.marshalNTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_TimelineGroup_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TimelineGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("TimelineGroup", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -8490,28 +7715,22 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -8519,28 +7738,22 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_username,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_username(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Username, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_username(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _User_albums(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -8548,30 +7761,33 @@ func (ec *executionContext) _User_albums(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_albums,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_albums(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().Albums(ctx, obj)
+			return ec.Resolvers.User().Albums(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_albums(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
@@ -8579,29 +7795,7 @@ func (ec *executionContext) fieldContext_User_albums(_ context.Context, field gr
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8612,30 +7806,33 @@ func (ec *executionContext) _User_rootAlbums(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_rootAlbums,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_rootAlbums(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().RootAlbums(ctx, obj)
+			return ec.Resolvers.User().RootAlbums(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.IsAdmin == nil {
+				if ec.Directives.IsAdmin == nil {
 					var zeroVal []*models.Album
 					return zeroVal, errors.New("directive isAdmin is not implemented")
 				}
-				return ec.directives.IsAdmin(ctx, obj, directive0)
+				return ec.Directives.IsAdmin(ctx, obj, directive0)
 			}
 
 			next = directive1
 			return next
 		},
-		ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_rootAlbums(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
@@ -8643,29 +7840,7 @@ func (ec *executionContext) fieldContext_User_rootAlbums(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Album_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Album_title(ctx, field)
-			case "media":
-				return ec.fieldContext_Album_media(ctx, field)
-			case "subAlbums":
-				return ec.fieldContext_Album_subAlbums(ctx, field)
-			case "parentAlbum":
-				return ec.fieldContext_Album_parentAlbum(ctx, field)
-			case "owner":
-				return ec.fieldContext_Album_owner(ctx, field)
-			case "filePath":
-				return ec.fieldContext_Album_filePath(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Album_thumbnail(ctx, field)
-			case "path":
-				return ec.fieldContext_Album_path(ctx, field)
-			case "shares":
-				return ec.fieldContext_Album_shares(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+			return ec.childFields_Album(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8676,28 +7851,22 @@ func (ec *executionContext) _User_admin(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_admin,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_admin(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Admin, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_admin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _UserPreferences_id(ctx context.Context, field graphql.CollectedField, obj *models.UserPreferences) (ret graphql.Marshaler) {
@@ -8705,28 +7874,22 @@ func (ec *executionContext) _UserPreferences_id(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserPreferences_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_UserPreferences_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserPreferences",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _UserPreferences_language(ctx context.Context, field graphql.CollectedField, obj *models.UserPreferences) (ret graphql.Marshaler) {
@@ -8734,28 +7897,22 @@ func (ec *executionContext) _UserPreferences_language(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserPreferences_language,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_language(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Language, nil
 		},
 		nil,
-		ec.marshalOLanguageTranslation2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐLanguageTranslation,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.LanguageTranslation) graphql.Marshaler {
+			return ec.marshalOLanguageTranslation2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐLanguageTranslation(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UserPreferences_language(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserPreferences",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type LanguageTranslation does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type LanguageTranslation does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8763,28 +7920,22 @@ func (ec *executionContext) _VideoMetadata_id(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8792,17 +7943,20 @@ func (ec *executionContext) _VideoMetadata_media(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_media,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_media(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Media(), nil
 		},
 		nil,
-		ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_media(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VideoMetadata",
@@ -8810,41 +7964,7 @@ func (ec *executionContext) fieldContext_VideoMetadata_media(_ context.Context, 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Media_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Media_title(ctx, field)
-			case "path":
-				return ec.fieldContext_Media_path(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Media_thumbnail(ctx, field)
-			case "highRes":
-				return ec.fieldContext_Media_highRes(ctx, field)
-			case "videoWeb":
-				return ec.fieldContext_Media_videoWeb(ctx, field)
-			case "album":
-				return ec.fieldContext_Media_album(ctx, field)
-			case "exif":
-				return ec.fieldContext_Media_exif(ctx, field)
-			case "videoMetadata":
-				return ec.fieldContext_Media_videoMetadata(ctx, field)
-			case "favorite":
-				return ec.fieldContext_Media_favorite(ctx, field)
-			case "type":
-				return ec.fieldContext_Media_type(ctx, field)
-			case "date":
-				return ec.fieldContext_Media_date(ctx, field)
-			case "blurhash":
-				return ec.fieldContext_Media_blurhash(ctx, field)
-			case "shares":
-				return ec.fieldContext_Media_shares(ctx, field)
-			case "downloads":
-				return ec.fieldContext_Media_downloads(ctx, field)
-			case "faces":
-				return ec.fieldContext_Media_faces(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
+			return ec.childFields_Media(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8855,28 +7975,22 @@ func (ec *executionContext) _VideoMetadata_width(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_width,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_width(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Width, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_width(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_height(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8884,28 +7998,22 @@ func (ec *executionContext) _VideoMetadata_height(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_height,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_height(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Height, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_height(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_duration(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8913,28 +8021,22 @@ func (ec *executionContext) _VideoMetadata_duration(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_duration,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_duration(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Duration, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_duration(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_codec(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8942,28 +8044,22 @@ func (ec *executionContext) _VideoMetadata_codec(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_codec,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_codec(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Codec, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_codec(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_framerate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -8971,28 +8067,22 @@ func (ec *executionContext) _VideoMetadata_framerate(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_framerate,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_framerate(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Framerate, nil
 		},
 		nil,
-		ec.marshalOFloat2ᚖfloat64,
+		func(ctx context.Context, selections ast.SelectionSet, v *float64) graphql.Marshaler {
+			return ec.marshalOFloat2ᚖfloat64(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_framerate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -9000,28 +8090,22 @@ func (ec *executionContext) _VideoMetadata_bitrate(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_bitrate,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_bitrate(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Bitrate, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_bitrate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_colorProfile(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -9029,28 +8113,22 @@ func (ec *executionContext) _VideoMetadata_colorProfile(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_colorProfile,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_colorProfile(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ColorProfile, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_colorProfile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _VideoMetadata_audio(ctx context.Context, field graphql.CollectedField, obj *models.VideoMetadata) (ret graphql.Marshaler) {
@@ -9058,28 +8136,22 @@ func (ec *executionContext) _VideoMetadata_audio(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_VideoMetadata_audio,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VideoMetadata_audio(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Audio, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_VideoMetadata_audio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VideoMetadata",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("VideoMetadata", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9087,28 +8159,22 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9116,28 +8182,22 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9145,28 +8205,22 @@ func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_isRepeatable,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_isRepeatable(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsRepeatable, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_locations(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9174,28 +8228,22 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_locations,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_locations(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Locations, nil
 		},
 		nil,
-		ec.marshalN__DirectiveLocation2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type __DirectiveLocation does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type __DirectiveLocation does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -9203,17 +8251,20 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_args,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_args(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Args, nil
 		},
 		nil,
-		ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
@@ -9221,21 +8272,7 @@ func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -9257,28 +8294,22 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -9286,28 +8317,22 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -9315,28 +8340,22 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -9344,28 +8363,22 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -9373,28 +8386,22 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -9402,28 +8409,22 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -9431,17 +8432,20 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_args,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_args(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Args, nil
 		},
 		nil,
-		ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
@@ -9449,21 +8453,7 @@ func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -9485,17 +8475,20 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
@@ -9503,31 +8496,7 @@ func (ec *executionContext) fieldContext___Field_type(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9538,28 +8507,22 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -9567,28 +8530,22 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -9596,28 +8553,22 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -9625,28 +8576,22 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -9654,17 +8599,20 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
@@ -9672,31 +8620,7 @@ func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9707,28 +8631,22 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_defaultValue,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_defaultValue(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DefaultValue, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_defaultValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -9736,28 +8654,22 @@ func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -9765,28 +8677,22 @@ func (ec *executionContext) ___InputValue_deprecationReason(ctx context.Context,
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Schema_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -9794,28 +8700,22 @@ func (ec *executionContext) ___Schema_description(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Schema",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Schema", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -9823,17 +8723,20 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_types,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_types(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Types(), nil
 		},
 		nil,
-		ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -9841,31 +8744,7 @@ func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9876,17 +8755,20 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_queryType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_queryType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.QueryType(), nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -9894,31 +8776,7 @@ func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9929,17 +8787,20 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_mutationType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_mutationType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MutationType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -9947,31 +8808,7 @@ func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9982,17 +8819,20 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_subscriptionType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_subscriptionType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.SubscriptionType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -10000,31 +8840,7 @@ func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Con
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10035,17 +8851,20 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_directives,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_directives(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Directives(), nil
 		},
 		nil,
-		ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
+			return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -10053,19 +8872,7 @@ func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___Directive_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Directive_description(ctx, field)
-			case "isRepeatable":
-				return ec.fieldContext___Directive_isRepeatable(ctx, field)
-			case "locations":
-				return ec.fieldContext___Directive_locations(ctx, field)
-			case "args":
-				return ec.fieldContext___Directive_args(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Directive", field.Name)
+			return ec.childFields___Directive(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10076,28 +8883,22 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_kind,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_kind(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Kind(), nil
 		},
 		nil,
-		ec.marshalN__TypeKind2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalN__TypeKind2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type __TypeKind does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type __TypeKind does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -10105,28 +8906,22 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -10134,28 +8929,22 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -10163,28 +8952,22 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_specifiedByURL,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_specifiedByURL(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.SpecifiedByURL(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -10192,18 +8975,21 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_fields,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_fields(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.Fields(fc.Args["includeDeprecated"].(bool)), nil
 		},
 		nil,
-		ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
+			return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10211,21 +8997,7 @@ func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___Field_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Field_description(ctx, field)
-			case "args":
-				return ec.fieldContext___Field_args(ctx, field)
-			case "type":
-				return ec.fieldContext___Field_type(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___Field_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___Field_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Field", field.Name)
+			return ec.childFields___Field(ctx, field)
 		},
 	}
 	defer func() {
@@ -10247,17 +9019,20 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_interfaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_interfaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Interfaces(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10265,31 +9040,7 @@ func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, fi
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10300,17 +9051,20 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_possibleTypes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_possibleTypes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PossibleTypes(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10318,31 +9072,7 @@ func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context,
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10353,18 +9083,21 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_enumValues,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_enumValues(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.EnumValues(fc.Args["includeDeprecated"].(bool)), nil
 		},
 		nil,
-		ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
+			return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10372,17 +9105,7 @@ func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___EnumValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___EnumValue_description(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __EnumValue", field.Name)
+			return ec.childFields___EnumValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -10404,17 +9127,20 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_inputFields,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_inputFields(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.InputFields(), nil
 		},
 		nil,
-		ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10422,21 +9148,7 @@ func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10447,17 +9159,20 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_ofType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_ofType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.OfType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -10465,31 +9180,7 @@ func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10500,28 +9191,22 @@ func (ec *executionContext) ___Type_isOneOf(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_isOneOf,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_isOneOf(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsOneOf(), nil
 		},
 		nil,
-		ec.marshalOBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalOBoolean2bool(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 // endregion **************************** field.gotpl *****************************
@@ -10530,6 +9215,10 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj any) (models.Ordering, error) {
 	var it models.Ordering
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10558,12 +9247,15 @@ func (ec *executionContext) unmarshalInputOrdering(ctx context.Context, obj any)
 			it.OrderDirection = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj any) (models.Pagination, error) {
 	var it models.Pagination
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10592,12 +9284,15 @@ func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj an
 			it.Offset = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputShareTokenCredentials(ctx context.Context, obj any) (models.ShareTokenCredentials, error) {
 	var it models.ShareTokenCredentials
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -10626,7 +9321,6 @@ func (ec *executionContext) unmarshalInputShareTokenCredentials(ctx context.Cont
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -10733,6 +9427,9 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "parentAlbum":
 			out.Values[i] = ec._Album_parentAlbum(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "owner":
 			field := field
 
@@ -10777,13 +9474,16 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		case "thumbnail":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Album_thumbnail(ctx, field, obj)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -10888,10 +9588,10 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -10925,6 +9625,9 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 			}
 		case "token":
 			out.Values[i] = ec._AuthorizeResult_token(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10934,10 +9637,10 @@ func (ec *executionContext) _AuthorizeResult(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -10978,10 +9681,10 @@ func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11010,6 +9713,9 @@ func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet
 			}
 		case "label":
 			out.Values[i] = ec._FaceGroup_label(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "imageFaces":
 			field := field
 
@@ -11091,10 +9797,10 @@ func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11145,10 +9851,10 @@ func (ec *executionContext) _FaceRectangle(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11261,10 +9967,10 @@ func (ec *executionContext) _ImageFace(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11304,13 +10010,16 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "thumbnail":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Media_thumbnail(ctx, field, obj)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -11337,13 +10046,16 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "highRes":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Media_highRes(ctx, field, obj)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -11370,13 +10082,16 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "videoWeb":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Media_videoWeb(ctx, field, obj)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -11439,13 +10154,16 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		case "exif":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Media_exif(ctx, field, obj)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -11471,6 +10189,9 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "videoMetadata":
 			out.Values[i] = ec._Media_videoMetadata(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "favorite":
 			field := field
 
@@ -11550,6 +10271,9 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "blurhash":
 			out.Values[i] = ec._Media_blurhash(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "shares":
 			field := field
 
@@ -11667,10 +10391,10 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11711,10 +10435,10 @@ func (ec *executionContext) _MediaDownload(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11748,28 +10472,64 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 			}
 		case "description":
 			out.Values[i] = ec._MediaEXIF_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "camera":
 			out.Values[i] = ec._MediaEXIF_camera(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "maker":
 			out.Values[i] = ec._MediaEXIF_maker(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "lens":
 			out.Values[i] = ec._MediaEXIF_lens(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "dateShot":
 			out.Values[i] = ec._MediaEXIF_dateShot(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "exposure":
 			out.Values[i] = ec._MediaEXIF_exposure(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "aperture":
 			out.Values[i] = ec._MediaEXIF_aperture(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "iso":
 			out.Values[i] = ec._MediaEXIF_iso(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "focalLength":
 			out.Values[i] = ec._MediaEXIF_focalLength(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "flash":
 			out.Values[i] = ec._MediaEXIF_flash(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "exposureProgram":
 			out.Values[i] = ec._MediaEXIF_exposureProgram(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "coordinates":
 			out.Values[i] = ec._MediaEXIF_coordinates(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11779,10 +10539,10 @@ func (ec *executionContext) _MediaEXIF(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11833,10 +10593,10 @@ func (ec *executionContext) _MediaURL(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -11996,6 +10756,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_initialSetupWizard(ctx, field)
 			})
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "updateUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUser(ctx, field)
@@ -12021,10 +10784,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_userAddRootPath(ctx, field)
 			})
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "userRemoveRootAlbum":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_userRemoveRootAlbum(ctx, field)
 			})
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "changeUserPreferences":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_changeUserPreferences(ctx, field)
@@ -12041,10 +10810,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12088,6 +10857,9 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 			}
 		case "progress":
 			out.Values[i] = ec._Notification_progress(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "positive":
 			out.Values[i] = ec._Notification_positive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12100,6 +10872,9 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 			}
 		case "timeout":
 			out.Values[i] = ec._Notification_timeout(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12109,10 +10884,10 @@ func (ec *executionContext) _Notification(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12321,13 +11096,16 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		case "mapboxToken":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Query_mapboxToken(ctx, field)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -12517,10 +11295,16 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
 			})
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "__schema":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12530,10 +11314,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12567,8 +11351,14 @@ func (ec *executionContext) _ScannerResult(ctx context.Context, sel ast.Selectio
 			}
 		case "progress":
 			out.Values[i] = ec._ScannerResult_progress(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "message":
 			out.Values[i] = ec._ScannerResult_message(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12578,10 +11368,10 @@ func (ec *executionContext) _ScannerResult(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12627,10 +11417,10 @@ func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12669,6 +11459,9 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 			}
 		case "expire":
 			out.Values[i] = ec._ShareToken_expire(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "hasPassword":
 			field := field
 
@@ -12707,8 +11500,14 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "album":
 			out.Values[i] = ec._ShareToken_album(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "media":
 			out.Values[i] = ec._ShareToken_media(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12718,10 +11517,10 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12803,10 +11602,10 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12877,10 +11676,10 @@ func (ec *executionContext) _TimelineGroup(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -12998,10 +11797,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13030,6 +11829,9 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 			}
 		case "language":
 			out.Values[i] = ec._UserPreferences_language(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13039,10 +11841,10 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13091,14 +11893,29 @@ func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.Selectio
 			}
 		case "codec":
 			out.Values[i] = ec._VideoMetadata_codec(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "framerate":
 			out.Values[i] = ec._VideoMetadata_framerate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "bitrate":
 			out.Values[i] = ec._VideoMetadata_bitrate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "colorProfile":
 			out.Values[i] = ec._VideoMetadata_colorProfile(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "audio":
 			out.Values[i] = ec._VideoMetadata_audio(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13108,10 +11925,10 @@ func (ec *executionContext) _VideoMetadata(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13140,6 +11957,9 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 			}
 		case "description":
 			out.Values[i] = ec.___Directive_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "isRepeatable":
 			out.Values[i] = ec.___Directive_isRepeatable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13164,10 +11984,10 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13196,6 +12016,9 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 			}
 		case "description":
 			out.Values[i] = ec.___EnumValue_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "isDeprecated":
 			out.Values[i] = ec.___EnumValue_isDeprecated(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13203,6 +12026,9 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 			}
 		case "deprecationReason":
 			out.Values[i] = ec.___EnumValue_deprecationReason(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13212,10 +12038,10 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13244,6 +12070,9 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "description":
 			out.Values[i] = ec.___Field_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "args":
 			out.Values[i] = ec.___Field_args(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13261,6 +12090,9 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "deprecationReason":
 			out.Values[i] = ec.___Field_deprecationReason(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13270,10 +12102,10 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13302,6 +12134,9 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 			}
 		case "description":
 			out.Values[i] = ec.___InputValue_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "type":
 			out.Values[i] = ec.___InputValue_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13309,6 +12144,9 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 			}
 		case "defaultValue":
 			out.Values[i] = ec.___InputValue_defaultValue(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "isDeprecated":
 			out.Values[i] = ec.___InputValue_isDeprecated(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13316,6 +12154,9 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 			}
 		case "deprecationReason":
 			out.Values[i] = ec.___InputValue_deprecationReason(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13325,10 +12166,10 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13352,6 +12193,9 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("__Schema")
 		case "description":
 			out.Values[i] = ec.___Schema_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "types":
 			out.Values[i] = ec.___Schema_types(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13364,8 +12208,14 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "mutationType":
 			out.Values[i] = ec.___Schema_mutationType(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "subscriptionType":
 			out.Values[i] = ec.___Schema_subscriptionType(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "directives":
 			out.Values[i] = ec.___Schema_directives(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13380,10 +12230,10 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13412,24 +12262,54 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "name":
 			out.Values[i] = ec.___Type_name(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "description":
 			out.Values[i] = ec.___Type_description(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "specifiedByURL":
 			out.Values[i] = ec.___Type_specifiedByURL(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "fields":
 			out.Values[i] = ec.___Type_fields(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "interfaces":
 			out.Values[i] = ec.___Type_interfaces(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "possibleTypes":
 			out.Values[i] = ec.___Type_possibleTypes(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "enumValues":
 			out.Values[i] = ec.___Type_enumValues(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "inputFields":
 			out.Values[i] = ec.___Type_inputFields(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "ofType":
 			out.Values[i] = ec.___Type_ofType(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		case "isOneOf":
 			out.Values[i] = ec.___Type_isOneOf(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13439,10 +12319,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13462,39 +12342,11 @@ func (ec *executionContext) marshalNAlbum2githubᚗcomᚋphotoviewᚋphotoview�
 }
 
 func (ec *executionContext) marshalNAlbum2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbumᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Album) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13572,39 +12424,11 @@ func (ec *executionContext) marshalNFaceGroup2githubᚗcomᚋphotoviewᚋphotovi
 }
 
 func (ec *executionContext) marshalNFaceGroup2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.FaceGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFaceGroup2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13692,39 +12516,11 @@ func (ec *executionContext) marshalNID2ᚕintᚄ(ctx context.Context, sel ast.Se
 }
 
 func (ec *executionContext) marshalNImageFace2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ImageFace) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNImageFace2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNImageFace2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐImageFace(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13782,39 +12578,11 @@ func (ec *executionContext) marshalNMedia2githubᚗcomᚋphotoviewᚋphotoview�
 }
 
 func (ec *executionContext) marshalNMedia2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Media) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13836,39 +12604,11 @@ func (ec *executionContext) marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotovie
 }
 
 func (ec *executionContext) marshalNMediaDownload2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.MediaDownload) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMediaDownload2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMediaDownload(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -13973,39 +12713,11 @@ func (ec *executionContext) marshalNShareToken2githubᚗcomᚋphotoviewᚋphotov
 }
 
 func (ec *executionContext) marshalNShareToken2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ShareToken) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNShareToken2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐShareToken(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14082,39 +12794,11 @@ func (ec *executionContext) marshalNUser2githubᚗcomᚋphotoviewᚋphotoviewᚋ
 }
 
 func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.User) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUser2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐUser(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14154,39 +12838,11 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 }
 
 func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14229,39 +12885,11 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14285,39 +12913,11 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 }
 
 func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14333,39 +12933,11 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 }
 
 func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14630,39 +13202,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14677,39 +13221,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14724,39 +13240,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -14778,39 +13266,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {

@@ -7,7 +7,7 @@ on:
     branches: [master]
   schedule:
     # At 23:18 every Wednesday, 2 hours before `photoview`. Details in https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
-    - cron: "18 23 * * 3"
+    - cron: '18 23 * * 3'
 
 env:
   IS_PUSHING_IMAGES: ${{ github.event_name != 'pull_request' && github.repository == 'photoview/photoview' }}
@@ -23,26 +23,26 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: ${{ env.PLATFORMS }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker Login
         if: ${{ env.IS_PUSHING_IMAGES == 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           # list of Docker images to use as base name for tags
           images: ${{ env.DOCKER_IMAGE }}
@@ -54,31 +54,14 @@ jobs:
       - name: Detect dependency versions
         id: versions
         working-directory: dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USER_AGENT: photoview-deps-ci
         shell: bash
-        run: |
-          set -euo pipefail
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          # Fetch latest version tags from GitHub releases
-          LIBRAW_VERSION=$(curl "${CURL_FLAGS[@]}" \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/LibRaw/LibRaw/releases/latest" | jq -er '.tag_name')
-          LIBHEIF_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/strukturag/libheif/releases/latest" | jq -r '.tag_name')
-          IMAGEMAGICK_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" | jq -r '.tag_name')
-          JELLYFIN_FFMPEG_VERSION=$(curl -fsSL --retry 2 --retry-delay 5 --retry-max-time 60 \
-            ${GITHUB_TOKEN:+-H "Authorization: Bearer ${GITHUB_TOKEN}"} \
-            "https://api.github.com/repos/jellyfin/jellyfin-ffmpeg/releases/latest" | jq -r '.tag_name')
-          # Output as environment variables
-          echo "LIBRAW_VERSION=${LIBRAW_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "LIBHEIF_VERSION=${LIBHEIF_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION}" | tee -a $GITHUB_OUTPUT
-          echo "JELLYFIN_FFMPEG_VERSION=${JELLYFIN_FFMPEG_VERSION}" | tee -a $GITHUB_OUTPUT
+        run: ./versions.sh | tee -a "$GITHUB_OUTPUT"
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context:     ./dependencies
           platforms:   ${{ env.PLATFORMS }}
@@ -96,6 +79,5 @@ jobs:
             github_token=${{ secrets.GITHUB_TOKEN }}
           build-args: |
             LIBRAW_VERSION=${{ steps.versions.outputs.LIBRAW_VERSION }}
-            LIBHEIF_VERSION=${{ steps.versions.outputs.LIBHEIF_VERSION }}
             IMAGEMAGICK_VERSION=${{ steps.versions.outputs.IMAGEMAGICK_VERSION }}
             JELLYFIN_FFMPEG_VERSION=${{ steps.versions.outputs.JELLYFIN_FFMPEG_VERSION }}

@@ -37,6 +37,7 @@ const languagePreferences = [
   { key: 14, label: 'Türkçe', value: LanguageTranslation.Turkish },
   { key: 15, label: 'Українська', value: LanguageTranslation.Ukrainian },
   { key: 17, label: '日本語', value: LanguageTranslation.Japanese },
+  { key: 18, label: 'Nederlands', value: LanguageTranslation.Dutch },
 ]
 
 const themePreferences = (t: TranslationFn) => [

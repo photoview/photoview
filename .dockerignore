@@ -19,8 +19,12 @@ screenshots
 storage
 photoview.db*
 
+# testing
 ui/node_modules/
 ui/build/
 ui/.cache/
-
+ui/coverage*
+api/coverage*
+api/test-*-report.xml
 api/photo_cache
+api/*.cov

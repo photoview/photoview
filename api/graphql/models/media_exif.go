@@ -44,16 +44,16 @@ func (exif *MediaEXIF) Coordinates() *Coordinates {
 }
 
 const rfc3339WithoutTimezone = "2006-01-02T15:04:05.999"
-const rfc3339WithTimezone = "2006-01-02T15:04:05.999-07:00"
 
 func (exif *MediaEXIF) DateShotWithOffset() *string {
 	if exif.DateShot == nil {
 		return nil
 	}
+	dateShot := exif.DateShot.UTC()
+	dateNoTimezone := dateShot.Format(rfc3339WithoutTimezone)
 
 	if exif.OffsetSecShot == nil {
-		ret := exif.DateShot.Format(rfc3339WithoutTimezone)
-		return &ret
+		return &dateNoTimezone
 	}
 
 	offsetAbs := *exif.OffsetSecShot
@@ -64,9 +64,7 @@ func (exif *MediaEXIF) DateShotWithOffset() *string {
 	}
 	hour := offsetAbs / 60 / 60
 	minute := offsetAbs / 60 % 60
-	zone := fmt.Sprintf("%s%02d:%02d", sign, hour, minute)
+	date := fmt.Sprintf("%s%s%02d:%02d", dateNoTimezone, sign, hour, minute)
 
-	loc := time.FixedZone(zone, *exif.OffsetSecShot)
-	ret := exif.DateShot.In(loc).Format(rfc3339WithTimezone)
-	return &ret
+	return &date
 }
