@@ -46,7 +46,6 @@ func CORSMiddleware(devMode bool) mux.MiddlewareFunc {
 // If a match is found, it sets the appropriate CORS headers on the response and returns the matched origin string.
 // If no match is found, it returns an empty string.
 func setAllowedCORSOrigin(allowed []*url.URL, req *http.Request, w http.ResponseWriter) string {
-	var matchedOrigin string
 	if len(allowed) == 0 {
 		return ""
 	}
@@ -57,7 +56,7 @@ func setAllowedCORSOrigin(allowed []*url.URL, req *http.Request, w http.Response
 	}
 
 	// Check if request origin matches any allowed endpoint
-	matchedOrigin = findMatchingOrigin(requestOrigin, allowed)
+	matchedOrigin := findMatchingOrigin(requestOrigin, allowed)
 	if matchedOrigin == "" {
 		return ""
 	}
