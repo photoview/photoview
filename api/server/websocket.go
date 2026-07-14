@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	coderws "github.com/coder/websocket"
@@ -42,33 +43,40 @@ func websocketCheckOrigin(devMode bool) func(r *http.Request) bool {
 	return func(r *http.Request) bool {
 		if devMode {
 			return true
-		} else {
-			uiEndpoint := utils.UiEndpointUrl()
-			if uiEndpoint == nil {
-				return true
-			}
-
-			if r.Header.Get("origin") == "" {
-				return true
-			}
-
-			originURL, err := url.Parse(r.Header.Get("origin"))
-			if err != nil {
-				log.Printf("Could not parse origin header of websocket request: %s", err)
-				return false
-			}
-
-			return isUIOnSameHost(uiEndpoint, originURL)
 		}
-	}
-}
 
-func isUIOnSameHost(uiEndpoint *url.URL, originURL *url.URL) bool {
-	if uiEndpoint.Host == originURL.Host {
-		return true
-	} else {
-		log.Printf("Not allowing websocket request from %s because it doesn't match PHOTOVIEW_UI_ENDPOINT %s",
-			originURL.Host, uiEndpoint.Host)
+		if utils.ShouldServeUI() {
+			return true
+		}
+
+		originHeader := r.Header.Get("Origin")
+		if originHeader == "" {
+			return true
+		}
+
+		originURL, err := url.Parse(originHeader)
+		if err != nil {
+			log.Printf("Could not parse origin header of websocket request: %s", err)
+			return false
+		}
+
+		uiEndpoints := utils.UiEndpointUrls()
+		for _, uiEndpoint := range uiEndpoints {
+			if uiEndpoint.Scheme+uiEndpoint.Host == strings.ToLower(originURL.Scheme+originURL.Host) {
+				return true
+			}
+		}
+
+		// Log rejection with sanitization
+		sanitizedOriginHost := strings.ReplaceAll(originURL.Host, "\n", "\\n")
+		sanitizedOriginHost = strings.ReplaceAll(sanitizedOriginHost, "\r", "\\r")
+		allowedHosts := make([]string, len(uiEndpoints))
+		for i, ep := range uiEndpoints {
+			allowedHosts[i] = ep.Host
+		}
+		log.Printf(
+			"Rejected websocket request from %s because it doesn't match allowed hosts in the PHOTOVIEW_UI_ENDPOINTS: %v",
+			sanitizedOriginHost, allowedHosts)
 		return false
 	}
 }

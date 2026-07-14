@@ -160,8 +160,8 @@ func setupGracefulShutdown(svr *http.Server) {
 }
 
 func logUIendpointURL() {
-	if uiEndpoint := utils.UiEndpointUrl(); uiEndpoint != nil {
-		log.Printf("Photoview UI public endpoint ready at %s\n", uiEndpoint.String())
+	if uiEndpoints := utils.UiEndpointUrls(); len(uiEndpoints) > 0 {
+		log.Printf("Photoview UI public endpoint(s) ready at: %q\n", uiEndpoints)
 	} else {
 		log.Println("Photoview UI public endpoint ready at /")
 	}
