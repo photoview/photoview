@@ -10,7 +10,7 @@ WORKDIR /app/ui
 
 COPY ui/package.json ui/package-lock.json /app/ui/
 # NPM 10.x is the latest supported version for Node.js 18.x
-RUN npm install --global npm@10 \
+RUN npm install --global npm@10 --no-audit --no-fund \
     && if [ "$NODE_ENV" = "production" ]; then \
         echo "Installing production dependencies only..."; \
         npm ci --omit=dev --no-audit --no-fund; \
@@ -122,7 +122,7 @@ RUN --mount=type=bind,from=dependencies,source=/dependencies/,target=/dependenci
     && cp -a lib/*.so* /usr/local/lib/ \
     && ldconfig \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
-      -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
+        -y --no-install-recommends ./deb/jellyfin-ffmpeg.deb \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/local/bin/ \
     && ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/local/bin/ \
     # Cleanup
@@ -137,7 +137,8 @@ COPY --from=ui /app/ui/dist /app/ui
 # This is a w/a for letting the UI build stage to be cached
 # and not rebuilt every new commit because of the build_arg value change.
 ARG COMMIT_SHA=NoCommit
-RUN find /app/ui/assets -type f -name "SettingsPage.*.js" \
+RUN find /app/ui/assets -type f \( -name "*.js" -o -name "*.mjs" \) \
+        -exec grep -qF -- '"-=<GitHub-CI-commit-sha-placeholder>=-"' {} \; \
         -exec sed -i 's/"-=<GitHub-CI-commit-sha-placeholder>=-"/"'"${COMMIT_SHA}"'"/g' {} \; \
     # Archive static files for better performance
     && find /app/ui -type f \( \
