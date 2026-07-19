@@ -2,7 +2,12 @@ import { vi, describe, test, expect } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing'
-import { SidebarAlbumShare, SET_EXPIRE_MUTATION, SHARE_ALBUM_QUERY } from './Sharing'
+import {
+  SidebarAlbumShare,
+  SET_EXPIRE_MUTATION,
+  SET_SHARE_NAME_MUTATION,
+  SHARE_ALBUM_QUERY,
+} from './Sharing'
 
 // =========================================================
 // Key modification: Mock this layer directly to bypass js-cookie.
@@ -30,14 +35,15 @@ const MOCK_TOKEN = 'token-abc'
 const mockShareNoExpire = {
   id: 'share-1',
   token: MOCK_TOKEN,
+  name: null,
   hasPassword: false,
   expire: null,
-  __typename: 'ShareToken'
+  __typename: 'ShareToken',
 }
 
 const mockShareWithExpire = {
   ...mockShareNoExpire,
-  expire: '2025-01-01T00:00:00Z'
+  expire: '2025-01-01T00:00:00Z',
 }
 
 const getSharesQueryMock = {
@@ -61,7 +67,7 @@ const setExpireMutationMock = {
     query: SET_EXPIRE_MUTATION,
     variables: {
       token: MOCK_TOKEN,
-      expire: expect.stringContaining('2026-10-01'),
+      expire: '2026-10-01T23:59:59Z',
     },
   },
   result: {
@@ -95,12 +101,17 @@ const clearExpireMutationMock = {
 describe('Sidebar Sharing Expiration', () => {
   test('User can open popover, enable expiration, set date, and save', async () => {
     render(
-      <MockedProvider mocks={[getSharesQueryMock, setExpireMutationMock]} addTypename={false}>
+      <MockedProvider
+        mocks={[getSharesQueryMock, setExpireMutationMock]}
+        addTypename={false}
+      >
         <SidebarAlbumShare id={MOCK_ALBUM_ID} />
       </MockedProvider>
     )
 
-    await waitFor(() => expect(screen.getByText(/Public Link/i)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/Public Link/i)).toBeInTheDocument()
+    )
 
     const moreBtn = screen.getByTitle('More')
     fireEvent.click(moreBtn)
@@ -123,16 +134,31 @@ describe('Sidebar Sharing Expiration', () => {
   })
 
   test('User can clear the expiration date by unchecking the box', async () => {
-    const mockWithExpireData = JSON.parse(JSON.stringify(getSharesQueryMock))
-    mockWithExpireData.result.data.album.shares = [mockShareWithExpire]
+    const mockWithExpireData = {
+      ...getSharesQueryMock,
+      result: {
+        data: {
+          album: {
+            id: MOCK_ALBUM_ID,
+            __typename: 'Album',
+            shares: [mockShareWithExpire],
+          },
+        },
+      },
+    }
 
     render(
-      <MockedProvider mocks={[mockWithExpireData, clearExpireMutationMock]} addTypename={false}>
+      <MockedProvider
+        mocks={[mockWithExpireData, clearExpireMutationMock]}
+        addTypename={false}
+      >
         <SidebarAlbumShare id={MOCK_ALBUM_ID} />
       </MockedProvider>
     )
 
-    await waitFor(() => expect(screen.getByText(/Public Link/i)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/Public Link/i)).toBeInTheDocument()
+    )
 
     fireEvent.click(screen.getByTitle('More'))
 
@@ -142,5 +168,72 @@ describe('Sidebar Sharing Expiration', () => {
     fireEvent.click(checkbox)
 
     await waitFor(() => expect(checkbox).not.toBeChecked())
+  })
+})
+
+describe('Sidebar Share Names', () => {
+  test('User can identify and rename a share link', async () => {
+    const namedShareQueryMock = {
+      ...getSharesQueryMock,
+      result: {
+        data: {
+          album: {
+            id: MOCK_ALBUM_ID,
+            __typename: 'Album',
+            shares: [{ ...mockShareNoExpire, name: 'Family' }],
+          },
+        },
+      },
+    }
+    const renamedShareQueryMock = {
+      ...namedShareQueryMock,
+      result: {
+        data: {
+          album: {
+            id: MOCK_ALBUM_ID,
+            __typename: 'Album',
+            shares: [{ ...mockShareNoExpire, name: 'Press gallery' }],
+          },
+        },
+      },
+    }
+    const renameResult = vi.fn(() => ({
+      data: {
+        setShareTokenName: {
+          token: MOCK_TOKEN,
+          name: 'Press gallery',
+          __typename: 'ShareToken',
+        },
+      },
+    }))
+    const renameMutationMock = {
+      request: {
+        query: SET_SHARE_NAME_MUTATION,
+        variables: {
+          token: MOCK_TOKEN,
+          name: 'Press gallery',
+        },
+      },
+      result: renameResult,
+    }
+
+    render(
+      <MockedProvider
+        mocks={[namedShareQueryMock, renameMutationMock, renamedShareQueryMock]}
+        addTypename={false}
+      >
+        <SidebarAlbumShare id={MOCK_ALBUM_ID} />
+      </MockedProvider>
+    )
+
+    expect(await screen.findByText('Family')).toBeInTheDocument()
+    fireEvent.click(screen.getByTitle('More'))
+
+    const nameInput = await screen.findByLabelText('Share name')
+    fireEvent.change(nameInput, { target: { value: ' Press gallery ' } })
+    fireEvent.keyUp(nameInput, { key: 'Enter' })
+
+    await waitFor(() => expect(renameResult).toHaveBeenCalledOnce())
+    expect(await screen.findByText('Press gallery')).toBeInTheDocument()
   })
 })

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,58 @@ import (
 
 func TestMain(m *testing.M) {
 	test_utils.IntegrationTestRun(m)
+}
+
+func TestShareTokenNameVisibility(t *testing.T) {
+	name := "Press gallery"
+	share := &models.ShareToken{
+		OwnerID: 42,
+		Name:    &name,
+	}
+	resolver := &shareTokenResolver{}
+
+	tests := []struct {
+		name string
+		user *models.User
+		want *string
+	}{
+		{
+			name: "anonymous",
+			user: nil,
+			want: nil,
+		},
+		{
+			name: "owner",
+			user: &models.User{Model: models.Model{ID: 42}},
+			want: &name,
+		},
+		{
+			name: "unrelated user",
+			user: &models.User{Model: models.Model{ID: 7}},
+			want: nil,
+		},
+		{
+			name: "administrator",
+			user: &models.User{
+				Model: models.Model{ID: 7},
+				Admin: true,
+			},
+			want: &name,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			if tt.user != nil {
+				ctx = auth.AddUserToContext(ctx, tt.user)
+			}
+
+			got, err := resolver.Name(ctx, share)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestShareTokenValidatePassword(t *testing.T) {

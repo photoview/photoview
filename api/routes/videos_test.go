@@ -186,7 +186,7 @@ func createTestResources(t *testing.T, db *gorm.DB, testID string) (
 	// Prepare share token for auth tests
 	tokenPassword := fmt.Sprintf("secret-password-%s", testID)
 	expiry := time.Now().Add(24 * time.Hour)
-	shareToken, err := actions.AddMediaShare(db, user, media.ID, &expiry, &tokenPassword)
+	shareToken, err := actions.AddMediaShare(db, user, media.ID, &expiry, &tokenPassword, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		db.Unscoped().Delete(shareToken)

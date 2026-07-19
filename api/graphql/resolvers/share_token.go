@@ -21,23 +21,23 @@ import (
 )
 
 // ShareAlbum is the resolver for the shareAlbum field.
-func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string, name *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.AddAlbumShare(r.DB(ctx), user, albumID, expire, password)
+	return actions.AddAlbumShare(r.DB(ctx), user, albumID, expire, password, name)
 }
 
 // ShareMedia is the resolver for the shareMedia field.
-func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string) (*models.ShareToken, error) {
+func (r *mutationResolver) ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string, name *string) (*models.ShareToken, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.AddMediaShare(r.DB(ctx), user, mediaID, expire, password)
+	return actions.AddMediaShare(r.DB(ctx), user, mediaID, expire, password, name)
 }
 
 // DeleteShareToken is the resolver for the deleteShareToken field.
@@ -68,6 +68,16 @@ func (r *mutationResolver) SetExpireShareToken(ctx context.Context, token string
 	}
 
 	return actions.SetExpireShareToken(r.DB(ctx), user.ID, token, expire)
+}
+
+// SetShareTokenName is the resolver for the setShareTokenName field.
+func (r *mutationResolver) SetShareTokenName(ctx context.Context, token string, name *string) (*models.ShareToken, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return actions.SetShareTokenName(r.DB(ctx), user.ID, token, name)
 }
 
 // ShareToken is the resolver for the shareToken field.
@@ -153,6 +163,16 @@ func (r *queryResolver) ShareTokenValidatePassword(ctx context.Context, credenti
 	}
 
 	return true, nil
+}
+
+// Name is the resolver for the name field.
+func (r *shareTokenResolver) Name(ctx context.Context, obj *models.ShareToken) (*string, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil || (!user.Admin && user.ID != obj.OwnerID) {
+		return nil, nil
+	}
+
+	return obj.Name, nil
 }
 
 // HasPassword is the resolver for the hasPassword field.

@@ -1,7 +1,9 @@
 package actions
 
 import (
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -12,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Time, password *string) (*models.ShareToken,
+func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Time, password *string, name *string) (*models.ShareToken,
 	error) {
 
 	var media models.Media
@@ -37,6 +39,11 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 		}
 	}
 
+	name, err = normalizeShareName(name)
+	if err != nil {
+		return nil, err
+	}
+
 	hashedPassword, err := hashSharePassword(password)
 	if err != nil {
 		return nil, err
@@ -44,6 +51,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 
 	shareToken := models.ShareToken{
 		Value:    utils.GenerateToken(),
+		Name:     name,
 		OwnerID:  user.ID,
 		Expire:   expire,
 		Password: hashedPassword,
@@ -58,7 +66,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 	return &shareToken, nil
 }
 
-func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string) (*models.ShareToken,
+func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string, name *string) (*models.ShareToken,
 	error) {
 
 	var count int64
@@ -76,6 +84,11 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 		return nil, auth.ErrUnauthorized
 	}
 
+	name, err = normalizeShareName(name)
+	if err != nil {
+		return nil, err
+	}
+
 	var hashedPassword *string = nil
 	if password != nil {
 		hashedPassBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 12)
@@ -88,6 +101,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 
 	shareToken := models.ShareToken{
 		Value:    utils.GenerateToken(),
+		Name:     name,
 		OwnerID:  user.ID,
 		Expire:   expire,
 		Password: hashedPassword,
@@ -148,6 +162,43 @@ func SetExpireShareToken(db *gorm.DB, userID int, tokenValue string, expire *tim
 	}
 
 	return token, nil
+}
+
+func SetShareTokenName(db *gorm.DB, userID int, tokenValue string, name *string) (*models.ShareToken, error) {
+	token, err := getUserToken(db, userID, tokenValue)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err = normalizeShareName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	token.Name = name
+
+	if err := db.Save(&token).Error; err != nil {
+		return nil, errors.Wrap(err, "failed to update name for share token")
+	}
+
+	return token, nil
+}
+
+func normalizeShareName(name *string) (*string, error) {
+	if name == nil {
+		return nil, nil
+	}
+
+	trimmedName := strings.TrimSpace(*name)
+	if trimmedName == "" {
+		return nil, nil
+	}
+
+	if utf8.RuneCountInString(trimmedName) > 100 {
+		return nil, errors.New("share token name cannot exceed 100 characters")
+	}
+
+	return &trimmedName, nil
 }
 
 func hashSharePassword(password *string) (*string, error) {

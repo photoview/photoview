@@ -8,6 +8,8 @@ input ShareTokenCredentials {
 type ShareToken {
   id: ID!
   token: String!
+  "Optional name visible to the owner or an administrator"
+  name: String
   "The user who created the token"
   owner: User!
   "Optional expire date"
@@ -31,10 +33,10 @@ extend type Query {
 
 extend type Mutation {
   "Generate share token for album"
-  shareAlbum(albumId: ID!, expire: Time, password: String): ShareToken! @isAuthorized
+  shareAlbum(albumId: ID!, expire: Time, password: String, name: String): ShareToken! @isAuthorized
 
   "Generate share token for media"
-  shareMedia(mediaId: ID!, expire: Time, password: String): ShareToken! @isAuthorized
+  shareMedia(mediaId: ID!, expire: Time, password: String, name: String): ShareToken! @isAuthorized
 
   "Delete a share token by it's token value"
   deleteShareToken(token: String!): ShareToken! @isAuthorized
@@ -44,4 +46,7 @@ extend type Mutation {
 
   "Set a Expiration Time for a token"
   setExpireShareToken(token: String!,expire: Time):ShareToken! @isAuthorized
+
+  "Set an optional name for a share token"
+  setShareTokenName(token: String!, name: String): ShareToken! @isAuthorized
 }

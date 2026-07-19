@@ -72,7 +72,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		expire := time.Now().Add(time.Hour * 24 * 30)
 		tokenPassword := "token-password-123"
-		shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
+		shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -112,7 +112,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request with share token but no password cookie", func(t *testing.T) {
-			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
@@ -125,7 +125,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request with share token and wrong password", func(t *testing.T) {
-			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword)
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expire, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
@@ -143,7 +143,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		t.Run("Request with expired share token", func(t *testing.T) {
 			expired := time.Now().Add(-time.Hour)
-			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expired, &tokenPassword)
+			shareToken, err := actions.AddMediaShare(db, user, media.ID, &expired, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/photo/image.jpg?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(imageData))
@@ -187,7 +187,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		expire := time.Now().Add(time.Hour * 24 * 30)
 		tokenPassword := "token-password-123"
-		shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword)
+		shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -226,7 +226,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request with album share token but no password cookie", func(t *testing.T) {
-			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword)
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
@@ -239,7 +239,7 @@ func TestAuthenticateRoute(t *testing.T) {
 		})
 
 		t.Run("Request with album share token and wrong password", func(t *testing.T) {
-			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword)
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expire, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
@@ -257,7 +257,7 @@ func TestAuthenticateRoute(t *testing.T) {
 
 		t.Run("Request with expired album share token", func(t *testing.T) {
 			expired := time.Now().Add(-time.Hour)
-			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expired, &tokenPassword)
+			shareToken, err := actions.AddAlbumShare(db, user, album.ID, &expired, &tokenPassword, nil)
 			assert.NoError(t, err)
 			url := fmt.Sprintf("/download/album/1?token=%s", shareToken.Value)
 			req := httptest.NewRequest("GET", url, strings.NewReader(albumData))
