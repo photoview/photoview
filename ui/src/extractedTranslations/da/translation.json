@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Vis kun favoritter",
-    "sort": "Sorter",
-    "sort_by": "Sorter efter",
-    "sort_direction": "Sorteringsretning",
     "order_direction": {
       "ascending": "Stigende",
       "descending": "Faldende"
     },
+    "sort": "Sorter",
+    "sort_by": "Sorter efter",
+    "sort_direction": "Sorteringsretning",
     "sorting_options": {
       "date_imported": "Dato for importering",
       "date_shot": "Dato",
@@ -342,9 +342,13 @@
       "add_share": "Tilføj deling",
       "copy_link": "Kopier link",
       "delete": "Slet",
+      "expiration_date": "",
       "more": "Mere",
       "no_shares_found": "Ingen delinger fundet",
       "public_link": "Offentligt link",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Indstillinger for deling"
     }
   },

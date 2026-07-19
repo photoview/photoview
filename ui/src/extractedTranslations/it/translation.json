@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Mostra solo i preferiti",
-    "sort": "Ordina",
-    "sort_by": "Ordina per",
-    "sort_direction": "Direzione ordinamento",
     "order_direction": {
       "ascending": "Crescente",
       "descending": "Decrescente"
     },
+    "sort": "Ordina",
+    "sort_by": "Ordina per",
+    "sort_direction": "Direzione ordinamento",
     "sorting_options": {
       "date_imported": "Data importazione",
       "date_shot": "Data scatto",
@@ -347,9 +347,13 @@
       "add_share": "Aggiungi condivisione",
       "copy_link": "Copia il link",
       "delete": "Elimina",
+      "expiration_date": "",
       "more": "Altro",
       "no_shares_found": "Nessuna condivisione trovata",
       "public_link": "Link pubblico",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Opzioni di condivisione"
     }
   },

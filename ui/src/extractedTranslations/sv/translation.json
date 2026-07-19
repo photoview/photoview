@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Visa endast favoriter",
-    "sort": "Sortering",
-    "sort_by": "Sortera efter",
-    "sort_direction": "Sorteringsriktning",
     "order_direction": {
       "ascending": "Stigande",
       "descending": "Fallande"
     },
+    "sort": "Sortering",
+    "sort_by": "Sortera efter",
+    "sort_direction": "Sorteringsriktning",
     "sorting_options": {
       "date_imported": "Datum för import",
       "date_shot": "Datum",
@@ -342,9 +342,13 @@
       "add_share": "Dela",
       "copy_link": "Kopiera länk",
       "delete": "",
+      "expiration_date": "",
       "more": "",
       "no_shares_found": "Inga delningar hittades",
       "public_link": "Publika länkar",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Delningsinställningar"
     }
   },

@@ -8,30 +8,30 @@
 // ====================================================
 
 export interface sidebarGetPhotoShares_media_shares {
-  __typename: "ShareToken";
-  id: string;
-  token: string;
+  __typename: 'ShareToken'
+  id: string
+  token: string
   /**
-   * Optional name visible to the owner or an administrator
+   * Optional label visible to the owner or an administrator
    */
-  name: string | null;
+  label: string | null
   /**
    * Whether or not a password is needed to access the share
    */
-  hasPassword: boolean;
+  hasPassword: boolean
   /**
    * Optional expire date
    */
-  expire: Time | null;
+  expire: Time | null
 }
 
 export interface sidebarGetPhotoShares_media {
-  __typename: "Media";
-  id: string;
+  __typename: 'Media'
+  id: string
   /**
    * A list of share tokens pointing to this media, owned byt the logged in user
    */
-  shares: sidebarGetPhotoShares_media_shares[];
+  shares: sidebarGetPhotoShares_media_shares[]
 }
 
 export interface sidebarGetPhotoShares {
@@ -39,9 +39,9 @@ export interface sidebarGetPhotoShares {
    * Get media by id, user must own the media or be admin.
    * If valid tokenCredentials are provided, the media may be retrived without further authentication
    */
-  media: sidebarGetPhotoShares_media;
+  media: sidebarGetPhotoShares_media
 }
 
 export interface sidebarGetPhotoSharesVariables {
-  id: string;
+  id: string
 }

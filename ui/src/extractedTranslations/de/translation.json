@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Nur Favoriten anzeigen",
-    "sort": "Sortierung",
-    "sort_by": "Sortieren nach",
-    "sort_direction": "Sortierrichtung",
     "order_direction": {
       "ascending": "Aufsteigend",
       "descending": "Absteigend"
     },
+    "sort": "Sortierung",
+    "sort_by": "Sortieren nach",
+    "sort_direction": "Sortierrichtung",
     "sorting_options": {
       "date_imported": "Importdatum",
       "date_shot": "Aufnahmedatum",
@@ -342,9 +342,13 @@
       "add_share": "Freigabe hinzufügen",
       "copy_link": "Link kopieren",
       "delete": "Freigabe löschen",
+      "expiration_date": "",
       "more": "mehr infos",
       "no_shares_found": "Keine Freigaben gefunden",
       "public_link": "Öffentlicher Link",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Freigabeoptionen"
     }
   },

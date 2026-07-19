@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Afficher seulement les favoris",
-    "sort": "Trier",
-    "sort_by": "Trier par",
-    "sort_direction": "Sens du tri",
     "order_direction": {
       "ascending": "Croissant",
       "descending": "Décroissant"
     },
+    "sort": "Trier",
+    "sort_by": "Trier par",
+    "sort_direction": "Sens du tri",
     "sorting_options": {
       "date_imported": "Date d'importation",
       "date_shot": "Date de prise de vue",
@@ -347,9 +347,13 @@
       "add_share": "Ajouter un partage",
       "copy_link": "Copier le lien",
       "delete": "Supprimer",
+      "expiration_date": "",
       "more": "Plus",
       "no_shares_found": "Aucun partage trouvé",
       "public_link": "Lien public",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Options de partage"
     }
   },

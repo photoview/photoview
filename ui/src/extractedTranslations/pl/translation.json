@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Pokaż tylko ulubione",
-    "sort": "Sortuj",
-    "sort_by": "Sortuj",
-    "sort_direction": "Kierunek sortowania",
     "order_direction": {
       "ascending": "Rosnąco",
       "descending": "Malejąco"
     },
+    "sort": "Sortuj",
+    "sort_by": "Sortuj",
+    "sort_direction": "Kierunek sortowania",
     "sorting_options": {
       "date_imported": "Data zaimportowania",
       "date_shot": "Data wykonania",
@@ -352,9 +352,13 @@
       "add_share": "Dodaj udział",
       "copy_link": "Skopiuj link",
       "delete": "Usuń",
+      "expiration_date": "",
       "more": "Więcej",
       "no_shares_found": "Nie znaleziono udostępnionych",
       "public_link": "Link publiczny",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Opcje udostępniania"
     }
   },

@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Show only favorites",
-    "sort": "Sort",
-    "sort_by": "Sort by",
-    "sort_direction": "Sorting direction",
     "order_direction": {
       "ascending": "Ascending",
       "descending": "Descending"
     },
+    "sort": "Sort",
+    "sort_by": "Sort by",
+    "sort_direction": "Sorting direction",
     "sorting_options": {
       "date_imported": "Date imported",
       "date_shot": "Date shot",
@@ -342,9 +342,13 @@
       "add_share": "Add shares",
       "copy_link": "Copy Link",
       "delete": "Delete",
+      "expiration_date": "Expiration date",
       "more": "More",
       "no_shares_found": "No shares found",
       "public_link": "Public Link",
+      "share_label": "Share label",
+      "share_label_placeholder": "Family, client, website...",
+      "share_label_update_error": "Could not update share label",
       "title": "Sharing options"
     }
   },

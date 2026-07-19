@@ -47,9 +47,9 @@ import {
   sidebarProtectShareVariables,
 } from './__generated__/sidebarProtectShare'
 import {
-  sidebarSetShareTokenName,
-  sidebarSetShareTokenNameVariables,
-} from './__generated__/sidebarSetShareTokenName'
+  sidebarSetShareTokenLabel,
+  sidebarSetShareTokenLabelVariables,
+} from './__generated__/sidebarSetShareTokenLabel'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import dayjs from 'dayjs'
@@ -61,7 +61,7 @@ const SHARE_PHOTO_QUERY = gql`
       shares {
         id
         token
-        name
+        label
         hasPassword
         expire
       }
@@ -76,7 +76,7 @@ export const SHARE_ALBUM_QUERY = gql`
       shares {
         id
         token
-        name
+        label
         hasPassword
         expire
       }
@@ -109,11 +109,11 @@ const PROTECT_SHARE_MUTATION = gql`
   }
 `
 
-export const SET_SHARE_NAME_MUTATION = gql`
-  mutation sidebarSetShareTokenName($token: String!, $name: String) {
-    setShareTokenName(token: $token, name: $name) {
+export const SET_SHARE_LABEL_MUTATION = gql`
+  mutation sidebarSetShareTokenLabel($token: String!, $label: String) {
+    setShareTokenLabel(token: $token, label: $label) {
       token
-      name
+      label
     }
   }
 `
@@ -175,36 +175,37 @@ type MorePopoverSectionPasswordProps = {
   id: string
 }
 
-type MorePopoverSectionNameProps = {
+type MorePopoverSectionLabelProps = {
   share: sidebarGetAlbumShares_album_shares
   query: DocumentNode
   id: string
 }
 
-const MorePopoverSectionName = ({
+const MorePopoverSectionLabel = ({
   share,
   query,
   id,
-}: MorePopoverSectionNameProps) => {
+}: MorePopoverSectionLabelProps) => {
   const { t } = useTranslation()
-  const [name, setName] = useState(share.name ?? '')
+  const [label, setLabel] = useState(share.label ?? '')
 
   useEffect(() => {
-    setName(share.name ?? '')
-  }, [share.name])
+    setLabel(share.label ?? '')
+  }, [share.label])
 
-  const [setShareName, { loading }] = useMutation<
-    sidebarSetShareTokenName,
-    sidebarSetShareTokenNameVariables
-  >(SET_SHARE_NAME_MUTATION, {
+  const [setShareLabel, { loading, error }] = useMutation<
+    sidebarSetShareTokenLabel,
+    sidebarSetShareTokenLabelVariables
+  >(SET_SHARE_LABEL_MUTATION, {
     refetchQueries: [{ query, variables: { id } }],
+    onError: () => undefined,
   })
 
   const submit = () => {
-    setShareName({
+    setShareLabel({
       variables: {
         token: share.token,
-        name: name.trim() || null,
+        label: label.trim() || null,
       },
     })
   }
@@ -212,17 +213,24 @@ const MorePopoverSectionName = ({
   return (
     <div className="px-4 py-2">
       <TextField
-        label={t('sidebar.sharing.share_name', 'Share name')}
+        label={t('sidebar.sharing.share_label', 'Share label')}
         placeholder={t(
-          'sidebar.sharing.share_name_placeholder',
+          'sidebar.sharing.share_label_placeholder',
           'Family, client, website...'
         )}
-        value={name}
-        maxLength={100}
+        value={label}
+        error={
+          error
+            ? t(
+                'sidebar.sharing.share_label_update_error',
+                'Could not update share label'
+              )
+            : undefined
+        }
         fullWidth
         action={submit}
         loading={loading}
-        onChange={event => setName(event.target.value)}
+        onChange={event => setLabel(event.target.value)}
       />
     </div>
   )
@@ -447,7 +455,7 @@ const MorePopover = ({ id, share, query }: MorePopoverProps) => {
 
       <Popover.Panel>
         <ArrowPopoverPanel width={260}>
-          <MorePopoverSectionName id={id} share={share} query={query} />
+          <MorePopoverSectionLabel id={id} share={share} query={query} />
           <MorePopoverSectionPassword id={id} share={share} query={query} />
           <MorePopoverSectionExpiration id={id} share={share} query={query} />
         </ArrowPopoverPanel>
@@ -589,9 +597,12 @@ const SidebarShare = ({
       <td className="pl-4 py-2 w-full">
         <span className="text-[#585858] dark:text-[#C0C3C4] mr-2 flex items-center">
           <LinkIcon className="mr-2 shrink-0" />
-          <span className="text-xs uppercase font-bold">
-            {share.name ||
-              t('sidebar.sharing.public_link', 'Public Link') + ' '}
+          <span className="text-xs font-bold">
+            {share.label || (
+              <span className="uppercase">
+                {t('sidebar.sharing.public_link', 'Public Link') + ' '}
+              </span>
+            )}
           </span>
         </span>
         <span className="text-sm break-all block ml-6">{share.token}</span>

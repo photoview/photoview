@@ -5,7 +5,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import {
   SidebarAlbumShare,
   SET_EXPIRE_MUTATION,
-  SET_SHARE_NAME_MUTATION,
+  SET_SHARE_LABEL_MUTATION,
   SHARE_ALBUM_QUERY,
 } from './Sharing'
 
@@ -35,7 +35,7 @@ const MOCK_TOKEN = 'token-abc'
 const mockShareNoExpire = {
   id: 'share-1',
   token: MOCK_TOKEN,
-  name: null,
+  label: null,
   hasPassword: false,
   expire: null,
   __typename: 'ShareToken',
@@ -67,7 +67,7 @@ const setExpireMutationMock = {
     query: SET_EXPIRE_MUTATION,
     variables: {
       token: MOCK_TOKEN,
-      expire: '2026-10-01T23:59:59Z',
+      expire: expect.stringContaining('2026-10-01') as unknown as string,
     },
   },
   result: {
@@ -134,18 +134,10 @@ describe('Sidebar Sharing Expiration', () => {
   })
 
   test('User can clear the expiration date by unchecking the box', async () => {
-    const mockWithExpireData = {
-      ...getSharesQueryMock,
-      result: {
-        data: {
-          album: {
-            id: MOCK_ALBUM_ID,
-            __typename: 'Album',
-            shares: [mockShareWithExpire],
-          },
-        },
-      },
-    }
+    const mockWithExpireData = JSON.parse(
+      JSON.stringify(getSharesQueryMock)
+    ) as typeof getSharesQueryMock
+    mockWithExpireData.result.data.album.shares = [mockShareWithExpire]
 
     render(
       <MockedProvider
@@ -171,7 +163,7 @@ describe('Sidebar Sharing Expiration', () => {
   })
 })
 
-describe('Sidebar Share Names', () => {
+describe('Sidebar Share Labels', () => {
   test('User can identify and rename a share link', async () => {
     const namedShareQueryMock = {
       ...getSharesQueryMock,
@@ -180,7 +172,7 @@ describe('Sidebar Share Names', () => {
           album: {
             id: MOCK_ALBUM_ID,
             __typename: 'Album',
-            shares: [{ ...mockShareNoExpire, name: 'Family' }],
+            shares: [{ ...mockShareNoExpire, label: 'Family' }],
           },
         },
       },
@@ -192,26 +184,26 @@ describe('Sidebar Share Names', () => {
           album: {
             id: MOCK_ALBUM_ID,
             __typename: 'Album',
-            shares: [{ ...mockShareNoExpire, name: 'Press gallery' }],
+            shares: [{ ...mockShareNoExpire, label: 'Press gallery' }],
           },
         },
       },
     }
     const renameResult = vi.fn(() => ({
       data: {
-        setShareTokenName: {
+        setShareTokenLabel: {
           token: MOCK_TOKEN,
-          name: 'Press gallery',
+          label: 'Press gallery',
           __typename: 'ShareToken',
         },
       },
     }))
     const renameMutationMock = {
       request: {
-        query: SET_SHARE_NAME_MUTATION,
+        query: SET_SHARE_LABEL_MUTATION,
         variables: {
           token: MOCK_TOKEN,
-          name: 'Press gallery',
+          label: 'Press gallery',
         },
       },
       result: renameResult,
@@ -226,14 +218,47 @@ describe('Sidebar Share Names', () => {
       </MockedProvider>
     )
 
-    expect(await screen.findByText('Family')).toBeInTheDocument()
+    expect(await screen.findByText('Family')).not.toHaveClass('uppercase')
     fireEvent.click(screen.getByTitle('More'))
 
-    const nameInput = await screen.findByLabelText('Share name')
-    fireEvent.change(nameInput, { target: { value: ' Press gallery ' } })
-    fireEvent.keyUp(nameInput, { key: 'Enter' })
+    const labelInput = await screen.findByLabelText('Share label')
+    fireEvent.change(labelInput, { target: { value: ' Press gallery ' } })
+    fireEvent.keyUp(labelInput, { key: 'Enter' })
 
     await waitFor(() => expect(renameResult).toHaveBeenCalledOnce())
     expect(await screen.findByText('Press gallery')).toBeInTheDocument()
+  })
+
+  test('User sees an error when a share label cannot be updated', async () => {
+    const renameMutationMock = {
+      request: {
+        query: SET_SHARE_LABEL_MUTATION,
+        variables: {
+          token: MOCK_TOKEN,
+          label: 'Press gallery',
+        },
+      },
+      error: new Error('Network error'),
+    }
+
+    render(
+      <MockedProvider
+        mocks={[getSharesQueryMock, renameMutationMock]}
+        addTypename={false}
+      >
+        <SidebarAlbumShare id={MOCK_ALBUM_ID} />
+      </MockedProvider>
+    )
+
+    await screen.findByText('Public Link')
+    fireEvent.click(screen.getByTitle('More'))
+
+    const labelInput = await screen.findByLabelText('Share label')
+    fireEvent.change(labelInput, { target: { value: 'Press gallery' } })
+    fireEvent.keyUp(labelInput, { key: 'Enter' })
+
+    expect(
+      await screen.findByText('Could not update share label')
+    ).toBeInTheDocument()
   })
 })

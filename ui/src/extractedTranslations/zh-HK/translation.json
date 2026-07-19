@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "只顯示喜愛",
-    "sort": "排序",
-    "sort_by": "排序方式",
-    "sort_direction": "排序方向",
     "order_direction": {
       "ascending": "升序",
       "descending": "降序"
     },
+    "sort": "排序",
+    "sort_by": "排序方式",
+    "sort_direction": "排序方向",
     "sorting_options": {
       "date_imported": "加入日期",
       "date_shot": "拍攝日期",
@@ -337,9 +337,13 @@
       "add_share": "新增分享",
       "copy_link": "複製連結",
       "delete": "刪除分享",
+      "expiration_date": "",
       "more": "更多",
       "no_shares_found": "沒有分享",
       "public_link": "公開連結",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "分享選項"
     }
   },

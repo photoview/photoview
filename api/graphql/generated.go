@@ -162,9 +162,9 @@ type ComplexityRoot struct {
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
-		SetShareTokenName           func(childComplexity int, token string, name *string) int
-		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string, name *string) int
-		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string, name *string) int
+		SetShareTokenLabel          func(childComplexity int, token string, label *string) int
+		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string, label *string) int
+		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string, label *string) int
 		UpdateUser                  func(childComplexity int, id int, username *string, password *string, admin *bool) int
 		UserAddRootPath             func(childComplexity int, id int, rootPath string) int
 		UserRemoveRootAlbum         func(childComplexity int, userID int, albumID int) int
@@ -219,8 +219,8 @@ type ComplexityRoot struct {
 		Expire      func(childComplexity int) int
 		HasPassword func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Label       func(childComplexity int) int
 		Media       func(childComplexity int) int
-		Name        func(childComplexity int) int
 		Owner       func(childComplexity int) int
 		Token       func(childComplexity int) int
 	}
@@ -320,12 +320,12 @@ type MutationResolver interface {
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
-	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string, name *string) (*models.ShareToken, error)
-	ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string, name *string) (*models.ShareToken, error)
+	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string, label *string) (*models.ShareToken, error)
+	ShareMedia(ctx context.Context, mediaID int, expire *time.Time, password *string, label *string) (*models.ShareToken, error)
 	DeleteShareToken(ctx context.Context, token string) (*models.ShareToken, error)
 	ProtectShareToken(ctx context.Context, token string, password *string) (*models.ShareToken, error)
 	SetExpireShareToken(ctx context.Context, token string, expire *time.Time) (*models.ShareToken, error)
-	SetShareTokenName(ctx context.Context, token string, name *string) (*models.ShareToken, error)
+	SetShareTokenLabel(ctx context.Context, token string, label *string) (*models.ShareToken, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
 	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
@@ -355,7 +355,7 @@ type QueryResolver interface {
 	MyUserPreferences(ctx context.Context) (*models.UserPreferences, error)
 }
 type ShareTokenResolver interface {
-	Name(ctx context.Context, obj *models.ShareToken) (*string, error)
+	Label(ctx context.Context, obj *models.ShareToken) (*string, error)
 
 	HasPassword(ctx context.Context, obj *models.ShareToken) (bool, error)
 }
@@ -1001,17 +1001,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SetScannerConcurrentWorkers(childComplexity, args["workers"].(int)), true
-	case "Mutation.setShareTokenName":
-		if e.ComplexityRoot.Mutation.SetShareTokenName == nil {
+	case "Mutation.setShareTokenLabel":
+		if e.ComplexityRoot.Mutation.SetShareTokenLabel == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_setShareTokenName_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_setShareTokenLabel_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.SetShareTokenName(childComplexity, args["token"].(string), args["name"].(*string)), true
+		return e.ComplexityRoot.Mutation.SetShareTokenLabel(childComplexity, args["token"].(string), args["label"].(*string)), true
 	case "Mutation.shareAlbum":
 		if e.ComplexityRoot.Mutation.ShareAlbum == nil {
 			break
@@ -1022,7 +1022,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string), args["name"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareAlbum(childComplexity, args["albumId"].(int), args["expire"].(*time.Time), args["password"].(*string), args["label"].(*string)), true
 	case "Mutation.shareMedia":
 		if e.ComplexityRoot.Mutation.ShareMedia == nil {
 			break
@@ -1033,7 +1033,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string), args["name"].(*string)), true
+		return e.ComplexityRoot.Mutation.ShareMedia(childComplexity, args["mediaId"].(int), args["expire"].(*time.Time), args["password"].(*string), args["label"].(*string)), true
 	case "Mutation.updateUser":
 		if e.ComplexityRoot.Mutation.UpdateUser == nil {
 			break
@@ -1349,18 +1349,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.ShareToken.ID(childComplexity), true
+	case "ShareToken.label":
+		if e.ComplexityRoot.ShareToken.Label == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareToken.Label(childComplexity), true
 	case "ShareToken.media":
 		if e.ComplexityRoot.ShareToken.Media == nil {
 			break
 		}
 
 		return e.ComplexityRoot.ShareToken.Media(childComplexity), true
-	case "ShareToken.name":
-		if e.ComplexityRoot.ShareToken.Name == nil {
-			break
-		}
-
-		return e.ComplexityRoot.ShareToken.Name(childComplexity), true
 	case "ShareToken.owner":
 		if e.ComplexityRoot.ShareToken.Owner == nil {
 			break
@@ -1909,8 +1909,8 @@ func (ec *executionContext) childFields_ShareToken(ctx context.Context, field gr
 		return ec.fieldContext_ShareToken_id(ctx, field)
 	case "token":
 		return ec.fieldContext_ShareToken_token(ctx, field)
-	case "name":
-		return ec.fieldContext_ShareToken_name(ctx, field)
+	case "label":
+		return ec.fieldContext_ShareToken_label(ctx, field)
 	case "owner":
 		return ec.fieldContext_ShareToken_owner(ctx, field)
 	case "expire":
@@ -2521,7 +2521,7 @@ func (ec *executionContext) field_Mutation_setScannerConcurrentWorkers_args(ctx 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_setShareTokenName_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_setShareTokenLabel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
@@ -2532,14 +2532,14 @@ func (ec *executionContext) field_Mutation_setShareTokenName_args(ctx context.Co
 		return nil, err
 	}
 	args["token"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "label",
 		func(ctx context.Context, v any) (*string, error) {
 			return ec.unmarshalOString2ᚖstring(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["name"] = arg1
+	args["label"] = arg1
 	return args, nil
 }
 
@@ -2570,14 +2570,14 @@ func (ec *executionContext) field_Mutation_shareAlbum_args(ctx context.Context, 
 		return nil, err
 	}
 	args["password"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "label",
 		func(ctx context.Context, v any) (*string, error) {
 			return ec.unmarshalOString2ᚖstring(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["name"] = arg3
+	args["label"] = arg3
 	return args, nil
 }
 
@@ -2608,14 +2608,14 @@ func (ec *executionContext) field_Mutation_shareMedia_args(ctx context.Context, 
 		return nil, err
 	}
 	args["password"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "label",
 		func(ctx context.Context, v any) (*string, error) {
 			return ec.unmarshalOString2ᚖstring(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["name"] = arg3
+	args["label"] = arg3
 	return args, nil
 }
 
@@ -5401,7 +5401,7 @@ func (ec *executionContext) _Mutation_shareAlbum(ctx context.Context, field grap
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string), fc.Args["name"].(*string))
+			return ec.Resolvers.Mutation().ShareAlbum(ctx, fc.Args["albumId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string), fc.Args["label"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -5458,7 +5458,7 @@ func (ec *executionContext) _Mutation_shareMedia(ctx context.Context, field grap
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string), fc.Args["name"].(*string))
+			return ec.Resolvers.Mutation().ShareMedia(ctx, fc.Args["mediaId"].(int), fc.Args["expire"].(*time.Time), fc.Args["password"].(*string), fc.Args["label"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -5676,17 +5676,17 @@ func (ec *executionContext) fieldContext_Mutation_setExpireShareToken(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_setShareTokenName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_setShareTokenLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_setShareTokenName(ctx, field)
+			return ec.fieldContext_Mutation_setShareTokenLabel(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().SetShareTokenName(ctx, fc.Args["token"].(string), fc.Args["name"].(*string))
+			return ec.Resolvers.Mutation().SetShareTokenLabel(ctx, fc.Args["token"].(string), fc.Args["label"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -5709,7 +5709,7 @@ func (ec *executionContext) _Mutation_setShareTokenName(ctx context.Context, fie
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_setShareTokenName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_setShareTokenLabel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -5726,7 +5726,7 @@ func (ec *executionContext) fieldContext_Mutation_setShareTokenName(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_setShareTokenName_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_setShareTokenLabel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7435,16 +7435,16 @@ func (ec *executionContext) fieldContext_ShareToken_token(_ context.Context, fie
 	return graphql.NewScalarFieldContext("ShareToken", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
-func (ec *executionContext) _ShareToken_name(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
+func (ec *executionContext) _ShareToken_label(ctx context.Context, field graphql.CollectedField, obj *models.ShareToken) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_ShareToken_name(ctx, field)
+			return ec.fieldContext_ShareToken_label(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.ShareToken().Name(ctx, obj)
+			return ec.Resolvers.ShareToken().Label(ctx, obj)
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
@@ -7454,7 +7454,7 @@ func (ec *executionContext) _ShareToken_name(ctx context.Context, field graphql.
 		false,
 	)
 }
-func (ec *executionContext) fieldContext_ShareToken_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ShareToken_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("ShareToken", field, true, true, errors.New("field of type String does not have child fields"))
 }
 
@@ -10926,9 +10926,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "setShareTokenName":
+		case "setShareTokenLabel":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_setShareTokenName(ctx, field)
+				return ec._Mutation_setShareTokenLabel(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -11635,7 +11635,7 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "name":
+		case "label":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -11644,7 +11644,7 @@ func (ec *executionContext) _ShareToken(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._ShareToken_name(ctx, field, obj)
+				res = ec._ShareToken_label(ctx, field, obj)
 				if res == graphql.RequiredNull {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

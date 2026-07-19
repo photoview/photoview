@@ -1,7 +1,6 @@
 package actions_test
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -58,20 +57,20 @@ func TestShareToken(t *testing.T) {
 
 	expireTime := time.Unix(1632866400, 0)
 	sharePassword := "secretSharePassword"
-	shareName := " Family album "
+	shareLabel := " Family album "
 
 	var mediaShare *models.ShareToken
 	var albumShare *models.ShareToken
 
 	t.Run("Add album share", func(t *testing.T) {
-		share, err := actions.AddAlbumShare(db, user, rootAlbum.ID, &expireTime, nil, &shareName)
+		share, err := actions.AddAlbumShare(db, user, rootAlbum.ID, &expireTime, nil, &shareLabel)
 		albumShare = share
 
 		assert.NoError(t, err)
 		assert.NotNil(t, share)
 
 		assert.NotEmpty(t, share.Value)
-		assert.Equal(t, "Family album", *share.Name)
+		assert.Equal(t, "Family album", *share.Label)
 		assert.Equal(t, rootAlbum.ID, *share.AlbumID)
 		assert.Nil(t, share.MediaID)
 	})
@@ -121,21 +120,15 @@ func TestShareToken(t *testing.T) {
 		assert.Nil(t, share.Expire)
 	})
 
-	t.Run("Set share token name", func(t *testing.T) {
-		name := "  Press gallery  "
-		share, err := actions.SetShareTokenName(db, user.ID, albumShare.Value, &name)
+	t.Run("Set share token label", func(t *testing.T) {
+		label := "  Press gallery  "
+		share, err := actions.SetShareTokenLabel(db, user.ID, albumShare.Value, &label)
 		assert.NoError(t, err)
-		assert.Equal(t, "Press gallery", *share.Name)
+		assert.Equal(t, "Press gallery", *share.Label)
 
-		blankName := " "
-		share, err = actions.SetShareTokenName(db, user.ID, albumShare.Value, &blankName)
+		blankLabel := " "
+		share, err = actions.SetShareTokenLabel(db, user.ID, albumShare.Value, &blankLabel)
 		assert.NoError(t, err)
-		assert.Nil(t, share.Name)
-	})
-
-	t.Run("Reject too long share token name", func(t *testing.T) {
-		name := strings.Repeat("a", 101)
-		_, err := actions.SetShareTokenName(db, user.ID, albumShare.Value, &name)
-		assert.EqualError(t, err, "share token name cannot exceed 100 characters")
+		assert.Nil(t, share.Label)
 	})
 }

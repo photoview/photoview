@@ -53,7 +53,7 @@ models:
   ShareToken:
     model: github.com/photoview/photoview/api/graphql/models.ShareToken
     fields:
-      name:
+      label:
         resolver: true
   FaceGroup:
     model: github.com/photoview/photoview/api/graphql/models.FaceGroup

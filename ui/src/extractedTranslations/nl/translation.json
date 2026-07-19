@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "Toon favorieten",
-    "sort": "Sorteren",
-    "sort_by": "Sorteren op",
-    "sort_direction": "Sorteerrichting",
     "order_direction": {
       "ascending": "Oplopend",
       "descending": "Aflopend"
     },
+    "sort": "Sorteren",
+    "sort_by": "Sorteren op",
+    "sort_direction": "Sorteerrichting",
     "sorting_options": {
       "date_imported": "Importdatum",
       "date_shot": "Opnamedatum",
@@ -342,9 +342,13 @@
       "add_share": "Share toevoegen",
       "copy_link": "Link kopiëren",
       "delete": "Verwijderen",
+      "expiration_date": "",
       "more": "Meer",
       "no_shares_found": "Geen albums gevonden",
       "public_link": "Publieke link",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "Deelopties"
     }
   },

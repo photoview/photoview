@@ -1,13 +1,13 @@
 {
   "album_filter": {
     "only_favorites": "お気に入りのみ表示",
-    "sort": "並び替え",
-    "sort_by": "並び替え順",
-    "sort_direction": "並び替え方向",
     "order_direction": {
       "ascending": "昇順",
       "descending": "降順"
     },
+    "sort": "並び替え",
+    "sort_by": "並び替え順",
+    "sort_direction": "並び替え方向",
     "sorting_options": {
       "date_imported": "インポート日",
       "date_shot": "撮影日",
@@ -342,9 +342,13 @@
       "add_share": "共有を追加",
       "copy_link": "リンクをコピー",
       "delete": "削除",
+      "expiration_date": "",
       "more": "その他",
       "no_shares_found": "共有が見つかりません",
       "public_link": "公開リンク",
+      "share_label": "",
+      "share_label_placeholder": "",
+      "share_label_update_error": "",
       "title": "共有オプション"
     }
   },

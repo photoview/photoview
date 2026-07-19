@@ -16,11 +16,11 @@ func TestMain(m *testing.M) {
 	test_utils.IntegrationTestRun(m)
 }
 
-func TestShareTokenNameVisibility(t *testing.T) {
-	name := "Press gallery"
+func TestShareTokenLabelVisibility(t *testing.T) {
+	label := "Press gallery"
 	share := &models.ShareToken{
 		OwnerID: 42,
-		Name:    &name,
+		Label:   &label,
 	}
 	resolver := &shareTokenResolver{}
 
@@ -37,7 +37,7 @@ func TestShareTokenNameVisibility(t *testing.T) {
 		{
 			name: "owner",
 			user: &models.User{Model: models.Model{ID: 42}},
-			want: &name,
+			want: &label,
 		},
 		{
 			name: "unrelated user",
@@ -50,7 +50,7 @@ func TestShareTokenNameVisibility(t *testing.T) {
 				Model: models.Model{ID: 7},
 				Admin: true,
 			},
-			want: &name,
+			want: &label,
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestShareTokenNameVisibility(t *testing.T) {
 				ctx = auth.AddUserToContext(ctx, tt.user)
 			}
 
-			got, err := resolver.Name(ctx, share)
+			got, err := resolver.Label(ctx, share)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
