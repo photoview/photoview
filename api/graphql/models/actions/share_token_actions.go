@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
@@ -38,7 +37,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 		}
 	}
 
-	label = normalizeShareLabel(label)
+	label = sanitizeShareLabel(label)
 
 	hashedPassword, err := hashSharePassword(password)
 	if err != nil {
@@ -80,7 +79,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 		return nil, auth.ErrUnauthorized
 	}
 
-	label = normalizeShareLabel(label)
+	label = sanitizeShareLabel(label)
 
 	var hashedPassword *string = nil
 	if password != nil {
@@ -163,26 +162,13 @@ func SetShareTokenLabel(db *gorm.DB, userID int, tokenValue string, label *strin
 		return nil, err
 	}
 
-	token.Label = normalizeShareLabel(label)
+	token.Label = sanitizeShareLabel(label)
 
 	if err := db.Save(&token).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to update label for share token")
 	}
 
 	return token, nil
-}
-
-func normalizeShareLabel(label *string) *string {
-	if label == nil {
-		return nil
-	}
-
-	trimmedLabel := strings.TrimSpace(*label)
-	if trimmedLabel == "" {
-		return nil
-	}
-
-	return &trimmedLabel
 }
 
 func hashSharePassword(password *string) (*string, error) {
