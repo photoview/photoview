@@ -7,7 +7,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/scanner/queue"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ type ScannerQueue interface {
 type RealScannerQueue struct{}
 
 func (r *RealScannerQueue) AddAllToQueue() error {
-	return scanner_queue.AddAllToQueue()
+	return queue.AddAll()
 }
 
 type periodicScanner struct {
