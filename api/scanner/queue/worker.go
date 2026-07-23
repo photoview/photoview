@@ -234,14 +234,6 @@ func (w *worker) gather(ctx context.Context, t *task) (gatheredInfo, error) {
 }
 
 func (w *worker) findOrCreateMedia(mediaPath string, albumID int, mediaType media_type.MediaType) (*models.Media, bool, error) {
-	var existing []*models.Media
-	if err := w.db.Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&existing).Error; err != nil {
-		return nil, false, err
-	}
-	if len(existing) > 0 {
-		return existing[0], false, nil
-	}
-
 	stat, err := os.Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
@@ -260,11 +252,12 @@ func (w *worker) findOrCreateMedia(mediaPath string, albumID int, mediaType medi
 		DateShot: stat.ModTime(),
 	}
 
-	if err := w.db.Create(media).Error; err != nil {
+	created, err := models.FindOrCreateMedia(w.db, media)
+	if err != nil {
 		return nil, false, err
 	}
 
-	return media, true, nil
+	return media, created, nil
 }
 
 func hashFile(ctx context.Context, p string) *string {
@@ -701,7 +694,7 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			if file == nil {
 				continue
 			}
-			if err := upsertMediaURL(tx, media, purpose, file, info.existingURLs[purpose]); err != nil {
+			if err := upsertMediaURL(tx, media, purpose, file); err != nil {
 				return fmt.Errorf("save media url (%s): %w", purpose, err)
 			}
 		}
@@ -720,14 +713,7 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 	return nil
 }
 
-func upsertMediaURL(tx *gorm.DB, media *models.Media, purpose models.MediaPurpose, file *encodedFile, existing *models.MediaURL) error {
-	if existing != nil {
-		existing.Width = file.width
-		existing.Height = file.height
-		existing.FileSize = file.fileSize
-		return tx.Save(existing).Error
-	}
-
+func upsertMediaURL(tx *gorm.DB, media *models.Media, purpose models.MediaPurpose, file *encodedFile) error {
 	url := &models.MediaURL{
 		MediaID:     media.ID,
 		MediaName:   file.name,
@@ -737,5 +723,5 @@ func upsertMediaURL(tx *gorm.DB, media *models.Media, purpose models.MediaPurpos
 		ContentType: file.contentType,
 		FileSize:    file.fileSize,
 	}
-	return tx.Create(url).Error
+	return models.UpsertMediaURL(tx, url)
 }
