@@ -81,6 +81,22 @@ func FindOrCreateMedia(db *gorm.DB, media *Media) (created bool, err error) {
 	return false, nil
 }
 
+// UpsertMedia creates media, or overwrites the existing row for the same
+// path with media's current field values. Unlike FindOrCreateMedia (which
+// leaves an existing row untouched), this always writes through - used by
+// queue's persist() where media has already been fully re-evaluated and a
+// second, separate update call would otherwise be needed right after.
+func UpsertMedia(db *gorm.DB, media *Media) error {
+	media.ID = 0
+	return db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "path_hash"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"title", "album_id", "date_shot", "type",
+			"side_car_path", "side_car_hash", "blurhash",
+		}),
+	}).Create(media).Error
+}
+
 // UpsertMediaURL creates url, or overwrites the existing row for the same
 // (media_id, purpose) pair if one already exists - whether from a prior scan
 // that's now being refreshed (e.g. after a sidecar change forces the cache

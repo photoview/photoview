@@ -78,7 +78,7 @@ func (s *albumState) NotifyFoundNewMedia(path string) {
 // real update (used only for the changedCount tally).
 func (s *albumState) CompleteMedia(ctx context.Context, media *models.Media, changed bool) {
 	s.mu.Lock()
-	if media != nil {
+	if media != nil && media.ID != 0 {
 		s.allMediaIDs = append(s.allMediaIDs, media.ID)
 	}
 	if changed {

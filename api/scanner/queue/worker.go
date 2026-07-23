@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -182,7 +183,7 @@ func (w *worker) gather(ctx context.Context, t *task) (gatheredInfo, error) {
 
 	info.isVideo = mediaType.IsVideo()
 
-	media, isNew, err := w.findOrCreateMedia(t.path, t.album.ID, mediaType)
+	media, isNew, err := w.findOrBuildMedia(t.path, t.album.ID, mediaType)
 	if err != nil {
 		return info, err
 	}
@@ -233,7 +234,21 @@ func (w *worker) gather(ctx context.Context, t *task) (gatheredInfo, error) {
 	return info, nil
 }
 
-func (w *worker) findOrCreateMedia(mediaPath string, albumID int, mediaType media_type.MediaType) (*models.Media, bool, error) {
+// findOrBuildMedia looks up an existing Media row by path_hash (read-only -
+// it never writes). If none exists, it builds an in-memory, unpersisted
+// Media (ID left at zero) with every field gather() can already determine;
+// the actual INSERT happens later, in persist(), once processing has
+// produced something worth making visible alongside it.
+func (w *worker) findOrBuildMedia(mediaPath string, albumID int, mediaType media_type.MediaType) (*models.Media, bool, error) {
+	var existing models.Media
+	err := w.db.Where("path_hash = ?", models.MD5Hash(mediaPath)).First(&existing).Error
+	switch {
+	case err == nil:
+		return &existing, false, nil
+	case !errors.Is(err, gorm.ErrRecordNotFound):
+		return nil, false, err
+	}
+
 	stat, err := os.Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
@@ -252,12 +267,7 @@ func (w *worker) findOrCreateMedia(mediaPath string, albumID int, mediaType medi
 		DateShot: stat.ModTime(),
 	}
 
-	created, err := models.FindOrCreateMedia(w.db, media)
-	if err != nil {
-		return nil, false, err
-	}
-
-	return media, created, nil
+	return media, true, nil
 }
 
 func hashFile(ctx context.Context, p string) *string {
@@ -285,9 +295,26 @@ func (w *worker) process(ctx context.Context, t *task) (workResult, error) {
 	plan := t.plan
 	var result workResult
 
-	cachePath, err := info.media.CachePath()
-	if err != nil {
-		return result, fmt.Errorf("cache directory error: %w", err)
+	var cachePath string
+	var err error
+	if info.isNewMedia {
+		// The token suffix matters: two workers can concurrently decide the
+		// same brand-new path needs processing (e.g. the same physical album
+		// discovered twice because two users share it) - gather() is
+		// read-only now, so nothing claims the path until persist() upserts
+		// it. Without a random suffix here, both workers would write into
+		// (and one would rename away from under the other) the same
+		// directory.
+		cachePath, err = utils.PendingCachePathForMedia(info.media.AlbumID, models.MD5Hash(t.path)+"-"+utils.GenerateToken())
+		if err != nil {
+			return result, fmt.Errorf("pending cache directory error: %w", err)
+		}
+		result.pendingCachePath = cachePath
+	} else {
+		cachePath, err = info.media.CachePath()
+		if err != nil {
+			return result, fmt.Errorf("cache directory error: %w", err)
+		}
 	}
 
 	if plan.needExif {
@@ -667,8 +694,17 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			media.SideCarHash = result.sidecarHash
 		}
 
-		if err := tx.Save(media).Error; err != nil {
+		if err := models.UpsertMedia(tx, media); err != nil {
 			return fmt.Errorf("save media: %w", err)
+		}
+
+		if info.isNewMedia {
+			// utils.MediaCacheLeafPath (not media.CachePath, which creates the
+			// directory) - os.Rename needs the destination to not exist yet.
+			finalCachePath := utils.MediaCacheLeafPath(media.AlbumID, media.ID)
+			if err := os.Rename(result.pendingCachePath, finalCachePath); err != nil {
+				return fmt.Errorf("finalize cache directory: %w", err)
+			}
 		}
 
 		if result.exif != nil {
