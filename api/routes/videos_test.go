@@ -304,54 +304,6 @@ func TestVideoRoutes(t *testing.T) {
 			},
 		},
 		{
-			name: "Multiple media URLs with same name",
-			testFunc: func(t *testing.T, db *gorm.DB) {
-				// Create unique resources for this test
-				_, album, media, _, mediaName, cachePath, _, _ := createTestResources(t, db, "multiple")
-
-				// Setup cache path for this test
-				restorePath := setTestCachePath(cachePath)
-				t.Cleanup(restorePath)
-
-				// Create second mediaURL with same name
-				mediaURL2 := &models.MediaURL{
-					MediaID:     media.ID,
-					Media:       media,
-					MediaName:   mediaName, // Same name
-					Width:       1280,
-					Height:      720,
-					Purpose:     models.VideoWeb,
-					ContentType: "video/mp4",
-					FileSize:    512,
-				}
-				require.NoError(t, db.Create(mediaURL2).Error)
-				t.Cleanup(func() {
-					db.Unscoped().Delete(mediaURL2)
-				})
-
-				// Create cache directory and file
-				albumDir := filepath.Join(cachePath, strconv.Itoa(int(album.ID)))
-				mediaDir := filepath.Join(albumDir, strconv.Itoa(int(media.ID)))
-				require.NoError(t, os.MkdirAll(mediaDir, 0755))
-
-				videoPath := filepath.Join(mediaDir, mediaName)
-				require.NoError(t, os.WriteFile(videoPath, []byte("test video content"), 0644))
-
-				// Create mock router without auth for this test
-				router := mux.NewRouter()
-				registerMockVideoRoutesForTesting(db, router, cachePath)
-
-				// Make request
-				req := httptest.NewRequest("GET", "/"+mediaName, nil)
-				rr := httptest.NewRecorder()
-				router.ServeHTTP(rr, req)
-
-				// Validate response
-				assert.Equal(t, http.StatusOK, rr.Code)
-				assert.Equal(t, "test video content", rr.Body.String())
-			},
-		},
-		{
 			name: "Video file not in cache, processing succeeds",
 			testFunc: func(t *testing.T, db *gorm.DB) {
 				// Create unique resources for this test

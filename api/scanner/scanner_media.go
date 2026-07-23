@@ -3,7 +3,6 @@ package scanner
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path"
 
@@ -20,24 +19,6 @@ var ProcessSingleMediaFunc = ProcessSingleMedia
 
 func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.AlbumScannerCache) (*models.Media, bool, error) {
 	mediaName := path.Base(mediaPath)
-
-	// Check if media already exists
-	{
-		var media []*models.Media
-
-		result := tx.Where("path_hash = ?", models.MD5Hash(mediaPath)).Find(&media)
-
-		if result.Error != nil {
-			return nil, false, errors.Wrap(result.Error, "scan media fetch from database")
-		}
-
-		if result.RowsAffected > 0 {
-			// log.Printf("Media already scanned: %s\n", mediaPath)
-			return media[0], false, nil
-		}
-	}
-
-	log.Printf("Scanning media: %s\n", mediaPath)
 
 	mediaType := cache.GetMediaType(mediaPath)
 	if mediaType == media_type.TypeUnknown {
@@ -65,11 +46,12 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 		DateShot: stat.ModTime(),
 	}
 
-	if err := tx.Create(&media).Error; err != nil {
-		return nil, false, errors.Wrap(err, "could not insert media into database")
+	created, err := models.FindOrCreateMedia(tx, &media)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "find or create media")
 	}
 
-	return &media, true, nil
+	return &media, created, nil
 }
 
 // ProcessSingleMedia processes a single media, might be used to reprocess media with corrupted cache
