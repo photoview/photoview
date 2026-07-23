@@ -64,7 +64,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 	}
 
 	mediaURL := models.MediaURL{
-		Media:       photo,
+		MediaID:     photo.ID,
 		MediaName:   originalImageName,
 		Width:       photoDimensions.Width,
 		Height:      photoDimensions.Height,
@@ -73,7 +73,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 		FileSize:    fileStats.Size(),
 	}
 
-	if err := tx.Create(&mediaURL).Error; err != nil {
+	if err := models.UpsertMediaURL(tx, &mediaURL); err != nil {
 		return nil, errors.Wrapf(err, "inserting original photo url: %d, %s", photo.ID, photo.Title)
 	}
 

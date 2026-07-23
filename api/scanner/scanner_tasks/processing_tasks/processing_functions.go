@@ -28,28 +28,19 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 	}
 
 	if mediaURL == nil {
-
 		mediaURL = &models.MediaURL{
-			MediaID:     media.ID,
-			MediaName:   highResName,
-			Width:       photoDimensions.Width,
-			Height:      photoDimensions.Height,
-			Purpose:     models.PhotoHighRes,
-			ContentType: "image/jpeg",
-			FileSize:    fileStats.Size(),
+			MediaID: media.ID,
+			Purpose: models.PhotoHighRes,
 		}
+	}
+	mediaURL.MediaName = highResName
+	mediaURL.Width = photoDimensions.Width
+	mediaURL.Height = photoDimensions.Height
+	mediaURL.ContentType = "image/jpeg"
+	mediaURL.FileSize = fileStats.Size()
 
-		if err := tx.Create(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not insert highres media url (%d, %s)", media.ID, highResName)
-		}
-	} else {
-		mediaURL.Width = photoDimensions.Width
-		mediaURL.Height = photoDimensions.Height
-		mediaURL.FileSize = fileStats.Size()
-
-		if err := tx.Save(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, highResName)
-		}
+	if err := models.UpsertMediaURL(tx, mediaURL); err != nil {
+		return nil, errors.Wrapf(err, "could not save highres media url (%d, %s)", media.ID, highResName)
 	}
 
 	return mediaURL, nil
@@ -69,28 +60,19 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnailName s
 	}
 
 	if mediaURL == nil {
-
 		mediaURL = &models.MediaURL{
-			MediaID:     media.ID,
-			MediaName:   thumbnailName,
-			Width:       thumbSize.Width,
-			Height:      thumbSize.Height,
-			Purpose:     models.PhotoThumbnail,
-			ContentType: "image/jpeg",
-			FileSize:    fileStats.Size(),
+			MediaID: media.ID,
+			Purpose: models.PhotoThumbnail,
 		}
+	}
+	mediaURL.MediaName = thumbnailName
+	mediaURL.Width = thumbSize.Width
+	mediaURL.Height = thumbSize.Height
+	mediaURL.ContentType = "image/jpeg"
+	mediaURL.FileSize = fileStats.Size()
 
-		if err := tx.Create(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not insert thumbnail media url (%d, %s)", media.ID, thumbnailName)
-		}
-	} else {
-		mediaURL.Width = thumbSize.Width
-		mediaURL.Height = thumbSize.Height
-		mediaURL.FileSize = fileStats.Size()
-
-		if err := tx.Save(&mediaURL).Error; err != nil {
-			return nil, errors.Wrapf(err, "could not update media url after side car changes (%d, %s)", media.ID, thumbnailName)
-		}
+	if err := models.UpsertMediaURL(tx, mediaURL); err != nil {
+		return nil, errors.Wrapf(err, "could not save thumbnail media url (%d, %s)", media.ID, thumbnailName)
 	}
 
 	return mediaURL, nil

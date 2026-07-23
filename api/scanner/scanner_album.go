@@ -33,45 +33,34 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		rootPath = path.Join(wd, rootPath)
 	}
 
-	owners := []models.User{
-		*owner,
+	album := models.Album{
+		Title:  path.Base(rootPath),
+		Path:   rootPath,
+		Owners: []models.User{*owner},
 	}
 
-	var matchedAlbums []models.Album
-	if err := db.Where("path_hash = ?", models.MD5Hash(rootPath)).Find(&matchedAlbums).Error; err != nil {
+	created, err := models.FindOrCreateAlbum(db, &album)
+	if err != nil {
+		return nil, err
+	}
+	if created {
+		return &album, nil
+	}
+
+	var matchedUserAlbumCount int64
+	if err := db.Table("user_albums").Where("user_id = ?", owner.ID).Where("album_id = ?", album.ID).Count(&matchedUserAlbumCount).Error; err != nil {
 		return nil, err
 	}
 
-	if len(matchedAlbums) > 0 {
-		album := matchedAlbums[0]
-
-		var matchedUserAlbumCount int64
-		if err := db.Table("user_albums").Where("user_id = ?", owner.ID).Where("album_id = ?", album.ID).Count(&matchedUserAlbumCount).Error; err != nil {
-			return nil, err
-		}
-
-		if matchedUserAlbumCount > 0 {
-			return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", rootPath))
-		}
-
-		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
-			return nil, errors.Wrap(err, "add owner to already existing album")
-		}
-
-		return &album, nil
-	} else {
-		album := models.Album{
-			Title:  path.Base(rootPath),
-			Path:   rootPath,
-			Owners: owners,
-		}
-
-		if err := db.Create(&album).Error; err != nil {
-			return nil, err
-		}
-
-		return &album, nil
+	if matchedUserAlbumCount > 0 {
+		return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", rootPath))
 	}
+
+	if err := db.Model(owner).Association("Albums").Append(&album); err != nil {
+		return nil, errors.Wrap(err, "add owner to already existing album")
+	}
+
+	return &album, nil
 }
 
 var ErrorInvalidRootPath = errors.New("invalid root path")

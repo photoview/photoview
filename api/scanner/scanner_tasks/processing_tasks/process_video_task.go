@@ -77,7 +77,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			FileSize:    fileStats.Size(),
 		}
 
-		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
+		if err := models.UpsertMediaURL(ctx.GetDB(), &mediaURL); err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "insert original video into database (%s)", video.Title)
 		}
 
@@ -117,7 +117,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			FileSize:    fileStats.Size(),
 		}
 
-		if err := ctx.GetDB().Create(&mediaURL).Error; err != nil {
+		if err := models.UpsertMediaURL(ctx.GetDB(), &mediaURL); err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert encoded web-video into database (%s)", video.Title)
 		}
 
@@ -162,7 +162,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			FileSize:    fileStats.Size(),
 		}
 
-		if err := ctx.GetDB().Create(&thumbMediaURL).Error; err != nil {
+		if err := models.UpsertMediaURL(ctx.GetDB(), &thumbMediaURL); err != nil {
 			return []*models.MediaURL{}, errors.Wrapf(err, "failed to insert video thumbnail image into database (%s)", video.Title)
 		}
 
@@ -194,7 +194,7 @@ func (t ProcessVideoTask) ProcessMedia(ctx scanner_task.TaskContext, mediaData *
 			videoThumbnailURL.Height = thumbDimensions.Height
 			videoThumbnailURL.FileSize = fileStats.Size()
 
-			if err := ctx.GetDB().Save(videoThumbnailURL).Error; err != nil {
+			if err := models.UpsertMediaURL(ctx.GetDB(), videoThumbnailURL); err != nil {
 				return []*models.MediaURL{}, errors.Wrap(err, "updating video thumbnail url in database after re-encoding")
 			}
 		}
