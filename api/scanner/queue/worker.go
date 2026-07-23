@@ -660,10 +660,9 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 	info := t.info
 	plan := t.plan
 	result := t.result
+	media := info.media
 
-	return w.db.Transaction(func(tx *gorm.DB) error {
-		media := info.media
-
+	if err := w.db.Transaction(func(tx *gorm.DB) error {
 		if result.dateShot != nil {
 			media.DateShot = *result.dateShot
 		}
@@ -707,14 +706,18 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			}
 		}
 
-		if plan.needFaces && w.faces != nil {
-			if err := w.faces.DetectFaces(tx, media); err != nil {
-				scanner_utils.ScannerError(ctx, "detect faces (%s): %s", t.path, err)
-			}
-		}
-
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	if plan.needFaces && w.faces != nil {
+		if err := w.faces.DetectFaces(w.db, media); err != nil {
+			scanner_utils.ScannerError(ctx, "detect faces (%s): %s", t.path, err)
+		}
+	}
+
+	return nil
 }
 
 func upsertMediaURL(tx *gorm.DB, media *models.Media, purpose models.MediaPurpose, file *encodedFile, existing *models.MediaURL) error {
