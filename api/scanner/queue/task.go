@@ -104,6 +104,12 @@ type workResult struct {
 	exif      *models.MediaEXIF
 	videoMeta *models.VideoMetadata
 
+	// pendingCachePath is set only when info.isNewMedia: process() writes
+	// generated files here (there's no real media ID yet to derive the
+	// normal cache path from), and persist() renames it into place once it
+	// has one.
+	pendingCachePath string
+
 	original   *encodedFile
 	thumbnail  *encodedFile
 	highres    *encodedFile
