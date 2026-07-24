@@ -134,16 +134,32 @@ func (w *worker) processMedia(t *task) {
 	result, err := w.process(ctx, t)
 	if err != nil {
 		scanner_utils.ScannerError(ctx, "process media (%s): %s", t.path, err)
+		cleanupPendingCache(ctx, result.pendingCachePath)
 		return
 	}
 	t.result = result
 
 	if err := w.persist(ctx, t); err != nil {
 		scanner_utils.ScannerError(ctx, "save media to database (%s): %s", t.path, err)
+		cleanupPendingCache(ctx, result.pendingCachePath)
 		return
 	}
 
 	hasChanged = true
+}
+
+// cleanupPendingCache removes a new media's scratch cache directory after
+// process() or persist() failed partway - it's only ever set (non-empty)
+// for a brand-new media, and only ever renamed away on a fully successful
+// persist(), so a failure anywhere before that leaves it right where
+// process() created it.
+func cleanupPendingCache(ctx context.Context, pendingCachePath string) {
+	if pendingCachePath == "" {
+		return
+	}
+	if err := os.RemoveAll(pendingCachePath); err != nil {
+		log.Warn(ctx, "clean up pending cache directory failed", "path", pendingCachePath, "error", err)
+	}
 }
 
 // gather (phase 1) reads the filesystem and database to establish every fact
@@ -698,15 +714,6 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			return fmt.Errorf("save media: %w", err)
 		}
 
-		if info.isNewMedia {
-			// utils.MediaCacheLeafPath (not media.CachePath, which creates the
-			// directory) - os.Rename needs the destination to not exist yet.
-			finalCachePath := utils.MediaCacheLeafPath(media.AlbumID, media.ID)
-			if err := os.Rename(result.pendingCachePath, finalCachePath); err != nil {
-				return fmt.Errorf("finalize cache directory: %w", err)
-			}
-		}
-
 		if result.exif != nil {
 			if err := tx.Model(media).Association("Exif").Replace(result.exif); err != nil {
 				return fmt.Errorf("save media exif: %w", err)
@@ -732,6 +739,18 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			}
 			if err := upsertMediaURL(tx, media, purpose, file); err != nil {
 				return fmt.Errorf("save media url (%s): %w", purpose, err)
+			}
+		}
+
+		if info.isNewMedia {
+			// Last step: if anything above failed, the transaction rolls
+			// back and result.pendingCachePath is still exactly where
+			// process() left it - nothing else to reconcile. utils.
+			// MediaCacheLeafPath (not media.CachePath, which creates the
+			// directory) - os.Rename needs the destination to not exist yet.
+			finalCachePath := utils.MediaCacheLeafPath(media.AlbumID, media.ID)
+			if err := os.Rename(result.pendingCachePath, finalCachePath); err != nil {
+				return fmt.Errorf("finalize cache directory: %w", err)
 			}
 		}
 

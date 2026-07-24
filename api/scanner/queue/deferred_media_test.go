@@ -101,6 +101,41 @@ func TestNewMediaNotVisibleBeforePersist(t *testing.T) {
 	}
 }
 
+// TestNewMediaPendingCacheCleanedUpOnPersistFailure checks that if persist()
+// fails for a brand-new media, the scratch directory process() wrote its
+// generated files to gets removed instead of leaking on disk forever. The
+// album's ID is never actually saved to the database, so persist()'s
+// UpsertMedia insert fails on the media.album_id foreign key - a reliable,
+// direct way to make persist() fail after process() has already produced
+// files, without needing to fake out the database connection itself.
+func TestNewMediaPendingCacheCleanedUpOnPersistFailure(t *testing.T) {
+	test_utils.FilesystemTest(t)
+	db := test_utils.DatabaseTest(t)
+
+	albumDir := t.TempDir()
+	mediaPath := filepath.Join(albumDir, "photo.jpg")
+	copyFixtureJPEG(t, mediaPath)
+
+	album := &models.Album{Model: models.Model{ID: 999999}, Title: "never persisted", Path: albumDir}
+
+	cache := scanner_cache.MakeAlbumCache()
+	state := newAlbumState(db, album, cache, 1)
+	tsk := newTask(album, cache, state, mediaPath, nil)
+
+	w := newWorker(context.Background(), db)
+	defer w.close()
+
+	w.processMedia(tsk)
+
+	if tsk.result.pendingCachePath == "" {
+		t.Fatalf("tsk.result.pendingCachePath is empty, want process() to have used a scratch directory")
+	}
+	if _, err := os.Stat(tsk.result.pendingCachePath); !os.IsNotExist(err) {
+		t.Fatalf("pending cache dir %s still exists after a failed persist(), want it cleaned up", tsk.result.pendingCachePath)
+	}
+	assertNoMediaRow(t, db, mediaPath)
+}
+
 func assertNoMediaRow(t *testing.T, db *gorm.DB, mediaPath string) {
 	t.Helper()
 	err := db.Where("path_hash = ?", models.MD5Hash(mediaPath)).First(&models.Media{}).Error
