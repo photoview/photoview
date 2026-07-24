@@ -73,7 +73,9 @@ func InitializePeriodicScannerWithQueue(db *gorm.DB, queue ScannerQueue) error {
 		log.Info(nil, "Periodic scan interval changed: disabled")
 	}
 
+	mainPeriodicScanner.tickerLocker.Lock()
 	mainPeriodicScanner.ticker = newTicker
+	mainPeriodicScanner.tickerLocker.Unlock()
 
 	select {
 	case mainPeriodicScanner.ticker_changed <- true:
