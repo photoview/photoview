@@ -13,7 +13,7 @@ import (
 
 type NotificationTask struct {
 	scanner_task.ScannerTaskBase
-	throttle utils.Throttle
+	throttle *utils.Throttle
 	albumKey string
 }
 

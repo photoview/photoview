@@ -115,7 +115,7 @@ func (queue *ScannerQueue) startBackgroundWorker() {
 			break
 		}
 
-		queue.processQueue(&notifyThrottle)
+		queue.processQueue(notifyThrottle)
 	}
 
 	log.Println("Scanner background worker stopped")

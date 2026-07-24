@@ -38,7 +38,7 @@ type albumState struct {
 	changedCount int
 	remaining    int
 	allMediaIDs  []int
-	throttle     utils.Throttle
+	throttle     *utils.Throttle
 }
 
 func newAlbumState(db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache, total int) *albumState {
@@ -89,6 +89,9 @@ func (s *albumState) CompleteMedia(ctx context.Context, media *models.Media, cha
 	done := s.total - s.remaining
 	total := s.total
 	progress := float64(done) / float64(total) * 100.0
+	isLast := s.remaining == 0
+	s.mu.Unlock()
+
 	s.throttle.Trigger(func() {
 		notification.BroadcastNotification(&models.Notification{
 			Key:      s.albumKey,
@@ -98,9 +101,6 @@ func (s *albumState) CompleteMedia(ctx context.Context, media *models.Media, cha
 			Progress: &progress,
 		})
 	})
-
-	isLast := s.remaining == 0
-	s.mu.Unlock()
 
 	if isLast {
 		s.completeAlbum(ctx)

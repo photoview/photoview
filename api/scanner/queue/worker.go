@@ -36,10 +36,6 @@ import (
 // ffmpeg/magick/faces are stateless-per-call or already internally
 // synchronized, so they're shared across all workers.
 type worker struct {
-	// ctx carries this worker's "worker_id" logging attribute (via
-	// log.WithAttrs); every log call the worker makes uses it (or a further
-	// derived context that also has the current task's media title on it),
-	// instead of a bare nil context.
 	ctx context.Context
 
 	db     *gorm.DB
@@ -55,10 +51,6 @@ type worker struct {
 // forever-growing lifetime counter.
 var activeWorkerCount atomic.Int64
 
-// newWorker always succeeds: if the worker's own exiftool process fails to
-// start, that failure is reported (and gracefully degraded around) at the
-// point of use in process(), the same way any other scanner error is - it
-// does not prevent this worker from handling everything else.
 func newWorker(parentCtx context.Context, db *gorm.DB) *worker {
 	ctx := log.WithAttrs(context.WithoutCancel(parentCtx), "worker_id", activeWorkerCount.Add(1))
 
@@ -97,10 +89,6 @@ func (w *worker) processMedia(t *task) {
 
 	hasChanged := false
 	defer func() {
-		// t.info.media may already be set even if gather returned an error
-		// (e.g. it failed on a later step, after determining/creating the
-		// media row) - CompleteMedia still needs that ID so cleanup doesn't
-		// mistake a real, existing media for stale.
 		t.albumState.CompleteMedia(ctx, t.info.media, hasChanged)
 		if t.done != nil {
 			close(t.done)
@@ -115,7 +103,7 @@ func (w *worker) processMedia(t *task) {
 	}
 
 	if info.media != nil {
-		ctx = log.WithAttrs(ctx, "media_title", info.media.Title)
+		ctx = log.WithAttrs(ctx, "media_path", info.media.Path)
 	}
 
 	if info.skip {
@@ -321,7 +309,7 @@ func (w *worker) process(ctx context.Context, t *task) (workResult, error) {
 		// it. Without a random suffix here, both workers would write into
 		// (and one would rename away from under the other) the same
 		// directory.
-		cachePath, err = utils.PendingCachePathForMedia(info.media.AlbumID, models.MD5Hash(t.path)+"-"+utils.GenerateToken())
+		cachePath, err = utils.PendingCachePathForMedia(info.media.AlbumID, "tmp-"+models.MD5Hash(t.path)+"-"+utils.GenerateToken())
 		if err != nil {
 			return result, fmt.Errorf("pending cache directory error: %w", err)
 		}
