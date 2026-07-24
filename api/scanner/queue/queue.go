@@ -25,9 +25,6 @@ import (
 // and activeWorkers are only ever touched by dispatch(), so none of them need
 // locking of their own.
 type Queue struct {
-	// ctx is passed to every worker this Queue creates (stripped of its
-	// cancellation via context.WithoutCancel first - a worker must be able
-	// to finish an in-flight task even if this ctx is later canceled).
 	ctx context.Context
 
 	db  *gorm.DB
@@ -63,7 +60,7 @@ func Initialize(ctx context.Context, db *gorm.DB) error {
 	q := &Queue{
 		ctx:      context.WithoutCancel(ctx),
 		db:       db,
-		incoming: make(chan any, 64),
+		incoming: make(chan any),
 		quit:     make(chan struct{}),
 		done:     make(chan struct{}),
 	}
@@ -168,8 +165,6 @@ func ProcessMedia(ctx context.Context, db *gorm.DB, media *models.Media) error {
 func (q *Queue) dispatch() {
 	defer close(q.done)
 
-	shuttingDown := false
-
 	for {
 		// Pending tasks take priority over expanding more albums.
 		if len(q.pendingTasks) == 0 && len(q.pendingAlbums) > 0 {
@@ -179,10 +174,9 @@ func (q *Queue) dispatch() {
 			tasks, state, err := expandAlbum(q.db, req)
 			switch {
 			case err != nil:
-				scanner_utils.ScannerError(nil, "expand album (%s): %s", req.Album.Path, err)
+				scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
 			case len(tasks) == 0:
-				// Nothing will ever call CompleteMedia for this album, so
-				// nothing else would trigger cleanup/notification.
+				// Nothing to do
 				state.completeAlbum(q.ctx)
 			default:
 				q.pendingTasks = append(q.pendingTasks, tasks...)
@@ -192,50 +186,30 @@ func (q *Queue) dispatch() {
 
 		if len(q.pendingTasks) == 0 {
 			if q.taskChan != nil {
-				// No work left right now: close this generation's channel
-				// and wait for its workers to exit (brief blocking, accepted
-				// trade-off for a simple shutdown story).
+				// No work left, close all workers
 				close(q.taskChan)
 				q.taskChan, q.activeWorkers = nil, 0
 				q.wg.Wait()
 			}
 
-			if shuttingDown {
-				return
-			}
-
+			// Both pendingAlbums and pendingTasks are empty.
 			select {
 			case req := <-q.incoming:
-				q.absorb(req)
+				q.enqueue(req)
 			case <-q.quit:
-				// Close() only promises no *new* work will be accepted - it
-				// must not abandon work already queued (e.g. an AddUser call
-				// that returned just before Close() was called). The select
-				// above can pick this case even while incoming still has
-				// buffered items, so drain whatever's already there before
-				// actually stopping.
-				shuttingDown = true
-				for drained := false; !drained; {
-					select {
-					case req := <-q.incoming:
-						q.absorb(req)
-					default:
-						drained = true
-					}
-				}
+				return
 			}
 			continue
 		}
 
-		// There's a task to hand out: make sure the pool has a channel and
-		// enough workers, then hand out the next one.
+		// Ensure workers are running
 		if q.taskChan == nil {
 			q.taskChan = make(chan *task)
 		}
 		if q.activeWorkers < int(q.max.Load()) {
 			q.activeWorkers++
 			q.wg.Add(1)
-			go func(ch chan *task) {
+			go func(ch <-chan *task) {
 				defer q.wg.Done()
 				w := newWorker(q.ctx, q.db)
 				defer w.close()
@@ -249,12 +223,12 @@ func (q *Queue) dispatch() {
 		case q.taskChan <- q.pendingTasks[0]:
 			q.pendingTasks = q.pendingTasks[1:]
 		case req := <-q.incoming:
-			q.absorb(req)
+			q.enqueue(req)
 		}
 	}
 }
 
-func (q *Queue) absorb(req any) {
+func (q *Queue) enqueue(req any) {
 	switch r := req.(type) {
 	case AlbumRequest:
 		q.pendingAlbums = append(q.pendingAlbums, r)
