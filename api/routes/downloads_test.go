@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"errors"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -69,11 +69,26 @@ func TestDownloadRouteReturnsNotFoundForMissingAlbum(t *testing.T) {
 }
 
 func TestDownloadRouteReturnsInternalServerErrorForDatabaseFailure(t *testing.T) {
-	db := test_utils.DatabaseTest(t).Session(&gorm.Session{})
-	forcedError := errors.New("forced album lookup failure")
-	assert.ErrorIs(t, db.AddError(forcedError), forcedError)
+	db := test_utils.DatabaseTest(t)
+	ctx := context.Background()
 
-	rec := requestAlbumDownload(db, "1")
+	// Force First to return a real query error without closing the shared test pool.
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("get database pool: %v", err)
+	}
+	connection, err := sqlDB.Conn(ctx)
+	if err != nil {
+		t.Fatalf("get dedicated database connection: %v", err)
+	}
+	if err := connection.Close(); err != nil {
+		t.Fatalf("close dedicated database connection: %v", err)
+	}
+
+	failingDB := db.WithContext(ctx)
+	failingDB.Statement.ConnPool = connection
+
+	rec := requestAlbumDownload(failingDB, "1")
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	assert.Equal(t, internalServerError, rec.Body.String())
