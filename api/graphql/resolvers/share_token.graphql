@@ -42,6 +42,6 @@ extend type Mutation {
   "Set a password for a token, if null is passed for the password argument, the password will be cleared"
   protectShareToken(token: String!, password: String): ShareToken! @isAuthorized
 
-  "Set a Expiration Time for a token"
+  "Set an Expiration Time for a token"
   setExpireShareToken(token: String!,expire: Time):ShareToken! @isAuthorized
 }
