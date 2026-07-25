@@ -1,0 +1,18 @@
+type ShareToken {
+  id: String!
+  token: String!
+  expiresAt: Int!
+  name: String!
+}
+
+input ShareTokenInput {
+  name: String!
+  expiresAt: Int!
+  permissions: [Int!]!
+}
+
+extend type Mutation {
+  createShareToken(input: ShareTokenInput!): ShareToken!
+  updateShareToken(id: ID!, input: ShareTokenInput!): ShareToken!
+  deleteShareToken(id: ID!): Boolean!
+}
