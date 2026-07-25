@@ -2,12 +2,17 @@ package queue
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/test_utils"
+	"github.com/photoview/photoview/api/utils"
 )
 
 // TestCompleteMediaConcurrentCounting drives CompleteMedia from many
@@ -72,6 +77,86 @@ drain:
 	}
 	if doneCount != 1 {
 		t.Errorf("got %d 'scan complete' notifications, want exactly 1", doneCount)
+	}
+}
+
+// TestCleanupStaleMediaDeletesGoneMedia checks the branch cleanupStaleMedia
+// takes when it actually finds stale media: rows outside allMediaIDs must be
+// deleted from the database along with their cache directories, while media
+// that was found stays untouched. It also exercises the
+// face_detection.GlobalFaceDetector reload that only runs on this branch.
+func TestCleanupStaleMediaDeletesGoneMedia(t *testing.T) {
+	test_utils.FilesystemTest(t)
+	db := test_utils.DatabaseTest(t)
+
+	if err := face_detection.InitializeFaceDetector(db); err != nil {
+		t.Fatalf("initialize face detector: %v", err)
+	}
+
+	album := &models.Album{Title: "stale media test", Path: t.TempDir()}
+	if err := db.Create(album).Error; err != nil {
+		t.Fatalf("create album: %v", err)
+	}
+
+	makeMedia := func(name string) *models.Media {
+		m := &models.Media{
+			Title:    name,
+			Path:     filepath.Join(album.Path, name),
+			AlbumID:  album.ID,
+			Type:     models.MediaTypePhoto,
+			DateShot: time.Now(),
+		}
+		if err := db.Create(m).Error; err != nil {
+			t.Fatalf("create media %s: %v", name, err)
+		}
+		return m
+	}
+
+	keep := makeMedia("keep.jpg")
+	gone1 := makeMedia("gone1.jpg")
+	gone2 := makeMedia("gone2.jpg")
+
+	var goneCacheDirs []string
+	for _, m := range []*models.Media{keep, gone1, gone2} {
+		cachePath, err := utils.CachePathForMedia(album.ID, m.ID)
+		if err != nil {
+			t.Fatalf("cache path for media %d: %v", m.ID, err)
+		}
+		if err := os.WriteFile(filepath.Join(cachePath, "thumbnail.jpg"), []byte("x"), 0o644); err != nil {
+			t.Fatalf("write cache file: %v", err)
+		}
+		if m.ID != keep.ID {
+			goneCacheDirs = append(goneCacheDirs, cachePath)
+		}
+	}
+
+	state := newAlbumState(db, album, nil, 1)
+	state.allMediaIDs = []int{keep.ID}
+
+	if err := state.cleanupStaleMedia(context.Background()); err != nil {
+		t.Fatalf("cleanupStaleMedia() error: %v", err)
+	}
+
+	var remaining []models.Media
+	if err := db.Where("album_id = ?", album.ID).Find(&remaining).Error; err != nil {
+		t.Fatalf("query remaining media: %v", err)
+	}
+	if len(remaining) != 1 || remaining[0].ID != keep.ID {
+		t.Errorf("remaining media = %+v, want only media %d (%q)", remaining, keep.ID, keep.Title)
+	}
+
+	for _, dir := range goneCacheDirs {
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			t.Errorf("stale cache dir %s still exists, want it removed", dir)
+		}
+	}
+
+	keepCachePath, err := utils.CachePathForMedia(album.ID, keep.ID)
+	if err != nil {
+		t.Fatalf("cache path for kept media: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(keepCachePath, "thumbnail.jpg")); err != nil {
+		t.Errorf("kept media's cache file was removed: %v", err)
 	}
 }
 
