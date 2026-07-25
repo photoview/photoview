@@ -27,7 +27,7 @@ func TestNewMediaNotVisibleBeforePersist(t *testing.T) {
 
 	albumDir := t.TempDir()
 	mediaPath := filepath.Join(albumDir, "photo.jpg")
-	copyFixtureJPEG(t, mediaPath)
+	copyFixtureFile(t, "photo/plain.jpg", mediaPath)
 
 	album := &models.Album{Title: "deferred media test", Path: albumDir}
 	if err := db.Create(album).Error; err != nil {
@@ -114,7 +114,7 @@ func TestNewMediaPendingCacheCleanedUpOnPersistFailure(t *testing.T) {
 
 	albumDir := t.TempDir()
 	mediaPath := filepath.Join(albumDir, "photo.jpg")
-	copyFixtureJPEG(t, mediaPath)
+	copyFixtureFile(t, "photo/plain.jpg", mediaPath)
 
 	album := &models.Album{Model: models.Model{ID: 999999}, Title: "never persisted", Path: albumDir}
 
@@ -144,20 +144,5 @@ func assertNoMediaRow(t *testing.T, db *gorm.DB, mediaPath string) {
 	}
 	if err != gorm.ErrRecordNotFound {
 		t.Fatalf("unexpected error checking for media row: %v", err)
-	}
-}
-
-// copyFixtureJPEG copies a small, real, already-exercised test fixture image
-// to dst, so the full process() pipeline (MIME detection, thumbnail
-// generation, ...) has genuinely valid image bytes to work with.
-func copyFixtureJPEG(t *testing.T, dst string) {
-	t.Helper()
-	src := test_utils.PathFromAPIRoot("scanner", "test_media", "orient", "up_arrow_90cw_web.jpg")
-	data, err := os.ReadFile(src)
-	if err != nil {
-		t.Fatalf("read fixture jpeg: %v", err)
-	}
-	if err := os.WriteFile(dst, data, 0o644); err != nil {
-		t.Fatalf("write fixture jpeg copy: %v", err)
 	}
 }

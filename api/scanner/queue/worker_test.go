@@ -1,6 +1,11 @@
 package queue
 
 import (
+	"context"
+	"crypto/md5"
+	"encoding/hex"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -178,6 +183,57 @@ func TestBuildVideoMetadata(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestHashFile checks hashFile against an independently-computed md5, and
+// that a missing file yields nil instead of an error value.
+func TestHashFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "content.txt")
+	content := []byte("hello queue package hashFile test")
+	if err := os.WriteFile(path, content, 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	sum := md5.Sum(content)
+	wantHex := hex.EncodeToString(sum[:])
+
+	got := hashFile(context.Background(), path)
+	if got == nil {
+		t.Fatalf("hashFile() = nil, want %q", wantHex)
+	}
+	if *got != wantHex {
+		t.Errorf("hashFile() = %q, want %q", *got, wantHex)
+	}
+
+	if got := hashFile(context.Background(), filepath.Join(dir, "does-not-exist.txt")); got != nil {
+		t.Errorf("hashFile() on missing file = %q, want nil", *got)
+	}
+}
+
+// TestCleanupPendingCache checks the empty-path no-op branch and that a real
+// scratch directory is actually removed.
+func TestCleanupPendingCache(t *testing.T) {
+	t.Run("empty path is a no-op", func(t *testing.T) {
+		cleanupPendingCache(context.Background(), "")
+	})
+
+	t.Run("removes an existing directory", func(t *testing.T) {
+		dir := t.TempDir()
+		pending := filepath.Join(dir, "pending")
+		if err := os.MkdirAll(pending, 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(pending, "file.txt"), []byte("x"), 0o644); err != nil {
+			t.Fatalf("write file: %v", err)
+		}
+
+		cleanupPendingCache(context.Background(), pending)
+
+		if _, err := os.Stat(pending); !os.IsNotExist(err) {
+			t.Errorf("pending dir %s still exists after cleanupPendingCache, want it removed", pending)
+		}
+	})
 }
 
 func ptr[T any](v T) *T { return &v }
