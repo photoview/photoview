@@ -56,9 +56,6 @@ func newAlbumState(db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumS
 // NotifyFoundNewMedia is called by a worker as soon as decide() confirms a
 // task is for new media.
 func (s *albumState) NotifyFoundNewMedia(path string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	s.throttle.Trigger(func() {
 		notification.BroadcastNotification(&models.Notification{
 			Key:     s.albumKey,

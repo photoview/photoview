@@ -109,7 +109,11 @@ func AddUser(user *models.User) error {
 	}
 
 	for _, album := range albums {
-		globalQueue.incoming <- AlbumRequest{Album: album, Cache: cache}
+		select {
+		case globalQueue.incoming <- AlbumRequest{Album: album, Cache: cache}:
+		case <-globalQueue.quit:
+			return fmt.Errorf("scanner queue is shutting down")
+		}
 	}
 
 	return nil
@@ -156,8 +160,19 @@ func ProcessMedia(ctx context.Context, db *gorm.DB, media *models.Media) error {
 
 	t := newTask(&album, cache, state, media.Path, make(chan struct{}))
 
-	globalQueue.incoming <- t
-	<-t.done
+	select {
+	case globalQueue.incoming <- t:
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-globalQueue.quit:
+		return fmt.Errorf("scanner queue is shutting down")
+	}
+
+	select {
+	case <-t.done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 
 	return nil
 }
@@ -171,7 +186,7 @@ func (q *Queue) dispatch() {
 			req := q.pendingAlbums[0]
 			q.pendingAlbums = q.pendingAlbums[1:]
 
-			tasks, state, err := expandAlbum(q.db, req)
+			tasks, state, err := expandAlbum(q.ctx, q.db, req)
 			switch {
 			case err != nil:
 				scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
@@ -224,6 +239,12 @@ func (q *Queue) dispatch() {
 			q.pendingTasks = q.pendingTasks[1:]
 		case req := <-q.incoming:
 			q.enqueue(req)
+		case <-q.quit:
+			if q.taskChan != nil {
+				close(q.taskChan)
+				q.wg.Wait()
+			}
+			return
 		}
 	}
 }
@@ -231,6 +252,11 @@ func (q *Queue) dispatch() {
 func (q *Queue) enqueue(req any) {
 	switch r := req.(type) {
 	case AlbumRequest:
+		for _, pending := range q.pendingAlbums {
+			if pending.Album.ID == r.Album.ID {
+				return
+			}
+		}
 		q.pendingAlbums = append(q.pendingAlbums, r)
 	case *task:
 		q.pendingTasks = append(q.pendingTasks, r)

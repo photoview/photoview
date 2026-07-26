@@ -87,7 +87,6 @@ func FindOrCreateMedia(db *gorm.DB, media *Media) (created bool, err error) {
 // queue's persist() where media has already been fully re-evaluated and a
 // second, separate update call would otherwise be needed right after.
 func UpsertMedia(db *gorm.DB, media *Media) error {
-	media.ID = 0
 	return db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "path_hash"}},
 		DoUpdates: clause.AssignmentColumns([]string{

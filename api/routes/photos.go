@@ -9,7 +9,6 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner"
 )
 
 func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
@@ -51,7 +50,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 
 		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
-			if err = scanner.ProcessSingleMediaFunc(r.Context(), db, media); err != nil {
+			if err = processSingleMediaFn(r.Context(), db, media); err != nil {
 				log.Error(r.Context(), "processing image not found in cache",
 					"media_cache_path", cachedPath,
 					"error", err)

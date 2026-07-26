@@ -226,7 +226,11 @@ func (w *worker) gather(ctx context.Context, t *task) (gatheredInfo, error) {
 		sidecarPath := t.path + ".xmp"
 		if scanner_utils.FileExists(sidecarPath) {
 			info.sidecarPath = &sidecarPath
-			info.sidecarHash = hashFile(ctx, sidecarPath)
+			hash, err := hashFile(sidecarPath)
+			if err != nil {
+				return info, fmt.Errorf("hash sidecar file: %w", err)
+			}
+			info.sidecarHash = hash
 		}
 
 		if counterpart, ok := media_type.FindWebCounterpart(t.path); ok {
@@ -274,22 +278,20 @@ func (w *worker) findOrBuildMedia(mediaPath string, albumID int, mediaType media
 	return media, true, nil
 }
 
-func hashFile(ctx context.Context, p string) *string {
+func hashFile(p string) (*string, error) {
 	f, err := os.Open(p)
 	if err != nil {
-		log.Warn(ctx, "hash file failed", "path", p, "error", err)
-		return nil
+		return nil, err
 	}
 	defer f.Close()
 
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
-		log.Warn(ctx, "hash file failed", "path", p, "error", err)
-		return nil
+		return nil, err
 	}
 
 	hash := hex.EncodeToString(h.Sum(nil))
-	return &hash
+	return &hash, nil
 }
 
 // process (phase 3) calls out to exiftool/ffprobe/ffmpeg/imagick/face

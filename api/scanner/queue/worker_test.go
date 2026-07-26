@@ -186,7 +186,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 }
 
 // TestHashFile checks hashFile against an independently-computed md5, and
-// that a missing file yields nil instead of an error value.
+// that a missing file yields an error instead of a hash.
 func TestHashFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "content.txt")
@@ -198,7 +198,10 @@ func TestHashFile(t *testing.T) {
 	sum := md5.Sum(content)
 	wantHex := hex.EncodeToString(sum[:])
 
-	got := hashFile(context.Background(), path)
+	got, err := hashFile(path)
+	if err != nil {
+		t.Fatalf("hashFile() error = %v, want nil", err)
+	}
 	if got == nil {
 		t.Fatalf("hashFile() = nil, want %q", wantHex)
 	}
@@ -206,8 +209,8 @@ func TestHashFile(t *testing.T) {
 		t.Errorf("hashFile() = %q, want %q", *got, wantHex)
 	}
 
-	if got := hashFile(context.Background(), filepath.Join(dir, "does-not-exist.txt")); got != nil {
-		t.Errorf("hashFile() on missing file = %q, want nil", *got)
+	if got, err := hashFile(filepath.Join(dir, "does-not-exist.txt")); err == nil {
+		t.Errorf("hashFile() on missing file = %v, %v, want a non-nil error", got, err)
 	}
 }
 
