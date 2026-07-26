@@ -1,10 +1,12 @@
 package queue
 
 import (
+	"context"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
@@ -20,7 +22,7 @@ type AlbumRequest struct {
 // task per candidate media file. It deliberately does no database or
 // exif/ffmpeg work itself - that happens per-task, in gather(), spread across
 // workers instead of serializing it all up front in the dispatcher.
-func expandAlbum(db *gorm.DB, req AlbumRequest) ([]*task, *albumState, error) {
+func expandAlbum(ctx context.Context, db *gorm.DB, req AlbumRequest) ([]*task, *albumState, error) {
 	album := req.Album
 	cache := req.Cache
 
@@ -35,6 +37,7 @@ func expandAlbum(db *gorm.DB, req AlbumRequest) ([]*task, *albumState, error) {
 
 		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
 		if err != nil {
+			log.Warn(ctx, "check dir symlink failed", "path", mediaPath, "error", err)
 			isDirSymlink = false
 		}
 

@@ -128,9 +128,9 @@ func TestGatherDetectsSidecarAndHash(t *testing.T) {
 		t.Fatalf("info.sidecarPath = %v, want %q", info.sidecarPath, sidecarPath)
 	}
 
-	wantHash := hashFile(context.Background(), sidecarPath)
-	if wantHash == nil {
-		t.Fatalf("hashFile() on the sidecar file itself returned nil")
+	wantHash, err := hashFile(sidecarPath)
+	if err != nil {
+		t.Fatalf("hashFile() on the sidecar file itself failed: %v", err)
 	}
 	if info.sidecarHash == nil || *info.sidecarHash != *wantHash {
 		t.Errorf("info.sidecarHash = %v, want %v", info.sidecarHash, *wantHash)
