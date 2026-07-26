@@ -69,7 +69,6 @@
     "action_label": {
       "change_label": "Змінити мітку",
       "detach_images": "Від’єднати обличчя",
-      "merge_face": "",
       "merge_people": "Обʼєднати обличчя",
       "move_faces": "Перемістити обличчя"
     },
@@ -80,8 +79,7 @@
     },
     "modal": {
       "action": {
-        "merge": "Обʼєднати",
-        "next": ""
+        "merge": "Обʼєднати"
       },
       "detach_image_faces": {
         "action": {
@@ -92,13 +90,9 @@
         "title": "Від’єднати світлини з обличчями"
       },
       "merge_face_groups": {
-        "destination_description": "",
+        "description": "Усі світлини цієї групи обличь будуть обʼєднані з обраною групою.",
         "destination_table": {
           "title": "Оберіть обличчя призначення"
-        },
-        "sources_description": "",
-        "sources_table": {
-          "title": ""
         },
         "title": "Об’єднати групи обличь"
       },
@@ -265,24 +259,14 @@
     "download": {
       "filesize": {
         "byte_one": "{{count}} Байт",
-        "byte_few": "",
-        "byte_many": "",
         "byte_other": "{{count}} Байтів",
         "giga_byte_one": "{{count}} ГБ",
-        "giga_byte_few": "",
-        "giga_byte_many": "",
         "giga_byte_other": "{{count}} ГБ",
         "kilo_byte_one": "{{count}} КБ",
-        "kilo_byte_few": "",
-        "kilo_byte_many": "",
         "kilo_byte_other": "{{count}} КБ",
         "mega_byte_one": "{{count}} МБ",
-        "mega_byte_few": "",
-        "mega_byte_many": "",
         "mega_byte_other": "{{count}} МБ",
         "tera_byte_one": "{{count}} ТБ",
-        "tera_byte_few": "",
-        "tera_byte_many": "",
         "tera_byte_other": "{{count}} ТБ"
       },
       "table_columns": {
@@ -299,7 +283,6 @@
     "media": {
       "album_path": "Шлях до альбому",
       "exif": {
-        "description": "",
         "exposure_program": {
           "action_program": "Програма дії",
           "aperture_priority": "Пріоритет діафрагми",
@@ -352,13 +335,12 @@
       "add_share": "Додати спільний доступ",
       "copy_link": "Копіювати посилання",
       "delete": "Видалити",
-      "expiration_date": "",
       "more": "Більше",
       "no_shares_found": "Спільних доступів не знайдено",
       "public_link": "Публічне посилання",
-      "share_label": "",
-      "share_label_placeholder": "",
-      "share_label_update_error": "",
+      "share_label": "Мітка спільного доступу",
+      "share_label_placeholder": "Сім’я, клієнт, вебсайт...",
+      "share_label_update_error": "Не вдалося оновити мітку спільного доступу",
       "title": "Параметри спільного доступу"
     }
   },

@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+	"unicode"
 )
 
 func GenerateToken() string {
@@ -26,6 +28,30 @@ func GenerateToken() string {
 		b[i] = charset[n.Int64()]
 	}
 	return string(b)
+}
+
+// SanitizeShareLabel removes invisible control and format characters and trims whitespace.
+func SanitizeShareLabel(label *string) *string {
+	if label == nil {
+		return nil
+	}
+
+	sanitizedLabel := strings.Map(func(r rune) rune {
+		switch {
+		case unicode.IsControl(r):
+			return -1
+		case unicode.In(r, unicode.Cf):
+			return -1
+		default:
+			return r
+		}
+	}, *label)
+	sanitizedLabel = strings.TrimSpace(sanitizedLabel)
+	if sanitizedLabel == "" {
+		return nil
+	}
+
+	return &sanitizedLabel
 }
 
 type PhotoviewError struct {

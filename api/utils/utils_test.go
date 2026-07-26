@@ -7,10 +7,56 @@ import (
 
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
 	test_utils.IntegrationTestRun(m)
+}
+
+func TestSanitizeShareLabel(t *testing.T) {
+	tests := []struct {
+		name     string
+		label    *string
+		expected *string
+	}{
+		{
+			name: "nil label",
+		},
+		{
+			name:     "control and format characters",
+			label:    stringPointer("Fam\x00ily\r\n\t\u007f\u0085\u200b album"),
+			expected: stringPointer("Family album"),
+		},
+		{
+			name:     "surrounding whitespace",
+			label:    stringPointer("\u00a0  Family album \t"),
+			expected: stringPointer("Family album"),
+		},
+		{
+			name:  "empty label",
+			label: stringPointer(""),
+		},
+		{
+			name:  "invisible characters only",
+			label: stringPointer("\x00\r\n\t\u007f\u0085\u200b"),
+		},
+		{
+			name:     "ordinary unicode",
+			label:    stringPointer("  Семья 日本語  "),
+			expected: stringPointer("Семья 日本語"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, utils.SanitizeShareLabel(test.label))
+		})
+	}
+}
+
+func stringPointer(value string) *string {
+	return &value
 }
 
 func TestIsDirSymlink(t *testing.T) {

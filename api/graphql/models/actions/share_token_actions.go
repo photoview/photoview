@@ -37,7 +37,7 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 		}
 	}
 
-	label = sanitizeShareLabel(label)
+	label = utils.SanitizeShareLabel(label)
 
 	hashedPassword, err := hashSharePassword(password)
 	if err != nil {
@@ -79,7 +79,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 		return nil, auth.ErrUnauthorized
 	}
 
-	label = sanitizeShareLabel(label)
+	label = utils.SanitizeShareLabel(label)
 
 	var hashedPassword *string = nil
 	if password != nil {
@@ -108,8 +108,8 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 	return &shareToken, nil
 }
 
-func DeleteShareToken(db *gorm.DB, userID int, tokenValue string) (*models.ShareToken, error) {
-	token, err := getUserToken(db, userID, tokenValue)
+func DeleteShareToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
+	token, err := getUserToken(db, user, tokenValue)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func DeleteShareToken(db *gorm.DB, userID int, tokenValue string) (*models.Share
 	return token, nil
 }
 
-func ProtectShareToken(db *gorm.DB, userID int, tokenValue string, password *string) (*models.ShareToken, error) {
-	token, err := getUserToken(db, userID, tokenValue)
+func ProtectShareToken(db *gorm.DB, user *models.User, tokenValue string, password *string) (*models.ShareToken, error) {
+	token, err := getUserToken(db, user, tokenValue)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +141,8 @@ func ProtectShareToken(db *gorm.DB, userID int, tokenValue string, password *str
 	return token, nil
 }
 
-func SetExpireShareToken(db *gorm.DB, userID int, tokenValue string, expire *time.Time) (*models.ShareToken, error) {
-	token, err := getUserToken(db, userID, tokenValue)
+func SetExpireShareToken(db *gorm.DB, user *models.User, tokenValue string, expire *time.Time) (*models.ShareToken, error) {
+	token, err := getUserToken(db, user, tokenValue)
 	if err != nil {
 		return nil, err
 	}
@@ -156,13 +156,13 @@ func SetExpireShareToken(db *gorm.DB, userID int, tokenValue string, expire *tim
 	return token, nil
 }
 
-func SetShareTokenLabel(db *gorm.DB, userID int, tokenValue string, label *string) (*models.ShareToken, error) {
-	token, err := getUserToken(db, userID, tokenValue)
+func SetShareTokenLabel(db *gorm.DB, user *models.User, tokenValue string, label *string) (*models.ShareToken, error) {
+	token, err := getUserToken(db, user, tokenValue)
 	if err != nil {
 		return nil, err
 	}
 
-	token.Label = sanitizeShareLabel(label)
+	token.Label = utils.SanitizeShareLabel(label)
 
 	if err := db.Save(&token).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to update label for share token")
@@ -185,17 +185,13 @@ func hashSharePassword(password *string) (*string, error) {
 	return hashedPassword, nil
 }
 
-func getUserToken(db *gorm.DB, userID int, tokenValue string) (*models.ShareToken, error) {
-
-	var query string
-	if drivers.POSTGRES.MatchDatabase(db) {
-		query = "\"Owner\".id = ? OR \"Owner\".admin = TRUE"
-	} else {
-		query = "Owner.id = ? OR Owner.admin = TRUE"
-	}
-
+func getUserToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
 	var token models.ShareToken
-	err := db.Where("share_tokens.value = ?", tokenValue).Joins("Owner").Where(query, userID).First(&token).Error
+	query := db.Where("share_tokens.value = ?", tokenValue)
+	if !user.Admin {
+		query = query.Where("share_tokens.owner_id = ?", user.ID)
+	}
+	err := query.First(&token).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get user share token from database")

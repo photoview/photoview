@@ -47,7 +47,7 @@ func (r *mutationResolver) DeleteShareToken(ctx context.Context, token string) (
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.DeleteShareToken(r.DB(ctx), user.ID, token)
+	return actions.DeleteShareToken(r.DB(ctx), user, token)
 }
 
 // ProtectShareToken is the resolver for the protectShareToken field.
@@ -57,7 +57,7 @@ func (r *mutationResolver) ProtectShareToken(ctx context.Context, token string, 
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.ProtectShareToken(r.DB(ctx), user.ID, token, password)
+	return actions.ProtectShareToken(r.DB(ctx), user, token, password)
 }
 
 // SetExpireShareToken is the resolver for the setExpireShareToken field.
@@ -67,7 +67,7 @@ func (r *mutationResolver) SetExpireShareToken(ctx context.Context, token string
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.SetExpireShareToken(r.DB(ctx), user.ID, token, expire)
+	return actions.SetExpireShareToken(r.DB(ctx), user, token, expire)
 }
 
 // SetShareTokenLabel is the resolver for the setShareTokenLabel field.
@@ -77,7 +77,7 @@ func (r *mutationResolver) SetShareTokenLabel(ctx context.Context, token string,
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.SetShareTokenLabel(r.DB(ctx), user.ID, token, label)
+	return actions.SetShareTokenLabel(r.DB(ctx), user, token, label)
 }
 
 // ShareToken is the resolver for the shareToken field.

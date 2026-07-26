@@ -88,7 +88,7 @@ func TestShareToken(t *testing.T) {
 	})
 
 	t.Run("Delete share token", func(t *testing.T) {
-		deletedShare, err := actions.DeleteShareToken(db, user.ID, mediaShare.Value)
+		deletedShare, err := actions.DeleteShareToken(db, user, mediaShare.Value)
 
 		assert.NoError(t, err)
 		assert.Equal(t, mediaShare.ID, deletedShare.ID)
@@ -98,11 +98,11 @@ func TestShareToken(t *testing.T) {
 
 		assert.Empty(t, albumShare.Password)
 
-		share, err := actions.ProtectShareToken(db, user.ID, albumShare.Value, &sharePassword)
+		share, err := actions.ProtectShareToken(db, user, albumShare.Value, &sharePassword)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, share.Password)
 
-		share, err = actions.ProtectShareToken(db, user.ID, albumShare.Value, nil)
+		share, err = actions.ProtectShareToken(db, user, albumShare.Value, nil)
 		assert.NoError(t, err)
 		assert.Empty(t, share.Password)
 	})
@@ -111,23 +111,23 @@ func TestShareToken(t *testing.T) {
 		assert.NotEmpty(t, albumShare.Expire)
 		time_ := time.Date(2025, 12, 6, 0, 0, 0, 0, time.UTC)
 
-		share, err := actions.SetExpireShareToken(db, user.ID, albumShare.Value, &time_)
+		share, err := actions.SetExpireShareToken(db, user, albumShare.Value, &time_)
 		assert.NoError(t, err)
 		assert.Equal(t, time_, *share.Expire)
 
-		share, err = actions.SetExpireShareToken(db, user.ID, albumShare.Value, nil)
+		share, err = actions.SetExpireShareToken(db, user, albumShare.Value, nil)
 		assert.NoError(t, err)
 		assert.Nil(t, share.Expire)
 	})
 
 	t.Run("Set share token label", func(t *testing.T) {
 		label := "  Press gallery  "
-		share, err := actions.SetShareTokenLabel(db, user.ID, albumShare.Value, &label)
+		share, err := actions.SetShareTokenLabel(db, user, albumShare.Value, &label)
 		assert.NoError(t, err)
 		assert.Equal(t, "Press gallery", *share.Label)
 
 		blankLabel := " "
-		share, err = actions.SetShareTokenLabel(db, user.ID, albumShare.Value, &blankLabel)
+		share, err = actions.SetShareTokenLabel(db, user, albumShare.Value, &blankLabel)
 		assert.NoError(t, err)
 		assert.Nil(t, share.Label)
 	})
