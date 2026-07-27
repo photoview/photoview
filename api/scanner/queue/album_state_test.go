@@ -43,16 +43,14 @@ func TestCompleteMediaConcurrentCounting(t *testing.T) {
 
 	wantChanged := 0
 	var wg sync.WaitGroup
-	for i := 0; i < total; i++ {
+	for i := range total {
 		changed := i%3 == 0
 		if changed {
 			wantChanged++
 		}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			state.CompleteMedia(context.Background(), nil, changed)
-		}()
+		})
 	}
 	wg.Wait()
 
