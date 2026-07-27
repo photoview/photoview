@@ -37,7 +37,7 @@ func TestQueueSubmittedAlbumsAreNotAbandonedOnClose(t *testing.T) {
 
 	const numAlbums = 32
 	cache := scanner_cache.MakeAlbumCache()
-	for i := 0; i < numAlbums; i++ {
+	for i := range numAlbums {
 		album := &models.Album{Title: fmt.Sprintf("empty-album-%d", i), Path: t.TempDir()}
 		if err := db.Create(album).Error; err != nil {
 			t.Fatalf("create album %d: %v", i, err)
