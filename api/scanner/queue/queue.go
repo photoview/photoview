@@ -239,12 +239,6 @@ func (q *Queue) dispatch() {
 			q.pendingTasks = q.pendingTasks[1:]
 		case req := <-q.incoming:
 			q.enqueue(req)
-		case <-q.quit:
-			if q.taskChan != nil {
-				close(q.taskChan)
-				q.wg.Wait()
-			}
-			return
 		}
 	}
 }
