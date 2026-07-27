@@ -53,7 +53,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("30/1")},
 			},
 			wantAudio:     "No audio",
-			wantFramerate: ptr(30.0),
+			wantFramerate: new(30.0),
 		},
 		{
 			name: "audio stream present but 0 channels",
@@ -62,7 +62,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("25/1"), audioStream(0)},
 			},
 			wantAudio:     "No audio",
-			wantFramerate: ptr(25.0),
+			wantFramerate: new(25.0),
 		},
 		{
 			name: "mono audio",
@@ -71,7 +71,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("25/1"), audioStream(1)},
 			},
 			wantAudio:     "Mono audio",
-			wantFramerate: ptr(25.0),
+			wantFramerate: new(25.0),
 		},
 		{
 			name: "stereo audio",
@@ -80,7 +80,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("25/1"), audioStream(2)},
 			},
 			wantAudio:     "Stereo audio",
-			wantFramerate: ptr(25.0),
+			wantFramerate: new(25.0),
 		},
 		{
 			name: "surround audio, more than 2 channels",
@@ -89,7 +89,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("25/1"), audioStream(6)},
 			},
 			wantAudio:     "Audio (6 channels)",
-			wantFramerate: ptr(25.0),
+			wantFramerate: new(25.0),
 		},
 		{
 			name: "fractional NTSC framerate",
@@ -98,7 +98,7 @@ func TestBuildVideoMetadata(t *testing.T) {
 				Streams: []*ffprobe.Stream{videoStream("30000/1001")},
 			},
 			wantAudio:     "No audio",
-			wantFramerate: ptr(30000.0 / 1001.0),
+			wantFramerate: new(30000.0 / 1001.0),
 		},
 		{
 			name: "empty AvgFrameRate string -> no framerate",
@@ -238,8 +238,6 @@ func TestCleanupPendingCache(t *testing.T) {
 		}
 	})
 }
-
-func ptr[T any](v T) *T { return &v }
 
 func derefStr(s *string) string {
 	if s == nil {
