@@ -46,6 +46,11 @@ func TestSanitizeShareLabel(t *testing.T) {
 			label:    stringPointer("  Семья 日本語  "),
 			expected: stringPointer("Семья 日本語"),
 		},
+		{
+			name:     "semantic format characters",
+			label:    stringPointer("Family 👩‍💻 می‌روم"),
+			expected: stringPointer("Family 👩‍💻 می‌روم"),
+		},
 	}
 
 	for _, test := range tests {

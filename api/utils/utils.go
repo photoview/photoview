@@ -30,7 +30,7 @@ func GenerateToken() string {
 	return string(b)
 }
 
-// SanitizeShareLabel removes invisible control and format characters and trims whitespace.
+// SanitizeShareLabel removes control and non-semantic format characters and trims whitespace.
 func SanitizeShareLabel(label *string) *string {
 	if label == nil {
 		return nil
@@ -40,7 +40,7 @@ func SanitizeShareLabel(label *string) *string {
 		switch {
 		case unicode.IsControl(r):
 			return -1
-		case unicode.In(r, unicode.Cf):
+		case unicode.In(r, unicode.Cf) && r != '\u200c' && r != '\u200d':
 			return -1
 		default:
 			return r
