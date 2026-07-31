@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/queue"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 		return
 	}
 
-	if !assert.NoError(t, queue.AddUser(user)) {
+	if !assert.NoError(t, scanner.AddUser(db, user)) {
 		return
 	}
 
@@ -41,7 +42,7 @@ func RunScannerAll(t *testing.T, db *gorm.DB) {
 		return
 	}
 
-	if !assert.NoError(t, queue.AddAll()) {
+	if !assert.NoError(t, scanner.AddAll(db)) {
 		return
 	}
 

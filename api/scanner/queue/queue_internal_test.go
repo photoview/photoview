@@ -12,6 +12,10 @@ import (
 	"github.com/photoview/photoview/api/test_utils"
 )
 
+func TestMain(m *testing.M) {
+	test_utils.IntegrationTestRun(m)
+}
+
 // TestQueueSubmittedAlbumsAreNotAbandonedOnClose checks that a burst of
 // AlbumRequests submitted right before Close() are never abandoned.
 // `incoming` is deliberately unbuffered: a send only returns once dispatch()
@@ -89,83 +93,16 @@ func TestUninitializedQueueCallsAreSafe(t *testing.T) {
 
 	ChangeConcurrentWorkers(4) // must not panic
 
-	if err := AddUser(&models.User{}); err == nil {
-		t.Errorf("AddUser() error = nil, want an error when the queue is not initialized")
+	if Initialized() {
+		t.Errorf("Initialized() = true, want false when globalQueue is nil")
 	}
 
-	if err := AddAll(); err == nil {
-		t.Errorf("AddAll() error = nil, want an error when the queue is not initialized")
+	if err := SubmitAlbum(&models.Album{}, nil); err == nil {
+		t.Errorf("SubmitAlbum() error = nil, want an error when the queue is not initialized")
 	}
 
-	if err := ProcessMedia(context.Background(), nil, &models.Media{}); err == nil {
-		t.Errorf("ProcessMedia() error = nil, want an error when the queue is not initialized")
-	}
-}
-
-// TestAddAllQueuesEveryUser checks that AddAll finds and scans every user's
-// albums, not just one - the loop in AddAll is otherwise indistinguishable
-// from AddUser in test coverage.
-func TestAddAllQueuesEveryUser(t *testing.T) {
-	test_utils.FilesystemTest(t)
-	db := test_utils.DatabaseTest(t)
-
-	pass := "1234"
-	user1, err := models.RegisterUser(db, "add_all_user_1", &pass, true)
-	if err != nil {
-		t.Fatalf("register user1: %v", err)
-	}
-	user2, err := models.RegisterUser(db, "add_all_user_2", &pass, true)
-	if err != nil {
-		t.Fatalf("register user2: %v", err)
-	}
-
-	album1Dir := t.TempDir()
-	copyFixtureFile(t, "photo/plain.jpg", filepath.Join(album1Dir, "plain.jpg"))
-	album1 := &models.Album{Title: "add-all album 1", Path: album1Dir}
-	if err := db.Save(album1).Error; err != nil {
-		t.Fatalf("save album1: %v", err)
-	}
-	if err := db.Model(user1).Association("Albums").Append(album1); err != nil {
-		t.Fatalf("associate album1 with user1: %v", err)
-	}
-
-	album2Dir := t.TempDir()
-	copyFixtureFile(t, "photo/plain.jpg", filepath.Join(album2Dir, "plain.jpg"))
-	album2 := &models.Album{Title: "add-all album 2", Path: album2Dir}
-	if err := db.Save(album2).Error; err != nil {
-		t.Fatalf("save album2: %v", err)
-	}
-	if err := db.Model(user2).Association("Albums").Append(album2); err != nil {
-		t.Fatalf("associate album2 with user2: %v", err)
-	}
-
-	if err := face_detection.InitializeFaceDetector(db); err != nil {
-		t.Fatalf("initialize face detector: %v", err)
-	}
-
-	if err := Initialize(context.Background(), db); err != nil {
-		t.Fatalf("Initialize() error: %v", err)
-	}
-	// Close() unconditionally, even if AddAll() failed, so the dispatcher
-	// goroutine it started is never left running past this test.
-	addAllErr := AddAll()
-	Close()
-	if addAllErr != nil {
-		t.Fatalf("AddAll() error: %v", addAllErr)
-	}
-
-	var count1, count2 int64
-	if err := db.Model(&models.Media{}).Where("album_id = ?", album1.ID).Count(&count1).Error; err != nil {
-		t.Fatalf("count album1 media: %v", err)
-	}
-	if err := db.Model(&models.Media{}).Where("album_id = ?", album2.ID).Count(&count2).Error; err != nil {
-		t.Fatalf("count album2 media: %v", err)
-	}
-	if count1 == 0 {
-		t.Errorf("expected AddAll to have scanned user1's album, found 0 media")
-	}
-	if count2 == 0 {
-		t.Errorf("expected AddAll to have scanned user2's album, found 0 media")
+	if err := SubmitMedia(context.Background(), nil, &models.Album{}, nil, ""); err == nil {
+		t.Errorf("SubmitMedia() error = nil, want an error when the queue is not initialized")
 	}
 }
 

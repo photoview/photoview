@@ -32,7 +32,7 @@ func setTestCachePath(tempPath string) func() {
 	}
 }
 
-// mockProcessSingleMedia replaces scanner.ProcessSingleMedia with a mock function during tests
+// mockProcessSingleMedia replaces processSingleMediaFn with a mock function during tests
 // and returns a function to restore the original implementation
 var originalProcessSingleMedia = processSingleMediaFn
 

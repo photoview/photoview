@@ -159,7 +159,7 @@ func TestCleanupStaleMediaDeletesGoneMedia(t *testing.T) {
 }
 
 // TestCompleteMediaSkipAfterSuppressesCompletion verifies that a task
-// submitted via ProcessMedia (skipAfter=true) never runs album-wide cleanup
+// submitted via queue.SubmitMedia (skipAfter=true) never runs album-wide cleanup
 // or broadcasts the "scan complete" notification, even once remaining
 // reaches 0.
 func TestCompleteMediaSkipAfterSuppressesCompletion(t *testing.T) {

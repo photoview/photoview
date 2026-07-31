@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"gorm.io/gorm"
@@ -93,72 +92,43 @@ func ChangeConcurrentWorkers(n int) {
 	globalQueue.max.Store(int64(n))
 }
 
-// AddUser finds all root albums owned by user and queues them for scanning.
-// It does not block until scanning finishes.
-func AddUser(user *models.User) error {
+// Initialized reports whether the queue's dispatcher has been started via
+// Initialize and not yet stopped by Close.
+func Initialized() bool {
+	return globalQueue != nil
+}
+
+// SubmitAlbum queues a single album for scanning; it is the queue's actual
+// unit of work - deciding *which* albums to scan is the caller's job (see
+// scanner.AddUser / scanner.AddAll).
+func SubmitAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache) error {
 	if globalQueue == nil {
 		return fmt.Errorf("scanner queue not initialized")
 	}
 
-	cache := scanner_cache.MakeAlbumCache()
-	albums, errs := scanner.FindAlbumsForUser(globalQueue.db, user, cache)
-	for _, err := range errs {
-		if err != nil {
-			return fmt.Errorf("find albums for user (user_id: %d): %w", user.ID, err)
-		}
-	}
-
-	for _, album := range albums {
-		select {
-		case globalQueue.incoming <- AlbumRequest{Album: album, Cache: cache}:
-		case <-globalQueue.quit:
-			return fmt.Errorf("scanner queue is shutting down")
-		}
+	select {
+	case globalQueue.incoming <- AlbumRequest{Album: album, Cache: cache}:
+	case <-globalQueue.quit:
+		return fmt.Errorf("scanner queue is shutting down")
 	}
 
 	return nil
 }
 
-// AddAll queues every user's albums for scanning.
-func AddAll() error {
-	if globalQueue == nil {
-		return fmt.Errorf("scanner queue not initialized")
-	}
-
-	var users []*models.User
-	if err := globalQueue.db.Find(&users).Error; err != nil {
-		return fmt.Errorf("get all users from database: %w", err)
-	}
-
-	for _, user := range users {
-		if err := AddUser(user); err != nil {
-			return fmt.Errorf("add user to queue (user_id: %d): %w", user.ID, err)
-		}
-	}
-
-	return nil
-}
-
-// ProcessMedia (re)processes a single already-known media, submitting it to
+// SubmitMedia (re)processes a single already-known media, submitting it to
 // the same queue and worker pool as everything else - used to fix up one
 // file (e.g. regenerate a cache file found missing while serving it) without
 // starting a dedicated worker for it. It blocks until processing has
 // finished.
-func ProcessMedia(ctx context.Context, db *gorm.DB, media *models.Media) error {
+func SubmitMedia(ctx context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache, mediaPath string) error {
 	if globalQueue == nil {
 		return fmt.Errorf("scanner queue not initialized")
 	}
 
-	var album models.Album
-	if err := db.Model(media).Association("Album").Find(&album); err != nil {
-		return err
-	}
-
-	cache := scanner_cache.MakeAlbumCache()
-	state := newAlbumState(db, &album, cache, 1)
+	state := newAlbumState(db, album, cache, 1)
 	state.skipAfter = true
 
-	t := newTask(&album, cache, state, media.Path, make(chan struct{}))
+	t := newTask(album, cache, state, mediaPath, make(chan struct{}))
 
 	select {
 	case globalQueue.incoming <- t:

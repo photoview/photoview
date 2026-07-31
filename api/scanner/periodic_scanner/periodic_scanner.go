@@ -7,18 +7,18 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/queue"
+	"github.com/photoview/photoview/api/scanner"
 	"gorm.io/gorm"
 )
 
 type ScannerQueue interface {
-	AddAllToQueue() error
+	AddAllToQueue(db *gorm.DB) error
 }
 
 type RealScannerQueue struct{}
 
-func (r *RealScannerQueue) AddAllToQueue() error {
-	return queue.AddAll()
+func (r *RealScannerQueue) AddAllToQueue(db *gorm.DB) error {
+	return scanner.AddAll(db)
 }
 
 type periodicScanner struct {
@@ -160,7 +160,7 @@ func (ps *periodicScanner) scanIntervalRunner() {
 				log.Info(nil, "Scan interval runner: New ticker detected")
 			case <-ticker.C:
 				log.Info(nil, "Scan interval runner: Starting periodic scan")
-				if err := ps.scannerQueue.AddAllToQueue(); err != nil {
+				if err := ps.scannerQueue.AddAllToQueue(ps.db); err != nil {
 					log.Error(nil, "Scan interval runner: Failed to add all users to queue", "error", err)
 				}
 			}

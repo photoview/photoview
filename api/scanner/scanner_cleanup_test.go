@@ -1,4 +1,4 @@
-package cleanup_tasks_test
+package scanner_test
 
 import (
 	"os"
@@ -13,10 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	test_utils.IntegrationTestRun(m)
-}
-
 func TestCleanupMedia(t *testing.T) {
 	test_utils.FilesystemTest(t)
 	db := test_utils.DatabaseTest(t)
@@ -26,7 +22,7 @@ func TestCleanupMedia(t *testing.T) {
 	}
 
 	testDir := t.TempDir()
-	assert.NoError(t, copy.Copy("../../test_media/library", testDir))
+	assert.NoError(t, copy.Copy(testDataPath, testDir))
 
 	countAllMedia := func() int {
 		var allMedia []*models.Media
