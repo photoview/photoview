@@ -29,7 +29,7 @@ type albumState struct {
 	albumKey string
 	total    int
 
-	// skipAfter is set for a standalone single-media reprocess (queue.ProcessMedia):
+	// skipAfter is set for a standalone single-media reprocess (queue.SubmitMedia):
 	// it must not run album-wide cleanup, since allMediaIDs would only ever
 	// contain the one media being reprocessed.
 	skipAfter bool

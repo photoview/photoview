@@ -10,14 +10,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/queue"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 var processSingleMediaFn = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
-	return queue.ProcessMedia(ctx, db, media)
+	return scanner.ProcessMedia(ctx, db, media)
 }
 
 func handleVideoRequest(

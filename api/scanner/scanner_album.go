@@ -8,11 +8,6 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
-	"github.com/photoview/photoview/api/scanner/media_encoding"
-	"github.com/photoview/photoview/api/scanner/scanner_task"
-	"github.com/photoview/photoview/api/scanner/scanner_tasks"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -85,102 +80,4 @@ func ValidRootPath(rootPath string) bool {
 	}
 
 	return true
-}
-
-func ScanAlbum(ctx scanner_task.TaskContext) error {
-	newCtx, err := scanner_tasks.Tasks.BeforeScanAlbum(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "before scan album (%s)", ctx.GetAlbum().Path)
-	}
-	ctx = newCtx
-
-	// Scan for photos
-	albumMedia, err := findMediaForAlbum(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path, err)
-	}
-
-	changedMedia := make([]*models.Media, 0)
-	for i, media := range albumMedia {
-		mediaData := media_encoding.NewEncodeMediaData(media)
-
-		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
-			scanner_utils.ScannerError(ctx, "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
-		}
-	}
-
-	if err := scanner_tasks.Tasks.AfterScanAlbum(ctx, changedMedia, albumMedia); err != nil {
-		return errors.Wrap(err, "after scan album")
-	}
-
-	return nil
-}
-
-func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
-
-	albumMedia := make([]*models.Media, 0)
-
-	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, item := range dirContent {
-		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
-		log.Info(ctx, "Check the media", "media_path", mediaPath)
-
-		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
-		if err != nil {
-			log.Warn(ctx, "Cannot detect whether the path is symlink to a directory. Pretending it is not", "media_path", mediaPath)
-			isDirSymlink = false
-		}
-
-		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
-			itemInfo, err := item.Info()
-			if err != nil {
-				return nil, err
-			}
-			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
-			if err != nil {
-				return nil, err
-			}
-			if skip {
-				continue
-			}
-
-			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
-				if err != nil {
-					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
-				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
-					return err
-				}
-
-				albumMedia = append(albumMedia, media)
-
-				return nil
-			})
-
-			if err != nil {
-				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
-				continue
-			}
-		}
-
-	}
-
-	return albumMedia, nil
-}
-
-func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
-
-	// Make sure media cache directory exists
-	mediaCachePath, err := mediaData.Media.CachePath()
-	if err != nil {
-		return []*models.MediaURL{}, errors.Wrap(err, "cache directory error")
-	}
-
-	return scanner_tasks.Tasks.ProcessMedia(ctx, mediaData, mediaCachePath)
 }

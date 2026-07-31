@@ -18,8 +18,8 @@ type MockScannerQueue struct {
 	mock.Mock
 }
 
-func (m *MockScannerQueue) AddAllToQueue() error {
-	return m.Called().Error(0)
+func (m *MockScannerQueue) AddAllToQueue(db *gorm.DB) error {
+	return m.Called(db).Error(0)
 }
 
 func TestMain(m *testing.M) {
@@ -131,7 +131,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 
 		// Use a channel to synchronize and count calls
 		callChan := make(chan struct{}, 5) // Buffer for multiple calls
-		mockQueue.On("AddAllToQueue").Return(nil).Run(func(args mock.Arguments) {
+		mockQueue.On("AddAllToQueue", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
 			select {
 			case callChan <- struct{}{}:
 			default:
@@ -172,7 +172,7 @@ func TestScanIntervalRunnerWithMocking(t *testing.T) {
 	t.Run("runner handles queue errors gracefully", func(t *testing.T) {
 		mockQueue := &MockScannerQueue{}
 		// Mock queue to return an error
-		mockQueue.On("AddAllToQueue").Return(errors.New("queue error")).Maybe()
+		mockQueue.On("AddAllToQueue", mock.Anything).Return(errors.New("queue error")).Maybe()
 
 		ps := &periodicScanner{
 			ticker:         time.NewTicker(30 * time.Millisecond),
