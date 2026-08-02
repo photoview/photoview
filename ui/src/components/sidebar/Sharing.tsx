@@ -460,7 +460,7 @@ export const SidebarPhotoShare = ({ id }: SidebarSharePhotoProps) => {
         },
       })
     }
-  }, [])
+  }, [id])
 
   const loading = queryLoading || mutationLoading
 
