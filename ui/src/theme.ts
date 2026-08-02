@@ -35,3 +35,17 @@ export const getTheme = () => {
 
 export const isDarkMode = () =>
   document.documentElement.classList.contains('dark')
+
+export const SWIPE_NAVIGATION_KEY = 'swipeNavigationDisabled'
+
+export const getSwipeNavigationDisabled = (): boolean => {
+  return localStorage.getItem(SWIPE_NAVIGATION_KEY) === 'true'
+}
+
+export const setSwipeNavigationDisabled = (disabled: boolean) => {
+  if (disabled) {
+    localStorage.setItem(SWIPE_NAVIGATION_KEY, 'true')
+  } else {
+    localStorage.removeItem(SWIPE_NAVIGATION_KEY)
+  }
+}

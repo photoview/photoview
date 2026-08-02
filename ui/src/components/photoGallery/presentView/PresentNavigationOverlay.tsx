@@ -8,6 +8,7 @@ import { useSwipeable } from 'react-swipeable'
 import ExitIcon from './icons/Exit'
 import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
+import { getSwipeNavigationDisabled } from '../../../theme'
 
 const StyledOverlayContainer = styled.div`
   width: 100%;
@@ -95,12 +96,14 @@ const PresentNavigationOverlay = ({
     }
   }, [])
 
-  const handlers = useSwipeable({
-    onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
-    onSwipedRight: () => dispatchMedia({ type: 'previousImage' }),
-    preventScrollOnSwipe: false,
-    trackMouse: false,
-  })
+  const handlers = getSwipeNavigationDisabled()
+    ? {}
+    : useSwipeable({
+        onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
+        onSwipedRight: () => dispatchMedia({ type: 'previousImage' }),
+        preventScrollOnSwipe: true,
+        trackMouse: false,
+      })
 
   return (
     <StyledOverlayContainer
