@@ -14,6 +14,7 @@ const StyledContainer = styled.div`
   top: 0;
   left: 0;
   z-index: 100;
+  overscroll-behavior: none;
 `
 
 const PreventScroll = createGlobalStyle`
