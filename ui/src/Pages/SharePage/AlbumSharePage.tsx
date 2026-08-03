@@ -26,6 +26,7 @@ export const SHARE_ALBUM_QUERY = gql`
       subAlbums(order: { order_by: "title" }) {
         id
         title
+        createdAt
         thumbnail {
           id
           thumbnail {
