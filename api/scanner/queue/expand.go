@@ -22,7 +22,12 @@ type AlbumRequest struct {
 // task per candidate media file. It deliberately does no database or
 // exif/ffmpeg work itself - that happens per-task, in gather(), spread across
 // workers instead of serializing it all up front in the dispatcher.
-func expandAlbum(ctx context.Context, db *gorm.DB, req AlbumRequest) ([]*task, *albumState, error) {
+//
+// incoming/quit are threaded straight through to the returned albumState so
+// it can tell dispatch() when this album stops being in-flight (see
+// Queue.scanningAlbums's doc comment) - they're the same channels dispatch()
+// itself already owns.
+func expandAlbum(ctx context.Context, db *gorm.DB, req AlbumRequest, incoming chan<- any, quit <-chan struct{}) ([]*task, *albumState, error) {
 	album := req.Album
 	cache := req.Cache
 
@@ -53,6 +58,8 @@ func expandAlbum(ctx context.Context, db *gorm.DB, req AlbumRequest) ([]*task, *
 	}
 
 	state := newAlbumState(db, album, cache, len(paths))
+	state.incoming = incoming
+	state.quit = quit
 
 	tasks := make([]*task, len(paths))
 	for i, p := range paths {

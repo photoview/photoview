@@ -20,21 +20,33 @@ import (
 )
 
 // Queue is a single dispatcher goroutine that turns AlbumRequests into Tasks
-// and feeds them to a pool of workers. pendingAlbums, pendingTasks, taskChan
-// and activeWorkers are only ever touched by dispatch(), so none of them need
-// locking of their own.
+// and feeds them to a pool of workers. pendingAlbums, pendingTasks, taskChan,
+// activeWorkers and scanningAlbums are only ever touched by dispatch(), so
+// none of them need locking of their own.
 type Queue struct {
 	ctx context.Context
 
 	db  *gorm.DB
 	max atomic.Int64
 
-	incoming chan any // AlbumRequest or *task
+	incoming chan any // AlbumRequest, *task, or albumDone
 	quit     chan struct{}
 	done     chan struct{}
 
 	pendingAlbums []AlbumRequest
 	pendingTasks  []*task
+
+	// scanningAlbums holds the ID of every album that has been dequeued from
+	// pendingAlbums for expansion but hasn't yet finished (expandAlbum error,
+	// zero tasks, or its albumState's last task completing - see the
+	// dispatch() branches and CompleteMedia's albumDone send). Without this,
+	// enqueue()'s AlbumRequest dedup only sees pendingAlbums, which is empty
+	// for exactly this album the moment it's mid-scan - a resubmission
+	// arriving in that window would expand the same album a second time
+	// concurrently with the first, and whichever albumState's cleanupStaleMedia
+	// runs first would delete media the other, still-running scan already
+	// found and persisted.
+	scanningAlbums map[int]struct{}
 
 	// taskChan is created lazily and closed (then recreated on next use)
 	// every time the pool goes idle - that close is what tells its workers
@@ -42,6 +54,13 @@ type Queue struct {
 	taskChan      chan *task
 	activeWorkers int
 	wg            sync.WaitGroup // whole-Queue lifetime; Add/Wait only ever called from dispatch()
+}
+
+// albumDone tells dispatch() that the album with this ID is no longer
+// in-flight - sent on Queue.incoming by CompleteMedia once an albumState's
+// last task has finished (including its stale-media cleanup).
+type albumDone struct {
+	albumID int
 }
 
 var globalQueue *Queue
@@ -57,11 +76,12 @@ func Initialize(ctx context.Context, db *gorm.DB) error {
 	}
 
 	q := &Queue{
-		ctx:      context.WithoutCancel(ctx),
-		db:       db,
-		incoming: make(chan any),
-		quit:     make(chan struct{}),
-		done:     make(chan struct{}),
+		ctx:            context.WithoutCancel(ctx),
+		db:             db,
+		incoming:       make(chan any),
+		quit:           make(chan struct{}),
+		done:           make(chan struct{}),
+		scanningAlbums: make(map[int]struct{}),
 	}
 	q.max.Store(int64(siteInfo.ConcurrentWorkers))
 
@@ -155,14 +175,23 @@ func (q *Queue) dispatch() {
 		if len(q.pendingTasks) == 0 && len(q.pendingAlbums) > 0 {
 			req := q.pendingAlbums[0]
 			q.pendingAlbums = q.pendingAlbums[1:]
+			q.scanningAlbums[req.Album.ID] = struct{}{}
 
-			tasks, state, err := expandAlbum(q.ctx, q.db, req)
+			tasks, state, err := expandAlbum(q.ctx, q.db, req, q.incoming, q.quit)
 			switch {
 			case err != nil:
 				scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
+				// Nothing will ever complete this album's (nonexistent)
+				// tasks, so nothing will send albumDone for it - without
+				// this, the album could never be resubmitted.
+				delete(q.scanningAlbums, req.Album.ID)
 			case len(tasks) == 0:
-				// Nothing to do
+				// Nothing to do. This runs synchronously, in dispatch()
+				// itself, so scanningAlbums can be cleared directly - unlike
+				// CompleteMedia's albumDone send, going through q.incoming
+				// here would deadlock (dispatch() is its only reader).
 				state.completeAlbum(q.ctx)
+				delete(q.scanningAlbums, req.Album.ID)
 			default:
 				q.pendingTasks = append(q.pendingTasks, tasks...)
 			}
@@ -216,6 +245,9 @@ func (q *Queue) dispatch() {
 func (q *Queue) enqueue(req any) {
 	switch r := req.(type) {
 	case AlbumRequest:
+		if _, scanning := q.scanningAlbums[r.Album.ID]; scanning {
+			return
+		}
 		for _, pending := range q.pendingAlbums {
 			if pending.Album.ID == r.Album.ID {
 				return
@@ -224,5 +256,7 @@ func (q *Queue) enqueue(req any) {
 		q.pendingAlbums = append(q.pendingAlbums, r)
 	case *task:
 		q.pendingTasks = append(q.pendingTasks, r)
+	case albumDone:
+		delete(q.scanningAlbums, r.albumID)
 	}
 }
