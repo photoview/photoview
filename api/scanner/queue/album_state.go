@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
-	"strconv"
 	"sync"
 	"time"
 
@@ -97,15 +95,23 @@ func (s *albumState) CompleteMedia(ctx context.Context, media *models.Media, cha
 	isLast := s.remaining == 0
 	s.mu.Unlock()
 
-	s.throttle.Trigger(func() {
-		notification.BroadcastNotification(&models.Notification{
-			Key:      s.albumKey,
-			Type:     models.NotificationTypeProgress,
-			Header:   fmt.Sprintf("Processing media for album '%s'", s.album.Title),
-			Content:  fmt.Sprintf("%d/%d processed", done, total),
-			Progress: &progress,
+	progressNotification := &models.Notification{
+		Key:      s.albumKey,
+		Type:     models.NotificationTypeProgress,
+		Header:   fmt.Sprintf("Processing media for album '%s'", s.album.Title),
+		Content:  fmt.Sprintf("%d/%d processed", done, total),
+		Progress: &progress,
+	}
+	if isLast {
+		// The final tick is never throttled: it's the one that tells clients
+		// the progress bar is done, and unlike every other tick it has no
+		// follow-up call that could otherwise deliver it.
+		notification.BroadcastNotification(progressNotification)
+	} else {
+		s.throttle.Trigger(func() {
+			notification.BroadcastNotification(progressNotification)
 		})
-	})
+	}
 
 	if isLast {
 		s.completeAlbum(ctx)
@@ -174,7 +180,7 @@ func (s *albumState) cleanupStaleMedia(ctx context.Context) error {
 	for i, media := range staleMedia {
 		staleIDs[i] = media.ID
 
-		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(s.album.ID), strconv.Itoa(media.ID))
+		cachePath := utils.MediaCacheLeafPath(s.album.ID, media.ID)
 		if err := os.RemoveAll(cachePath); err != nil {
 			scanner_utils.ScannerError(ctx, "delete unused cache folder (%s): %s", cachePath, err)
 		}
