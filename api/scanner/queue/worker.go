@@ -369,7 +369,7 @@ func (w *worker) processPhoto(t *task, encData *media_encoding.EncodeMediaData, 
 		}
 		highresPath := path.Join(cachePath, highresName)
 
-		if err := encData.EncodeHighRes(highresPath); err != nil {
+		if err := encodeAtomically(highresPath, encData.EncodeHighRes); err != nil {
 			return fmt.Errorf("encode highres: %w", err)
 		}
 
@@ -397,7 +397,12 @@ func (w *worker) processPhoto(t *task, encData *media_encoding.EncodeMediaData, 
 		}
 		thumbPath := path.Join(cachePath, thumbnailName)
 
-		dim, err := media_encoding.EncodeThumbnail(w.db, baseImagePath, thumbPath)
+		var dim media_encoding.Dimension
+		err := encodeAtomically(thumbPath, func(tmpPath string) error {
+			var err error
+			dim, err = media_encoding.EncodeThumbnail(w.db, baseImagePath, tmpPath)
+			return err
+		})
 		if err != nil {
 			return fmt.Errorf("encode thumbnail: %w", err)
 		}
@@ -475,7 +480,9 @@ func (w *worker) processVideo(ctx context.Context, t *task, cachePath string, re
 		webVideoName := generateUniqueMediaNamePrefixed("web_video", t.path, ".mp4")
 		webVideoPath := path.Join(cachePath, webVideoName)
 
-		if err := w.ffmpeg.EncodeMp4(t.path, webVideoPath); err != nil {
+		if err := encodeAtomically(webVideoPath, func(tmpPath string) error {
+			return w.ffmpeg.EncodeMp4(t.path, tmpPath)
+		}); err != nil {
 			return fmt.Errorf("encode web video: %w", err)
 		}
 
@@ -504,7 +511,9 @@ func (w *worker) processVideo(ctx context.Context, t *task, cachePath string, re
 		}
 		thumbPath := path.Join(cachePath, videoThumbName)
 
-		if err := w.ffmpeg.EncodeVideoThumbnail(t.path, thumbPath, probeData); err != nil {
+		if err := encodeAtomically(thumbPath, func(tmpPath string) error {
+			return w.ffmpeg.EncodeVideoThumbnail(t.path, tmpPath, probeData)
+		}); err != nil {
 			return fmt.Errorf("encode video thumbnail: %w", err)
 		}
 
@@ -678,6 +687,33 @@ func generateUniqueMediaName(mediaPath string) string {
 func generateUniqueMediaNamePrefixed(prefix string, mediaPath string, extension string) string {
 	name := fmt.Sprintf("%s_%s_%s", prefix, path.Base(mediaPath), utils.GenerateToken())
 	return models.SanitizeMediaName(name) + extension
+}
+
+// encodeAtomically calls encode with a fresh temporary path next to outPath,
+// then renames it into place - so a partial write (OOM kill, full disk,
+// crash) never leaves outPath itself corrupted or truncated. This matters
+// even when outPath doesn't exist yet: without it, a later scan's
+// scanner_utils.FileExists check would see the half-written file as already
+// present and never retry it. The token is prefixed onto outPath's full
+// filename (extension included, e.g. "tmp-<rand>.video.mp4") rather than
+// appended after it, since ffmpeg infers its output container from the
+// destination filename's extension - EncodeMp4/EncodeVideoThumbnail are
+// never told the format explicitly. encode must write its result to the
+// tmpPath it's given, not to outPath directly.
+func encodeAtomically(outPath string, encode func(tmpPath string) error) error {
+	tmpPath := path.Join(path.Dir(outPath), "tmp-"+utils.GenerateToken()+"."+path.Base(outPath))
+
+	if err := encode(tmpPath); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+
+	if err := os.Rename(tmpPath, outPath); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("finalize %s: %w", path.Base(outPath), err)
+	}
+
+	return nil
 }
 
 // persist (phase 4) writes everything process() computed to the database in
