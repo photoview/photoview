@@ -32,13 +32,15 @@ type albumState struct {
 	// contain the one media being reprocessed.
 	skipAfter bool
 
-	// incoming/quit mirror the Queue's own channels of the same name; they are
-	// only set by expandAlbum (nil for SubmitMedia's skipAfter state, and for
-	// any albumState built directly in tests). Once the last task completes,
-	// CompleteMedia uses them to tell dispatch() this album is no longer
-	// in-flight - see Queue.scanningAlbums's doc comment for why that matters.
-	incoming chan<- any
-	quit     <-chan struct{}
+	// markDone is Queue.markAlbumDone, threaded through by expandAlbum (left
+	// nil for SubmitMedia's skipAfter state, and for any albumState built
+	// directly in tests). Once the last task completes, CompleteMedia calls
+	// it to tell dispatch() this album is no longer in-flight - see
+	// Queue.scanningAlbums's doc comment for why that matters. It's a plain
+	// function call, not a channel send: dispatch() can legitimately be
+	// parked in wg.Wait() at exactly this moment, and a channel send would
+	// deadlock the two goroutines waiting on each other.
+	markDone func(albumID int)
 
 	mu           sync.Mutex
 	changedCount int
@@ -118,17 +120,14 @@ func (s *albumState) CompleteMedia(ctx context.Context, media *models.Media, cha
 
 		// Tell dispatch() this album is no longer in-flight, now that
 		// completeAlbum's stale-media cleanup has actually finished - not
-		// before, or a resubmission accepted right after this signal could
+		// before, or a resubmission accepted right after this report could
 		// start a second cleanupStaleMedia concurrently with this one still
 		// running. skipAfter's state never registered as in-flight (it
 		// bypasses pendingAlbums/scanningAlbums entirely), and a nil
-		// s.incoming means this albumState was built directly (e.g. by a
-		// test) rather than via expandAlbum, so there's nothing to signal.
-		if !s.skipAfter && s.incoming != nil {
-			select {
-			case s.incoming <- albumDone{albumID: s.album.ID}:
-			case <-s.quit:
-			}
+		// s.markDone means this albumState was built directly (e.g. by a
+		// test) rather than via expandAlbum, so there's nothing to report.
+		if !s.skipAfter && s.markDone != nil {
+			s.markDone(s.album.ID)
 		}
 	}
 }

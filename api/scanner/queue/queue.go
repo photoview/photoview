@@ -22,14 +22,15 @@ import (
 // Queue is a single dispatcher goroutine that turns AlbumRequests into Tasks
 // and feeds them to a pool of workers. pendingAlbums, pendingTasks, taskChan,
 // activeWorkers and scanningAlbums are only ever touched by dispatch(), so
-// none of them need locking of their own.
+// none of them need locking of their own. finishedAlbums is the one
+// exception - see its own doc comment.
 type Queue struct {
 	ctx context.Context
 
 	db  *gorm.DB
 	max atomic.Int64
 
-	incoming chan any // AlbumRequest, *task, or albumDone
+	incoming chan any // AlbumRequest or *task
 	quit     chan struct{}
 	done     chan struct{}
 
@@ -39,14 +40,23 @@ type Queue struct {
 	// scanningAlbums holds the ID of every album that has been dequeued from
 	// pendingAlbums for expansion but hasn't yet finished (expandAlbum error,
 	// zero tasks, or its albumState's last task completing - see the
-	// dispatch() branches and CompleteMedia's albumDone send). Without this,
-	// enqueue()'s AlbumRequest dedup only sees pendingAlbums, which is empty
-	// for exactly this album the moment it's mid-scan - a resubmission
-	// arriving in that window would expand the same album a second time
-	// concurrently with the first, and whichever albumState's cleanupStaleMedia
-	// runs first would delete media the other, still-running scan already
-	// found and persisted.
+	// dispatch() branches and markAlbumDone). Without this, enqueue()'s
+	// AlbumRequest dedup only sees pendingAlbums, which is empty for exactly
+	// this album the moment it's mid-scan - a resubmission arriving in that
+	// window would expand the same album a second time concurrently with the
+	// first, and whichever albumState's cleanupStaleMedia runs first would
+	// delete media the other, still-running scan already found and persisted.
 	scanningAlbums map[int]struct{}
+
+	// finishedAlbums/finishedMu are how a worker goroutine reports an
+	// album's last task completing (see markAlbumDone) - a mutex-guarded
+	// append rather than a send on incoming, because dispatch() can
+	// legitimately be parked in wg.Wait() below (tearing down idle workers)
+	// at exactly the moment a worker needs to report in, and a channel send
+	// would deadlock the two goroutines waiting on each other. enqueue()
+	// drains this into scanningAlbums before every dedup check.
+	finishedMu     sync.Mutex
+	finishedAlbums []int
 
 	// taskChan is created lazily and closed (then recreated on next use)
 	// every time the pool goes idle - that close is what tells its workers
@@ -56,11 +66,13 @@ type Queue struct {
 	wg            sync.WaitGroup // whole-Queue lifetime; Add/Wait only ever called from dispatch()
 }
 
-// albumDone tells dispatch() that the album with this ID is no longer
-// in-flight - sent on Queue.incoming by CompleteMedia once an albumState's
-// last task has finished (including its stale-media cleanup).
-type albumDone struct {
-	albumID int
+// markAlbumDone records that albumID's last task has finished (including its
+// stale-media cleanup) - called from a worker goroutine via CompleteMedia,
+// so it must never block on dispatch() being in any particular state.
+func (q *Queue) markAlbumDone(albumID int) {
+	q.finishedMu.Lock()
+	q.finishedAlbums = append(q.finishedAlbums, albumID)
+	q.finishedMu.Unlock()
 }
 
 var globalQueue *Queue
@@ -177,19 +189,17 @@ func (q *Queue) dispatch() {
 			q.pendingAlbums = q.pendingAlbums[1:]
 			q.scanningAlbums[req.Album.ID] = struct{}{}
 
-			tasks, state, err := expandAlbum(q.ctx, q.db, req, q.incoming, q.quit)
+			tasks, state, err := expandAlbum(q.ctx, q.db, req, q.markAlbumDone)
 			switch {
 			case err != nil:
 				scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
 				// Nothing will ever complete this album's (nonexistent)
-				// tasks, so nothing will send albumDone for it - without
-				// this, the album could never be resubmitted.
+				// tasks, so nothing will report it done - without this, the
+				// album could never be resubmitted.
 				delete(q.scanningAlbums, req.Album.ID)
 			case len(tasks) == 0:
 				// Nothing to do. This runs synchronously, in dispatch()
-				// itself, so scanningAlbums can be cleared directly - unlike
-				// CompleteMedia's albumDone send, going through q.incoming
-				// here would deadlock (dispatch() is its only reader).
+				// itself, so scanningAlbums can be cleared directly.
 				state.completeAlbum(q.ctx)
 				delete(q.scanningAlbums, req.Album.ID)
 			default:
@@ -243,6 +253,17 @@ func (q *Queue) dispatch() {
 }
 
 func (q *Queue) enqueue(req any) {
+	// Drain any albums a worker has reported done since we last checked,
+	// before the AlbumRequest dedup below reads scanningAlbums - otherwise a
+	// resubmission could be rejected as "still scanning" long after that
+	// scan actually finished, with no retry to recover it.
+	q.finishedMu.Lock()
+	for _, id := range q.finishedAlbums {
+		delete(q.scanningAlbums, id)
+	}
+	q.finishedAlbums = q.finishedAlbums[:0]
+	q.finishedMu.Unlock()
+
 	switch r := req.(type) {
 	case AlbumRequest:
 		if _, scanning := q.scanningAlbums[r.Album.ID]; scanning {
@@ -256,7 +277,5 @@ func (q *Queue) enqueue(req any) {
 		q.pendingAlbums = append(q.pendingAlbums, r)
 	case *task:
 		q.pendingTasks = append(q.pendingTasks, r)
-	case albumDone:
-		delete(q.scanningAlbums, r.albumID)
 	}
 }

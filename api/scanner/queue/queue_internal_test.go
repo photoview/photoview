@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
@@ -157,5 +158,65 @@ func TestDispatchLogsExpandAlbumErrorAndContinues(t *testing.T) {
 	}
 	if count == 0 {
 		t.Errorf("expected the good album to still be scanned after the bad one errored, found 0 media")
+	}
+}
+
+// TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown reproduces a
+// deadlock: dispatch() tears down its worker pool (close(taskChan) then
+// wg.Wait()) the instant pendingTasks empties, which happens the moment the
+// last task is handed to a worker - not when that worker actually finishes
+// it. If CompleteMedia's isLast branch then tries to report the album done
+// back to dispatch() over q.incoming, nothing is reading q.incoming anymore
+// (dispatch() is parked in wg.Wait()), so the worker blocks forever trying
+// to send and dispatch() blocks forever waiting for it to exit - neither
+// side can proceed.
+//
+// If this test ever fails by timing out, its own t.Cleanup below
+// (close(q.quit); <-q.done) will hang too, since a genuinely deadlocked
+// dispatch() goroutine can never reach that select - nothing can force it to
+// unwind from outside. That's an inherent limit of testing a real deadlock
+// in-process: go test's own overall -timeout is what ultimately kills the
+// binary in that case, not this test.
+func TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := &models.Album{Title: "deadlock repro", Path: t.TempDir()}
+	if err := db.Create(album).Error; err != nil {
+		t.Fatalf("create album: %v", err)
+	}
+
+	q := &Queue{
+		ctx:            context.Background(),
+		db:             db,
+		incoming:       make(chan any),
+		quit:           make(chan struct{}),
+		done:           make(chan struct{}),
+		scanningAlbums: make(map[int]struct{}),
+	}
+	q.max.Store(1)
+
+	go q.dispatch()
+	t.Cleanup(func() {
+		close(q.quit)
+		<-q.done
+	})
+
+	cache := scanner_cache.MakeAlbumCache()
+	state := newAlbumState(db, album, cache, 1)
+	state.markDone = q.markAlbumDone
+
+	taskDone := make(chan struct{})
+	// The path doesn't need to exist or be a real image: gather() fails
+	// os.Stat-ing it, but processMedia's defer calls CompleteMedia
+	// regardless of how the task ended - which is all this test needs to
+	// reach the isLast branch.
+	tsk := newTask(album, cache, state, filepath.Join(album.Path, "does-not-exist.jpg"), taskDone)
+
+	q.incoming <- tsk
+
+	select {
+	case <-taskDone:
+	case <-time.After(5 * time.Second):
+		t.Fatal("processMedia never returned for the album's last task - dispatch() likely deadlocked tearing down its worker pool while the worker waited to report the album done")
 	}
 }
