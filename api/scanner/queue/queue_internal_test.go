@@ -29,11 +29,12 @@ func TestQueueSubmittedAlbumsAreNotAbandonedOnClose(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	q := &Queue{
-		ctx:      context.Background(),
-		db:       db,
-		incoming: make(chan any),
-		quit:     make(chan struct{}),
-		done:     make(chan struct{}),
+		ctx:            context.Background(),
+		db:             db,
+		incoming:       make(chan any),
+		quit:           make(chan struct{}),
+		done:           make(chan struct{}),
+		scanningAlbums: make(map[int]struct{}),
 	}
 	q.max.Store(1)
 
@@ -133,11 +134,12 @@ func TestDispatchLogsExpandAlbumErrorAndContinues(t *testing.T) {
 	}
 
 	q := &Queue{
-		ctx:      context.Background(),
-		db:       db,
-		incoming: make(chan any),
-		quit:     make(chan struct{}),
-		done:     make(chan struct{}),
+		ctx:            context.Background(),
+		db:             db,
+		incoming:       make(chan any),
+		quit:           make(chan struct{}),
+		done:           make(chan struct{}),
+		scanningAlbums: make(map[int]struct{}),
 	}
 	q.max.Store(1)
 

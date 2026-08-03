@@ -17,7 +17,7 @@ func TestExpandAlbumReadDirError(t *testing.T) {
 	album := &models.Album{Title: "missing dir", Path: filepath.Join(t.TempDir(), "does-not-exist")}
 	cache := scanner_cache.MakeAlbumCache()
 
-	tasks, state, err := expandAlbum(context.Background(), nil, AlbumRequest{Album: album, Cache: cache})
+	tasks, state, err := expandAlbum(context.Background(), nil, AlbumRequest{Album: album, Cache: cache}, nil, nil)
 	if err == nil {
 		t.Fatalf("expandAlbum() error = nil, want an error for a nonexistent album directory")
 	}
@@ -38,7 +38,7 @@ func TestExpandAlbumSkipsSubdirectories(t *testing.T) {
 	album := &models.Album{Title: "with subdir", Path: albumDir}
 	cache := scanner_cache.MakeAlbumCache()
 
-	tasks, state, err := expandAlbum(context.Background(), nil, AlbumRequest{Album: album, Cache: cache})
+	tasks, state, err := expandAlbum(context.Background(), nil, AlbumRequest{Album: album, Cache: cache}, nil, nil)
 	if err != nil {
 		t.Fatalf("expandAlbum() error: %v", err)
 	}
