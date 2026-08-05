@@ -87,13 +87,27 @@ func FindOrCreateMedia(db *gorm.DB, media *Media) (created bool, err error) {
 // queue's persist() where media has already been fully re-evaluated and a
 // second, separate update call would otherwise be needed right after.
 func UpsertMedia(db *gorm.DB, media *Media) error {
-	return db.Clauses(clause.OnConflict{
+	if err := db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "path_hash"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"title", "album_id", "date_shot", "type",
 			"side_car_path", "side_car_hash", "blurhash",
 		}),
-	}).Create(media).Error
+	}).Create(media).Error; err != nil {
+		return err
+	}
+
+	// On real MySQL (unlike Postgres/SQLite, which use RETURNING), hitting
+	// the conflict-update branch here is a plain UPDATE, and LastInsertId()
+	// - which GORM relies on to populate the primary key - returns 0 for
+	// that. Without this, a concurrent caller that lost the upsert race
+	// would keep media.ID == 0 and corrupt anything built from it
+	// afterwards (e.g. MediaURL.MediaID). Reload the canonical row by its
+	// unique key whenever that happened.
+	if media.ID == 0 {
+		return db.Where("path_hash = ?", media.PathHash).First(media).Error
+	}
+	return nil
 }
 
 // UpsertMediaURL creates url, or overwrites the existing row for the same
@@ -106,8 +120,18 @@ func UpsertMedia(db *gorm.DB, media *Media) error {
 // primary key too.
 func UpsertMediaURL(db *gorm.DB, url *MediaURL) error {
 	url.ID = 0
-	return db.Clauses(clause.OnConflict{
+	if err := db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "media_id"}, {Name: "purpose"}},
 		DoUpdates: clause.AssignmentColumns([]string{"media_name", "width", "height", "content_type", "file_size"}),
-	}).Create(url).Error
+	}).Create(url).Error; err != nil {
+		return err
+	}
+
+	// See UpsertMedia: on real MySQL the conflict-update branch doesn't
+	// report the row's id via LastInsertId(), so reload it by its unique
+	// key whenever GORM left url.ID at 0.
+	if url.ID == 0 {
+		return db.Where("media_id = ? AND purpose = ?", url.MediaID, url.Purpose).First(url).Error
+	}
+	return nil
 }

@@ -15,37 +15,33 @@ import (
 func RunScannerOnUser(t *testing.T, db *gorm.DB, user *models.User) {
 	start := time.Now()
 	defer func() {
-		dur := time.Now().Sub(start)
+		dur := time.Since(start)
 		t.Logf("RunScannerOnUser(user(id:%d)) took %s.", user.ID, dur)
 	}()
 
 	if !assert.NoError(t, queue.Initialize(context.Background(), db)) {
 		return
 	}
+	defer queue.Close()
 
 	if !assert.NoError(t, scanner.AddUser(db, user)) {
 		return
 	}
-
-	// wait for all jobs to finish
-	queue.Close()
 }
 
 func RunScannerAll(t *testing.T, db *gorm.DB) {
 	start := time.Now()
 	defer func() {
-		dur := time.Now().Sub(start)
+		dur := time.Since(start)
 		t.Logf("RunScannerAll() took %s.", dur)
 	}()
 
 	if !assert.NoError(t, queue.Initialize(context.Background(), db)) {
 		return
 	}
+	defer queue.Close()
 
 	if !assert.NoError(t, scanner.AddAll(db)) {
 		return
 	}
-
-	// wait for all jobs to finish
-	queue.Close()
 }

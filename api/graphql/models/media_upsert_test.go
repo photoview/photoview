@@ -91,6 +91,50 @@ func TestFindOrCreateMediaConcurrent(t *testing.T) {
 	assert.EqualValues(t, 1, count, "expected exactly one media row for the shared path")
 }
 
+// TestUpsertMediaConcurrent drives UpsertMedia from many goroutines at once
+// for the same path - matching two workers that concurrently (re)persist the
+// same media (e.g. the same physical file reached through two album paths).
+// Unlike TestFindOrCreateMediaConcurrent (which uses DoNothing on conflict),
+// UpsertMedia always writes through via DoUpdates, which is the path where a
+// caller that loses the upsert race can be left with a zero media.ID if it's
+// not reloaded (see UpsertMedia's comment in media_upsert.go).
+func TestUpsertMediaConcurrent(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := &models.Album{Title: "media upsert test album", Path: "/concurrent/media_upsert/album"}
+	require.NoError(t, db.Create(album).Error)
+
+	const mediaPath = "/concurrent/media_upsert/album/photo.jpg"
+
+	ids := make([]int, concurrentUpsertCallers)
+	var wg sync.WaitGroup
+	for i := 0; i < concurrentUpsertCallers; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			media := &models.Media{
+				Title:    "photo.jpg",
+				Path:     mediaPath,
+				AlbumID:  album.ID,
+				Type:     models.MediaTypePhoto,
+				DateShot: time.Now(),
+			}
+			assert.NoError(t, models.UpsertMedia(db, media))
+			ids[i] = media.ID
+		}(i)
+	}
+	wg.Wait()
+
+	for i, id := range ids {
+		assert.NotZero(t, id, "caller %d got a zero ID", i)
+		assert.Equal(t, ids[0], id, "caller %d converged on a different media than caller 0", i)
+	}
+
+	var count int64
+	require.NoError(t, db.Model(&models.Media{}).Where("path_hash = ?", models.MD5Hash(mediaPath)).Count(&count).Error)
+	assert.EqualValues(t, 1, count, "expected exactly one media row for the shared path")
+}
+
 // TestUpsertMediaURLConcurrent drives UpsertMediaURL from many goroutines at
 // once for the same (media_id, purpose) pair - matching two workers that
 // independently decided the same cache file needed to be (re)generated.
@@ -111,6 +155,7 @@ func TestUpsertMediaURLConcurrent(t *testing.T) {
 	}
 	require.NoError(t, db.Create(media).Error)
 
+	ids := make([]int, concurrentUpsertCallers)
 	var wg sync.WaitGroup
 	for i := 0; i < concurrentUpsertCallers; i++ {
 		wg.Add(1)
@@ -126,9 +171,15 @@ func TestUpsertMediaURLConcurrent(t *testing.T) {
 				FileSize:    int64(i),
 			}
 			assert.NoError(t, models.UpsertMediaURL(db, url))
+			ids[i] = url.ID
 		}(i)
 	}
 	wg.Wait()
+
+	for i, id := range ids {
+		assert.NotZero(t, id, "caller %d got a zero ID", i)
+		assert.Equal(t, ids[0], id, "caller %d converged on a different media url than caller 0", i)
+	}
 
 	var urls []models.MediaURL
 	require.NoError(t, db.Where("media_id = ? AND purpose = ?", media.ID, models.VideoWeb).Find(&urls).Error)

@@ -361,11 +361,9 @@ func (w *worker) processPhoto(t *task, encData *media_encoding.EncodeMediaData, 
 	baseImagePath := t.path
 
 	if plan.needHighres {
-		highresName := t.path
+		highresName := generateUniqueMediaNamePrefixed("highres", t.path, ".jpg")
 		if url, ok := info.existingURLs[models.PhotoHighRes]; ok {
 			highresName = url.MediaName
-		} else {
-			highresName = generateUniqueMediaNamePrefixed("highres", t.path, ".jpg")
 		}
 		highresPath := path.Join(cachePath, highresName)
 
@@ -724,18 +722,18 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 	result := t.result
 	media := info.media
 
-	if err := w.db.Transaction(func(tx *gorm.DB) error {
-		if result.dateShot != nil {
-			media.DateShot = *result.dateShot
-		}
-		if result.blurhash != nil {
-			media.Blurhash = result.blurhash
-		}
-		if plan.sidecarChanged {
-			media.SideCarPath = result.sidecarPath
-			media.SideCarHash = result.sidecarHash
-		}
+	if result.dateShot != nil {
+		media.DateShot = *result.dateShot
+	}
+	if result.blurhash != nil {
+		media.Blurhash = result.blurhash
+	}
+	if plan.sidecarChanged {
+		media.SideCarPath = result.sidecarPath
+		media.SideCarHash = result.sidecarHash
+	}
 
+	if err := w.db.Transaction(func(tx *gorm.DB) error {
 		if err := models.UpsertMedia(tx, media); err != nil {
 			return fmt.Errorf("save media: %w", err)
 		}
@@ -768,21 +766,16 @@ func (w *worker) persist(ctx context.Context, t *task) error {
 			}
 		}
 
-		if info.isNewMedia {
-			// Last step: if anything above failed, the transaction rolls
-			// back and result.pendingCachePath is still exactly where
-			// process() left it - nothing else to reconcile. utils.
-			// MediaCacheLeafPath (not media.CachePath, which creates the
-			// directory) - os.Rename needs the destination to not exist yet.
-			finalCachePath := utils.MediaCacheLeafPath(media.AlbumID, media.ID)
-			if err := os.Rename(result.pendingCachePath, finalCachePath); err != nil {
-				return fmt.Errorf("finalize cache directory: %w", err)
-			}
-		}
-
 		return nil
 	}); err != nil {
 		return err
+	}
+
+	if info.isNewMedia {
+		finalCachePath := utils.MediaCacheLeafPath(media.AlbumID, media.ID)
+		if err := os.Rename(result.pendingCachePath, finalCachePath); err != nil {
+			return fmt.Errorf("finalize cache directory: %w", err)
+		}
 	}
 
 	if plan.needFaces && w.faces != nil {

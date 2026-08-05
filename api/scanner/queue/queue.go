@@ -110,8 +110,11 @@ func Close() {
 	if globalQueue == nil {
 		return
 	}
-	close(globalQueue.quit)
-	<-globalQueue.done
+
+	q := globalQueue
+	globalQueue = nil
+	close(q.quit)
+	<-q.done
 }
 
 // ChangeConcurrentWorkers updates the worker pool size. It never forcibly
