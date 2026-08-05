@@ -206,8 +206,10 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		}
 	}
 
-	deleteErrors := DeleteOldUserAlbums(db, userAlbums, user)
-	scanErrors = append(scanErrors, deleteErrors...)
+	if len(scanErrors) == 0 {
+		deleteErrors := DeleteOldUserAlbums(db, userAlbums, user)
+		scanErrors = append(scanErrors, deleteErrors...)
+	}
 
 	return userAlbums, scanErrors
 }
@@ -218,7 +220,7 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 		return nil
 	}
 
-	scannedAlbumIDs := make([]interface{}, len(scannedAlbums))
+	scannedAlbumIDs := make([]any, len(scannedAlbums))
 	for i, album := range scannedAlbums {
 		scannedAlbumIDs[i] = album.ID
 	}
@@ -248,11 +250,6 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 	deleteAlbumIDs := make([]int, len(deleteAlbums))
 	for i, album := range deleteAlbums {
 		deleteAlbumIDs[i] = album.ID
-		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
-		err := os.RemoveAll(cachePath)
-		if err != nil {
-			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
-		}
 	}
 
 	// Delete old albums from database
@@ -267,6 +264,14 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 
 		return nil
 	})
+
+	for _, album := range deleteAlbums {
+		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
+		err := os.RemoveAll(cachePath)
+		if err != nil {
+			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
+		}
+	}
 
 	if err != nil {
 		scanner_utils.ScannerError(nil, "Could not delete old albums from database:\n%s\n", err)

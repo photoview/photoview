@@ -178,15 +178,17 @@ func (s *albumState) cleanupStaleMedia(ctx context.Context) error {
 	staleIDs := make([]int, len(staleMedia))
 	for i, media := range staleMedia {
 		staleIDs[i] = media.ID
-
-		cachePath := utils.MediaCacheLeafPath(s.album.ID, media.ID)
-		if err := os.RemoveAll(cachePath); err != nil {
-			scanner_utils.ScannerError(ctx, "delete unused cache folder (%s): %s", cachePath, err)
-		}
 	}
 
 	if err := s.db.Where("id IN (?)", staleIDs).Delete(&models.Media{}).Error; err != nil {
 		return fmt.Errorf("delete stale media from database: %w", err)
+	}
+
+	for _, media := range staleMedia {
+		cachePath := utils.MediaCacheLeafPath(s.album.ID, media.ID)
+		if err := os.RemoveAll(cachePath); err != nil {
+			scanner_utils.ScannerError(ctx, "delete unused cache folder (%s): %s", cachePath, err)
+		}
 	}
 
 	if face_detection.GlobalFaceDetector != nil {
