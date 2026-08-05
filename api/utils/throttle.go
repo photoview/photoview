@@ -22,10 +22,16 @@ func (t *Throttle) Trigger(action func()) {
 	if action == nil {
 		return
 	}
+
+	run := false
 	t.mu.Lock()
-	defer t.mu.Unlock()
 	if time.Now().After(t.lastAction.Add(t.interval)) {
 		t.lastAction = time.Now()
+		run = true
+	}
+	t.mu.Unlock()
+
+	if run {
 		action()
 	}
 }
