@@ -11,7 +11,7 @@ import { ReactComponent as DirectionIcon } from './icons/direction-arrow.svg'
 import Dropdown from '../../primitives/form/Dropdown'
 import classNames from 'classnames'
 
-export type SortingOptionValue = 'date_shot' | 'updated_at' | 'title' | 'type'
+export type SortingOptionValue = 'date_shot' | 'updated_at' | 'title' | 'type' | 'title_natural'
 export type SortingOption = { value: SortingOptionValue; label: string }
 
 export type FavoriteCheckboxProps = {
