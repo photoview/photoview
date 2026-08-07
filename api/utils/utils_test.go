@@ -25,31 +25,31 @@ func TestSanitizeShareLabel(t *testing.T) {
 		},
 		{
 			name:     "control and format characters",
-			label:    stringPointer("Fam\x00ily\r\n\t\u007f\u0085\u200b album"),
-			expected: stringPointer("Family album"),
+			label:    new("Fam\x00ily\r\n\t\u007f\u0085\u200b album"),
+			expected: new("Family album"),
 		},
 		{
 			name:     "surrounding whitespace",
-			label:    stringPointer("\u00a0  Family album \t"),
-			expected: stringPointer("Family album"),
+			label:    new("\u00a0  Family album \t"),
+			expected: new("Family album"),
 		},
 		{
 			name:  "empty label",
-			label: stringPointer(""),
+			label: new(""),
 		},
 		{
 			name:  "invisible characters only",
-			label: stringPointer("\x00\r\n\t\u007f\u0085\u200b"),
+			label: new("\x00\r\n\t\u007f\u0085\u200b"),
 		},
 		{
 			name:     "ordinary unicode",
-			label:    stringPointer("  Семья 日本語  "),
-			expected: stringPointer("Семья 日本語"),
+			label:    new("  Семья 日本語  "),
+			expected: new("Семья 日本語"),
 		},
 		{
 			name:     "semantic format characters",
-			label:    stringPointer("Family 👩‍💻 می‌روم"),
-			expected: stringPointer("Family 👩‍💻 می‌روم"),
+			label:    new("Family 👩‍💻 می‌روم"),
+			expected: new("Family 👩‍💻 می‌روم"),
 		},
 	}
 
@@ -58,10 +58,6 @@ func TestSanitizeShareLabel(t *testing.T) {
 			assert.Equal(t, test.expected, utils.SanitizeShareLabel(test.label))
 		})
 	}
-}
-
-func stringPointer(value string) *string {
-	return &value
 }
 
 func TestIsDirSymlink(t *testing.T) {
