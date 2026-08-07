@@ -2,11 +2,13 @@ package routes
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -17,14 +19,24 @@ import (
 
 func RegisterDownloadRoutes(db *gorm.DB, router *mux.Router) {
 	router.HandleFunc("/album/{album_id}/{media_purpose}", func(w http.ResponseWriter, r *http.Request) {
-		albumID := mux.Vars(r)["album_id"]
+		albumID, err := strconv.Atoi(mux.Vars(r)["album_id"])
+		if err != nil || albumID <= 0 {
+			http.Error(w, "invalid album id", http.StatusBadRequest)
+			return
+		}
+
 		mediaPurpose := mux.Vars(r)["media_purpose"]
 		mediaPurposeList := strings.SplitN(mediaPurpose, ",", 10)
 
 		var album models.Album
-		if err := db.Find(&album, albumID).Error; err != nil {
+		if err := db.First(&album, "id = ?", albumID).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404"))
+			return
+		} else if err != nil {
+			log.Printf("ERROR: failed to find album for download: %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(internalServerError))
 			return
 		}
 
