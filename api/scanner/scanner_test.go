@@ -2,6 +2,7 @@ package scanner_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -9,7 +10,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/graphql/notification"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 )
@@ -247,6 +250,126 @@ func TestFullScan(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestScanQueuesValidAlbumsWhenDiscoveryFails(t *testing.T) {
+	test_utils.FilesystemTest(t)
+	db := test_utils.DatabaseTest(t)
+
+	pass := "1234"
+	user, err := models.RegisterUser(db, "partial_scan_user", &pass, true)
+	if err != nil {
+		t.Fatal("register user error:", err)
+	}
+
+	validRoot := t.TempDir()
+	mediaContents, err := os.ReadFile("test_media/real_media/jpeg.jpg")
+	if err != nil {
+		t.Fatal("read test media error:", err)
+	}
+	if err := os.WriteFile(filepath.Join(validRoot, "jpeg.jpg"), mediaContents, 0o600); err != nil {
+		t.Fatal("write test media error:", err)
+	}
+
+	rootAlbums := []models.Album{
+		{Title: "valid root", Path: validRoot},
+		{Title: "missing root 1", Path: filepath.Join(t.TempDir(), "missing")},
+		{Title: "missing root 2", Path: filepath.Join(t.TempDir(), "missing")},
+	}
+	if err := db.Create(&rootAlbums).Error; err != nil {
+		t.Fatal("create root albums error:", err)
+	}
+	if err := db.Model(user).Association("Albums").Append(&rootAlbums); err != nil {
+		t.Fatal("bind root albums error:", err)
+	}
+
+	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+		t.Fatal("initialize scanner queue error:", err)
+	}
+	discoveryErr := scanner_queue.AddUserToQueue(user)
+	scanner_queue.CloseScannerQueue()
+
+	if discoveryErr == nil {
+		t.Fatal("expected album discovery error")
+	}
+	for _, album := range rootAlbums[1:] {
+		if !strings.Contains(discoveryErr.Error(), album.Path) {
+			t.Errorf("discovery error %q does not contain missing root %q", discoveryErr, album.Path)
+		}
+	}
+
+	var media []models.Media
+	if err := db.Find(&media).Error; err != nil {
+		t.Fatal("get scanned media error:", err)
+	}
+	if got, want := len(media), 1; got != want {
+		t.Fatalf("scanned media count = %d, want %d", got, want)
+	}
+	if got, want := media[0].Title, "jpeg.jpg"; got != want {
+		t.Errorf("scanned media title = %q, want %q", got, want)
+	}
+}
+
+func TestScanWithOnlyDiscoveryErrorsQueuesNoAlbums(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	pass := "1234"
+	user, err := models.RegisterUser(db, "failed_scan_user", &pass, true)
+	if err != nil {
+		t.Fatal("register user error:", err)
+	}
+
+	missingRoot := models.Album{
+		Title: "missing root",
+		Path:  filepath.Join(t.TempDir(), "missing"),
+	}
+	if err := db.Create(&missingRoot).Error; err != nil {
+		t.Fatal("create root album error:", err)
+	}
+	if err := db.Model(user).Association("Albums").Append(&missingRoot); err != nil {
+		t.Fatal("bind root album error:", err)
+	}
+
+	notifications := make(chan *models.Notification, 1)
+	listenerID := notification.RegisterListener(user, notifications)
+	listenerRegistered := true
+	defer func() {
+		if listenerRegistered {
+			if err := notification.DeregisterListener(listenerID); err != nil {
+				t.Errorf("deregister notification listener error: %v", err)
+			}
+		}
+	}()
+
+	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+		t.Fatal("initialize scanner queue error:", err)
+	}
+	discoveryErr := scanner_queue.AddUserToQueue(user)
+
+	select {
+	case got := <-notifications:
+		t.Errorf("unexpected scanner notification after failed discovery: %+v", got)
+	default:
+	}
+	if err := notification.DeregisterListener(listenerID); err != nil {
+		t.Errorf("deregister notification listener error: %v", err)
+	}
+	listenerRegistered = false
+	scanner_queue.CloseScannerQueue()
+
+	if discoveryErr == nil {
+		t.Fatal("expected album discovery error")
+	}
+	if !strings.Contains(discoveryErr.Error(), missingRoot.Path) {
+		t.Errorf("discovery error %q does not contain missing root %q", discoveryErr, missingRoot.Path)
+	}
+	var mediaCount int64
+	if err := db.Model(&models.Media{}).Count(&mediaCount).Error; err != nil {
+		t.Fatal("count scanned media error:", err)
+	}
+	if mediaCount != 0 {
+		t.Errorf("scanned media count = %d, want 0", mediaCount)
+	}
 }
 
 func equalNameWithoutSuffix(a, b string) bool {
