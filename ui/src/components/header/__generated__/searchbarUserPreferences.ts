@@ -3,16 +3,13 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { LanguageTranslation } from "./../../../__generated__/globalTypes";
-
 // ====================================================
-// GraphQL query operation: myUserPreferences
+// GraphQL query operation: searchbarUserPreferences
 // ====================================================
 
-export interface myUserPreferences_myUserPreferences {
+export interface searchbarUserPreferences_myUserPreferences {
   __typename: "UserPreferences";
   id: string;
-  language: LanguageTranslation | null;
   /**
    * The maximum number of albums/media to show per category in search results.
    * `null` uses the server default, `0` means no limit (show all results).
@@ -20,9 +17,9 @@ export interface myUserPreferences_myUserPreferences {
   searchResultLimit: number | null;
 }
 
-export interface myUserPreferences {
+export interface searchbarUserPreferences {
   /**
    * User preferences for the logged in user
    */
-  myUserPreferences: myUserPreferences_myUserPreferences;
+  myUserPreferences: searchbarUserPreferences_myUserPreferences;
 }

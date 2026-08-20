@@ -45,6 +45,9 @@ type UserPreferences struct {
 	UserID   int  `gorm:"not null;index"`
 	User     User `gorm:"constraint:OnDelete:CASCADE;"`
 	Language *LanguageTranslation
+	// SearchResultLimit is the maximum number of albums/media returned per category by a search.
+	// nil means the server default is used, 0 means no limit (return all results).
+	SearchResultLimit *int
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
@@ -66,6 +69,10 @@ func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
 		if !foundMatch {
 			return errors.New("invalid language value")
 		}
+	}
+
+	if u.SearchResultLimit != nil && *u.SearchResultLimit < 0 {
+		return errors.New("search result limit must not be negative")
 	}
 
 	return nil

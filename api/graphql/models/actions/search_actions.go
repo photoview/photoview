@@ -33,7 +33,7 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 		userSubquery = userSubquery.Where("album_id = Album.id")
 	}
 
-	err := db.Joins("Album").
+	mediaQuery := db.Joins("Album").
 		Where("EXISTS (?)", userSubquery).
 		Where("LOWER(media.title) LIKE ? OR LOWER(media.path) LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
@@ -41,16 +41,20 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 				SQL:    "(CASE WHEN LOWER(media.title) LIKE ? THEN 2 WHEN LOWER(media.path) LIKE ? THEN 1 END) DESC",
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
-		}).
-		Limit(limitMediaInternal).Find(&media).Error
+		})
 
-	if err != nil {
+	// A limit of 0 or less means no limit, i.e. all matching results are returned.
+	if limitMediaInternal > 0 {
+		mediaQuery = mediaQuery.Limit(limitMediaInternal)
+	}
+
+	if err := mediaQuery.Find(&media).Error; err != nil {
 		return nil, errors.Wrapf(err, "searching media")
 	}
 
 	var albums []*models.Album
 
-	err = db.
+	albumsQuery := db.
 		Where("EXISTS (?)", db.Table("user_albums").Where("user_id = ?", userID).Where("album_id = albums.id")).
 		Where("albums.title LIKE ? OR albums.path LIKE ?", wildQuery, wildQuery).
 		Clauses(clause.OrderBy{
@@ -58,11 +62,13 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 				SQL:                "(CASE WHEN albums.title LIKE ? THEN 2 WHEN albums.path LIKE ? THEN 1 END) DESC",
 				Vars:               []interface{}{wildQuery, wildQuery},
 				WithoutParentheses: true},
-		}).
-		Limit(limitAlbumsInternal).
-		Find(&albums).Error
+		})
 
-	if err != nil {
+	if limitAlbumsInternal > 0 {
+		albumsQuery = albumsQuery.Limit(limitAlbumsInternal)
+	}
+
+	if err := albumsQuery.Find(&albums).Error; err != nil {
 		return nil, errors.Wrapf(err, "searching albums")
 	}
 

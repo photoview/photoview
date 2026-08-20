@@ -35,6 +35,11 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
+  """
+  The maximum number of albums/media to show per category in search results.
+  `null` uses the server default, `0` means no limit (show all results).
+  """
+  searchResultLimit: Int
 }
 
 type AuthorizeResult {
@@ -97,5 +102,8 @@ extend type Mutation {
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+  changeUserPreferences(
+    language: String
+    searchResultLimit: Int
+  ): UserPreferences! @isAuthorized
 }

@@ -68,6 +68,8 @@ func TestSearch(t *testing.T) {
 		expectedAlbumCount int
 	}
 
+	noLimit := 0
+
 	searchTests := []SearchTest{
 		{
 			query:              "image",
@@ -86,6 +88,13 @@ func TestSearch(t *testing.T) {
 			userID:             user.ID,
 			expectedMediaCount: 10,
 			expectedAlbumCount: 1,
+		},
+		{
+			query:              "g",
+			userID:             user.ID,
+			limitMedia:         &noLimit,
+			expectedMediaCount: 14,
+			expectedAlbumCount: 0,
 		},
 	}
 

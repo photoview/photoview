@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { useLazyQuery, gql } from '@apollo/client'
+import { useLazyQuery, useQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
@@ -10,11 +10,12 @@ import {
   searchQuery_search_albums,
   searchQuery_search_media,
 } from './__generated__/searchQuery'
+import { searchbarUserPreferences } from './__generated__/searchbarUserPreferences'
 import classNames from 'classnames'
 
 const SEARCH_QUERY = gql`
-  query searchQuery($query: String!) {
-    search(query: $query) {
+  query searchQuery($query: String!, $limitMedia: Int, $limitAlbums: Int) {
+    search(query: $query, limitMedia: $limitMedia, limitAlbums: $limitAlbums) {
       query
       albums {
         id
@@ -39,6 +40,15 @@ const SEARCH_QUERY = gql`
   }
 `
 
+const SEARCHBAR_USER_PREFERENCES_QUERY = gql`
+  query searchbarUserPreferences {
+    myUserPreferences {
+      id
+      searchResultLimit
+    }
+  }
+`
+
 const SearchWrapper = styled.div.attrs({
   className: 'w-full max-w-xs lg:relative',
 })``
@@ -46,6 +56,16 @@ const SearchWrapper = styled.div.attrs({
 const SearchBar = () => {
   const { t } = useTranslation()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
+  const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
+    SEARCHBAR_USER_PREFERENCES_QUERY
+  )
+  const searchResultLimit =
+    userPrefsData?.myUserPreferences.searchResultLimit ?? undefined
+  const searchResultLimitRef = useRef(searchResultLimit)
+  useEffect(() => {
+    searchResultLimitRef.current = searchResultLimit
+  }, [searchResultLimit])
+
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -56,7 +76,13 @@ const SearchBar = () => {
   const debouncedFetch = useRef<null | DebouncedFn<QueryFn>>(null)
   useEffect(() => {
     debouncedFetch.current = debounce<QueryFn>(query => {
-      fetchSearches({ variables: { query } })
+      fetchSearches({
+        variables: {
+          query,
+          limitMedia: searchResultLimitRef.current,
+          limitAlbums: searchResultLimitRef.current,
+        },
+      })
       setFetched(true)
       setExpanded(true)
     }, 250)
@@ -86,11 +112,8 @@ const SearchBar = () => {
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 
   const searchData = fetchResult.data
-  let media = searchData?.search.media || []
-  let albums = searchData?.search.albums || []
-
-  albums = albums.slice(0, 5)
-  media = media.slice(0, 5)
+  const media = searchData?.search.media || []
+  const albums = searchData?.search.albums || []
 
   const selectedItemId =
     selectedItem !== null

@@ -252,7 +252,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 }
 
 // ChangeUserPreferences is the resolver for the changeUserPreferences field.
-func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string, searchResultLimit *int) (*models.UserPreferences, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -272,6 +272,7 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 
 	userPref.UserID = user.ID
 	userPref.Language = langTrans
+	userPref.SearchResultLimit = searchResultLimit
 
 	if err := db.Save(&userPref).Error; err != nil {
 		return nil, err

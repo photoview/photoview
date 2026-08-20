@@ -13,6 +13,11 @@ export interface changeUserPreferences_changeUserPreferences {
   __typename: "UserPreferences";
   id: string;
   language: LanguageTranslation | null;
+  /**
+   * The maximum number of albums/media to show per category in search results.
+   * `null` uses the server default, `0` means no limit (show all results).
+   */
+  searchResultLimit: number | null;
 }
 
 export interface changeUserPreferences {
@@ -24,4 +29,5 @@ export interface changeUserPreferences {
 
 export interface changeUserPreferencesVariables {
   language?: string | null;
+  searchResultLimit?: number | null;
 }
