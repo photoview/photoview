@@ -48,6 +48,9 @@ type UserPreferences struct {
 	// SearchResultLimit is the maximum number of albums/media returned per category by a search.
 	// nil means the server default is used, 0 means no limit (return all results).
 	SearchResultLimit *int
+	// ShowAlbumTree controls whether the album tree sidebar is shown in the UI.
+	// nil means the default is used (shown).
+	ShowAlbumTree *bool
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {

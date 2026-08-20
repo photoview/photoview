@@ -18,6 +18,11 @@ export interface changeUserPreferences_changeUserPreferences {
    * `null` uses the server default, `0` means no limit (show all results).
    */
   searchResultLimit: number | null;
+  /**
+   * Whether the album tree sidebar is shown in the UI.
+   * `null` uses the default, which is to show it.
+   */
+  showAlbumTree: boolean | null;
 }
 
 export interface changeUserPreferences {
@@ -30,4 +35,5 @@ export interface changeUserPreferences {
 export interface changeUserPreferencesVariables {
   language?: string | null;
   searchResultLimit?: number | null;
+  showAlbumTree?: boolean | null;
 }

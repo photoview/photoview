@@ -40,6 +40,11 @@ type UserPreferences {
   `null` uses the server default, `0` means no limit (show all results).
   """
   searchResultLimit: Int
+  """
+  Whether the album tree sidebar is shown in the UI.
+  `null` uses the default, which is to show it.
+  """
+  showAlbumTree: Boolean
 }
 
 type AuthorizeResult {
@@ -105,5 +110,6 @@ extend type Mutation {
   changeUserPreferences(
     language: String
     searchResultLimit: Int
+    showAlbumTree: Boolean
   ): UserPreferences! @isAuthorized
 }

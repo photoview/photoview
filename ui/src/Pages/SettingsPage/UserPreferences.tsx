@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { LanguageTranslation } from '../../__generated__/globalTypes'
+import Checkbox from '../../primitives/form/Checkbox'
 import Dropdown from '../../primitives/form/Dropdown'
 import { Button, TextField } from '../../primitives/form/Input'
 import {
@@ -59,14 +60,20 @@ const themePreferences = (t: TranslationFn) => [
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
-  mutation changeUserPreferences($language: String, $searchResultLimit: Int) {
+  mutation changeUserPreferences(
+    $language: String
+    $searchResultLimit: Int
+    $showAlbumTree: Boolean
+  ) {
     changeUserPreferences(
       language: $language
       searchResultLimit: $searchResultLimit
+      showAlbumTree: $showAlbumTree
     ) {
       id
       language
       searchResultLimit
+      showAlbumTree
     }
   }
 `
@@ -77,6 +84,7 @@ const MY_USER_PREFERENCES = gql`
       id
       language
       searchResultLimit
+      showAlbumTree
     }
   }
 `
@@ -123,6 +131,7 @@ const UserPreferences = () => {
 
   const currentLanguage = data?.myUserPreferences.language ?? null
   const currentSearchResultLimit = data?.myUserPreferences.searchResultLimit ?? null
+  const currentShowAlbumTree = data?.myUserPreferences.showAlbumTree ?? true
 
   const [searchResultLimitInput, setSearchResultLimitInput] = useState('')
 
@@ -149,6 +158,7 @@ const UserPreferences = () => {
       variables: {
         language: currentLanguage,
         searchResultLimit: parsed,
+        showAlbumTree: currentShowAlbumTree,
       },
     })
   }
@@ -189,6 +199,7 @@ const UserPreferences = () => {
             variables: {
               language: language as LanguageTranslation,
               searchResultLimit: currentSearchResultLimit,
+              showAlbumTree: currentShowAlbumTree,
             },
           })
         }}
@@ -225,6 +236,39 @@ const UserPreferences = () => {
         }}
         disabled={loadingPrefs}
         wrapperClassName="mb-4"
+      />
+      <label htmlFor="user_pref_show_album_tree_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.show_album_tree.title',
+            'Album tree sidebar'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.show_album_tree.description',
+            'Show a collapsible tree of your albums in a sidebar for quick navigation'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Checkbox
+        id="user_pref_show_album_tree_field"
+        label={t(
+          'settings.user_preferences.show_album_tree.checkbox_label',
+          'Show album tree sidebar'
+        )}
+        disabled={loadingPrefs}
+        checked={currentShowAlbumTree}
+        onChange={event => {
+          changePrefs({
+            variables: {
+              language: currentLanguage,
+              searchResultLimit: currentSearchResultLimit,
+              showAlbumTree: event.target.checked,
+            },
+          })
+        }}
+        className="mb-4"
       />
       <label htmlFor="user_pref_change_theme_field">
         <InputLabelTitle>
