@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import styled from 'styled-components'
 import { useLazyQuery, useQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
+import { AlbumTreeSearchContext } from '../albumTree/AlbumTreeSearchContext'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -66,6 +67,8 @@ const SearchBar = () => {
     searchResultLimitRef.current = searchResultLimit
   }, [searchResultLimit])
 
+  const { setQuery: setTreeQuery } = useContext(AlbumTreeSearchContext)
+
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -96,6 +99,7 @@ const SearchBar = () => {
     e.persist()
 
     setQuery(e.target.value)
+    setTreeQuery(e.target.value)
     if (e.target.value.trim() != '' && debouncedFetch.current) {
       debouncedFetch.current(e.target.value.trim())
     } else {
@@ -107,6 +111,7 @@ const SearchBar = () => {
   useEffect(() => {
     setExpanded(false)
     setQuery('')
+    setTreeQuery('')
   }, [location])
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null)

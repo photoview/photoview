@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client'
 import React, { useContext } from 'react'
 import { Helmet } from 'react-helmet'
 import AlbumTree from '../albumTree/AlbumTree'
+import { AlbumTreeSearchProvider } from '../albumTree/AlbumTreeSearchContext'
 import Header from '../header/Header'
 import { Authorized } from '../routes/AuthorizedRoute'
 import { Sidebar, SidebarContext } from '../sidebar/Sidebar'
@@ -47,32 +48,34 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
       <Helmet>
         <title>{title ? `${title} - Photoview` : `Photoview`}</title>
       </Helmet>
-      <div className="relative" {...otherProps} data-testid="Layout">
-        <Header />
-        <div className="">
-          <Authorized>
-            <MainMenu />
-          </Authorized>
-          {!!authToken() && (
+      <AlbumTreeSearchProvider>
+        <div className="relative" {...otherProps} data-testid="Layout">
+          <Header />
+          <div className="">
+            <Authorized>
+              <MainMenu />
+            </Authorized>
+            {!!authToken() && (
+              <div
+                className={`${
+                  showAlbumTree ? 'hidden lg:block' : 'hidden'
+                } fixed lg:top-[84px] bottom-0 left-[292px] w-[260px] border-r border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg z-20`}
+              >
+                <AlbumTree />
+              </div>
+            )}
             <div
-              className={`${
-                showAlbumTree ? 'hidden lg:block' : 'hidden'
-              } fixed lg:top-[84px] bottom-0 left-[292px] w-[260px] border-r border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg z-20`}
+              className={`mx-3 my-3 lg:mt-5 lg:mr-8 ${
+                showAlbumTree ? 'lg:ml-[576px]' : 'lg:ml-[292px]'
+              } ${pinned && sidebarContent ? 'lg:pr-[420px]' : ''}`}
+              id="layout-content"
             >
-              <AlbumTree />
+              {children}
             </div>
-          )}
-          <div
-            className={`mx-3 my-3 lg:mt-5 lg:mr-8 ${
-              showAlbumTree ? 'lg:ml-[576px]' : 'lg:ml-[292px]'
-            } ${pinned && sidebarContent ? 'lg:pr-[420px]' : ''}`}
-            id="layout-content"
-          >
-            {children}
           </div>
+          <Sidebar />
         </div>
-        <Sidebar />
-      </div>
+      </AlbumTreeSearchProvider>
     </>
   )
 }

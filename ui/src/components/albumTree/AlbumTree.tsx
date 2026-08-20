@@ -1,13 +1,19 @@
 import { gql, useLazyQuery, useQuery } from '@apollo/client'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
+import { debounce, DebouncedFn } from '../../helpers/utils'
 import AlbumTreeNode from './AlbumTreeNode'
+import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
 import {
   albumTreeActivePathQuery,
   albumTreeActivePathQueryVariables,
 } from './__generated__/albumTreeActivePathQuery'
 import { albumTreeRootQuery } from './__generated__/albumTreeRootQuery'
+import {
+  albumTreeSearchQuery,
+  albumTreeSearchQueryVariables,
+} from './__generated__/albumTreeSearchQuery'
 
 export const ALBUM_TREE_ROOT_QUERY = gql`
   query albumTreeRootQuery {
@@ -28,6 +34,19 @@ export const ALBUM_TREE_ACTIVE_PATH_QUERY = gql`
       id
       path {
         id
+      }
+    }
+  }
+`
+
+export const ALBUM_TREE_SEARCH_QUERY = gql`
+  query albumTreeSearchQuery($query: String!) {
+    search(query: $query, limitAlbums: 0, limitMedia: 0) {
+      albums {
+        id
+        path {
+          id
+        }
       }
     }
   }
@@ -68,7 +87,57 @@ const AlbumTree = () => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
+  const { query: searchQuery } = useContext(AlbumTreeSearchContext)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+
+  const debouncedSetQuery = useRef<null | DebouncedFn<(query: string) => void>>(
+    null
+  )
+  useEffect(() => {
+    debouncedSetQuery.current = debounce<(query: string) => void>(
+      query => setDebouncedSearchQuery(query),
+      250
+    )
+    return () => debouncedSetQuery.current?.cancel()
+  }, [])
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setDebouncedSearchQuery('')
+      return
+    }
+    debouncedSetQuery.current?.(searchQuery.trim())
+  }, [searchQuery])
+
+  const [fetchTreeSearch, { data: treeSearchData, loading: treeSearchLoading }] =
+    useLazyQuery<albumTreeSearchQuery, albumTreeSearchQueryVariables>(
+      ALBUM_TREE_SEARCH_QUERY
+    )
+
+  useEffect(() => {
+    if (debouncedSearchQuery !== '') {
+      fetchTreeSearch({ variables: { query: debouncedSearchQuery } })
+    }
+  }, [debouncedSearchQuery, fetchTreeSearch])
+
+  const isFiltering = debouncedSearchQuery !== ''
+
+  let matchedIds: Set<string> | undefined
+  let visibleIds: Set<string> | undefined
+  if (isFiltering && treeSearchData) {
+    matchedIds = new Set(treeSearchData.search.albums.map(a => a.id))
+    visibleIds = new Set(matchedIds)
+    for (const album of treeSearchData.search.albums) {
+      for (const ancestor of album.path) {
+        visibleIds.add(ancestor.id)
+      }
+    }
+  }
+
   const roots = data?.myAlbums
+  const visibleRoots = isFiltering
+    ? roots?.filter(album => visibleIds?.has(album.id))
+    : roots
 
   return (
     <nav
@@ -80,13 +149,23 @@ const AlbumTree = () => {
           {t('general.loading.default', 'Loading...')}
         </div>
       )}
-      {roots && roots.length === 0 && (
+      {roots && roots.length === 0 && !isFiltering && (
         <div className="px-2 py-2 text-sm text-gray-400">
           {t('album_tree.empty', 'No albums yet')}
         </div>
       )}
+      {isFiltering && treeSearchLoading && !treeSearchData && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t('general.loading.default', 'Loading...')}
+        </div>
+      )}
+      {isFiltering && treeSearchData && visibleRoots?.length === 0 && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t('album_tree.no_matches', 'No matching albums')}
+        </div>
+      )}
       <ul>
-        {roots?.map(album => (
+        {visibleRoots?.map(album => (
           <AlbumTreeNode
             key={album.id}
             album={album}
@@ -94,6 +173,8 @@ const AlbumTree = () => {
             activeAlbumId={activeAlbumId}
             expanded={expanded}
             toggleExpand={toggleExpand}
+            visibleIds={visibleIds}
+            matchedIds={matchedIds}
           />
         ))}
       </ul>
