@@ -56,6 +56,7 @@ const SearchWrapper = styled.div.attrs({
 
 const SearchBar = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
   const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
     SEARCHBAR_USER_PREFERENCES_QUERY
@@ -165,6 +166,12 @@ const SearchBar = () => {
       } else if (event.key == 'Escape') {
         // setExpanded(false)
         inputEl.current?.blur()
+      } else if (event.key == 'Enter' && selectedItem === null) {
+        const trimmed = query.trim()
+        if (trimmed !== '') {
+          navigate(`/search?q=${encodeURIComponent(trimmed)}`)
+          inputEl.current?.blur()
+        }
       }
     }
 
@@ -173,7 +180,7 @@ const SearchBar = () => {
     return () => {
       document.removeEventListener('keydown', keydownEvent)
     }
-  }, [searchData])
+  }, [searchData, selectedItem, query, navigate])
 
   let results = null
   if (query.trim().length > 0 && fetched) {
@@ -298,6 +305,17 @@ const SearchResults = ({
           <ul aria-label="media">{mediaElements}</ul>
         </>
       )}
+      {!loading && query.trim() !== '' && (
+        <div className="my-4 text-center">
+          <NavLink
+            to={`/search?q=${encodeURIComponent(query.trim())}`}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            tabIndex={-1}
+          >
+            {t('header.search.view_all_results', 'View all results')}
+          </NavLink>
+        </div>
+      )}
     </div>
   )
 }
@@ -324,7 +342,7 @@ const SearchRow = ({
 
   useEffect(() => {
     const keydownEvent = (event: KeyboardEvent) => {
-      if (event.key == 'Enter') navigate(link)
+      if (event.key == 'Enter' && selected) navigate(link)
     }
 
     document.addEventListener('keydown', keydownEvent)
