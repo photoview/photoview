@@ -19,6 +19,7 @@ export const ALBUM_GALLERY_FRAGMENT = gql`
   fragment AlbumGalleryFields on Album {
     id
     title
+    createdAt
     subAlbums(order: { order_by: "title", order_direction: $orderDirection }) {
       id
       title
