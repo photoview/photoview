@@ -176,6 +176,11 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Setup UserAlbums join table failed: %v\n", err)
 	}
 
+	// Must run before AutoMigrate adds a unique index on (media_id, purpose).
+	if err := migrations.MigrateForDuplicateMediaURLs(db); err != nil {
+		log.Printf("Failed to remove duplicate media urls: %v\n", err)
+	}
+
 	if err := db.AutoMigrate(database_models...); err != nil {
 		log.Printf("Auto migration failed: %v\n", err)
 	}

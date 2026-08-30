@@ -35,6 +35,8 @@ services:
       PHOTOVIEW_POSTGRES_URL: postgres://photoview:photosecret@postgres:5432/photoview_test
     volumes:
       - .:/app:rw
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
     ports:
       - 4001:4001
     command:
@@ -83,3 +85,7 @@ services:
       retries: 10
     expose:
       - "5432"
+
+volumes:
+  go-mod-cache:
+  go-build-cache:

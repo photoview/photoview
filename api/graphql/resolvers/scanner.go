@@ -13,14 +13,15 @@ import (
 
 	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/scanner/queue"
 	"gorm.io/gorm"
 )
 
 // ScanAll is the resolver for the scanAll field.
 func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, error) {
-	err := scanner_queue.AddAllToQueue()
+	err := scanner.AddAll(r.DB(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +37,14 @@ func (r *mutationResolver) ScanAll(ctx context.Context) (*models.ScannerResult, 
 
 // ScanUser is the resolver for the scanUser field.
 func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error) {
+	db := r.DB(ctx)
+
 	var user models.User
-	if err := r.DB(ctx).First(&user, userID).Error; err != nil {
+	if err := db.First(&user, userID).Error; err != nil {
 		return nil, fmt.Errorf("get user from database: %w", err)
 	}
 
-	scanner_queue.AddUserToQueue(&user)
+	scanner.AddUser(db, &user)
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{
@@ -102,7 +105,7 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 		return 0, err
 	}
 
-	scanner_queue.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
+	queue.ChangeConcurrentWorkers(siteInfo.ConcurrentWorkers)
 
 	return siteInfo.ConcurrentWorkers, nil
 }
