@@ -28,12 +28,36 @@ func FormatSQL(tx *gorm.DB, order *Ordering, paginate *Pagination) *gorm.DB {
 			}
 		}
 
-		tx.Order(clause.OrderByColumn{
-			Column: clause.Column{
-				Name: *order.OrderBy,
-			},
-			Desc: desc,
-		})
+		// Natural (numeric-aware) sorting for album titles.
+		// Extracts leading numbers, pads them to 10 digits so "album_2" sorts before "album_10".
+		// Falls back to alphabetical sort for titles that don't start with a number.
+		if *order.OrderBy == "title_natural" {
+			naturalExpr := `CASE WHEN title ~ '^[0-9]+' THEN LPAD(SUBSTRING(title FROM '^[0-9]+'), 10, '0') ELSE LOWER(title) END`
+			if desc {
+				tx.Order(clause.OrderByColumn{
+					Column: clause.Column{Name: naturalExpr, Raw: true},
+					Desc:   true,
+				})
+				tx.Order(clause.OrderByColumn{
+					Column: clause.Column{Name: "LOWER(title)", Raw: true},
+					Desc:   true,
+				})
+			} else {
+				tx.Order(clause.OrderByColumn{
+					Column: clause.Column{Name: naturalExpr, Raw: true},
+				})
+				tx.Order(clause.OrderByColumn{
+					Column: clause.Column{Name: "LOWER(title)", Raw: true},
+				})
+			}
+		} else {
+			tx.Order(clause.OrderByColumn{
+				Column: clause.Column{
+					Name: *order.OrderBy,
+				},
+				Desc: desc,
+			})
+		}
 	}
 
 	return tx
