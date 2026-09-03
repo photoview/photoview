@@ -116,6 +116,12 @@ const PresentNavigationOverlay = ({
       onMouseMove={() => {
         onMouseMove.current && onMouseMove.current()
       }}
+      onClick={() => {
+        // Touch devices never fire mousemove, so the controls would
+        // otherwise stay hidden forever. A tap toggles them the same way a
+        // mouse movement does, and reuses the same auto-hide timer.
+        onMouseMove.current && onMouseMove.current()
+      }}
     >
     <div {...handlers}>
       {children}
