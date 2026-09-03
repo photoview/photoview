@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useContext, useEffect } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
 import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
+import { SidebarContext } from '../../sidebar/Sidebar'
+import MediaSidebar from '../../sidebar/MediaSidebar/MediaSidebar'
 
 const StyledContainer = styled.div`
   position: fixed;
@@ -37,6 +39,8 @@ const PresentView = ({
   dispatchMedia,
   disableSaveCloseInHistory,
 }: PresentViewProps) => {
+  const { updateSidebar } = useContext(SidebarContext)
+
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
       if (e.key == 'ArrowRight') {
@@ -73,6 +77,9 @@ const PresentView = ({
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}
         disableSaveCloseInHistory
+        onInfoClick={() =>
+          updateSidebar(<MediaSidebar media={activeMedia} />)
+        }
       >
         <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
       </PresentNavigationOverlay>

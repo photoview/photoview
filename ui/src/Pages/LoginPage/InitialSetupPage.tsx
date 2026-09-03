@@ -14,6 +14,7 @@ import {
   InitialSetup,
   InitialSetupVariables,
 } from './__generated__/InitialSetup'
+import Header from '../../components/header/Header'
 
 const initialSetupMutation = gql`
   mutation InitialSetup(
@@ -93,6 +94,7 @@ const InitialSetupPage = () => {
 
   return (
     <div>
+      <Header />
       <Container>
         <h1 className="text-center text-xl">
           {t('login_page.initial_setup.title', 'Initial Setup')}

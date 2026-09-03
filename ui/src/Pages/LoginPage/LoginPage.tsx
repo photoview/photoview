@@ -11,6 +11,7 @@ import { TextField } from '../../primitives/form/Input'
 import MessageBox from '../../primitives/form/MessageBox'
 import { CheckInitialSetup } from './__generated__/CheckInitialSetup'
 import { Authorize, AuthorizeVariables } from './__generated__/Authorize'
+import Header from '../../components/header/Header'
 
 const authorizeMutation = gql`
   mutation Authorize($username: String!, $password: String!) {
@@ -22,20 +23,13 @@ const authorizeMutation = gql`
   }
 `
 
-const LogoHeader = () => {
+const WelcomeMessage = () => {
   const { t } = useTranslation()
 
   return (
-    <div className="flex justify-center flex-col mb-14 mt-20">
-      <img
-        className="h-24"
-        src={import.meta.env.BASE_URL + 'photoview-logo.svg'}
-        alt="photoview logo"
-      />
-      <h1 className="text-3xl text-center mt-4">
-        {t('login_page.welcome', 'Welcome to Photoview')}
-      </h1>
-    </div>
+    <h1 className="text-3xl text-center mt-16 mb-12">
+      {t('login_page.welcome', 'Welcome to Photoview')}
+    </h1>
   )
 }
 
@@ -145,7 +139,8 @@ const LoginPage = () => {
         <title>{t('title.login', 'Login')} - Photoview</title>
       </Helmet>
       <div>
-        <LogoHeader />
+        <Header />
+        <WelcomeMessage />
         <LoginForm />
       </div>
     </>

@@ -15,4 +15,4 @@ export function login(token: string) {
   window.location.href = `${import.meta.env.BASE_URL}`
 }
 
-export const Container = styled.div.attrs({ className: 'mt-20' })``
+export const Container = styled.div.attrs({ className: 'mt-12' })``
