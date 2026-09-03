@@ -289,6 +289,17 @@ const SearchResults = ({
       }}
     >
       {message}
+      {!loading && query.trim() !== '' && (
+        <div className="pt-3 pb-2 mb-1 text-center border-b dark:border-dark-border">
+          <NavLink
+            to={`/search?q=${encodeURIComponent(query.trim())}`}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            tabIndex={-1}
+          >
+            {t('header.search.view_all_results', 'View all results')}
+          </NavLink>
+        </div>
+      )}
       {albumElements.length > 0 && (
         <>
           <ResultTitle>
@@ -304,17 +315,6 @@ const SearchResults = ({
           </ResultTitle>
           <ul aria-label="media">{mediaElements}</ul>
         </>
-      )}
-      {!loading && query.trim() !== '' && (
-        <div className="my-4 text-center">
-          <NavLink
-            to={`/search?q=${encodeURIComponent(query.trim())}`}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-            tabIndex={-1}
-          >
-            {t('header.search.view_all_results', 'View all results')}
-          </NavLink>
-        </div>
       )}
     </div>
   )
