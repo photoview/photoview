@@ -35,13 +35,16 @@ type LayoutProps = {
 const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
   const { pinned, content: sidebarContent } = useContext(SidebarContext)
 
-  const albumTreePreferenceQuery = authToken()
-    ? useQuery<layoutAlbumTreePreferenceQuery>(ALBUM_TREE_PREFERENCE_QUERY)
-    : null
+  const token = authToken()
+
+  const albumTreePreferenceQuery = useQuery<layoutAlbumTreePreferenceQuery>(
+    ALBUM_TREE_PREFERENCE_QUERY,
+    { skip: !token }
+  )
 
   const showAlbumTree =
-    !!authToken() &&
-    (albumTreePreferenceQuery?.data?.myUserPreferences.showAlbumTree ?? true)
+    !!token &&
+    (albumTreePreferenceQuery.data?.myUserPreferences.showAlbumTree ?? true)
 
   return (
     <>
@@ -55,7 +58,7 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <Authorized>
               <MainMenu />
             </Authorized>
-            {!!authToken() && (
+            {!!token && (
               <div
                 className={`${
                   showAlbumTree ? 'hidden lg:block' : 'hidden'

@@ -21,17 +21,18 @@ export const SidebarAlbumScan = ({ id }: SidebarAlbumScanProps) => {
   const { t } = useTranslation()
   const isAdmin = useIsAdmin()
 
-  const [scanAlbum, { called }] = useMutation<scanAlbum, scanAlbumVariables>(
-    SCAN_ALBUM_MUTATION,
-    {
-      variables: { albumId: id },
-    }
-  )
+  const [scanAlbum, { called, reset }] = useMutation<
+    scanAlbum,
+    scanAlbumVariables
+  >(SCAN_ALBUM_MUTATION, {
+    variables: { albumId: id },
+  })
 
   const [buttonDisabled, setButtonDisabled] = useState(false)
 
   useEffect(() => {
     setButtonDisabled(false)
+    reset()
   }, [id])
 
   if (!isAdmin) {

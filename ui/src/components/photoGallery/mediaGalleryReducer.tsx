@@ -70,18 +70,26 @@ export function mediaGalleryReducer(
 }
 
 export interface MediaGalleryPopStateEvent extends PopStateEvent {
-  state: MediaGalleryState
+  state: MediaGalleryState & { groupId?: string }
 }
 
+// groupId distinguishes multiple independent galleries living on the same
+// page (e.g. one per album on the search results page) so that browser
+// back/forward only affects the gallery that pushed that history entry.
+// Pages with a single gallery (the common case) can omit it.
 export const urlPresentModeSetupHook = ({
   dispatchMedia,
   openPresentMode,
+  groupId,
 }: {
   dispatchMedia: React.Dispatch<GalleryAction>
   openPresentMode: (event: MediaGalleryPopStateEvent) => void
+  groupId?: string
 }) => {
   useEffect(() => {
     const urlChangeListener = (event: MediaGalleryPopStateEvent) => {
+      if (event.state?.groupId !== groupId) return
+
       if (event.state.presenting === true) {
         openPresentMode(event)
       } else {
@@ -91,7 +99,7 @@ export const urlPresentModeSetupHook = ({
 
     window.addEventListener('popstate', urlChangeListener)
 
-    history.replaceState({ presenting: false }, '')
+    history.replaceState({ presenting: false, groupId }, '')
 
     return () => {
       window.removeEventListener('popstate', urlChangeListener)
@@ -102,16 +110,18 @@ export const urlPresentModeSetupHook = ({
 export const openPresentModeAction = ({
   dispatchMedia,
   activeIndex,
+  groupId,
 }: {
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
   activeIndex: number
+  groupId?: string
 }) => {
   dispatchMedia({
     type: 'openPresentMode',
     activeIndex: activeIndex,
   })
 
-  history.pushState({ presenting: true, activeIndex }, '')
+  history.pushState({ presenting: true, activeIndex, groupId }, '')
 }
 
 export const closePresentModeAction = ({

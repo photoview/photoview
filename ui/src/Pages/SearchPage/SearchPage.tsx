@@ -90,6 +90,7 @@ const SearchAlbumMediaGroup = ({ id, title, media }: MediaAlbumGroup) => {
         activeIndex: event.state.activeIndex,
       })
     },
+    groupId: id,
   })
 
   return (
@@ -101,6 +102,7 @@ const SearchAlbumMediaGroup = ({ id, title, media }: MediaAlbumGroup) => {
         loading={false}
         mediaState={mediaState}
         dispatchMedia={dispatchMedia}
+        groupId={id}
       />
     </div>
   )

@@ -6,6 +6,7 @@ import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { useSwipeable } from 'react-swipeable'
 
 import ExitIcon from './icons/Exit'
+import InfoIcon from './icons/Info'
 import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
 
@@ -52,6 +53,11 @@ const ExitButton = styled(OverlayButton)`
   top: 28px;
 `
 
+const InfoButton = styled(OverlayButton)`
+  right: 28px;
+  top: 28px;
+`
+
 const NavigationButton = styled(OverlayButton)<{ align: 'left' | 'right' }>`
   height: 80%;
   width: 20%;
@@ -71,12 +77,14 @@ type PresentNavigationOverlayProps = {
   children?: React.ReactChild
   dispatchMedia: React.Dispatch<GalleryAction>
   disableSaveCloseInHistory?: boolean
+  onInfoClick?: () => void
 }
 
 const PresentNavigationOverlay = ({
   children,
   dispatchMedia,
   disableSaveCloseInHistory,
+  onInfoClick,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
@@ -140,6 +148,15 @@ const PresentNavigationOverlay = ({
       >
         <ExitIcon />
       </ExitButton>
+      {onInfoClick && (
+        <InfoButton
+          aria-label="Show media info"
+          className={hide ? 'hide' : undefined}
+          onClick={onInfoClick}
+        >
+          <InfoIcon />
+        </InfoButton>
+      )}
     </div>
     </StyledOverlayContainer>
   )

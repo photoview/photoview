@@ -129,6 +129,10 @@ const UserPreferences = () => {
     []
   )
 
+  // Preferences haven't loaded yet: don't let interactions fire mutations
+  // with these placeholder values, since changeUserPreferences persists all
+  // three fields on every call and would otherwise clobber the real ones.
+  const preferencesLoaded = data?.myUserPreferences != null
   const currentLanguage = data?.myUserPreferences.language ?? null
   const currentSearchResultLimit = data?.myUserPreferences.searchResultLimit ?? null
   const currentShowAlbumTree = data?.myUserPreferences.showAlbumTree ?? true
@@ -142,10 +146,15 @@ const UserPreferences = () => {
   }, [currentSearchResultLimit])
 
   const commitSearchResultLimit = () => {
-    const trimmed = searchResultLimitInput.trim()
-    const parsed = trimmed === '' ? null : Math.max(0, parseInt(trimmed, 10))
+    if (!preferencesLoaded) return
 
-    if (parsed !== null && Number.isNaN(parsed)) {
+    const trimmed = searchResultLimitInput.trim()
+    const parsed = trimmed === '' ? null : Number(trimmed)
+
+    const isValid =
+      parsed === null || (Number.isInteger(parsed) && parsed >= 0)
+
+    if (!isValid) {
       setSearchResultLimitInput(
         currentSearchResultLimit != null ? String(currentSearchResultLimit) : ''
       )
@@ -195,6 +204,8 @@ const UserPreferences = () => {
         )}
         items={sortedLanguagePrefs}
         setSelected={language => {
+          if (!preferencesLoaded) return
+
           changePrefs({
             variables: {
               language: language as LanguageTranslation,
@@ -204,7 +215,7 @@ const UserPreferences = () => {
           })
         }}
         selected={data?.myUserPreferences.language || undefined}
-        disabled={loadingPrefs}
+        disabled={loadingPrefs || !preferencesLoaded}
       />
       <label htmlFor="user_pref_search_result_limit_field">
         <InputLabelTitle>
@@ -234,7 +245,7 @@ const UserPreferences = () => {
             e.currentTarget.blur()
           }
         }}
-        disabled={loadingPrefs}
+        disabled={loadingPrefs || !preferencesLoaded}
         wrapperClassName="mb-4"
       />
       <label htmlFor="user_pref_show_album_tree_field">
@@ -257,9 +268,11 @@ const UserPreferences = () => {
           'settings.user_preferences.show_album_tree.checkbox_label',
           'Show album tree sidebar'
         )}
-        disabled={loadingPrefs}
+        disabled={loadingPrefs || !preferencesLoaded}
         checked={currentShowAlbumTree}
         onChange={event => {
+          if (!preferencesLoaded) return
+
           changePrefs({
             variables: {
               language: currentLanguage,

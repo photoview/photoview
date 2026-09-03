@@ -177,7 +177,7 @@ func MigrateDatabase(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(database_models...); err != nil {
-		log.Printf("Auto migration failed: %v\n", err)
+		return fmt.Errorf("auto migration failed: %w", err)
 	}
 
 	// v2.1.0 - Replaced by Media.CreatedAt

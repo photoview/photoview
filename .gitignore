@@ -48,3 +48,6 @@ yarn-error.log*
 __debug_bin
 .idea
 .nvmrc
+
+# local AI assistant config (never intended for the shared repo)
+/.claude/
