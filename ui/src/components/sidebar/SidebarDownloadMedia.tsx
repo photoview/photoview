@@ -5,9 +5,10 @@ import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
 import { MessageState } from '../messages/Messages'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
-import React from 'react'
+import React, { useState } from 'react'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
+import { ReactComponent as ShareIcon } from './icons/shareNativeIcon.svg'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,
@@ -55,30 +56,35 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn) => async (url: string) => {
-  const imgUrl = new URL(
-    `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
-    location.origin
-  )
+export const fetchMediaBlob =
+  (t: TranslationFn) =>
+  async (url: string): Promise<Blob | null | undefined> => {
+    const imgUrl = new URL(
+      `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
+      location.origin
+    )
 
-  if (authToken() == null) {
-    // Get share token if not authorized
-    const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-    if (token) {
-      imgUrl.searchParams.set('token', token[1])
+    if (authToken() == null) {
+      // Get share token if not authorized
+      const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+      if (token) {
+        imgUrl.searchParams.set('token', token[1])
+      }
     }
+
+    const response = await fetch(imgUrl.href, {
+      credentials: 'include',
+    })
+
+    if (response.headers.has('content-length')) {
+      return downloadMediaShowProgress(t)(response)
+    }
+
+    return response.blob()
   }
 
-  const response = await fetch(imgUrl.href, {
-    credentials: 'include',
-  })
-
-  let blob = null
-  if (response.headers.has('content-length')) {
-    blob = await downloadMediaShowProgress(t)(response)
-  } else {
-    blob = await response.blob()
-  }
+const downloadMedia = (t: TranslationFn) => async (url: string) => {
+  const blob = await fetchMediaBlob(t)(url)
 
   if (blob == null) {
     console.log('Blob is null canceling')
@@ -246,6 +252,74 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   )
 }
 
+const canNativeShare = () =>
+  typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+const pickShareRow = (rows: SidebarDownloadTableRow[]) =>
+  rows.find(x => x.title == 'Original') ??
+  rows.find(x => x.title == 'Web optimized video') ??
+  rows.find(x => x.title == 'Large') ??
+  rows[0]
+
+type SidebarShareMediaButtonProps = {
+  media: MediaSidebarMedia
+  rows: SidebarDownloadTableRow[]
+}
+
+const SidebarShareMediaButton = ({
+  media,
+  rows,
+}: SidebarShareMediaButtonProps) => {
+  const { t } = useTranslation()
+  const [sharing, setSharing] = useState(false)
+
+  const row = pickShareRow(rows)
+
+  if (!canNativeShare() || row == null) return null
+
+  const share = async () => {
+    setSharing(true)
+    try {
+      const blob = await fetchMediaBlob(t)(row.url)
+      if (blob == null) return
+
+      const filename = row.url.match(/[^/]*$/)?.[0] ?? media.title ?? 'photo'
+      const file = new File([blob], filename, { type: blob.type })
+
+      if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+        // Fall back to sharing a link when the OS share sheet can't take
+        // this file directly (e.g. desktop browsers without file support).
+        await navigator.share({
+          title: media.title ?? undefined,
+          url: location.href,
+        })
+        return
+      }
+
+      await navigator.share({ files: [file], title: media.title ?? undefined })
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        console.error('Native share failed', err)
+      }
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  return (
+    <div className="pl-4 py-2">
+      <button
+        className="text-green-500 font-bold uppercase text-xs disabled:opacity-50"
+        disabled={sharing}
+        onClick={share}
+      >
+        <ShareIcon className="inline-block mr-2" />
+        <span>{t('sidebar.download.share', 'Share')}</span>
+      </button>
+    </div>
+  )
+}
+
 type SidebarMediaDownladProps = {
   media: MediaSidebarMedia
 }
@@ -288,6 +362,7 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
       </SidebarSectionTitle>
 
       <SidebarDownloadTable rows={downloadRows} />
+      <SidebarShareMediaButton media={media} rows={downloadRows} />
     </SidebarSection>
   )
 }
