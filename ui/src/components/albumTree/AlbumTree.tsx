@@ -57,6 +57,8 @@ const AlbumTree = () => {
   const { id: activeAlbumId } = useParams()
   const { data, loading } = useQuery<albumTreeRootQuery>(ALBUM_TREE_ROOT_QUERY)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [justExpandedId, setJustExpandedId] = useState<string | null>(null)
+  const scrollContainerRef = useRef<HTMLElement>(null)
 
   const [fetchActivePath, { data: activePathData }] = useLazyQuery<
     albumTreeActivePathQuery,
@@ -84,7 +86,9 @@ const AlbumTree = () => {
   }, [activeAlbumId, activePathData])
 
   const toggleExpand = (id: string) => {
-    setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+    const nowExpanded = !expanded[id]
+    setExpanded(prev => ({ ...prev, [id]: nowExpanded }))
+    setJustExpandedId(nowExpanded ? id : null)
   }
 
   const { query: searchQuery } = useContext(AlbumTreeSearchContext)
@@ -141,6 +145,7 @@ const AlbumTree = () => {
 
   return (
     <nav
+      ref={scrollContainerRef}
       aria-label={t('album_tree.label', 'Album tree')}
       className="overflow-y-auto h-full py-2 px-2"
     >
@@ -175,6 +180,8 @@ const AlbumTree = () => {
             toggleExpand={toggleExpand}
             visibleIds={visibleIds}
             matchedIds={matchedIds}
+            scrollContainerRef={scrollContainerRef}
+            justExpandedId={justExpandedId}
           />
         ))}
       </ul>

@@ -1,5 +1,5 @@
 import { gql, useLazyQuery } from '@apollo/client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { tailwindClassNames } from '../../helpers/utils'
 import {
@@ -37,6 +37,15 @@ type AlbumTreeNodeProps = {
   // Albums that directly matched the search query (as opposed to being an
   // ancestor of a match), used to highlight the actual hits.
   matchedIds?: Set<string>
+  // The scrollable tree container, used to scroll a freshly expanded node's
+  // children into view.
+  scrollContainerRef: React.RefObject<HTMLElement>
+  // Id of the album the user just expanded (not auto-expanded), so only that
+  // node scrolls its children into view.
+  justExpandedId: string | null
+  // Reports this node's own list item element up to its parent, so the
+  // parent can scroll it into view when it's the last child of an expansion.
+  onNodeRef?: (id: string, el: HTMLLIElement | null) => void
 }
 
 const AlbumTreeNode = ({
@@ -47,11 +56,16 @@ const AlbumTreeNode = ({
   toggleExpand,
   visibleIds,
   matchedIds,
+  scrollContainerRef,
+  justExpandedId,
+  onNodeRef,
 }: AlbumTreeNodeProps) => {
   const isFiltering = visibleIds != null
   const isExpanded = isFiltering ? true : !!expanded[album.id]
   const isActive = activeAlbumId === album.id
   const isMatch = !!matchedIds?.has(album.id)
+  const ownRef = useRef<HTMLLIElement | null>(null)
+  const childRefs = useRef<Record<string, HTMLLIElement | null>>({})
 
   const [fetchSubAlbums, { data, loading, called }] = useLazyQuery<
     albumTreeSubAlbumsQuery,
@@ -69,8 +83,47 @@ const AlbumTreeNode = ({
     : data?.album.subAlbums
   const hasNoChildren = called && !loading && (subAlbums?.length ?? 0) === 0
 
+  useEffect(() => {
+    if (isFiltering || album.id !== justExpandedId) return
+    if (!isExpanded || !subAlbums || subAlbums.length === 0) return
+
+    const containerEl = scrollContainerRef.current
+    const ownEl = ownRef.current
+    const lastEl = childRefs.current[subAlbums[subAlbums.length - 1].id]
+    if (!containerEl || !ownEl || !lastEl) return
+
+    const containerRect = containerEl.getBoundingClientRect()
+    const lastRect = lastEl.getBoundingClientRect()
+    const ownRect = ownEl.getBoundingClientRect()
+
+    const overflowBelow = lastRect.bottom - containerRect.bottom
+    if (overflowBelow <= 0) return
+
+    const ownTopAfterScroll = ownRect.top - overflowBelow
+    if (ownTopAfterScroll < containerRect.top) {
+      // Scrolling far enough to reveal the last child would push the
+      // expanded node itself out of view, so pin that node to the top
+      // instead of fully revealing the children.
+      containerEl.scrollTop += ownRect.top - containerRect.top
+    } else {
+      containerEl.scrollTop += overflowBelow
+    }
+  }, [
+    isFiltering,
+    album.id,
+    justExpandedId,
+    isExpanded,
+    subAlbums,
+    scrollContainerRef,
+  ])
+
   return (
-    <li>
+    <li
+      ref={el => {
+        ownRef.current = el
+        onNodeRef?.(album.id, el)
+      }}
+    >
       <div
         className="flex items-center rounded hover:bg-gray-100 dark:hover:bg-dark-bg2"
         style={{ paddingLeft: `${depth * 16}px` }}
@@ -121,6 +174,11 @@ const AlbumTreeNode = ({
               toggleExpand={toggleExpand}
               visibleIds={visibleIds}
               matchedIds={matchedIds}
+              scrollContainerRef={scrollContainerRef}
+              justExpandedId={justExpandedId}
+              onNodeRef={(id, el) => {
+                childRefs.current[id] = el
+              }}
             />
           ))}
         </ul>
