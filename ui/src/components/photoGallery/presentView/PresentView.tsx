@@ -18,8 +18,11 @@ const StyledContainer = styled.div`
   z-index: 100;
 `
 
+// Locks scrolling on the page behind the fullscreen viewer. Scoped to
+// html/body rather than every element, so panels rendered on top of the
+// viewer (e.g. the media info sidebar) can still scroll their own content.
 const PreventScroll = createGlobalStyle`
-  * {
+  html, body {
     overflow: hidden !important;
   }
 `
