@@ -1,8 +1,12 @@
 import { Dialog } from '@headlessui/react'
+import { useQuery } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import AlbumTree from './AlbumTree'
 import { ReactComponent as AlbumTreeIcon } from '../album/icons/album-tree.svg'
+import { authToken } from '../../helpers/authentication'
+import { ALBUM_TREE_PREFERENCE_QUERY } from '../layout/Layout'
+import { layoutAlbumTreePreferenceQuery } from '../layout/__generated__/layoutAlbumTreePreferenceQuery'
 
 // Lets small screens reach the album tree as a full-screen overlay, since the
 // persistent sidebar (Layout.tsx) is desktop-only (hidden below the `lg`
@@ -10,6 +14,15 @@ import { ReactComponent as AlbumTreeIcon } from '../album/icons/album-tree.svg'
 const MobileAlbumTreeButton = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+
+  const token = authToken()
+  const { data } = useQuery<layoutAlbumTreePreferenceQuery>(
+    ALBUM_TREE_PREFERENCE_QUERY,
+    { skip: !token }
+  )
+  const showAlbumTree = data?.myUserPreferences.showAlbumTree ?? true
+
+  if (!showAlbumTree) return null
 
   return (
     <>

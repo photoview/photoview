@@ -151,8 +151,11 @@ const UserPreferences = () => {
     const trimmed = searchResultLimitInput.trim()
     const parsed = trimmed === '' ? null : Number(trimmed)
 
+    // $searchResultLimit is a GraphQL Int (signed 32-bit); reject values
+    // outside that range instead of letting the mutation get rejected.
     const isValid =
-      parsed === null || (Number.isInteger(parsed) && parsed >= 0)
+      parsed === null ||
+      (Number.isInteger(parsed) && parsed >= 0 && parsed <= 2147483647)
 
     if (!isValid) {
       setSearchResultLimitInput(

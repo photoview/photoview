@@ -56,25 +56,29 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
+const fetchMediaResponse = async (url: string): Promise<Response> => {
+  const imgUrl = new URL(
+    `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
+    location.origin
+  )
+
+  if (authToken() == null) {
+    // Get share token if not authorized
+    const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+    if (token) {
+      imgUrl.searchParams.set('token', token[1])
+    }
+  }
+
+  return fetch(imgUrl.href, {
+    credentials: 'include',
+  })
+}
+
 export const fetchMediaBlob =
   (t: TranslationFn) =>
   async (url: string): Promise<Blob | null | undefined> => {
-    const imgUrl = new URL(
-      `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
-      location.origin
-    )
-
-    if (authToken() == null) {
-      // Get share token if not authorized
-      const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-      if (token) {
-        imgUrl.searchParams.set('token', token[1])
-      }
-    }
-
-    const response = await fetch(imgUrl.href, {
-      credentials: 'include',
-    })
+    const response = await fetchMediaResponse(url)
 
     if (response.headers.has('content-length')) {
       return downloadMediaShowProgress(t)(response)
@@ -82,6 +86,14 @@ export const fetchMediaBlob =
 
     return response.blob()
   }
+
+// Like fetchMediaBlob, but never shows the download-progress notification —
+// dismissing that notification cancels the fetch, which isn't appropriate
+// for the share flow.
+export const fetchMediaBlobQuiet = async (url: string): Promise<Blob> => {
+  const response = await fetchMediaResponse(url)
+  return response.blob()
+}
 
 const downloadMedia = (t: TranslationFn) => async (url: string) => {
   const blob = await fetchMediaBlob(t)(url)
@@ -280,8 +292,7 @@ const SidebarShareMediaButton = ({
   const share = async () => {
     setSharing(true)
     try {
-      const blob = await fetchMediaBlob(t)(row.url)
-      if (blob == null) return
+      const blob = await fetchMediaBlobQuiet(row.url)
 
       const filename = row.url.match(/[^/]*$/)?.[0] ?? media.title ?? 'photo'
       const file = new File([blob], filename, { type: blob.type })

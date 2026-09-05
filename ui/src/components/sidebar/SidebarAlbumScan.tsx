@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useMutation, gql } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
@@ -21,19 +21,17 @@ export const SidebarAlbumScan = ({ id }: SidebarAlbumScanProps) => {
   const { t } = useTranslation()
   const isAdmin = useIsAdmin()
 
-  const [scanAlbum, { called, reset }] = useMutation<
-    scanAlbum,
-    scanAlbumVariables
-  >(SCAN_ALBUM_MUTATION, {
-    variables: { albumId: id },
-  })
-
   const [buttonDisabled, setButtonDisabled] = useState(false)
 
-  useEffect(() => {
-    setButtonDisabled(false)
-    reset()
-  }, [id])
+  const [scanAlbum, { called }] = useMutation<scanAlbum, scanAlbumVariables>(
+    SCAN_ALBUM_MUTATION,
+    {
+      variables: { albumId: id },
+      // Without this, a rejected mutation is an unhandled promise
+      // rejection and leaves the button disabled with no way to retry.
+      onError: () => setButtonDisabled(false),
+    }
+  )
 
   if (!isAdmin) {
     return null

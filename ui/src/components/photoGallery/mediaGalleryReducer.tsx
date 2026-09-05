@@ -88,9 +88,12 @@ export const urlPresentModeSetupHook = ({
 }) => {
   useEffect(() => {
     const urlChangeListener = (event: MediaGalleryPopStateEvent) => {
-      if (event.state?.groupId !== groupId) return
-
-      if (event.state.presenting === true) {
+      // Multiple groups can be mounted at once (e.g. one per album on the
+      // search results page), each with its own base history entry that
+      // the others may since have replaced. Only open when this group's id
+      // matches, but always close on any other state so a group left
+      // presenting doesn't get stuck open when navigating back past it.
+      if (event.state?.presenting === true && event.state.groupId === groupId) {
         openPresentMode(event)
       } else {
         dispatchMedia({ type: 'closePresentMode' })
