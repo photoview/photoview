@@ -113,6 +113,20 @@ $ npm run genSchemaTypes   # regenerate GraphQL TS types from src/**/*.graphql q
 - Styling is a mix of styled-components (older code) and Tailwind utility classes (newer code) —
   match whichever convention the file you're editing already uses.
 
+## Known limitations / future work
+
+- **Scanner discovery blocks the GraphQL request.** `AddUserToQueue` and `AddAlbumToQueue`
+  (`api/scanner/scanner_queue/queue.go`) call `FindAlbumsForUser`/`FindAlbumsForAlbum`
+  (`api/scanner/scanner_user.go`) synchronously from the resolver. `walkAlbumScanQueue` walks the
+  *entire* directory subtree and opens a DB transaction per directory before anything is queued for
+  the background scanner workers — so scanning a large album/library can block the request for
+  seconds to minutes, risking a client/proxy timeout even though the scan itself would otherwise
+  succeed. Both the pre-existing "scan my library" resolver and the "rescan this album" mutation
+  share this pattern. A proper fix means introducing a "discover children of this album" job type
+  that the scanner workers process asynchronously (queueing further discovery/scan jobs themselves),
+  rather than the resolver doing the full walk inline — a real change to the job/queue model
+  (`ScannerJob`, job dedup in `queue.go`) affecting both entry points, not a quick patch.
+
 ## PR expectations (from CONTRIBUTING.md)
 
 - Target the `master` branch.
