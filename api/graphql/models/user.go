@@ -16,8 +16,9 @@ type User struct {
 	Username string  `gorm:"unique;size:128"`
 	Password *string `gorm:"size:256"`
 	// RootPath string  `gorm:"size:512`
-	Albums []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
-	Admin  bool    `gorm:"default:false"`
+	Albums    []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
+	Admin     bool    `gorm:"default:false"`
+	CanUpload bool    `gorm:"default:false"`
 }
 
 type UserMediaData struct {
@@ -187,6 +188,22 @@ func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	}
 
 	return len(ownedParents) > 0, nil
+}
+
+// CanUploadToAlbum returns true if the user is allowed to create folders,
+// upload media, delete, and move sub-albums within the given album: either
+// they're an admin, or the CanUpload flag is set and they own the album
+// (ownership is inherited down the tree, see OwnsAlbum).
+func (user *User) CanUploadToAlbum(db *gorm.DB, album *Album) (bool, error) {
+	if user.Admin {
+		return true, nil
+	}
+
+	if !user.CanUpload {
+		return false, nil
+	}
+
+	return user.OwnsAlbum(db, album)
 }
 
 // FavoriteMedia sets/clears a media as favorite for the user

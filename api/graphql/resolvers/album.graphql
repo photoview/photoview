@@ -18,8 +18,16 @@ type Album {
 
   "The album which contains this album"
   parentAlbum: Album
+  """
+  ID of the album which contains this album, or null if this is a root album.
+  Unlike parentAlbum, this doesn't require the parent association to be
+  preloaded, so it's always accurate.
+  """
+  parentAlbumId: ID
   "The user who owns this album"
   owner: User!
+  "Whether the currently logged in user may create folders, upload media into, delete, or move this album"
+  viewerCanUpload: Boolean!
   "The path on the filesystem of the server, where this album is located"
   filePath: String!
   "An image in this album used for previewing this album"

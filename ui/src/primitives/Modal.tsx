@@ -41,7 +41,10 @@ const Modal = ({
     <Dialog
       open={open}
       onClose={onClose}
-      className="fixed z-40 inset-0 overflow-y-auto"
+      // Higher than Sidebar's z-[110] (ui/src/components/sidebar/Sidebar.tsx),
+      // so a modal opened from within the sidebar (e.g. a delete
+      // confirmation) isn't rendered behind it and left unclickable.
+      className="fixed z-[120] inset-0 overflow-y-auto"
     >
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />

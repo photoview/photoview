@@ -100,6 +100,9 @@ func main() {
 	downloadsRouter := endpointRouter.PathPrefix("/download").Subrouter()
 	routes.RegisterDownloadRoutes(db, downloadsRouter)
 
+	uploadRouter := endpointRouter.PathPrefix("/upload").Subrouter()
+	routes.RegisterUploadRoutes(db, uploadRouter)
+
 	shouldServeUI := utils.ShouldServeUI()
 
 	if shouldServeUI {

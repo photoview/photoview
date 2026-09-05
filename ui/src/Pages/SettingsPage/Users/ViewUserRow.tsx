@@ -34,6 +34,7 @@ const ViewUserRow = ({
       <TableCell>{paths}</TableCell>
       <TableCell>
         <Checkbox label="Admin" disabled checked={user.admin} />
+        <Checkbox label="Can upload" disabled checked={user.canUpload} />
       </TableCell>
       <TableCell>
         <div className="flex gap-1">

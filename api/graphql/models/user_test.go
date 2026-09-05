@@ -185,6 +185,52 @@ func TestUserOwnsAlbum(t *testing.T) {
 	assert.False(t, owns)
 }
 
+func TestUserCanUploadToAlbum(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	owner := models.User{Username: "owner", CanUpload: true}
+	assert.NoError(t, db.Save(&owner).Error)
+
+	nonUploader := models.User{Username: "non_uploader", CanUpload: false}
+	assert.NoError(t, db.Save(&nonUploader).Error)
+
+	admin := models.User{Username: "admin_user", Admin: true, CanUpload: false}
+	assert.NoError(t, db.Save(&admin).Error)
+
+	album := models.Album{Title: "album", Path: "/photos/album"}
+	assert.NoError(t, db.Model(&owner).Association("Albums").Append(&album))
+
+	t.Run("owner with CanUpload can upload", func(t *testing.T) {
+		can, err := owner.CanUploadToAlbum(db, &album)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+
+	t.Run("user without CanUpload cannot upload, even if they own the album", func(t *testing.T) {
+		nonUploaderOwned := models.Album{Title: "album2", Path: "/photos/album2"}
+		assert.NoError(t, db.Model(&nonUploader).Association("Albums").Append(&nonUploaderOwned))
+
+		can, err := nonUploader.CanUploadToAlbum(db, &nonUploaderOwned)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("CanUpload user who does not own the album cannot upload", func(t *testing.T) {
+		otherAlbum := models.Album{Title: "not_owned", Path: "/photos/not_owned"}
+		assert.NoError(t, db.Save(&otherAlbum).Error)
+
+		can, err := owner.CanUploadToAlbum(db, &otherAlbum)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("admin can upload anywhere, regardless of CanUpload/ownership", func(t *testing.T) {
+		can, err := admin.CanUploadToAlbum(db, &album)
+		assert.NoError(t, err)
+		assert.True(t, can)
+	})
+}
+
 func TestUserFavoriteMedia(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 

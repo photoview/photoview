@@ -89,6 +89,47 @@ func FaceRecognitionModelsPath() string {
 	return EnvFaceRecognitionModelsPath.GetValue()
 }
 
+// IsSubPath returns true if target is root itself or a descendant of root.
+// Both paths should already be cleaned/absolute; this is meant as a defense-
+// in-depth check after joining a user-supplied path onto a trusted root, not
+// as the primary sanitization step.
+func IsSubPath(root, target string) bool {
+	rel, err := filepath.Rel(root, target)
+	if err != nil {
+		return false
+	}
+
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+// SanitizeRelativePath cleans a user-supplied relative path (e.g. a form
+// field name from an upload, or a folder name), rejecting absolute paths
+// and any attempt to escape upwards via "..". The returned path uses the
+// OS-native separator and is safe to filepath.Join onto a trusted root.
+func SanitizeRelativePath(p string) (string, error) {
+	if p == "" {
+		return "", fmt.Errorf("path must not be empty")
+	}
+
+	slashed := filepath.ToSlash(p)
+	if strings.HasPrefix(slashed, "/") {
+		return "", fmt.Errorf("absolute paths are not allowed")
+	}
+
+	cleaned := filepath.Clean(filepath.FromSlash(slashed))
+	if cleaned == "." {
+		return "", fmt.Errorf("path must not be empty")
+	}
+
+	for _, part := range strings.Split(cleaned, string(filepath.Separator)) {
+		if part == ".." {
+			return "", fmt.Errorf("path must not contain '..'")
+		}
+	}
+
+	return cleaned, nil
+}
+
 // IsDirSymlink checks that the given path is a symlink and resolves to a
 // directory.
 func IsDirSymlink(linkPath string) (bool, error) {

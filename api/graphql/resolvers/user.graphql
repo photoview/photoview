@@ -7,6 +7,8 @@ type User {
   rootAlbums: [Album!]! @isAdmin
   "Whether or not the user has admin privileges"
   admin: Boolean!
+  "Whether or not the user may create folders and upload media into albums they own"
+  canUpload: Boolean!
 }
 
 "Supported language translations of the user interface"
@@ -85,12 +87,14 @@ extend type Mutation {
     username: String
     password: String
     admin: Boolean
+    canUpload: Boolean
   ): User! @isAdmin
   "Create a new user"
   createUser(
     username: String!
     password: String
     admin: Boolean!
+    canUpload: Boolean
     rootPath: String
   ): User! @isAdmin
   "Delete an existing user"

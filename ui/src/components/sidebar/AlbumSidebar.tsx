@@ -10,12 +10,17 @@ import {
 import { SidebarAlbumCover } from './AlbumCovers'
 import SidebarAlbumDownload from './SidebarDownloadAlbum'
 import SidebarAlbumScan from './SidebarAlbumScan'
+import SidebarAlbumNewFolder from './SidebarAlbumNewFolder'
+import SidebarAlbumUpload from './SidebarAlbumUpload'
+import SidebarAlbumManage from './SidebarAlbumManage'
 
 const albumQuery = gql`
   query getAlbumSidebar($id: ID!) {
     album(id: $id) {
       id
       title
+      viewerCanUpload
+      parentAlbumId
     }
   }
 `
@@ -56,8 +61,30 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
         <SidebarAlbumDownload albumID={albumId} />
       </div>
       <div className="mt-8">
-        <SidebarAlbumScan id={albumId} />
+        {/* Remounts the mutation state on album change, so a scan promise
+            still in flight for the previous album can't leave this
+            album's button stuck disabled. */}
+        <SidebarAlbumScan key={albumId} id={albumId} />
       </div>
+      {data?.album.viewerCanUpload && (
+        <>
+          <div className="mt-8">
+            <SidebarAlbumNewFolder key={albumId} albumId={albumId} />
+          </div>
+          <div className="mt-8">
+            <SidebarAlbumUpload key={albumId} albumId={albumId} />
+          </div>
+          {data.album.parentAlbumId && (
+            <div className="mt-8">
+              <SidebarAlbumManage
+                key={albumId}
+                albumId={albumId}
+                albumTitle={data.album.title}
+              />
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

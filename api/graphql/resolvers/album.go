@@ -69,6 +69,16 @@ func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.U
 	panic("not implemented")
 }
 
+// ViewerCanUpload is the resolver for the viewerCanUpload field.
+func (r *albumResolver) ViewerCanUpload(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+
+	return user.CanUploadToAlbum(r.DB(ctx), obj)
+}
+
 // Thumbnail is the resolver for the thumbnail field.
 func (r *albumResolver) Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error) {
 	return obj.Thumbnail(r.DB(ctx))

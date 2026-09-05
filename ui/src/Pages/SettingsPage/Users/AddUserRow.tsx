@@ -11,11 +11,16 @@ import {
 } from './__generated__/userAddRootPath'
 
 export const CREATE_USER_MUTATION = gql`
-  mutation createUser($username: String!, $admin: Boolean!) {
-    createUser(username: $username, admin: $admin) {
+  mutation createUser(
+    $username: String!
+    $admin: Boolean!
+    $canUpload: Boolean
+  ) {
+    createUser(username: $username, admin: $admin, canUpload: $canUpload) {
       id
       username
       admin
+      canUpload
       __typename
     }
   }
@@ -33,6 +38,7 @@ const initialState = {
   username: '',
   rootPath: '',
   admin: false,
+  canUpload: false,
   userAdded: false,
 }
 
@@ -127,6 +133,16 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
             })
           }}
         />
+        <Checkbox
+          label="Can upload"
+          checked={state.canUpload}
+          onChange={e => {
+            setState({
+              ...state,
+              canUpload: e.target.checked || false,
+            })
+          }}
+        />
       </TableCell>
       <TableCell>
         <ButtonGroup>
@@ -142,6 +158,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
                 variables: {
                   username: state.username,
                   admin: state.admin,
+                  canUpload: state.canUpload,
                 },
               })
             }}

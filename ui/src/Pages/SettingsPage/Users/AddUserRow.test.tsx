@@ -10,7 +10,7 @@ const gqlMock = [
   {
     request: {
       query: CREATE_USER_MUTATION,
-      variables: { username: 'testuser', admin: false },
+      variables: { username: 'testuser', admin: false, canUpload: false },
     },
     result: {
       data: {
@@ -18,6 +18,7 @@ const gqlMock = [
           id: '123',
           username: 'testuser',
           admin: false,
+          canUpload: false,
           __typename: 'User',
         },
       },
