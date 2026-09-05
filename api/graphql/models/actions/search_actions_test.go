@@ -109,3 +109,37 @@ func TestSearch(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchAlbumOrder(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "user", nil, true)
+	assert.NoError(t, err)
+
+	albumTitles := []string{
+		"gallery_2024-01",
+		"gallery_2023-12",
+		"gallery_2024-02",
+	}
+
+	for _, title := range albumTitles {
+		album := models.Album{
+			Title: title,
+			Path:  fmt.Sprintf("/media/%s", title),
+		}
+		assert.NoError(t, db.Create(&album).Error)
+		assert.NoError(t, db.Model(&album).Association("Owners").Append(user))
+	}
+
+	result, err := actions.Search(db, "gallery", user.ID, nil, nil)
+	assert.NoError(t, err)
+
+	var titles []string
+	for _, album := range result.Albums {
+		titles = append(titles, album.Title)
+	}
+
+	// Matches are ordered alphabetically descending by title, so
+	// Year/Year-Month-named albums come back newest first.
+	assert.Equal(t, []string{"gallery_2024-02", "gallery_2024-01", "gallery_2023-12"}, titles)
+}

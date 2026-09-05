@@ -54,6 +54,28 @@ const SearchWrapper = styled.div.attrs({
   className: 'w-full max-w-xs lg:relative',
 })``
 
+// Every page wraps itself in its own <Layout>, so navigating between page
+// types (e.g. Timeline -> Album) unmounts and remounts the header, wiping
+// any local component state. Session storage survives that remount, so the
+// typed query is still there if the user navigates back to it.
+const SEARCH_QUERY_STORAGE_KEY = 'searchbar.query'
+
+const readStoredQuery = (): string => {
+  try {
+    return sessionStorage.getItem(SEARCH_QUERY_STORAGE_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+const writeStoredQuery = (query: string) => {
+  try {
+    sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, query)
+  } catch {
+    // Ignore storage errors (e.g. private browsing with storage disabled)
+  }
+}
+
 const SearchBar = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -70,7 +92,11 @@ const SearchBar = () => {
 
   const { setQuery: setTreeQuery } = useContext(AlbumTreeSearchContext)
 
-  const [query, setQuery] = useState('')
+  const [query, setQueryState] = useState(readStoredQuery)
+  const setQuery = (value: string) => {
+    setQueryState(value)
+    writeStoredQuery(value)
+  }
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const inputEl = useRef<HTMLInputElement>(null)
@@ -110,8 +136,10 @@ const SearchBar = () => {
 
   const location = useLocation()
   useEffect(() => {
+    // Collapse the dropdown on navigation, but keep the typed query intact
+    // so it's still there if the user navigates back to it (e.g. after
+    // clicking a result or "View all results").
     setExpanded(false)
-    setQuery('')
     setTreeQuery('')
   }, [location])
 
