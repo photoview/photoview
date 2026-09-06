@@ -69,8 +69,6 @@ func TestUploadRoute(t *testing.T) {
 
 	uploader, err := models.RegisterUser(db, "uploader", nil, false)
 	assert.NoError(t, err)
-	uploader.CanUpload = true
-	assert.NoError(t, db.Save(uploader).Error)
 
 	nonUploader, err := models.RegisterUser(db, "non_uploader", nil, false)
 	assert.NoError(t, err)
@@ -78,7 +76,12 @@ func TestUploadRoute(t *testing.T) {
 	albumPath := t.TempDir()
 	album := models.Album{Title: "album", Path: albumPath}
 	assert.NoError(t, db.Save(&album).Error)
-	assert.NoError(t, db.Model(uploader).Association("Albums").Append(&album))
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: uploader.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: nonUploader.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
 
 	router := mux.NewRouter()
 	RegisterUploadRoutes(db, router)
@@ -90,7 +93,7 @@ func TestUploadRoute(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
-	t.Run("user without CanUpload is rejected", func(t *testing.T) {
+	t.Run("user with only Read level is rejected", func(t *testing.T) {
 		req := buildUploadRequest(t, album.ID, map[string][]byte{"photo.jpg": validJPEGBytes(t)})
 		req = req.WithContext(auth.AddUserToContext(req.Context(), nonUploader))
 		rec := httptest.NewRecorder()

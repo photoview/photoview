@@ -24,19 +24,19 @@ func TestNewRootPath(t *testing.T) {
 	}
 
 	t.Run("Insert valid root album", func(t *testing.T) {
-		album, err := scanner.NewRootAlbum(db, testDataPath, &user)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user, models.AlbumPermissionLevelRead)
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		assert.NotNil(t, album)
 		assert.Contains(t, album.Path, "/api/scanner/test_media")
-		assert.NotEmpty(t, album.Owners)
+		assert.EqualValues(t, 1, db.Model(&album).Association("Owners").Count())
 	})
 
 	t.Run("Insert duplicate root album", func(t *testing.T) {
 
-		_, err := scanner.NewRootAlbum(db, testDataPath, &user)
+		_, err := scanner.NewRootAlbum(db, testDataPath, &user, models.AlbumPermissionLevelRead)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "user already owns a path containing this path:")
@@ -44,7 +44,7 @@ func TestNewRootPath(t *testing.T) {
 
 	t.Run("Insert invalid root album", func(t *testing.T) {
 
-		_, err := scanner.NewRootAlbum(db, "./invalid_path", &user)
+		_, err := scanner.NewRootAlbum(db, "./invalid_path", &user, models.AlbumPermissionLevelRead)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "invalid root path")
@@ -60,7 +60,7 @@ func TestNewRootPath(t *testing.T) {
 			return
 		}
 
-		album, err := scanner.NewRootAlbum(db, testDataPath, &user2)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user2, models.AlbumPermissionLevelRead)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -80,7 +80,7 @@ func TestNewRootPath(t *testing.T) {
 		tmpFile.Close()
 		defer os.Remove(tmpFile.Name())
 
-		_, err = scanner.NewRootAlbum(db, tmpFile.Name(), &user)
+		_, err = scanner.NewRootAlbum(db, tmpFile.Name(), &user, models.AlbumPermissionLevelRead)
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "invalid root path")
 	})

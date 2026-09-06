@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User, level models.AlbumPermissionLevel) (*models.Album, error) {
 	rootPath = filepath.Clean(rootPath)
 
 	if !ValidRootPath(rootPath) {
@@ -31,10 +31,6 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		}
 
 		rootPath = path.Join(wd, rootPath)
-	}
-
-	owners := []models.User{
-		*owner,
 	}
 
 	var matchedAlbums []models.Album
@@ -54,20 +50,27 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 			return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", rootPath))
 		}
 
-		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
+		// PropagateAlbumLevel stamps the grant onto the whole existing
+		// subtree, not just the root row, since this path may already have
+		// content scanned in below it (e.g. shared between two admin-managed
+		// root paths pointing at the same directory).
+		if err := models.PropagateAlbumLevel(db, album.ID, owner.ID, level, nil); err != nil {
 			return nil, errors.Wrap(err, "add owner to already existing album")
 		}
 
 		return &album, nil
 	} else {
 		album := models.Album{
-			Title:  path.Base(rootPath),
-			Path:   rootPath,
-			Owners: owners,
+			Title: path.Base(rootPath),
+			Path:  rootPath,
 		}
 
 		if err := db.Create(&album).Error; err != nil {
 			return nil, err
+		}
+
+		if err := models.PropagateAlbumLevel(db, album.ID, owner.ID, level, nil); err != nil {
+			return nil, errors.Wrap(err, "grant owner access to new root album")
 		}
 
 		return &album, nil

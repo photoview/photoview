@@ -1,17 +1,17 @@
 extend type Mutation {
   """
   Create a new, empty sub-folder on disk inside the given album.
-  The caller must be an admin, or must own `parentAlbumId` and have the
-  `canUpload` permission.
+  The caller must be an admin, or hold at least UPLOAD-level access on
+  `parentAlbumId`.
   """
   createAlbumFolder(parentAlbumId: ID!, name: String!): Album! @isAuthorized
 
   """
   Move a folder (and everything inside it) into a new parent album, both on
-  disk and in the database. The caller must be an admin, or must own both
-  `albumId` and `newParentAlbumId` and have the `canUpload` permission.
-  Root albums cannot be moved, and an album cannot be moved into itself or
-  one of its own sub-albums.
+  disk and in the database. The caller must be an admin, or hold at least
+  DELETE-level access on `albumId` and at least UPLOAD-level access on
+  `newParentAlbumId`. Root albums cannot be moved, and an album cannot be
+  moved into itself or one of its own sub-albums.
   """
   moveAlbum(albumId: ID!, newParentAlbumId: ID!): Album! @isAuthorized
 
@@ -19,8 +19,8 @@ extend type Mutation {
   Move a folder (and everything inside it) to a hidden trash folder next to
   its parent, and remove it from the library. This does not permanently
   delete the files - an administrator can still recover them directly from
-  the filesystem. The caller must be an admin, or must own `albumId` and
-  have the `canUpload` permission. Root albums cannot be deleted this way.
+  the filesystem. The caller must be an admin, or hold at least DELETE-level
+  access on `albumId`. Root albums cannot be deleted this way.
   """
   deleteAlbum(albumId: ID!): Boolean! @isAuthorized
 }

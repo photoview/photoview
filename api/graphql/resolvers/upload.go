@@ -34,7 +34,7 @@ func (r *mutationResolver) CreateAlbumFolder(ctx context.Context, parentAlbumID 
 		return nil, err
 	}
 
-	canUpload, err := user.CanUploadToAlbum(db, &parent)
+	canUpload, err := user.HasAlbumLevel(db, &parent, models.AlbumPermissionLevelUpload)
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +70,20 @@ func (r *mutationResolver) CreateAlbumFolder(ctx context.Context, parentAlbumID 
 			return err
 		}
 
-		// New folders are owned by whoever already owns the parent, not just
-		// the uploader, mirroring the scanner's own walkAlbumScanQueue.
-		var parentOwners []models.User
-		if err := tx.Model(&parent).Association("Owners").Find(&parentOwners); err != nil {
+		// New folders inherit every one of the parent's current grants
+		// (level and grantedBy included), not just the uploader, mirroring
+		// the scanner's own walkAlbumScanQueue.
+		var parentGrants []models.UserAlbums
+		if err := tx.Where("album_id = ?", parent.ID).Find(&parentGrants).Error; err != nil {
 			return err
 		}
-		return tx.Model(&album).Association("Owners").Append(parentOwners)
+		for _, g := range parentGrants {
+			g.AlbumID = album.ID
+			if err := tx.Create(&g).Error; err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	if transErr != nil {
 		_ = os.Remove(newPath)
@@ -114,13 +121,13 @@ func (r *mutationResolver) MoveAlbum(ctx context.Context, albumID int, newParent
 		return nil, err
 	}
 
-	if canUpload, err := user.CanUploadToAlbum(db, &album); err != nil {
+	if canDelete, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelDelete); err != nil {
 		return nil, err
-	} else if !canUpload {
+	} else if !canDelete {
 		return nil, errors.New("unauthorized")
 	}
 
-	if canUpload, err := user.CanUploadToAlbum(db, &newParent); err != nil {
+	if canUpload, err := user.HasAlbumLevel(db, &newParent, models.AlbumPermissionLevelUpload); err != nil {
 		return nil, err
 	} else if !canUpload {
 		return nil, errors.New("unauthorized")
@@ -223,11 +230,11 @@ func (r *mutationResolver) DeleteAlbum(ctx context.Context, albumID int) (bool, 
 		return false, err
 	}
 
-	canUpload, err := user.CanUploadToAlbum(db, &album)
+	canDelete, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelDelete)
 	if err != nil {
 		return false, err
 	}
-	if !canUpload {
+	if !canDelete {
 		return false, errors.New("unauthorized")
 	}
 

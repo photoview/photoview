@@ -231,7 +231,7 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Single root album, no children", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -260,7 +260,7 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 
 	t.Run("Single root album, multiple children", func(t *testing.T) {
 
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 3)
@@ -298,7 +298,7 @@ func TestNonRootAlbumPath(t *testing.T) {
 
 	// The child album is a "local root album" for the user, as it does not have access to the root album
 	t.Run("User should only see child album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -356,7 +356,7 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Admin should see all albums", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, admin, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, admin, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 2)
@@ -365,7 +365,7 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	})
 
 	t.Run("User 1 should only see child1 album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user1, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user1, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -373,10 +373,50 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	})
 
 	t.Run("User 2 should only see child2 album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user2, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user2, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
 		assert.Equal(t, "child2", returnedAlbums[0].Title)
+	})
+}
+
+func TestMyAlbumsExcludesHidden(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	user, err := models.RegisterUser(db, "hide_myalbums_user", nil, false)
+	assert.NoError(t, err)
+
+	visible := models.Album{Title: "visible", Path: "/photos/mya_visible"}
+	assert.NoError(t, db.Save(&visible).Error)
+	hidden := models.Album{Title: "hidden", Path: "/photos/mya_hidden"}
+	assert.NoError(t, db.Save(&hidden).Error)
+
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&visible, &hidden))
+
+	_, err = user.HideAlbum(db, hidden.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("hidden album is excluded by default", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "visible")
+		assert.NotContains(t, titles, "hidden")
+	})
+
+	t.Run("showHidden reveals it again", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, &boolTrue)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "visible")
+		assert.Contains(t, titles, "hidden")
 	})
 }

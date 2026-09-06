@@ -45,7 +45,8 @@ var addAlbumToQueue = scanner_queue.AddAlbumToQueue
 // RegisterUploadRoutes registers the endpoint used to upload media into an
 // album a user owns. Unlike the read-only photo/video/download routes, this
 // is never reachable via a share token — the caller must be a logged in
-// user with the canUpload permission (or an admin).
+// user holding at least Upload-level access on the target album (or an
+// admin).
 func RegisterUploadRoutes(db *gorm.DB, router *mux.Router) {
 	router.HandleFunc("/{albumId}", func(w http.ResponseWriter, r *http.Request) {
 		albumID, err := strconv.Atoi(mux.Vars(r)["albumId"])
@@ -66,7 +67,7 @@ func RegisterUploadRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		canUpload, err := user.CanUploadToAlbum(db, &album)
+		canUpload, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 		if err != nil {
 			log.Error(r.Context(), "error checking upload permission", "error", err)
 			http.Error(w, internalServerError, http.StatusInternalServerError)

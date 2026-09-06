@@ -27,8 +27,6 @@ func setupUploadMutationTest(t *testing.T) (*mutationResolver, *models.User, *mo
 
 	uploader, err := models.RegisterUser(db, "uploader", nil, false)
 	assert.NoError(t, err)
-	uploader.CanUpload = true
-	assert.NoError(t, db.Save(uploader).Error)
 
 	nonUploader, err := models.RegisterUser(db, "non_uploader", nil, false)
 	assert.NoError(t, err)
@@ -46,7 +44,9 @@ func makeTestRootAlbum(t *testing.T, r *mutationResolver, owner *models.User, ti
 
 	album := models.Album{Title: title, Path: albumPath}
 	assert.NoError(t, r.database.Save(&album).Error)
-	assert.NoError(t, r.database.Model(owner).Association("Albums").Append(&album))
+	assert.NoError(t, r.database.Create(&models.UserAlbums{
+		UserID: owner.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelDelete,
+	}).Error)
 
 	return &album
 }

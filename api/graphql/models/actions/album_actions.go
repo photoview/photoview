@@ -7,7 +7,7 @@ import (
 )
 
 func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *models.Pagination,
-	onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+	onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool, showHidden *bool) ([]*models.Album, error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, err
@@ -36,6 +36,7 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	}
 
 	query = favoritesQuery(showEmpty, db, onlyWithFavorites, user, query)
+	query = HiddenAlbumsFilter(showHidden, db, user, query)
 
 	query = models.FormatSQL(query, order, paginate)
 
@@ -60,6 +61,18 @@ func getSingleRootAlbumID(user *models.User) int {
 		}
 	}
 	return singleRootAlbumID
+}
+
+// hiddenAlbumsFilter excludes albums the user has personally hidden, unless
+// showHidden is true (used to reveal hidden albums, dimmed, in the UI).
+func HiddenAlbumsFilter(showHidden *bool, db *gorm.DB, user *models.User, query *gorm.DB) *gorm.DB {
+	if showHidden != nil && *showHidden {
+		return query
+	}
+	hiddenSubquery := db.Model(&models.UserAlbumData{UserID: user.ID}).
+		Where("user_album_data.album_id = albums.id").
+		Where("user_album_data.hidden = true")
+	return query.Where("NOT EXISTS (?)", hiddenSubquery)
 }
 
 func favoritesQuery(showEmpty *bool, db *gorm.DB, onlyWithFavorites *bool, user *models.User, query *gorm.DB) *gorm.DB {

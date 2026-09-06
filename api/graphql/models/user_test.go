@@ -185,47 +185,59 @@ func TestUserOwnsAlbum(t *testing.T) {
 	assert.False(t, owns)
 }
 
-func TestUserCanUploadToAlbum(t *testing.T) {
+func TestUserHasAlbumLevel(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	owner := models.User{Username: "owner", CanUpload: true}
+	owner := models.User{Username: "owner"}
 	assert.NoError(t, db.Save(&owner).Error)
 
-	nonUploader := models.User{Username: "non_uploader", CanUpload: false}
+	nonUploader := models.User{Username: "non_uploader"}
 	assert.NoError(t, db.Save(&nonUploader).Error)
 
-	admin := models.User{Username: "admin_user", Admin: true, CanUpload: false}
+	admin := models.User{Username: "admin_user", Admin: true}
 	assert.NoError(t, db.Save(&admin).Error)
 
 	album := models.Album{Title: "album", Path: "/photos/album"}
-	assert.NoError(t, db.Model(&owner).Association("Albums").Append(&album))
+	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: owner.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
 
-	t.Run("owner with CanUpload can upload", func(t *testing.T) {
-		can, err := owner.CanUploadToAlbum(db, &album)
+	t.Run("owner with Upload level can upload", func(t *testing.T) {
+		can, err := owner.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 		assert.NoError(t, err)
 		assert.True(t, can)
 	})
 
-	t.Run("user without CanUpload cannot upload, even if they own the album", func(t *testing.T) {
-		nonUploaderOwned := models.Album{Title: "album2", Path: "/photos/album2"}
-		assert.NoError(t, db.Model(&nonUploader).Association("Albums").Append(&nonUploaderOwned))
-
-		can, err := nonUploader.CanUploadToAlbum(db, &nonUploaderOwned)
+	t.Run("Upload level does not imply Delete level", func(t *testing.T) {
+		can, err := owner.HasAlbumLevel(db, &album, models.AlbumPermissionLevelDelete)
 		assert.NoError(t, err)
 		assert.False(t, can)
 	})
 
-	t.Run("CanUpload user who does not own the album cannot upload", func(t *testing.T) {
+	t.Run("user with Read level cannot upload, even though they own the album", func(t *testing.T) {
+		nonUploaderOwned := models.Album{Title: "album2", Path: "/photos/album2"}
+		assert.NoError(t, db.Save(&nonUploaderOwned).Error)
+		assert.NoError(t, db.Create(&models.UserAlbums{
+			UserID: nonUploader.ID, AlbumID: nonUploaderOwned.ID, Level: models.AlbumPermissionLevelRead,
+		}).Error)
+
+		can, err := nonUploader.HasAlbumLevel(db, &nonUploaderOwned, models.AlbumPermissionLevelUpload)
+		assert.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	t.Run("user who does not own the album cannot upload", func(t *testing.T) {
 		otherAlbum := models.Album{Title: "not_owned", Path: "/photos/not_owned"}
 		assert.NoError(t, db.Save(&otherAlbum).Error)
 
-		can, err := owner.CanUploadToAlbum(db, &otherAlbum)
+		can, err := owner.HasAlbumLevel(db, &otherAlbum, models.AlbumPermissionLevelUpload)
 		assert.NoError(t, err)
 		assert.False(t, can)
 	})
 
-	t.Run("admin can upload anywhere, regardless of CanUpload/ownership", func(t *testing.T) {
-		can, err := admin.CanUploadToAlbum(db, &album)
+	t.Run("admin can upload anywhere, regardless of grants/ownership", func(t *testing.T) {
+		can, err := admin.HasAlbumLevel(db, &album, models.AlbumPermissionLevelDelete)
 		assert.NoError(t, err)
 		assert.True(t, can)
 	})
@@ -274,4 +286,61 @@ func TestUserFavoriteMedia(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.True(t, favourite)
+}
+
+func TestUserHideAlbum(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	userA, err := models.RegisterUser(db, "hide_user_a", nil, false)
+	assert.NoError(t, err)
+	userB, err := models.RegisterUser(db, "hide_user_b", nil, false)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "album", Path: "/photos/hide_test"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	loadHidden := func(user *models.User) bool {
+		hidden, err := dataloader.NewAlbumHiddenLoader(db).Load(&models.UserAlbumData{
+			UserID:  user.ID,
+			AlbumID: album.ID,
+		})
+		assert.NoError(t, err)
+		return hidden
+	}
+
+	assert.False(t, loadHidden(userA))
+
+	_, err = userA.HideAlbum(db, album.ID, true)
+	assert.NoError(t, err)
+	assert.True(t, loadHidden(userA))
+	assert.False(t, loadHidden(userB), "hiding for one user must not affect another")
+
+	_, err = userA.HideAlbum(db, album.ID, false)
+	assert.NoError(t, err)
+	assert.False(t, loadHidden(userA))
+}
+
+func TestUnhideAllAlbums(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "unhide_all_user", nil, false)
+	assert.NoError(t, err)
+
+	album1 := models.Album{Title: "album1", Path: "/photos/unhide1"}
+	assert.NoError(t, db.Save(&album1).Error)
+	album2 := models.Album{Title: "album2", Path: "/photos/unhide2"}
+	assert.NoError(t, db.Save(&album2).Error)
+
+	_, err = user.HideAlbum(db, album1.ID, true)
+	assert.NoError(t, err)
+	_, err = user.HideAlbum(db, album2.ID, true)
+	assert.NoError(t, err)
+
+	assert.NoError(t, user.UnhideAllAlbums(db))
+
+	var hiddenCount int64
+	assert.NoError(t, db.Model(&models.UserAlbumData{}).
+		Where("user_id = ? AND hidden = true", user.ID).
+		Count(&hiddenCount).Error)
+	assert.Zero(t, hiddenCount)
 }

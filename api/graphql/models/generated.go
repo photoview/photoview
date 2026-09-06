@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+// A user who has been granted access to an album, and the level of that access.
+type AlbumPermission struct {
+	User  *User                `json:"user"`
+	Level AlbumPermissionLevel `json:"level"`
+}
+
 type AuthorizeResult struct {
 	Success bool `json:"success"`
 	// A textual status message describing the result, can be used to show an error message when `success` is false
@@ -106,6 +112,64 @@ type TimelineGroup struct {
 	MediaTotal int `json:"mediaTotal"`
 	// The day shared for all media in this timeline group
 	Date time.Time `json:"date"`
+}
+
+// An ordered tier of access on an album. DELETE implies UPLOAD implies READ.
+type AlbumPermissionLevel string
+
+const (
+	AlbumPermissionLevelRead   AlbumPermissionLevel = "READ"
+	AlbumPermissionLevelUpload AlbumPermissionLevel = "UPLOAD"
+	AlbumPermissionLevelDelete AlbumPermissionLevel = "DELETE"
+)
+
+var AllAlbumPermissionLevel = []AlbumPermissionLevel{
+	AlbumPermissionLevelRead,
+	AlbumPermissionLevelUpload,
+	AlbumPermissionLevelDelete,
+}
+
+func (e AlbumPermissionLevel) IsValid() bool {
+	switch e {
+	case AlbumPermissionLevelRead, AlbumPermissionLevelUpload, AlbumPermissionLevelDelete:
+		return true
+	}
+	return false
+}
+
+func (e AlbumPermissionLevel) String() string {
+	return string(e)
+}
+
+func (e *AlbumPermissionLevel) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AlbumPermissionLevel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AlbumPermissionLevel", str)
+	}
+	return nil
+}
+
+func (e AlbumPermissionLevel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AlbumPermissionLevel) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AlbumPermissionLevel) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 // Supported language translations of the user interface

@@ -367,3 +367,43 @@ func TestAlbumThumbnail(t *testing.T) {
 		assert.True(t, found, "One of the album's media should be selected")
 	})
 }
+
+func TestHiddenAlbumsClosure(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "hider", nil, false)
+	assert.NoError(t, err)
+
+	root := models.Album{Title: "root", Path: "/photos/hidden_root"}
+	assert.NoError(t, db.Save(&root).Error)
+	child := models.Album{Title: "child", Path: "/photos/hidden_root/child", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&child).Error)
+	grandchild := models.Album{Title: "grandchild", Path: "/photos/hidden_root/child/grandchild", ParentAlbumID: &child.ID}
+	assert.NoError(t, db.Save(&grandchild).Error)
+	sibling := models.Album{Title: "sibling", Path: "/photos/hidden_root/sibling", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&sibling).Error)
+
+	t.Run("no hidden albums yields an empty closure", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.Empty(t, ids)
+	})
+
+	_, err = user.HideAlbum(db, child.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("hiding an album includes it and its descendants, not its ancestors or siblings", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []int{child.ID, grandchild.ID}, ids)
+	})
+
+	_, err = user.HideAlbum(db, child.ID, false)
+	assert.NoError(t, err)
+
+	t.Run("unhiding empties the closure again", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.Empty(t, ids)
+	})
+}

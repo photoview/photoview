@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Album struct {
@@ -78,6 +79,85 @@ func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID i
 	`, albumID, query).Find(&parents).Error
 
 	return parents, err
+}
+
+// PropagateAlbumLevel stamps level (and grantedByUserID) onto albumID and
+// every one of its *current* descendants for userID, in one bulk upsert.
+// This is needed any time a grant is created or its level changes on an
+// album that may already have content scanned in below it: the scanner's
+// own copy-parent-owners-onto-new-child step only ever reaches directories
+// discovered *after* the grant exists, so a backlog of already-scanned
+// descendants would otherwise keep a stale (or missing) level.
+func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermissionLevel, grantedByUserID *int) error {
+	var album Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return err
+	}
+
+	subtree, err := album.GetChildren(db, nil)
+	if err != nil {
+		return err
+	}
+
+	grants := make([]UserAlbums, len(subtree))
+	for i, a := range subtree {
+		grants[i] = UserAlbums{UserID: userID, AlbumID: a.ID, Level: level, GrantedByUserID: grantedByUserID}
+	}
+
+	return db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "album_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"level", "granted_by_user_id"}),
+	}).Create(&grants).Error
+}
+
+// RevokeAlbumLevel removes userID's access to albumID and every one of its
+// current descendants in one bulk delete.
+func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
+	var album Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return err
+	}
+
+	subtree, err := album.GetChildren(db, nil)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]int, len(subtree))
+	for i, a := range subtree {
+		ids[i] = a.ID
+	}
+
+	return db.Where("user_id = ? AND album_id IN (?)", userID, ids).Delete(&UserAlbums{}).Error
+}
+
+// HiddenAlbumsClosure returns the ids of every album that should be treated
+// as hidden for userID in search results: the albums they've explicitly
+// hidden, plus all descendants of those albums (a descendant isn't itself
+// marked hidden, but is unreachable by browsing once its ancestor is
+// hidden, so it shouldn't surface via search either).
+func HiddenAlbumsClosure(db *gorm.DB, userID int) ([]int, error) {
+	var hiddenAlbumIDs []int
+	if err := db.Model(&UserAlbumData{}).
+		Where("user_id = ? AND hidden = true", userID).
+		Pluck("album_id", &hiddenAlbumIDs).Error; err != nil {
+		return nil, err
+	}
+
+	if len(hiddenAlbumIDs) == 0 {
+		return nil, nil
+	}
+
+	closureAlbums, err := GetChildrenFromAlbums(db, nil, hiddenAlbumIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]int, len(closureAlbums))
+	for i, a := range closureAlbums {
+		ids[i] = a.ID
+	}
+	return ids, nil
 }
 
 func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
