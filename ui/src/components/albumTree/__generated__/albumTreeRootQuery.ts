@@ -16,11 +16,9 @@ export interface albumTreeRootQuery_myAlbums {
    */
   viewerHidden: boolean;
   /**
-   * ID of the album which contains this album, or null if this is a root album.
-   * Unlike parentAlbum, this doesn't require the parent association to be
-   * preloaded, so it's always accurate.
+   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share) and may share it with other users
    */
-  parentAlbumId: string | null;
+  viewerIsOwner: boolean;
 }
 
 export interface albumTreeRootQuery {

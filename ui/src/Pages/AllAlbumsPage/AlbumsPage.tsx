@@ -25,7 +25,7 @@ const getAlbumsQuery = gql`
       id
       title
       viewerHidden
-      parentAlbumId
+      viewerIsOwner
       thumbnail {
         id
         thumbnail {
@@ -54,8 +54,8 @@ const AlbumsPage = () => {
     }
   )
 
-  const myVolumes = data?.myAlbums.filter(a => a.parentAlbumId == null)
-  const sharedWithMe = data?.myAlbums.filter(a => a.parentAlbumId != null)
+  const myVolumes = data?.myAlbums.filter(a => a.viewerIsOwner)
+  const sharedWithMe = data?.myAlbums.filter(a => !a.viewerIsOwner)
 
   const sortingOptions = React.useMemo(
     () => [

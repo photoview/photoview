@@ -12,7 +12,7 @@ const mocks = [
     result: {
       data: {
         myAlbums: [
-          { id: '1', title: 'Root', viewerHidden: false, parentAlbumId: null },
+          { id: '1', title: 'Root', viewerHidden: false, viewerIsOwner: true },
         ],
       },
     },

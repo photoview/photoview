@@ -31,7 +31,7 @@ export const ALBUM_TREE_ROOT_QUERY = gql`
       id
       title
       viewerHidden
-      parentAlbumId
+      viewerIsOwner
     }
   }
 `
@@ -157,8 +157,8 @@ const AlbumTree = () => {
     ? roots?.filter(album => visibleIds?.has(album.id))
     : roots
 
-  const myVolumes = visibleRoots?.filter(a => a.parentAlbumId == null)
-  const sharedWithMe = visibleRoots?.filter(a => a.parentAlbumId != null)
+  const myVolumes = visibleRoots?.filter(a => a.viewerIsOwner)
+  const sharedWithMe = visibleRoots?.filter(a => !a.viewerIsOwner)
 
   const renderNode = (album: albumTreeRootQuery_myAlbums) => (
     <AlbumTreeNode
