@@ -48,18 +48,47 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	return albums, nil
 }
 
+// getSingleRootAlbumID returns the ID of the user's only true root album
+// (ParentAlbumID == nil) if it accounts for everything the user can see -
+// i.e. every other album they have access to is a descendant of it. In
+// that case, MyAlbums flattens the redundant root away and returns its
+// children directly, sparing a click into an otherwise pointless single
+// top-level folder.
+//
+// If the user has any other album whose own parent isn't in their album
+// set either, that's an independent share unrelated to the single root
+// (e.g. a folder shared from a different user's library, whose real
+// parent the recipient has no access to) - this returns -1 so it shows
+// up as its own top-level entry instead of silently disappearing under
+// the single-root special case.
 func getSingleRootAlbumID(user *models.User) int {
 	var singleRootAlbumID int = -1
 	for _, album := range user.Albums {
 		if album.ParentAlbumID == nil {
-			if singleRootAlbumID == -1 {
-				singleRootAlbumID = album.ID
-			} else {
-				singleRootAlbumID = -1
-				break
+			if singleRootAlbumID != -1 {
+				return -1
 			}
+			singleRootAlbumID = album.ID
 		}
 	}
+	if singleRootAlbumID == -1 {
+		return -1
+	}
+
+	albumIDs := make(map[int]bool, len(user.Albums))
+	for _, album := range user.Albums {
+		albumIDs[album.ID] = true
+	}
+
+	for _, album := range user.Albums {
+		if album.ID == singleRootAlbumID {
+			continue
+		}
+		if album.ParentAlbumID == nil || !albumIDs[*album.ParentAlbumID] {
+			return -1
+		}
+	}
+
 	return singleRootAlbumID
 }
 

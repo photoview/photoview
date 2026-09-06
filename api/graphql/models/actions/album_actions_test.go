@@ -420,3 +420,57 @@ func TestMyAlbumsExcludesHidden(t *testing.T) {
 		assert.Contains(t, titles, "hidden")
 	})
 }
+
+// TestMyAlbumsOnlyRootWithUnrelatedShare covers a real production bug: a
+// user with a single true root album ("papa") who also receives an
+// unrelated share of someone else's subfolder ("pc_media", whose real
+// parent "meike_root" isn't in the user's own album set) used to have that
+// share silently disappear - the single-root special case flattened
+// "papa" to its own children without noticing "pc_media" wasn't one of
+// them, so it never showed up anywhere in the onlyRoot listing.
+func TestMyAlbumsOnlyRootWithUnrelatedShare(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	papa := models.Album{Title: "papa", Path: "/photos/papa"}
+	assert.NoError(t, db.Save(&papa).Error)
+	papaYear := models.Album{Title: "papa_year", Path: "/photos/papa/1999", ParentAlbumID: &papa.ID}
+	assert.NoError(t, db.Save(&papaYear).Error)
+
+	meikeRoot := models.Album{Title: "meike_root", Path: "/photos/meike"}
+	assert.NoError(t, db.Save(&meikeRoot).Error)
+	pcMedia := models.Album{Title: "pc_media", Path: "/photos/meike/pc_media", ParentAlbumID: &meikeRoot.ID}
+	assert.NoError(t, db.Save(&pcMedia).Error)
+
+	user, err := models.RegisterUser(db, "regina", nil, false)
+	assert.NoError(t, err)
+
+	// User has the whole "papa" tree, plus "pc_media" specifically - but
+	// not "meike_root", its real parent.
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&papa, &papaYear, &pcMedia))
+
+	t.Run("papa and pc_media both show as their own top-level entries", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.ElementsMatch(t, []string{"papa", "pc_media"}, titles)
+	})
+
+	t.Run("removing access to papa leaves pc_media showing as itself", func(t *testing.T) {
+		assert.NoError(t, db.Model(&user).Association("Albums").Delete(&papa, &papaYear))
+
+		user.Albums = nil // force MyAlbums to reload the user's albums
+		albums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Equal(t, []string{"pc_media"}, titles)
+	})
+}
