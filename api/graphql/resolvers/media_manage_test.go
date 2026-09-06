@@ -183,3 +183,49 @@ func TestDeleteMedia(t *testing.T) {
 		assert.NoError(t, statErr, "file should be untouched after a denied delete")
 	})
 }
+
+func TestDeleteMediaList(t *testing.T) {
+	r, album, uploader, readOnly, _ := setupMediaManageTest(t)
+	ctx := auth.AddUserToContext(context.Background(), uploader)
+
+	t.Run("mixed batch: owned files succeed independently of a denied one", func(t *testing.T) {
+		media1 := makeTestMediaFile(t, r, album, "batch1.jpg")
+		media2 := makeTestMediaFile(t, r, album, "batch2.jpg")
+
+		otherAlbum := &models.Album{Title: "other_album", Path: t.TempDir()}
+		assert.NoError(t, r.database.Save(otherAlbum).Error)
+		assert.NoError(t, r.database.Create(&models.UserAlbums{
+			UserID: readOnly.ID, AlbumID: otherAlbum.ID, Level: models.AlbumPermissionLevelRead,
+		}).Error)
+		deniedMedia := makeTestMediaFile(t, r, otherAlbum, "denied.jpg")
+
+		// Run as uploader against a mix of two files they own and one in an
+		// album they have no access to at all, to exercise per-item
+		// success/failure in a single call.
+		results, err := r.DeleteMediaList(ctx, []int{media1.ID, media2.ID, deniedMedia.ID})
+		assert.NoError(t, err)
+		if !assert.Len(t, results, 3) {
+			return
+		}
+
+		assert.True(t, results[0].Success)
+		assert.Nil(t, results[0].Error)
+		assert.True(t, results[1].Success)
+		assert.Nil(t, results[1].Error)
+		assert.False(t, results[2].Success, "uploader has no access to otherAlbum, this item should fail")
+		assert.NotNil(t, results[2].Error)
+
+		_, statErr := os.Stat(media1.Path)
+		assert.True(t, os.IsNotExist(statErr))
+		_, statErr = os.Stat(media2.Path)
+		assert.True(t, os.IsNotExist(statErr))
+		_, statErr = os.Stat(deniedMedia.Path)
+		assert.NoError(t, statErr, "the denied file must be untouched")
+	})
+
+	t.Run("empty list returns an empty result without error", func(t *testing.T) {
+		results, err := r.DeleteMediaList(ctx, []int{})
+		assert.NoError(t, err)
+		assert.Empty(t, results)
+	})
+}

@@ -100,6 +100,10 @@ export interface albumQuery_album {
   id: string;
   title: string;
   /**
+   * Whether the currently logged in user may create folders in, or upload media into, this album
+   */
+  viewerCanUpload: boolean;
+  /**
    * The albums contained in this album
    */
   subAlbums: albumQuery_album_subAlbums[];

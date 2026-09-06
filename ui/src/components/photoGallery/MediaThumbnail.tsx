@@ -129,6 +129,40 @@ const SidebarIconWrapper = styled(HoverIcon)`
   right: 0;
 `
 
+const SelectionIconWrapper = styled(HoverIcon)<{ selected: boolean }>`
+  margin: 10px !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 1 !important;
+  background-color: ${({ selected }) =>
+    selected ? 'rgba(65, 131, 196, 0.9)' : 'rgba(0, 0, 0, 0.4)'};
+`
+
+type SelectionIconProps = {
+  selected: boolean
+  onClick(e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void
+}
+
+const SelectionIcon = ({ selected, onClick }: SelectionIconProps) => (
+  <SelectionIconWrapper selected={selected} onClick={onClick}>
+    {selected ? (
+      <svg width="16px" height="16px" viewBox="0 0 16 16" className="m-auto">
+        <path d="M6 11.5L2.5 8l1-1L6 9.5l6.5-6.5 1 1z" fill="#FFFFFF"></path>
+      </svg>
+    ) : (
+      <div
+        className="m-auto rounded-full"
+        style={{
+          width: '16px',
+          height: '16px',
+          border: '2px solid white',
+        }}
+      ></div>
+    )}
+  </SelectionIconWrapper>
+)
+
 const VideoThumbnailIcon = styled(VideoThumbnailIconSVG)`
   color: rgba(255, 255, 255, 0.8);
   position: absolute;
@@ -142,6 +176,9 @@ type MediaThumbnailProps = {
   selectImage(): void
   clickPresent(): void
   clickFavorite(): void
+  selectMode?: boolean
+  selected?: boolean
+  onToggleSelect?(): void
 }
 
 export const MediaThumbnail = ({
@@ -150,9 +187,12 @@ export const MediaThumbnail = ({
   selectImage,
   clickPresent,
   clickFavorite,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
 }: MediaThumbnailProps) => {
   let heartIcon = null
-  if (media.favorite !== undefined) {
+  if (media.favorite !== undefined && !selectMode) {
     heartIcon = (
       <FavoriteIcon
         favorite={media.favorite}
@@ -184,7 +224,11 @@ export const MediaThumbnail = ({
         minWidth: `clamp(124px, ${minWidth}px, 100% - 8px)`,
       }}
       onClick={() => {
-        clickPresent()
+        if (selectMode) {
+          onToggleSelect?.()
+        } else {
+          clickPresent()
+        }
       }}
     >
       <div
@@ -198,13 +242,25 @@ export const MediaThumbnail = ({
       </div>
       <PhotoOverlay active={active}>
         {videoIcon}
-        <SidebarIcon
-          onClick={e => {
-            e.stopPropagation()
-            selectImage()
-          }}
-        />
-        {heartIcon}
+        {selectMode ? (
+          <SelectionIcon
+            selected={selected}
+            onClick={e => {
+              e.stopPropagation()
+              onToggleSelect?.()
+            }}
+          />
+        ) : (
+          <>
+            <SidebarIcon
+              onClick={e => {
+                e.stopPropagation()
+                selectImage()
+              }}
+            />
+            {heartIcon}
+          </>
+        )}
       </PhotoOverlay>
     </MediaContainer>
   )

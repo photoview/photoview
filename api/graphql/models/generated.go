@@ -31,6 +31,14 @@ type Coordinates struct {
 	Longitude float64 `json:"longitude"`
 }
 
+// The outcome of deleting one media file as part of a deleteMediaList call
+type DeleteMediaResult struct {
+	MediaID int  `json:"mediaId"`
+	Success bool `json:"success"`
+	// Present only when success is false
+	Error *string `json:"error,omitempty"`
+}
+
 type MediaDownload struct {
 	// A description of the role of the media file
 	Title    string    `json:"title"`

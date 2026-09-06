@@ -15,6 +15,23 @@
       "type": "Kind"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "Move {{count}} files to the trash? This can be recovered by an administrator, but they will disappear from the library immediately.",
+        "description_other": "Move {{count}} files to the trash? This can be recovered by an administrator, but they will disappear from the library immediately.",
+        "title": "Delete files"
+      },
+      "count_one": "{{count}} selected",
+      "count_other": "{{count}} selected",
+      "delete_complete_one": "Deleted {{count}} files",
+      "delete_complete_other": "Deleted {{count}} files",
+      "delete_finished_with_errors": "Deleted {{success}} of {{total}} files",
+      "delete_selected": "Delete selected",
+      "select": "Select",
+      "select_all": "Select all"
+    }
+  },
   "album_tree": {
     "empty": "No albums yet",
     "label": "Album tree",
@@ -390,6 +407,15 @@
           "lens": "Lens",
           "maker": "Maker"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "Move \"{{name}}\" to the trash? This can be recovered by an administrator, but will disappear from the library immediately.",
+          "title": "Delete file"
+        },
+        "delete": "Delete this file",
+        "rename": "Rename",
+        "title": "Manage file"
       }
     },
     "people": {

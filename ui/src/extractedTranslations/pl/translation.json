@@ -15,6 +15,29 @@
       "type": "Rodzaj"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "",
+        "description_few": "",
+        "description_many": "",
+        "description_other": "",
+        "title": ""
+      },
+      "count_one": "",
+      "count_few": "",
+      "count_many": "",
+      "count_other": "",
+      "delete_complete_one": "",
+      "delete_complete_few": "",
+      "delete_complete_many": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "select": "",
+      "select_all": ""
+    }
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -400,6 +423,15 @@
           "lens": "Obiektyw",
           "maker": "Twórca"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

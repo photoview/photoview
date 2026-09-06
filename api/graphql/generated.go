@@ -83,6 +83,12 @@ type ComplexityRoot struct {
 		Longitude func(childComplexity int) int
 	}
 
+	DeleteMediaResult struct {
+		Error   func(childComplexity int) int
+		MediaID func(childComplexity int) int
+		Success func(childComplexity int) int
+	}
+
 	FaceGroup struct {
 		ID             func(childComplexity int) int
 		ImageFaceCount func(childComplexity int) int
@@ -161,6 +167,7 @@ type ComplexityRoot struct {
 		CreateUser                  func(childComplexity int, username string, password *string, admin bool, rootPath *string) int
 		DeleteAlbum                 func(childComplexity int, albumID int) int
 		DeleteMedia                 func(childComplexity int, mediaID int) int
+		DeleteMediaList             func(childComplexity int, mediaIds []int) int
 		DeleteShareToken            func(childComplexity int, token string) int
 		DeleteUser                  func(childComplexity int, id int) int
 		DetachImageFaces            func(childComplexity int, imageFaceIDs []int) int
@@ -355,6 +362,7 @@ type MutationResolver interface {
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
 	RenameMedia(ctx context.Context, mediaID int, newName string) (*models.Media, error)
 	DeleteMedia(ctx context.Context, mediaID int) (bool, error)
+	DeleteMediaList(ctx context.Context, mediaIds []int) ([]*models.DeleteMediaResult, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error)
@@ -584,6 +592,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Coordinates.Longitude(childComplexity), true
+
+	case "DeleteMediaResult.error":
+		if e.ComplexityRoot.DeleteMediaResult.Error == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DeleteMediaResult.Error(childComplexity), true
+	case "DeleteMediaResult.mediaId":
+		if e.ComplexityRoot.DeleteMediaResult.MediaID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DeleteMediaResult.MediaID(childComplexity), true
+	case "DeleteMediaResult.success":
+		if e.ComplexityRoot.DeleteMediaResult.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DeleteMediaResult.Success(childComplexity), true
 
 	case "FaceGroup.id":
 		if e.ComplexityRoot.FaceGroup.ID == nil {
@@ -968,6 +995,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteMedia(childComplexity, args["mediaId"].(int)), true
+	case "Mutation.deleteMediaList":
+		if e.ComplexityRoot.Mutation.DeleteMediaList == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteMediaList_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteMediaList(childComplexity, args["mediaIds"].([]int)), true
 	case "Mutation.deleteShareToken":
 		if e.ComplexityRoot.Mutation.DeleteShareToken == nil {
 			break
@@ -1981,6 +2019,18 @@ func (ec *executionContext) childFields_Coordinates(ctx context.Context, field g
 	return nil, fmt.Errorf("no field named %q was found under type Coordinates", field.Name)
 }
 
+func (ec *executionContext) childFields_DeleteMediaResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "mediaId":
+		return ec.fieldContext_DeleteMediaResult_mediaId(ctx, field)
+	case "success":
+		return ec.fieldContext_DeleteMediaResult_success(ctx, field)
+	case "error":
+		return ec.fieldContext_DeleteMediaResult_error(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeleteMediaResult", field.Name)
+}
+
 func (ec *executionContext) childFields_FaceGroup(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -2606,6 +2656,20 @@ func (ec *executionContext) field_Mutation_deleteAlbum_args(ctx context.Context,
 		return nil, err
 	}
 	args["albumId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteMediaList_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaIds",
+		func(ctx context.Context, v any) ([]int, error) {
+			return ec.unmarshalNID2ᚕintᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaIds"] = arg0
 	return args, nil
 }
 
@@ -4211,6 +4275,75 @@ func (ec *executionContext) _Coordinates_longitude(ctx context.Context, field gr
 }
 func (ec *executionContext) fieldContext_Coordinates_longitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Coordinates", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _DeleteMediaResult_mediaId(ctx context.Context, field graphql.CollectedField, obj *models.DeleteMediaResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteMediaResult_mediaId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MediaID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNID2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DeleteMediaResult_mediaId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DeleteMediaResult", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _DeleteMediaResult_success(ctx context.Context, field graphql.CollectedField, obj *models.DeleteMediaResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteMediaResult_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DeleteMediaResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DeleteMediaResult", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _DeleteMediaResult_error(ctx context.Context, field graphql.CollectedField, obj *models.DeleteMediaResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteMediaResult_error(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Error, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_DeleteMediaResult_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DeleteMediaResult", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _FaceGroup_id(ctx context.Context, field graphql.CollectedField, obj *models.FaceGroup) (ret graphql.Marshaler) {
@@ -6255,6 +6388,63 @@ func (ec *executionContext) fieldContext_Mutation_deleteMedia(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteMedia_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteMediaList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteMediaList(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteMediaList(ctx, fc.Args["mediaIds"].([]int))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal []*models.DeleteMediaResult
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.DeleteMediaResult) graphql.Marshaler {
+			return ec.marshalNDeleteMediaResult2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐDeleteMediaResultᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteMediaList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DeleteMediaResult(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteMediaList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11577,6 +11767,54 @@ func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var deleteMediaResultImplementors = []string{"DeleteMediaResult"}
+
+func (ec *executionContext) _DeleteMediaResult(ctx context.Context, sel ast.SelectionSet, obj *models.DeleteMediaResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteMediaResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteMediaResult")
+		case "mediaId":
+			out.Values[i] = ec._DeleteMediaResult_mediaId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "success":
+			out.Values[i] = ec._DeleteMediaResult_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "error":
+			out.Values[i] = ec._DeleteMediaResult_error(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var faceGroupImplementors = []string{"FaceGroup"}
 
 func (ec *executionContext) _FaceGroup(ctx context.Context, sel ast.SelectionSet, obj *models.FaceGroup) graphql.Marshaler {
@@ -12662,6 +12900,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteMedia":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteMedia(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteMediaList":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteMediaList(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -14532,6 +14777,32 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNDeleteMediaResult2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐDeleteMediaResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.DeleteMediaResult) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNDeleteMediaResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐDeleteMediaResult(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDeleteMediaResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐDeleteMediaResult(ctx context.Context, sel ast.SelectionSet, v *models.DeleteMediaResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeleteMediaResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNFaceGroup2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐFaceGroup(ctx context.Context, sel ast.SelectionSet, v models.FaceGroup) graphql.Marshaler {

@@ -11,9 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -136,70 +134,32 @@ func (r *mutationResolver) DeleteMedia(ctx context.Context, mediaID int) (bool, 
 		return false, auth.ErrUnauthorized
 	}
 
-	var media models.Media
-	if err := db.First(&media, mediaID).Error; err != nil {
+	if err := deleteOneMedia(db, user, mediaID); err != nil {
 		return false, err
-	}
-
-	var album models.Album
-	if err := db.First(&album, media.AlbumID).Error; err != nil {
-		return false, err
-	}
-
-	canDelete, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
-	if err != nil {
-		return false, err
-	}
-	if !canDelete {
-		return false, auth.ErrUnauthorized
-	}
-
-	trashDir := filepath.Join(album.Path, ".trash")
-	if err := os.MkdirAll(trashDir, 0o755); err != nil {
-		return false, fmt.Errorf("could not create trash folder: %w", err)
-	}
-
-	timestamp := time.Now().Unix()
-	trashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%s", timestamp, filepath.Base(media.Path)))
-	if err := os.Rename(media.Path, trashPath); err != nil {
-		return false, fmt.Errorf("could not move file to trash: %w", err)
-	}
-
-	if media.SideCarPath != nil {
-		sidecarTrashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%s", timestamp, filepath.Base(*media.SideCarPath)))
-		// Best-effort: the primary file is already safely trashed, and the
-		// sidecar isn't required for the library entry to be gone.
-		_ = os.Rename(*media.SideCarPath, sidecarTrashPath)
-	}
-
-	// MediaURL and ImageFace rows point *at* Media (has-many) and are
-	// cascade-deleted below, but the cached thumbnail/highres/web-video
-	// files MediaURL points at are not - remove them explicitly,
-	// mirroring cleanup_tasks' album-level cache cleanup.
-	cacheDir := filepath.Join(utils.MediaCachePath(), strconv.Itoa(media.AlbumID), strconv.Itoa(media.ID))
-	_ = os.RemoveAll(cacheDir)
-
-	// MediaEXIF/VideoMetadata are the opposite direction (Media points at
-	// them via ExifID/VideoMetadataID), so deleting Media does not cascade
-	// to them - delete them explicitly to avoid leaving orphan rows.
-	deleteErr := db.Transaction(func(tx *gorm.DB) error {
-		if media.ExifID != nil {
-			if err := tx.Delete(&models.MediaEXIF{}, *media.ExifID).Error; err != nil {
-				return err
-			}
-		}
-		if media.VideoMetadataID != nil {
-			if err := tx.Delete(&models.VideoMetadata{}, *media.VideoMetadataID).Error; err != nil {
-				return err
-			}
-		}
-		return tx.Delete(&media).Error
-	})
-	if deleteErr != nil {
-		// The file is already in the trash but the DB rows remain -
-		// surface the error rather than silently leaving a stale entry.
-		return false, fmt.Errorf("moved to trash, but failed to remove library entry: %w", deleteErr)
 	}
 
 	return true, nil
+}
+
+// DeleteMediaList is the resolver for the deleteMediaList field.
+func (r *mutationResolver) DeleteMediaList(ctx context.Context, mediaIds []int) ([]*models.DeleteMediaResult, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	results := make([]*models.DeleteMediaResult, 0, len(mediaIds))
+	for _, mediaID := range mediaIds {
+		result := &models.DeleteMediaResult{MediaID: mediaID, Success: true}
+		if err := deleteOneMedia(db, user, mediaID); err != nil {
+			result.Success = false
+			msg := err.Error()
+			result.Error = &msg
+		}
+		results = append(results, result)
+	}
+
+	return results, nil
 }

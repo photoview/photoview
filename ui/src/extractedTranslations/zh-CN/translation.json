@@ -15,6 +15,20 @@
       "type": "文件类型"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_other": "",
+        "title": ""
+      },
+      "count_other": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "select": "",
+      "select_all": ""
+    }
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -386,6 +400,15 @@
           "lens": "镜头",
           "maker": "制造商"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

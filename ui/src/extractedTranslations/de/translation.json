@@ -15,6 +15,23 @@
       "type": "Typ"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "{{count}} Datei in den Papierkorb verschieben? Ein Administrator kann sie wiederherstellen, aber sie verschwindet sofort aus der Bibliothek.",
+        "description_other": "{{count}} Dateien in den Papierkorb verschieben? Ein Administrator kann sie wiederherstellen, aber sie verschwinden sofort aus der Bibliothek.",
+        "title": "Dateien löschen"
+      },
+      "count_one": "{{count}} ausgewählt",
+      "count_other": "{{count}} ausgewählt",
+      "delete_complete_one": "{{count}} Datei gelöscht",
+      "delete_complete_other": "{{count}} Dateien gelöscht",
+      "delete_finished_with_errors": "{{success}} von {{total}} Dateien gelöscht",
+      "delete_selected": "Auswahl löschen",
+      "select": "Auswählen",
+      "select_all": "Alle auswählen"
+    }
+  },
   "album_tree": {
     "empty": "Noch keine Alben",
     "label": "Alben-Baum",
@@ -390,6 +407,15 @@
           "lens": "Objektiv",
           "maker": "Hersteller"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "\"{{name}}\" in den Papierkorb verschieben? Ein Administrator kann die Datei wiederherstellen, aber sie verschwindet sofort aus der Bibliothek.",
+          "title": "Datei löschen"
+        },
+        "delete": "Diese Datei löschen",
+        "rename": "Umbenennen",
+        "title": "Datei verwalten"
       }
     },
     "people": {

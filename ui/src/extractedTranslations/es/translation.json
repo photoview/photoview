@@ -15,6 +15,26 @@
       "type": "Tipo"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "",
+        "description_many": "",
+        "description_other": "",
+        "title": ""
+      },
+      "count_one": "",
+      "count_many": "",
+      "count_other": "",
+      "delete_complete_one": "",
+      "delete_complete_many": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "select": "",
+      "select_all": ""
+    }
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -395,6 +415,15 @@
           "lens": "Lente",
           "maker": "Fabricante"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

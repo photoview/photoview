@@ -61,12 +61,18 @@ type MediaGalleryProps = {
   // Distinguishes this gallery's presentation history from any other
   // MediaGallery on the same page. See urlPresentModeSetupHook.
   groupId?: string
+  selectMode?: boolean
+  selectedIds?: Set<string>
+  onToggleSelect?(mediaId: string): void
 }
 
 const MediaGallery = ({
   mediaState,
   dispatchMedia,
   groupId,
+  selectMode,
+  selectedIds,
+  onToggleSelect,
 }: MediaGalleryProps) => {
   const [markFavorite] = useMarkFavoriteMutation()
 
@@ -98,8 +104,15 @@ const MediaGallery = ({
             })
           }}
           clickPresent={() => {
-            openPresentModeAction({ dispatchMedia, activeIndex: index, groupId })
+            openPresentModeAction({
+              dispatchMedia,
+              activeIndex: index,
+              groupId,
+            })
           }}
+          selectMode={selectMode}
+          selected={selectedIds?.has(media.id)}
+          onToggleSelect={() => onToggleSelect?.(media.id)}
         />
       )
     })
