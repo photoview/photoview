@@ -6,13 +6,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// AlbumPermissions lists every user with an explicit access grant directly
-// on albumID. Callers must already have verified the viewer is allowed to
-// see this (the album's owner, or an admin) - this function itself does no
+// AlbumPermissions lists every user *other than viewerID* with an explicit
+// access grant directly on albumID - i.e. who this album has been shared
+// with, not including the viewer's own (usually admin-granted) access to
+// it. Callers must already have verified the viewer is allowed to see this
+// (the album's owner, or an admin) - this function itself does no
 // authorization check.
-func AlbumPermissions(db *gorm.DB, albumID int) ([]*models.AlbumPermission, error) {
+func AlbumPermissions(db *gorm.DB, albumID int, viewerID int) ([]*models.AlbumPermission, error) {
 	var rows []models.UserAlbums
-	if err := db.Where("album_id = ?", albumID).Find(&rows).Error; err != nil {
+	if err := db.Where("album_id = ? AND user_id != ?", albumID, viewerID).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -39,6 +41,10 @@ func AlbumPermissions(db *gorm.DB, albumID int) ([]*models.AlbumPermission, erro
 // across the album's current subtree, so already-scanned descendants never
 // keep a stale level.
 func GrantAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserID int, level models.AlbumPermissionLevel) (*models.AlbumPermission, error) {
+	if actor.ID == targetUserID {
+		return nil, errors.New("cannot share an album with yourself")
+	}
+
 	var album models.Album
 	if err := db.First(&album, albumID).Error; err != nil {
 		return nil, err
@@ -73,6 +79,10 @@ func GrantAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserID
 // current descendant), on behalf of actor. Only the album's owner or an
 // admin may do this.
 func RevokeAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserID int) error {
+	if actor.ID == targetUserID {
+		return errors.New("cannot revoke your own access")
+	}
+
 	var album models.Album
 	if err := db.First(&album, albumID).Error; err != nil {
 		return err

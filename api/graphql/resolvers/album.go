@@ -168,7 +168,7 @@ func (r *albumResolver) Permissions(ctx context.Context, obj *models.Album) ([]*
 		return nil, nil
 	}
 
-	return actions.AlbumPermissions(r.DB(ctx), obj.ID)
+	return actions.AlbumPermissions(r.DB(ctx), obj.ID, user.ID)
 }
 
 // Takes album_id, resets album.cover_id to 0 (null)

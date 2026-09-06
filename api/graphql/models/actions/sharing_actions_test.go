@@ -81,6 +81,35 @@ func TestGrantAlbumAccess_OwnerOnly(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, models.AlbumPermissionLevelDelete, permission.Level)
 	})
+
+	t.Run("cannot share an album with yourself", func(t *testing.T) {
+		_, err := actions.GrantAlbumAccess(db, owner, album.ID, owner.ID, models.AlbumPermissionLevelRead)
+		assert.Error(t, err)
+	})
+}
+
+func TestAlbumPermissions_ExcludesViewer(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	owner, err := models.RegisterUser(db, "perms_owner", nil, false)
+	assert.NoError(t, err)
+	recipient, err := models.RegisterUser(db, "perms_recipient", nil, false)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "perms_album", Path: "/photos/perms_album"}
+	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: owner.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelDelete,
+	}).Error)
+
+	_, err = actions.GrantAlbumAccess(db, owner, album.ID, recipient.ID, models.AlbumPermissionLevelRead)
+	assert.NoError(t, err)
+
+	permissions, err := actions.AlbumPermissions(db, album.ID, owner.ID)
+	assert.NoError(t, err)
+	if assert.Len(t, permissions, 1) {
+		assert.Equal(t, recipient.ID, permissions[0].User.ID)
+	}
 }
 
 func TestGrantAlbumAccess_PropagatesToExistingDescendants(t *testing.T) {
@@ -148,5 +177,14 @@ func TestRevokeAlbumAccess(t *testing.T) {
 		grant, err := recipient.EffectiveGrant(db, &album)
 		assert.NoError(t, err)
 		assert.Nil(t, grant)
+	})
+
+	t.Run("cannot revoke your own access", func(t *testing.T) {
+		err := actions.RevokeAlbumAccess(db, owner, album.ID, owner.ID)
+		assert.Error(t, err)
+
+		grant, err := owner.EffectiveGrant(db, &album)
+		assert.NoError(t, err)
+		assert.NotNil(t, grant, "owner's own access must be untouched")
 	})
 }
