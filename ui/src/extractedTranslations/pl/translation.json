@@ -236,7 +236,8 @@
         },
         "title": "Motyw"
       },
-      "title": "Preferencje użytkownika"
+      "title": "Preferencje użytkownika",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

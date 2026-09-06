@@ -227,7 +227,8 @@
         },
         "title": "佈景主題偏好設定"
       },
-      "title": "使用者偏好設定"
+      "title": "使用者偏好設定",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

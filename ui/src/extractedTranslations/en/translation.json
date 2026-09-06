@@ -230,7 +230,8 @@
         },
         "title": "Theme preferences"
       },
-      "title": "User preferences"
+      "title": "User preferences",
+      "title_with_username": "User preferences ({{username}})"
     },
     "users": {
       "add_user": {

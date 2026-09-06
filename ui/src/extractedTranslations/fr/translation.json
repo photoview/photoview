@@ -233,7 +233,8 @@
         },
         "title": "Préférences de thème"
       },
-      "title": "Préférences Utilisateur"
+      "title": "Préférences Utilisateur",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

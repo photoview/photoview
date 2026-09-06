@@ -230,7 +230,8 @@
         },
         "title": ""
       },
-      "title": "Användarinställningar"
+      "title": "Användarinställningar",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

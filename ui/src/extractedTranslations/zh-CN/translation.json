@@ -227,7 +227,8 @@
         },
         "title": "主题设置"
       },
-      "title": "用户选项"
+      "title": "用户选项",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

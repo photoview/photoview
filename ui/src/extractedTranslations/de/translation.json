@@ -230,7 +230,8 @@
         },
         "title": "Darstellung Einstellungen"
       },
-      "title": "Persönliche Einstellungen"
+      "title": "Persönliche Einstellungen",
+      "title_with_username": "Persönliche Einstellungen ({{username}})"
     },
     "users": {
       "add_user": {

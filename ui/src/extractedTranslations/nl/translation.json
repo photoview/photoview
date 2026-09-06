@@ -230,7 +230,8 @@
         },
         "title": "Thema-instellingen"
       },
-      "title": "Gebruikersvoorkeuren"
+      "title": "Gebruikersvoorkeuren",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

@@ -227,7 +227,8 @@
         },
         "title": "テーマの設定"
       },
-      "title": "ユーザー設定"
+      "title": "ユーザー設定",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
