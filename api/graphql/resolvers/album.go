@@ -102,16 +102,8 @@ func (r *albumResolver) ViewerIsOwner(ctx context.Context, obj *models.Album) (b
 	if user == nil {
 		return false, nil
 	}
-	if user.Admin {
-		return true, nil
-	}
 
-	grant, err := user.EffectiveGrant(r.DB(ctx), obj)
-	if err != nil {
-		return false, err
-	}
-
-	return grant != nil && grant.GrantedByUserID == nil, nil
+	return user.IsAlbumOwner(r.DB(ctx), obj)
 }
 
 // ViewerHidden is the resolver for the viewerHidden field.

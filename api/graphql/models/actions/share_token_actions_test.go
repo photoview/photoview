@@ -132,3 +132,76 @@ func TestShareToken(t *testing.T) {
 		assert.Nil(t, share.Label)
 	})
 }
+
+func TestShareTokenPermissions(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	owner, err := models.RegisterUser(db, "share_owner", nil, false)
+	assert.NoError(t, err)
+	reader, err := models.RegisterUser(db, "share_reader", nil, false)
+	assert.NoError(t, err)
+	stranger, err := models.RegisterUser(db, "share_stranger", nil, false)
+	assert.NoError(t, err)
+	admin, err := models.RegisterUser(db, "share_admin", nil, true)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "owners album", Path: "/photos/owner"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	media := models.Media{Title: "pic", Path: "/photos/owner/pic.jpg", AlbumID: album.ID}
+	assert.NoError(t, db.Save(&media).Error)
+
+	// owner's own grant (not granted by anyone else) makes them the owner.
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: owner.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelDelete,
+	}).Error)
+	// reader was granted read-only access by the owner - not an owner themselves.
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: reader.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelRead, GrantedByUserID: &owner.ID,
+	}).Error)
+
+	// stranger has access to a completely unrelated album, but none at all
+	// to the album above - this is the regression case for the bug where
+	// AddAlbumShare's check wasn't scoped to the target album at all.
+	otherAlbum := models.Album{Title: "strangers own album", Path: "/photos/stranger"}
+	assert.NoError(t, db.Save(&otherAlbum).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: stranger.ID, AlbumID: otherAlbum.ID, Level: models.AlbumPermissionLevelDelete,
+	}).Error)
+
+	t.Run("owner can share the album and the media", func(t *testing.T) {
+		share, err := actions.AddAlbumShare(db, owner, album.ID, nil, nil, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, share)
+
+		mediaShare, err := actions.AddMediaShare(db, owner, media.ID, nil, nil, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, mediaShare)
+	})
+
+	t.Run("a read-only recipient cannot share the album or the media", func(t *testing.T) {
+		_, err := actions.AddAlbumShare(db, reader, album.ID, nil, nil, nil)
+		assert.Error(t, err)
+
+		_, err = actions.AddMediaShare(db, reader, media.ID, nil, nil, nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("a user with no access at all to the album cannot share it or its media", func(t *testing.T) {
+		_, err := actions.AddAlbumShare(db, stranger, album.ID, nil, nil, nil)
+		assert.Error(t, err)
+
+		_, err = actions.AddMediaShare(db, stranger, media.ID, nil, nil, nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("admin bypasses the ownership check", func(t *testing.T) {
+		share, err := actions.AddAlbumShare(db, admin, album.ID, nil, nil, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, share)
+
+		mediaShare, err := actions.AddMediaShare(db, admin, media.ID, nil, nil, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, mediaShare)
+	})
+}

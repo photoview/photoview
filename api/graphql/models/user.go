@@ -39,8 +39,8 @@ type UserAlbumData struct {
 }
 
 type UserAlbums struct {
-	UserID  int                  `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
-	AlbumID int                  `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	UserID  int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	AlbumID int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
 	// Default matches AlbumPermissionLevelRead's wire value: a fail-safe
 	// default for any row ever inserted without an explicit level.
 	Level AlbumPermissionLevel `gorm:"not null;default:READ"`
@@ -244,6 +244,22 @@ func (user *User) HasAlbumLevel(db *gorm.DB, album *Album, level AlbumPermission
 	}
 
 	return grant != nil && grant.Level.AtLeast(level), nil
+}
+
+// IsAlbumOwner returns true if the user is an admin, or their own grant on
+// this album was not itself granted by another user (i.e. they're the root
+// grantee, not a recipient of GrantAlbumAccess).
+func (user *User) IsAlbumOwner(db *gorm.DB, album *Album) (bool, error) {
+	if user.Admin {
+		return true, nil
+	}
+
+	grant, err := user.EffectiveGrant(db, album)
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.GrantedByUserID == nil, nil
 }
 
 // HideAlbum sets/clears an album as hidden from the user's own navigation.
