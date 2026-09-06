@@ -357,7 +357,7 @@ const UserPreferences = () => {
       >
         {t(
           'settings.user_preferences.show_hidden_albums.unhide_all',
-          'Show all hidden albums again'
+          'Unhide all albums'
         )}
       </Button>
       <label htmlFor="user_pref_change_theme_field">
