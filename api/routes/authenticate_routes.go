@@ -26,14 +26,14 @@ func authenticateMedia(media *models.Media, db *gorm.DB, r *http.Request) (succe
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
-		ownsAlbum, err := user.OwnsAlbum(db, &album)
+		hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
 		if err != nil {
-			// log.Debug(nil, "Failed to check if user owns album %d for media %d: %v", media.AlbumID, media.ID, err)
+			// log.Debug(nil, "Failed to check if user has access to album %d for media %d: %v", media.AlbumID, media.ID, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
-		if !ownsAlbum {
-			// log.Debug(nil, "User does not own album %d for media %d", media.AlbumID, media.ID)
+		if !hasAccess {
+			// log.Debug(nil, "User does not have access to album %d for media %d", media.AlbumID, media.ID)
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {
@@ -49,14 +49,14 @@ func authenticateAlbum(album *models.Album, db *gorm.DB, r *http.Request) (succe
 	user := auth.UserFromContext(r.Context())
 
 	if user != nil {
-		ownsAlbum, err := user.OwnsAlbum(db, album)
+		hasAccess, err := user.HasAlbumLevel(db, album, models.AlbumPermissionLevelRead)
 		if err != nil {
-			// log.Debug(nil, "Failed to check if user owns album %d: %v", album.ID, err)
+			// log.Debug(nil, "Failed to check if user has access to album %d: %v", album.ID, err)
 			return false, internalServerError, http.StatusInternalServerError, err
 		}
 
-		if !ownsAlbum {
-			// log.Debug(nil, "User does not own album %d", album.ID)
+		if !hasAccess {
+			// log.Debug(nil, "User does not have access to album %d", album.ID)
 			return false, "invalid credentials", http.StatusForbidden, nil
 		}
 	} else {

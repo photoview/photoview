@@ -131,12 +131,12 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 
@@ -155,16 +155,17 @@ func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.A
 		SELECT * FROM path_albums WHERE id != ?
 	`, album.ID, album.ID).Scan(&albumPath).Error
 
-	// Make sure to only return albums this user owns
+	// Truncate the path at the point the user can no longer see, e.g. when
+	// they were only granted a subfolder rather than one of its ancestors.
 	for i := len(albumPath) - 1; i >= 0; i-- {
 		album := albumPath[i]
 
-		owns, err := user.OwnsAlbum(db, album)
+		hasAccess, err := user.HasAlbumLevel(db, album, models.AlbumPermissionLevelRead)
 		if err != nil {
 			return nil, err
 		}
 
-		if !owns {
+		if !hasAccess {
 			albumPath = albumPath[i+1:]
 			break
 		}
@@ -191,12 +192,12 @@ func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, 
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 
@@ -213,12 +214,12 @@ func ResetAlbumCover(db *gorm.DB, user *models.User, albumID int) (*models.Album
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 

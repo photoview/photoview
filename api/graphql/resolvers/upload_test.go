@@ -67,9 +67,9 @@ func TestCreateAlbumFolder(t *testing.T) {
 			assert.NoError(t, statErr)
 			assert.True(t, info.IsDir())
 
-			owns, err := uploader.OwnsAlbum(r.database, album)
+			hasAccess, err := uploader.HasAlbumLevel(r.database, album, models.AlbumPermissionLevelRead)
 			assert.NoError(t, err)
-			assert.True(t, owns)
+			assert.True(t, hasAccess)
 		}
 	})
 

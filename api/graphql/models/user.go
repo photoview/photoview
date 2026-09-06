@@ -198,21 +198,6 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 	return nil
 }
 
-func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
-	filter := func(query *gorm.DB) *gorm.DB {
-		return query.Where(
-			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)",
-			user.ID)
-	}
-
-	ownedParents, err := album.GetParents(db, filter)
-	if err != nil {
-		return false, err
-	}
-
-	return len(ownedParents) > 0, nil
-}
-
 // EffectiveGrant returns the user's own UserAlbums row on this exact album,
 // or nil if they have no access to it. Every album a user can reach always
 // has its own row for them (see PropagateAlbumLevel and the album-creation

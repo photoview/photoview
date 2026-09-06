@@ -30,13 +30,33 @@ func TestAlbumPath(t *testing.T) {
 	user, err := models.RegisterUser(db, "user", nil, false)
 	assert.NoError(t, err)
 
-	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum)
+	// Grant access on the whole chain, matching how a real grant on "One"
+	// would actually leave the database: PropagateAlbumLevel/the scanner's
+	// copy-on-create logic both cascade a grant down onto every existing
+	// descendant, so "Two" and "Three" get their own rows too, not just
+	// "One". (The original version of this test only appended the
+	// grandparent, relying on the old OwnsAlbum's ancestor-walk to infer
+	// access to its descendants - a shape that never occurs in production.)
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&album, album.ParentAlbum, album.ParentAlbum.ParentAlbum))
 
 	albumPath, err := actions.AlbumPath(db, user, &album)
 	assert.NoError(t, err)
 	assert.Len(t, albumPath, 2)
 	assert.Equal(t, "Two", albumPath[0].Title)
 	assert.Equal(t, "One", albumPath[1].Title)
+}
+
+func TestAlbumForbidden(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := models.Album{Title: "private", Path: "/photos/private"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	stranger, err := models.RegisterUser(db, "album_stranger", nil, false)
+	assert.NoError(t, err)
+
+	_, err = actions.Album(db, stranger, album.ID)
+	assert.Error(t, err)
 }
 
 func TestAlbumCover(t *testing.T) {
