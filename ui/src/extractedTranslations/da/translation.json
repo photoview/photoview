@@ -15,6 +15,16 @@
       "type": "Type"
     }
   },
+  "album_tree": {
+    "empty": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "shared_with_me": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Tilføj",
@@ -22,6 +32,7 @@
       "remove": "Fjern",
       "save": "Gem"
     },
+    "close": "",
     "loading": {
       "album": "Loader album",
       "default": "Loader...",
@@ -41,7 +52,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Medie"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +144,13 @@
   "routes": {
     "page_not_found": "Side ikke fundet"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Det maksimale antal medier som må skannes samtidig",
@@ -165,6 +184,21 @@
       },
       "language_selector": {
         "placeholder": "Vælg sprog"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -258,9 +292,37 @@
           "title": "Konverterede videoer"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "Nulstil coverbillede",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Set som album coverbillede",
-      "title_placeholder": "Albumtitel"
+      "sharing": {
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "Albumtitel",
+      "upload": {
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -275,6 +337,7 @@
         "tera_byte_one": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Dimension",
         "file_size": "Størrelse",

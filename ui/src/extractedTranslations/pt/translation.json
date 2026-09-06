@@ -15,6 +15,16 @@
       "type": "Tipo"
     }
   },
+  "album_tree": {
+    "empty": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "shared_with_me": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Adicionar",
@@ -22,6 +32,7 @@
       "remove": "Remover",
       "save": "Guardar"
     },
+    "close": "",
     "loading": {
       "album": "Carregar Álbum",
       "default": "Carregar...",
@@ -41,7 +52,8 @@
       "result_type": {
         "albums": "Álbuns",
         "media": "Mídia"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +144,13 @@
   "routes": {
     "page_not_found": "Página não encontrada"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Quantidade máxima de processos de procura que podem ser executados de uma vez só",
@@ -165,6 +184,21 @@
       },
       "language_selector": {
         "placeholder": "Selecionar Idioma"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -258,9 +292,37 @@
           "title": ""
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "",
-      "title_placeholder": "Título do Álbum"
+      "sharing": {
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "Título do Álbum",
+      "upload": {
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -280,6 +342,7 @@
         "tera_byte_many": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Dimensões",
         "file_size": "Tamanho",

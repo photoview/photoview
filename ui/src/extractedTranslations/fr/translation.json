@@ -15,6 +15,16 @@
       "type": "Type"
     }
   },
+  "album_tree": {
+    "empty": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "shared_with_me": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Ajouter",
@@ -22,6 +32,7 @@
       "remove": "Supprimer",
       "save": "Sauvegarder"
     },
+    "close": "",
     "loading": {
       "album": "Chargement de l'album",
       "default": "Chargement...",
@@ -41,7 +52,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Médias"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +144,13 @@
   "routes": {
     "page_not_found": "Page non trouvée"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Nombre maximal de tâches d'analyse simultanées.",
@@ -165,6 +184,21 @@
       },
       "language_selector": {
         "placeholder": "Choisir la langue"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -258,9 +292,37 @@
           "title": "Vidéos converties"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "Réinitialiser la photo de couverture",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Définir une photo de couverture d'Album",
-      "title_placeholder": "Titre de l'Album"
+      "sharing": {
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "Titre de l'Album",
+      "upload": {
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -280,6 +342,7 @@
         "tera_byte_many": "",
         "tera_byte_other": "{{count}} To"
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Dimensions",
         "file_size": "Taille",

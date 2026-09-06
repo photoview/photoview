@@ -15,6 +15,16 @@
       "type": "文件类型"
     }
   },
+  "album_tree": {
+    "empty": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "shared_with_me": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "加入",
@@ -22,6 +32,7 @@
       "remove": "删除",
       "save": "储存"
     },
+    "close": "",
     "loading": {
       "album": "载入相册中",
       "default": "载入中...",
@@ -41,7 +52,8 @@
       "result_type": {
         "albums": "相册",
         "media": "媒体"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +144,13 @@
   "routes": {
     "page_not_found": "找不到网页"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "最多允许同时进行的扫描任务数目",
@@ -165,6 +184,21 @@
       },
       "language_selector": {
         "placeholder": "选择语言"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -258,9 +292,37 @@
           "title": "已转换视频"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "重设封面照片",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "设置为封面图片",
-      "title_placeholder": "相册名称"
+      "sharing": {
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "相册名称",
+      "upload": {
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -271,6 +333,7 @@
         "mega_byte_other": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
