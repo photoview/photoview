@@ -191,6 +191,11 @@
     },
     "scanner": {
       "description": "Neue und aktualisierte Medien aller Benutzer scannen",
+      "queue_status": {
+        "queued": "Wartet",
+        "running": "Läuft",
+        "title": "Scan-Warteschlange"
+      },
       "scan_all_users": "Alle Benutzer scannen",
       "title": "Scanner"
     },

@@ -194,6 +194,11 @@
     },
     "scanner": {
       "description": "Escaneará todos los usuarios para buscar archivos nuevos o actualizados",
+      "queue_status": {
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Escanear todos los usuarios",
       "title": "Escáner"
     },

@@ -141,3 +141,34 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 
 	return siteInfo.ConcurrentWorkers, nil
 }
+
+// ScannerQueueStatus is the resolver for the scannerQueueStatus field.
+func (r *queryResolver) ScannerQueueStatus(ctx context.Context) ([]*models.ScannerQueueItem, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	items := getScannerQueueStatus()
+
+	if user.Admin {
+		result := make([]*models.ScannerQueueItem, len(items))
+		for i := range items {
+			result[i] = &items[i]
+		}
+		return result, nil
+	}
+
+	db := r.DB(ctx)
+	result := make([]*models.ScannerQueueItem, 0, len(items))
+	for i := range items {
+		canView, err := user.HasAlbumLevel(db, items[i].Album, models.AlbumPermissionLevelRead)
+		if err != nil {
+			return nil, err
+		}
+		if canView {
+			result = append(result, &items[i])
+		}
+	}
+	return result, nil
+}

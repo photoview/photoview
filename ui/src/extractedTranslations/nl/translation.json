@@ -191,6 +191,11 @@
     },
     "scanner": {
       "description": "Scant alle gebruikers op nieuwe of gewijzigde media",
+      "queue_status": {
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Scan alle gebruikers",
       "title": "Scanner"
     },

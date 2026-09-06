@@ -191,6 +191,11 @@
     },
     "scanner": {
       "description": "Ska skanna alla användare efter nya eller uppdaterade media ",
+      "queue_status": {
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Skanna alla användare",
       "title": "Skanner"
     },

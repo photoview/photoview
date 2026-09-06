@@ -107,3 +107,31 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 	}
 
 }
+
+func TestScannerQueueGetQueueStatus(t *testing.T) {
+
+	mockScannerQueue := ScannerQueue{
+		idle_chan:   make(chan bool, 1),
+		in_progress: []ScannerJob{makeScannerJob(100)},
+		up_next:     []ScannerJob{makeScannerJob(20), makeScannerJob(42)},
+		db:          nil,
+	}
+
+	items := mockScannerQueue.GetQueueStatus()
+
+	if len(items) != 3 {
+		t.Fatalf("Expected 3 queue items but got %d", len(items))
+	}
+
+	if items[0].Album.ID != 100 || items[0].Status != models.ScannerJobStatusRunning {
+		t.Errorf("Expected first item to be running album 100, got album %d with status %s", items[0].Album.ID, items[0].Status)
+	}
+
+	if items[1].Album.ID != 20 || items[1].Status != models.ScannerJobStatusQueued {
+		t.Errorf("Expected second item to be queued album 20, got album %d with status %s", items[1].Album.ID, items[1].Status)
+	}
+
+	if items[2].Album.ID != 42 || items[2].Status != models.ScannerJobStatusQueued {
+		t.Errorf("Expected third item to be queued album 42, got album %d with status %s", items[2].Album.ID, items[2].Status)
+	}
+}

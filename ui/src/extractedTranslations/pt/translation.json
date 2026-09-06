@@ -194,6 +194,11 @@
     },
     "scanner": {
       "description": "Irá procurar todos os utilizadores para encontrar mídia nova ou atualizada",
+      "queue_status": {
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Procurar todos os utilizadores",
       "title": "Procurar fotos dos utilizadores"
     },

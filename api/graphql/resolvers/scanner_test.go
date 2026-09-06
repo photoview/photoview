@@ -68,3 +68,62 @@ func TestScanAlbum(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestScannerQueueStatus(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	uploader, err := models.RegisterUser(db, "queue_uploader", nil, false)
+	assert.NoError(t, err)
+	stranger, err := models.RegisterUser(db, "queue_stranger", nil, false)
+	assert.NoError(t, err)
+	admin, err := models.RegisterUser(db, "queue_admin", nil, true)
+	assert.NoError(t, err)
+
+	visibleAlbum := models.Album{Title: "visible", Path: "/photos/queue_visible"}
+	assert.NoError(t, db.Save(&visibleAlbum).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: uploader.ID, AlbumID: visibleAlbum.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+
+	hiddenAlbum := models.Album{Title: "hidden", Path: "/photos/queue_hidden"}
+	assert.NoError(t, db.Save(&hiddenAlbum).Error)
+
+	origGetQueueStatus := getScannerQueueStatus
+	getScannerQueueStatus = func() []models.ScannerQueueItem {
+		return []models.ScannerQueueItem{
+			{Album: &visibleAlbum, Status: models.ScannerJobStatusRunning},
+			{Album: &hiddenAlbum, Status: models.ScannerJobStatusQueued},
+		}
+	}
+	t.Cleanup(func() { getScannerQueueStatus = origGetQueueStatus })
+
+	r := &queryResolver{Resolver: &Resolver{database: db}}
+
+	t.Run("a user with read access only sees the job for that album", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), uploader)
+		items, err := r.ScannerQueueStatus(ctx)
+		assert.NoError(t, err)
+		if assert.Len(t, items, 1) {
+			assert.Equal(t, "visible", items[0].Album.Title)
+		}
+	})
+
+	t.Run("a user with no access to either album sees nothing", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), stranger)
+		items, err := r.ScannerQueueStatus(ctx)
+		assert.NoError(t, err)
+		assert.Empty(t, items)
+	})
+
+	t.Run("admin sees every job regardless of access", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), admin)
+		items, err := r.ScannerQueueStatus(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, items, 2)
+	})
+
+	t.Run("unauthenticated request is rejected", func(t *testing.T) {
+		_, err := r.ScannerQueueStatus(context.Background())
+		assert.Error(t, err)
+	})
+}

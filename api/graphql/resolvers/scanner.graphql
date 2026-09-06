@@ -5,6 +5,26 @@ type ScannerResult {
   message: String
 }
 
+enum ScannerJobStatus {
+  RUNNING
+  QUEUED
+}
+
+"A single album/sub-album currently running or queued in the scanner."
+type ScannerQueueItem {
+  album: Album!
+  status: ScannerJobStatus!
+}
+
+extend type Query {
+  """
+  Snapshot of what the scanner is currently running or has queued.
+  Admins see every job; other users only see jobs for albums they have
+  at least read access to.
+  """
+  scannerQueueStatus: [ScannerQueueItem!]! @isAuthorized
+}
+
 extend type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin

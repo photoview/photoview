@@ -197,6 +197,11 @@
     },
     "scanner": {
       "description": "Skanuje wszystkich użytkowników w poszukiwaniu nowych lub zaktualizowanych mediów",
+      "queue_status": {
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Przeskanuj wszystkich użytkowników",
       "title": "Skaner"
     },

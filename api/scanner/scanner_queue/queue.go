@@ -283,3 +283,32 @@ func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
 
 	return false, nil
 }
+
+// GetQueueStatus returns a snapshot of the jobs currently running or
+// waiting on this queue, one entry per album/sub-album - most useful for
+// surfacing "what's still left to scan" without waiting on the generic
+// broadcast notifications.
+func (queue *ScannerQueue) GetQueueStatus() []models.ScannerQueueItem {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	items := make([]models.ScannerQueueItem, 0, len(queue.in_progress)+len(queue.up_next))
+	for _, job := range queue.in_progress {
+		items = append(items, models.ScannerQueueItem{
+			Album:  job.ctx.GetAlbum(),
+			Status: models.ScannerJobStatusRunning,
+		})
+	}
+	for _, job := range queue.up_next {
+		items = append(items, models.ScannerQueueItem{
+			Album:  job.ctx.GetAlbum(),
+			Status: models.ScannerJobStatusQueued,
+		})
+	}
+	return items
+}
+
+// GetQueueStatus returns a snapshot of the global scanner queue's jobs.
+func GetQueueStatus() []models.ScannerQueueItem {
+	return global_scanner_queue.GetQueueStatus()
+}
