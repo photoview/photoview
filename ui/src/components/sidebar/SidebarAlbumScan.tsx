@@ -15,9 +15,13 @@ const SCAN_ALBUM_MUTATION = gql`
 
 type SidebarAlbumScanProps = {
   id: string
+  viewerCanUpload: boolean
 }
 
-export const SidebarAlbumScan = ({ id }: SidebarAlbumScanProps) => {
+export const SidebarAlbumScan = ({
+  id,
+  viewerCanUpload,
+}: SidebarAlbumScanProps) => {
   const { t } = useTranslation()
   const isAdmin = useIsAdmin()
 
@@ -33,7 +37,7 @@ export const SidebarAlbumScan = ({ id }: SidebarAlbumScanProps) => {
     }
   )
 
-  if (!isAdmin) {
+  if (!isAdmin && !viewerCanUpload) {
     return null
   }
 

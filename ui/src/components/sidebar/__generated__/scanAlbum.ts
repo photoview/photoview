@@ -14,7 +14,9 @@ export interface scanAlbum_scanAlbum {
 
 export interface scanAlbum {
   /**
-   * Recursively scan a single album and its sub-albums for new media, without scanning the rest of the library
+   * Recursively scan a single album and its sub-albums for new media, without
+   * scanning the rest of the library. Caller must be an admin, or hold at
+   * least UPLOAD-level access on albumId.
    */
   scanAlbum: scanAlbum_scanAlbum;
 }

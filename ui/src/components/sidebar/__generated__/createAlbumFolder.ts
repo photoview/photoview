@@ -8,21 +8,21 @@
 // ====================================================
 
 export interface createAlbumFolder_createAlbumFolder {
-  __typename: 'Album'
-  id: string
-  title: string
+  __typename: "Album";
+  id: string;
+  title: string;
 }
 
 export interface createAlbumFolder {
   /**
    * Create a new, empty sub-folder on disk inside the given album.
-   * The caller must be an admin, or must own `parentAlbumId` and have the
-   * `canUpload` permission.
+   * The caller must be an admin, or hold at least UPLOAD-level access on
+   * `parentAlbumId`.
    */
-  createAlbumFolder: createAlbumFolder_createAlbumFolder
+  createAlbumFolder: createAlbumFolder_createAlbumFolder;
 }
 
 export interface createAlbumFolderVariables {
-  parentAlbumId: string
-  name: string
+  parentAlbumId: string;
+  name: string;
 }

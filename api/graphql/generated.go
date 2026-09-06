@@ -6169,11 +6169,11 @@ func (ec *executionContext) _Mutation_scanAlbum(ctx context.Context, field graph
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.Directives.IsAdmin == nil {
+				if ec.Directives.IsAuthorized == nil {
 					var zeroVal *models.ScannerResult
-					return zeroVal, errors.New("directive isAdmin is not implemented")
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
 				}
-				return ec.Directives.IsAdmin(ctx, nil, directive0)
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
 			}
 
 			next = directive1

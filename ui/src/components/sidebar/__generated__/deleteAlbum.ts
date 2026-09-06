@@ -12,12 +12,12 @@ export interface deleteAlbum {
    * Move a folder (and everything inside it) to a hidden trash folder next to
    * its parent, and remove it from the library. This does not permanently
    * delete the files - an administrator can still recover them directly from
-   * the filesystem. The caller must be an admin, or must own `albumId` and
-   * have the `canUpload` permission. Root albums cannot be deleted this way.
+   * the filesystem. The caller must be an admin, or hold at least DELETE-level
+   * access on `albumId`. Root albums cannot be deleted this way.
    */
-  deleteAlbum: boolean
+  deleteAlbum: boolean;
 }
 
 export interface deleteAlbumVariables {
-  albumId: string
+  albumId: string;
 }

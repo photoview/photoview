@@ -67,7 +67,11 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
         {/* Remounts the mutation state on album change, so a scan promise
             still in flight for the previous album can't leave this
             album's button stuck disabled. */}
-        <SidebarAlbumScan key={albumId} id={albumId} />
+        <SidebarAlbumScan
+          key={albumId}
+          id={albumId}
+          viewerCanUpload={data?.album.viewerCanUpload ?? false}
+        />
       </div>
       {data?.album.viewerCanUpload && (
         <>

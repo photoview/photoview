@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
@@ -53,12 +54,27 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 
 // ScanAlbum is the resolver for the scanAlbum field.
 func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
 	var album models.Album
-	if err := r.DB(ctx).First(&album, albumID).Error; err != nil {
+	if err := db.First(&album, albumID).Error; err != nil {
 		return nil, fmt.Errorf("get album from database: %w", err)
 	}
 
-	if err := scanner_queue.AddAlbumToQueue(&album); err != nil {
+	canScan, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
+	if err != nil {
+		return nil, err
+	}
+	if !canScan {
+		return nil, auth.ErrUnauthorized
+	}
+
+	if err := addAlbumToQueue(&album); err != nil {
 		return nil, err
 	}
 

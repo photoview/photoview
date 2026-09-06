@@ -12,8 +12,12 @@ extend type Mutation {
   "Scan a single user for new media"
   scanUser(userId: ID!): ScannerResult! @isAdmin
 
-  "Recursively scan a single album and its sub-albums for new media, without scanning the rest of the library"
-  scanAlbum(albumId: ID!): ScannerResult! @isAdmin
+  """
+  Recursively scan a single album and its sub-albums for new media, without
+  scanning the rest of the library. Caller must be an admin, or hold at
+  least UPLOAD-level access on albumId.
+  """
+  scanAlbum(albumId: ID!): ScannerResult! @isAuthorized
 
   """
   Set how often, in seconds, the server should automatically scan for new media,
