@@ -46,6 +46,44 @@ func TestAlbumPath(t *testing.T) {
 	assert.Equal(t, "One", albumPath[1].Title)
 }
 
+// TestAlbumPathTruncatesAtInaccessibleAncestor covers a real production bug:
+// a subfolder shared directly (e.g. "PC-Medien", granted without its real
+// parent "Meike") sitting more than one level below the point where access
+// stops must still show its own accessible ancestors in the breadcrumb -
+// the old root-first, stop-on-first-miss loop discarded the whole path the
+// moment it saw the inaccessible root, hiding "PC-Medien" too.
+func TestAlbumPathTruncatesAtInaccessibleAncestor(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	leaf := models.Album{
+		Title: "Camera",
+		Path:  "/meike/pc_medien/camera",
+		ParentAlbum: &models.Album{
+			Title: "PC-Medien",
+			Path:  "/meike/pc_medien",
+			ParentAlbum: &models.Album{
+				Title: "Meike",
+				Path:  "/meike",
+			},
+		},
+	}
+	assert.NoError(t, db.Save(&leaf).Error)
+
+	user, err := models.RegisterUser(db, "album_path_user", nil, false)
+	assert.NoError(t, err)
+
+	// User has access to "Camera" and its immediate parent "PC-Medien" (as
+	// PropagateAlbumLevel/the scanner would leave it if "PC-Medien" was the
+	// actual share point), but not to "Meike", its real, inaccessible parent.
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&leaf, leaf.ParentAlbum))
+
+	albumPath, err := actions.AlbumPath(db, user, &leaf)
+	assert.NoError(t, err)
+	if assert.Len(t, albumPath, 1) {
+		assert.Equal(t, "PC-Medien", albumPath[0].Title)
+	}
+}
+
 func TestAlbumForbidden(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 

@@ -146,37 +146,37 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
 	var albumPath []*models.Album
 
-	err := db.Raw(`
+	if err := db.Raw(`
 		WITH recursive path_albums AS (
 			SELECT * FROM albums anchor WHERE anchor.id = ?
 			UNION
 			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
 		SELECT * FROM path_albums WHERE id != ?
-	`, album.ID, album.ID).Scan(&albumPath).Error
+	`, album.ID, album.ID).Scan(&albumPath).Error; err != nil {
+		return nil, err
+	}
 
-	// Truncate the path at the point the user can no longer see, e.g. when
-	// they were only granted a subfolder rather than one of its ancestors.
-	for i := len(albumPath) - 1; i >= 0; i-- {
-		album := albumPath[i]
-
-		hasAccess, err := user.HasAlbumLevel(db, album, models.AlbumPermissionLevelRead)
+	// albumPath is ordered closest-ancestor-first, root-last. Access only
+	// ever cascades downward (from a grant point to its descendants), so
+	// walk outward from the leaf and stop at the first ancestor the user
+	// can't see - everything from there to the root is truncated, while
+	// closer, still-visible ancestors (e.g. a shared subfolder sitting
+	// below an otherwise inaccessible root) are kept.
+	visibleUpTo := len(albumPath)
+	for i, ancestor := range albumPath {
+		hasAccess, err := user.HasAlbumLevel(db, ancestor, models.AlbumPermissionLevelRead)
 		if err != nil {
 			return nil, err
 		}
 
 		if !hasAccess {
-			albumPath = albumPath[i+1:]
+			visibleUpTo = i
 			break
 		}
-
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return albumPath, nil
+	return albumPath[:visibleUpTo], nil
 }
 
 func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, error) {
