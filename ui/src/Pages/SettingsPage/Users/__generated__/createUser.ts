@@ -8,28 +8,23 @@
 // ====================================================
 
 export interface createUser_createUser {
-  __typename: 'User'
-  id: string
-  username: string
+  __typename: "User";
+  id: string;
+  username: string;
   /**
    * Whether or not the user has admin privileges
    */
-  admin: boolean
-  /**
-   * Whether or not the user may create folders and upload media into albums they own
-   */
-  canUpload: boolean
+  admin: boolean;
 }
 
 export interface createUser {
   /**
    * Create a new user
    */
-  createUser: createUser_createUser
+  createUser: createUser_createUser;
 }
 
 export interface createUserVariables {
-  username: string
-  admin: boolean
-  canUpload?: boolean | null
+  username: string;
+  admin: boolean;
 }

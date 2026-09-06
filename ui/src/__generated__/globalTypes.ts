@@ -8,6 +8,15 @@
 //==============================================================
 
 /**
+ * An ordered tier of access on an album. DELETE implies UPLOAD implies READ.
+ */
+export enum AlbumPermissionLevel {
+  DELETE = "DELETE",
+  READ = "READ",
+  UPLOAD = "UPLOAD",
+}
+
+/**
  * Supported language translations of the user interface
  */
 export enum LanguageTranslation {

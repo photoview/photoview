@@ -50,16 +50,6 @@ const EditUserRow = ({
             }))
           }}
         />
-        <Checkbox
-          label="Can upload"
-          checked={state.canUpload}
-          onChange={e => {
-            setState(state => ({
-              ...state,
-              canUpload: e.target.checked || false,
-            }))
-          }}
-        />
       </TableCell>
       <TableCell>
         <ButtonGroup>
@@ -83,7 +73,6 @@ const EditUserRow = ({
                   id: user.id,
                   username: state.username,
                   admin: state.admin,
-                  canUpload: state.canUpload,
                 },
               })
             }

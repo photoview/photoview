@@ -23,10 +23,15 @@ export const USERS_QUERY = gql`
       id
       username
       admin
-      canUpload
       rootAlbums {
         id
         filePath
+        permissions {
+          user {
+            id
+          }
+          level
+        }
       }
     }
   }

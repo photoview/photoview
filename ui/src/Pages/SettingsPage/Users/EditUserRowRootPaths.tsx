@@ -8,11 +8,17 @@ import {
   userRemoveAlbumPathMutationVariables,
 } from './__generated__/userRemoveAlbumPathMutation'
 import {
+  userUpdateRootPathLevel,
+  userUpdateRootPathLevelVariables,
+} from './__generated__/userUpdateRootPathLevel'
+import {
   settingsUsersQuery_user,
   settingsUsersQuery_user_rootAlbums,
 } from './__generated__/settingsUsersQuery'
 import { userAddRootPath } from './__generated__/userAddRootPath'
 import { Button, TextField } from '../../../primitives/form/Input'
+import Dropdown from '../../../primitives/form/Dropdown'
+import { AlbumPermissionLevel } from '../../../__generated__/globalTypes'
 
 const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
   mutation userRemoveAlbumPathMutation($userId: ID!, $albumId: ID!) {
@@ -21,6 +27,24 @@ const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
     }
   }
 `
+
+const USER_UPDATE_ROOT_PATH_LEVEL_MUTATION = gql`
+  mutation userUpdateRootPathLevel(
+    $id: ID!
+    $albumId: ID!
+    $level: AlbumPermissionLevel!
+  ) {
+    userUpdateRootPathLevel(id: $id, albumId: $albumId, level: $level) {
+      id
+    }
+  }
+`
+
+export const levelOptions = [
+  { value: AlbumPermissionLevel.READ, label: 'Read' },
+  { value: AlbumPermissionLevel.UPLOAD, label: 'Read + upload' },
+  { value: AlbumPermissionLevel.DELETE, label: 'Read + upload + delete' },
+]
 
 type EditRootPathProps = {
   album: settingsUsersQuery_user_rootAlbums
@@ -40,23 +64,54 @@ const EditRootPath = ({ album, user }: EditRootPathProps) => {
     ],
   })
 
+  const [updateLevel, { loading: updateLevelLoading }] = useMutation<
+    userUpdateRootPathLevel,
+    userUpdateRootPathLevelVariables
+  >(USER_UPDATE_ROOT_PATH_LEVEL_MUTATION, {
+    refetchQueries: [
+      {
+        query: USERS_QUERY,
+      },
+    ],
+  })
+
+  const currentLevel =
+    album.permissions?.find(p => p.user.id === user.id)?.level ??
+    AlbumPermissionLevel.READ
+
   return (
-    <li className="flex justify-between">
+    <li className="flex justify-between items-center gap-2">
       <span>{album.filePath}</span>
-      <Button
-        variant="negative"
-        disabled={loading}
-        onClick={() =>
-          removeAlbumPath({
-            variables: {
-              userId: user.id,
-              albumId: album.id,
-            },
-          })
-        }
-      >
-        {t('general.action.remove', 'Remove')}
-      </Button>
+      <div className="flex gap-1">
+        <Dropdown
+          items={levelOptions}
+          selected={currentLevel}
+          disabled={updateLevelLoading}
+          setSelected={value =>
+            updateLevel({
+              variables: {
+                id: user.id,
+                albumId: album.id,
+                level: value as AlbumPermissionLevel,
+              },
+            })
+          }
+        />
+        <Button
+          variant="negative"
+          disabled={loading}
+          onClick={() =>
+            removeAlbumPath({
+              variables: {
+                userId: user.id,
+                albumId: album.id,
+              },
+            })
+          }
+        >
+          {t('general.action.remove', 'Remove')}
+        </Button>
+      </div>
     </li>
   )
 }
@@ -68,6 +123,9 @@ type EditNewRootPathProps = {
 const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
   const { t } = useTranslation()
   const [value, setValue] = useState('')
+  const [level, setLevel] = useState<AlbumPermissionLevel>(
+    AlbumPermissionLevel.READ
+  )
   const [addRootPath, { loading }] = useMutation<userAddRootPath>(
     USER_ADD_ROOT_PATH_MUTATION,
     {
@@ -88,6 +146,12 @@ const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
         }
         disabled={loading}
       />
+      <Dropdown
+        items={levelOptions}
+        selected={level}
+        disabled={loading}
+        setSelected={value => setLevel(value as AlbumPermissionLevel)}
+      />
       <Button
         variant="positive"
         disabled={loading}
@@ -97,6 +161,7 @@ const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
             variables: {
               id: userID,
               rootPath: value,
+              level,
             },
           })
         }}

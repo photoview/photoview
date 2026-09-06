@@ -2,8 +2,10 @@ import { gql, useMutation } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Checkbox from '../../../primitives/form/Checkbox'
+import Dropdown from '../../../primitives/form/Dropdown'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
+import { AlbumPermissionLevel } from '../../../__generated__/globalTypes'
 import { createUser, createUserVariables } from './__generated__/createUser'
 import {
   userAddRootPath,
@@ -11,34 +13,39 @@ import {
 } from './__generated__/userAddRootPath'
 
 export const CREATE_USER_MUTATION = gql`
-  mutation createUser(
-    $username: String!
-    $admin: Boolean!
-    $canUpload: Boolean
-  ) {
-    createUser(username: $username, admin: $admin, canUpload: $canUpload) {
+  mutation createUser($username: String!, $admin: Boolean!) {
+    createUser(username: $username, admin: $admin) {
       id
       username
       admin
-      canUpload
       __typename
     }
   }
 `
 
 export const USER_ADD_ROOT_PATH_MUTATION = gql`
-  mutation userAddRootPath($id: ID!, $rootPath: String!) {
-    userAddRootPath(id: $id, rootPath: $rootPath) {
+  mutation userAddRootPath(
+    $id: ID!
+    $rootPath: String!
+    $level: AlbumPermissionLevel
+  ) {
+    userAddRootPath(id: $id, rootPath: $rootPath, level: $level) {
       id
     }
   }
 `
 
+const levelOptions = [
+  { value: AlbumPermissionLevel.READ, label: 'Read' },
+  { value: AlbumPermissionLevel.UPLOAD, label: 'Read + upload' },
+  { value: AlbumPermissionLevel.DELETE, label: 'Read + upload + delete' },
+]
+
 const initialState = {
   username: '',
   rootPath: '',
   admin: false,
-  canUpload: false,
+  level: AlbumPermissionLevel.READ as AlbumPermissionLevel,
   userAdded: false,
 }
 
@@ -79,6 +86,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           variables: {
             id: id,
             rootPath: state.rootPath,
+            level: state.level,
           },
         })
       } else {
@@ -133,16 +141,19 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
             })
           }}
         />
-        <Checkbox
-          label="Can upload"
-          checked={state.canUpload}
-          onChange={e => {
-            setState({
-              ...state,
-              canUpload: e.target.checked || false,
-            })
-          }}
-        />
+        {state.rootPath && (
+          <Dropdown
+            className="mt-1"
+            items={levelOptions}
+            selected={state.level}
+            setSelected={value =>
+              setState({
+                ...state,
+                level: value as AlbumPermissionLevel,
+              })
+            }
+          />
+        )}
       </TableCell>
       <TableCell>
         <ButtonGroup>
@@ -158,7 +169,6 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
                 variables: {
                   username: state.username,
                   admin: state.admin,
-                  canUpload: state.canUpload,
                 },
               })
             }}

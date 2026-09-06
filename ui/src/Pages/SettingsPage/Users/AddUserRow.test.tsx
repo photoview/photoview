@@ -10,7 +10,7 @@ const gqlMock = [
   {
     request: {
       query: CREATE_USER_MUTATION,
-      variables: { username: 'testuser', admin: false, canUpload: false },
+      variables: { username: 'testuser', admin: false },
     },
     result: {
       data: {
@@ -18,7 +18,6 @@ const gqlMock = [
           id: '123',
           username: 'testuser',
           admin: false,
-          canUpload: false,
           __typename: 'User',
         },
       },
@@ -27,7 +26,7 @@ const gqlMock = [
   {
     request: {
       query: USER_ADD_ROOT_PATH_MUTATION,
-      variables: { id: '123', rootPath: '/tmp' },
+      variables: { id: '123', rootPath: '/tmp', level: 'READ' },
     },
     result: { data: { userAddRootPath: { id: '567', __typename: 'Album' } } },
   },
