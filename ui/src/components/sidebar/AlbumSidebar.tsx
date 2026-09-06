@@ -13,6 +13,7 @@ import SidebarAlbumScan from './SidebarAlbumScan'
 import SidebarAlbumNewFolder from './SidebarAlbumNewFolder'
 import SidebarAlbumUpload from './SidebarAlbumUpload'
 import SidebarAlbumManage from './SidebarAlbumManage'
+import SidebarAlbumSharing from './SidebarAlbumSharing'
 
 const albumQuery = gql`
   query getAlbumSidebar($id: ID!) {
@@ -20,6 +21,8 @@ const albumQuery = gql`
       id
       title
       viewerCanUpload
+      viewerCanDelete
+      viewerIsOwner
       parentAlbumId
     }
   }
@@ -74,16 +77,21 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
           <div className="mt-8">
             <SidebarAlbumUpload key={albumId} albumId={albumId} />
           </div>
-          {data.album.parentAlbumId && (
-            <div className="mt-8">
-              <SidebarAlbumManage
-                key={albumId}
-                albumId={albumId}
-                albumTitle={data.album.title}
-              />
-            </div>
-          )}
         </>
+      )}
+      {data?.album.parentAlbumId && data.album.viewerCanDelete && (
+        <div className="mt-8">
+          <SidebarAlbumManage
+            key={albumId}
+            albumId={albumId}
+            albumTitle={data.album.title}
+          />
+        </div>
+      )}
+      {data?.album.viewerIsOwner && (
+        <div className="mt-8">
+          <SidebarAlbumSharing key={albumId} albumId={albumId} />
+        </div>
       )}
     </div>
   )
