@@ -49,7 +49,7 @@ type AlbumTitleProps = {
 const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   const [fetchPath, { data: pathData }] =
     useLazyQuery<albumPathQuery>(ALBUM_PATH_QUERY)
-  const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar, content } = useContext(SidebarContext)
 
   useEffect(() => {
     if (!album) return
@@ -62,6 +62,20 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
       })
     }
   }, [album])
+
+  useEffect(() => {
+    if (!album) return
+
+    // Keep an already-open album properties sidebar following navigation
+    // to a different album, instead of leaving it showing the old one.
+    if (
+      React.isValidElement(content) &&
+      content.type === AlbumSidebar &&
+      (content.props as { albumId: string }).albumId !== album.id
+    ) {
+      updateSidebar(<AlbumSidebar albumId={album.id} />)
+    }
+  }, [album?.id, content, updateSidebar])
 
   const delay = useDelay(200, [album])
 
