@@ -17,6 +17,7 @@ import {
   changeUserPreferencesVariables,
 } from './__generated__/changeUserPreferences'
 import { myUserPreferences } from './__generated__/myUserPreferences'
+import { unhideAllAlbums } from './__generated__/unhideAllAlbums'
 import { TranslationFn } from '../../localization'
 import { changeTheme, getTheme } from '../../theme'
 
@@ -30,8 +31,16 @@ const languagePreferences = [
   { key: 7, label: 'Italiano', value: LanguageTranslation.Italian },
   { key: 8, label: 'Deutsch', value: LanguageTranslation.German },
   { key: 9, label: 'Русский', value: LanguageTranslation.Russian },
-  { key: 10, label: '繁體中文 (香港)', value: LanguageTranslation.TraditionalChineseHK },
-  { key: 16, label: '繁體中文 (台灣)', value: LanguageTranslation.TraditionalChineseTW },
+  {
+    key: 10,
+    label: '繁體中文 (香港)',
+    value: LanguageTranslation.TraditionalChineseHK,
+  },
+  {
+    key: 16,
+    label: '繁體中文 (台灣)',
+    value: LanguageTranslation.TraditionalChineseTW,
+  },
   { key: 11, label: '简体中文', value: LanguageTranslation.SimplifiedChinese },
   { key: 12, label: 'Português', value: LanguageTranslation.Portuguese },
   { key: 13, label: 'Euskara', value: LanguageTranslation.Basque },
@@ -64,16 +73,19 @@ const CHANGE_USER_PREFERENCES = gql`
     $language: String
     $searchResultLimit: Int
     $showAlbumTree: Boolean
+    $showHiddenAlbums: Boolean
   ) {
     changeUserPreferences(
       language: $language
       searchResultLimit: $searchResultLimit
       showAlbumTree: $showAlbumTree
+      showHiddenAlbums: $showHiddenAlbums
     ) {
       id
       language
       searchResultLimit
       showAlbumTree
+      showHiddenAlbums
     }
   }
 `
@@ -85,7 +97,14 @@ const MY_USER_PREFERENCES = gql`
       language
       searchResultLimit
       showAlbumTree
+      showHiddenAlbums
     }
+  }
+`
+
+const UNHIDE_ALL_ALBUMS = gql`
+  mutation unhideAllAlbums {
+    unhideAllAlbums
   }
 `
 
@@ -125,7 +144,8 @@ const UserPreferences = () => {
   >(CHANGE_USER_PREFERENCES)
 
   const sortedLanguagePrefs = useMemo(
-    () => [...languagePreferences].sort((a, b) => a.label.localeCompare(b.label)),
+    () =>
+      [...languagePreferences].sort((a, b) => a.label.localeCompare(b.label)),
     []
   )
 
@@ -134,8 +154,14 @@ const UserPreferences = () => {
   // three fields on every call and would otherwise clobber the real ones.
   const preferencesLoaded = data?.myUserPreferences != null
   const currentLanguage = data?.myUserPreferences.language ?? null
-  const currentSearchResultLimit = data?.myUserPreferences.searchResultLimit ?? null
+  const currentSearchResultLimit =
+    data?.myUserPreferences.searchResultLimit ?? null
   const currentShowAlbumTree = data?.myUserPreferences.showAlbumTree ?? true
+  const currentShowHiddenAlbums =
+    data?.myUserPreferences.showHiddenAlbums ?? false
+
+  const [unhideAllAlbums, { loading: unhideAllLoading }] =
+    useMutation<unhideAllAlbums>(UNHIDE_ALL_ALBUMS)
 
   const [searchResultLimitInput, setSearchResultLimitInput] = useState('')
 
@@ -171,6 +197,7 @@ const UserPreferences = () => {
         language: currentLanguage,
         searchResultLimit: parsed,
         showAlbumTree: currentShowAlbumTree,
+        showHiddenAlbums: currentShowHiddenAlbums,
       },
     })
   }
@@ -214,6 +241,7 @@ const UserPreferences = () => {
               language: language as LanguageTranslation,
               searchResultLimit: currentSearchResultLimit,
               showAlbumTree: currentShowAlbumTree,
+              showHiddenAlbums: currentShowHiddenAlbums,
             },
           })
         }}
@@ -281,11 +309,57 @@ const UserPreferences = () => {
               language: currentLanguage,
               searchResultLimit: currentSearchResultLimit,
               showAlbumTree: event.target.checked,
+              showHiddenAlbums: currentShowHiddenAlbums,
             },
           })
         }}
         className="mb-4"
       />
+      <label htmlFor="user_pref_show_hidden_albums_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.show_hidden_albums.title',
+            'Hidden albums'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.show_hidden_albums.description',
+            "Show albums you've hidden, dimmed, so you can bring them back"
+          )}
+        </InputLabelDescription>
+      </label>
+      <Checkbox
+        id="user_pref_show_hidden_albums_field"
+        label={t(
+          'settings.user_preferences.show_hidden_albums.checkbox_label',
+          'Show hidden albums'
+        )}
+        disabled={loadingPrefs || !preferencesLoaded}
+        checked={currentShowHiddenAlbums}
+        onChange={event => {
+          if (!preferencesLoaded) return
+
+          changePrefs({
+            variables: {
+              language: currentLanguage,
+              searchResultLimit: currentSearchResultLimit,
+              showAlbumTree: currentShowAlbumTree,
+              showHiddenAlbums: event.target.checked,
+            },
+          })
+        }}
+      />
+      <Button
+        className="mt-2 mb-4"
+        disabled={unhideAllLoading}
+        onClick={() => unhideAllAlbums()}
+      >
+        {t(
+          'settings.user_preferences.show_hidden_albums.unhide_all',
+          'Show all hidden albums again'
+        )}
+      </Button>
       <label htmlFor="user_pref_change_theme_field">
         <InputLabelTitle>
           {t('settings.user_preferences.theme.title', 'Theme preferences')}

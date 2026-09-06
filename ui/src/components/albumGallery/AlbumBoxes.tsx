@@ -4,11 +4,17 @@ import { AlbumBox } from './AlbumBox'
 
 type AlbumBoxesProps = {
   error?: Error
-  albums?: albumQuery_album_subAlbums[]
+  albums?: (albumQuery_album_subAlbums & { viewerHidden?: boolean })[]
   getCustomLink?(albumID: string): string
+  refetchQueries?: string[]
 }
 
-const AlbumBoxes = ({ error, albums, getCustomLink }: AlbumBoxesProps) => {
+const AlbumBoxes = ({
+  error,
+  albums,
+  getCustomLink,
+  refetchQueries,
+}: AlbumBoxesProps) => {
   if (error) return <div>Error {error.message}</div>
 
   let albumElements = []
@@ -19,6 +25,7 @@ const AlbumBoxes = ({ error, albums, getCustomLink }: AlbumBoxesProps) => {
         key={album.id}
         album={album}
         customLink={getCustomLink ? getCustomLink(album.id) : undefined}
+        refetchQueries={refetchQueries}
       />
     ))
   } else {

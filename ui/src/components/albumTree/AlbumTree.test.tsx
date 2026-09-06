@@ -8,18 +8,27 @@ import { ALBUM_TREE_SUB_ALBUMS_QUERY } from './AlbumTreeNode'
 
 const mocks = [
   {
-    request: { query: ALBUM_TREE_ROOT_QUERY },
-    result: { data: { myAlbums: [{ id: '1', title: 'Root' }] } },
+    request: { query: ALBUM_TREE_ROOT_QUERY, variables: { showHidden: false } },
+    result: {
+      data: {
+        myAlbums: [
+          { id: '1', title: 'Root', viewerHidden: false, parentAlbumId: null },
+        ],
+      },
+    },
   },
   {
-    request: { query: ALBUM_TREE_SUB_ALBUMS_QUERY, variables: { id: '1' } },
+    request: {
+      query: ALBUM_TREE_SUB_ALBUMS_QUERY,
+      variables: { id: '1', showHidden: false },
+    },
     result: {
       data: {
         album: {
           id: '1',
           subAlbums: [
-            { id: '2', title: 'ChildA' },
-            { id: '3', title: 'ChildB' },
+            { id: '2', title: 'ChildA', viewerHidden: false },
+            { id: '3', title: 'ChildB', viewerHidden: false },
           ],
         },
       },

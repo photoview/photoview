@@ -31,6 +31,10 @@ export interface AlbumGalleryFields_subAlbums {
   id: string;
   title: string;
   /**
+   * Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users.
+   */
+  viewerHidden: boolean;
+  /**
    * An image in this album used for previewing this album
    */
   thumbnail: AlbumGalleryFields_subAlbums_thumbnail | null;

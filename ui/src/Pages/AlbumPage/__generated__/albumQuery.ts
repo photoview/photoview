@@ -31,6 +31,10 @@ export interface albumQuery_album_subAlbums {
   id: string;
   title: string;
   /**
+   * Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users.
+   */
+  viewerHidden: boolean;
+  /**
    * An image in this album used for previewing this album
    */
   thumbnail: albumQuery_album_subAlbums_thumbnail | null;
@@ -120,4 +124,5 @@ export interface albumQueryVariables {
   orderDirection?: OrderDirection | null;
   limit?: number | null;
   offset?: number | null;
+  showHidden?: boolean | null;
 }

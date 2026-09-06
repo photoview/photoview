@@ -11,6 +11,10 @@ export interface albumTreeSubAlbumsQuery_album_subAlbums {
   __typename: "Album";
   id: string;
   title: string;
+  /**
+   * Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users.
+   */
+  viewerHidden: boolean;
 }
 
 export interface albumTreeSubAlbumsQuery_album {
@@ -32,4 +36,5 @@ export interface albumTreeSubAlbumsQuery {
 
 export interface albumTreeSubAlbumsQueryVariables {
   id: string;
+  showHidden?: boolean | null;
 }

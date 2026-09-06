@@ -3,27 +3,35 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { debounce, DebouncedFn } from '../../helpers/utils'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 import AlbumTreeNode from './AlbumTreeNode'
 import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
 import {
   albumTreeActivePathQuery,
   albumTreeActivePathQueryVariables,
 } from './__generated__/albumTreeActivePathQuery'
-import { albumTreeRootQuery } from './__generated__/albumTreeRootQuery'
+import {
+  albumTreeRootQuery,
+  albumTreeRootQueryVariables,
+  albumTreeRootQuery_myAlbums,
+} from './__generated__/albumTreeRootQuery'
 import {
   albumTreeSearchQuery,
   albumTreeSearchQueryVariables,
 } from './__generated__/albumTreeSearchQuery'
 
 export const ALBUM_TREE_ROOT_QUERY = gql`
-  query albumTreeRootQuery {
+  query albumTreeRootQuery($showHidden: Boolean) {
     myAlbums(
       onlyRoot: true
       showEmpty: true
+      showHidden: $showHidden
       order: { order_by: "title", order_direction: ASC }
     ) {
       id
       title
+      viewerHidden
+      parentAlbumId
     }
   }
 `
@@ -55,7 +63,11 @@ export const ALBUM_TREE_SEARCH_QUERY = gql`
 const AlbumTree = () => {
   const { t } = useTranslation()
   const { id: activeAlbumId } = useParams()
-  const { data, loading } = useQuery<albumTreeRootQuery>(ALBUM_TREE_ROOT_QUERY)
+  const showHidden = useShowHiddenAlbums()
+  const { data, loading } = useQuery<
+    albumTreeRootQuery,
+    albumTreeRootQueryVariables
+  >(ALBUM_TREE_ROOT_QUERY, { variables: { showHidden } })
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [justExpandedId, setJustExpandedId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLElement>(null)
@@ -113,10 +125,12 @@ const AlbumTree = () => {
     debouncedSetQuery.current?.(searchQuery.trim())
   }, [searchQuery])
 
-  const [fetchTreeSearch, { data: treeSearchData, loading: treeSearchLoading }] =
-    useLazyQuery<albumTreeSearchQuery, albumTreeSearchQueryVariables>(
-      ALBUM_TREE_SEARCH_QUERY
-    )
+  const [
+    fetchTreeSearch,
+    { data: treeSearchData, loading: treeSearchLoading },
+  ] = useLazyQuery<albumTreeSearchQuery, albumTreeSearchQueryVariables>(
+    ALBUM_TREE_SEARCH_QUERY
+  )
 
   useEffect(() => {
     if (debouncedSearchQuery !== '') {
@@ -142,6 +156,24 @@ const AlbumTree = () => {
   const visibleRoots = isFiltering
     ? roots?.filter(album => visibleIds?.has(album.id))
     : roots
+
+  const myVolumes = visibleRoots?.filter(a => a.parentAlbumId == null)
+  const sharedWithMe = visibleRoots?.filter(a => a.parentAlbumId != null)
+
+  const renderNode = (album: albumTreeRootQuery_myAlbums) => (
+    <AlbumTreeNode
+      key={album.id}
+      album={album}
+      depth={0}
+      activeAlbumId={activeAlbumId}
+      expanded={expanded}
+      toggleExpand={toggleExpand}
+      visibleIds={visibleIds}
+      matchedIds={matchedIds}
+      scrollContainerRef={scrollContainerRef}
+      justExpandedId={justExpandedId}
+    />
+  )
 
   return (
     <nav
@@ -169,22 +201,15 @@ const AlbumTree = () => {
           {t('album_tree.no_matches', 'No matching albums')}
         </div>
       )}
-      <ul>
-        {visibleRoots?.map(album => (
-          <AlbumTreeNode
-            key={album.id}
-            album={album}
-            depth={0}
-            activeAlbumId={activeAlbumId}
-            expanded={expanded}
-            toggleExpand={toggleExpand}
-            visibleIds={visibleIds}
-            matchedIds={matchedIds}
-            scrollContainerRef={scrollContainerRef}
-            justExpandedId={justExpandedId}
-          />
-        ))}
-      </ul>
+      <ul>{myVolumes?.map(renderNode)}</ul>
+      {sharedWithMe && sharedWithMe.length > 0 && (
+        <>
+          <div className="px-2 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase">
+            {t('album_tree.shared_with_me', 'Shared with me')}
+          </div>
+          <ul>{sharedWithMe.map(renderNode)}</ul>
+        </>
+      )}
     </nav>
   )
 }

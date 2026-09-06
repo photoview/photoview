@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import classNames from 'classnames'
 import { Link } from 'react-router-dom'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
+import { useHideAlbumMutation, toggleAlbumHidden } from './albumHideMutations'
 
 interface AlbumBoxImageProps {
   src?: string
@@ -38,21 +40,45 @@ const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
 }
 
 type AlbumBoxProps = {
-  album?: albumQuery_album_subAlbums
+  album?: albumQuery_album_subAlbums & { viewerHidden?: boolean }
   customLink?: string
+  refetchQueries?: string[]
 }
 
-export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
+export const AlbumBox = ({
+  album,
+  customLink,
+  refetchQueries,
+  ...props
+}: AlbumBoxProps) => {
   const wrapperClasses =
     'inline-block text-center text-gray-900 dark:text-gray-200 mx-3 my-2 xs:h-60 xs:w-[220px]'
 
+  const [hideAlbum] = useHideAlbumMutation(refetchQueries)
+
   if (album) {
+    const hidden = album.viewerHidden === true
+
     return (
       <Link
         to={customLink || `/album/${album.id}`}
-        className={wrapperClasses}
+        className={classNames(wrapperClasses, 'relative group', {
+          'opacity-50': hidden,
+        })}
         {...props}
       >
+        <button
+          type="button"
+          title={hidden ? 'Unhide album' : 'Hide album'}
+          className="absolute top-1 right-4 z-10 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleAlbumHidden(hideAlbum, album.id, hidden)
+          }}
+        >
+          {hidden ? '\u{1F441}' : '\u{1F6AB}'}
+        </button>
         <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} />
         <p className="whitespace-nowrap overflow-hidden overflow-ellipsis">
           {album.title}

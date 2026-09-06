@@ -2,18 +2,27 @@ import { gql, useLazyQuery } from '@apollo/client'
 import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { tailwindClassNames } from '../../helpers/utils'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
+import {
+  useHideAlbumMutation,
+  toggleAlbumHidden,
+} from '../albumGallery/albumHideMutations'
 import {
   albumTreeSubAlbumsQuery,
   albumTreeSubAlbumsQueryVariables,
 } from './__generated__/albumTreeSubAlbumsQuery'
 
 export const ALBUM_TREE_SUB_ALBUMS_QUERY = gql`
-  query albumTreeSubAlbumsQuery($id: ID!) {
+  query albumTreeSubAlbumsQuery($id: ID!, $showHidden: Boolean) {
     album(id: $id) {
       id
-      subAlbums(order: { order_by: "title", order_direction: ASC }) {
+      subAlbums(
+        order: { order_by: "title", order_direction: ASC }
+        showHidden: $showHidden
+      ) {
         id
         title
+        viewerHidden
       }
     }
   }
@@ -22,6 +31,7 @@ export const ALBUM_TREE_SUB_ALBUMS_QUERY = gql`
 export type AlbumTreeNodeAlbum = {
   id: string
   title: string
+  viewerHidden?: boolean
 }
 
 type AlbumTreeNodeProps = {
@@ -67,10 +77,15 @@ const AlbumTreeNode = ({
   const ownRef = useRef<HTMLLIElement | null>(null)
   const childRefs = useRef<Record<string, HTMLLIElement | null>>({})
 
+  const showHidden = useShowHiddenAlbums()
+  const [hideAlbum] = useHideAlbumMutation(['albumTreeSubAlbumsQuery'])
+
   const [fetchSubAlbums, { data, loading, called }] = useLazyQuery<
     albumTreeSubAlbumsQuery,
     albumTreeSubAlbumsQueryVariables
-  >(ALBUM_TREE_SUB_ALBUMS_QUERY, { variables: { id: album.id } })
+  >(ALBUM_TREE_SUB_ALBUMS_QUERY, {
+    variables: { id: album.id, showHidden },
+  })
 
   useEffect(() => {
     if (isExpanded && !called) {
@@ -156,11 +171,23 @@ const AlbumTreeNode = ({
             {
               'font-semibold text-blue-600 dark:text-blue-400': isActive,
               'font-semibold': isMatch && !isActive,
+              'opacity-50': album.viewerHidden === true,
             }
           )}
         >
           {album.title}
         </Link>
+        <button
+          type="button"
+          title={album.viewerHidden ? 'Unhide album' : 'Hide album'}
+          className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
+          onClick={e => {
+            e.preventDefault()
+            toggleAlbumHidden(hideAlbum, album.id, album.viewerHidden === true)
+          }}
+        >
+          {album.viewerHidden ? '\u{1F441}' : '\u{1F6AB}'}
+        </button>
       </div>
       {isExpanded && subAlbums && subAlbums.length > 0 && (
         <ul>

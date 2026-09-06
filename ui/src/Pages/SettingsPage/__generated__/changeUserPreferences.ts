@@ -23,6 +23,12 @@ export interface changeUserPreferences_changeUserPreferences {
    * `null` uses the default, which is to show it.
    */
   showAlbumTree: boolean | null;
+  /**
+   * Whether personally-hidden albums are shown (dimmed, with a click-to-unhide
+   * affordance) instead of being excluded from navigation and search.
+   * `null` uses the default, which is to exclude them.
+   */
+  showHiddenAlbums: boolean | null;
 }
 
 export interface changeUserPreferences {
@@ -36,4 +42,5 @@ export interface changeUserPreferencesVariables {
   language?: string | null;
   searchResultLimit?: number | null;
   showAlbumTree?: boolean | null;
+  showHiddenAlbums?: boolean | null;
 }

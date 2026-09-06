@@ -19,9 +19,13 @@ export const ALBUM_GALLERY_FRAGMENT = gql`
   fragment AlbumGalleryFields on Album {
     id
     title
-    subAlbums(order: { order_by: "title", order_direction: $orderDirection }) {
+    subAlbums(
+      order: { order_by: "title", order_direction: $orderDirection }
+      showHidden: $showHidden
+    ) {
       id
       title
+      viewerHidden
       thumbnail {
         id
         thumbnail {
@@ -92,6 +96,7 @@ const AlbumGallery = React.forwardRef(
           <AlbumBoxes
             albums={album.subAlbums}
             getCustomLink={customAlbumLink}
+            refetchQueries={['albumQuery']}
           />
         )
       }

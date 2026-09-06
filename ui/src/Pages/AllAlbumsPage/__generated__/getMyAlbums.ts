@@ -31,6 +31,16 @@ export interface getMyAlbums_myAlbums {
   id: string;
   title: string;
   /**
+   * Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users.
+   */
+  viewerHidden: boolean;
+  /**
+   * ID of the album which contains this album, or null if this is a root album.
+   * Unlike parentAlbum, this doesn't require the parent association to be
+   * preloaded, so it's always accurate.
+   */
+  parentAlbumId: string | null;
+  /**
    * An image in this album used for previewing this album
    */
   thumbnail: getMyAlbums_myAlbums_thumbnail | null;
@@ -46,4 +56,5 @@ export interface getMyAlbums {
 export interface getMyAlbumsVariables {
   orderBy?: string | null;
   orderDirection?: OrderDirection | null;
+  showHidden?: boolean | null;
 }
