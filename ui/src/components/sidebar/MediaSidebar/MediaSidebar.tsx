@@ -21,6 +21,7 @@ import { sidebarDownloadQuery_media_downloads } from '../__generated__/sidebarDo
 import ExifDetails from './MediaSidebarExif'
 import MediaSidebarPeople from './MediaSidebarPeople'
 import MediaSidebarMap from './MediaSidebarMap'
+import SidebarMediaManage from './SidebarMediaManage'
 import {
   sidebarMediaQuery,
   sidebarMediaQueryVariables,
@@ -37,6 +38,8 @@ export const SIDEBAR_MEDIA_QUERY = gql`
     media(id: $id) {
       id
       title
+      path
+      viewerCanUpload
       type
       highRes {
         url
@@ -163,7 +166,7 @@ type SidebarContentProps = {
 }
 
 const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
-	const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar } = useContext(SidebarContext)
   const { t } = useTranslation()
   let previewImage = null
   if (media.highRes) previewImage = media.highRes
@@ -192,7 +195,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
         <Link
           className="text-blue-900 dark:text-blue-200 hover:underline"
           to={`/album/${album.id}`}
-					onClick={() => updateSidebar(null)}
+          onClick={() => updateSidebar(null)}
         >
           {album.title}
         </Link>
@@ -235,6 +238,15 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       <div className="mt-8">
         <SidebarPhotoCover cover_id={media.id} />
       </div>
+      {media.viewerCanUpload && media.path && mediaAlbum && (
+        <div className="mt-8">
+          <SidebarMediaManage
+            mediaId={media.id}
+            currentFileName={media.path.split('/').pop() ?? media.path}
+            albumId={mediaAlbum.id}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -243,6 +255,8 @@ export interface MediaSidebarMedia {
   __typename: 'Media'
   id: string
   title?: string
+  path?: string
+  viewerCanUpload?: boolean
   type: MediaType
   highRes?: null | {
     __typename: 'MediaURL'

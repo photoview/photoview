@@ -219,6 +219,14 @@ export interface sidebarMediaQuery_media {
   __typename: "Media";
   id: string;
   title: string;
+  /**
+   * Local filepath for the media
+   */
+  path: string;
+  /**
+   * Whether the currently logged in user may rename or delete this media
+   */
+  viewerCanUpload: boolean;
   type: MediaType;
   /**
    * URL to display the photo in full resolution, will be null for videos

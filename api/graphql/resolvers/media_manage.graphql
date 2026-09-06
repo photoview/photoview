@@ -1,0 +1,18 @@
+extend type Media {
+  "Whether the currently logged in user may rename or delete this media"
+  viewerCanUpload: Boolean!
+}
+
+extend type Mutation {
+  "Rename a media file, on disk and in the library (and its sidecar file, if any). The caller must be an admin, or hold at least UPLOAD-level access on the media's album."
+  renameMedia(mediaId: ID!, newName: String!): Media! @isAuthorized
+
+  """
+  Move a media file (and its sidecar file, if any) to a hidden trash
+  folder next to its album, and remove it from the library. Does not
+  permanently delete the files - an administrator can still recover them
+  directly from the filesystem. The caller must be an admin, or hold at
+  least UPLOAD-level access on the media's album.
+  """
+  deleteMedia(mediaId: ID!): Boolean! @isAuthorized
+}

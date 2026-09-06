@@ -105,22 +105,23 @@ type ComplexityRoot struct {
 	}
 
 	Media struct {
-		Album         func(childComplexity int) int
-		Blurhash      func(childComplexity int) int
-		Date          func(childComplexity int) int
-		Downloads     func(childComplexity int) int
-		Exif          func(childComplexity int) int
-		Faces         func(childComplexity int) int
-		Favorite      func(childComplexity int) int
-		HighRes       func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Path          func(childComplexity int) int
-		Shares        func(childComplexity int) int
-		Thumbnail     func(childComplexity int) int
-		Title         func(childComplexity int) int
-		Type          func(childComplexity int) int
-		VideoMetadata func(childComplexity int) int
-		VideoWeb      func(childComplexity int) int
+		Album           func(childComplexity int) int
+		Blurhash        func(childComplexity int) int
+		Date            func(childComplexity int) int
+		Downloads       func(childComplexity int) int
+		Exif            func(childComplexity int) int
+		Faces           func(childComplexity int) int
+		Favorite        func(childComplexity int) int
+		HighRes         func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Path            func(childComplexity int) int
+		Shares          func(childComplexity int) int
+		Thumbnail       func(childComplexity int) int
+		Title           func(childComplexity int) int
+		Type            func(childComplexity int) int
+		VideoMetadata   func(childComplexity int) int
+		VideoWeb        func(childComplexity int) int
+		ViewerCanUpload func(childComplexity int) int
 	}
 
 	MediaDownload struct {
@@ -159,6 +160,7 @@ type ComplexityRoot struct {
 		CreateAlbumFolder           func(childComplexity int, parentAlbumID int, name string) int
 		CreateUser                  func(childComplexity int, username string, password *string, admin bool, rootPath *string) int
 		DeleteAlbum                 func(childComplexity int, albumID int) int
+		DeleteMedia                 func(childComplexity int, mediaID int) int
 		DeleteShareToken            func(childComplexity int, token string) int
 		DeleteUser                  func(childComplexity int, id int) int
 		DetachImageFaces            func(childComplexity int, imageFaceIDs []int) int
@@ -170,6 +172,7 @@ type ComplexityRoot struct {
 		MoveImageFaces              func(childComplexity int, imageFaceIDs []int, destinationFaceGroupID int) int
 		ProtectShareToken           func(childComplexity int, token string, password *string) int
 		RecognizeUnlabeledFaces     func(childComplexity int) int
+		RenameMedia                 func(childComplexity int, mediaID int, newName string) int
 		ResetAlbumCover             func(childComplexity int, albumID int) int
 		RevokeAlbumAccess           func(childComplexity int, albumID int, userID int) int
 		ScanAlbum                   func(childComplexity int, albumID int) int
@@ -335,6 +338,7 @@ type MediaResolver interface {
 	Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error)
 	Downloads(ctx context.Context, obj *models.Media) ([]*models.MediaDownload, error)
 	Faces(ctx context.Context, obj *models.Media) ([]*models.ImageFace, error)
+	ViewerCanUpload(ctx context.Context, obj *models.Media) (bool, error)
 }
 type MutationResolver interface {
 	ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error)
@@ -349,6 +353,8 @@ type MutationResolver interface {
 	RecognizeUnlabeledFaces(ctx context.Context) ([]*models.ImageFace, error)
 	DetachImageFaces(ctx context.Context, imageFaceIDs []int) (*models.FaceGroup, error)
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
+	RenameMedia(ctx context.Context, mediaID int, newName string) (*models.Media, error)
+	DeleteMedia(ctx context.Context, mediaID int) (bool, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error)
@@ -755,6 +761,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Media.VideoWeb(childComplexity), true
+	case "Media.viewerCanUpload":
+		if e.ComplexityRoot.Media.ViewerCanUpload == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Media.ViewerCanUpload(childComplexity), true
 
 	case "MediaDownload.mediaUrl":
 		if e.ComplexityRoot.MediaDownload.MediaURL == nil {
@@ -945,6 +957,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteAlbum(childComplexity, args["albumId"].(int)), true
+	case "Mutation.deleteMedia":
+		if e.ComplexityRoot.Mutation.DeleteMedia == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteMedia_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteMedia(childComplexity, args["mediaId"].(int)), true
 	case "Mutation.deleteShareToken":
 		if e.ComplexityRoot.Mutation.DeleteShareToken == nil {
 			break
@@ -1061,6 +1084,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RecognizeUnlabeledFaces(childComplexity), true
+	case "Mutation.renameMedia":
+		if e.ComplexityRoot.Mutation.RenameMedia == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_renameMedia_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RenameMedia(childComplexity, args["mediaId"].(int), args["newName"].(string)), true
 	case "Mutation.resetAlbumCover":
 		if e.ComplexityRoot.Mutation.ResetAlbumCover == nil {
 			break
@@ -1844,7 +1878,7 @@ func newExecutionContext(
 	}
 }
 
-//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/timeline.graphql" "resolvers/upload.graphql" "resolvers/user.graphql"
+//go:embed "resolvers/album.graphql" "resolvers/faces.graphql" "resolvers/media.graphql" "resolvers/media_geo_json.graphql" "resolvers/media_manage.graphql" "resolvers/notification.graphql" "resolvers/root.graphql" "resolvers/scanner.graphql" "resolvers/search.graphql" "resolvers/share_token.graphql" "resolvers/site_info.graphql" "resolvers/timeline.graphql" "resolvers/upload.graphql" "resolvers/user.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1860,6 +1894,7 @@ var sources = []*ast.Source{
 	{Name: "resolvers/faces.graphql", Input: sourceData("resolvers/faces.graphql"), BuiltIn: false},
 	{Name: "resolvers/media.graphql", Input: sourceData("resolvers/media.graphql"), BuiltIn: false},
 	{Name: "resolvers/media_geo_json.graphql", Input: sourceData("resolvers/media_geo_json.graphql"), BuiltIn: false},
+	{Name: "resolvers/media_manage.graphql", Input: sourceData("resolvers/media_manage.graphql"), BuiltIn: false},
 	{Name: "resolvers/notification.graphql", Input: sourceData("resolvers/notification.graphql"), BuiltIn: false},
 	{Name: "resolvers/root.graphql", Input: sourceData("resolvers/root.graphql"), BuiltIn: false},
 	{Name: "resolvers/scanner.graphql", Input: sourceData("resolvers/scanner.graphql"), BuiltIn: false},
@@ -2022,6 +2057,8 @@ func (ec *executionContext) childFields_Media(ctx context.Context, field graphql
 		return ec.fieldContext_Media_downloads(ctx, field)
 	case "faces":
 		return ec.fieldContext_Media_faces(ctx, field)
+	case "viewerCanUpload":
+		return ec.fieldContext_Media_viewerCanUpload(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Media", field.Name)
 }
@@ -2572,6 +2609,20 @@ func (ec *executionContext) field_Mutation_deleteAlbum_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteMedia_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteShareToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2781,6 +2832,28 @@ func (ec *executionContext) field_Mutation_protectShareToken_args(ctx context.Co
 		return nil, err
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_renameMedia_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "newName",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["newName"] = arg1
 	return args, nil
 }
 
@@ -4913,6 +4986,29 @@ func (ec *executionContext) fieldContext_Media_faces(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Media_viewerCanUpload(ctx context.Context, field graphql.CollectedField, obj *models.Media) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Media_viewerCanUpload(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Media().ViewerCanUpload(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Media_viewerCanUpload(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Media", field, true, true, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _MediaDownload_title(ctx context.Context, field graphql.CollectedField, obj *models.MediaDownload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6045,6 +6141,120 @@ func (ec *executionContext) fieldContext_Mutation_favoriteMedia(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_favoriteMedia_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_renameMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_renameMedia(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RenameMedia(ctx, fc.Args["mediaId"].(int), fc.Args["newName"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal *models.Media
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Media) graphql.Marshaler {
+			return ec.marshalNMedia2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐMedia(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_renameMedia(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Media(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_renameMedia_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteMedia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteMedia(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteMedia(ctx, fc.Args["mediaId"].(int))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteMedia(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteMedia_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12080,6 +12290,44 @@ func (ec *executionContext) _Media(ctx context.Context, sel ast.SelectionSet, ob
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "viewerCanUpload":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Media_viewerCanUpload(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.IsDeferred() {
+				deferredFieldSet.AddField(field)
+				fieldIndex := len(deferredFieldSet.Values) - 1
+				deferredFieldSet.Concurrently(fieldIndex, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, deferredFieldSet)
+				})
+
+				for _, deferrable := range field.Deferrables {
+					view, ok := deferLabelToView[deferrable.Label]
+					if !ok {
+						view = deferredFieldSet.NewView()
+						deferLabelToView[deferrable.Label] = view
+					}
+					view.AddIndices(fieldIndex)
+				}
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12400,6 +12648,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "favoriteMedia":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_favoriteMedia(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "renameMedia":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_renameMedia(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteMedia":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteMedia(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
