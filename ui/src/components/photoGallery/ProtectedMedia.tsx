@@ -4,25 +4,11 @@ import { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { BlurhashCanvas } from 'react-blurhash'
-import { isNil } from '../../helpers/utils'
+import { getProtectedUrl, isNil } from '../../helpers/utils'
 
 const isNativeLazyLoadSupported = 'loading' in document.createElement('img')
 const placeholder =
   'data:image/gif;base64,R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
-
-const getProtectedUrl = (url?: string) => {
-  if (url == undefined) return undefined
-
-  const imgUrl = new URL(url, location.origin)
-
-  const tokenRegex = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-  if (tokenRegex) {
-    const token = tokenRegex[1]
-    imgUrl.searchParams.set('token', token)
-  }
-
-  return imgUrl.href
-}
 
 export interface ProtectedImageProps
   extends Omit<
