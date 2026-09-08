@@ -151,13 +151,28 @@ func saveOneUploadedFile(album *models.Album, relPath string, header *multipart.
 		os.Remove(tmpPath)
 		return uploadFileResult{Path: relPath, Status: "error", Reason: "write failed"}
 	}
-	dst.Close()
+	// A delayed write failure (e.g. a full disk) can surface only here, not
+	// from io.Copy - check it rather than accepting a possibly-truncated file.
+	if err := dst.Close(); err != nil {
+		os.Remove(tmpPath)
+		return uploadFileResult{Path: relPath, Status: "error", Reason: "could not finalize write"}
+	}
 
 	// Same acceptance rule the scanner itself uses (MIME sniffed from
 	// content, not the client-declared type or file extension).
 	if !media_type.GetMediaType(tmpPath).IsSupported() {
 		os.Remove(tmpPath)
 		return uploadFileResult{Path: relPath, Status: "rejected", Reason: "unsupported file type"}
+	}
+
+	// os.Rename would silently overwrite an existing file at destPath -
+	// reject the upload instead of clobbering a library file already there.
+	if _, err := os.Stat(destPath); err == nil {
+		os.Remove(tmpPath)
+		return uploadFileResult{Path: relPath, Status: "rejected", Reason: "a file with that name already exists"}
+	} else if !os.IsNotExist(err) {
+		os.Remove(tmpPath)
+		return uploadFileResult{Path: relPath, Status: "error", Reason: "could not check destination path"}
 	}
 
 	if err := os.Rename(tmpPath, destPath); err != nil {

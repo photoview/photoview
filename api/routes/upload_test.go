@@ -119,6 +119,28 @@ func TestUploadRoute(t *testing.T) {
 		assert.NoError(t, statErr)
 	})
 
+	t.Run("uploading over an existing file is rejected, not overwritten", func(t *testing.T) {
+		existingPath := filepath.Join(albumPath, "existing.jpg")
+		assert.NoError(t, os.WriteFile(existingPath, []byte("original content"), 0o644))
+
+		req := buildUploadRequest(t, album.ID, map[string][]byte{"existing.jpg": validJPEGBytes(t)})
+		req = req.WithContext(auth.AddUserToContext(req.Context(), uploader))
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var resp uploadResponse
+		assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+		if assert.Len(t, resp.Results, 1) {
+			assert.Equal(t, "rejected", resp.Results[0].Status)
+		}
+
+		onDisk, err := os.ReadFile(existingPath)
+		assert.NoError(t, err)
+		assert.Equal(t, "original content", string(onDisk), "existing file must not be overwritten")
+	})
+
 	t.Run("whole-folder upload creates intermediate directories", func(t *testing.T) {
 		req := buildUploadRequest(t, album.ID, map[string][]byte{
 			"Vacation/Day1/beach.jpg": validJPEGBytes(t),
