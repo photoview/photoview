@@ -241,6 +241,7 @@ const SidebarContent = ({ media, hidePreview }: SidebarContentProps) => {
       {media.viewerCanUpload && media.path && mediaAlbum && (
         <div className="mt-8">
           <SidebarMediaManage
+            key={media.id}
             mediaId={media.id}
             currentFileName={media.path.split('/').pop() ?? media.path}
             albumId={mediaAlbum.id}
