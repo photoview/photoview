@@ -172,7 +172,12 @@ const UserPreferences = () => {
     data?.myUserPreferences.showHiddenAlbums ?? false
 
   const [unhideAllAlbums, { loading: unhideAllLoading }] =
-    useMutation<unhideAllAlbums>(UNHIDE_ALL_ALBUMS)
+    useMutation<unhideAllAlbums>(UNHIDE_ALL_ALBUMS, {
+      // The album tree only shows unhidden albums by default - without a
+      // refetch, restored albums stay filtered out of an already-loaded
+      // tree even though the mutation succeeded.
+      refetchQueries: ['albumTreeRootQuery', 'albumTreeSubAlbumsQuery'],
+    })
 
   const [searchResultLimitInput, setSearchResultLimitInput] = useState('')
 
