@@ -12,6 +12,7 @@ import {
   urlPresentModeSetupHook,
 } from '../../components/photoGallery/mediaGalleryReducer'
 import useURLParameters from '../../hooks/useURLParameters'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 import {
   searchPageQuery,
   searchPageQueryVariables,
@@ -21,11 +22,17 @@ import {
 const SEARCH_PAGE_QUERY = gql`
   ${MEDIA_GALLERY_FRAGMENT}
 
-  query searchPageQuery($query: String!) {
-    search(query: $query, limitAlbums: 0, limitMedia: 0) {
+  query searchPageQuery($query: String!, $showHidden: Boolean) {
+    search(
+      query: $query
+      limitAlbums: 0
+      limitMedia: 0
+      showHidden: $showHidden
+    ) {
       albums {
         id
         title
+        viewerHidden
         thumbnail {
           id
           thumbnail {
@@ -112,12 +119,13 @@ const SearchPage = () => {
   const { t } = useTranslation()
   const urlParams = useURLParameters()
   const query = urlParams.getParam('q') ?? ''
+  const showHidden = useShowHiddenAlbums()
 
   const { data, loading, error } = useQuery<
     searchPageQuery,
     searchPageQueryVariables
   >(SEARCH_PAGE_QUERY, {
-    variables: { query },
+    variables: { query, showHidden },
     skip: query.trim() === '',
   })
 

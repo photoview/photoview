@@ -7,6 +7,8 @@ import {
   saveSharePassword,
   clearSharePassword,
   getSharePassword,
+  readStoredSearchQuery,
+  writeStoredSearchQuery,
 } from './authentication'
 
 function resetCookies() {
@@ -33,6 +35,15 @@ describe('helpers/authentication', () => {
 
     expect(authToken()).toBeUndefined()
     expect(document.cookie).toEqual('')
+  })
+
+  test('clearing the auth token also clears a stored search query, so the next logged-in account cannot inherit it', function () {
+    writeStoredSearchQuery('some previous search')
+    expect(readStoredSearchQuery()).toEqual('some previous search')
+
+    clearTokenCookie()
+
+    expect(readStoredSearchQuery()).toEqual('')
   })
 
   test('share token cookie operations', function () {

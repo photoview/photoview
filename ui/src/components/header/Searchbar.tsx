@@ -13,10 +13,25 @@ import {
 } from './__generated__/searchQuery'
 import { searchbarUserPreferences } from './__generated__/searchbarUserPreferences'
 import classNames from 'classnames'
+import {
+  readStoredSearchQuery,
+  writeStoredSearchQuery,
+} from '../../helpers/authentication'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 
 const SEARCH_QUERY = gql`
-  query searchQuery($query: String!, $limitMedia: Int, $limitAlbums: Int) {
-    search(query: $query, limitMedia: $limitMedia, limitAlbums: $limitAlbums) {
+  query searchQuery(
+    $query: String!
+    $limitMedia: Int
+    $limitAlbums: Int
+    $showHidden: Boolean
+  ) {
+    search(
+      query: $query
+      limitMedia: $limitMedia
+      limitAlbums: $limitAlbums
+      showHidden: $showHidden
+    ) {
       query
       albums {
         id
@@ -54,28 +69,6 @@ const SearchWrapper = styled.div.attrs({
   className: 'w-full max-w-xs lg:relative',
 })``
 
-// Every page wraps itself in its own <Layout>, so navigating between page
-// types (e.g. Timeline -> Album) unmounts and remounts the header, wiping
-// any local component state. Session storage survives that remount, so the
-// typed query is still there if the user navigates back to it.
-const SEARCH_QUERY_STORAGE_KEY = 'searchbar.query'
-
-const readStoredQuery = (): string => {
-  try {
-    return sessionStorage.getItem(SEARCH_QUERY_STORAGE_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
-
-const writeStoredQuery = (query: string) => {
-  try {
-    sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, query)
-  } catch {
-    // Ignore storage errors (e.g. private browsing with storage disabled)
-  }
-}
-
 const SearchBar = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -83,19 +76,18 @@ const SearchBar = () => {
   const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
     SEARCHBAR_USER_PREFERENCES_QUERY
   )
+  const showHidden = useShowHiddenAlbums()
+  const showHiddenRef = useRef(showHidden)
   const searchResultLimit =
     userPrefsData?.myUserPreferences.searchResultLimit ?? undefined
   const searchResultLimitRef = useRef(searchResultLimit)
-  useEffect(() => {
-    searchResultLimitRef.current = searchResultLimit
-  }, [searchResultLimit])
 
   const { setQuery: setTreeQuery } = useContext(AlbumTreeSearchContext)
 
-  const [query, setQueryState] = useState(readStoredQuery)
+  const [query, setQueryState] = useState(readStoredSearchQuery)
   const setQuery = (value: string) => {
     setQueryState(value)
-    writeStoredQuery(value)
+    writeStoredSearchQuery(value)
   }
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -111,6 +103,7 @@ const SearchBar = () => {
           query,
           limitMedia: searchResultLimitRef.current,
           limitAlbums: searchResultLimitRef.current,
+          showHidden: showHiddenRef.current,
         },
       })
       setFetched(true)
@@ -121,6 +114,34 @@ const SearchBar = () => {
       debouncedFetch.current?.cancel()
     }
   }, [])
+
+  useEffect(() => {
+    showHiddenRef.current = showHidden
+  }, [showHidden])
+
+  useEffect(() => {
+    const limitJustResolved =
+      searchResultLimitRef.current === undefined &&
+      searchResultLimit !== undefined
+    searchResultLimitRef.current = searchResultLimit
+
+    // The preference query can still be in flight when the very first
+    // search fires (debounced 250ms after typing). If it resolves after
+    // that, the already-fired search stays capped at the server's default
+    // limit forever, since updating the ref alone doesn't rerun it - so
+    // a saved "unlimited" (0) preference would silently show only 10
+    // results. Re-issue the current search once the real limit is known.
+    if (limitJustResolved && fetched && query.trim() !== '') {
+      fetchSearches({
+        variables: {
+          query: query.trim(),
+          limitMedia: searchResultLimit,
+          limitAlbums: searchResultLimit,
+          showHidden: showHiddenRef.current,
+        },
+      })
+    }
+  }, [searchResultLimit, fetched, query, fetchSearches])
 
   const fetchEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()
@@ -208,7 +229,7 @@ const SearchBar = () => {
     return () => {
       document.removeEventListener('keydown', keydownEvent)
     }
-  }, [searchData, selectedItem, query, navigate])
+  }, [searchData, selectedItem, query, navigate, expanded])
 
   let results = null
   if (query.trim().length > 0 && fetched) {
