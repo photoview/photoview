@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
@@ -42,7 +42,26 @@ const PresentView = ({
   dispatchMedia,
   disableSaveCloseInHistory,
 }: PresentViewProps) => {
-  const { updateSidebar } = useContext(SidebarContext)
+  const { updateSidebar, content: sidebarContent } = useContext(SidebarContext)
+  const [infoOpen, setInfoOpen] = useState(false)
+
+  useEffect(() => {
+    // The sidebar was closed some other way (e.g. its own close button),
+    // so navigating to another image shouldn't reopen it.
+    if (sidebarContent === null) {
+      setInfoOpen(false)
+    }
+  }, [sidebarContent])
+
+  useEffect(() => {
+    // Keep an already-open info panel in sync with the active image - it
+    // was built from activeMedia at the moment the panel was opened, and
+    // otherwise keeps showing that same image after navigating away.
+    if (infoOpen) {
+      updateSidebar(<MediaSidebar media={activeMedia} />)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMedia])
 
   useEffect(() => {
     const keyDownEvent = (e: KeyboardEvent) => {
@@ -80,9 +99,10 @@ const PresentView = ({
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}
         disableSaveCloseInHistory
-        onInfoClick={() =>
+        onInfoClick={() => {
+          setInfoOpen(true)
           updateSidebar(<MediaSidebar media={activeMedia} />)
-        }
+        }}
       >
         <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
       </PresentNavigationOverlay>
