@@ -204,12 +204,21 @@ func TestAlbumCover(t *testing.T) {
 		return
 	}
 
-	if !assert.NoError(t, db.Model(&regularUser).Association("Albums").Append(&rootAlbum)) {
+	// Explicit Upload-level grants, not a plain association append (which
+	// would default to Read) - setting/resetting an album cover requires
+	// Upload access.
+	if !assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: regularUser.ID, AlbumID: rootAlbum.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error) {
 		return
 	}
 
-	if !assert.NoError(t, db.Model(&regularUser).Association("Albums").Append(&children)) {
-		return
+	for _, child := range children {
+		if !assert.NoError(t, db.Create(&models.UserAlbums{
+			UserID: regularUser.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelUpload,
+		}).Error) {
+			return
+		}
 	}
 
 	// Single test since we cannot rely on the tests being performed sequentially
