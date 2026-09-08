@@ -96,7 +96,16 @@ $ npm run genSchemaTypes   # regenerate GraphQL TS types from src/**/*.graphql q
   A grant's `GrantedByUserID` is nil for a root/admin-configured grant (an "owner") or the granting
   owner's user ID for a peer share (`actions.GrantAlbumAccess`/`RevokeAlbumAccess`,
   `graphql/models/actions/sharing_actions.go`) — only an owner may share further, capped at their
-  own level. Known gap: `MoveAlbum` (`graphql/resolvers/upload.go`) reparents an album by updating
+  own level. Since `UserAlbums` has exactly one row per `(user, album)`, `GrantAlbumAccess`/
+  `RevokeAlbumAccess` refuse to act (for non-admin actors) when the target already holds a grant
+  anywhere in the subtree that traces to a different grantor, so a peer share can no longer
+  silently clobber an admin's direct grant or another owner's independent share. Known gaps (see
+  `HANDOFF_open_findings.md` for the full writeup): (1) that check only covers the two sharing
+  actions — `PropagateAlbumLevel`/`RevokeAlbumLevel` themselves (`graphql/models/album.go`) still
+  unconditionally overwrite/delete a single row with no memory of which source is being propagated,
+  so an *admin* grant, or the scanner's own copy-parent-grants-onto-new-children step, can still
+  clobber an unrelated grant the same way — a full fix means tracking grant provenance instead of a
+  single flat row. (2) `MoveAlbum` (`graphql/resolvers/upload.go`) reparents an album by updating
   `ParentAlbumID` only, without re-running `PropagateAlbumLevel`/`RevokeAlbumLevel` — a user only
   granted via the old parent keeps stale access to the moved subtree, and a user granted on the new
   parent doesn't inherit access to what was just moved in.
@@ -153,6 +162,21 @@ $ npm run genSchemaTypes   # regenerate GraphQL TS types from src/**/*.graphql q
   that the scanner workers process asynchronously (queueing further discovery/scan jobs themselves),
   rather than the resolver doing the full walk inline — a real change to the job/queue model
   (`ScannerJob`, job dedup in `queue.go`) affecting both entry points, not a quick patch.
+- **Album-tree filtering can fan out an unbounded number of requests.** `AlbumTreeNode`
+  (`ui/src/components/albumTree/AlbumTreeNode.tsx`) treats every node as expanded while a filter is
+  active (`isFiltering` → `isExpanded = true`) and fires its own `fetchSubAlbums()` per node
+  (line ~92) via a `useEffect` on mount/expand. A broad search that matches deep into a large tree
+  therefore queues one GraphQL request per matched node *and* every one of its ancestors, all at
+  once — there's no batching of the visible node set into a single request. A proper fix likely
+  means having the search result (or a dedicated batched query) return enough tree data upfront
+  that filtered nodes don't each need their own round trip, rather than patching the per-node fetch
+  itself.
+- **Uploads send the credentialed cookie without enforcing HTTPS.** `SidebarAlbumUpload.tsx` sets
+  `xhr.withCredentials = true` so the `auth-token` cookie rides along with the upload request, but
+  neither the cookie (set client-side via `js-cookie`, not `Secure`-flagged) nor `API_ENDPOINT` are
+  checked to require HTTPS. On an HTTP deployment this is consistent with the rest of the app (the
+  cookie is already sent over HTTP everywhere else), so the fix is deployment-policy-shaped rather
+  than a pure code change — see `HANDOFF_open_findings.md`.
 
 ## PR expectations (from CONTRIBUTING.md)
 
