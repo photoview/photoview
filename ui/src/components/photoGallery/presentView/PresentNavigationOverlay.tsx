@@ -96,10 +96,17 @@ const PresentNavigationOverlay = ({
   }, [])
 
   const handlers = useSwipeable({
+    onSwipedDown: () => {
+      if (disableSaveCloseInHistory === true) {
+        dispatchMedia({ type: 'closePresentMode' })
+      } else {
+        closePresentModeAction({ dispatchMedia })
+      }
+    },
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
     onSwipedRight: () => dispatchMedia({ type: 'previousImage' }),
     preventScrollOnSwipe: false,
-    trackMouse: false,
+    trackMouse: true,
   })
 
   return (
@@ -109,38 +116,38 @@ const PresentNavigationOverlay = ({
         onMouseMove.current && onMouseMove.current()
       }}
     >
-    <div {...handlers}>
-      {children}
-      <NavigationButton
-        aria-label="Previous image"
-        className={hide ? 'hide' : undefined}
-        align="left"
-        onClick={() => dispatchMedia({ type: 'previousImage' })}
-      >
-        <PrevIcon />
-      </NavigationButton>
-      <NavigationButton
-        aria-label="Next image"
-        className={hide ? 'hide' : undefined}
-        align="right"
-        onClick={() => dispatchMedia({ type: 'nextImage' })}
-      >
-        <NextIcon />
-      </NavigationButton>
-      <ExitButton
-        aria-label="Exit presentation mode"
-        className={hide ? 'hide' : undefined}
-        onClick={() => {
-          if (disableSaveCloseInHistory === true) {
-            dispatchMedia({ type: 'closePresentMode' })
-          } else {
-            closePresentModeAction({ dispatchMedia })
-          }
-        }}
-      >
-        <ExitIcon />
-      </ExitButton>
-    </div>
+      <div {...handlers} data-testid="swipe-component">
+        {children}
+        <NavigationButton
+          aria-label="Previous image"
+          className={hide ? 'hide' : undefined}
+          align="left"
+          onClick={() => dispatchMedia({ type: 'previousImage' })}
+        >
+          <PrevIcon />
+        </NavigationButton>
+        <NavigationButton
+          aria-label="Next image"
+          className={hide ? 'hide' : undefined}
+          align="right"
+          onClick={() => dispatchMedia({ type: 'nextImage' })}
+        >
+          <NextIcon />
+        </NavigationButton>
+        <ExitButton
+          aria-label="Exit presentation mode"
+          className={hide ? 'hide' : undefined}
+          onClick={() => {
+            if (disableSaveCloseInHistory === true) {
+              dispatchMedia({ type: 'closePresentMode' })
+            } else {
+              closePresentModeAction({ dispatchMedia })
+            }
+          }}
+        >
+          <ExitIcon />
+        </ExitButton>
+      </div>
     </StyledOverlayContainer>
   )
 }
