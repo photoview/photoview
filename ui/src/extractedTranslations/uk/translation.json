@@ -198,6 +198,7 @@
     "scanner": {
       "description": "Сканує всіх користувачів на наявність нових або оновлених медіафайлів",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

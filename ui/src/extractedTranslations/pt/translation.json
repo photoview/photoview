@@ -195,6 +195,7 @@
     "scanner": {
       "description": "Irá procurar todos os utilizadores para encontrar mídia nova ou atualizada",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

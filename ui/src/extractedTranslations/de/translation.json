@@ -192,6 +192,7 @@
     "scanner": {
       "description": "Neue und aktualisierte Medien aller Benutzer scannen",
       "queue_status": {
+        "cancel": "Abbrechen",
         "queued": "Wartet",
         "running": "Läuft",
         "title": "Scan-Warteschlange"

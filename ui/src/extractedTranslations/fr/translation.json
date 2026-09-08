@@ -195,6 +195,7 @@
     "scanner": {
       "description": "Analyser tous les utilisateurs pour détecter de nouveaux médias ou des médias mis à jour",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

@@ -192,6 +192,7 @@
     "scanner": {
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

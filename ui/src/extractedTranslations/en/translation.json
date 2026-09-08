@@ -192,6 +192,7 @@
     "scanner": {
       "description": "Will scan all users for new or updated media",
       "queue_status": {
+        "cancel": "Cancel",
         "queued": "Queued",
         "running": "Running",
         "title": "Scan queue"

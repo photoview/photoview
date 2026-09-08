@@ -189,6 +189,7 @@
     "scanner": {
       "description": "將會掃描所有使用者以取得新增或更新的媒體",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

@@ -192,6 +192,7 @@
     "scanner": {
       "description": "Scant alle gebruikers op nieuwe of gewijzigde media",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

@@ -198,6 +198,7 @@
     "scanner": {
       "description": "Сканирование всех пользователей на наличие обновлённых или новых медиа",
       "queue_status": {
+        "cancel": "",
         "queued": "",
         "running": "",
         "title": ""

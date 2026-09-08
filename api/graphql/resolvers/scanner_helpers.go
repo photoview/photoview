@@ -11,3 +11,8 @@ import "github.com/photoview/photoview/api/scanner/scanner_queue"
 // tests can exercise ScannerQueueStatus's permission filtering without
 // touching the real, process-global scanner queue.
 var getScannerQueueStatus = scanner_queue.GetQueueStatus
+
+// cancelScanJob is a seam over scanner_queue.CancelJob so tests can
+// exercise CancelScanJob's permission checks without touching the real,
+// process-global scanner queue.
+var cancelScanJob = scanner_queue.CancelJob

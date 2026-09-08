@@ -1,5 +1,5 @@
 import React from 'react'
-import { gql, useQuery } from '@apollo/client'
+import { gql, useMutation, useQuery } from '@apollo/client'
 import { useTranslation } from 'react-i18next'
 import { InputLabelTitle } from './SettingsPage'
 import { ScannerJobStatus } from '../../__generated__/globalTypes'
@@ -7,6 +7,11 @@ import {
   scannerQueueStatusQuery,
   scannerQueueStatusQuery_scannerQueueStatus,
 } from './__generated__/scannerQueueStatusQuery'
+import {
+  cancelScanJobMutation,
+  cancelScanJobMutationVariables,
+} from './__generated__/cancelScanJobMutation'
+import { ReactComponent as DismissIcon } from '../../components/messages/icons/dismissIcon.svg'
 
 const SCANNER_QUEUE_STATUS_QUERY = gql`
   query scannerQueueStatusQuery {
@@ -24,6 +29,12 @@ const SCANNER_QUEUE_STATUS_QUERY = gql`
   }
 `
 
+const CANCEL_SCAN_JOB_MUTATION = gql`
+  mutation cancelScanJobMutation($albumId: ID!) {
+    cancelScanJob(albumId: $albumId)
+  }
+`
+
 const albumBreadcrumb = (
   item: scannerQueueStatusQuery_scannerQueueStatus
 ): string => {
@@ -32,6 +43,40 @@ const albumBreadcrumb = (
     .reverse()
     .map(a => a.title)
   return [...ancestors, item.album.title].join(' / ')
+}
+
+type QueueRowProps = {
+  item: scannerQueueStatusQuery_scannerQueueStatus
+  statusLabel: string
+  statusClassName: string
+}
+
+const QueueRow = ({ item, statusLabel, statusClassName }: QueueRowProps) => {
+  const { t } = useTranslation()
+  const [cancelScanJob, { loading }] = useMutation<
+    cancelScanJobMutation,
+    cancelScanJobMutationVariables
+  >(CANCEL_SCAN_JOB_MUTATION)
+
+  return (
+    <li className="flex justify-between items-center gap-4 py-1 border-b border-gray-100 dark:border-dark-border2">
+      <span className="truncate">{albumBreadcrumb(item)}</span>
+      <span className="flex items-center gap-2 shrink-0">
+        <span className={statusClassName}>{statusLabel}</span>
+        <button
+          title={t('settings.scanner.queue_status.cancel', 'Cancel')}
+          aria-label={t('settings.scanner.queue_status.cancel', 'Cancel')}
+          disabled={loading}
+          onClick={() =>
+            cancelScanJob({ variables: { albumId: item.album.id } })
+          }
+          className="p-1 disabled:opacity-40"
+        >
+          <DismissIcon className="w-[10px] h-[10px] text-gray-500 dark:text-gray-300" />
+        </button>
+      </span>
+    </li>
+  )
 }
 
 const ScannerQueueStatus = () => {
@@ -54,26 +99,20 @@ const ScannerQueueStatus = () => {
       </InputLabelTitle>
       <ul className="text-sm mt-2 max-h-64 overflow-y-auto">
         {running.map(item => (
-          <li
+          <QueueRow
             key={item.album.id}
-            className="flex justify-between gap-4 py-1 border-b border-gray-100 dark:border-dark-border2"
-          >
-            <span className="truncate">{albumBreadcrumb(item)}</span>
-            <span className="text-green-600 shrink-0">
-              {t('settings.scanner.queue_status.running', 'Running')}
-            </span>
-          </li>
+            item={item}
+            statusLabel={t('settings.scanner.queue_status.running', 'Running')}
+            statusClassName="text-green-600"
+          />
         ))}
         {queued.map(item => (
-          <li
+          <QueueRow
             key={item.album.id}
-            className="flex justify-between gap-4 py-1 border-b border-gray-100 dark:border-dark-border2"
-          >
-            <span className="truncate">{albumBreadcrumb(item)}</span>
-            <span className="text-gray-400 shrink-0">
-              {t('settings.scanner.queue_status.queued', 'Queued')}
-            </span>
-          </li>
+            item={item}
+            statusLabel={t('settings.scanner.queue_status.queued', 'Queued')}
+            statusClassName="text-gray-400"
+          />
         ))}
       </ul>
     </div>

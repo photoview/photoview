@@ -86,6 +86,31 @@ func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.
 	}, nil
 }
 
+// CancelScanJob is the resolver for the cancelScanJob field.
+func (r *mutationResolver) CancelScanJob(ctx context.Context, albumID int) (bool, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return false, fmt.Errorf("get album from database: %w", err)
+	}
+
+	canCancel, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
+	if err != nil {
+		return false, err
+	}
+	if !canCancel {
+		return false, auth.ErrUnauthorized
+	}
+
+	return cancelScanJob(albumID), nil
+}
+
 // SetPeriodicScanInterval is the resolver for the setPeriodicScanInterval field.
 func (r *mutationResolver) SetPeriodicScanInterval(ctx context.Context, interval int) (int, error) {
 	db := r.DB(ctx)

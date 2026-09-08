@@ -127,3 +127,76 @@ func TestScannerQueueStatus(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestCancelScanJob(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	var cancelledAlbumIDs []int
+	origCancelScanJob := cancelScanJob
+	cancelScanJob = func(albumID int) bool {
+		cancelledAlbumIDs = append(cancelledAlbumIDs, albumID)
+		return true
+	}
+	t.Cleanup(func() { cancelScanJob = origCancelScanJob })
+
+	uploader, err := models.RegisterUser(db, "cancel_uploader", nil, false)
+	assert.NoError(t, err)
+	readOnlyUser, err := models.RegisterUser(db, "cancel_read_only", nil, false)
+	assert.NoError(t, err)
+	strangerUser, err := models.RegisterUser(db, "cancel_stranger", nil, false)
+	assert.NoError(t, err)
+	admin, err := models.RegisterUser(db, "cancel_admin", nil, true)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "cancel_album", Path: "/photos/cancel_album"}
+	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: uploader.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: readOnlyUser.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+
+	r := &mutationResolver{Resolver: &Resolver{database: db}}
+
+	t.Run("user with Upload level can cancel the job", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		ctx := auth.AddUserToContext(context.Background(), uploader)
+		ok, err := r.CancelScanJob(ctx, album.ID)
+		assert.NoError(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, []int{album.ID}, cancelledAlbumIDs)
+	})
+
+	t.Run("user with only Read level cannot cancel the job", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		ctx := auth.AddUserToContext(context.Background(), readOnlyUser)
+		_, err := r.CancelScanJob(ctx, album.ID)
+		assert.Error(t, err)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+
+	t.Run("user with no access at all cannot cancel the job", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		ctx := auth.AddUserToContext(context.Background(), strangerUser)
+		_, err := r.CancelScanJob(ctx, album.ID)
+		assert.Error(t, err)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+
+	t.Run("admin can cancel the job regardless of grants", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		ctx := auth.AddUserToContext(context.Background(), admin)
+		ok, err := r.CancelScanJob(ctx, album.ID)
+		assert.NoError(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, []int{album.ID}, cancelledAlbumIDs)
+	})
+
+	t.Run("unauthenticated request is rejected", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		_, err := r.CancelScanJob(context.Background(), album.ID)
+		assert.Error(t, err)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+}
