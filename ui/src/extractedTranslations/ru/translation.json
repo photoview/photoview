@@ -204,6 +204,7 @@
       "description": "Сканирование всех пользователей на наличие обновлённых или новых медиа",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

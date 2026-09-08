@@ -161,6 +161,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser               func(childComplexity int, username string, password string) int
+		CancelAllScanJobs           func(childComplexity int) int
 		CancelScanJob               func(childComplexity int, albumID int) int
 		ChangeUserPreferences       func(childComplexity int, language *string, searchResultLimit *int, showAlbumTree *bool, showHiddenAlbums *bool) int
 		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
@@ -374,6 +375,7 @@ type MutationResolver interface {
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
 	ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error)
 	CancelScanJob(ctx context.Context, albumID int) (bool, error)
+	CancelAllScanJobs(ctx context.Context) (int, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string, label *string) (*models.ShareToken, error)
@@ -938,6 +940,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+	case "Mutation.cancelAllScanJobs":
+		if e.ComplexityRoot.Mutation.CancelAllScanJobs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.CancelAllScanJobs(childComplexity), true
 	case "Mutation.cancelScanJob":
 		if e.ComplexityRoot.Mutation.CancelScanJob == nil {
 			break
@@ -6728,6 +6736,42 @@ func (ec *executionContext) fieldContext_Mutation_cancelScanJob(ctx context.Cont
 		return fc, err
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_cancelAllScanJobs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_cancelAllScanJobs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().CancelAllScanJobs(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal int
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_cancelAllScanJobs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -13155,6 +13199,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "cancelScanJob":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_cancelScanJob(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cancelAllScanJobs":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelAllScanJobs(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

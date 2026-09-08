@@ -11,9 +11,11 @@ import {
   cancelScanJobMutation,
   cancelScanJobMutationVariables,
 } from './__generated__/cancelScanJobMutation'
+import { cancelAllScanJobsMutation } from './__generated__/cancelAllScanJobsMutation'
 import { ReactComponent as DismissIcon } from '../../components/messages/icons/dismissIcon.svg'
+import { Button } from '../../primitives/form/Input'
 
-const SCANNER_QUEUE_STATUS_QUERY = gql`
+export const SCANNER_QUEUE_STATUS_QUERY = gql`
   query scannerQueueStatusQuery {
     scannerQueueStatus {
       status
@@ -32,6 +34,12 @@ const SCANNER_QUEUE_STATUS_QUERY = gql`
 const CANCEL_SCAN_JOB_MUTATION = gql`
   mutation cancelScanJobMutation($albumId: ID!) {
     cancelScanJob(albumId: $albumId)
+  }
+`
+
+export const CANCEL_ALL_SCAN_JOBS_MUTATION = gql`
+  mutation cancelAllScanJobsMutation {
+    cancelAllScanJobs
   }
 `
 
@@ -79,12 +87,16 @@ const QueueRow = ({ item, statusLabel, statusClassName }: QueueRowProps) => {
   )
 }
 
-const ScannerQueueStatus = () => {
+export const ScannerQueueStatus = () => {
   const { t } = useTranslation()
-  const { data } = useQuery<scannerQueueStatusQuery>(
+  const { data, refetch } = useQuery<scannerQueueStatusQuery>(
     SCANNER_QUEUE_STATUS_QUERY,
     { pollInterval: 2000 }
   )
+  const [cancelAllScanJobs, { loading: cancellingAll }] =
+    useMutation<cancelAllScanJobsMutation>(CANCEL_ALL_SCAN_JOBS_MUTATION, {
+      onCompleted: () => refetch(),
+    })
 
   const items = data?.scannerQueueStatus ?? []
   if (items.length === 0) return null
@@ -94,9 +106,14 @@ const ScannerQueueStatus = () => {
 
   return (
     <div>
-      <InputLabelTitle>
-        {t('settings.scanner.queue_status.title', 'Scan queue')}
-      </InputLabelTitle>
+      <div className="flex justify-between items-center">
+        <InputLabelTitle>
+          {t('settings.scanner.queue_status.title', 'Scan queue')}
+        </InputLabelTitle>
+        <Button onClick={() => cancelAllScanJobs()} disabled={cancellingAll}>
+          {t('settings.scanner.queue_status.cancel_all', 'Cancel all')}
+        </Button>
+      </div>
       <ul className="text-sm mt-2 max-h-64 overflow-y-auto">
         {running.map(item => (
           <QueueRow

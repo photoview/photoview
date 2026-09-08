@@ -202,3 +202,51 @@ func TestScannerQueueCancelJob(t *testing.T) {
 		}
 	})
 }
+
+func TestScannerQueueCancelAllJobs(t *testing.T) {
+
+	t.Run("cancels queued and running jobs and reports how many", func(t *testing.T) {
+		runningJob := makeScannerJob(100)
+		queuedJobA := makeScannerJob(20)
+		queuedJobB := makeScannerJob(42)
+
+		mockScannerQueue := ScannerQueue{
+			idle_chan:   make(chan bool, 1),
+			in_progress: []ScannerJob{runningJob},
+			up_next:     []ScannerJob{queuedJobA, queuedJobB},
+			db:          nil,
+		}
+
+		cancelled := mockScannerQueue.CancelAllJobs()
+		if cancelled != 3 {
+			t.Errorf("Expected 3 jobs to be cancelled, got %d", cancelled)
+		}
+
+		if len(mockScannerQueue.up_next) != 0 {
+			t.Errorf("Expected up_next to be emptied, got %+v", mockScannerQueue.up_next)
+		}
+
+		if len(mockScannerQueue.in_progress) != 1 {
+			t.Errorf("Expected in_progress to stay in place until jobs exit on their own, got %+v", mockScannerQueue.in_progress)
+		}
+
+		for _, job := range []ScannerJob{runningJob, queuedJobA, queuedJobB} {
+			if job.ctx.Err() == nil {
+				t.Errorf("Expected job for album %d to have its context cancelled", job.ctx.GetAlbum().ID)
+			}
+		}
+	})
+
+	t.Run("an empty queue cancels nothing", func(t *testing.T) {
+		mockScannerQueue := ScannerQueue{
+			idle_chan:   make(chan bool, 1),
+			in_progress: []ScannerJob{},
+			up_next:     []ScannerJob{},
+			db:          nil,
+		}
+
+		if cancelled := mockScannerQueue.CancelAllJobs(); cancelled != 0 {
+			t.Errorf("Expected 0 jobs to be cancelled, got %d", cancelled)
+		}
+	})
+}

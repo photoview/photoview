@@ -201,6 +201,7 @@
       "description": "Irá procurar todos os utilizadores para encontrar mídia nova ou atualizada",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

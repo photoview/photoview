@@ -49,6 +49,15 @@ extend type Mutation {
   cancelScanJob(albumId: ID!): Boolean! @isAuthorized
 
   """
+  Cancel every scanner job currently queued or running, following the same
+  per-job semantics as cancelScanJob. Admins cancel the entire queue; other
+  users only cancel jobs for albums where they hold at least UPLOAD-level
+  access, the same requirement as cancelScanJob. Returns the number of jobs
+  cancelled.
+  """
+  cancelAllScanJobs: Int! @isAuthorized
+
+  """
   Set how often, in seconds, the server should automatically scan for new media,
   a value of 0 will disable periodic scans
   """

@@ -201,6 +201,7 @@
       "description": "Escaneará todos los usuarios para buscar archivos nuevos o actualizados",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

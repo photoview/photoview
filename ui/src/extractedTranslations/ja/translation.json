@@ -195,6 +195,7 @@
       "description": "すべてのユーザーに対して新しく追加または更新されたメディアをスキャンします",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

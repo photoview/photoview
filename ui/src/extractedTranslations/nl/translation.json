@@ -198,6 +198,7 @@
       "description": "Scant alle gebruikers op nieuwe of gewijzigde media",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

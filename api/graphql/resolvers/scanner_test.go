@@ -200,3 +200,91 @@ func TestCancelScanJob(t *testing.T) {
 		assert.Empty(t, cancelledAlbumIDs)
 	})
 }
+
+func TestCancelAllScanJobs(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	var cancelledAlbumIDs []int
+	origCancelScanJob := cancelScanJob
+	cancelScanJob = func(albumID int) bool {
+		cancelledAlbumIDs = append(cancelledAlbumIDs, albumID)
+		return true
+	}
+	t.Cleanup(func() { cancelScanJob = origCancelScanJob })
+
+	allJobsCancelled := 0
+	origCancelAllScanJobs := cancelAllScanJobs
+	cancelAllScanJobs = func() int {
+		allJobsCancelled++
+		return 7
+	}
+	t.Cleanup(func() { cancelAllScanJobs = origCancelAllScanJobs })
+
+	uploader, err := models.RegisterUser(db, "cancel_all_uploader", nil, false)
+	assert.NoError(t, err)
+	stranger, err := models.RegisterUser(db, "cancel_all_stranger", nil, false)
+	assert.NoError(t, err)
+	admin, err := models.RegisterUser(db, "cancel_all_admin", nil, true)
+	assert.NoError(t, err)
+
+	uploadableAlbum := models.Album{Title: "cancel_all_uploadable", Path: "/photos/cancel_all_uploadable"}
+	assert.NoError(t, db.Save(&uploadableAlbum).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: uploader.ID, AlbumID: uploadableAlbum.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
+
+	readOnlyAlbum := models.Album{Title: "cancel_all_read_only", Path: "/photos/cancel_all_read_only"}
+	assert.NoError(t, db.Save(&readOnlyAlbum).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: uploader.ID, AlbumID: readOnlyAlbum.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+
+	origGetQueueStatus := getScannerQueueStatus
+	getScannerQueueStatus = func() []models.ScannerQueueItem {
+		return []models.ScannerQueueItem{
+			{Album: &uploadableAlbum, Status: models.ScannerJobStatusRunning},
+			{Album: &readOnlyAlbum, Status: models.ScannerJobStatusQueued},
+		}
+	}
+	t.Cleanup(func() { getScannerQueueStatus = origGetQueueStatus })
+
+	r := &mutationResolver{Resolver: &Resolver{database: db}}
+
+	t.Run("admin cancels the whole queue via the fast path", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		allJobsCancelled = 0
+		ctx := auth.AddUserToContext(context.Background(), admin)
+		count, err := r.CancelAllScanJobs(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 7, count)
+		assert.Equal(t, 1, allJobsCancelled)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+
+	t.Run("non-admin only cancels jobs for albums with at least Upload level", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		allJobsCancelled = 0
+		ctx := auth.AddUserToContext(context.Background(), uploader)
+		count, err := r.CancelAllScanJobs(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count)
+		assert.Equal(t, 0, allJobsCancelled)
+		assert.Equal(t, []int{uploadableAlbum.ID}, cancelledAlbumIDs)
+	})
+
+	t.Run("user with no access anywhere cancels nothing", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		ctx := auth.AddUserToContext(context.Background(), stranger)
+		count, err := r.CancelAllScanJobs(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, count)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+
+	t.Run("unauthenticated request is rejected", func(t *testing.T) {
+		cancelledAlbumIDs = nil
+		_, err := r.CancelAllScanJobs(context.Background())
+		assert.Error(t, err)
+		assert.Empty(t, cancelledAlbumIDs)
+	})
+}

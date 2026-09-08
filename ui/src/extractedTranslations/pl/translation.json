@@ -204,6 +204,7 @@
       "description": "Skanuje wszystkich użytkowników w poszukiwaniu nowych lub zaktualizowanych mediów",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""

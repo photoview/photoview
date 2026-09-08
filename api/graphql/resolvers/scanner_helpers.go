@@ -16,3 +16,8 @@ var getScannerQueueStatus = scanner_queue.GetQueueStatus
 // exercise CancelScanJob's permission checks without touching the real,
 // process-global scanner queue.
 var cancelScanJob = scanner_queue.CancelJob
+
+// cancelAllScanJobs is a seam over scanner_queue.CancelAllJobs so tests can
+// exercise CancelAllScanJobs's admin path without touching the real,
+// process-global scanner queue.
+var cancelAllScanJobs = scanner_queue.CancelAllJobs

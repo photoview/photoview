@@ -195,6 +195,7 @@
       "description": "將掃描所有使用者的新媒體或更新媒體",
       "queue_status": {
         "cancel": "",
+        "cancel_all": "",
         "queued": "",
         "running": "",
         "title": ""
