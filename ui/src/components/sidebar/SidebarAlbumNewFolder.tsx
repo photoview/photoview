@@ -31,6 +31,9 @@ const SidebarAlbumNewFolder = ({ albumId }: SidebarAlbumNewFolderProps) => {
   >(CREATE_ALBUM_FOLDER_MUTATION, {
     refetchQueries: ['albumQuery'],
     onCompleted: () => setName(''),
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // `error` above already renders it.
+    onError: () => undefined,
   })
 
   return (
@@ -41,10 +44,7 @@ const SidebarAlbumNewFolder = ({ albumId }: SidebarAlbumNewFolderProps) => {
       <div className="mx-4 flex gap-2 items-start">
         <TextField
           className="flex-1"
-          placeholder={t(
-            'sidebar.album.new_folder.placeholder',
-            'Folder name'
-          )}
+          placeholder={t('sidebar.album.new_folder.placeholder', 'Folder name')}
           value={name}
           disabled={loading}
           onChange={e => setName(e.target.value)}

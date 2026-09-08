@@ -58,19 +58,28 @@ const SidebarAlbumManage = ({
   >(MOVE_ALBUM_MUTATION, {
     refetchQueries: ['albumQuery'],
     onCompleted: () => navigate(`/album/${destination}`),
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // moveError above already renders it, this just avoids the console
+    // warning.
+    onError: () => undefined,
   })
 
-  const [deleteAlbum, { loading: deleting, error: deleteError }] =
-    useMutation<deleteAlbum, deleteAlbumVariables>(DELETE_ALBUM_MUTATION, {
-      // No refetchQueries here: we're navigating away from the deleted
-      // album's own page below, and refetching its still-mounted albumQuery
-      // first would surface a harmless but confusing "album not found" error
-      // toast before that navigation completes.
-      onCompleted: () => {
-        updateSidebar(null)
-        navigate('/albums')
-      },
-    })
+  const [deleteAlbum, { loading: deleting, error: deleteError }] = useMutation<
+    deleteAlbum,
+    deleteAlbumVariables
+  >(DELETE_ALBUM_MUTATION, {
+    // No refetchQueries here: we're navigating away from the deleted
+    // album's own page below, and refetching its still-mounted albumQuery
+    // first would surface a harmless but confusing "album not found" error
+    // toast before that navigation completes.
+    onCompleted: () => {
+      updateSidebar(null)
+      navigate('/albums')
+    },
+    // Without this, a rejected mutation is an unhandled promise
+    // rejection - deleteError above already renders it.
+    onError: () => undefined,
+  })
 
   const destinationOptions = (data?.myAlbums ?? [])
     .filter(album => album.id !== albumId)
