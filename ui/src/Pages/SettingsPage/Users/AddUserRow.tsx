@@ -6,6 +6,7 @@ import Dropdown from '../../../primitives/form/Dropdown'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
 import { AlbumPermissionLevel } from '../../../__generated__/globalTypes'
+import { albumPermissionLevelOptions } from '../../../helpers/albumPermissions'
 import { createUser, createUserVariables } from './__generated__/createUser'
 import {
   userAddRootPath,
@@ -35,12 +36,6 @@ export const USER_ADD_ROOT_PATH_MUTATION = gql`
   }
 `
 
-const levelOptions = [
-  { value: AlbumPermissionLevel.READ, label: 'Read' },
-  { value: AlbumPermissionLevel.UPLOAD, label: 'Read + upload' },
-  { value: AlbumPermissionLevel.DELETE, label: 'Read + upload + delete' },
-]
-
 const initialState = {
   username: '',
   rootPath: '',
@@ -57,6 +52,7 @@ type AddUserRowProps = {
 
 const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
   const { t } = useTranslation()
+  const levelOptions = albumPermissionLevelOptions(t)
   const [state, setState] = useState(initialState)
 
   const finished = () => {

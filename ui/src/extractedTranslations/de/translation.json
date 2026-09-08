@@ -32,6 +32,11 @@
       "select_all": "Alle auswählen"
     }
   },
+  "album_permission_level": {
+    "delete": "Lesen + Hochladen + Löschen",
+    "read": "Lesen",
+    "upload": "Lesen + Hochladen"
+  },
   "album_tree": {
     "empty": "Noch keine Alben",
     "label": "Alben-Baum",
@@ -337,6 +342,7 @@
       },
       "set_cover": "Als Album Titelbild setzen",
       "sharing": {
+        "select_user": "Benutzer auswählen",
         "share": "Teilen",
         "title": "Geteilt mit"
       },

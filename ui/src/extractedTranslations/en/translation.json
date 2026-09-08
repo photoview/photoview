@@ -32,6 +32,11 @@
       "select_all": "Select all"
     }
   },
+  "album_permission_level": {
+    "delete": "Read + upload + delete",
+    "read": "Read",
+    "upload": "Read + upload"
+  },
   "album_tree": {
     "empty": "No albums yet",
     "label": "Album tree",
@@ -337,6 +342,7 @@
       },
       "set_cover": "Set as album cover photo",
       "sharing": {
+        "select_user": "Select a user",
         "share": "Share",
         "title": "Shared with"
       },

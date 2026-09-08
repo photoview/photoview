@@ -5,6 +5,7 @@ import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import { Button } from '../../primitives/form/Input'
 import Dropdown from '../../primitives/form/Dropdown'
 import { AlbumPermissionLevel } from '../../__generated__/globalTypes'
+import { albumPermissionLevelOptions } from '../../helpers/albumPermissions'
 import { albumPermissionsQuery } from './__generated__/albumPermissionsQuery'
 import {
   grantAlbumAccess,
@@ -56,18 +57,13 @@ export const REVOKE_ALBUM_ACCESS_MUTATION = gql`
   }
 `
 
-const levelOptions = [
-  { value: AlbumPermissionLevel.READ, label: 'Read' },
-  { value: AlbumPermissionLevel.UPLOAD, label: 'Read + upload' },
-  { value: AlbumPermissionLevel.DELETE, label: 'Read + upload + delete' },
-]
-
 type SidebarAlbumSharingProps = {
   albumId: string
 }
 
 const SidebarAlbumSharing = ({ albumId }: SidebarAlbumSharingProps) => {
   const { t } = useTranslation()
+  const levelOptions = albumPermissionLevelOptions(t)
 
   const [newUserId, setNewUserId] = useState('')
   const [newLevel, setNewLevel] = useState<AlbumPermissionLevel>(
@@ -87,13 +83,19 @@ const SidebarAlbumSharing = ({ albumId }: SidebarAlbumSharingProps) => {
       setNewUserId('')
       refetch()
     },
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // grantError above already renders it.
+    onError: () => undefined,
   })
 
-  const [revokeAccess] = useMutation<
+  const [revokeAccess, { error: revokeError }] = useMutation<
     revokeAlbumAccess,
     revokeAlbumAccessVariables
   >(REVOKE_ALBUM_ACCESS_MUTATION, {
     onCompleted: () => refetch(),
+    // Without this, a rejected mutation is an unhandled promise rejection,
+    // and revokeError above would never be set.
+    onError: () => undefined,
   })
 
   const permissions = data?.album.permissions ?? []
@@ -140,7 +142,16 @@ const SidebarAlbumSharing = ({ albumId }: SidebarAlbumSharingProps) => {
           <div className="flex gap-2 items-start mt-2">
             <Dropdown
               className="flex-1"
-              items={[{ value: '', label: 'Select a user' }, ...userOptions]}
+              items={[
+                {
+                  value: '',
+                  label: t(
+                    'sidebar.album.sharing.select_user',
+                    'Select a user'
+                  ),
+                },
+                ...userOptions,
+              ]}
               selected={newUserId}
               setSelected={setNewUserId}
             />
@@ -163,6 +174,9 @@ const SidebarAlbumSharing = ({ albumId }: SidebarAlbumSharingProps) => {
         )}
         {grantError && (
           <div className="mt-2 text-red-600">{grantError.message}</div>
+        )}
+        {revokeError && (
+          <div className="mt-2 text-red-600">{revokeError.message}</div>
         )}
       </div>
     </SidebarSection>

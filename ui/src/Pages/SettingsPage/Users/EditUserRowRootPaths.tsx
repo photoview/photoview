@@ -19,6 +19,7 @@ import { userAddRootPath } from './__generated__/userAddRootPath'
 import { Button, TextField } from '../../../primitives/form/Input'
 import Dropdown from '../../../primitives/form/Dropdown'
 import { AlbumPermissionLevel } from '../../../__generated__/globalTypes'
+import { albumPermissionLevelOptions } from '../../../helpers/albumPermissions'
 
 const USER_REMOVE_ALBUM_PATH_MUTATION = gql`
   mutation userRemoveAlbumPathMutation($userId: ID!, $albumId: ID!) {
@@ -40,12 +41,6 @@ const USER_UPDATE_ROOT_PATH_LEVEL_MUTATION = gql`
   }
 `
 
-export const levelOptions = [
-  { value: AlbumPermissionLevel.READ, label: 'Read' },
-  { value: AlbumPermissionLevel.UPLOAD, label: 'Read + upload' },
-  { value: AlbumPermissionLevel.DELETE, label: 'Read + upload + delete' },
-]
-
 type EditRootPathProps = {
   album: settingsUsersQuery_user_rootAlbums
   user: settingsUsersQuery_user
@@ -53,6 +48,7 @@ type EditRootPathProps = {
 
 const EditRootPath = ({ album, user }: EditRootPathProps) => {
   const { t } = useTranslation()
+  const levelOptions = albumPermissionLevelOptions(t)
   const [removeAlbumPath, { loading }] = useMutation<
     userRemoveAlbumPathMutation,
     userRemoveAlbumPathMutationVariables
@@ -122,6 +118,7 @@ type EditNewRootPathProps = {
 
 const EditNewRootPath = ({ userID }: EditNewRootPathProps) => {
   const { t } = useTranslation()
+  const levelOptions = albumPermissionLevelOptions(t)
   const [value, setValue] = useState('')
   const [level, setLevel] = useState<AlbumPermissionLevel>(
     AlbumPermissionLevel.READ

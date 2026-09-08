@@ -29,6 +29,11 @@
       "select_all": ""
     }
   },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -334,6 +339,7 @@
       },
       "set_cover": "設為封面相片",
       "sharing": {
+        "select_user": "",
         "share": "",
         "title": ""
       },

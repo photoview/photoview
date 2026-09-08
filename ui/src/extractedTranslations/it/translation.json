@@ -35,6 +35,11 @@
       "select_all": ""
     }
   },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -340,6 +345,7 @@
       },
       "set_cover": "Imposta come foto di copertina",
       "sharing": {
+        "select_user": "",
         "share": "",
         "title": ""
       },

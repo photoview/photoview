@@ -38,6 +38,11 @@
       "select_all": ""
     }
   },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
   "album_tree": {
     "empty": "",
     "label": "",
@@ -343,6 +348,7 @@
       },
       "set_cover": "Ustaw jako zdjęcie okładki albumu",
       "sharing": {
+        "select_user": "",
         "share": "",
         "title": ""
       },
