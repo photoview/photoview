@@ -33,6 +33,41 @@ func AlbumPermissions(db *gorm.DB, albumID int, viewerID int) ([]*models.AlbumPe
 	return permissions, nil
 }
 
+// targetHasForeignGrantInSubtree reports whether targetUserID already holds
+// a grant, somewhere in albumID's current subtree (albumID included), that
+// doesn't trace back to actorID - e.g. an admin's direct root grant on a
+// nested share, or a different owner's independent share of a descendant
+// folder. UserAlbums has exactly one row per (user, album), so
+// PropagateAlbumLevel/RevokeAlbumLevel would silently overwrite or delete
+// such a row; callers use this to refuse the operation instead.
+func targetHasForeignGrantInSubtree(db *gorm.DB, albumID int, targetUserID int, actorID int) (bool, error) {
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return false, err
+	}
+
+	subtree, err := album.GetChildren(db, nil)
+	if err != nil {
+		return false, err
+	}
+
+	ids := make([]int, len(subtree))
+	for i, a := range subtree {
+		ids[i] = a.ID
+	}
+
+	var count int64
+	err = db.Model(&models.UserAlbums{}).
+		Where("user_id = ? AND album_id IN (?)", targetUserID, ids).
+		Where("granted_by_user_id IS NULL OR granted_by_user_id != ?", actorID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 // ShareAlbum grants targetUserID access to albumID at level, on behalf of
 // actor. Only albumID's owner (an explicit grant with no GrantedByUserID,
 // i.e. it traces to an admin grant rather than another user's share) may
@@ -60,6 +95,14 @@ func GrantAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserID
 		}
 		if level.HigherThan(grant.Level) {
 			return nil, errors.New("cannot grant a higher permission level than your own")
+		}
+
+		hasForeign, err := targetHasForeignGrantInSubtree(db, albumID, targetUserID, actor.ID)
+		if err != nil {
+			return nil, err
+		}
+		if hasForeign {
+			return nil, errors.New("target user already has access to part of this folder from another source")
 		}
 	}
 
@@ -95,6 +138,14 @@ func RevokeAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserI
 		}
 		if grant == nil || grant.GrantedByUserID != nil {
 			return errors.New("only the owner of a folder may revoke access to it")
+		}
+
+		hasForeign, err := targetHasForeignGrantInSubtree(db, albumID, targetUserID, actor.ID)
+		if err != nil {
+			return err
+		}
+		if hasForeign {
+			return errors.New("cannot revoke access that was granted by someone else")
 		}
 	}
 
