@@ -3,77 +3,52 @@
 Status as of 2026-09-08. PR #1473 (`feature/configurable-search-result-limit` →
 `photoview/photoview:master`) has had three CodeRabbit review passes today (11:25, 11:48, 12:51),
 producing 23 findings. 20 were fixed and deployed the same day (16 commits, `530aaba`..`41f53bd`,
-image tag `coderabbit-fixes-batch2`). The 3 below were deliberately deferred — either because they
-need a real design decision, or because they're a deployment-policy question rather than a code
-fix — and are still open.
+image tag `coderabbit-fixes-batch2`). Two more (grant provenance, album-tree filter fanout) were
+deliberately deferred pending a design decision, then implemented later the same day once the user
+picked a direction — see below. Item 3 (HTTPS enforcement) is a deployment-policy question, not a
+code fix, and is still open.
 
-## 1. Grant provenance: `PropagateAlbumLevel`/`RevokeAlbumLevel` still have no memory of source
+## 1. Grant provenance: `PropagateAlbumLevel`/`RevokeAlbumLevel` had no memory of source — RESOLVED
 
-**Where:** `api/graphql/models/user.go:52` (the `UserAlbums.GrantedByUserID` field comment),
-`api/graphql/models/album.go:91` (`PropagateAlbumLevel`) and `:115` (`RevokeAlbumLevel`).
+**Where:** `api/graphql/models/user.go` (`UserAlbumGrant`), `api/graphql/models/album.go`
+(`PropagateAlbumLevel`, `RevokeAlbumLevel`, `recomputeUserAlbums`), `api/database/database.go`
+(`backfillUserAlbumGrants`).
 
-**What's already fixed:** `actions.GrantAlbumAccess`/`RevokeAlbumAccess`
-(`api/graphql/models/actions/sharing_actions.go`) now refuse to act, for non-admin actors, when the
-target user already holds a grant anywhere in the album's subtree that traces to a different
-grantor (see `targetHasForeignGrantInSubtree`, added 2026-09-08, commit `44bc3db`). That closes the
-sharing-UI path: a peer share can no longer silently overwrite an admin's direct grant, or another
-owner's independent share of a nested folder.
+**What was wrong:** `UserAlbums` had exactly one row per `(user_id, album_id)`, so two independent
+grants reaching the same album from different sources (e.g. an admin's root grant and a peer's
+share of a nested folder) collapsed into one row — whichever `PropagateAlbumLevel` call ran last
+silently won, and `RevokeAlbumLevel` could delete access that traced to an unrelated source.
+`actions.GrantAlbumAccess`/`RevokeAlbumAccess` had a same-day stopgap (`targetHasForeignGrantInSubtree`)
+that refused the operation instead of clobbering, but admin actions and the scanner's
+copy-parent-grants-onto-new-children step still went through the unconditional `PropagateAlbumLevel`/
+`RevokeAlbumLevel` path.
 
-**What's still open:** the check above only guards the two `sharing_actions.go` entry points.
-`PropagateAlbumLevel`/`RevokeAlbumLevel` themselves are unconditional bulk upsert/delete over
-`UserAlbums`, and are also called from:
+**Fix:** the user picked "track provenance per source". Added `UserAlbumGrant`, one row per
+`(user, album, source_album)`; `UserAlbums` is now a materialized cache recomputed from it (max
+level across sources, owner-rooted if any source is) after every propagate/revoke. Two independent
+grants on the same album now coexist instead of colliding, so the `targetHasForeignGrantInSubtree`
+stopgap was removed — a peer share into a subtree that already has an unrelated grant now succeeds
+(coexists) rather than being refused, which is the intended outcome. Existing `UserAlbums` rows are
+backfilled as self-sourced `UserAlbumGrant` rows on migration; this is forward-looking only — grants
+already clobbered before today can't be un-clobbered, since the old single-row model never recorded
+which source it lost.
 
-- The scanner's copy-parent-grants-onto-new-children step (new albums discovered under an existing
-  grant inherit it via `PropagateAlbumLevel`).
-- `NewRootAlbum` (`api/scanner/scanner_album.go`) when a new root path is created.
-- An **admin** granting/revoking access — admins bypass the foreign-grant check entirely (by
-  design, since they're allowed to override), so an admin action can still clobber a peer share the
-  same way.
+## 2. Album-tree filtering fanned out one GraphQL request per visible node — RESOLVED
 
-Because `UserAlbums` has exactly one row per `(user_id, album_id)` — `Level` plus a single nullable
-`GrantedByUserID` — there is fundamentally no way to represent "this user has independent access to
-this album from two different sources, keep the higher/most-specific one" or "only remove the part
-of this grant that came from album X". Two sources always collapse into one row, and whichever
-write happens last wins.
+**Where:** `ui/src/components/albumTree/AlbumTree.tsx`, `AlbumTreeNode.tsx`,
+`api/graphql/resolvers/album.graphql`/`album.go` (`albumTreeChildren`).
 
-**Why this hasn't been fixed today:** CodeRabbit tagged this "Heavy lift" and it's a real
-data-model change, not a quick patch. It needs a design decision before implementation, e.g.:
+**What was wrong:** when a filter was active, every visible node (every match *and* every one of
+its ancestors) rendered expanded and fired its own `subAlbums` request via `useEffect` - a broad
+match against a large tree could queue hundreds of simultaneous GraphQL requests.
 
-- Track grant provenance per source (one row per `(user, album, source_album)`, take the highest
-  level across sources, only delete the row for the matching source on revoke) — most correct, but
-  changes the `UserAlbums` schema and every place that reads a user's access level.
-- Or: make `PropagateAlbumLevel`/`RevokeAlbumLevel` themselves subtree-scan for foreign grants the
-  same way `sharing_actions.go` now does, and skip (rather than clobber) any row that doesn't trace
-  back to the actor — cheaper, but changes propagation semantics (a subtree with a mix of grant
-  sources would end up with genuinely inconsistent levels across siblings, which may be the more
-  honest outcome anyway).
-
-**Suggested next step:** bring this to the user as a design question (which of the two directions
-above, or something else) before writing code — this is exactly the kind of decision the session
-convention has been pausing on rather than silently picking one.
-
-## 2. Album-tree filtering fans out one GraphQL request per visible node
-
-**Where:** `ui/src/components/albumTree/AlbumTreeNode.tsx:73-94`, and the sibling
-`ui/src/components/albumTree/AlbumTree.tsx:52-58` (the search/filter query that produces
-`visibleIds`/`matchedIds`).
-
-**What's happening:** when a filter is active, `isFiltering` forces `isExpanded = true` for every
-rendered node (line 74), and each node's own `useEffect` (line ~90-94) calls `fetchSubAlbums()` the
-first time it renders expanded. Since `limitAlbums: 0` on the search means "return every match",
-searching a large tree can render (and therefore fetch-for) every matched album *and* every one of
-its ancestors simultaneously — one `albumTreeSubAlbumsQuery` GraphQL request each, all fired within
-the same render pass.
-
-**Why this hasn't been fixed today:** also tagged "Heavy lift". A real fix isn't a per-node
-change — it's giving the tree enough data upfront (either the search result itself returning the
-tree shape, or a dedicated batched "give me children for these N album IDs" query) so filtered
-nodes don't each need their own round trip. That's a shape change to either the search resolver or
-a new tree-batching query, not a one-file patch.
-
-**Suggested next step:** worth asking the user how large their album trees / search result sets
-typically get in practice — if it's a handful of matches this may not be worth the redesign; if
-someone has thousands of albums it's a real scaling problem worth prioritizing.
+**Fix:** the user confirmed a real library (~50,000 photos over 20 years of album folders), i.e.
+this was a real scaling problem. Added a batched `albumTreeChildren(albumIds, showHidden)` query
+that returns direct children for a whole list of album ids in one round trip (reusing `subAlbums`'s
+own authorization/hidden-filtering logic). `AlbumTree.tsx` now fires this once for the full
+`visibleIds` set when filtering; `AlbumTreeNode` reads from the batched result instead of issuing
+its own request while filtering. Normal (non-filtering) single-node expand/collapse browsing is
+unchanged.
 
 ## 3. Credentialed uploads don't enforce HTTPS
 
