@@ -92,6 +92,9 @@ export const fetchMediaBlob =
 // for the share flow.
 export const fetchMediaBlobQuiet = async (url: string): Promise<Blob> => {
   const response = await fetchMediaResponse(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch media: ${response.status}`)
+  }
   return response.blob()
 }
 
