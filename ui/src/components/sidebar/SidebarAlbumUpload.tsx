@@ -78,11 +78,7 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
 
     xhr.onload = () => {
       if (xhr.status !== 200) {
-        finish(
-          'sidebar.album.upload.failed',
-          'Upload failed',
-          xhr.responseText
-        )
+        finish('sidebar.album.upload.failed', 'Upload failed', xhr.responseText)
         return
       }
 
@@ -114,6 +110,13 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
       finish('sidebar.album.upload.failed', 'Upload failed')
     }
 
+    // abort() fires the abort event, not error - onload never runs either,
+    // so without this the upload buttons would stay disabled forever after
+    // dismissing the progress toast.
+    xhr.onabort = () => {
+      finish('sidebar.album.upload.cancelled', 'Upload cancelled')
+    }
+
     xhr.send(formData)
   }
 
@@ -129,7 +132,10 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
           multiple
           accept="image/*,video/*"
           className="hidden"
-          onChange={e => upload(e.target.files)}
+          onChange={e => {
+            upload(e.target.files)
+            e.target.value = ''
+          }}
         />
         <Button
           disabled={uploading}
@@ -144,7 +150,10 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
           type="file"
           multiple
           className="hidden"
-          onChange={e => upload(e.target.files)}
+          onChange={e => {
+            upload(e.target.files)
+            e.target.value = ''
+          }}
           ref={el => {
             folderInputRef.current = el
             if (el) {
