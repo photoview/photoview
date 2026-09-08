@@ -214,9 +214,13 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
 	}
 
-	// Replaced by per-album UserAlbums.Level
+	// Replaced by per-album UserAlbums.Level. Unlike the cosmetic/data-quality
+	// migrations above, a failure here must stop startup: the new level
+	// column defaults to READ, so continuing would silently downgrade any
+	// user who previously had can_upload=true until this migration
+	// eventually succeeds.
 	if err := migrations.MigrateCanUploadToAlbumLevel(db); err != nil {
-		log.Printf("Failed to run can_upload to album level migration: %v\n", err)
+		return fmt.Errorf("run can_upload to album level migration: %w", err)
 	}
 
 	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
@@ -266,9 +270,16 @@ func existingColumns(db *gorm.DB, tableName string) (map[string]bool, error) {
 		for _, r := range rows {
 			names = append(names, r.Name)
 		}
+	} else if drivers.POSTGRES.MatchDatabase(db) {
+		if err := db.Raw(
+			"SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = current_schema()",
+			tableName,
+		).Scan(&names).Error; err != nil {
+			return nil, err
+		}
 	} else {
 		if err := db.Raw(
-			"SELECT column_name FROM information_schema.columns WHERE table_name = ?",
+			"SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = DATABASE()",
 			tableName,
 		).Scan(&names).Error; err != nil {
 			return nil, err
