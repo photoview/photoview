@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { gql, useMutation } from '@apollo/client'
+import { gql, useApolloClient, useMutation } from '@apollo/client'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SidebarSection, SidebarSectionTitle } from '../SidebarComponents'
@@ -39,6 +39,7 @@ const SidebarMediaManage = ({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { updateSidebar } = useContext(SidebarContext)
+  const client = useApolloClient()
 
   const [newName, setNewName] = useState(currentFileName)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
@@ -53,8 +54,16 @@ const SidebarMediaManage = ({
     deleteMediaVariables
   >(DELETE_MEDIA_MUTATION, {
     // No refetchQueries: we're navigating away from this media's own
-    // page below, matching SidebarAlbumManage's delete behaviour.
+    // page below, matching SidebarAlbumManage's delete behaviour (a
+    // refetch of a still-mounted query could surface a confusing error
+    // toast before the navigation completes). Evict the entity directly
+    // instead, so an already-cached view of the album doesn't keep
+    // showing the deleted item.
     onCompleted: () => {
+      client.cache.evict({
+        id: client.cache.identify({ __typename: 'Media', id: mediaId }),
+      })
+      client.cache.gc()
       updateSidebar(null)
       navigate(`/album/${albumId}`)
     },

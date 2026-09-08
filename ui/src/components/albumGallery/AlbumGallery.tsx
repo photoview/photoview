@@ -138,6 +138,12 @@ const AlbumGallery = React.forwardRef(
         })
         setTimeout(() => MessageState.removeKey(notifyKey), 4000)
       },
+      // The global Apollo error link already shows a toast for network/
+      // GraphQL-level failures; this only exists so Apollo treats the
+      // mutation as handled instead of leaving an unhandled promise
+      // rejection, and so the selection stays intact for a retry instead
+      // of being silently cleared as if the delete had succeeded.
+      onError: () => undefined,
     })
 
     useEffect(() => {
