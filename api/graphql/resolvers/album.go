@@ -59,7 +59,11 @@ func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, order 
 	query := db.Where("parent_album_id = ?", obj.ID)
 
 	if user := auth.UserFromContext(ctx); user != nil {
-		query = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+		var err error
+		query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	query = models.FormatSQL(query, order, paginate)

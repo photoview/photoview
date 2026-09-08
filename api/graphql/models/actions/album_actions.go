@@ -36,7 +36,10 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	}
 
 	query = favoritesQuery(showEmpty, db, onlyWithFavorites, user, query)
-	query = HiddenAlbumsFilter(showHidden, db, user, query)
+	query, err := HiddenAlbumsFilter(showHidden, db, user, query)
+	if err != nil {
+		return nil, err
+	}
 
 	query = models.FormatSQL(query, order, paginate)
 
@@ -92,16 +95,26 @@ func getSingleRootAlbumID(user *models.User) int {
 	return singleRootAlbumID
 }
 
-// hiddenAlbumsFilter excludes albums the user has personally hidden, unless
-// showHidden is true (used to reveal hidden albums, dimmed, in the UI).
-func HiddenAlbumsFilter(showHidden *bool, db *gorm.DB, user *models.User, query *gorm.DB) *gorm.DB {
+// hiddenAlbumsFilter excludes albums the user has personally hidden, plus
+// all descendants of a hidden album (they're unreachable by browsing once
+// their ancestor is hidden, even though they have no hidden row of their
+// own), unless showHidden is true (used to reveal hidden albums, dimmed, in
+// the UI).
+func HiddenAlbumsFilter(showHidden *bool, db *gorm.DB, user *models.User, query *gorm.DB) (*gorm.DB, error) {
 	if showHidden != nil && *showHidden {
-		return query
+		return query, nil
 	}
-	hiddenSubquery := db.Model(&models.UserAlbumData{UserID: user.ID}).
-		Where("user_album_data.album_id = albums.id").
-		Where("user_album_data.hidden = true")
-	return query.Where("NOT EXISTS (?)", hiddenSubquery)
+
+	hiddenClosureIDs, err := models.HiddenAlbumsClosure(db, user.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "computing hidden albums closure")
+	}
+
+	if len(hiddenClosureIDs) > 0 {
+		query = query.Where("id NOT IN (?)", hiddenClosureIDs)
+	}
+
+	return query, nil
 }
 
 func favoritesQuery(showEmpty *bool, db *gorm.DB, onlyWithFavorites *bool, user *models.User, query *gorm.DB) *gorm.DB {

@@ -479,6 +479,50 @@ func TestMyAlbumsExcludesHidden(t *testing.T) {
 	})
 }
 
+// TestMyAlbumsExcludesHiddenDescendants covers a real bug: hiding a parent
+// album only wrote a hidden row for that exact album, so a child with no
+// hidden row of its own kept showing up in MyAlbums even though it's
+// unreachable by browsing once its parent is hidden.
+func TestMyAlbumsExcludesHiddenDescendants(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	user, err := models.RegisterUser(db, "hide_descendants_user", nil, false)
+	assert.NoError(t, err)
+
+	parent := models.Album{Title: "hidden_parent", Path: "/photos/hide_desc_parent"}
+	assert.NoError(t, db.Save(&parent).Error)
+	child := models.Album{Title: "unhidden_child", Path: "/photos/hide_desc_parent/child", ParentAlbumID: &parent.ID}
+	assert.NoError(t, db.Save(&child).Error)
+
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&parent, &child))
+
+	_, err = user.HideAlbum(db, parent.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("both the hidden parent and its unhidden child are excluded", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.NotContains(t, titles, "hidden_parent")
+		assert.NotContains(t, titles, "unhidden_child")
+	})
+
+	t.Run("showHidden reveals both again", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, &boolTrue)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "hidden_parent")
+		assert.Contains(t, titles, "unhidden_child")
+	})
+}
+
 // TestMyAlbumsOnlyRootWithUnrelatedShare covers a real production bug: a
 // user with a single true root album ("papa") who also receives an
 // unrelated share of someone else's subfolder ("pc_media", whose real
