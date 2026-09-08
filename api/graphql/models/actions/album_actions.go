@@ -209,7 +209,7 @@ func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, 
 		return nil, err
 	}
 
-	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func ResetAlbumCover(db *gorm.DB, user *models.User, albumID int) (*models.Album
 		return nil, err
 	}
 
-	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 	if err != nil {
 		return nil, err
 	}
