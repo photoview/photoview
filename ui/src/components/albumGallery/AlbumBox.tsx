@@ -60,13 +60,16 @@ export const AlbumBox = ({
     const hidden = album.viewerHidden === true
 
     return (
-      <Link
-        to={customLink || `/album/${album.id}`}
-        className={classNames(wrapperClasses, 'relative group', {
-          'opacity-50': hidden,
-        })}
-        {...props}
-      >
+      <div className={classNames(wrapperClasses, 'relative group')} {...props}>
+        <Link
+          to={customLink || `/album/${album.id}`}
+          className={classNames('block', { 'opacity-50': hidden })}
+        >
+          <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} />
+          <p className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+            {album.title}
+          </p>
+        </Link>
         <button
           type="button"
           title={hidden ? 'Unhide album' : 'Hide album'}
@@ -79,11 +82,7 @@ export const AlbumBox = ({
         >
           {hidden ? '\u{1F441}' : '\u{1F6AB}'}
         </button>
-        <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} />
-        <p className="whitespace-nowrap overflow-hidden overflow-ellipsis">
-          {album.title}
-        </p>
-      </Link>
+      </div>
     )
   }
 
