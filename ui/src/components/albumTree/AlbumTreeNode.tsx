@@ -80,7 +80,7 @@ const AlbumTreeNode = ({
   const showHidden = useShowHiddenAlbums()
   const [hideAlbum] = useHideAlbumMutation(['albumTreeSubAlbumsQuery'])
 
-  const [fetchSubAlbums, { data, loading, called }] = useLazyQuery<
+  const [fetchSubAlbums, { data, loading, called, error }] = useLazyQuery<
     albumTreeSubAlbumsQuery,
     albumTreeSubAlbumsQueryVariables
   >(ALBUM_TREE_SUB_ALBUMS_QUERY, {
@@ -96,7 +96,8 @@ const AlbumTreeNode = ({
   const subAlbums = isFiltering
     ? data?.album.subAlbums.filter(sub => visibleIds?.has(sub.id))
     : data?.album.subAlbums
-  const hasNoChildren = called && !loading && (subAlbums?.length ?? 0) === 0
+  const hasNoChildren =
+    called && !loading && !error && (subAlbums?.length ?? 0) === 0
 
   useEffect(() => {
     if (isFiltering || album.id !== justExpandedId) return
@@ -146,7 +147,16 @@ const AlbumTreeNode = ({
         <button
           type="button"
           aria-label={isExpanded ? 'Collapse album' : 'Expand album'}
-          onClick={() => toggleExpand(album.id)}
+          onClick={() => {
+            // A failed fetch leaves `called` true, so the effect above
+            // won't retry it on its own - let a click while expanded and
+            // errored retry directly instead of just toggling collapsed.
+            if (isExpanded && error) {
+              fetchSubAlbums()
+            } else {
+              toggleExpand(album.id)
+            }
+          }}
           disabled={isFiltering}
           className={tailwindClassNames(
             'w-5 h-5 flex-shrink-0 flex items-center justify-center text-gray-400 dark:text-gray-500',
