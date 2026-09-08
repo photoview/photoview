@@ -159,13 +159,17 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
 	var albumPath []*models.Album
 
+	// depth is carried through the recursion and used only to ORDER BY -
+	// SQL doesn't guarantee a recursive CTE returns rows in any particular
+	// order otherwise, and the truncation loop below depends on seeing the
+	// closest ancestor first.
 	if err := db.Raw(`
 		WITH recursive path_albums AS (
-			SELECT * FROM albums anchor WHERE anchor.id = ?
+			SELECT *, 0 AS depth FROM albums anchor WHERE anchor.id = ?
 			UNION
-			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
+			SELECT parent.*, child.depth + 1 FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
-		SELECT * FROM path_albums WHERE id != ?
+		SELECT * FROM path_albums WHERE id != ? ORDER BY depth ASC
 	`, album.ID, album.ID).Scan(&albumPath).Error; err != nil {
 		return nil, err
 	}
