@@ -27,15 +27,24 @@ export const SidebarAlbumScan = ({
 
   const [buttonDisabled, setButtonDisabled] = useState(false)
 
-  const [scanAlbum, { called }] = useMutation<scanAlbum, scanAlbumVariables>(
-    SCAN_ALBUM_MUTATION,
-    {
-      variables: { albumId: id },
-      // Without this, a rejected mutation is an unhandled promise
-      // rejection and leaves the button disabled with no way to retry.
-      onError: () => setButtonDisabled(false),
-    }
-  )
+  const [scanAlbum, { called, reset }] = useMutation<
+    scanAlbum,
+    scanAlbumVariables
+  >(SCAN_ALBUM_MUTATION, {
+    variables: { albumId: id },
+    // `called` never resets on its own once the mutation has fired once,
+    // and the button's disabled state below also depends on it - without
+    // calling reset() here too, the button would stay disabled forever
+    // after the very first click, success or failure alike.
+    onCompleted: () => {
+      setButtonDisabled(false)
+      reset()
+    },
+    onError: () => {
+      setButtonDisabled(false)
+      reset()
+    },
+  })
 
   if (!isAdmin && !viewerCanUpload) {
     return null
