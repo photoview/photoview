@@ -320,6 +320,51 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 	return actions.Album(db, user, id)
 }
 
+// AlbumTreeChildren is the resolver for the albumTreeChildren field.
+func (r *queryResolver) AlbumTreeChildren(ctx context.Context, albumIds []int, showHidden *bool) ([]*models.AlbumTreeChildren, error) {
+	db := r.DB(ctx)
+
+	if len(albumIds) == 0 {
+		return []*models.AlbumTreeChildren{}, nil
+	}
+
+	var albums []*models.Album
+	query := db.Where("parent_album_id IN (?)", albumIds)
+
+	if user := auth.UserFromContext(ctx); user != nil {
+		var err error
+		query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	orderByTitle := "title"
+	query = models.FormatSQL(query, &models.Ordering{OrderBy: &orderByTitle}, nil)
+
+	if err := query.Find(&albums).Error; err != nil {
+		return nil, err
+	}
+
+	byParent := make(map[int][]*models.Album, len(albumIds))
+	for _, album := range albums {
+		if album.ParentAlbumID == nil {
+			continue
+		}
+		byParent[*album.ParentAlbumID] = append(byParent[*album.ParentAlbumID], album)
+	}
+
+	result := make([]*models.AlbumTreeChildren, len(albumIds))
+	for i, albumID := range albumIds {
+		result[i] = &models.AlbumTreeChildren{
+			AlbumID:  albumID,
+			Children: byParent[albumID],
+		}
+	}
+
+	return result, nil
+}
+
 // Album returns api.AlbumResolver implementation.
 func (r *Resolver) Album() api.AlbumResolver { return &albumResolver{r} }
 

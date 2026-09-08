@@ -1,10 +1,15 @@
 import React from 'react'
 import { MockedProvider } from '@apollo/client/testing'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import AlbumTree, { ALBUM_TREE_ROOT_QUERY } from './AlbumTree'
+import AlbumTree, {
+  ALBUM_TREE_ROOT_QUERY,
+  ALBUM_TREE_SEARCH_QUERY,
+  ALBUM_TREE_CHILDREN_QUERY,
+} from './AlbumTree'
 import { ALBUM_TREE_SUB_ALBUMS_QUERY } from './AlbumTreeNode'
+import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
 
 const mocks = [
   {
@@ -121,4 +126,75 @@ test('pins the expanded node to the top instead of hiding it', async () => {
   // (top 10) above the container entirely, so it should scroll just
   // enough (10px) to pin Root to the top instead.
   expect(nav.scrollTop).toBe(10)
+})
+
+test('filtering fetches children via one batched request instead of per node', async () => {
+  const searchMocks = [
+    {
+      request: {
+        query: ALBUM_TREE_ROOT_QUERY,
+        variables: { showHidden: false },
+      },
+      result: {
+        data: {
+          myAlbums: [
+            {
+              id: '1',
+              title: 'Root',
+              viewerHidden: false,
+              viewerIsOwner: true,
+            },
+          ],
+        },
+      },
+    },
+    {
+      request: {
+        query: ALBUM_TREE_SEARCH_QUERY,
+        variables: { query: 'child' },
+      },
+      result: {
+        data: {
+          search: {
+            albums: [{ id: '3', path: [{ id: '1' }] }],
+          },
+        },
+      },
+    },
+    {
+      request: {
+        query: ALBUM_TREE_CHILDREN_QUERY,
+        variables: { albumIds: ['3', '1'], showHidden: false },
+      },
+      result: {
+        data: {
+          albumTreeChildren: [
+            {
+              albumId: '1',
+              children: [{ id: '3', title: 'ChildB', viewerHidden: false }],
+            },
+            { albumId: '3', children: [] },
+          ],
+        },
+      },
+    },
+  ]
+
+  render(
+    <MockedProvider mocks={searchMocks} addTypename={false}>
+      <MemoryRouter>
+        <AlbumTreeSearchContext.Provider
+          value={{ query: 'child', setQuery: vi.fn() }}
+        >
+          <AlbumTree />
+        </AlbumTreeSearchContext.Provider>
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  // Resolves purely from the batched albumTreeChildren mock above - if the
+  // node fell back to firing its own per-node subAlbums request, this mock
+  // list (which has no ALBUM_TREE_SUB_ALBUMS_QUERY entry) would leave it
+  // stuck loading and the assertion below would time out.
+  await waitFor(() => screen.getByText('ChildB'), { timeout: 1000 })
 })

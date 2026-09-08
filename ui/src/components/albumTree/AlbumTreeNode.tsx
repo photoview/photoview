@@ -56,6 +56,11 @@ type AlbumTreeNodeProps = {
   // Reports this node's own list item element up to its parent, so the
   // parent can scroll it into view when it's the last child of an expansion.
   onNodeRef?: (id: string, el: HTMLLIElement | null) => void
+  // Direct children for every visible node, fetched once up front by
+  // AlbumTree in a single batched request while filtering - only set (and
+  // only consulted) when visibleIds is set, so a broad match doesn't fire
+  // one subAlbums request per node.
+  childrenByParentId?: Map<string, AlbumTreeNodeAlbum[]>
 }
 
 const AlbumTreeNode = ({
@@ -69,6 +74,7 @@ const AlbumTreeNode = ({
   scrollContainerRef,
   justExpandedId,
   onNodeRef,
+  childrenByParentId,
 }: AlbumTreeNodeProps) => {
   const isFiltering = visibleIds != null
   const isExpanded = isFiltering ? true : !!expanded[album.id]
@@ -88,13 +94,14 @@ const AlbumTreeNode = ({
   })
 
   useEffect(() => {
+    if (isFiltering) return
     if (isExpanded && !called) {
       fetchSubAlbums()
     }
-  }, [isExpanded, called, fetchSubAlbums])
+  }, [isFiltering, isExpanded, called, fetchSubAlbums])
 
   const subAlbums = isFiltering
-    ? data?.album.subAlbums.filter(sub => visibleIds?.has(sub.id))
+    ? childrenByParentId?.get(album.id)?.filter(sub => visibleIds?.has(sub.id))
     : data?.album.subAlbums
   const hasNoChildren =
     called && !loading && !error && (subAlbums?.length ?? 0) === 0
@@ -216,6 +223,7 @@ const AlbumTreeNode = ({
               onNodeRef={(id, el) => {
                 childRefs.current[id] = el
               }}
+              childrenByParentId={childrenByParentId}
             />
           ))}
         </ul>

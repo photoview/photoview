@@ -137,3 +137,73 @@ func TestAlbumViewerPermissionFields(t *testing.T) {
 		assert.False(t, canUpload)
 	})
 }
+
+func TestAlbumTreeChildren(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "tree_children_user", nil, false)
+	assert.NoError(t, err)
+
+	rootA := models.Album{Title: "root_a", Path: "/photos/tree_root_a"}
+	assert.NoError(t, db.Save(&rootA).Error)
+	rootB := models.Album{Title: "root_b", Path: "/photos/tree_root_b"}
+	assert.NoError(t, db.Save(&rootB).Error)
+
+	childA1 := models.Album{Title: "child_a1", Path: "/photos/tree_root_a/child1", ParentAlbumID: &rootA.ID}
+	assert.NoError(t, db.Save(&childA1).Error)
+	childA2 := models.Album{Title: "child_a2", Path: "/photos/tree_root_a/child2", ParentAlbumID: &rootA.ID}
+	assert.NoError(t, db.Save(&childA2).Error)
+	hiddenChildA := models.Album{Title: "hidden_child_a", Path: "/photos/tree_root_a/hidden", ParentAlbumID: &rootA.ID}
+	assert.NoError(t, db.Save(&hiddenChildA).Error)
+	childB1 := models.Album{Title: "child_b1", Path: "/photos/tree_root_b/child1", ParentAlbumID: &rootB.ID}
+	assert.NoError(t, db.Save(&childB1).Error)
+
+	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: rootA.ID, Level: models.AlbumPermissionLevelRead}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: rootB.ID, Level: models.AlbumPermissionLevelRead}).Error)
+	_, err = user.HideAlbum(db, hiddenChildA.ID, true)
+	assert.NoError(t, err)
+
+	r := &queryResolver{Resolver: &Resolver{database: db}}
+	ctx := auth.AddUserToContext(context.Background(), user)
+
+	t.Run("returns grouped children for multiple album ids in one call", func(t *testing.T) {
+		results, err := r.AlbumTreeChildren(ctx, []int{rootA.ID, rootB.ID}, nil)
+		assert.NoError(t, err)
+		if assert.Len(t, results, 2) {
+			byAlbum := make(map[int]*models.AlbumTreeChildren, len(results))
+			for _, res := range results {
+				byAlbum[res.AlbumID] = res
+			}
+
+			if assert.Contains(t, byAlbum, rootA.ID) {
+				assert.Len(t, byAlbum[rootA.ID].Children, 2, "hidden child excluded by default")
+			}
+			if assert.Contains(t, byAlbum, rootB.ID) {
+				assert.Len(t, byAlbum[rootB.ID].Children, 1)
+			}
+		}
+	})
+
+	t.Run("showHidden reveals the hidden child too", func(t *testing.T) {
+		showHidden := true
+		results, err := r.AlbumTreeChildren(ctx, []int{rootA.ID}, &showHidden)
+		assert.NoError(t, err)
+		if assert.Len(t, results, 1) {
+			assert.Len(t, results[0].Children, 3)
+		}
+	})
+
+	t.Run("an album with no children returns an empty slice, not an error", func(t *testing.T) {
+		results, err := r.AlbumTreeChildren(ctx, []int{childA1.ID}, nil)
+		assert.NoError(t, err)
+		if assert.Len(t, results, 1) {
+			assert.Empty(t, results[0].Children)
+		}
+	})
+
+	t.Run("an empty id list short-circuits to an empty result", func(t *testing.T) {
+		results, err := r.AlbumTreeChildren(ctx, []int{}, nil)
+		assert.NoError(t, err)
+		assert.Empty(t, results)
+	})
+}

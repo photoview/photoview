@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { debounce, DebouncedFn } from '../../helpers/utils'
 import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
-import AlbumTreeNode from './AlbumTreeNode'
+import AlbumTreeNode, { AlbumTreeNodeAlbum } from './AlbumTreeNode'
 import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
 import {
   albumTreeActivePathQuery,
@@ -19,6 +19,10 @@ import {
   albumTreeSearchQuery,
   albumTreeSearchQueryVariables,
 } from './__generated__/albumTreeSearchQuery'
+import {
+  albumTreeChildrenQuery,
+  albumTreeChildrenQueryVariables,
+} from './__generated__/albumTreeChildrenQuery'
 
 export const ALBUM_TREE_ROOT_QUERY = gql`
   query albumTreeRootQuery($showHidden: Boolean) {
@@ -55,6 +59,19 @@ export const ALBUM_TREE_SEARCH_QUERY = gql`
         path {
           id
         }
+      }
+    }
+  }
+`
+
+export const ALBUM_TREE_CHILDREN_QUERY = gql`
+  query albumTreeChildrenQuery($albumIds: [ID!]!, $showHidden: Boolean) {
+    albumTreeChildren(albumIds: $albumIds, showHidden: $showHidden) {
+      albumId
+      children {
+        id
+        title
+        viewerHidden
       }
     }
   }
@@ -152,6 +169,27 @@ const AlbumTree = () => {
     }
   }
 
+  const [fetchTreeChildren, { data: treeChildrenData }] = useLazyQuery<
+    albumTreeChildrenQuery,
+    albumTreeChildrenQueryVariables
+  >(ALBUM_TREE_CHILDREN_QUERY)
+
+  useEffect(() => {
+    if (visibleIds) {
+      fetchTreeChildren({
+        variables: { albumIds: Array.from(visibleIds), showHidden },
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treeSearchData, showHidden, fetchTreeChildren])
+
+  const childrenByParentId = new Map<string, AlbumTreeNodeAlbum[]>()
+  if (treeChildrenData) {
+    for (const entry of treeChildrenData.albumTreeChildren) {
+      childrenByParentId.set(entry.albumId, entry.children)
+    }
+  }
+
   const roots = data?.myAlbums
   const visibleRoots = isFiltering
     ? roots?.filter(album => visibleIds?.has(album.id))
@@ -172,6 +210,7 @@ const AlbumTree = () => {
       matchedIds={matchedIds}
       scrollContainerRef={scrollContainerRef}
       justExpandedId={justExpandedId}
+      childrenByParentId={isFiltering ? childrenByParentId : undefined}
     />
   )
 
