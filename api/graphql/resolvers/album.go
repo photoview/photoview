@@ -82,8 +82,16 @@ func (r *albumResolver) ViewerCanUpload(ctx context.Context, obj *models.Album) 
 	if user == nil {
 		return false, nil
 	}
+	if user.Admin {
+		return true, nil
+	}
 
-	return user.HasAlbumLevel(r.DB(ctx), obj, models.AlbumPermissionLevelUpload)
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.Level.AtLeast(models.AlbumPermissionLevelUpload), nil
 }
 
 // ViewerCanDelete is the resolver for the viewerCanDelete field.
@@ -92,8 +100,16 @@ func (r *albumResolver) ViewerCanDelete(ctx context.Context, obj *models.Album) 
 	if user == nil {
 		return false, nil
 	}
+	if user.Admin {
+		return true, nil
+	}
 
-	return user.HasAlbumLevel(r.DB(ctx), obj, models.AlbumPermissionLevelDelete)
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.Level.AtLeast(models.AlbumPermissionLevelDelete), nil
 }
 
 // ViewerIsOwner is the resolver for the viewerIsOwner field.
@@ -102,8 +118,16 @@ func (r *albumResolver) ViewerIsOwner(ctx context.Context, obj *models.Album) (b
 	if user == nil {
 		return false, nil
 	}
+	if user.Admin {
+		return true, nil
+	}
 
-	return user.IsAlbumOwner(r.DB(ctx), obj)
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.GrantedByUserID == nil, nil
 }
 
 // ViewerHidden is the resolver for the viewerHidden field.

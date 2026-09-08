@@ -52,6 +52,13 @@ type UserAlbums struct {
 	GrantedByUserID *int `gorm:"index"`
 }
 
+// UserAlbumKey identifies a user's grant on a specific album, used as the
+// batching key for dataloader.AlbumGrantLoader.
+type UserAlbumKey struct {
+	UserID  int
+	AlbumID int
+}
+
 type AccessToken struct {
 	Model
 	UserID int       `gorm:"not null;index"`

@@ -19,6 +19,7 @@ type Loaders struct {
 	UserFromAccessToken *UserLoader
 	UserMediaFavorite   *UserFavoritesLoader
 	AlbumHidden         *AlbumHiddenLoader
+	AlbumGrant          *AlbumGrantLoader
 }
 
 func Middleware(db *gorm.DB) mux.MiddlewareFunc {
@@ -32,6 +33,7 @@ func Middleware(db *gorm.DB) mux.MiddlewareFunc {
 				UserFromAccessToken: NewUserLoaderByToken(db),
 				UserMediaFavorite:   NewUserFavoriteLoader(db),
 				AlbumHidden:         NewAlbumHiddenLoader(db),
+				AlbumGrant:          NewAlbumGrantLoader(db),
 			})
 
 			r = r.WithContext(ctx)
