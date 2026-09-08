@@ -407,3 +407,65 @@ func TestHiddenAlbumsClosure(t *testing.T) {
 		assert.Empty(t, ids)
 	})
 }
+
+func TestPropagateAndRevokeAlbumLevel(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "provenance_user", nil, false)
+	assert.NoError(t, err)
+	granterA, err := models.RegisterUser(db, "provenance_granter_a", nil, false)
+	assert.NoError(t, err)
+	granterB, err := models.RegisterUser(db, "provenance_granter_b", nil, false)
+	assert.NoError(t, err)
+
+	root := models.Album{Title: "root", Path: "/photos/provenance_root"}
+	assert.NoError(t, db.Save(&root).Error)
+	child := models.Album{Title: "child", Path: "/photos/provenance_root/child", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&child).Error)
+
+	t.Run("propagating a lower level from a second source does not clobber the first", func(t *testing.T) {
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelUpload, &granterA.ID))
+		assert.NoError(t, models.PropagateAlbumLevel(db, child.ID, user.ID, models.AlbumPermissionLevelRead, &granterB.ID))
+
+		grant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level, "the higher of the two sources should win")
+		}
+	})
+
+	t.Run("revoking one source leaves the other's access on the shared descendant intact", func(t *testing.T) {
+		assert.NoError(t, models.RevokeAlbumLevel(db, root.ID, user.ID))
+
+		rootGrant, err := user.EffectiveGrant(db, &root)
+		assert.NoError(t, err)
+		assert.Nil(t, rootGrant, "the revoked source's own access to root should be gone")
+
+		childGrant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		if assert.NotNil(t, childGrant, "the second source's grant on child must survive") {
+			assert.Equal(t, models.AlbumPermissionLevelRead, childGrant.Level)
+		}
+	})
+
+	t.Run("revoking the last remaining source removes access entirely", func(t *testing.T) {
+		assert.NoError(t, models.RevokeAlbumLevel(db, child.ID, user.ID))
+
+		grant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		assert.Nil(t, grant)
+	})
+
+	t.Run("re-propagating from the same source updates the level instead of adding a duplicate", func(t *testing.T) {
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelRead, &granterA.ID))
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelDelete, &granterA.ID))
+
+		grant, err := user.EffectiveGrant(db, &root)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelDelete, grant.Level)
+		}
+
+		assert.NoError(t, models.RevokeAlbumLevel(db, root.ID, user.ID))
+	})
+}

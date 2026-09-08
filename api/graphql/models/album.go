@@ -82,12 +82,19 @@ func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID i
 }
 
 // PropagateAlbumLevel stamps level (and grantedByUserID) onto albumID and
-// every one of its *current* descendants for userID, in one bulk upsert.
-// This is needed any time a grant is created or its level changes on an
-// album that may already have content scanned in below it: the scanner's
-// own copy-parent-owners-onto-new-child step only ever reaches directories
-// discovered *after* the grant exists, so a backlog of already-scanned
-// descendants would otherwise keep a stale (or missing) level.
+// every one of its *current* descendants for userID, as a grant sourced at
+// albumID. This is needed any time a grant is created or its level changes
+// on an album that may already have content scanned in below it: the
+// scanner's own copy-owners-onto-new-child step only ever reaches
+// directories discovered *after* the grant exists, so a backlog of
+// already-scanned descendants would otherwise keep a stale (or missing)
+// level.
+//
+// The write goes through UserAlbumGrant, keyed on (user, album, source) so
+// a grant reaching the same descendant from a *different* source (e.g. an
+// admin's root grant reaching a folder an owner already shared separately)
+// coexists instead of overwriting it - UserAlbums.Level ends up the max
+// across every source, recomputed by recomputeUserAlbums.
 func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermissionLevel, grantedByUserID *int) error {
 	var album Album
 	if err := db.First(&album, albumID).Error; err != nil {
@@ -99,19 +106,28 @@ func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermis
 		return err
 	}
 
-	grants := make([]UserAlbums, len(subtree))
+	grants := make([]UserAlbumGrant, len(subtree))
+	albumIDs := make([]int, len(subtree))
 	for i, a := range subtree {
-		grants[i] = UserAlbums{UserID: userID, AlbumID: a.ID, Level: level, GrantedByUserID: grantedByUserID}
+		grants[i] = UserAlbumGrant{UserID: userID, AlbumID: a.ID, SourceAlbumID: albumID, Level: level, GrantedByUserID: grantedByUserID}
+		albumIDs[i] = a.ID
 	}
 
-	return db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "album_id"}},
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "album_id"}, {Name: "source_album_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"level", "granted_by_user_id"}),
-	}).Create(&grants).Error
+	}).Create(&grants).Error; err != nil {
+		return err
+	}
+
+	return recomputeUserAlbums(db, userID, albumIDs)
 }
 
 // RevokeAlbumLevel removes userID's access to albumID and every one of its
-// current descendants in one bulk delete.
+// current descendants that was sourced at albumID - i.e. exactly what the
+// matching PropagateAlbumLevel(albumID, userID, ...) call created. A grant
+// reaching the same albums from a different source is untouched, since it's
+// a different UserAlbumGrant row by construction.
 func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
 	var album Album
 	if err := db.First(&album, albumID).Error; err != nil {
@@ -128,7 +144,74 @@ func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
 		ids[i] = a.ID
 	}
 
-	return db.Where("user_id = ? AND album_id IN (?)", userID, ids).Delete(&UserAlbums{}).Error
+	if err := db.Where("user_id = ? AND album_id IN (?) AND source_album_id = ?", userID, ids, albumID).
+		Delete(&UserAlbumGrant{}).Error; err != nil {
+		return err
+	}
+
+	return recomputeUserAlbums(db, userID, ids)
+}
+
+// recomputeUserAlbums recalculates the materialized UserAlbums row for each
+// (userID, albumID) pair in albumIDs from the current UserAlbumGrant rows:
+// the max Level across every source, and a nil GrantedByUserID (owner
+// access) if any source is owner-rooted, else an arbitrary non-nil
+// grantor. An album with no remaining grant rows has its UserAlbums row
+// deleted, matching the "no access" semantics of a full revoke.
+func recomputeUserAlbums(db *gorm.DB, userID int, albumIDs []int) error {
+	if len(albumIDs) == 0 {
+		return nil
+	}
+
+	var grants []UserAlbumGrant
+	if err := db.Where("user_id = ? AND album_id IN (?)", userID, albumIDs).Find(&grants).Error; err != nil {
+		return err
+	}
+
+	byAlbum := make(map[int][]UserAlbumGrant, len(albumIDs))
+	for _, g := range grants {
+		byAlbum[g.AlbumID] = append(byAlbum[g.AlbumID], g)
+	}
+
+	toUpsert := make([]UserAlbums, 0, len(albumIDs))
+	toDelete := make([]int, 0, len(albumIDs))
+	for _, albumID := range albumIDs {
+		sources := byAlbum[albumID]
+		if len(sources) == 0 {
+			toDelete = append(toDelete, albumID)
+			continue
+		}
+
+		best := sources[0]
+		grantedBy := best.GrantedByUserID
+		for _, g := range sources[1:] {
+			if g.Level.HigherThan(best.Level) {
+				best = g
+			}
+			if g.GrantedByUserID == nil {
+				grantedBy = nil
+			}
+		}
+
+		toUpsert = append(toUpsert, UserAlbums{UserID: userID, AlbumID: albumID, Level: best.Level, GrantedByUserID: grantedBy})
+	}
+
+	if len(toUpsert) > 0 {
+		if err := db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "album_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"level", "granted_by_user_id"}),
+		}).Create(&toUpsert).Error; err != nil {
+			return err
+		}
+	}
+
+	if len(toDelete) > 0 {
+		if err := db.Where("user_id = ? AND album_id IN (?)", userID, toDelete).Delete(&UserAlbums{}).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // HiddenAlbumsClosure returns the ids of every album that should be treated

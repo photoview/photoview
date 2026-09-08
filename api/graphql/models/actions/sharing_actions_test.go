@@ -142,14 +142,12 @@ func TestGrantAlbumAccess_PropagatesToExistingDescendants(t *testing.T) {
 	}
 }
 
-func TestGrantAlbumAccess_ForeignGrantInSubtree(t *testing.T) {
+func TestGrantAlbumAccess_CoexistsWithForeignGrantInSubtree(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	owner, err := models.RegisterUser(db, "owner4", nil, false)
 	assert.NoError(t, err)
 	recipient, err := models.RegisterUser(db, "recipient4", nil, false)
-	assert.NoError(t, err)
-	admin, err := models.RegisterUser(db, "admin4", nil, true)
 	assert.NoError(t, err)
 
 	root := models.Album{Title: "root4", Path: "/photos/root4"}
@@ -177,40 +175,38 @@ func TestGrantAlbumAccess_ForeignGrantInSubtree(t *testing.T) {
 		assert.NoError(t, actions.RevokeAlbumAccess(db, owner, root.ID, recipient.ID))
 	})
 
-	t.Run("owner cannot overwrite a grant an admin gave directly on a descendant", func(t *testing.T) {
-		assert.NoError(t, db.Create(&models.UserAlbums{
-			UserID: recipient.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelUpload, GrantedByUserID: nil,
-		}).Error)
+	t.Run("owner sharing a subtree coexists with an independent grant on a descendant instead of overwriting it", func(t *testing.T) {
+		// An admin already granted recipient Upload access directly on
+		// child, independently of anything owner does at root.
+		assert.NoError(t, models.PropagateAlbumLevel(db, child.ID, recipient.ID, models.AlbumPermissionLevelUpload, nil))
 		t.Cleanup(func() {
-			assert.NoError(t, db.Where("user_id = ? AND album_id = ?", recipient.ID, child.ID).Delete(&models.UserAlbums{}).Error)
+			assert.NoError(t, models.RevokeAlbumLevel(db, child.ID, recipient.ID))
 		})
 
 		_, err := actions.GrantAlbumAccess(db, owner, root.ID, recipient.ID, models.AlbumPermissionLevelRead)
-		assert.Error(t, err)
+		assert.NoError(t, err)
 
 		grant, err := recipient.EffectiveGrant(db, &child)
 		assert.NoError(t, err)
 		if assert.NotNil(t, grant) {
-			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level, "the admin's grant on the descendant must be untouched")
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level, "the higher of the two independent sources should win")
+			assert.Nil(t, grant.GrantedByUserID, "an owner-rooted source keeps the effective grant owner-rooted")
+		}
+
+		// Revoking owner's share must leave the admin's independent grant
+		// on child intact, since it traces to a different source.
+		assert.NoError(t, actions.RevokeAlbumAccess(db, owner, root.ID, recipient.ID))
+
+		grant, err = recipient.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant, "the admin's grant on the descendant must survive the owner's revoke") {
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level)
 			assert.Nil(t, grant.GrantedByUserID)
 		}
 	})
-
-	t.Run("admin bypasses the foreign-grant check", func(t *testing.T) {
-		assert.NoError(t, db.Create(&models.UserAlbums{
-			UserID: recipient.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelUpload, GrantedByUserID: nil,
-		}).Error)
-		t.Cleanup(func() {
-			assert.NoError(t, db.Where("user_id = ? AND album_id = ?", recipient.ID, root.ID).Delete(&models.UserAlbums{}).Error)
-			assert.NoError(t, db.Where("user_id = ? AND album_id = ?", recipient.ID, child.ID).Delete(&models.UserAlbums{}).Error)
-		})
-
-		_, err := actions.GrantAlbumAccess(db, admin, root.ID, recipient.ID, models.AlbumPermissionLevelRead)
-		assert.NoError(t, err)
-	})
 }
 
-func TestRevokeAlbumAccess_ForeignGrantInSubtree(t *testing.T) {
+func TestRevokeAlbumAccess_LeavesForeignGrantInSubtreeIntact(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	owner, err := models.RegisterUser(db, "owner5", nil, false)
@@ -227,23 +223,24 @@ func TestRevokeAlbumAccess_ForeignGrantInSubtree(t *testing.T) {
 		UserID: owner.ID, AlbumID: root.ID, Level: models.AlbumPermissionLevelDelete,
 	}).Error)
 
-	// A different, independent owner's share of the descendant folder -
-	// recipient's access to child traces to someone other than owner.
-	assert.NoError(t, db.Create(&models.UserAlbums{
-		UserID: recipient.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelRead, GrantedByUserID: &owner.ID,
-	}).Error)
-	otherOwner, err := models.RegisterUser(db, "other_owner5", nil, false)
+	_, err = actions.GrantAlbumAccess(db, owner, root.ID, recipient.ID, models.AlbumPermissionLevelRead)
 	assert.NoError(t, err)
-	assert.NoError(t, db.Model(&models.UserAlbums{}).
-		Where("user_id = ? AND album_id = ?", recipient.ID, child.ID).
-		Update("granted_by_user_id", otherOwner.ID).Error)
 
-	err = actions.RevokeAlbumAccess(db, owner, root.ID, recipient.ID)
-	assert.Error(t, err)
+	// A different, independent source (e.g. an admin) also grants recipient
+	// access directly on the descendant - unrelated to owner's share.
+	assert.NoError(t, models.PropagateAlbumLevel(db, child.ID, recipient.ID, models.AlbumPermissionLevelUpload, nil))
+
+	assert.NoError(t, actions.RevokeAlbumAccess(db, owner, root.ID, recipient.ID))
 
 	grant, err := recipient.EffectiveGrant(db, &child)
 	assert.NoError(t, err)
-	assert.NotNil(t, grant, "the other owner's grant on the descendant must be untouched")
+	if assert.NotNil(t, grant, "the other source's grant on the descendant must be untouched") {
+		assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level)
+	}
+
+	rootGrant, err := recipient.EffectiveGrant(db, &root)
+	assert.NoError(t, err)
+	assert.Nil(t, rootGrant, "the revoked source's own access to root should be gone")
 }
 
 func TestRevokeAlbumAccess(t *testing.T) {

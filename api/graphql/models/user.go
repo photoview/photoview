@@ -52,6 +52,22 @@ type UserAlbums struct {
 	GrantedByUserID *int `gorm:"index"`
 }
 
+// UserAlbumGrant records one grant "source": userID's level on albumID as
+// stamped by a single PropagateAlbumLevel call rooted at SourceAlbumID.
+// Multiple rows can exist for the same (user, album) pair when access
+// reaches it through more than one independent grant (e.g. an admin's root
+// grant and a peer share of a nested folder both reaching the same
+// descendant) - UserAlbums.Level/GrantedByUserID is always the materialized
+// max-level / any-owner-source view across this table for that pair, kept
+// up to date by PropagateAlbumLevel/RevokeAlbumLevel (see album.go).
+type UserAlbumGrant struct {
+	UserID          int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	AlbumID         int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	SourceAlbumID   int `gorm:"primaryKey;autoIncrement:false;constraint:OnDelete:CASCADE;"`
+	Level           AlbumPermissionLevel `gorm:"not null"`
+	GrantedByUserID *int
+}
+
 // UserAlbumKey identifies a user's grant on a specific album, used as the
 // batching key for dataloader.AlbumGrantLoader.
 type UserAlbumKey struct {
