@@ -65,12 +65,17 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User, level models
 			Path:  rootPath,
 		}
 
-		if err := db.Create(&album).Error; err != nil {
-			return nil, err
-		}
+		// Create and grant must succeed or fail together: if grant creation
+		// failed after the album row was already committed, the album would
+		// be left with no permission grant for anyone to access it.
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&album).Error; err != nil {
+				return err
+			}
 
-		if err := models.PropagateAlbumLevel(db, album.ID, owner.ID, level, nil); err != nil {
-			return nil, errors.Wrap(err, "grant owner access to new root album")
+			return models.PropagateAlbumLevel(tx, album.ID, owner.ID, level, nil)
+		}); err != nil {
+			return nil, errors.Wrap(err, "create new root album and grant owner access")
 		}
 
 		return &album, nil
