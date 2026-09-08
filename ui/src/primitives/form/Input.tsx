@@ -68,7 +68,7 @@ export const TextField = forwardRef(
           'dark:bg-dark-input-bg dark:border-dark-input-border',
           variant,
           sizeVariant == 'big' ? 'py-2' : 'py-1',
-          { 'w-full': fullWidth },
+          { 'w-full': fullWidth, 'pr-8': action || isPassword },
           className
         )}
         {...inputProps}
