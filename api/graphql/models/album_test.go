@@ -383,6 +383,10 @@ func TestHiddenAlbumsClosure(t *testing.T) {
 	sibling := models.Album{Title: "sibling", Path: "/photos/hidden_root/sibling", ParentAlbumID: &root.ID}
 	assert.NoError(t, db.Save(&sibling).Error)
 
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: user.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+
 	t.Run("no hidden albums yields an empty closure", func(t *testing.T) {
 		ids, err := models.HiddenAlbumsClosure(db, user.ID)
 		assert.NoError(t, err)

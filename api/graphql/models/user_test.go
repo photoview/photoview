@@ -224,9 +224,12 @@ func TestUserHideAlbum(t *testing.T) {
 
 	album := models.Album{Title: "album", Path: "/photos/hide_test"}
 	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: userA.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
 
 	loadHidden := func(user *models.User) bool {
-		hidden, err := dataloader.NewAlbumHiddenLoader(db).Load(&models.UserAlbumData{
+		hidden, err := dataloader.NewAlbumHiddenLoader(db).Load(models.UserAlbumKey{
 			UserID:  user.ID,
 			AlbumID: album.ID,
 		})
@@ -244,6 +247,12 @@ func TestUserHideAlbum(t *testing.T) {
 	_, err = userA.HideAlbum(db, album.ID, false)
 	assert.NoError(t, err)
 	assert.False(t, loadHidden(userA))
+
+	t.Run("a user with no access to the album cannot hide it", func(t *testing.T) {
+		_, err := userB.HideAlbum(db, album.ID, true)
+		assert.Error(t, err)
+		assert.False(t, loadHidden(userB))
+	})
 }
 
 func TestUnhideAllAlbums(t *testing.T) {
@@ -256,6 +265,12 @@ func TestUnhideAllAlbums(t *testing.T) {
 	assert.NoError(t, db.Save(&album1).Error)
 	album2 := models.Album{Title: "album2", Path: "/photos/unhide2"}
 	assert.NoError(t, db.Save(&album2).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: user.ID, AlbumID: album1.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: user.ID, AlbumID: album2.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
 
 	_, err = user.HideAlbum(db, album1.ID, true)
 	assert.NoError(t, err)

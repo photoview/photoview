@@ -272,8 +272,23 @@ func (user *User) IsAlbumOwner(db *gorm.DB, album *Album) (bool, error) {
 
 // HideAlbum sets/clears an album as hidden from the user's own navigation.
 // This is a personal preference only: it never affects other users'
-// visibility of, or access to, the album.
+// visibility of, or access to, the album. Requires at least Read access to
+// the album - without this, any authenticated user could toggle the hidden
+// flag for (and learn the title/path of) an album they have no access to.
 func (user *User) HideAlbum(db *gorm.DB, albumID int, hidden bool) (*Album, error) {
+	var album Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, errors.Wrap(err, "get album from database")
+	}
+
+	canView, err := user.HasAlbumLevel(db, &album, AlbumPermissionLevelRead)
+	if err != nil {
+		return nil, err
+	}
+	if !canView {
+		return nil, errors.New("unauthorized")
+	}
+
 	userAlbumData := UserAlbumData{
 		UserID:  user.ID,
 		AlbumID: albumID,
@@ -282,11 +297,6 @@ func (user *User) HideAlbum(db *gorm.DB, albumID int, hidden bool) (*Album, erro
 
 	if err := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userAlbumData).Error; err != nil {
 		return nil, errors.Wrapf(err, "update user hidden album in database")
-	}
-
-	var album Album
-	if err := db.First(&album, albumID).Error; err != nil {
-		return nil, errors.Wrap(err, "get album from database after hide update")
 	}
 
 	return &album, nil

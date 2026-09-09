@@ -328,15 +328,28 @@ func (r *queryResolver) AlbumTreeChildren(ctx context.Context, albumIds []int, s
 		return []*models.AlbumTreeChildren{}, nil
 	}
 
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
 	var albums []*models.Album
 	query := db.Where("parent_album_id IN (?)", albumIds)
 
-	if user := auth.UserFromContext(ctx); user != nil {
-		var err error
-		query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
-		if err != nil {
-			return nil, err
-		}
+	// Unlike the subAlbums field resolver (only reachable via an Album
+	// object the caller was already authorized to load), this is a
+	// top-level query that takes raw album ids straight from the client -
+	// without this, a non-admin could pass another user's album id and
+	// read its children's titles/paths.
+	if !user.Admin {
+		query = query.Where("id IN (?)",
+			db.Table("user_albums").Select("album_id").Where("user_id = ?", user.ID))
+	}
+
+	var err error
+	query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+	if err != nil {
+		return nil, err
 	}
 
 	orderByTitle := "title"

@@ -158,8 +158,12 @@ func TestAlbumTreeChildren(t *testing.T) {
 	childB1 := models.Album{Title: "child_b1", Path: "/photos/tree_root_b/child1", ParentAlbumID: &rootB.ID}
 	assert.NoError(t, db.Save(&childB1).Error)
 
-	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: rootA.ID, Level: models.AlbumPermissionLevelRead}).Error)
-	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: rootB.ID, Level: models.AlbumPermissionLevelRead}).Error)
+	// PropagateAlbumLevel (rather than a single UserAlbums row on the
+	// roots) so the already-existing children get their own grant row too,
+	// matching the real invariant AlbumTreeChildren's authorization check
+	// relies on: every album a user can reach has its own row for them.
+	assert.NoError(t, models.PropagateAlbumLevel(db, rootA.ID, user.ID, models.AlbumPermissionLevelRead, nil))
+	assert.NoError(t, models.PropagateAlbumLevel(db, rootB.ID, user.ID, models.AlbumPermissionLevelRead, nil))
 	_, err = user.HideAlbum(db, hiddenChildA.ID, true)
 	assert.NoError(t, err)
 
@@ -205,5 +209,39 @@ func TestAlbumTreeChildren(t *testing.T) {
 		results, err := r.AlbumTreeChildren(ctx, []int{}, nil)
 		assert.NoError(t, err)
 		assert.Empty(t, results)
+	})
+
+	t.Run("a non-admin cannot read children of an album they have no access to", func(t *testing.T) {
+		stranger, err := models.RegisterUser(db, "tree_children_stranger", nil, false)
+		assert.NoError(t, err)
+		strangerCtx := auth.AddUserToContext(context.Background(), stranger)
+
+		results, err := r.AlbumTreeChildren(strangerCtx, []int{rootA.ID, rootB.ID}, nil)
+		assert.NoError(t, err)
+		if assert.Len(t, results, 2) {
+			for _, res := range results {
+				assert.Empty(t, res.Children, "a user with no grant on the requested album must not see its children")
+			}
+		}
+	})
+
+	t.Run("admin sees children regardless of their own grants", func(t *testing.T) {
+		admin, err := models.RegisterUser(db, "tree_children_admin", nil, true)
+		assert.NoError(t, err)
+		adminCtx := auth.AddUserToContext(context.Background(), admin)
+
+		results, err := r.AlbumTreeChildren(adminCtx, []int{rootA.ID}, nil)
+		assert.NoError(t, err)
+		if assert.Len(t, results, 1) {
+			// "Hidden" is a per-viewer preference (UserAlbumData.Hidden) -
+			// this admin never hid hiddenChildA themselves, so unlike
+			// `user` earlier, they see all three children by default.
+			assert.Len(t, results[0].Children, 3)
+		}
+	})
+
+	t.Run("unauthenticated request is rejected", func(t *testing.T) {
+		_, err := r.AlbumTreeChildren(context.Background(), []int{rootA.ID}, nil)
+		assert.Error(t, err)
 	})
 }
