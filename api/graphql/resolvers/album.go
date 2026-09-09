@@ -141,7 +141,7 @@ func (r *albumResolver) ViewerHidden(ctx context.Context, obj *models.Album) (bo
 		return false, nil
 	}
 
-	return dataloader.For(ctx).AlbumHidden.Load(&models.UserAlbumData{
+	return dataloader.For(ctx).AlbumHidden.Load(models.UserAlbumKey{
 		UserID:  user.ID,
 		AlbumID: obj.ID,
 	})

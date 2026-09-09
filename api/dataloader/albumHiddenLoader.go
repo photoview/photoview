@@ -11,7 +11,7 @@ func NewAlbumHiddenLoader(db *gorm.DB) *AlbumHiddenLoader {
 	return &AlbumHiddenLoader{
 		maxBatch: 100,
 		wait:     5 * time.Millisecond,
-		fetch: func(keys []*models.UserAlbumData) ([]bool, []error) {
+		fetch: func(keys []models.UserAlbumKey) ([]bool, []error) {
 
 			userIDMap := make(map[int]struct{}, len(keys))
 			albumIDMap := make(map[int]struct{}, len(keys))

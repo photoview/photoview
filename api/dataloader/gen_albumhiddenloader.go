@@ -12,7 +12,7 @@ import (
 // AlbumHiddenLoaderConfig captures the config to create a new AlbumHiddenLoader
 type AlbumHiddenLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []*models.UserAlbumData) ([]bool, []error)
+	Fetch func(keys []models.UserAlbumKey) ([]bool, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -33,7 +33,7 @@ func newAlbumHiddenLoaderFromConfig(config AlbumHiddenLoaderConfig) *AlbumHidden
 // AlbumHiddenLoader batches and caches requests
 type AlbumHiddenLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []*models.UserAlbumData) ([]bool, []error)
+	fetch func(keys []models.UserAlbumKey) ([]bool, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,7 +44,7 @@ type AlbumHiddenLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[*models.UserAlbumData]bool
+	cache map[models.UserAlbumKey]bool
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,7 +55,7 @@ type AlbumHiddenLoader struct {
 }
 
 type albumHiddenLoaderBatch struct {
-	keys    []*models.UserAlbumData
+	keys    []models.UserAlbumKey
 	data    []bool
 	error   []error
 	closing bool
@@ -63,14 +63,14 @@ type albumHiddenLoaderBatch struct {
 }
 
 // Load a bool by key, batching and caching will be applied automatically
-func (l *AlbumHiddenLoader) Load(key *models.UserAlbumData) (bool, error) {
+func (l *AlbumHiddenLoader) Load(key models.UserAlbumKey) (bool, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a bool.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *AlbumHiddenLoader) LoadThunk(key *models.UserAlbumData) func() (bool, error) {
+func (l *AlbumHiddenLoader) LoadThunk(key models.UserAlbumKey) func() (bool, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -113,7 +113,7 @@ func (l *AlbumHiddenLoader) LoadThunk(key *models.UserAlbumData) func() (bool, e
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *AlbumHiddenLoader) LoadAll(keys []*models.UserAlbumData) ([]bool, []error) {
+func (l *AlbumHiddenLoader) LoadAll(keys []models.UserAlbumKey) ([]bool, []error) {
 	results := make([]func() (bool, error), len(keys))
 
 	for i, key := range keys {
@@ -131,7 +131,7 @@ func (l *AlbumHiddenLoader) LoadAll(keys []*models.UserAlbumData) ([]bool, []err
 // LoadAllThunk returns a function that when called will block waiting for a bools.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *AlbumHiddenLoader) LoadAllThunk(keys []*models.UserAlbumData) func() ([]bool, []error) {
+func (l *AlbumHiddenLoader) LoadAllThunk(keys []models.UserAlbumKey) func() ([]bool, []error) {
 	results := make([]func() (bool, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -149,7 +149,7 @@ func (l *AlbumHiddenLoader) LoadAllThunk(keys []*models.UserAlbumData) func() ([
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *AlbumHiddenLoader) Prime(key *models.UserAlbumData, value bool) bool {
+func (l *AlbumHiddenLoader) Prime(key models.UserAlbumKey, value bool) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -160,22 +160,22 @@ func (l *AlbumHiddenLoader) Prime(key *models.UserAlbumData, value bool) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *AlbumHiddenLoader) Clear(key *models.UserAlbumData) {
+func (l *AlbumHiddenLoader) Clear(key models.UserAlbumKey) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *AlbumHiddenLoader) unsafeSet(key *models.UserAlbumData, value bool) {
+func (l *AlbumHiddenLoader) unsafeSet(key models.UserAlbumKey, value bool) {
 	if l.cache == nil {
-		l.cache = map[*models.UserAlbumData]bool{}
+		l.cache = map[models.UserAlbumKey]bool{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *albumHiddenLoaderBatch) keyIndex(l *AlbumHiddenLoader, key *models.UserAlbumData) int {
+func (b *albumHiddenLoaderBatch) keyIndex(l *AlbumHiddenLoader, key models.UserAlbumKey) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
