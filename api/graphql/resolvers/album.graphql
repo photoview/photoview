@@ -32,8 +32,10 @@ type Album {
   viewerCanUpload: Boolean!
   "Whether the currently logged in user may delete or move this album"
   viewerCanDelete: Boolean!
-  "Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share) and may share it with other users"
+  "Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)"
   viewerIsOwner: Boolean!
+  "Whether the currently logged in user is allowed to share albums at all (see User.canShare) - sharing this specific album also requires viewerIsOwner"
+  viewerCanShare: Boolean!
   "Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users."
   viewerHidden: Boolean!
   "The path on the filesystem of the server, where this album is located"
@@ -70,7 +72,7 @@ type AlbumTreeChildren {
 }
 
 extend type Query {
-  "Other users this account may pick as a share target. Username/id only."
+  "Other users this account may pick as a share target. Username/id only. Caller must be an admin or hold User.canShare."
   shareableUsers: [User!]! @isAuthorized
   "List of albums owned by the logged in user."
   myAlbums(

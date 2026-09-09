@@ -72,6 +72,10 @@ func TestAlbumViewerPermissionFields(t *testing.T) {
 		isOwner, err := r.ViewerIsOwner(ctx, &album)
 		assert.NoError(t, err)
 		assert.True(t, isOwner)
+
+		canShare, err := r.ViewerCanShare(ctx, &album)
+		assert.NoError(t, err)
+		assert.False(t, canShare, "CanShare defaults to false even for an album owner")
 	})
 
 	t.Run("upload-level recipient can upload but not delete, and is not the owner", func(t *testing.T) {
@@ -128,6 +132,21 @@ func TestAlbumViewerPermissionFields(t *testing.T) {
 		isOwner, err := r.ViewerIsOwner(ctx, &album)
 		assert.NoError(t, err)
 		assert.True(t, isOwner)
+
+		canShare, err := r.ViewerCanShare(ctx, &album)
+		assert.NoError(t, err)
+		assert.True(t, canShare, "admins can always share regardless of the CanShare flag")
+	})
+
+	t.Run("CanShare unlocks viewerCanShare regardless of album-specific access", func(t *testing.T) {
+		sharer, err := models.RegisterUser(db, "album_viewer_sharer", nil, false)
+		assert.NoError(t, err)
+		sharer.CanShare = true
+		assert.NoError(t, db.Save(sharer).Error)
+
+		canShare, err := r.ViewerCanShare(ctxFor(sharer), &album)
+		assert.NoError(t, err)
+		assert.True(t, canShare)
 	})
 
 	t.Run("unauthenticated viewer gets false for every field", func(t *testing.T) {
@@ -135,6 +154,52 @@ func TestAlbumViewerPermissionFields(t *testing.T) {
 		canUpload, err := r.ViewerCanUpload(ctx, &album)
 		assert.NoError(t, err)
 		assert.False(t, canUpload)
+
+		canShare, err := r.ViewerCanShare(ctx, &album)
+		assert.NoError(t, err)
+		assert.False(t, canShare)
+	})
+}
+
+func TestShareableUsers(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	sharer, err := models.RegisterUser(db, "shareable_users_sharer", nil, false)
+	assert.NoError(t, err)
+	sharer.CanShare = true
+	assert.NoError(t, db.Save(sharer).Error)
+
+	noShare, err := models.RegisterUser(db, "shareable_users_no_share", nil, false)
+	assert.NoError(t, err)
+
+	admin, err := models.RegisterUser(db, "shareable_users_admin", nil, true)
+	assert.NoError(t, err)
+
+	r := &queryResolver{Resolver: &Resolver{database: db}}
+
+	t.Run("a user with CanShare sees the user list", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), sharer)
+		users, err := r.ShareableUsers(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, users, 3)
+	})
+
+	t.Run("a user without CanShare is refused", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), noShare)
+		_, err := r.ShareableUsers(ctx)
+		assert.Error(t, err)
+	})
+
+	t.Run("admin sees the user list regardless of CanShare", func(t *testing.T) {
+		ctx := auth.AddUserToContext(context.Background(), admin)
+		users, err := r.ShareableUsers(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, users, 3)
+	})
+
+	t.Run("unauthenticated request is rejected", func(t *testing.T) {
+		_, err := r.ShareableUsers(context.Background())
+		assert.Error(t, err)
 	})
 }
 

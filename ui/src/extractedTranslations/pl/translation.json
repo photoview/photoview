@@ -259,6 +259,7 @@
       "add_user": {
         "submit": "Dodaj użytkownika"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Usuń {{user}}",
         "description": "<0>Czy jesteś pewien, że chcesz usunąć <1></1>?</0><p>Tej czynności nie można cofnąć</p>",

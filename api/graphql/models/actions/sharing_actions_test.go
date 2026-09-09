@@ -14,12 +14,18 @@ func TestGrantAlbumAccess_OwnerOnly(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "owner", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 
 	recipient, err := models.RegisterUser(db, "recipient", nil, false)
 	assert.NoError(t, err)
+	recipient.CanShare = true
+	assert.NoError(t, db.Save(recipient).Error)
 
 	thirdParty, err := models.RegisterUser(db, "third_party", nil, false)
 	assert.NoError(t, err)
+	thirdParty.CanShare = true
+	assert.NoError(t, db.Save(thirdParty).Error)
 
 	admin, err := models.RegisterUser(db, "admin", nil, true)
 	assert.NoError(t, err)
@@ -86,6 +92,23 @@ func TestGrantAlbumAccess_OwnerOnly(t *testing.T) {
 		_, err := actions.GrantAlbumAccess(db, owner, album.ID, owner.ID, models.AlbumPermissionLevelRead)
 		assert.Error(t, err)
 	})
+
+	t.Run("an owner without CanShare is refused even with full access", func(t *testing.T) {
+		noShare, err := models.RegisterUser(db, "no_share_owner", nil, false)
+		assert.NoError(t, err)
+		assert.NoError(t, db.Create(&models.UserAlbums{
+			UserID: noShare.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelDelete, GrantedByUserID: nil,
+		}).Error)
+
+		_, err = actions.GrantAlbumAccess(db, noShare, album.ID, thirdParty.ID, models.AlbumPermissionLevelRead)
+		assert.Error(t, err)
+
+		noShare.CanShare = true
+		assert.NoError(t, db.Save(noShare).Error)
+
+		_, err = actions.GrantAlbumAccess(db, noShare, album.ID, thirdParty.ID, models.AlbumPermissionLevelRead)
+		assert.NoError(t, err, "granting CanShare should unlock sharing without any other change")
+	})
 }
 
 func TestAlbumPermissions_ExcludesViewer(t *testing.T) {
@@ -93,6 +116,8 @@ func TestAlbumPermissions_ExcludesViewer(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "perms_owner", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 	recipient, err := models.RegisterUser(db, "perms_recipient", nil, false)
 	assert.NoError(t, err)
 
@@ -117,6 +142,8 @@ func TestGrantAlbumAccess_PropagatesToExistingDescendants(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "owner2", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 	recipient, err := models.RegisterUser(db, "recipient2", nil, false)
 	assert.NoError(t, err)
 
@@ -147,6 +174,8 @@ func TestGrantAlbumAccess_CoexistsWithForeignGrantInSubtree(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "owner4", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 	recipient, err := models.RegisterUser(db, "recipient4", nil, false)
 	assert.NoError(t, err)
 
@@ -211,6 +240,8 @@ func TestRevokeAlbumAccess_LeavesForeignGrantInSubtreeIntact(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "owner5", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 	recipient, err := models.RegisterUser(db, "recipient5", nil, false)
 	assert.NoError(t, err)
 
@@ -248,6 +279,8 @@ func TestRevokeAlbumAccess(t *testing.T) {
 
 	owner, err := models.RegisterUser(db, "owner3", nil, false)
 	assert.NoError(t, err)
+	owner.CanShare = true
+	assert.NoError(t, db.Save(owner).Error)
 	recipient, err := models.RegisterUser(db, "recipient3", nil, false)
 	assert.NoError(t, err)
 	nonOwner, err := models.RegisterUser(db, "non_owner3", nil, false)

@@ -14,11 +14,16 @@ import {
 } from './__generated__/userAddRootPath'
 
 export const CREATE_USER_MUTATION = gql`
-  mutation createUser($username: String!, $admin: Boolean!) {
-    createUser(username: $username, admin: $admin) {
+  mutation createUser(
+    $username: String!
+    $admin: Boolean!
+    $canShare: Boolean
+  ) {
+    createUser(username: $username, admin: $admin, canShare: $canShare) {
       id
       username
       admin
+      canShare
       __typename
     }
   }
@@ -40,6 +45,7 @@ const initialState = {
   username: '',
   rootPath: '',
   admin: false,
+  canShare: false,
   level: AlbumPermissionLevel.READ as AlbumPermissionLevel,
   userAdded: false,
 }
@@ -137,6 +143,16 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
             })
           }}
         />
+        <Checkbox
+          label={t('settings.users.can_share', 'Can share')}
+          checked={state.canShare}
+          onChange={e => {
+            setState({
+              ...state,
+              canShare: e.target.checked || false,
+            })
+          }}
+        />
         {state.rootPath && (
           <Dropdown
             className="mt-1"
@@ -165,6 +181,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
                 variables: {
                   username: state.username,
                   admin: state.admin,
+                  canShare: state.canShare,
                 },
               })
             }}

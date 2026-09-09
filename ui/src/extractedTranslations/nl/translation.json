@@ -253,6 +253,7 @@
       "add_user": {
         "submit": "Gebruiker toevoegen"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Verwijder {{user}}",
         "description": "<0>Weet je zeker dat je <1></1> wilt verwijderen?</0><p>Deze actie kan niet ongedaan worden gemaakt</p>",

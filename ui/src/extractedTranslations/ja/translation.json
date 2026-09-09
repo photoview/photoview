@@ -250,6 +250,7 @@
       "add_user": {
         "submit": "ユーザーを追加"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "{{user}} を削除",
         "description": "<0><1></1> を削除してもよろしいですか？</0><p>この操作は元に戻せません</p>",

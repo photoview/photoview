@@ -253,6 +253,7 @@
       "add_user": {
         "submit": "Tilføj bruger"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Slet {user}",
         "description": "<0>Er du sikker på at du vil slette <1></1>?</0><p>Denne handling kan ikke fortrydes</p>",

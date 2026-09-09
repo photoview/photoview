@@ -41,6 +41,10 @@ func AlbumPermissions(db *gorm.DB, albumID int, viewerID int) ([]*models.AlbumPe
 // across the album's current subtree, so already-scanned descendants never
 // keep a stale level.
 func GrantAlbumAccess(db *gorm.DB, actor *models.User, albumID int, targetUserID int, level models.AlbumPermissionLevel) (*models.AlbumPermission, error) {
+	if !actor.Admin && !actor.CanShare {
+		return nil, errors.New("not allowed to share albums")
+	}
+
 	if actor.ID == targetUserID {
 		return nil, errors.New("cannot share an album with yourself")
 	}

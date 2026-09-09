@@ -50,6 +50,16 @@ const EditUserRow = ({
             }))
           }}
         />
+        <Checkbox
+          label={t('settings.users.can_share', 'Can share')}
+          checked={state.canShare}
+          onChange={e => {
+            setState(state => ({
+              ...state,
+              canShare: e.target.checked || false,
+            }))
+          }}
+        />
       </TableCell>
       <TableCell>
         <ButtonGroup>
@@ -73,6 +83,7 @@ const EditUserRow = ({
                   id: user.id,
                   username: state.username,
                   admin: state.admin,
+                  canShare: state.canShare,
                 },
               })
             }

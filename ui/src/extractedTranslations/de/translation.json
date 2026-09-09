@@ -253,6 +253,7 @@
       "add_user": {
         "submit": "Benutzer hinzufügen"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Lösche {{user}}",
         "description": "<0>Du bist dabei, den Nutzer <1></1> endgültig zu löschen.</0><p>Diese Aktion kann nicht rückgängig gemacht werden. Bist du sicher?</p>",

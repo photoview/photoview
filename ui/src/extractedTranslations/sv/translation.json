@@ -253,6 +253,7 @@
       "add_user": {
         "submit": "Lägg till användare"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Radera {{user}}",
         "description": "<0>Är du säker att du vill radera <1></1>?</0><p>Denna åtgärd kan inte ångras</p>",

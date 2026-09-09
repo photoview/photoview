@@ -18,6 +18,12 @@ type User struct {
 	// RootPath string  `gorm:"size:512`
 	Albums []Album `gorm:"many2many:user_albums;constraint:OnDelete:CASCADE;"`
 	Admin  bool    `gorm:"default:false"`
+	// CanShare grants permission to share albums the user owns with other
+	// users (GrantAlbumAccess, and the shareableUsers query that lists
+	// possible recipients) - defaults to false so existing installs match
+	// their pre-sharing-feature behavior until an admin opts a user in.
+	// Admins can always share regardless of this flag.
+	CanShare bool `gorm:"default:false"`
 }
 
 type UserMediaData struct {

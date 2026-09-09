@@ -134,6 +134,16 @@ func (r *albumResolver) ViewerIsOwner(ctx context.Context, obj *models.Album) (b
 	return grant != nil && grant.GrantedByUserID == nil, nil
 }
 
+// ViewerCanShare is the resolver for the viewerCanShare field.
+func (r *albumResolver) ViewerCanShare(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+
+	return user.Admin || user.CanShare, nil
+}
+
 // ViewerHidden is the resolver for the viewerHidden field.
 func (r *albumResolver) ViewerHidden(ctx context.Context, obj *models.Album) (bool, error) {
 	user := auth.UserFromContext(ctx)
@@ -263,6 +273,9 @@ func (r *mutationResolver) UnhideAllAlbums(ctx context.Context) (bool, error) {
 func (r *queryResolver) ShareableUsers(ctx context.Context) ([]*models.User, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+	if !user.Admin && !user.CanShare {
 		return nil, auth.ErrUnauthorized
 	}
 

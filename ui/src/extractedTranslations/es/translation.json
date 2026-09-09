@@ -256,6 +256,7 @@
       "add_user": {
         "submit": "Añadir usuario"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Eliminar {{user}}",
         "description": "<0>¿Estás seguro de que quieres eliminar a <1></1>?</0><p>Esta acción no puede deshacerse</p>",

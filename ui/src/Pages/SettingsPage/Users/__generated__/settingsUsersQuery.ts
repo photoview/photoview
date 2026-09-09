@@ -42,6 +42,10 @@ export interface settingsUsersQuery_user {
    */
   admin: boolean;
   /**
+   * Whether the user may share albums they own with other users. Admins can always share regardless of this flag.
+   */
+  canShare: boolean;
+  /**
    * Top level albums owned by this user
    */
   rootAlbums: settingsUsersQuery_user_rootAlbums[];

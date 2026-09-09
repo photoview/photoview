@@ -16,7 +16,7 @@ export interface albumTreeRootQuery_myAlbums {
    */
   viewerHidden: boolean;
   /**
-   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share) and may share it with other users
+   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)
    */
   viewerIsOwner: boolean;
 }

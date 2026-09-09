@@ -10,7 +10,7 @@ const gqlMock = [
   {
     request: {
       query: CREATE_USER_MUTATION,
-      variables: { username: 'testuser', admin: false },
+      variables: { username: 'testuser', admin: false, canShare: false },
     },
     result: {
       data: {
@@ -18,6 +18,7 @@ const gqlMock = [
           id: '123',
           username: 'testuser',
           admin: false,
+          canShare: false,
           __typename: 'User',
         },
       },
@@ -59,6 +60,51 @@ test('Add user with username and path', async () => {
   })
 
   expect(setShow).not.toHaveBeenCalled()
+})
+
+test('Add user with canShare checked', async () => {
+  const userAdded = vi.fn()
+  const setShow = vi.fn()
+
+  const canShareMock = [
+    {
+      request: {
+        query: CREATE_USER_MUTATION,
+        variables: { username: 'sharinguser', admin: false, canShare: true },
+      },
+      result: {
+        data: {
+          createUser: {
+            id: '124',
+            username: 'sharinguser',
+            admin: false,
+            canShare: true,
+            __typename: 'User',
+          },
+        },
+      },
+    },
+  ]
+
+  render(
+    <MockedProvider addTypename={true} mocks={canShareMock}>
+      <table>
+        <tbody>
+          <AddUserRow onUserAdded={userAdded} setShow={setShow} show={true} />
+        </tbody>
+      </table>
+    </MockedProvider>
+  )
+
+  fireEvent.change(screen.getByPlaceholderText('Username'), {
+    target: { value: 'sharinguser' },
+  })
+  fireEvent.click(screen.getByLabelText('Can share'))
+  fireEvent.click(screen.getByText('Add user'))
+
+  await waitFor(() => {
+    expect(userAdded).toHaveBeenCalledTimes(1)
+  })
 })
 
 test('Add user with only username', async () => {

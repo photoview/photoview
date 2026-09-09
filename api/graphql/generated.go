@@ -62,6 +62,7 @@ type ComplexityRoot struct {
 		Thumbnail       func(childComplexity int) int
 		Title           func(childComplexity int) int
 		ViewerCanDelete func(childComplexity int) int
+		ViewerCanShare  func(childComplexity int) int
 		ViewerCanUpload func(childComplexity int) int
 		ViewerHidden    func(childComplexity int) int
 		ViewerIsOwner   func(childComplexity int) int
@@ -171,7 +172,7 @@ type ComplexityRoot struct {
 		ChangeUserPreferences       func(childComplexity int, language *string, searchResultLimit *int, showAlbumTree *bool, showHiddenAlbums *bool) int
 		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
 		CreateAlbumFolder           func(childComplexity int, parentAlbumID int, name string) int
-		CreateUser                  func(childComplexity int, username string, password *string, admin bool, rootPath *string) int
+		CreateUser                  func(childComplexity int, username string, password *string, admin bool, canShare *bool, rootPath *string) int
 		DeleteAlbum                 func(childComplexity int, albumID int) int
 		DeleteMedia                 func(childComplexity int, mediaID int) int
 		DeleteMediaList             func(childComplexity int, mediaIds []int) int
@@ -202,7 +203,7 @@ type ComplexityRoot struct {
 		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string, label *string) int
 		ShareMedia                  func(childComplexity int, mediaID int, expire *time.Time, password *string, label *string) int
 		UnhideAllAlbums             func(childComplexity int) int
-		UpdateUser                  func(childComplexity int, id int, username *string, password *string, admin *bool) int
+		UpdateUser                  func(childComplexity int, id int, username *string, password *string, admin *bool, canShare *bool) int
 		UserAddRootPath             func(childComplexity int, id int, rootPath string, level *models.AlbumPermissionLevel) int
 		UserRemoveRootAlbum         func(childComplexity int, userID int, albumID int) int
 		UserUpdateRootPathLevel     func(childComplexity int, id int, albumID int, level models.AlbumPermissionLevel) int
@@ -292,6 +293,7 @@ type ComplexityRoot struct {
 	User struct {
 		Admin      func(childComplexity int) int
 		Albums     func(childComplexity int) int
+		CanShare   func(childComplexity int) int
 		ID         func(childComplexity int) int
 		RootAlbums func(childComplexity int) int
 		Username   func(childComplexity int) int
@@ -331,6 +333,7 @@ type AlbumResolver interface {
 	ViewerCanUpload(ctx context.Context, obj *models.Album) (bool, error)
 	ViewerCanDelete(ctx context.Context, obj *models.Album) (bool, error)
 	ViewerIsOwner(ctx context.Context, obj *models.Album) (bool, error)
+	ViewerCanShare(ctx context.Context, obj *models.Album) (bool, error)
 	ViewerHidden(ctx context.Context, obj *models.Album) (bool, error)
 
 	Thumbnail(ctx context.Context, obj *models.Album) (*models.Media, error)
@@ -397,8 +400,8 @@ type MutationResolver interface {
 	DeleteAlbum(ctx context.Context, albumID int) (bool, error)
 	AuthorizeUser(ctx context.Context, username string, password string) (*models.AuthorizeResult, error)
 	InitialSetupWizard(ctx context.Context, username string, password string, rootPath string) (*models.AuthorizeResult, error)
-	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error)
-	CreateUser(ctx context.Context, username string, password *string, admin bool, rootPath *string) (*models.User, error)
+	UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool, canShare *bool) (*models.User, error)
+	CreateUser(ctx context.Context, username string, password *string, admin bool, canShare *bool, rootPath *string) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (*models.User, error)
 	UserAddRootPath(ctx context.Context, id int, rootPath string, level *models.AlbumPermissionLevel) (*models.Album, error)
 	UserUpdateRootPathLevel(ctx context.Context, id int, albumID int, level models.AlbumPermissionLevel) (*models.Album, error)
@@ -549,6 +552,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Album.ViewerCanDelete(childComplexity), true
+	case "Album.viewerCanShare":
+		if e.ComplexityRoot.Album.ViewerCanShare == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Album.ViewerCanShare(childComplexity), true
 	case "Album.viewerCanUpload":
 		if e.ComplexityRoot.Album.ViewerCanUpload == nil {
 			break
@@ -1022,7 +1031,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool), args["rootPath"].(*string)), true
+		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["username"].(string), args["password"].(*string), args["admin"].(bool), args["canShare"].(*bool), args["rootPath"].(*string)), true
 	case "Mutation.deleteAlbum":
 		if e.ComplexityRoot.Mutation.DeleteAlbum == nil {
 			break
@@ -1348,7 +1357,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["id"].(int), args["username"].(*string), args["password"].(*string), args["admin"].(*bool), args["canShare"].(*bool)), true
 	case "Mutation.userAddRootPath":
 		if e.ComplexityRoot.Mutation.UserAddRootPath == nil {
 			break
@@ -1794,6 +1803,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.User.Albums(childComplexity), true
+	case "User.canShare":
+		if e.ComplexityRoot.User.CanShare == nil {
+			break
+		}
+
+		return e.ComplexityRoot.User.CanShare(childComplexity), true
 	case "User.id":
 		if e.ComplexityRoot.User.ID == nil {
 			break
@@ -2062,6 +2077,8 @@ func (ec *executionContext) childFields_Album(ctx context.Context, field graphql
 		return ec.fieldContext_Album_viewerCanDelete(ctx, field)
 	case "viewerIsOwner":
 		return ec.fieldContext_Album_viewerIsOwner(ctx, field)
+	case "viewerCanShare":
+		return ec.fieldContext_Album_viewerCanShare(ctx, field)
 	case "viewerHidden":
 		return ec.fieldContext_Album_viewerHidden(ctx, field)
 	case "filePath":
@@ -2378,6 +2395,8 @@ func (ec *executionContext) childFields_User(ctx context.Context, field graphql.
 		return ec.fieldContext_User_rootAlbums(ctx, field)
 	case "admin":
 		return ec.fieldContext_User_admin(ctx, field)
+	case "canShare":
+		return ec.fieldContext_User_canShare(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 }
@@ -2759,14 +2778,22 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 		return nil, err
 	}
 	args["admin"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath",
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "canShare",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["canShare"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "rootPath",
 		func(ctx context.Context, v any) (*string, error) {
 			return ec.unmarshalOString2ᚖstring(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["rootPath"] = arg3
+	args["rootPath"] = arg4
 	return args, nil
 }
 
@@ -3351,6 +3378,14 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 		return nil, err
 	}
 	args["admin"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "canShare",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["canShare"] = arg4
 	return args, nil
 }
 
@@ -4099,6 +4134,29 @@ func (ec *executionContext) _Album_viewerIsOwner(ctx context.Context, field grap
 	)
 }
 func (ec *executionContext) fieldContext_Album_viewerIsOwner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Album", field, true, true, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Album_viewerCanShare(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_viewerCanShare(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Album().ViewerCanShare(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Album_viewerCanShare(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Album", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
@@ -7709,7 +7767,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool))
+			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["id"].(int), fc.Args["username"].(*string), fc.Args["password"].(*string), fc.Args["admin"].(*bool), fc.Args["canShare"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -7766,7 +7824,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool), fc.Args["rootPath"].(*string))
+			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["username"].(string), fc.Args["password"].(*string), fc.Args["admin"].(bool), fc.Args["canShare"].(*bool), fc.Args["rootPath"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -10156,6 +10214,29 @@ func (ec *executionContext) fieldContext_User_admin(_ context.Context, field gra
 	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _User_canShare(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_canShare(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CanShare, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_User_canShare(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _UserPreferences_id(ctx context.Context, field graphql.CollectedField, obj *models.UserPreferences) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -11920,6 +12001,44 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Album_viewerIsOwner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.IsDeferred() {
+				deferredFieldSet.AddField(field)
+				fieldIndex := len(deferredFieldSet.Values) - 1
+				deferredFieldSet.Concurrently(fieldIndex, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, deferredFieldSet)
+				})
+
+				for _, deferrable := range field.Deferrables {
+					view, ok := deferLabelToView[deferrable.Label]
+					if !ok {
+						view = deferredFieldSet.NewView()
+						deferLabelToView[deferrable.Label] = view
+					}
+					view.AddIndices(fieldIndex)
+				}
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "viewerCanShare":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_viewerCanShare(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -14798,6 +14917,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "admin":
 			out.Values[i] = ec._User_admin(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "canShare":
+			out.Values[i] = ec._User_canShare(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

@@ -15,6 +15,10 @@ export interface updateUser_updateUser {
    * Whether or not the user has admin privileges
    */
   admin: boolean;
+  /**
+   * Whether the user may share albums they own with other users. Admins can always share regardless of this flag.
+   */
+  canShare: boolean;
 }
 
 export interface updateUser {
@@ -28,4 +32,5 @@ export interface updateUserVariables {
   id: string;
   username?: string | null;
   admin?: boolean | null;
+  canShare?: boolean | null;
 }

@@ -38,7 +38,7 @@ export interface albumPermissionsQuery_album {
 
 export interface albumPermissionsQuery {
   /**
-   * Other users this account may pick as a share target. Username/id only.
+   * Other users this account may pick as a share target. Username/id only. Caller must be an admin or hold User.canShare.
    */
   shareableUsers: albumPermissionsQuery_shareableUsers[];
   /**

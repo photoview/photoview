@@ -107,10 +107,10 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 }
 
 // UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool, canShare *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
-	if username == nil && password == nil && admin == nil {
+	if username == nil && password == nil && admin == nil && canShare == nil {
 		return nil, errors.New("no updates requested")
 	}
 
@@ -137,6 +137,10 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 		user.Admin = *admin
 	}
 
+	if canShare != nil {
+		user.CanShare = *canShare
+	}
+
 	if err := db.Save(&user).Error; err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
@@ -145,7 +149,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 }
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool, rootPath *string) (*models.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool, canShare *bool, rootPath *string) (*models.User, error) {
 	var user *models.User
 
 	transactionError := r.DB(ctx).Transaction(func(tx *gorm.DB) error {
@@ -153,6 +157,13 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 		user, err = models.RegisterUser(tx, username, password, admin)
 		if err != nil {
 			return err
+		}
+
+		if canShare != nil && *canShare {
+			user.CanShare = true
+			if err := tx.Save(user).Error; err != nil {
+				return fmt.Errorf("failed to set canShare on new user: %w", err)
+			}
 		}
 
 		if rootPath != nil && *rootPath != "" {

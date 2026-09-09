@@ -250,6 +250,7 @@
       "add_user": {
         "submit": "新增用户"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "删除 {{user}}",
         "description": "<0>确定删除 <1></1>?</0><p>此操作无法取消</p>",

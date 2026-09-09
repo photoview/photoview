@@ -23,6 +23,7 @@ const albumQuery = gql`
       viewerCanUpload
       viewerCanDelete
       viewerIsOwner
+      viewerCanShare
       parentAlbumId
     }
   }
@@ -92,7 +93,7 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
           />
         </div>
       )}
-      {data?.album.viewerIsOwner && (
+      {data?.album.viewerIsOwner && data.album.viewerCanShare && (
         <div className="mt-8">
           <SidebarAlbumSharing key={albumId} albumId={albumId} />
         </div>

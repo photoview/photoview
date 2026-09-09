@@ -253,6 +253,7 @@
       "add_user": {
         "submit": "Add user"
       },
+      "can_share": "Can share",
       "confirm_delete_user": {
         "action": "Delete {{user}}",
         "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",

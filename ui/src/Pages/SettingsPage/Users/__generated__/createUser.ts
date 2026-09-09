@@ -15,6 +15,10 @@ export interface createUser_createUser {
    * Whether or not the user has admin privileges
    */
   admin: boolean;
+  /**
+   * Whether the user may share albums they own with other users. Admins can always share regardless of this flag.
+   */
+  canShare: boolean;
 }
 
 export interface createUser {
@@ -27,4 +31,5 @@ export interface createUser {
 export interface createUserVariables {
   username: string;
   admin: boolean;
+  canShare?: boolean | null;
 }

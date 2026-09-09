@@ -20,9 +20,13 @@ export interface getAlbumSidebar_album {
    */
   viewerCanDelete: boolean;
   /**
-   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share) and may share it with other users
+   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)
    */
   viewerIsOwner: boolean;
+  /**
+   * Whether the currently logged in user is allowed to share albums at all (see User.canShare) - sharing this specific album also requires viewerIsOwner
+   */
+  viewerCanShare: boolean;
   /**
    * ID of the album which contains this album, or null if this is a root album.
    * Unlike parentAlbum, this doesn't require the parent association to be
