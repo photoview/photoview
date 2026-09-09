@@ -138,6 +138,76 @@ func TestDeleteAlbum(t *testing.T) {
 	})
 }
 
+func TestRenameAlbum(t *testing.T) {
+	r, uploader, nonUploader := setupUploadMutationTest(t)
+	root := makeTestRootAlbum(t, r, uploader, "root")
+	ctx := auth.AddUserToContext(context.Background(), uploader)
+
+	t.Run("root album cannot be renamed", func(t *testing.T) {
+		_, err := r.RenameAlbum(ctx, root.ID, "new_root_name")
+		assert.Error(t, err)
+	})
+
+	t.Run("happy path renames on disk and updates descendant media paths", func(t *testing.T) {
+		source, err := r.CreateAlbumFolder(ctx, root.ID, "source")
+		assert.NoError(t, err)
+
+		media := models.Media{
+			Title:   "photo.jpg",
+			Path:    filepath.Join(source.Path, "photo.jpg"),
+			AlbumID: source.ID,
+		}
+		assert.NoError(t, r.database.Save(&media).Error)
+
+		renamed, err := r.RenameAlbum(ctx, source.ID, "renamed")
+		assert.NoError(t, err)
+		if !assert.NotNil(t, renamed) {
+			return
+		}
+
+		wantPath := filepath.Join(root.Path, "renamed")
+		assert.Equal(t, wantPath, renamed.Path)
+		assert.Equal(t, "renamed", renamed.Title)
+
+		_, statErr := os.Stat(wantPath)
+		assert.NoError(t, statErr)
+		_, statErr = os.Stat(source.Path)
+		assert.True(t, os.IsNotExist(statErr))
+
+		var updatedMedia models.Media
+		assert.NoError(t, r.database.First(&updatedMedia, media.ID).Error)
+		assert.Equal(t, filepath.Join(wantPath, "photo.jpg"), updatedMedia.Path)
+	})
+
+	t.Run("renaming to the current name is a no-op", func(t *testing.T) {
+		album, err := r.CreateAlbumFolder(ctx, root.ID, "unchanged")
+		assert.NoError(t, err)
+
+		result, err := r.RenameAlbum(ctx, album.ID, "unchanged")
+		assert.NoError(t, err)
+		assert.Equal(t, album.Path, result.Path)
+	})
+
+	t.Run("cannot rename to a name that already exists in the parent", func(t *testing.T) {
+		_, err := r.CreateAlbumFolder(ctx, root.ID, "taken")
+		assert.NoError(t, err)
+		toRename, err := r.CreateAlbumFolder(ctx, root.ID, "to_rename")
+		assert.NoError(t, err)
+
+		_, err = r.RenameAlbum(ctx, toRename.ID, "taken")
+		assert.Error(t, err)
+	})
+
+	t.Run("permission denied for non-uploader", func(t *testing.T) {
+		album, err := r.CreateAlbumFolder(ctx, root.ID, "denied_rename")
+		assert.NoError(t, err)
+
+		nonUploaderCtx := auth.AddUserToContext(context.Background(), nonUploader)
+		_, err = r.RenameAlbum(nonUploaderCtx, album.ID, "hijacked")
+		assert.Error(t, err)
+	})
+}
+
 func TestMoveAlbum(t *testing.T) {
 	r, uploader, nonUploader := setupUploadMutationTest(t)
 	root := makeTestRootAlbum(t, r, uploader, "root")

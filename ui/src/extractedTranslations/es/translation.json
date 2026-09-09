@@ -332,6 +332,7 @@
         },
         "delete": "",
         "move": "",
+        "rename": "",
         "title": ""
       },
       "new_folder": {

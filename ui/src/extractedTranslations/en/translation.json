@@ -329,6 +329,7 @@
         },
         "delete": "Delete this folder",
         "move": "Move",
+        "rename": "Rename",
         "title": "Manage folder"
       },
       "new_folder": {

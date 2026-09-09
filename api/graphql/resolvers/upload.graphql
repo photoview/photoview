@@ -7,6 +7,13 @@ extend type Mutation {
   createAlbumFolder(parentAlbumId: ID!, name: String!): Album! @isAuthorized
 
   """
+  Rename a folder on disk and in the database, keeping it in the same
+  parent album. The caller must be an admin, or hold at least
+  DELETE-level access on albumId. Root albums cannot be renamed.
+  """
+  renameAlbum(albumId: ID!, newName: String!): Album! @isAuthorized
+
+  """
   Move a folder (and everything inside it) into a new parent album, both on
   disk and in the database. The caller must be an admin, or hold at least
   DELETE-level access on `albumId` and at least UPLOAD-level access on

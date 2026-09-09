@@ -329,6 +329,7 @@
         },
         "delete": "Diesen Ordner löschen",
         "move": "Verschieben",
+        "rename": "",
         "title": "Ordner verwalten"
       },
       "new_folder": {

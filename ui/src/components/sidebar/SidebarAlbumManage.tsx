@@ -3,17 +3,27 @@ import { gql, useMutation, useQuery } from '@apollo/client'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
-import { Button } from '../../primitives/form/Input'
+import { Button, TextField } from '../../primitives/form/Input'
 import Dropdown from '../../primitives/form/Dropdown'
 import Modal from '../../primitives/Modal'
 import { SidebarContext } from './Sidebar'
 import { sidebarManageAlbumsQuery } from './__generated__/sidebarManageAlbumsQuery'
+import { renameAlbum, renameAlbumVariables } from './__generated__/renameAlbum'
 import { moveAlbum, moveAlbumVariables } from './__generated__/moveAlbum'
 import { deleteAlbum, deleteAlbumVariables } from './__generated__/deleteAlbum'
 
 export const MANAGE_ALBUMS_QUERY = gql`
   query sidebarManageAlbumsQuery {
     myAlbums(onlyRoot: false, showEmpty: true) {
+      id
+      title
+    }
+  }
+`
+
+export const RENAME_ALBUM_MUTATION = gql`
+  mutation renameAlbum($albumId: ID!, $newName: String!) {
+    renameAlbum(albumId: $albumId, newName: $newName) {
       id
       title
     }
@@ -47,10 +57,22 @@ const SidebarAlbumManage = ({
   const navigate = useNavigate()
   const { updateSidebar } = useContext(SidebarContext)
 
+  const [newName, setNewName] = useState(albumTitle)
   const [destination, setDestination] = useState('')
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const { data } = useQuery<sidebarManageAlbumsQuery>(MANAGE_ALBUMS_QUERY)
+
+  const [renameAlbum, { loading: renaming, error: renameError }] = useMutation<
+    renameAlbum,
+    renameAlbumVariables
+  >(RENAME_ALBUM_MUTATION, {
+    refetchQueries: ['albumQuery'],
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // renameError above already renders it, this just avoids the console
+    // warning.
+    onError: () => undefined,
+  })
 
   const [moveAlbum, { loading: moving, error: moveError }] = useMutation<
     moveAlbum,
@@ -92,6 +114,30 @@ const SidebarAlbumManage = ({
       </SidebarSectionTitle>
       <div className="mx-4">
         <div className="flex gap-2 items-start">
+          <TextField
+            className="flex-1"
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            disabled={renaming}
+          />
+          <Button
+            disabled={
+              renaming || newName.trim() === '' || newName === albumTitle
+            }
+            onClick={() =>
+              renameAlbum({
+                variables: { albumId, newName: newName.trim() },
+              })
+            }
+          >
+            {t('sidebar.album.manage.rename', 'Rename')}
+          </Button>
+        </div>
+        {renameError && (
+          <div className="mt-2 text-red-600">{renameError.message}</div>
+        )}
+
+        <div className="flex gap-2 items-start mt-4">
           <Dropdown
             className="flex-1"
             items={destinationOptions}

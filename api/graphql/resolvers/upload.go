@@ -98,6 +98,106 @@ func (r *mutationResolver) CreateAlbumFolder(ctx context.Context, parentAlbumID 
 	return &album, nil
 }
 
+// RenameAlbum is the resolver for the renameAlbum field.
+func (r *mutationResolver) RenameAlbum(ctx context.Context, albumID int, newName string) (*models.Album, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, err
+	}
+
+	if album.ParentAlbumID == nil {
+		return nil, errors.New("root albums cannot be renamed")
+	}
+
+	if canDelete, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelDelete); err != nil {
+		return nil, err
+	} else if !canDelete {
+		return nil, errors.New("unauthorized")
+	}
+
+	safeName, err := sanitizeFileName(newName)
+	if err != nil {
+		return nil, err
+	}
+
+	parentPath := filepath.Dir(album.Path)
+	oldPath := album.Path
+	newPath := filepath.Join(parentPath, safeName)
+
+	if !utils.IsSubPath(parentPath, newPath) {
+		return nil, errors.New("invalid folder name")
+	}
+
+	if newPath == oldPath {
+		return &album, nil
+	}
+
+	if _, err := os.Stat(newPath); err == nil {
+		return nil, errors.New("a folder with that name already exists")
+	} else if !os.IsNotExist(err) {
+		return nil, fmt.Errorf("could not check destination path: %w", err)
+	}
+
+	// subtree holds the album being renamed plus every descendant (the
+	// query includes the root of the recursive walk), used to rewrite
+	// descendant paths after the rename.
+	subtree, err := album.GetChildren(db, nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve album subtree: %w", err)
+	}
+
+	var descendantMedia []models.Media
+	if err := db.Where("album_id IN (?)", albumIDs(subtree)).Find(&descendantMedia).Error; err != nil {
+		return nil, fmt.Errorf("could not load media to rename: %w", err)
+	}
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return nil, fmt.Errorf("could not rename folder on disk: %w", err)
+	}
+
+	transErr := db.Transaction(func(tx *gorm.DB) error {
+		for _, a := range subtree {
+			a.Path = strings.Replace(a.Path, oldPath, newPath, 1)
+			if a.ID == album.ID {
+				a.Title = safeName
+			}
+			if err := tx.Save(a).Error; err != nil {
+				return err
+			}
+		}
+
+		for _, m := range descendantMedia {
+			m.Path = strings.Replace(m.Path, oldPath, newPath, 1)
+			if m.SideCarPath != nil {
+				replaced := strings.Replace(*m.SideCarPath, oldPath, newPath, 1)
+				m.SideCarPath = &replaced
+			}
+			if err := tx.Save(&m).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if transErr != nil {
+		// Best-effort rollback of the filesystem rename so disk and DB
+		// don't end up disagreeing about where the folder lives.
+		_ = os.Rename(newPath, oldPath)
+		return nil, transErr
+	}
+
+	album.Path = newPath
+	album.Title = safeName
+	return &album, nil
+}
+
 // MoveAlbum is the resolver for the moveAlbum field.
 func (r *mutationResolver) MoveAlbum(ctx context.Context, albumID int, newParentAlbumID int) (*models.Album, error) {
 	db := r.DB(ctx)

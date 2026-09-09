@@ -4,6 +4,7 @@ import { MockedProvider } from '@apollo/client/testing'
 import { MemoryRouter } from 'react-router-dom'
 import SidebarAlbumManage, {
   MANAGE_ALBUMS_QUERY,
+  RENAME_ALBUM_MUTATION,
   MOVE_ALBUM_MUTATION,
   DELETE_ALBUM_MUTATION,
 } from './SidebarAlbumManage'
@@ -52,6 +53,64 @@ test('excludes the current album from the move destination list', async () => {
     expect(screen.getByText('Other folder')).toBeInTheDocument()
   })
   expect(screen.queryByText('Current folder')).not.toBeInTheDocument()
+})
+
+test('renames the album', async () => {
+  let requestedVariables: unknown = null
+
+  const renameMock = {
+    request: {
+      query: RENAME_ALBUM_MUTATION,
+      variables: { albumId: '1', newName: 'Renamed folder' },
+    },
+    result: () => {
+      requestedVariables = { albumId: '1', newName: 'Renamed folder' }
+      return {
+        data: {
+          renameAlbum: {
+            id: '1',
+            title: 'Renamed folder',
+            __typename: 'Album',
+          },
+        },
+      }
+    },
+  }
+
+  render(
+    <MockedProvider mocks={[albumsQueryMock, renameMock]} addTypename={false}>
+      <MemoryRouter>
+        <SidebarAlbumManage albumId="1" albumTitle="Current folder" />
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  const input = screen.getByDisplayValue('Current folder')
+  fireEvent.change(input, { target: { value: 'Renamed folder' } })
+  fireEvent.click(screen.getByText('Rename'))
+
+  await waitFor(() => {
+    expect(requestedVariables).toEqual({
+      albumId: '1',
+      newName: 'Renamed folder',
+    })
+  })
+})
+
+test('rename button is disabled until the name actually changes', () => {
+  render(
+    <MockedProvider mocks={[albumsQueryMock]} addTypename={false}>
+      <MemoryRouter>
+        <SidebarAlbumManage albumId="1" albumTitle="Current folder" />
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  expect(screen.getByText('Rename')).toBeDisabled()
+
+  const input = screen.getByDisplayValue('Current folder')
+  fireEvent.change(input, { target: { value: '' } })
+  expect(screen.getByText('Rename')).toBeDisabled()
 })
 
 test('moves the album to the selected destination', async () => {
