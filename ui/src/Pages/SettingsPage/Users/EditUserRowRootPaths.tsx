@@ -69,6 +69,9 @@ const EditRootPath = ({ album, user }: EditRootPathProps) => {
         query: USERS_QUERY,
       },
     ],
+    // The global Apollo error link already shows a toast; this only
+    // consumes the rejected promise so it isn't left unhandled.
+    onError: () => undefined,
   })
 
   const currentLevel =

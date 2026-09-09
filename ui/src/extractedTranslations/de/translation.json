@@ -38,11 +38,15 @@
     "upload": "Lesen + Hochladen"
   },
   "album_tree": {
+    "collapse": "",
     "empty": "Noch keine Alben",
+    "expand": "",
+    "hide": "",
     "label": "Alben-Baum",
     "mobile_open": "Alben-Baum durchsuchen",
     "no_matches": "Keine passenden Alben",
-    "shared_with_me": "Für mich freigegeben"
+    "shared_with_me": "Für mich freigegeben",
+    "unhide": ""
   },
   "albums_page": {
     "shared_with_me": "Für mich freigegeben"
@@ -350,6 +354,10 @@
       },
       "title_placeholder": "Albumtitel",
       "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
         "select_files": "Dateien auswählen",
         "select_folder": "Ordner auswählen",
         "title": "Hochladen",

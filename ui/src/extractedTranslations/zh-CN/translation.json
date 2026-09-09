@@ -35,11 +35,15 @@
     "upload": ""
   },
   "album_tree": {
+    "collapse": "",
     "empty": "",
+    "expand": "",
+    "hide": "",
     "label": "",
     "mobile_open": "",
     "no_matches": "",
-    "shared_with_me": ""
+    "shared_with_me": "",
+    "unhide": ""
   },
   "albums_page": {
     "shared_with_me": ""
@@ -347,6 +351,10 @@
       },
       "title_placeholder": "相册名称",
       "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
         "select_files": "",
         "select_folder": "",
         "title": "",

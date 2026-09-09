@@ -64,7 +64,11 @@ const QueueRow = ({ item, statusLabel, statusClassName }: QueueRowProps) => {
   const [cancelScanJob, { loading }] = useMutation<
     cancelScanJobMutation,
     cancelScanJobMutationVariables
-  >(CANCEL_SCAN_JOB_MUTATION)
+  >(CANCEL_SCAN_JOB_MUTATION, {
+    // The global Apollo error link already shows a toast; this only
+    // consumes the rejected promise so it isn't left unhandled.
+    onError: () => undefined,
+  })
 
   return (
     <li className="flex justify-between items-center gap-4 py-1 border-b border-gray-100 dark:border-dark-border2">
@@ -96,6 +100,7 @@ export const ScannerQueueStatus = () => {
   const [cancelAllScanJobs, { loading: cancellingAll }] =
     useMutation<cancelAllScanJobsMutation>(CANCEL_ALL_SCAN_JOBS_MUTATION, {
       onCompleted: () => refetch(),
+      onError: () => undefined,
     })
 
   const items = data?.scannerQueueStatus ?? []

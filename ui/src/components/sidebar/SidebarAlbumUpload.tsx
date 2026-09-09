@@ -66,19 +66,26 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
       })
     }
 
-    const finish = (headerKey: string, headerDefault: string, content = '') => {
+    // Takes an already-translated header, rather than a key, so every t()
+    // call site below is a literal i18next-parser can extract - a dynamic
+    // key here silently drops these strings from the extracted
+    // translations.
+    const finish = (header: string, content = '') => {
       setUploading(false)
       MessageState.add({
         key: notifyKey,
         type: NotificationType.Message,
-        props: { header: t(headerKey, headerDefault), content },
+        props: { header, content },
       })
       setTimeout(() => MessageState.removeKey(notifyKey), 4000)
     }
 
     xhr.onload = () => {
       if (xhr.status !== 200) {
-        finish('sidebar.album.upload.failed', 'Upload failed', xhr.responseText)
+        finish(
+          t('sidebar.album.upload.failed', 'Upload failed'),
+          xhr.responseText
+        )
         return
       }
 
@@ -92,12 +99,14 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
 
       if (rejected.length > 0) {
         finish(
-          'sidebar.album.upload.finished_with_errors',
-          'Upload finished with errors',
+          t(
+            'sidebar.album.upload.finished_with_errors',
+            'Upload finished with errors'
+          ),
           rejected.map(r => `${r.path}: ${r.reason || r.status}`).join('\n')
         )
       } else {
-        finish('sidebar.album.upload.complete', 'Upload complete')
+        finish(t('sidebar.album.upload.complete', 'Upload complete'))
       }
 
       // Media/sub-albums arrive asynchronously once the server-side rescan
@@ -107,14 +116,14 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
     }
 
     xhr.onerror = () => {
-      finish('sidebar.album.upload.failed', 'Upload failed')
+      finish(t('sidebar.album.upload.failed', 'Upload failed'))
     }
 
     // abort() fires the abort event, not error - onload never runs either,
     // so without this the upload buttons would stay disabled forever after
     // dismissing the progress toast.
     xhr.onabort = () => {
-      finish('sidebar.album.upload.cancelled', 'Upload cancelled')
+      finish(t('sidebar.album.upload.cancelled', 'Upload cancelled'))
     }
 
     xhr.send(formData)

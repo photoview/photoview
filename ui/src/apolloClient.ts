@@ -134,9 +134,7 @@ const linkError = onError(({ graphQLErrors, networkError, operation }) => {
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${
-          graphQLErrors?.length || 0
-        } errors from the server.${recoveryNote}`,
+        content: `Received ${errors.length} errors from the server.${recoveryNote}`,
       })
     }
   }

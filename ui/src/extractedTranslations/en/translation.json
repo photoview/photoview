@@ -38,11 +38,15 @@
     "upload": "Read + upload"
   },
   "album_tree": {
+    "collapse": "Collapse album",
     "empty": "No albums yet",
+    "expand": "Expand album",
+    "hide": "Hide album",
     "label": "Album tree",
     "mobile_open": "Browse album tree",
     "no_matches": "No matching albums",
-    "shared_with_me": "Shared with me"
+    "shared_with_me": "Shared with me",
+    "unhide": "Unhide album"
   },
   "albums_page": {
     "shared_with_me": "Shared with me"
@@ -350,6 +354,10 @@
       },
       "title_placeholder": "Album title",
       "upload": {
+        "cancelled": "Upload cancelled",
+        "complete": "Upload complete",
+        "failed": "Upload failed",
+        "finished_with_errors": "Upload finished with errors",
         "select_files": "Select files",
         "select_folder": "Select folder",
         "title": "Upload",

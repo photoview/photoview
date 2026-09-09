@@ -177,6 +177,9 @@ const UserPreferences = () => {
       // refetch, restored albums stay filtered out of an already-loaded
       // tree even though the mutation succeeded.
       refetchQueries: ['albumTreeRootQuery', 'albumTreeSubAlbumsQuery'],
+      // The global Apollo error link already shows a toast; this only
+      // consumes the rejected promise so it isn't left unhandled.
+      onError: () => undefined,
     })
 
   const [searchResultLimitInput, setSearchResultLimitInput] = useState('')

@@ -106,11 +106,15 @@ const AlbumGallery = React.forwardRef(
     >(DELETE_MEDIA_LIST_MUTATION, {
       refetchQueries: ['albumQuery'],
       onCompleted: data => {
-        setSelectMode(false)
-        setSelectedIds(new Set())
-
         const results = data.deleteMediaList
         const failed = results.filter(r => !r.success)
+
+        // Keep failed items selected (and selection mode on) so the user
+        // can see and retry exactly what didn't delete, instead of losing
+        // track of which files still need attention.
+        setSelectMode(failed.length > 0)
+        setSelectedIds(new Set(failed.map(r => r.mediaId)))
+
         const notifyKey = `delete-media-${Date.now()}`
         MessageState.add({
           key: notifyKey,
