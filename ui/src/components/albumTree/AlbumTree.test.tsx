@@ -151,7 +151,7 @@ test('filtering fetches children via one batched request instead of per node', a
     {
       request: {
         query: ALBUM_TREE_SEARCH_QUERY,
-        variables: { query: 'child' },
+        variables: { query: 'child', showHidden: false },
       },
       result: {
         data: {

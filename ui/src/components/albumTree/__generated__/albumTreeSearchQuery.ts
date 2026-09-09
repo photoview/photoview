@@ -38,4 +38,5 @@ export interface albumTreeSearchQuery {
 
 export interface albumTreeSearchQueryVariables {
   query: string;
+  showHidden?: boolean | null;
 }

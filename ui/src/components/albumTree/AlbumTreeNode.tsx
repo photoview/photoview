@@ -1,5 +1,6 @@
 import { gql, useLazyQuery } from '@apollo/client'
 import React, { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { tailwindClassNames } from '../../helpers/utils'
 import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
@@ -76,6 +77,7 @@ const AlbumTreeNode = ({
   onNodeRef,
   childrenByParentId,
 }: AlbumTreeNodeProps) => {
+  const { t } = useTranslation()
   const isFiltering = visibleIds != null
   const isExpanded = isFiltering ? true : !!expanded[album.id]
   const isActive = activeAlbumId === album.id
@@ -153,7 +155,11 @@ const AlbumTreeNode = ({
       >
         <button
           type="button"
-          aria-label={isExpanded ? 'Collapse album' : 'Expand album'}
+          aria-label={
+            isExpanded
+              ? t('album_tree.collapse', 'Collapse album')
+              : t('album_tree.expand', 'Expand album')
+          }
           onClick={() => {
             // A failed fetch leaves `called` true, so the effect above
             // won't retry it on its own - let a click while expanded and
@@ -196,7 +202,11 @@ const AlbumTreeNode = ({
         </Link>
         <button
           type="button"
-          title={album.viewerHidden ? 'Unhide album' : 'Hide album'}
+          title={
+            album.viewerHidden
+              ? t('album_tree.unhide', 'Unhide album')
+              : t('album_tree.hide', 'Hide album')
+          }
           className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
           onClick={e => {
             e.preventDefault()

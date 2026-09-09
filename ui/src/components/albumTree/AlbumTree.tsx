@@ -52,8 +52,13 @@ export const ALBUM_TREE_ACTIVE_PATH_QUERY = gql`
 `
 
 export const ALBUM_TREE_SEARCH_QUERY = gql`
-  query albumTreeSearchQuery($query: String!) {
-    search(query: $query, limitAlbums: 0, limitMedia: 0) {
+  query albumTreeSearchQuery($query: String!, $showHidden: Boolean) {
+    search(
+      query: $query
+      limitAlbums: 0
+      limitMedia: 0
+      showHidden: $showHidden
+    ) {
       albums {
         id
         path {
@@ -136,6 +141,10 @@ const AlbumTree = () => {
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
+      // A call scheduled before the field was cleared would otherwise still
+      // fire and restore the stale query, leaving the tree filtered while
+      // the search field itself is empty.
+      debouncedSetQuery.current?.cancel()
       setDebouncedSearchQuery('')
       return
     }
@@ -151,9 +160,11 @@ const AlbumTree = () => {
 
   useEffect(() => {
     if (debouncedSearchQuery !== '') {
-      fetchTreeSearch({ variables: { query: debouncedSearchQuery } })
+      fetchTreeSearch({
+        variables: { query: debouncedSearchQuery, showHidden },
+      })
     }
-  }, [debouncedSearchQuery, fetchTreeSearch])
+  }, [debouncedSearchQuery, showHidden, fetchTreeSearch])
 
   const isFiltering = debouncedSearchQuery !== ''
 
