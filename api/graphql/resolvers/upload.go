@@ -291,6 +291,10 @@ func (r *mutationResolver) MoveAlbum(ctx context.Context, albumID int, newParent
 			}
 		}
 
+		if err := models.RecomputeGrantsAfterMove(tx, subtree, newParent.ID); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if transErr != nil {

@@ -14,12 +14,13 @@ import {
 import { searchbarUserPreferences } from './__generated__/searchbarUserPreferences'
 import classNames from 'classnames'
 import {
+  authToken,
   readStoredSearchQuery,
   writeStoredSearchQuery,
 } from '../../helpers/authentication'
 import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 
-const SEARCH_QUERY = gql`
+export const SEARCH_QUERY = gql`
   query searchQuery(
     $query: String!
     $limitMedia: Int
@@ -56,7 +57,7 @@ const SEARCH_QUERY = gql`
   }
 `
 
-const SEARCHBAR_USER_PREFERENCES_QUERY = gql`
+export const SEARCHBAR_USER_PREFERENCES_QUERY = gql`
   query searchbarUserPreferences {
     myUserPreferences {
       id
@@ -74,7 +75,8 @@ const SearchBar = () => {
   const navigate = useNavigate()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
   const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
-    SEARCHBAR_USER_PREFERENCES_QUERY
+    SEARCHBAR_USER_PREFERENCES_QUERY,
+    { skip: !authToken() }
   )
   const showHidden = useShowHiddenAlbums()
   const showHiddenRef = useRef(showHidden)
@@ -116,32 +118,38 @@ const SearchBar = () => {
   }, [])
 
   useEffect(() => {
+    const showHiddenJustChanged = showHiddenRef.current !== showHidden
     showHiddenRef.current = showHidden
-  }, [showHidden])
 
-  useEffect(() => {
     const limitJustResolved =
       searchResultLimitRef.current === undefined &&
       searchResultLimit !== undefined
     searchResultLimitRef.current = searchResultLimit
 
-    // The preference query can still be in flight when the very first
-    // search fires (debounced 250ms after typing). If it resolves after
-    // that, the already-fired search stays capped at the server's default
-    // limit forever, since updating the ref alone doesn't rerun it - so
-    // a saved "unlimited" (0) preference would silently show only 10
-    // results. Re-issue the current search once the real limit is known.
-    if (limitJustResolved && fetched && query.trim() !== '') {
+    // Both the search-limit and show-hidden-albums preferences can still be
+    // in flight when the very first search fires (debounced 250ms after
+    // typing), and they resolve independently of each other. If either
+    // resolves (or show-hidden later changes) after that, the already-fired
+    // search stays stuck on its original values forever, since updating the
+    // refs alone doesn't rerun it - a saved "unlimited" (0) limit would
+    // silently show only 10 results, and enabling "show hidden albums"
+    // wouldn't reveal anything until the next keystroke. Re-issue the
+    // current search whenever either becomes newly known/changed.
+    if (
+      (limitJustResolved || showHiddenJustChanged) &&
+      fetched &&
+      query.trim() !== ''
+    ) {
       fetchSearches({
         variables: {
           query: query.trim(),
           limitMedia: searchResultLimit,
           limitAlbums: searchResultLimit,
-          showHidden: showHiddenRef.current,
+          showHidden,
         },
       })
     }
-  }, [searchResultLimit, fetched, query, fetchSearches])
+  }, [searchResultLimit, showHidden, fetched, query, fetchSearches])
 
   const fetchEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()

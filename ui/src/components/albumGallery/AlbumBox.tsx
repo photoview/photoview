@@ -73,7 +73,7 @@ export const AlbumBox = ({
         <button
           type="button"
           title={hidden ? 'Unhide album' : 'Hide album'}
-          className="absolute top-1 right-4 z-10 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="absolute top-1 right-4 z-10 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
           onClick={e => {
             e.preventDefault()
             e.stopPropagation()

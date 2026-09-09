@@ -47,7 +47,12 @@ const SidebarMediaManage = ({
   const [renameMedia, { loading: renaming, error: renameError }] = useMutation<
     renameMedia,
     renameMediaVariables
-  >(RENAME_MEDIA_MUTATION)
+  >(RENAME_MEDIA_MUTATION, {
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // renameError above already renders it, this just avoids the console
+    // warning.
+    onError: () => undefined,
+  })
 
   const [deleteMedia, { loading: deleting, error: deleteError }] = useMutation<
     deleteMedia,
@@ -67,6 +72,9 @@ const SidebarMediaManage = ({
       updateSidebar(null)
       navigate(`/album/${albumId}`)
     },
+    // Without this, a rejected mutation is an unhandled promise rejection -
+    // deleteError above already renders it.
+    onError: () => undefined,
   })
 
   return (

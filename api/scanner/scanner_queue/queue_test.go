@@ -109,6 +109,41 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 
 }
 
+// TestScannerQueueJobOnQueueIgnoresCancelledInProgress covers a real bug: a
+// cancelled in_progress job stays in that slice until it finishes its
+// current file and exits on its own, so without this, restarting a scan
+// right after cancelling it would find the album "still on queue" and be
+// silently dropped - AddAlbumToQueue would report success while nothing was
+// actually queued, for as long as the cancelled job's current file takes to
+// finish.
+func TestScannerQueueJobOnQueueIgnoresCancelledInProgress(t *testing.T) {
+	cancelledJob := makeScannerJob(100)
+	cancelledJob.cancel()
+
+	mockScannerQueue := ScannerQueue{
+		idle_chan:   make(chan bool, 1),
+		in_progress: []ScannerJob{cancelledJob},
+		up_next:     make([]ScannerJob, 0),
+		db:          nil,
+	}
+
+	restart := makeScannerJob(100)
+	onQueue, err := mockScannerQueue.jobOnQueue(&restart)
+	if err != nil {
+		t.Error("Expected jobOnQueue not to return an error")
+	}
+	if onQueue {
+		t.Error("Expected a cancelled in_progress job not to block a restart of the same album")
+	}
+
+	if err := mockScannerQueue.addJob(&restart); err != nil {
+		t.Errorf("addJob returned an unexpected error: %s", err)
+	}
+	if len(mockScannerQueue.up_next) != 1 {
+		t.Errorf("Expected the restart to be queued in up_next, got %+v", mockScannerQueue.up_next)
+	}
+}
+
 func TestScannerQueueGetQueueStatus(t *testing.T) {
 
 	mockScannerQueue := ScannerQueue{

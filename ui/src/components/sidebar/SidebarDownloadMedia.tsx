@@ -271,8 +271,8 @@ const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
 const pickShareRow = (rows: SidebarDownloadTableRow[]) =>
-  rows.find(x => x.title == 'Original') ??
   rows.find(x => x.title == 'Web optimized video') ??
+  rows.find(x => x.title == 'Original') ??
   rows.find(x => x.title == 'Large') ??
   rows[0]
 

@@ -285,6 +285,14 @@ func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
 	scannerJobs := append(queue.in_progress, queue.up_next...)
 
 	for _, scannerJob := range scannerJobs {
+		// A cancelled in_progress job stays in the slice until it finishes
+		// its current file and exits on its own (see CancelJob) - ignore it
+		// here so a restart isn't silently dropped while that natural exit
+		// is still pending, which could otherwise take as long as one more
+		// file (potentially a large video) to process.
+		if scannerJob.ctx.Err() != nil {
+			continue
+		}
 		if scannerJob.ctx.GetAlbum().ID == job.ctx.GetAlbum().ID {
 			return true, nil
 		}

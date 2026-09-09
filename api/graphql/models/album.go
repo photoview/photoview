@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"slices"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -106,10 +107,20 @@ func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermis
 		return err
 	}
 
+	return propagateOntoSubtree(db, subtree, albumID, userID, level, grantedByUserID)
+}
+
+// propagateOntoSubtree is PropagateAlbumLevel's shared implementation, but
+// takes an already-resolved subtree and lets the caller specify the
+// source separately from the subtree itself - used by
+// RecomputeGrantsAfterMove to re-propagate a grant sourced above the
+// subtree's new parent onto a moved subtree, keeping the original source's
+// provenance rather than attributing it to the moved album.
+func propagateOntoSubtree(db *gorm.DB, subtree []*Album, sourceAlbumID int, userID int, level AlbumPermissionLevel, grantedByUserID *int) error {
 	grants := make([]UserAlbumGrant, len(subtree))
 	albumIDs := make([]int, len(subtree))
 	for i, a := range subtree {
-		grants[i] = UserAlbumGrant{UserID: userID, AlbumID: a.ID, SourceAlbumID: albumID, Level: level, GrantedByUserID: grantedByUserID}
+		grants[i] = UserAlbumGrant{UserID: userID, AlbumID: a.ID, SourceAlbumID: sourceAlbumID, Level: level, GrantedByUserID: grantedByUserID}
 		albumIDs[i] = a.ID
 	}
 
@@ -124,10 +135,16 @@ func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermis
 }
 
 // RevokeAlbumLevel removes userID's access to albumID and every one of its
-// current descendants that was sourced at albumID - i.e. exactly what the
-// matching PropagateAlbumLevel(albumID, userID, ...) call created. A grant
-// reaching the same albums from a different source is untouched, since it's
-// a different UserAlbumGrant row by construction.
+// descendants that was sourced at albumID - i.e. exactly what the matching
+// PropagateAlbumLevel(albumID, userID, ...) call created. A grant reaching
+// the same albums from a different source is untouched, since it's a
+// different UserAlbumGrant row by construction.
+//
+// Deletion is scoped by source_album_id alone, not by albumID's *current*
+// subtree: if a descendant was moved out of the subtree (via MoveAlbum)
+// after the original PropagateAlbumLevel call, its grant row still carries
+// source_album_id = albumID and must still be revoked, even though
+// album.GetChildren(albumID) no longer reaches it.
 func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
 	var album Album
 	if err := db.First(&album, albumID).Error; err != nil {
@@ -144,12 +161,92 @@ func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
 		ids[i] = a.ID
 	}
 
-	if err := db.Where("user_id = ? AND album_id IN (?) AND source_album_id = ?", userID, ids, albumID).
+	var toRevoke []UserAlbumGrant
+	if err := db.Where("user_id = ? AND source_album_id = ?", userID, albumID).Find(&toRevoke).Error; err != nil {
+		return err
+	}
+
+	if err := db.Where("user_id = ? AND source_album_id = ?", userID, albumID).
 		Delete(&UserAlbumGrant{}).Error; err != nil {
 		return err
 	}
 
-	return recomputeUserAlbums(db, userID, ids)
+	// Recompute every album the current subtree reaches, plus any album a
+	// revoked row pointed at that's no longer part of it (moved out since).
+	affected := ids
+	for _, grant := range toRevoke {
+		if !slices.Contains(affected, grant.AlbumID) {
+			affected = append(affected, grant.AlbumID)
+		}
+	}
+
+	return recomputeUserAlbums(db, userID, affected)
+}
+
+// RecomputeGrantsAfterMove updates every grant reaching a moved subtree so
+// access reflects the new ancestry instead of the old one. Call this inside
+// the same transaction as the ParentAlbumID/Path update in MoveAlbum -
+// subtree must be the moved album plus every descendant (album.GetChildren
+// on the album being moved, resolved before the move's DB writes commit).
+//
+//  1. Any grant reaching a subtree album whose source is not itself part of
+//     the subtree traces to an ancestor the subtree is no longer under, so
+//     it's revoked - a grant sourced at the moved album or a descendant (a
+//     direct/independent share) is left alone, since it travels with the
+//     subtree regardless of where it lives.
+//  2. Every source currently reaching newParentID is re-propagated onto the
+//     subtree under that same source, so access inherited from the new
+//     ancestry now extends into it too.
+//
+// UserAlbums is then recomputed for every affected user across the whole
+// subtree.
+func RecomputeGrantsAfterMove(db *gorm.DB, subtree []*Album, newParentID int) error {
+	if len(subtree) == 0 {
+		return nil
+	}
+
+	subtreeIDs := make([]int, len(subtree))
+	for i, a := range subtree {
+		subtreeIDs[i] = a.ID
+	}
+
+	var staleGrants []UserAlbumGrant
+	if err := db.Where("album_id IN (?) AND source_album_id NOT IN (?)", subtreeIDs, subtreeIDs).
+		Find(&staleGrants).Error; err != nil {
+		return err
+	}
+
+	if len(staleGrants) > 0 {
+		if err := db.Where("album_id IN (?) AND source_album_id NOT IN (?)", subtreeIDs, subtreeIDs).
+			Delete(&UserAlbumGrant{}).Error; err != nil {
+			return err
+		}
+	}
+
+	var newAncestryGrants []UserAlbumGrant
+	if err := db.Where("album_id = ?", newParentID).Find(&newAncestryGrants).Error; err != nil {
+		return err
+	}
+
+	affectedUsers := make(map[int]bool, len(staleGrants)+len(newAncestryGrants))
+	for _, g := range staleGrants {
+		affectedUsers[g.UserID] = true
+	}
+
+	for _, g := range newAncestryGrants {
+		affectedUsers[g.UserID] = true
+		if err := propagateOntoSubtree(db, subtree, g.SourceAlbumID, g.UserID, g.Level, g.GrantedByUserID); err != nil {
+			return err
+		}
+	}
+
+	for userID := range affectedUsers {
+		if err := recomputeUserAlbums(db, userID, subtreeIDs); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // recomputeUserAlbums recalculates the materialized UserAlbums row for each
