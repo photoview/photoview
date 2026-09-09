@@ -179,13 +179,8 @@ func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_c
 				albumTitle := path.Base(albumPath)
 
 				var albumParentID *int
-				var parentGrants []models.UserAlbums
 				if albumParent != nil {
 					albumParentID = &albumParent.ID
-
-					if err := tx.Where("album_id = ?", albumParent.ID).Find(&parentGrants).Error; err != nil {
-						return err
-					}
 				}
 
 				album = &models.Album{
@@ -201,12 +196,13 @@ func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_c
 					return errors.Wrap(err, "insert album into database")
 				}
 
-				// New sub-albums inherit every one of their parent's current
-				// grants (level and grantedBy included), not just plain
-				// ownership.
-				for _, g := range parentGrants {
-					g.AlbumID = album.ID
-					if err := tx.Create(&g).Error; err != nil {
+				if albumParent != nil {
+					// New sub-albums inherit every grant that currently
+					// reaches their parent, preserving each grant's
+					// original source rather than attributing it to the
+					// parent - so revoking that source later still reaches
+					// this album, even if it's since been moved elsewhere.
+					if err := models.CopyAlbumGrants(tx, albumParent.ID, album.ID, nil); err != nil {
 						return errors.Wrap(err, "add owners to album")
 					}
 				}
@@ -216,24 +212,14 @@ func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_c
 				if user != nil && albumParent != nil {
 					// This directory already exists in the DB (e.g. reachable
 					// from more than one root path) but this particular user
-					// doesn't yet have a row on it. Copy whatever level they
+					// doesn't yet have a row on it. Copy whatever grants they
 					// hold on its parent within this same scan walk, rather
 					// than defaulting to Read.
 					var existingGrant models.UserAlbums
 					err := tx.Where("user_id = ? AND album_id = ?", user.ID, album.ID).First(&existingGrant).Error
 					if errors.Is(err, gorm.ErrRecordNotFound) {
-						var parentGrant models.UserAlbums
-						if err := tx.Where("user_id = ? AND album_id = ?", user.ID, albumParent.ID).First(&parentGrant).Error; err != nil {
-							return errors.Wrap(err, "find user's grant on parent album")
-						}
-						newGrant := models.UserAlbums{
-							UserID:          user.ID,
-							AlbumID:         album.ID,
-							Level:           parentGrant.Level,
-							GrantedByUserID: parentGrant.GrantedByUserID,
-						}
-						if err := tx.Create(&newGrant).Error; err != nil {
-							return err
+						if err := models.CopyAlbumGrants(tx, albumParent.ID, album.ID, &user.ID); err != nil {
+							return errors.Wrap(err, "copy user's grant from parent album")
 						}
 					} else if err != nil {
 						return err

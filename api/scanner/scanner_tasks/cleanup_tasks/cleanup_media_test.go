@@ -64,12 +64,15 @@ func TestCleanupMedia(t *testing.T) {
 		return
 	}
 
-	err = db.Model(user1).Association("Albums").Append(&rootAlbum)
-	if !assert.NoError(t, err) {
+	// PropagateAlbumLevel (not a raw many2many Association.Append) so
+	// ownership is backed by a real UserAlbumGrant row, matching how
+	// NewRootAlbum grants a real root path - the scanner's own
+	// grant-copying for newly discovered sub-albums reads from
+	// UserAlbumGrant, not the materialized UserAlbums row directly.
+	if !assert.NoError(t, models.PropagateAlbumLevel(db, rootAlbum.ID, user1.ID, models.AlbumPermissionLevelRead, nil)) {
 		return
 	}
-	err = db.Model(user2).Association("Albums").Append(&rootAlbum)
-	if !assert.NoError(t, err) {
+	if !assert.NoError(t, models.PropagateAlbumLevel(db, rootAlbum.ID, user2.ID, models.AlbumPermissionLevelRead, nil)) {
 		return
 	}
 

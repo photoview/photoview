@@ -38,7 +38,10 @@ const MobileAlbumTreeButton = () => {
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        className="fixed z-40 inset-0 lg:hidden"
+        // Higher than Sidebar's z-[110] (ui/src/components/sidebar/Sidebar.tsx),
+        // so this overlay isn't rendered behind it and left unclickable when
+        // both are open on a small screen.
+        className="fixed z-[115] inset-0 lg:hidden"
       >
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
         <div

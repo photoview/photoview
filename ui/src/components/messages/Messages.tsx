@@ -11,6 +11,10 @@ const Container = styled.div`
   bottom: 20px;
   right: 20px;
   width: 500px;
+  /* Above Modal's z-[120] (ui/src/primitives/Modal.tsx) and Sidebar's
+     z-[110] (ui/src/components/sidebar/Sidebar.tsx), so notifications stay
+     visible and clickable regardless of what else is open. */
+  z-index: 130;
 
   @media (max-width: 1000px) {
     display: none;

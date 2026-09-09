@@ -249,6 +249,59 @@ func RecomputeGrantsAfterMove(db *gorm.DB, subtree []*Album, newParentID int) er
 	return nil
 }
 
+// CopyAlbumGrants gives targetAlbumID every grant currently reaching
+// sourceAlbumID, preserving each grant's original SourceAlbumID rather than
+// attributing it to sourceAlbumID itself - used by the scanner when it
+// discovers a new album on disk, or finds an existing album (reachable
+// through a second root path) that a particular user doesn't yet have a
+// row on. Preserving the original source means a later revoke of that
+// source still reaches targetAlbumID even if it's since been moved
+// elsewhere, unlike a plain copy of the parent's materialized level, which
+// only a coincidental subtree walk would still catch. If onlyUserID is
+// non-nil, only that user's grants are copied.
+func CopyAlbumGrants(db *gorm.DB, sourceAlbumID int, targetAlbumID int, onlyUserID *int) error {
+	query := db.Where("album_id = ?", sourceAlbumID)
+	if onlyUserID != nil {
+		query = query.Where("user_id = ?", *onlyUserID)
+	}
+
+	var sourceGrants []UserAlbumGrant
+	if err := query.Find(&sourceGrants).Error; err != nil {
+		return err
+	}
+	if len(sourceGrants) == 0 {
+		return nil
+	}
+
+	grants := make([]UserAlbumGrant, len(sourceGrants))
+	affectedUsers := make(map[int]bool, len(sourceGrants))
+	for i, g := range sourceGrants {
+		grants[i] = UserAlbumGrant{
+			UserID:          g.UserID,
+			AlbumID:         targetAlbumID,
+			SourceAlbumID:   g.SourceAlbumID,
+			Level:           g.Level,
+			GrantedByUserID: g.GrantedByUserID,
+		}
+		affectedUsers[g.UserID] = true
+	}
+
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "album_id"}, {Name: "source_album_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"level", "granted_by_user_id"}),
+	}).Create(&grants).Error; err != nil {
+		return err
+	}
+
+	for userID := range affectedUsers {
+		if err := recomputeUserAlbums(db, userID, []int{targetAlbumID}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // recomputeUserAlbums recalculates the materialized UserAlbums row for each
 // (userID, albumID) pair in albumIDs from the current UserAlbumGrant rows:
 // the max Level across every source, and a nil GrantedByUserID (owner

@@ -113,6 +113,13 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 			return err
 		}
 
+		// Also delete the provenance rows backing those materialized grants -
+		// left behind, they'd keep referencing an album that's about to be
+		// deleted.
+		if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbumGrant{}).Error; err != nil {
+			return err
+		}
+
 		if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
 			return err
 		}

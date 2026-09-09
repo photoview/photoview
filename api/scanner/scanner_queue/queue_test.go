@@ -144,6 +144,43 @@ func TestScannerQueueJobOnQueueIgnoresCancelledInProgress(t *testing.T) {
 	}
 }
 
+// TestScannerQueueRemoveFinishedJobMatchesByIdentity covers a real bug:
+// jobOnQueue now lets a restart of an album be queued and promoted into
+// in_progress while a cancelled job for the same album is still there
+// finishing up, so in_progress can hold two entries with the same album ID.
+// Removing "the job that just finished" by matching album ID could then
+// remove the wrong entry - if the cancelled job finishes first but the
+// removal matched the restart instead, the restart would be silently
+// dropped from in_progress mid-run while the actually-finished cancelled
+// job stayed behind forever, permanently occupying a worker slot.
+func TestScannerQueueRemoveFinishedJobMatchesByIdentity(t *testing.T) {
+	cancelledJob := makeScannerJob(100)
+	restart := makeScannerJob(100)
+
+	// The restart is listed first, so a removal that matched by album ID
+	// (rather than by identity) would hit it before reaching the actually-
+	// finished cancelledJob - the ordering here is what makes the test
+	// actually discriminate between the two.
+	mockScannerQueue := ScannerQueue{
+		idle_chan:   make(chan bool, 1),
+		in_progress: []ScannerJob{restart, cancelledJob},
+		up_next:     make([]ScannerJob, 0),
+		db:          nil,
+	}
+
+	// The cancelled job finishes first (it exits on its own once its
+	// current file is done), while the restart for the same album is still
+	// genuinely running.
+	mockScannerQueue.removeFinishedJob(cancelledJob)
+
+	if len(mockScannerQueue.in_progress) != 1 {
+		t.Fatalf("Expected exactly one job left in_progress, got %d", len(mockScannerQueue.in_progress))
+	}
+	if mockScannerQueue.in_progress[0].id != restart.id {
+		t.Errorf("Expected the restart to still be in_progress, but the wrong job was removed")
+	}
+}
+
 func TestScannerQueueGetQueueStatus(t *testing.T) {
 
 	mockScannerQueue := ScannerQueue{

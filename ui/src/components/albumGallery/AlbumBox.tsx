@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import classNames from 'classnames'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
 import { useHideAlbumMutation, toggleAlbumHidden } from './albumHideMutations'
@@ -51,6 +52,7 @@ export const AlbumBox = ({
   refetchQueries,
   ...props
 }: AlbumBoxProps) => {
+  const { t } = useTranslation()
   const wrapperClasses =
     'inline-block text-center text-gray-900 dark:text-gray-200 mx-3 my-2 xs:h-60 xs:w-[220px]'
 
@@ -72,7 +74,11 @@ export const AlbumBox = ({
         </Link>
         <button
           type="button"
-          title={hidden ? 'Unhide album' : 'Hide album'}
+          title={
+            hidden
+              ? t('album_tree.unhide', 'Unhide album')
+              : t('album_tree.hide', 'Hide album')
+          }
           className="absolute top-1 right-4 z-10 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
           onClick={e => {
             e.preventDefault()

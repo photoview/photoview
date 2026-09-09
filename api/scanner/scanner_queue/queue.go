@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -27,14 +28,24 @@ type ScannerJob struct {
 	// in_progress job finishes processing its current file and then exits
 	// early instead of continuing to the next one.
 	cancel context.CancelFunc
+	// id uniquely identifies this job, distinct from its album ID - a
+	// cancelled in_progress job stays on the queue until it exits on its
+	// own (see jobOnQueue), so a restart of the same album can be
+	// in_progress at the same time. Matching by id (not album ID) when a
+	// finished job removes itself from in_progress ensures it only ever
+	// removes its own entry.
+	id uint64
 	// album *models.Album
 	// cache *scanner_cache.AlbumScannerCache
 }
 
+var nextScannerJobID uint64
+
 func NewScannerJob(ctx scanner_task.TaskContext, cancel context.CancelFunc) ScannerJob {
 	return ScannerJob{
-		ctx,
-		cancel,
+		ctx:    ctx,
+		cancel: cancel,
+		id:     atomic.AddUint64(&nextScannerJobID, 1),
 	}
 }
 
@@ -156,16 +167,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			nextJob.Run(queue.db)
 			log.Printf("Finished job %d/%d\n", jobNum, maxJobs)
 
-			// Delete finished job from queue
-			queue.mutex.Lock()
-			for i, x := range queue.in_progress {
-				if x.ctx.GetAlbum().ID == nextJob.ctx.GetAlbum().ID {
-					queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
-					queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
-					break
-				}
-			}
-			queue.mutex.Unlock()
+			queue.removeFinishedJob(nextJob)
 
 			queue.notify()
 		}()
@@ -193,6 +195,25 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", inProgressLength, upNextLength),
 			})
 		})
+	}
+}
+
+// removeFinishedJob removes finished from in_progress, matching by its
+// unique id rather than its album ID - a cancelled in_progress job stays on
+// the queue until it exits on its own (see jobOnQueue), so a restart of the
+// same album can be in_progress at the same time. Matching by album ID
+// could remove the wrong entry, leaving a stale one behind that occupies a
+// worker slot and reports RUNNING forever.
+func (queue *ScannerQueue) removeFinishedJob(finished ScannerJob) {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	for i, x := range queue.in_progress {
+		if x.id == finished.id {
+			queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
+			queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
+			break
+		}
 	}
 }
 
@@ -235,10 +256,8 @@ func AddUserToQueue(user *models.User) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		jobCtx, cancel := context.WithCancel(context.Background())
-		global_scanner_queue.addJob(&ScannerJob{
-			ctx:    scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache),
-			cancel: cancel,
-		})
+		job := NewScannerJob(scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache), cancel)
+		global_scanner_queue.addJob(&job)
 	}
 	global_scanner_queue.mutex.Unlock()
 
@@ -258,10 +277,8 @@ func AddAlbumToQueue(album *models.Album) error {
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
 		jobCtx, cancel := context.WithCancel(context.Background())
-		global_scanner_queue.addJob(&ScannerJob{
-			ctx:    scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache),
-			cancel: cancel,
-		})
+		job := NewScannerJob(scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache), cancel)
+		global_scanner_queue.addJob(&job)
 	}
 	global_scanner_queue.mutex.Unlock()
 

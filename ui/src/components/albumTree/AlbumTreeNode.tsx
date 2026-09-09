@@ -86,7 +86,11 @@ const AlbumTreeNode = ({
   const childRefs = useRef<Record<string, HTMLLIElement | null>>({})
 
   const showHidden = useShowHiddenAlbums()
-  const [hideAlbum] = useHideAlbumMutation(['albumTreeSubAlbumsQuery'])
+  const [hideAlbum] = useHideAlbumMutation([
+    'albumTreeSubAlbumsQuery',
+    'albumTreeRootQuery',
+    'albumTreeChildrenQuery',
+  ])
 
   const [fetchSubAlbums, { data, loading, called, error }] = useLazyQuery<
     albumTreeSubAlbumsQuery,

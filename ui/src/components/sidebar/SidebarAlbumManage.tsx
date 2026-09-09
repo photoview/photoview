@@ -137,14 +137,15 @@ const SidebarAlbumManage = ({
           <div className="mt-2 text-red-600">{renameError.message}</div>
         )}
 
-        <div className="flex gap-2 items-start mt-4">
+        <div className="mt-4">
           <Dropdown
-            className="flex-1"
+            className="w-full"
             items={destinationOptions}
             selected={destination}
             setSelected={setDestination}
           />
           <Button
+            className="mt-2"
             disabled={moving || destination === ''}
             onClick={() =>
               moveAlbum({
