@@ -55,14 +55,17 @@ func RegisterUploadRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		var album models.Album
-		if err := db.First(&album, albumID).Error; err != nil {
-			http.Error(w, "album not found", http.StatusNotFound)
+		user := auth.UserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "unauthorized", http.StatusForbidden)
 			return
 		}
 
-		user := auth.UserFromContext(r.Context())
-		if user == nil {
+		// A missing album and a forbidden one return the same status and
+		// body, so probing album ids can't be used to enumerate which ones
+		// exist.
+		var album models.Album
+		if err := db.First(&album, albumID).Error; err != nil {
 			http.Error(w, "unauthorized", http.StatusForbidden)
 			return
 		}
