@@ -82,11 +82,6 @@ func (r *mutationResolver) RenameMedia(ctx context.Context, mediaID int, newName
 		return nil, fmt.Errorf("could not check destination path: %w", err)
 	}
 
-	if err := os.Rename(media.Path, newPath); err != nil {
-		return nil, fmt.Errorf("could not rename file on disk: %w", err)
-	}
-
-	oldPath := media.Path
 	oldSidecarPath := media.SideCarPath
 
 	var newSidecarPath *string
@@ -95,7 +90,24 @@ func (r *mutationResolver) RenameMedia(ctx context.Context, mediaID int, newName
 		sidecarName := newBase + filepath.Ext(*media.SideCarPath)
 		joined := filepath.Join(filepath.Dir(*media.SideCarPath), sidecarName)
 		newSidecarPath = &joined
+
+		// Checked up front, alongside the media file's own collision check
+		// above and before either file is touched - the rollback below
+		// assumes both renames it undoes actually happened, so a collision
+		// caught only after the media file was already renamed would need
+		// the sidecar rename to be undone too even though it never ran.
+		if _, err := os.Stat(*newSidecarPath); err == nil {
+			return nil, errors.New("a sidecar file with that name already exists")
+		} else if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("could not check sidecar destination path: %w", err)
+		}
 	}
+
+	if err := os.Rename(media.Path, newPath); err != nil {
+		return nil, fmt.Errorf("could not rename file on disk: %w", err)
+	}
+
+	oldPath := media.Path
 
 	transErr := db.Transaction(func(tx *gorm.DB) error {
 		if newSidecarPath != nil {

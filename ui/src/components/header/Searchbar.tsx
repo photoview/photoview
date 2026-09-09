@@ -169,14 +169,22 @@ const SearchBar = () => {
     // so it's still there if the user navigates back to it (e.g. after
     // clicking a result or "View all results").
     setExpanded(false)
-    setTreeQuery('')
+    setTreeQuery(query)
   }, [location])
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 
   const searchData = fetchResult.data
-  const media = searchData?.search.media || []
-  const albums = searchData?.search.albums || []
+  // searchResultLimit governs the full search page and can be large or
+  // unlimited (0) - cap what the dropdown itself renders regardless, since
+  // each media row mounts a ProtectedImage thumbnail request. "View all
+  // results" below already routes to the uncapped list.
+  const DROPDOWN_RESULT_LIMIT = 5
+  const media = (searchData?.search.media || []).slice(0, DROPDOWN_RESULT_LIMIT)
+  const albums = (searchData?.search.albums || []).slice(
+    0,
+    DROPDOWN_RESULT_LIMIT
+  )
 
   const selectedItemId =
     selectedItem !== null

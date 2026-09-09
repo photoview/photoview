@@ -123,6 +123,34 @@ func TestRenameMedia(t *testing.T) {
 		assert.True(t, os.IsNotExist(statErr))
 	})
 
+	t.Run("sidecar collision is rejected without touching the unrelated sidecar", func(t *testing.T) {
+		// photo.jpg's own sidecar - must survive untouched.
+		makeTestMediaFile(t, r, album, "photo.jpg")
+		photoSidecarPath := filepath.Join(album.Path, "photo.xmp")
+		assert.NoError(t, os.WriteFile(photoSidecarPath, []byte("photo's own sidecar"), 0o644))
+
+		// The media file being renamed to "photo.arw" - that filename is
+		// free, so the plain destination-collision check on the media file
+		// itself passes, but its sidecar would land on "photo.xmp".
+		media := makeTestMediaFile(t, r, album, "raw_0001.arw")
+		mediaSidecarPath := filepath.Join(album.Path, "raw_0001.xmp")
+		assert.NoError(t, os.WriteFile(mediaSidecarPath, []byte("raw_0001's own sidecar"), 0o644))
+		media.SideCarPath = &mediaSidecarPath
+		assert.NoError(t, r.database.Save(media).Error)
+
+		_, err := r.RenameMedia(ctx, media.ID, "photo.arw")
+		assert.Error(t, err)
+
+		content, readErr := os.ReadFile(photoSidecarPath)
+		assert.NoError(t, readErr)
+		assert.Equal(t, "photo's own sidecar", string(content), "the unrelated sidecar must not be overwritten")
+
+		_, statErr := os.Stat(media.Path)
+		assert.NoError(t, statErr, "the renamed-away media file should have been rolled back")
+		_, statErr = os.Stat(mediaSidecarPath)
+		assert.NoError(t, statErr, "the media's own sidecar should still be at its original path")
+	})
+
 	t.Run("permission denied for a read-only user", func(t *testing.T) {
 		media := makeTestMediaFile(t, r, album, "readonly_test.jpg")
 		readOnlyCtx := auth.AddUserToContext(context.Background(), readOnly)

@@ -98,3 +98,72 @@ test('re-issues the search once showHiddenAlbums resolves after the first deboun
     timeout: 15000,
   })
 }, 20000)
+
+test('caps the dropdown to 5 rows even when the search returns more', async () => {
+  const media = Array.from({ length: 7 }, (_, i) => ({
+    id: `media-${i}`,
+    title: `Photo ${i}`,
+    thumbnail: { url: `/thumb-${i}.jpg`, __typename: 'MediaURL' },
+    album: { id: 'album-1', __typename: 'Album' },
+    __typename: 'Media',
+  }))
+
+  const mocks = [
+    {
+      request: { query: SEARCHBAR_USER_PREFERENCES_QUERY },
+      result: {
+        data: {
+          myUserPreferences: {
+            id: '1',
+            searchResultLimit: null,
+            __typename: 'UserPreferences',
+          },
+        },
+      },
+    },
+    {
+      request: { query: SHOW_HIDDEN_ALBUMS_PREFERENCE_QUERY },
+      result: {
+        data: {
+          myUserPreferences: {
+            id: '1',
+            showHiddenAlbums: false,
+            __typename: 'UserPreferences',
+          },
+        },
+      },
+    },
+    {
+      request: {
+        query: SEARCH_QUERY,
+        variables: {
+          query: 'vac',
+          limitMedia: undefined,
+          limitAlbums: undefined,
+          showHidden: false,
+        },
+      },
+      result: {
+        data: {
+          search: { query: 'vac', albums: [], media, __typename: 'SearchResult' },
+        },
+      },
+    },
+  ]
+
+  render(
+    <MockedProvider mocks={mocks} addTypename={false}>
+      <MemoryRouter>
+        <SearchBar />
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  await userEvent.type(screen.getByPlaceholderText('Search'), 'vac')
+
+  await waitFor(() =>
+    expect(screen.getByRole('list', { name: 'media' }).children).toHaveLength(
+      5
+    )
+  )
+})
