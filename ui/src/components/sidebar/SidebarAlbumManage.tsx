@@ -143,6 +143,9 @@ const SidebarAlbumManage = ({
             items={destinationOptions}
             selected={destination}
             setSelected={setDestination}
+            // onCompleted navigates to whatever destination holds when the
+            // mutation returns, so it must not be changeable while in flight.
+            disabled={moving}
           />
           <Button
             className="mt-2"

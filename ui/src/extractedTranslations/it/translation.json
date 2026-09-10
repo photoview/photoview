@@ -274,6 +274,7 @@
         },
         "title": "Cambia password"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Azioni",

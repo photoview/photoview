@@ -277,6 +277,7 @@
         },
         "title": "Зміна пароля"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Дія",

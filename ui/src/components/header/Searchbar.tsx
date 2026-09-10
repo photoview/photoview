@@ -165,8 +165,12 @@ const SearchBar = () => {
   useEffect(() => {
     // Collapse the dropdown on navigation, but keep the typed query intact
     // so it's still there if the user navigates back to it (e.g. after
-    // clicking a result or "View all results").
+    // clicking a result or "View all results"). The row selection has to go
+    // though: the collapsed dropdown keeps its keydown listeners mounted, so
+    // a still-selected row would swallow the next Enter and re-open that
+    // result instead of going to the full search page.
     setExpanded(false)
+    setSelectedItem(null)
     setTreeQuery(query)
   }, [location])
 

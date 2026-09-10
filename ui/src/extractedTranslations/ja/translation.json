@@ -268,6 +268,7 @@
         },
         "title": "パスワードを変更"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "操作",

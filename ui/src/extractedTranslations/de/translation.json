@@ -271,6 +271,7 @@
         },
         "title": "Passwort zurücksetzen"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Aktion",

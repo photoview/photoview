@@ -271,6 +271,7 @@
         },
         "title": "Ændre adgangskode"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Handling",

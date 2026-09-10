@@ -271,6 +271,7 @@
         },
         "title": "Wachtwoord wijzigen"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Actie",

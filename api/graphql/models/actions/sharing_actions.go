@@ -19,13 +19,35 @@ func AlbumPermissions(db *gorm.DB, albumID int, viewerID int) ([]*models.AlbumPe
 	}
 
 	permissions := make([]*models.AlbumPermission, 0, len(rows))
+	if len(rows) == 0 {
+		return permissions, nil
+	}
+
+	// One query for every grantee rather than one per grant: the settings
+	// page resolves this field for every root album of every user, so a
+	// per-row lookup multiplies out across the whole table.
+	userIDs := make([]int, 0, len(rows))
 	for _, row := range rows {
-		var user models.User
-		if err := db.First(&user, row.UserID).Error; err != nil {
-			return nil, err
+		userIDs = append(userIDs, row.UserID)
+	}
+
+	var users []*models.User
+	if err := db.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	usersByID := make(map[int]*models.User, len(users))
+	for _, user := range users {
+		usersByID[user.ID] = user
+	}
+
+	for _, row := range rows {
+		user, ok := usersByID[row.UserID]
+		if !ok {
+			continue
 		}
 		permissions = append(permissions, &models.AlbumPermission{
-			User:  &user,
+			User:  user,
 			Level: row.Level,
 		})
 	}

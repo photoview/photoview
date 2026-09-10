@@ -271,6 +271,7 @@
         },
         "title": "Change password"
       },
+      "root_path_level": "Root path permission level",
       "table": {
         "column_names": {
           "action": "Action",

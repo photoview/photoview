@@ -271,6 +271,7 @@
         },
         "title": "Byta lösenord"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Åtgärd",

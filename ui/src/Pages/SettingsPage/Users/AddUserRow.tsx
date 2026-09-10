@@ -156,6 +156,10 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
         {state.rootPath && (
           <Dropdown
             className="mt-1"
+            aria-label={t(
+              'settings.users.root_path_level',
+              'Root path permission level'
+            )}
             items={levelOptions}
             selected={state.level}
             setSelected={value =>
