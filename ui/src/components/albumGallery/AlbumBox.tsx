@@ -79,6 +79,11 @@ export const AlbumBox = ({
               ? t('album_tree.unhide', 'Unhide album')
               : t('album_tree.hide', 'Hide album')
           }
+          aria-label={
+            hidden
+              ? t('album_tree.unhide', 'Unhide album')
+              : t('album_tree.hide', 'Hide album')
+          }
           className="absolute top-1 right-4 z-10 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
           onClick={e => {
             e.preventDefault()
@@ -86,7 +91,7 @@ export const AlbumBox = ({
             toggleAlbumHidden(hideAlbum, album.id, hidden)
           }}
         >
-          {hidden ? '\u{1F441}' : '\u{1F6AB}'}
+          <span aria-hidden="true">{hidden ? '\u{1F441}' : '\u{1F6AB}'}</span>
         </button>
       </div>
     )

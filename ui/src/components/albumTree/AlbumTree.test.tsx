@@ -198,3 +198,47 @@ test('filtering fetches children via one batched request instead of per node', a
   // stuck loading and the assertion below would time out.
   await waitFor(() => screen.getByText('ChildB'), { timeout: 1000 })
 })
+
+test('shows a message when the tree search fails, instead of rendering an empty tree silently', async () => {
+  const errorMocks = [
+    {
+      request: {
+        query: ALBUM_TREE_ROOT_QUERY,
+        variables: { showHidden: false },
+      },
+      result: {
+        data: {
+          myAlbums: [
+            {
+              id: '1',
+              title: 'Root',
+              viewerHidden: false,
+              viewerIsOwner: true,
+            },
+          ],
+        },
+      },
+    },
+    {
+      request: {
+        query: ALBUM_TREE_SEARCH_QUERY,
+        variables: { query: 'child', showHidden: false },
+      },
+      error: new Error('network error'),
+    },
+  ]
+
+  render(
+    <MockedProvider mocks={errorMocks} addTypename={false}>
+      <MemoryRouter>
+        <AlbumTreeSearchContext.Provider
+          value={{ query: 'child', setQuery: vi.fn() }}
+        >
+          <AlbumTree />
+        </AlbumTreeSearchContext.Provider>
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  await screen.findByText('Could not load matching albums')
+})

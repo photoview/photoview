@@ -45,6 +45,7 @@
     "label": "Album tree",
     "mobile_open": "Browse album tree",
     "no_matches": "No matching albums",
+    "search_error": "Could not load matching albums",
     "shared_with_me": "Shared with me",
     "unhide": "Unhide album"
   },

@@ -95,7 +95,7 @@ func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID i
 // a grant reaching the same descendant from a *different* source (e.g. an
 // admin's root grant reaching a folder an owner already shared separately)
 // coexists instead of overwriting it - UserAlbums.Level ends up the max
-// across every source, recomputed by recomputeUserAlbums.
+// across every source, recomputed by RecomputeUserAlbums.
 func PropagateAlbumLevel(db *gorm.DB, albumID int, userID int, level AlbumPermissionLevel, grantedByUserID *int) error {
 	var album Album
 	if err := db.First(&album, albumID).Error; err != nil {
@@ -131,7 +131,7 @@ func propagateOntoSubtree(db *gorm.DB, subtree []*Album, sourceAlbumID int, user
 		return err
 	}
 
-	return recomputeUserAlbums(db, userID, albumIDs)
+	return RecomputeUserAlbums(db, userID, albumIDs)
 }
 
 // RevokeAlbumLevel removes userID's access to albumID and every one of its
@@ -180,7 +180,7 @@ func RevokeAlbumLevel(db *gorm.DB, albumID int, userID int) error {
 		}
 	}
 
-	return recomputeUserAlbums(db, userID, affected)
+	return RecomputeUserAlbums(db, userID, affected)
 }
 
 // RecomputeGrantsAfterMove updates every grant reaching a moved subtree so
@@ -241,7 +241,7 @@ func RecomputeGrantsAfterMove(db *gorm.DB, subtree []*Album, newParentID int) er
 	}
 
 	for userID := range affectedUsers {
-		if err := recomputeUserAlbums(db, userID, subtreeIDs); err != nil {
+		if err := RecomputeUserAlbums(db, userID, subtreeIDs); err != nil {
 			return err
 		}
 	}
@@ -294,7 +294,7 @@ func CopyAlbumGrants(db *gorm.DB, sourceAlbumID int, targetAlbumID int, onlyUser
 	}
 
 	for userID := range affectedUsers {
-		if err := recomputeUserAlbums(db, userID, []int{targetAlbumID}); err != nil {
+		if err := RecomputeUserAlbums(db, userID, []int{targetAlbumID}); err != nil {
 			return err
 		}
 	}
@@ -302,13 +302,13 @@ func CopyAlbumGrants(db *gorm.DB, sourceAlbumID int, targetAlbumID int, onlyUser
 	return nil
 }
 
-// recomputeUserAlbums recalculates the materialized UserAlbums row for each
+// RecomputeUserAlbums recalculates the materialized UserAlbums row for each
 // (userID, albumID) pair in albumIDs from the current UserAlbumGrant rows:
 // the max Level across every source, and a nil GrantedByUserID (owner
 // access) if any source is owner-rooted, else an arbitrary non-nil
 // grantor. An album with no remaining grant rows has its UserAlbums row
 // deleted, matching the "no access" semantics of a full revoke.
-func recomputeUserAlbums(db *gorm.DB, userID int, albumIDs []int) error {
+func RecomputeUserAlbums(db *gorm.DB, userID int, albumIDs []int) error {
 	if len(albumIDs) == 0 {
 		return nil
 	}

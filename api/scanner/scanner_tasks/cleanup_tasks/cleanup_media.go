@@ -113,15 +113,35 @@ func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *model
 			return err
 		}
 
+		// A grant can also reference one of these albums as its source
+		// without living on it (e.g. a descendant a few levels down that
+		// isn't itself stale) - find those before deleting, so their
+		// UserAlbums row can be recomputed afterwards rather than left
+		// stale with a level that included a source about to disappear.
+		var strandedGrants []models.UserAlbumGrant
+		if err := tx.
+			Where("source_album_id IN (?) AND album_id NOT IN (?)", deleteAlbumIDs, deleteAlbumIDs).
+			Find(&strandedGrants).Error; err != nil {
+			return err
+		}
+
 		// Also delete the provenance rows backing those materialized grants -
 		// left behind, they'd keep referencing an album that's about to be
-		// deleted.
-		if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbumGrant{}).Error; err != nil {
+		// deleted, either as the grant's own album or as its source.
+		if err := tx.
+			Where("album_id IN (?) OR source_album_id IN (?)", deleteAlbumIDs, deleteAlbumIDs).
+			Delete(&models.UserAlbumGrant{}).Error; err != nil {
 			return err
 		}
 
 		if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
 			return err
+		}
+
+		for _, g := range strandedGrants {
+			if err := models.RecomputeUserAlbums(tx, g.UserID, []int{g.AlbumID}); err != nil {
+				return err
+			}
 		}
 
 		return nil

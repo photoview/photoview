@@ -56,6 +56,10 @@ const ExitButton = styled(OverlayButton)`
 const InfoButton = styled(OverlayButton)`
   right: 28px;
   top: 28px;
+
+  &.hide {
+    pointer-events: none;
+  }
 `
 
 const NavigationButton = styled(OverlayButton)<{ align: 'left' | 'right' }>`
@@ -123,47 +127,47 @@ const PresentNavigationOverlay = ({
         onMouseMove.current && onMouseMove.current()
       }}
     >
-    <div {...handlers}>
-      {children}
-      <NavigationButton
-        aria-label="Previous image"
-        className={hide ? 'hide' : undefined}
-        align="left"
-        onClick={() => dispatchMedia({ type: 'previousImage' })}
-      >
-        <PrevIcon />
-      </NavigationButton>
-      <NavigationButton
-        aria-label="Next image"
-        className={hide ? 'hide' : undefined}
-        align="right"
-        onClick={() => dispatchMedia({ type: 'nextImage' })}
-      >
-        <NextIcon />
-      </NavigationButton>
-      <ExitButton
-        aria-label="Exit presentation mode"
-        className={hide ? 'hide' : undefined}
-        onClick={() => {
-          if (disableSaveCloseInHistory === true) {
-            dispatchMedia({ type: 'closePresentMode' })
-          } else {
-            closePresentModeAction({ dispatchMedia })
-          }
-        }}
-      >
-        <ExitIcon />
-      </ExitButton>
-      {onInfoClick && (
-        <InfoButton
-          aria-label="Show media info"
+      <div {...handlers}>
+        {children}
+        <NavigationButton
+          aria-label="Previous image"
           className={hide ? 'hide' : undefined}
-          onClick={onInfoClick}
+          align="left"
+          onClick={() => dispatchMedia({ type: 'previousImage' })}
         >
-          <InfoIcon />
-        </InfoButton>
-      )}
-    </div>
+          <PrevIcon />
+        </NavigationButton>
+        <NavigationButton
+          aria-label="Next image"
+          className={hide ? 'hide' : undefined}
+          align="right"
+          onClick={() => dispatchMedia({ type: 'nextImage' })}
+        >
+          <NextIcon />
+        </NavigationButton>
+        <ExitButton
+          aria-label="Exit presentation mode"
+          className={hide ? 'hide' : undefined}
+          onClick={() => {
+            if (disableSaveCloseInHistory === true) {
+              dispatchMedia({ type: 'closePresentMode' })
+            } else {
+              closePresentModeAction({ dispatchMedia })
+            }
+          }}
+        >
+          <ExitIcon />
+        </ExitButton>
+        {onInfoClick && (
+          <InfoButton
+            aria-label="Show media info"
+            className={hide ? 'hide' : undefined}
+            onClick={onInfoClick}
+          >
+            <InfoIcon />
+          </InfoButton>
+        )}
+      </div>
     </StyledOverlayContainer>
   )
 }

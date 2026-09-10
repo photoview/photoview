@@ -45,6 +45,7 @@
     "label": "Alben-Baum",
     "mobile_open": "Alben-Baum durchsuchen",
     "no_matches": "Keine passenden Alben",
+    "search_error": "",
     "shared_with_me": "Für mich freigegeben",
     "unhide": ""
   },

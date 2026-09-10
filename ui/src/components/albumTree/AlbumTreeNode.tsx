@@ -211,13 +211,20 @@ const AlbumTreeNode = ({
               ? t('album_tree.unhide', 'Unhide album')
               : t('album_tree.hide', 'Hide album')
           }
+          aria-label={
+            album.viewerHidden
+              ? t('album_tree.unhide', 'Unhide album')
+              : t('album_tree.hide', 'Hide album')
+          }
           className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
           onClick={e => {
             e.preventDefault()
             toggleAlbumHidden(hideAlbum, album.id, album.viewerHidden === true)
           }}
         >
-          {album.viewerHidden ? '\u{1F441}' : '\u{1F6AB}'}
+          <span aria-hidden="true">
+            {album.viewerHidden ? '\u{1F441}' : '\u{1F6AB}'}
+          </span>
         </button>
       </div>
       {isExpanded && subAlbums && subAlbums.length > 0 && (

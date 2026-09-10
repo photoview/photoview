@@ -8,6 +8,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 	"github.com/stretchr/testify/assert"
@@ -105,4 +106,62 @@ func TestCleanupMedia(t *testing.T) {
 		assert.Equal(t, 2, countAllMedia())
 		assert.Equal(t, 4, countAllMediaURLs())
 	})
+}
+
+// TestDeleteOldUserAlbumsCleansUpStrandedGrantSources covers a real bug: a
+// deleted album can still be referenced as a grant's SourceAlbumID by a
+// surviving descendant a few levels down (not itself stale, so it isn't
+// among the deleted albums). UserAlbumGrant.SourceAlbumID has no actual
+// foreign key (GORM doesn't create one for a scalar field without an
+// association), so nothing enforces that only cleaning up rows scoped to
+// AlbumID also catches rows that merely cite a deleted album as their
+// source - left behind, the survivor's materialized UserAlbums row would
+// stay stuck at whatever level included that now-gone source.
+func TestDeleteOldUserAlbumsCleansUpStrandedGrantSources(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "stranded_grant_user", nil, false)
+	assert.NoError(t, err)
+
+	staleAlbum := models.Album{Title: "stale", Path: t.TempDir()}
+	assert.NoError(t, db.Save(&staleAlbum).Error)
+	survivor := models.Album{Title: "survivor", Path: t.TempDir(), ParentAlbumID: &staleAlbum.ID}
+	assert.NoError(t, db.Save(&survivor).Error)
+
+	// staleAlbum's own grant - covered by the existing AlbumID-scoped
+	// cleanup, included here so its removal doesn't mask the SourceAlbumID
+	// gap being tested.
+	assert.NoError(t, db.Create(&models.UserAlbumGrant{
+		UserID: user.ID, AlbumID: staleAlbum.ID, SourceAlbumID: staleAlbum.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: staleAlbum.ID, Level: models.AlbumPermissionLevelRead}).Error)
+
+	// survivor has two independent sources: one from staleAlbum (about to be
+	// stranded) at the higher level, and one self-sourced that must remain
+	// untouched.
+	assert.NoError(t, db.Create(&models.UserAlbumGrant{
+		UserID: user.ID, AlbumID: survivor.ID, SourceAlbumID: staleAlbum.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbumGrant{
+		UserID: user.ID, AlbumID: survivor.ID, SourceAlbumID: survivor.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+	assert.NoError(t, db.Create(&models.UserAlbums{UserID: user.ID, AlbumID: survivor.ID, Level: models.AlbumPermissionLevelUpload}).Error)
+
+	// Only survivor was found on this scan - staleAlbum is gone from disk.
+	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, []*models.Album{&survivor}, user)
+	assert.Empty(t, deleteErrors)
+
+	var staleAlbumCount int64
+	assert.NoError(t, db.Model(&models.Album{}).Where("id = ?", staleAlbum.ID).Count(&staleAlbumCount).Error)
+	assert.Zero(t, staleAlbumCount, "the stale album itself should be deleted")
+
+	var strandedGrantCount int64
+	assert.NoError(t, db.Model(&models.UserAlbumGrant{}).
+		Where("album_id = ? AND source_album_id = ?", survivor.ID, staleAlbum.ID).
+		Count(&strandedGrantCount).Error)
+	assert.Zero(t, strandedGrantCount, "the grant sourced from the deleted album must be cleaned up even though the target album survives")
+
+	var survivorGrant models.UserAlbums
+	assert.NoError(t, db.Where("user_id = ? AND album_id = ?", user.ID, survivor.ID).First(&survivorGrant).Error)
+	assert.Equal(t, models.AlbumPermissionLevelRead, survivorGrant.Level, "the survivor's materialized level must be recomputed down to its one remaining source")
 }

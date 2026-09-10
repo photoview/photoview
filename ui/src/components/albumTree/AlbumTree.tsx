@@ -153,7 +153,11 @@ const AlbumTree = () => {
 
   const [
     fetchTreeSearch,
-    { data: treeSearchData, loading: treeSearchLoading },
+    {
+      data: treeSearchData,
+      loading: treeSearchLoading,
+      error: treeSearchError,
+    },
   ] = useLazyQuery<albumTreeSearchQuery, albumTreeSearchQueryVariables>(
     ALBUM_TREE_SEARCH_QUERY
   )
@@ -244,6 +248,11 @@ const AlbumTree = () => {
       {isFiltering && treeSearchLoading && !treeSearchData && (
         <div className="px-2 py-2 text-sm text-gray-400">
           {t('general.loading.default', 'Loading...')}
+        </div>
+      )}
+      {isFiltering && treeSearchError && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t('album_tree.search_error', 'Could not load matching albums')}
         </div>
       )}
       {isFiltering && treeSearchData && visibleRoots?.length === 0 && (
