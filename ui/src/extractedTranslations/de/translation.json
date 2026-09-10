@@ -40,8 +40,10 @@
     "upload": "Lesen + Hochladen"
   },
   "album_tree": {
+    "children_error": "",
     "collapse": "",
     "empty": "Noch keine Alben",
+    "error": "",
     "expand": "",
     "hide": "",
     "label": "Alben-Baum",

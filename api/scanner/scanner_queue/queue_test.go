@@ -261,6 +261,30 @@ func TestScannerQueueCancelJob(t *testing.T) {
 		}
 	})
 
+	t.Run("cancelling skips an already-cancelled job for the same album", func(t *testing.T) {
+		// jobOnQueue lets a restart start while the cancelled job is still
+		// finishing its current file, so both are in_progress for a while.
+		cancelledJob := makeScannerJob(100)
+		cancelledJob.cancel()
+		restartedJob := makeScannerJob(100)
+
+		mockScannerQueue := ScannerQueue{
+			idle_chan:   make(chan bool, 1),
+			in_progress: []ScannerJob{cancelledJob, restartedJob},
+			up_next:     make([]ScannerJob, 0),
+			db:          nil,
+		}
+
+		ok := mockScannerQueue.CancelJob(100)
+		if !ok {
+			t.Fatal("Expected CancelJob to return true for the still-running restart")
+		}
+
+		if restartedJob.ctx.Err() == nil {
+			t.Error("Expected the restarted job to be the one that got cancelled")
+		}
+	})
+
 	t.Run("cancelling an unknown album returns false", func(t *testing.T) {
 		mockScannerQueue := ScannerQueue{
 			idle_chan:   make(chan bool, 1),
@@ -306,6 +330,22 @@ func TestScannerQueueCancelAllJobs(t *testing.T) {
 			if job.ctx.Err() == nil {
 				t.Errorf("Expected job for album %d to have its context cancelled", job.ctx.GetAlbum().ID)
 			}
+		}
+	})
+
+	t.Run("does not count a job that was already cancelled", func(t *testing.T) {
+		cancelledJob := makeScannerJob(100)
+		cancelledJob.cancel()
+
+		mockScannerQueue := ScannerQueue{
+			idle_chan:   make(chan bool, 1),
+			in_progress: []ScannerJob{cancelledJob, makeScannerJob(42)},
+			up_next:     make([]ScannerJob, 0),
+			db:          nil,
+		}
+
+		if cancelled := mockScannerQueue.CancelAllJobs(); cancelled != 1 {
+			t.Errorf("Expected only the still-running job to be counted, got %d", cancelled)
 		}
 	})
 

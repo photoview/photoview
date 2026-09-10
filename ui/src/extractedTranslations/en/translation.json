@@ -40,8 +40,10 @@
     "upload": "Read + upload"
   },
   "album_tree": {
+    "children_error": "Could not load albums below the matches",
     "collapse": "Collapse album",
     "empty": "No albums yet",
+    "error": "Could not load albums",
     "expand": "Expand album",
     "hide": "Hide album",
     "label": "Album tree",

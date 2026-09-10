@@ -86,7 +86,7 @@ const AlbumTree = () => {
   const { t } = useTranslation()
   const { id: activeAlbumId } = useParams()
   const showHidden = useShowHiddenAlbums()
-  const { data, loading } = useQuery<
+  const { data, loading, error } = useQuery<
     albumTreeRootQuery,
     albumTreeRootQueryVariables
   >(ALBUM_TREE_ROOT_QUERY, { variables: { showHidden } })
@@ -184,10 +184,12 @@ const AlbumTree = () => {
     }
   }
 
-  const [fetchTreeChildren, { data: treeChildrenData }] = useLazyQuery<
-    albumTreeChildrenQuery,
-    albumTreeChildrenQueryVariables
-  >(ALBUM_TREE_CHILDREN_QUERY)
+  const [
+    fetchTreeChildren,
+    { data: treeChildrenData, error: treeChildrenError },
+  ] = useLazyQuery<albumTreeChildrenQuery, albumTreeChildrenQueryVariables>(
+    ALBUM_TREE_CHILDREN_QUERY
+  )
 
   useEffect(() => {
     if (visibleIds) {
@@ -240,6 +242,11 @@ const AlbumTree = () => {
           {t('general.loading.default', 'Loading...')}
         </div>
       )}
+      {error && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t('album_tree.error', 'Could not load albums')}
+        </div>
+      )}
       {roots && roots.length === 0 && !isFiltering && (
         <div className="px-2 py-2 text-sm text-gray-400">
           {t('album_tree.empty', 'No albums yet')}
@@ -253,6 +260,14 @@ const AlbumTree = () => {
       {isFiltering && treeSearchError && (
         <div className="px-2 py-2 text-sm text-gray-400">
           {t('album_tree.search_error', 'Could not load matching albums')}
+        </div>
+      )}
+      {isFiltering && treeChildrenError && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t(
+            'album_tree.children_error',
+            'Could not load albums below the matches'
+          )}
         </div>
       )}
       {isFiltering && treeSearchData && visibleRoots?.length === 0 && (

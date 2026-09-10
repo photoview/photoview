@@ -203,6 +203,10 @@ const SearchBar = () => {
 
     const blurEvent = () => {
       setExpanded(false)
+      // The rows keep their document keydown listeners while collapsed, so
+      // a selection left behind here would let Enter open that hidden
+      // result instead of doing whatever the focused element does.
+      setSelectedItem(null)
     }
 
     elem.addEventListener('focus', focusEvent)

@@ -37,8 +37,10 @@
     "upload": ""
   },
   "album_tree": {
+    "children_error": "",
     "collapse": "",
     "empty": "",
+    "error": "",
     "expand": "",
     "hide": "",
     "label": "",

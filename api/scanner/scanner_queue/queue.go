@@ -366,6 +366,13 @@ func (queue *ScannerQueue) CancelJob(albumID int) bool {
 	}
 
 	for _, job := range queue.in_progress {
+		// An already-cancelled job lingers here until it exits on its own,
+		// and jobOnQueue lets a restart for the same album start meanwhile -
+		// so cancelling the first match could hit the dead one and leave the
+		// restart running.
+		if job.ctx.Err() != nil {
+			continue
+		}
 		if job.ctx.GetAlbum().ID == albumID {
 			job.cancel()
 			return true
@@ -398,6 +405,9 @@ func (queue *ScannerQueue) CancelAllJobs() int {
 	queue.up_next = queue.up_next[:0]
 
 	for _, job := range queue.in_progress {
+		if job.ctx.Err() != nil {
+			continue
+		}
 		job.cancel()
 		cancelled++
 	}
