@@ -130,6 +130,10 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           )}
           value={state.rootPath}
           onChange={e => updateInput(e, 'rootPath')}
+          // createUser's onCompleted hands these two on to addRootPath, so
+          // editing them mid-flight would create the root path with values
+          // the user never submitted.
+          disabled={loading}
         />
       </TableCell>
       <TableCell>
@@ -160,6 +164,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
               'settings.users.root_path_level',
               'Root path permission level'
             )}
+            disabled={loading}
             items={levelOptions}
             selected={state.level}
             setSelected={value =>

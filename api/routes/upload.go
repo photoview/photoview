@@ -216,6 +216,22 @@ func saveOneUploadedFile(album *models.Album, relPath string, header *multipart.
 
 	// os.Rename would silently overwrite an existing file at destPath -
 	// reject the upload instead of clobbering a library file already there.
+	// os.Link refuses an existing destination itself, so unlike a
+	// stat-then-rename guard it leaves no window for a second upload of the
+	// same name to land in between and be overwritten.
+	linkErr := os.Link(tmpPath, destPath)
+	if linkErr == nil {
+		os.Remove(tmpPath)
+		return uploadFileResult{Path: relPath, Status: "ok"}
+	}
+	if os.IsExist(linkErr) {
+		os.Remove(tmpPath)
+		return uploadFileResult{Path: relPath, Status: "rejected", Reason: "a file with that name already exists"}
+	}
+
+	// Not every filesystem a library can live on supports hard links (exFAT
+	// and some network mounts don't), so fall back to the checked rename
+	// there rather than refusing the upload outright.
 	if _, err := os.Stat(destPath); err == nil {
 		os.Remove(tmpPath)
 		return uploadFileResult{Path: relPath, Status: "rejected", Reason: "a file with that name already exists"}

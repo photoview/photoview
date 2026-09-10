@@ -237,7 +237,10 @@ const SearchBar = () => {
       } else if (event.key == 'Escape') {
         // setExpanded(false)
         inputEl.current?.blur()
-      } else if (event.key == 'Enter' && selectedItem === null) {
+        // Not selectedItem: arrowing down an empty result list still sets it
+        // to 0, and that index resolves to no row at all - which would leave
+        // Enter doing nothing instead of opening the full search page.
+      } else if (event.key == 'Enter' && selectedItemId == null) {
         const trimmed = query.trim()
         if (trimmed !== '') {
           navigate(`/search?q=${encodeURIComponent(trimmed)}`)
@@ -251,7 +254,7 @@ const SearchBar = () => {
     return () => {
       document.removeEventListener('keydown', keydownEvent)
     }
-  }, [searchData, selectedItem, query, navigate, expanded])
+  }, [searchData, selectedItem, selectedItemId, query, navigate, expanded])
 
   let results = null
   if (query.trim().length > 0 && fetched) {

@@ -115,16 +115,23 @@ const linkError = onError(({ graphQLErrors, networkError, operation }) => {
 
   if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
-    if (!isSubscription) {
+    // Only an actual authentication failure invalidates the token. A
+    // timeout, an offline client or a server-side 500 would otherwise log
+    // the user out over an outage that says nothing about their session.
+    const statusCode = (networkError as ServerError | undefined)?.statusCode
+    const loggingOut =
+      !isSubscription && (statusCode === 401 || statusCode === 403)
+
+    if (loggingOut) {
       clearTokenCookie()
     }
 
     const errors =
-      ((networkError as ServerError)?.result.errors as Error[]) || []
+      ((networkError as ServerError)?.result?.errors as Error[]) || []
 
-    const recoveryNote = isSubscription
-      ? ''
-      : ' You are being logged out in an attempt to recover.'
+    const recoveryNote = loggingOut
+      ? ' You are being logged out in an attempt to recover.'
+      : ''
 
     if (errors.length == 1) {
       errorMessages.push({

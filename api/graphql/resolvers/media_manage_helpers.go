@@ -6,6 +6,7 @@ package resolvers
 // on the next `go generate` as "unknown code".
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +26,12 @@ import (
 func deleteOneMedia(db *gorm.DB, user *models.User, mediaID int) error {
 	var media models.Media
 	if err := db.First(&media, mediaID).Error; err != nil {
+		// A media id that doesn't exist and one the caller may not touch
+		// answer the same way, so this can't be used to probe which ids are
+		// in the library.
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return auth.ErrUnauthorized
+		}
 		return err
 	}
 
@@ -46,14 +53,17 @@ func deleteOneMedia(db *gorm.DB, user *models.User, mediaID int) error {
 		return fmt.Errorf("could not create trash folder: %w", err)
 	}
 
+	// The media id keeps two records that share a basename apart: the
+	// timestamp only has second resolution, and os.Rename would silently
+	// replace an already-trashed file of the same name.
 	timestamp := time.Now().Unix()
-	trashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%s", timestamp, filepath.Base(media.Path)))
+	trashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%d-%s", timestamp, media.ID, filepath.Base(media.Path)))
 	if err := os.Rename(media.Path, trashPath); err != nil {
 		return fmt.Errorf("could not move file to trash: %w", err)
 	}
 
 	if media.SideCarPath != nil {
-		sidecarTrashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%s", timestamp, filepath.Base(*media.SideCarPath)))
+		sidecarTrashPath := filepath.Join(trashDir, fmt.Sprintf("%d-%d-%s", timestamp, media.ID, filepath.Base(*media.SideCarPath)))
 		// Best-effort: the primary file is already safely trashed, and the
 		// sidecar isn't required for the library entry to be gone.
 		_ = os.Rename(*media.SideCarPath, sidecarTrashPath)

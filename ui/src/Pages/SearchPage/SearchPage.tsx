@@ -166,7 +166,7 @@ const SearchPage = () => {
           <h2 className="text-xl mb-2">
             {t('search_page.albums_heading', 'Albums')}
           </h2>
-          <AlbumBoxes albums={albums} />
+          <AlbumBoxes albums={albums} refetchQueries={['searchPageQuery']} />
         </>
       )}
 

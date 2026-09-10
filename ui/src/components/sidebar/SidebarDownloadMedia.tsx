@@ -307,7 +307,10 @@ const SidebarShareMediaButton = ({
       const filename = row.url.match(/[^/]*$/)?.[0] ?? media.title ?? 'photo'
       const file = new File([blob], filename, { type: blob.type })
 
-      if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+      // A browser exposing share() without canShare() gives no way to know
+      // it takes files, and passing some a file they can't handle rejects
+      // the whole share - treat a missing canShare as "no file support".
+      if (!navigator.canShare?.({ files: [file] })) {
         // Fall back to sharing a link when the OS share sheet can't take
         // this file directly (e.g. desktop browsers without file support).
         await navigator.share({

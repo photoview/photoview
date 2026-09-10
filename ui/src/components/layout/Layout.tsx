@@ -58,12 +58,8 @@ const Layout = ({ children, title, ...otherProps }: LayoutProps) => {
             <Authorized>
               <MainMenu />
             </Authorized>
-            {!!token && (
-              <div
-                className={`${
-                  showAlbumTree ? 'hidden lg:block' : 'hidden'
-                } fixed lg:top-[84px] bottom-0 left-[292px] w-[260px] border-r border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg z-20`}
-              >
+            {showAlbumTree && (
+              <div className="hidden lg:block fixed lg:top-[84px] bottom-0 left-[292px] w-[260px] border-r border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg z-20">
                 <AlbumTree />
               </div>
             )}
