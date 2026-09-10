@@ -154,6 +154,16 @@ const AlbumGallery = React.forwardRef(
       dispatchMedia({ type: 'replaceMedia', media: album?.media || [] })
     }, [album?.media])
 
+    // The gallery is reused across albums (same component instance, new
+    // album prop), so without this a selection made in one album would
+    // still be live in the next one - and the delete button would act on
+    // media that isn't even on screen anymore.
+    useEffect(() => {
+      setSelectMode(false)
+      setSelectedIds(new Set())
+      setShowConfirmDelete(false)
+    }, [album?.id])
+
     urlPresentModeSetupHook({
       dispatchMedia,
       openPresentMode: event => {

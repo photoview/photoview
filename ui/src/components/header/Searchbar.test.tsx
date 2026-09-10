@@ -1,4 +1,5 @@
 import React from 'react'
+import { InMemoryCache } from '@apollo/client'
 import { MockedProvider } from '@apollo/client/testing'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -99,6 +100,89 @@ test('re-issues the search once showHiddenAlbums resolves after the first deboun
   })
 }, 20000)
 
+test('re-issues the search when the result limit preference is changed to unlimited', async () => {
+  let sawLimited = false
+  let sawUnlimited = false
+  // Must match MockedProvider's addTypename={false}, or the cache rewrites
+  // the outgoing documents and no mock matches anymore.
+  const cache = new InMemoryCache({ addTypename: false })
+
+  const searchVariables = (limit: number) => ({
+    query: 'vac',
+    limitMedia: limit,
+    limitAlbums: limit,
+    showHidden: false,
+  })
+
+  const mocks = [
+    {
+      request: { query: SEARCHBAR_USER_PREFERENCES_QUERY },
+      result: {
+        data: {
+          myUserPreferences: {
+            id: '1',
+            searchResultLimit: 10,
+            __typename: 'UserPreferences',
+          },
+        },
+      },
+    },
+    {
+      request: { query: SHOW_HIDDEN_ALBUMS_PREFERENCE_QUERY },
+      result: {
+        data: {
+          myUserPreferences: {
+            id: '1',
+            showHiddenAlbums: false,
+            __typename: 'UserPreferences',
+          },
+        },
+      },
+    },
+    {
+      request: { query: SEARCH_QUERY, variables: searchVariables(10) },
+      result: () => {
+        sawLimited = true
+        return { data: emptySearchResult }
+      },
+    },
+    {
+      request: { query: SEARCH_QUERY, variables: searchVariables(0) },
+      result: () => {
+        sawUnlimited = true
+        return { data: emptySearchResult }
+      },
+    },
+  ]
+
+  render(
+    <MockedProvider mocks={mocks} cache={cache} addTypename={false}>
+      <MemoryRouter>
+        <SearchBar />
+      </MemoryRouter>
+    </MockedProvider>
+  )
+
+  await userEvent.type(screen.getByPlaceholderText('Search'), 'vac')
+  await waitFor(() => expect(sawLimited).toBe(true), { timeout: 15000 })
+
+  // Saving "0" (unlimited) in the settings while the searchbar stays
+  // mounted: a defined-to-defined change, which the earlier
+  // undefined-to-defined check missed entirely.
+  cache.writeQuery({
+    query: SEARCHBAR_USER_PREFERENCES_QUERY,
+    data: {
+      myUserPreferences: {
+        id: '1',
+        searchResultLimit: 0,
+        __typename: 'UserPreferences',
+      },
+    },
+  })
+
+  await waitFor(() => expect(sawUnlimited).toBe(true), { timeout: 15000 })
+}, 40000)
+
 test('caps the dropdown to 5 rows even when the search returns more', async () => {
   const media = Array.from({ length: 7 }, (_, i) => ({
     id: `media-${i}`,
@@ -145,7 +229,12 @@ test('caps the dropdown to 5 rows even when the search returns more', async () =
       },
       result: {
         data: {
-          search: { query: 'vac', albums: [], media, __typename: 'SearchResult' },
+          search: {
+            query: 'vac',
+            albums: [],
+            media,
+            __typename: 'SearchResult',
+          },
         },
       },
     },
@@ -162,8 +251,6 @@ test('caps the dropdown to 5 rows even when the search returns more', async () =
   await userEvent.type(screen.getByPlaceholderText('Search'), 'vac')
 
   await waitFor(() =>
-    expect(screen.getByRole('list', { name: 'media' }).children).toHaveLength(
-      5
-    )
+    expect(screen.getByRole('list', { name: 'media' }).children).toHaveLength(5)
   )
 })

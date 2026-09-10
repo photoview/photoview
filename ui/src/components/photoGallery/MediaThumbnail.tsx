@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { ProtectedImage } from './ProtectedMedia'
 import { MediaType } from '../../__generated__/globalTypes'
@@ -144,24 +145,37 @@ type SelectionIconProps = {
   onClick(e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void
 }
 
-const SelectionIcon = ({ selected, onClick }: SelectionIconProps) => (
-  <SelectionIconWrapper selected={selected} onClick={onClick}>
-    {selected ? (
-      <svg width="16px" height="16px" viewBox="0 0 16 16" className="m-auto">
-        <path d="M6 11.5L2.5 8l1-1L6 9.5l6.5-6.5 1 1z" fill="#FFFFFF"></path>
-      </svg>
-    ) : (
-      <div
-        className="m-auto rounded-full"
-        style={{
-          width: '16px',
-          height: '16px',
-          border: '2px solid white',
-        }}
-      ></div>
-    )}
-  </SelectionIconWrapper>
-)
+const SelectionIcon = ({ selected, onClick }: SelectionIconProps) => {
+  const { t } = useTranslation()
+
+  return (
+    <SelectionIconWrapper
+      selected={selected}
+      onClick={onClick}
+      aria-pressed={selected}
+      aria-label={
+        selected
+          ? t('album_gallery.select.deselect_media', 'Deselect media')
+          : t('album_gallery.select.select_media', 'Select media')
+      }
+    >
+      {selected ? (
+        <svg width="16px" height="16px" viewBox="0 0 16 16" className="m-auto">
+          <path d="M6 11.5L2.5 8l1-1L6 9.5l6.5-6.5 1 1z" fill="#FFFFFF"></path>
+        </svg>
+      ) : (
+        <div
+          className="m-auto rounded-full"
+          style={{
+            width: '16px',
+            height: '16px',
+            border: '2px solid white',
+          }}
+        ></div>
+      )}
+    </SelectionIconWrapper>
+  )
+}
 
 const VideoThumbnailIcon = styled(VideoThumbnailIconSVG)`
   color: rgba(255, 255, 255, 0.8);

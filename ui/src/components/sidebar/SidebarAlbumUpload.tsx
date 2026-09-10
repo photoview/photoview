@@ -89,15 +89,26 @@ const SidebarAlbumUpload = ({ albumId }: SidebarAlbumUploadProps) => {
         return
       }
 
-      let rejected: UploadFileResult[] = []
+      let rejected: UploadFileResult[] | null = null
       try {
         const parsed = JSON.parse(xhr.responseText) as UploadResponse
-        rejected = parsed.results.filter(r => r.status !== 'ok')
+        if (Array.isArray(parsed.results)) {
+          rejected = parsed.results.filter(r => r.status !== 'ok')
+        }
       } catch {
-        // ignore parse errors, treat as fully successful
+        // Handled below, same as a well-formed body without results.
       }
 
-      if (rejected.length > 0) {
+      if (rejected === null) {
+        // A 200 whose body we can't read tells us nothing about which files
+        // were stored - reporting "Upload complete" here would hide files
+        // the server actually rejected. Some may still have landed, so the
+        // cache invalidation below has to run either way.
+        finish(
+          t('sidebar.album.upload.failed', 'Upload failed'),
+          xhr.responseText
+        )
+      } else if (rejected.length > 0) {
         finish(
           t(
             'sidebar.album.upload.finished_with_errors',

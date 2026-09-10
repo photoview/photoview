@@ -2,12 +2,14 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -120,6 +122,47 @@ func RegisterUploadRoutes(db *gorm.DB, router *mux.Router) {
 	}).Methods("POST", "OPTIONS")
 }
 
+var errUploadPathSymlink = errors.New("path crosses a symbolic link")
+
+// prepareUploadDir creates the directories cleanRel needs below albumPath,
+// rejecting any component that already exists as a symlink. Containment
+// checks on the joined path are purely lexical, so a symlink sitting inside
+// the album (say "trip" -> /etc) passes them while the write itself lands
+// wherever the link points. Uploading into a symlinked sub-album is still
+// possible by selecting that album directly, where its own resolved path is
+// the root this walks from.
+func prepareUploadDir(albumPath string, cleanRel string) error {
+	relDir := filepath.Dir(cleanRel)
+	if relDir == "." {
+		return nil
+	}
+
+	dir := albumPath
+	for _, part := range strings.Split(relDir, string(filepath.Separator)) {
+		dir = filepath.Join(dir, part)
+
+		info, err := os.Lstat(dir)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return err
+			}
+			if err := os.Mkdir(dir, 0o755); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if info.Mode()&os.ModeSymlink != 0 {
+			return errUploadPathSymlink
+		}
+		if !info.IsDir() {
+			return errors.New("path component is not a directory")
+		}
+	}
+
+	return nil
+}
+
 func saveOneUploadedFile(album *models.Album, relPath string, header *multipart.FileHeader) uploadFileResult {
 	cleanRel, err := utils.SanitizeRelativePath(relPath)
 	if err != nil {
@@ -131,7 +174,10 @@ func saveOneUploadedFile(album *models.Album, relPath string, header *multipart.
 		return uploadFileResult{Path: relPath, Status: "rejected", Reason: "path escapes album directory"}
 	}
 
-	if err := os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil {
+	if err := prepareUploadDir(album.Path, cleanRel); err != nil {
+		if errors.Is(err, errUploadPathSymlink) {
+			return uploadFileResult{Path: relPath, Status: "rejected", Reason: err.Error()}
+		}
 		return uploadFileResult{Path: relPath, Status: "error", Reason: "could not create directory"}
 	}
 

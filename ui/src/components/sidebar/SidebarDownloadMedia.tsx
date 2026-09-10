@@ -80,6 +80,13 @@ export const fetchMediaBlob =
   async (url: string): Promise<Blob | null | undefined> => {
     const response = await fetchMediaResponse(url)
 
+    // An error body (401/403/404) is still a readable body - without this it
+    // would be handed to the progress reader or saved as if it were media.
+    if (!response.ok) {
+      console.error(`Failed to fetch media: ${response.status}`)
+      return null
+    }
+
     if (response.headers.has('content-length')) {
       return downloadMediaShowProgress(t)(response)
     }

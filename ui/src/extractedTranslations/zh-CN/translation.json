@@ -25,8 +25,10 @@
       "delete_complete_other": "",
       "delete_finished_with_errors": "",
       "delete_selected": "",
+      "deselect_media": "",
       "select": "",
-      "select_all": ""
+      "select_all": "",
+      "select_media": ""
     }
   },
   "album_permission_level": {

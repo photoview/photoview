@@ -28,8 +28,10 @@
       "delete_complete_other": "Deleted {{count}} files",
       "delete_finished_with_errors": "Deleted {{success}} of {{total}} files",
       "delete_selected": "Delete selected",
+      "deselect_media": "Deselect media",
       "select": "Select",
-      "select_all": "Select all"
+      "select_all": "Select all",
+      "select_media": "Select media"
     }
   },
   "album_permission_level": {

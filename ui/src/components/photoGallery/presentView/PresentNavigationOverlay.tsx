@@ -46,6 +46,13 @@ const OverlayButton = styled.button`
     stroke: rgba(255, 255, 255, 0);
     transition: stroke 300ms;
   }
+
+  /* An invisible button must not stay tappable: on touch devices the first
+     tap is meant to reveal the controls via the container's click handler,
+     not to fire whatever button happens to sit under the finger. */
+  &.hide {
+    pointer-events: none;
+  }
 `
 
 const ExitButton = styled(OverlayButton)`
@@ -56,10 +63,6 @@ const ExitButton = styled(OverlayButton)`
 const InfoButton = styled(OverlayButton)`
   right: 28px;
   top: 28px;
-
-  &.hide {
-    pointer-events: none;
-  }
 `
 
 const NavigationButton = styled(OverlayButton)<{ align: 'left' | 'right' }>`

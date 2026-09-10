@@ -190,6 +190,29 @@ func TestUploadRoute(t *testing.T) {
 		assert.True(t, os.IsNotExist(statErr))
 	})
 
+	t.Run("upload through a symlinked directory is rejected", func(t *testing.T) {
+		outside := t.TempDir()
+		linkPath := filepath.Join(albumPath, "link")
+		assert.NoError(t, os.Symlink(outside, linkPath))
+		t.Cleanup(func() { os.Remove(linkPath) })
+
+		req := buildUploadRequest(t, album.ID, map[string][]byte{"link/escaped.jpg": validJPEGBytes(t)})
+		req = req.WithContext(auth.AddUserToContext(req.Context(), uploader))
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var resp uploadResponse
+		assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+		if assert.Len(t, resp.Results, 1) {
+			assert.Equal(t, "rejected", resp.Results[0].Status)
+		}
+
+		_, statErr := os.Stat(filepath.Join(outside, "escaped.jpg"))
+		assert.True(t, os.IsNotExist(statErr), "upload must not land outside the album through a symlink")
+	})
+
 	t.Run("unknown album id is forbidden, same as a permission denial", func(t *testing.T) {
 		req := buildUploadRequest(t, 999999, map[string][]byte{"photo.jpg": validJPEGBytes(t)})
 		req = req.WithContext(auth.AddUserToContext(req.Context(), uploader))
