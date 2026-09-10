@@ -7,16 +7,25 @@ import { getMyAlbums, getMyAlbumsVariables } from './__generated__/getMyAlbums'
 import useURLParameters from '../../hooks/useURLParameters'
 import useOrderingParams from '../../hooks/useOrderingParams'
 import AlbumFilter from '../../components/album/AlbumFilter'
+import MobileAlbumTreeButton from '../../components/albumTree/MobileAlbumTreeButton'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 
 const getAlbumsQuery = gql`
-  query getMyAlbums($orderBy: String, $orderDirection: OrderDirection) {
+  query getMyAlbums(
+    $orderBy: String
+    $orderDirection: OrderDirection
+    $showHidden: Boolean
+  ) {
     myAlbums(
       order: { order_by: $orderBy, order_direction: $orderDirection }
       onlyRoot: true
       showEmpty: true
+      showHidden: $showHidden
     ) {
       id
       title
+      viewerHidden
+      viewerIsOwner
       thumbnail {
         id
         thumbnail {
@@ -32,6 +41,7 @@ const AlbumsPage = () => {
 
   const urlParams = useURLParameters()
   const orderParams = useOrderingParams(urlParams, 'updated_at')
+  const showHidden = useShowHiddenAlbums()
 
   const { error, data } = useQuery<getMyAlbums, getMyAlbumsVariables>(
     getAlbumsQuery,
@@ -39,9 +49,13 @@ const AlbumsPage = () => {
       variables: {
         orderBy: orderParams.orderBy,
         orderDirection: orderParams.orderDirection,
+        showHidden,
       },
     }
   )
+
+  const myVolumes = data?.myAlbums.filter(a => a.viewerIsOwner)
+  const sharedWithMe = data?.myAlbums.filter(a => !a.viewerIsOwner)
 
   const sortingOptions = React.useMemo(
     () => [
@@ -59,13 +73,28 @@ const AlbumsPage = () => {
 
   return (
     <Layout title="Albums">
-      <AlbumFilter
-        onlyFavorites={false}
-        ordering={orderParams}
-        setOrdering={orderParams.setOrdering}
-        sortingOptions={sortingOptions}
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <AlbumFilter
+          onlyFavorites={false}
+          ordering={orderParams}
+          setOrdering={orderParams.setOrdering}
+          sortingOptions={sortingOptions}
+        />
+        <MobileAlbumTreeButton />
+      </div>
+      <AlbumBoxes
+        error={error}
+        albums={myVolumes}
+        refetchQueries={['getMyAlbums']}
       />
-      <AlbumBoxes error={error} albums={data?.myAlbums} />
+      {sharedWithMe && sharedWithMe.length > 0 && (
+        <>
+          <h2 className="text-lg font-semibold mt-6 mb-2">
+            {t('albums_page.shared_with_me', 'Shared with me')}
+          </h2>
+          <AlbumBoxes albums={sharedWithMe} refetchQueries={['getMyAlbums']} />
+        </>
+      )}
     </Layout>
   )
 }

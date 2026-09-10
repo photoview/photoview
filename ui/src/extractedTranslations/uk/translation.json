@@ -15,6 +15,53 @@
       "type": "Тип"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "",
+        "description_few": "",
+        "description_many": "",
+        "description_other": "",
+        "title": ""
+      },
+      "count_one": "",
+      "count_few": "",
+      "count_many": "",
+      "count_other": "",
+      "delete_complete_one": "",
+      "delete_complete_few": "",
+      "delete_complete_many": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Додати",
@@ -22,6 +69,7 @@
       "remove": "Видалити",
       "save": "Зберегти"
     },
+    "close": "",
     "loading": {
       "album": "Завантаження альбому",
       "default": "Завантаження...",
@@ -41,7 +89,8 @@
       "result_type": {
         "albums": "Альбоми",
         "media": "Медіафайли"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -69,6 +118,7 @@
     "action_label": {
       "change_label": "Змінити мітку",
       "detach_images": "Від’єднати обличчя",
+      "merge_face": "",
       "merge_people": "Обʼєднати обличчя",
       "move_faces": "Перемістити обличчя"
     },
@@ -79,7 +129,8 @@
     },
     "modal": {
       "action": {
-        "merge": "Обʼєднати"
+        "merge": "Обʼєднати",
+        "next": ""
       },
       "detach_image_faces": {
         "action": {
@@ -90,9 +141,13 @@
         "title": "Від’єднати світлини з обличчями"
       },
       "merge_face_groups": {
-        "description": "Усі світлини цієї групи обличь будуть обʼєднані з обраною групою.",
+        "destination_description": "",
         "destination_table": {
           "title": "Оберіть обличчя призначення"
+        },
+        "sources_description": "",
+        "sources_table": {
+          "title": ""
         },
         "title": "Об’єднати групи обличь"
       },
@@ -126,6 +181,13 @@
   "routes": {
     "page_not_found": "Сторінку не знайдено"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Максимальна кількість завдань сканування, які можна запускати одночасно",
@@ -149,6 +211,13 @@
     },
     "scanner": {
       "description": "Сканує всіх користувачів на наявність нових або оновлених медіафайлів",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Сканувати всіх користувачів",
       "title": "Сканер"
     },
@@ -159,6 +228,21 @@
       },
       "language_selector": {
         "placeholder": "Обрати мову"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -173,12 +257,14 @@
         },
         "title": "Налаштування теми"
       },
-      "title": "Налаштування користувача"
+      "title": "Налаштування користувача",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "Додати користувача"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Видалити {{user}}",
         "description": "<0>Ви впевнені, що бажаєте видалити <1></1>?</0><p>Цю дію не можна буде скасувати</p>",
@@ -193,6 +279,7 @@
         },
         "title": "Зміна пароля"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Дія",
@@ -252,23 +339,68 @@
           "title": "Конвертовані відео"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "Скинути обкладинку",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Встановити як обкладинку альбому",
-      "title_placeholder": "Назва альбому"
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "Назва альбому",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
         "byte_one": "{{count}} Байт",
+        "byte_few": "",
+        "byte_many": "",
         "byte_other": "{{count}} Байтів",
         "giga_byte_one": "{{count}} ГБ",
+        "giga_byte_few": "",
+        "giga_byte_many": "",
         "giga_byte_other": "{{count}} ГБ",
         "kilo_byte_one": "{{count}} КБ",
+        "kilo_byte_few": "",
+        "kilo_byte_many": "",
         "kilo_byte_other": "{{count}} КБ",
         "mega_byte_one": "{{count}} МБ",
+        "mega_byte_few": "",
+        "mega_byte_many": "",
         "mega_byte_other": "{{count}} МБ",
         "tera_byte_one": "{{count}} ТБ",
+        "tera_byte_few": "",
+        "tera_byte_many": "",
         "tera_byte_other": "{{count}} ТБ"
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Габарити",
         "file_size": "Розмір",
@@ -283,6 +415,7 @@
     "media": {
       "album_path": "Шлях до альбому",
       "exif": {
+        "description": "",
         "exposure_program": {
           "action_program": "Програма дії",
           "aperture_priority": "Пріоритет діафрагми",
@@ -320,6 +453,15 @@
           "lens": "Об'єктив",
           "maker": "Виробник"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {
@@ -335,6 +477,7 @@
       "add_share": "Додати спільний доступ",
       "copy_link": "Копіювати посилання",
       "delete": "Видалити",
+      "expiration_date": "",
       "more": "Більше",
       "no_shares_found": "Спільних доступів не знайдено",
       "public_link": "Публічне посилання",

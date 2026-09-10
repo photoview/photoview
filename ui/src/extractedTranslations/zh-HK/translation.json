@@ -15,6 +15,44 @@
       "type": "種類"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_other": "",
+        "title": ""
+      },
+      "count_other": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "加入",
@@ -22,6 +60,7 @@
       "remove": "刪除",
       "save": "儲存"
     },
+    "close": "",
     "loading": {
       "album": "載入相簿中",
       "default": "載入中...",
@@ -41,7 +80,8 @@
       "result_type": {
         "albums": "相簿",
         "media": "媒體"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +172,13 @@
   "routes": {
     "page_not_found": "找不到網頁"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "最多同時進行的掃描工作數目",
@@ -155,6 +202,13 @@
     },
     "scanner": {
       "description": "將掃描所有使用者的新媒體或更新媒體",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "掃描所有使用者",
       "title": "掃描"
     },
@@ -165,6 +219,21 @@
       },
       "language_selector": {
         "placeholder": "Select language"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -179,12 +248,14 @@
         },
         "title": ""
       },
-      "title": "使用者選項"
+      "title": "使用者選項",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "新增使用者"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "刪除 {{user}}",
         "description": "<0>確定刪除 <1></1>?</0><p>此操作無法取消</p>",
@@ -199,6 +270,7 @@
         },
         "title": "更改密碼"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "動作",
@@ -258,9 +330,43 @@
           "title": ""
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "",
-      "title_placeholder": "相簿名稱"
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "相簿名稱",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -270,6 +376,7 @@
         "mega_byte_other": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
@@ -322,6 +429,15 @@
           "lens": "鏡頭",
           "maker": "製造商"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

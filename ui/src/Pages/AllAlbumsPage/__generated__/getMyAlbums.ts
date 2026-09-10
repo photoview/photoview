@@ -31,6 +31,14 @@ export interface getMyAlbums_myAlbums {
   id: string;
   title: string;
   /**
+   * Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users.
+   */
+  viewerHidden: boolean;
+  /**
+   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)
+   */
+  viewerIsOwner: boolean;
+  /**
    * An image in this album used for previewing this album
    */
   thumbnail: getMyAlbums_myAlbums_thumbnail | null;
@@ -46,4 +54,5 @@ export interface getMyAlbums {
 export interface getMyAlbumsVariables {
   orderBy?: string | null;
   orderDirection?: OrderDirection | null;
+  showHidden?: boolean | null;
 }

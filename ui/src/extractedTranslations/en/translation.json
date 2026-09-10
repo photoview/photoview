@@ -15,6 +15,47 @@
       "type": "Kind"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "Move {{count}} file to the trash? This can be recovered by an administrator, but it will disappear from the library immediately.",
+        "description_other": "Move {{count}} files to the trash? This can be recovered by an administrator, but they will disappear from the library immediately.",
+        "title": "Delete files"
+      },
+      "count_one": "{{count}} selected",
+      "count_other": "{{count}} selected",
+      "delete_complete_one": "Deleted {{count}} file",
+      "delete_complete_other": "Deleted {{count}} files",
+      "delete_finished_with_errors": "Deleted {{success}} of {{total}} files",
+      "delete_selected": "Delete selected",
+      "deselect_media": "Deselect media",
+      "select": "Select",
+      "select_all": "Select all",
+      "select_media": "Select media"
+    }
+  },
+  "album_permission_level": {
+    "delete": "Read + upload + delete",
+    "read": "Read",
+    "upload": "Read + upload"
+  },
+  "album_tree": {
+    "children_error": "Could not load albums below the matches",
+    "collapse": "Collapse album",
+    "empty": "No albums yet",
+    "error": "Could not load albums",
+    "expand": "Expand album",
+    "hide": "Hide album",
+    "label": "Album tree",
+    "mobile_open": "Browse album tree",
+    "no_matches": "No matching albums",
+    "search_error": "Could not load matching albums",
+    "shared_with_me": "Shared with me",
+    "unhide": "Unhide album"
+  },
+  "albums_page": {
+    "shared_with_me": "Shared with me"
+  },
   "general": {
     "action": {
       "add": "Add",
@@ -22,6 +63,7 @@
       "remove": "Remove",
       "save": "Save"
     },
+    "close": "Close",
     "loading": {
       "album": "Loading album",
       "default": "Loading...",
@@ -41,7 +83,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Media"
-      }
+      },
+      "view_all_results": "View all results"
     }
   },
   "login_page": {
@@ -132,6 +175,13 @@
   "routes": {
     "page_not_found": "Page not found"
   },
+  "search_page": {
+    "albums_heading": "Albums",
+    "error": "Error loading results",
+    "heading": "Search results for \"{{query}}\"",
+    "no_results": "No results found",
+    "title": "Search results for \"{{query}}\""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "The maximum amount of scanner jobs that is allowed to run at once",
@@ -155,6 +205,13 @@
     },
     "scanner": {
       "description": "Will scan all users for new or updated media",
+      "queue_status": {
+        "cancel": "Cancel",
+        "cancel_all": "Cancel all",
+        "queued": "Queued",
+        "running": "Running",
+        "title": "Scan queue"
+      },
       "scan_all_users": "Scan all users",
       "title": "Scanner"
     },
@@ -165,6 +222,21 @@
       },
       "language_selector": {
         "placeholder": "Select language"
+      },
+      "search_result_limit": {
+        "description": "Maximum number of albums and media shown per category in search results. Use 0 to show all results.",
+        "title": "Number of search results"
+      },
+      "show_album_tree": {
+        "checkbox_label": "Show album tree sidebar",
+        "description": "Show a collapsible tree of your albums in a sidebar for quick navigation",
+        "title": "Album tree sidebar"
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "Show hidden albums",
+        "description": "Show albums you've hidden, dimmed, so you can bring them back",
+        "title": "Hidden albums",
+        "unhide_all": "Unhide all albums"
       },
       "theme": {
         "auto": {
@@ -179,12 +251,14 @@
         },
         "title": "Theme preferences"
       },
-      "title": "User preferences"
+      "title": "User preferences",
+      "title_with_username": "User preferences ({{username}})"
     },
     "users": {
       "add_user": {
         "submit": "Add user"
       },
+      "can_share": "Can share",
       "confirm_delete_user": {
         "action": "Delete {{user}}",
         "description": "<0>Are you sure, you want to delete <1></1>?</0><p>This action cannot be undone</p>",
@@ -199,6 +273,7 @@
         },
         "title": "Change password"
       },
+      "root_path_level": "Root path permission level",
       "table": {
         "column_names": {
           "action": "Action",
@@ -258,9 +333,43 @@
           "title": "Converted videos"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "Move \"{{title}}\" and everything inside it to the trash? This can be recovered by an administrator, but will disappear from the library immediately.",
+          "title": "Delete folder"
+        },
+        "delete": "Delete this folder",
+        "move": "Move",
+        "rename": "Rename",
+        "title": "Manage folder"
+      },
+      "new_folder": {
+        "create": "Create",
+        "placeholder": "Folder name",
+        "title": "New folder"
+      },
       "reset_cover": "Reset cover photo",
+      "scan": {
+        "rescan": "Rescan this album and its sub-albums",
+        "title": "Scanner"
+      },
       "set_cover": "Set as album cover photo",
-      "title_placeholder": "Album title"
+      "sharing": {
+        "select_user": "Select a user",
+        "share": "Share",
+        "title": "Shared with"
+      },
+      "title_placeholder": "Album title",
+      "upload": {
+        "cancelled": "Upload cancelled",
+        "complete": "Upload complete",
+        "failed": "Upload failed",
+        "finished_with_errors": "Upload finished with errors",
+        "select_files": "Select files",
+        "select_folder": "Select folder",
+        "title": "Upload",
+        "uploading": "Uploading"
+      }
     },
     "download": {
       "filesize": {
@@ -275,6 +384,7 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
+      "share": "Share",
       "table_columns": {
         "dimensions": "Dimensions",
         "file_size": "Size",
@@ -327,6 +437,15 @@
           "lens": "Lens",
           "maker": "Maker"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "Move \"{{name}}\" to the trash? This can be recovered by an administrator, but will disappear from the library immediately.",
+          "title": "Delete file"
+        },
+        "delete": "Delete this file",
+        "rename": "Rename",
+        "title": "Manage file"
       }
     },
     "people": {

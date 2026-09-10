@@ -7,6 +7,8 @@ type User {
   rootAlbums: [Album!]! @isAdmin
   "Whether or not the user has admin privileges"
   admin: Boolean!
+  "Whether the user may share albums they own with other users. Admins can always share regardless of this flag."
+  canShare: Boolean!
 }
 
 "Supported language translations of the user interface"
@@ -35,6 +37,22 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
+  """
+  The maximum number of albums/media to show per category in search results.
+  `null` uses the server default, `0` means no limit (show all results).
+  """
+  searchResultLimit: Int
+  """
+  Whether the album tree sidebar is shown in the UI.
+  `null` uses the default, which is to show it.
+  """
+  showAlbumTree: Boolean
+  """
+  Whether personally-hidden albums are shown (dimmed, with a click-to-unhide
+  affordance) instead of being excluded from navigation and search.
+  `null` uses the default, which is to exclude them.
+  """
+  showHiddenAlbums: Boolean
 }
 
 type AuthorizeResult {
@@ -75,19 +93,29 @@ extend type Mutation {
     username: String
     password: String
     admin: Boolean
+    canShare: Boolean
   ): User! @isAdmin
   "Create a new user"
   createUser(
     username: String!
     password: String
     admin: Boolean!
+    "Whether the user may share albums they own. Defaults to false if omitted."
+    canShare: Boolean
     rootPath: String
   ): User! @isAdmin
   "Delete an existing user"
   deleteUser(id: ID!): User! @isAdmin
 
-  "Add a root path from where to look for media for the given user, specified by their user id."
-  userAddRootPath(id: ID!, rootPath: String!): Album @isAdmin
+  """
+  Add a root path from where to look for media for the given user, specified
+  by their user id, at the given permission level (defaults to READ if
+  omitted).
+  """
+  userAddRootPath(id: ID!, rootPath: String!, level: AlbumPermissionLevel): Album @isAdmin
+
+  "Change the permission level a user holds on one of their existing root albums."
+  userUpdateRootPathLevel(id: ID!, albumId: ID!, level: AlbumPermissionLevel!): Album @isAdmin
 
   """
   Remove a root path from a user, specified by the id of the user and the top album representing the root path.
@@ -97,5 +125,10 @@ extend type Mutation {
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+  changeUserPreferences(
+    language: String
+    searchResultLimit: Int
+    showAlbumTree: Boolean
+    showHiddenAlbums: Boolean
+  ): UserPreferences! @isAuthorized
 }

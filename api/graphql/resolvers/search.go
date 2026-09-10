@@ -14,11 +14,11 @@ import (
 )
 
 // Search is the resolver for the search field.
-func (r *queryResolver) Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error) {
+func (r *queryResolver) Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int, showHidden *bool) (*models.SearchResult, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.Search(r.DB(ctx), query, user.ID, limitMedia, limitAlbums)
+	return actions.Search(r.DB(ctx), query, user.ID, limitMedia, limitAlbums, showHidden)
 }

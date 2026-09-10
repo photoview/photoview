@@ -32,3 +32,38 @@ func TestMigrateDatabaseAddsShareTokenLabel(t *testing.T) {
 	require.True(t, db.Migrator().HasColumn(&models.ShareToken{}, "label"))
 	require.False(t, db.Migrator().HasIndex(&models.ShareToken{}, "Label"))
 }
+
+func TestMigrateDatabaseBackfillsUserAlbumGrants(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "backfill_user", nil, false)
+	require.NoError(t, err)
+	album := models.Album{Title: "backfill_album", Path: "/photos/backfill_album"}
+	require.NoError(t, db.Save(&album).Error)
+
+	// Simulate a UserAlbums row that predates grant provenance tracking: a
+	// direct insert with no matching UserAlbumGrant row, bypassing
+	// PropagateAlbumLevel entirely.
+	require.NoError(t, db.Create(&models.UserAlbums{
+		UserID: user.ID, AlbumID: album.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error)
+
+	var countBefore int64
+	require.NoError(t, db.Model(&models.UserAlbumGrant{}).
+		Where("user_id = ? AND album_id = ?", user.ID, album.ID).Count(&countBefore).Error)
+	require.Zero(t, countBefore)
+
+	require.NoError(t, database.MigrateDatabase(db))
+
+	var grant models.UserAlbumGrant
+	require.NoError(t, db.Where("user_id = ? AND album_id = ?", user.ID, album.ID).First(&grant).Error)
+	require.Equal(t, album.ID, grant.SourceAlbumID, "a backfilled grant is self-sourced on the album it already sits on")
+	require.Equal(t, models.AlbumPermissionLevelUpload, grant.Level)
+
+	// Running the migration again must not duplicate the backfilled row.
+	require.NoError(t, database.MigrateDatabase(db))
+	var countAfter int64
+	require.NoError(t, db.Model(&models.UserAlbumGrant{}).
+		Where("user_id = ? AND album_id = ?", user.ID, album.ID).Count(&countAfter).Error)
+	require.EqualValues(t, 1, countAfter)
+}

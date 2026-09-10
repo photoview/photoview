@@ -6,6 +6,7 @@ import { closePresentModeAction, GalleryAction } from '../mediaGalleryReducer'
 import { useSwipeable } from 'react-swipeable'
 
 import ExitIcon from './icons/Exit'
+import InfoIcon from './icons/Info'
 import NextIcon from './icons/Next'
 import PrevIcon from './icons/Previous'
 
@@ -45,10 +46,22 @@ const OverlayButton = styled.button`
     stroke: rgba(255, 255, 255, 0);
     transition: stroke 300ms;
   }
+
+  /* An invisible button must not stay tappable: on touch devices the first
+     tap is meant to reveal the controls via the container's click handler,
+     not to fire whatever button happens to sit under the finger. */
+  &.hide {
+    pointer-events: none;
+  }
 `
 
 const ExitButton = styled(OverlayButton)`
   left: 28px;
+  top: 28px;
+`
+
+const InfoButton = styled(OverlayButton)`
+  right: 28px;
   top: 28px;
 `
 
@@ -71,12 +84,14 @@ type PresentNavigationOverlayProps = {
   children?: React.ReactChild
   dispatchMedia: React.Dispatch<GalleryAction>
   disableSaveCloseInHistory?: boolean
+  onInfoClick?: () => void
 }
 
 const PresentNavigationOverlay = ({
   children,
   dispatchMedia,
   disableSaveCloseInHistory,
+  onInfoClick,
 }: PresentNavigationOverlayProps) => {
   const [hide, setHide] = useState(true)
   const onMouseMove = useRef<null | DebouncedFn<() => void>>(null)
@@ -108,39 +123,54 @@ const PresentNavigationOverlay = ({
       onMouseMove={() => {
         onMouseMove.current && onMouseMove.current()
       }}
+      onClick={() => {
+        // Touch devices never fire mousemove, so the controls would
+        // otherwise stay hidden forever. A tap toggles them the same way a
+        // mouse movement does, and reuses the same auto-hide timer.
+        onMouseMove.current && onMouseMove.current()
+      }}
     >
-    <div {...handlers}>
-      {children}
-      <NavigationButton
-        aria-label="Previous image"
-        className={hide ? 'hide' : undefined}
-        align="left"
-        onClick={() => dispatchMedia({ type: 'previousImage' })}
-      >
-        <PrevIcon />
-      </NavigationButton>
-      <NavigationButton
-        aria-label="Next image"
-        className={hide ? 'hide' : undefined}
-        align="right"
-        onClick={() => dispatchMedia({ type: 'nextImage' })}
-      >
-        <NextIcon />
-      </NavigationButton>
-      <ExitButton
-        aria-label="Exit presentation mode"
-        className={hide ? 'hide' : undefined}
-        onClick={() => {
-          if (disableSaveCloseInHistory === true) {
-            dispatchMedia({ type: 'closePresentMode' })
-          } else {
-            closePresentModeAction({ dispatchMedia })
-          }
-        }}
-      >
-        <ExitIcon />
-      </ExitButton>
-    </div>
+      <div {...handlers}>
+        {children}
+        <NavigationButton
+          aria-label="Previous image"
+          className={hide ? 'hide' : undefined}
+          align="left"
+          onClick={() => dispatchMedia({ type: 'previousImage' })}
+        >
+          <PrevIcon />
+        </NavigationButton>
+        <NavigationButton
+          aria-label="Next image"
+          className={hide ? 'hide' : undefined}
+          align="right"
+          onClick={() => dispatchMedia({ type: 'nextImage' })}
+        >
+          <NextIcon />
+        </NavigationButton>
+        <ExitButton
+          aria-label="Exit presentation mode"
+          className={hide ? 'hide' : undefined}
+          onClick={() => {
+            if (disableSaveCloseInHistory === true) {
+              dispatchMedia({ type: 'closePresentMode' })
+            } else {
+              closePresentModeAction({ dispatchMedia })
+            }
+          }}
+        >
+          <ExitIcon />
+        </ExitButton>
+        {onInfoClick && (
+          <InfoButton
+            aria-label="Show media info"
+            className={hide ? 'hide' : undefined}
+            onClick={onInfoClick}
+          >
+            <InfoIcon />
+          </InfoButton>
+        )}
+      </div>
     </StyledOverlayContainer>
   )
 }

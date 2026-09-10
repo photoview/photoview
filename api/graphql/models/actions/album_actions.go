@@ -7,7 +7,7 @@ import (
 )
 
 func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *models.Pagination,
-	onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+	onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool, showHidden *bool) ([]*models.Album, error) {
 
 	if err := user.FillAlbums(db); err != nil {
 		return nil, err
@@ -36,6 +36,10 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	}
 
 	query = favoritesQuery(showEmpty, db, onlyWithFavorites, user, query)
+	query, err := HiddenAlbumsFilter(showHidden, db, user, query)
+	if err != nil {
+		return nil, err
+	}
 
 	query = models.FormatSQL(query, order, paginate)
 
@@ -47,19 +51,70 @@ func MyAlbums(db *gorm.DB, user *models.User, order *models.Ordering, paginate *
 	return albums, nil
 }
 
+// getSingleRootAlbumID returns the ID of the user's only true root album
+// (ParentAlbumID == nil) if it accounts for everything the user can see -
+// i.e. every other album they have access to is a descendant of it. In
+// that case, MyAlbums flattens the redundant root away and returns its
+// children directly, sparing a click into an otherwise pointless single
+// top-level folder.
+//
+// If the user has any other album whose own parent isn't in their album
+// set either, that's an independent share unrelated to the single root
+// (e.g. a folder shared from a different user's library, whose real
+// parent the recipient has no access to) - this returns -1 so it shows
+// up as its own top-level entry instead of silently disappearing under
+// the single-root special case.
 func getSingleRootAlbumID(user *models.User) int {
 	var singleRootAlbumID int = -1
 	for _, album := range user.Albums {
 		if album.ParentAlbumID == nil {
-			if singleRootAlbumID == -1 {
-				singleRootAlbumID = album.ID
-			} else {
-				singleRootAlbumID = -1
-				break
+			if singleRootAlbumID != -1 {
+				return -1
 			}
+			singleRootAlbumID = album.ID
 		}
 	}
+	if singleRootAlbumID == -1 {
+		return -1
+	}
+
+	albumIDs := make(map[int]bool, len(user.Albums))
+	for _, album := range user.Albums {
+		albumIDs[album.ID] = true
+	}
+
+	for _, album := range user.Albums {
+		if album.ID == singleRootAlbumID {
+			continue
+		}
+		if album.ParentAlbumID == nil || !albumIDs[*album.ParentAlbumID] {
+			return -1
+		}
+	}
+
 	return singleRootAlbumID
+}
+
+// hiddenAlbumsFilter excludes albums the user has personally hidden, plus
+// all descendants of a hidden album (they're unreachable by browsing once
+// their ancestor is hidden, even though they have no hidden row of their
+// own), unless showHidden is true (used to reveal hidden albums, dimmed, in
+// the UI).
+func HiddenAlbumsFilter(showHidden *bool, db *gorm.DB, user *models.User, query *gorm.DB) (*gorm.DB, error) {
+	if showHidden != nil && *showHidden {
+		return query, nil
+	}
+
+	hiddenClosureIDs, err := models.HiddenAlbumsClosure(db, user.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "computing hidden albums closure")
+	}
+
+	if len(hiddenClosureIDs) > 0 {
+		query = query.Where("id NOT IN (?)", hiddenClosureIDs)
+	}
+
+	return query, nil
 }
 
 func favoritesQuery(showEmpty *bool, db *gorm.DB, onlyWithFavorites *bool, user *models.User, query *gorm.DB) *gorm.DB {
@@ -89,12 +144,12 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelRead)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 
@@ -104,36 +159,41 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
 	var albumPath []*models.Album
 
-	err := db.Raw(`
+	// depth is carried through the recursion and used only to ORDER BY -
+	// SQL doesn't guarantee a recursive CTE returns rows in any particular
+	// order otherwise, and the truncation loop below depends on seeing the
+	// closest ancestor first.
+	if err := db.Raw(`
 		WITH recursive path_albums AS (
-			SELECT * FROM albums anchor WHERE anchor.id = ?
+			SELECT *, 0 AS depth FROM albums anchor WHERE anchor.id = ?
 			UNION
-			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
+			SELECT parent.*, child.depth + 1 FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
 		)
-		SELECT * FROM path_albums WHERE id != ?
-	`, album.ID, album.ID).Scan(&albumPath).Error
+		SELECT * FROM path_albums WHERE id != ? ORDER BY depth ASC
+	`, album.ID, album.ID).Scan(&albumPath).Error; err != nil {
+		return nil, err
+	}
 
-	// Make sure to only return albums this user owns
-	for i := len(albumPath) - 1; i >= 0; i-- {
-		album := albumPath[i]
-
-		owns, err := user.OwnsAlbum(db, album)
+	// albumPath is ordered closest-ancestor-first, root-last. Access only
+	// ever cascades downward (from a grant point to its descendants), so
+	// walk outward from the leaf and stop at the first ancestor the user
+	// can't see - everything from there to the root is truncated, while
+	// closer, still-visible ancestors (e.g. a shared subfolder sitting
+	// below an otherwise inaccessible root) are kept.
+	visibleUpTo := len(albumPath)
+	for i, ancestor := range albumPath {
+		hasAccess, err := user.HasAlbumLevel(db, ancestor, models.AlbumPermissionLevelRead)
 		if err != nil {
 			return nil, err
 		}
 
-		if !owns {
-			albumPath = albumPath[i+1:]
+		if !hasAccess {
+			visibleUpTo = i
 			break
 		}
-
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return albumPath, nil
+	return albumPath[:visibleUpTo], nil
 }
 
 func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, error) {
@@ -149,12 +209,12 @@ func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, 
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 
@@ -171,12 +231,12 @@ func ResetAlbumCover(db *gorm.DB, user *models.User, albumID int) (*models.Album
 		return nil, err
 	}
 
-	ownsAlbum, err := user.OwnsAlbum(db, &album)
+	hasAccess, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
 	if err != nil {
 		return nil, err
 	}
 
-	if !ownsAlbum {
+	if !hasAccess {
 		return nil, errors.New("forbidden")
 	}
 

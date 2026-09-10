@@ -12,6 +12,7 @@ import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
 import useOrderingParams from '../../hooks/useOrderingParams'
 import { useParams } from 'react-router-dom'
 import { isNil } from '../../helpers/utils'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 
 const ALBUM_QUERY = gql`
   ${ALBUM_GALLERY_FRAGMENT}
@@ -23,6 +24,7 @@ const ALBUM_QUERY = gql`
     $orderDirection: OrderDirection
     $limit: Int
     $offset: Int
+    $showHidden: Boolean
   ) {
     album(id: $id) {
       ...AlbumGalleryFields
@@ -42,6 +44,7 @@ function AlbumPage() {
 
   const urlParams = useURLParameters()
   const orderParams = useOrderingParams(urlParams)
+  const showHidden = useShowHiddenAlbums()
 
   const onlyFavorites = urlParams.getParam('favorites') == '1' ? true : false
   const setOnlyFavorites = (favorites: boolean) =>
@@ -58,6 +61,7 @@ function AlbumPage() {
       orderDirection: orderParams.orderDirection,
       offset: 0,
       limit: 200,
+      showHidden,
     },
   })
 

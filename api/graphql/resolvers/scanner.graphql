@@ -5,12 +5,57 @@ type ScannerResult {
   message: String
 }
 
+enum ScannerJobStatus {
+  RUNNING
+  QUEUED
+}
+
+"A single album/sub-album currently running or queued in the scanner."
+type ScannerQueueItem {
+  album: Album!
+  status: ScannerJobStatus!
+}
+
+extend type Query {
+  """
+  Snapshot of what the scanner is currently running or has queued.
+  Admins see every job; other users only see jobs for albums they have
+  at least read access to.
+  """
+  scannerQueueStatus: [ScannerQueueItem!]! @isAuthorized
+}
+
 extend type Mutation {
   "Scan all users for new media"
   scanAll: ScannerResult! @isAdmin
 
   "Scan a single user for new media"
   scanUser(userId: ID!): ScannerResult! @isAdmin
+
+  """
+  Recursively scan a single album and its sub-albums for new media, without
+  scanning the rest of the library. Caller must be an admin, or hold at
+  least UPLOAD-level access on albumId.
+  """
+  scanAlbum(albumId: ID!): ScannerResult! @isAuthorized
+
+  """
+  Cancel a specific album's scanner job, whether queued or running. A
+  queued job is removed immediately; a running job stops once it
+  finishes its current file - already-processed files are kept, not
+  rolled back. Caller must be an admin, or hold at least UPLOAD-level
+  access on the album (the same requirement as triggering the scan).
+  """
+  cancelScanJob(albumId: ID!): Boolean! @isAuthorized
+
+  """
+  Cancel every scanner job currently queued or running, following the same
+  per-job semantics as cancelScanJob. Admins cancel the entire queue; other
+  users only cancel jobs for albums where they hold at least UPLOAD-level
+  access, the same requirement as cancelScanJob. Returns the number of jobs
+  cancelled.
+  """
+  cancelAllScanJobs: Int! @isAuthorized
 
   """
   Set how often, in seconds, the server should automatically scan for new media,

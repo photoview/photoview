@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
+func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User, level models.AlbumPermissionLevel) (*models.Album, error) {
 	rootPath = filepath.Clean(rootPath)
 
 	if !ValidRootPath(rootPath) {
@@ -31,10 +31,6 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 		}
 
 		rootPath = path.Join(wd, rootPath)
-	}
-
-	owners := []models.User{
-		*owner,
 	}
 
 	var matchedAlbums []models.Album
@@ -54,20 +50,32 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 			return nil, errors.New(fmt.Sprintf("user already owns a path containing this path: %s", rootPath))
 		}
 
-		if err := db.Model(&owner).Association("Albums").Append(&album); err != nil {
+		// PropagateAlbumLevel stamps the grant onto the whole existing
+		// subtree, not just the root row, since this path may already have
+		// content scanned in below it (e.g. shared between two admin-managed
+		// root paths pointing at the same directory).
+		if err := models.PropagateAlbumLevel(db, album.ID, owner.ID, level, nil); err != nil {
 			return nil, errors.Wrap(err, "add owner to already existing album")
 		}
 
 		return &album, nil
 	} else {
 		album := models.Album{
-			Title:  path.Base(rootPath),
-			Path:   rootPath,
-			Owners: owners,
+			Title: path.Base(rootPath),
+			Path:  rootPath,
 		}
 
-		if err := db.Create(&album).Error; err != nil {
-			return nil, err
+		// Create and grant must succeed or fail together: if grant creation
+		// failed after the album row was already committed, the album would
+		// be left with no permission grant for anyone to access it.
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&album).Error; err != nil {
+				return err
+			}
+
+			return models.PropagateAlbumLevel(tx, album.ID, owner.ID, level, nil)
+		}); err != nil {
+			return nil, errors.Wrap(err, "create new root album and grant owner access")
 		}
 
 		return &album, nil
@@ -113,6 +121,10 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
@@ -137,6 +149,10 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	}
 
 	for _, item := range dirContent {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 		log.Info(ctx, "Check the media", "media_path", mediaPath)
 

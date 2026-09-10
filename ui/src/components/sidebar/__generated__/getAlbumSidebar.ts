@@ -11,6 +11,28 @@ export interface getAlbumSidebar_album {
   __typename: "Album";
   id: string;
   title: string;
+  /**
+   * Whether the currently logged in user may create folders in, or upload media into, this album
+   */
+  viewerCanUpload: boolean;
+  /**
+   * Whether the currently logged in user may delete or move this album
+   */
+  viewerCanDelete: boolean;
+  /**
+   * Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)
+   */
+  viewerIsOwner: boolean;
+  /**
+   * Whether the currently logged in user is allowed to share albums at all (see User.canShare) - sharing this specific album also requires viewerIsOwner
+   */
+  viewerCanShare: boolean;
+  /**
+   * ID of the album which contains this album, or null if this is a root album.
+   * Unlike parentAlbum, this doesn't require the parent association to be
+   * preloaded, so it's always accurate.
+   */
+  parentAlbumId: string | null;
 }
 
 export interface getAlbumSidebar {

@@ -3,7 +3,6 @@ package actions
 import (
 	"time"
 
-	"github.com/photoview/photoview/api/database/drivers"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/utils"
@@ -17,24 +16,21 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 
 	var media models.Media
 
-	var query string
-	if drivers.POSTGRES.MatchDatabase(db) {
-		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = \"Album\".id AND user_albums.user_id = ?)"
-	} else {
-		query = "EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = Album.id AND user_albums.user_id = ?)"
-	}
-
-	err := db.Joins("Album").
-		Where(query, user.ID).
-		First(&media, mediaID).
-		Error
-
+	err := db.Joins("Album").First(&media, mediaID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, auth.ErrUnauthorized
 		} else {
-			return nil, errors.Wrap(err, "failed to validate media owner with database")
+			return nil, errors.Wrap(err, "failed to load media from database")
 		}
+	}
+
+	isOwner, err := user.IsAlbumOwner(db, &media.Album)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate media owner with database")
+	}
+	if !isOwner {
+		return nil, auth.ErrUnauthorized
 	}
 
 	label = utils.SanitizeShareLabel(label)
@@ -64,18 +60,19 @@ func AddMediaShare(db *gorm.DB, user *models.User, mediaID int, expire *time.Tim
 func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Time, password *string, label *string) (*models.ShareToken,
 	error) {
 
-	var count int64
-	err := db.
-		Model(&models.Album{}).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)",
-			user.ID).
-		Count(&count).Error
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, auth.ErrUnauthorized
+		}
+		return nil, errors.Wrap(err, "failed to load album from database")
+	}
 
+	isOwner, err := user.IsAlbumOwner(db, &album)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to validate album owner with database")
 	}
-
-	if count == 0 {
+	if !isOwner {
 		return nil, auth.ErrUnauthorized
 	}
 

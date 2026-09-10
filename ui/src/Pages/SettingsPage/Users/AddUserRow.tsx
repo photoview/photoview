@@ -2,8 +2,11 @@ import { gql, useMutation } from '@apollo/client'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Checkbox from '../../../primitives/form/Checkbox'
+import Dropdown from '../../../primitives/form/Dropdown'
 import { TextField, Button, ButtonGroup } from '../../../primitives/form/Input'
 import { TableRow, TableCell } from '../../../primitives/Table'
+import { AlbumPermissionLevel } from '../../../__generated__/globalTypes'
+import { albumPermissionLevelOptions } from '../../../helpers/albumPermissions'
 import { createUser, createUserVariables } from './__generated__/createUser'
 import {
   userAddRootPath,
@@ -11,19 +14,28 @@ import {
 } from './__generated__/userAddRootPath'
 
 export const CREATE_USER_MUTATION = gql`
-  mutation createUser($username: String!, $admin: Boolean!) {
-    createUser(username: $username, admin: $admin) {
+  mutation createUser(
+    $username: String!
+    $admin: Boolean!
+    $canShare: Boolean
+  ) {
+    createUser(username: $username, admin: $admin, canShare: $canShare) {
       id
       username
       admin
+      canShare
       __typename
     }
   }
 `
 
 export const USER_ADD_ROOT_PATH_MUTATION = gql`
-  mutation userAddRootPath($id: ID!, $rootPath: String!) {
-    userAddRootPath(id: $id, rootPath: $rootPath) {
+  mutation userAddRootPath(
+    $id: ID!
+    $rootPath: String!
+    $level: AlbumPermissionLevel
+  ) {
+    userAddRootPath(id: $id, rootPath: $rootPath, level: $level) {
       id
     }
   }
@@ -33,6 +45,8 @@ const initialState = {
   username: '',
   rootPath: '',
   admin: false,
+  canShare: false,
+  level: AlbumPermissionLevel.READ as AlbumPermissionLevel,
   userAdded: false,
 }
 
@@ -44,6 +58,7 @@ type AddUserRowProps = {
 
 const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
   const { t } = useTranslation()
+  const levelOptions = albumPermissionLevelOptions(t)
   const [state, setState] = useState(initialState)
 
   const finished = () => {
@@ -73,6 +88,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           variables: {
             id: id,
             rootPath: state.rootPath,
+            level: state.level,
           },
         })
       } else {
@@ -114,6 +130,10 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
           )}
           value={state.rootPath}
           onChange={e => updateInput(e, 'rootPath')}
+          // createUser's onCompleted hands these two on to addRootPath, so
+          // editing them mid-flight would create the root path with values
+          // the user never submitted.
+          disabled={loading}
         />
       </TableCell>
       <TableCell>
@@ -127,6 +147,34 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
             })
           }}
         />
+        <Checkbox
+          label={t('settings.users.can_share', 'Can share')}
+          checked={state.canShare}
+          onChange={e => {
+            setState({
+              ...state,
+              canShare: e.target.checked || false,
+            })
+          }}
+        />
+        {state.rootPath && (
+          <Dropdown
+            className="mt-1"
+            aria-label={t(
+              'settings.users.root_path_level',
+              'Root path permission level'
+            )}
+            disabled={loading}
+            items={levelOptions}
+            selected={state.level}
+            setSelected={value =>
+              setState({
+                ...state,
+                level: value as AlbumPermissionLevel,
+              })
+            }
+          />
+        )}
       </TableCell>
       <TableCell>
         <ButtonGroup>
@@ -142,6 +190,7 @@ const AddUserRow = ({ setShow, show, onUserAdded }: AddUserRowProps) => {
                 variables: {
                   username: state.username,
                   admin: state.admin,
+                  canShare: state.canShare,
                 },
               })
             }}

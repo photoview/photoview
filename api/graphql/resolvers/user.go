@@ -79,7 +79,7 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 			return err
 		}
 
-		_, err = scanner.NewRootAlbum(tx, rootPath, user)
+		_, err = scanner.NewRootAlbum(tx, rootPath, user, models.AlbumPermissionLevelDelete)
 		if err != nil {
 			return err
 		}
@@ -107,10 +107,10 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 }
 
 // UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool) (*models.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *string, password *string, admin *bool, canShare *bool) (*models.User, error) {
 	db := r.DB(ctx)
 
-	if username == nil && password == nil && admin == nil {
+	if username == nil && password == nil && admin == nil && canShare == nil {
 		return nil, errors.New("no updates requested")
 	}
 
@@ -137,6 +137,10 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 		user.Admin = *admin
 	}
 
+	if canShare != nil {
+		user.CanShare = *canShare
+	}
+
 	if err := db.Save(&user).Error; err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
@@ -145,7 +149,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, username *str
 }
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool, rootPath *string) (*models.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, username string, password *string, admin bool, canShare *bool, rootPath *string) (*models.User, error) {
 	var user *models.User
 
 	transactionError := r.DB(ctx).Transaction(func(tx *gorm.DB) error {
@@ -155,9 +159,16 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string, pass
 			return err
 		}
 
+		if canShare != nil && *canShare {
+			user.CanShare = true
+			if err := tx.Save(user).Error; err != nil {
+				return fmt.Errorf("failed to set canShare on new user: %w", err)
+			}
+		}
+
 		if rootPath != nil && *rootPath != "" {
 			cleanedPath := path.Clean(*rootPath)
-			_, err = scanner.NewRootAlbum(tx, cleanedPath, user)
+			_, err = scanner.NewRootAlbum(tx, cleanedPath, user, models.AlbumPermissionLevelRead)
 			if err != nil {
 				return err
 			}
@@ -179,22 +190,47 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User
 }
 
 // UserAddRootPath is the resolver for the userAddRootPath field.
-func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string) (*models.Album, error) {
+func (r *mutationResolver) UserAddRootPath(ctx context.Context, id int, rootPath string, level *models.AlbumPermissionLevel) (*models.Album, error) {
 	db := r.DB(ctx)
 
 	rootPath = path.Clean(rootPath)
+
+	grantLevel := models.AlbumPermissionLevelRead
+	if level != nil {
+		grantLevel = *level
+	}
 
 	var user models.User
 	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 
-	newAlbum, err := scanner.NewRootAlbum(db, rootPath, &user)
+	newAlbum, err := scanner.NewRootAlbum(db, rootPath, &user, grantLevel)
 	if err != nil {
 		return nil, err
 	}
 
 	return newAlbum, nil
+}
+
+// UserUpdateRootPathLevel is the resolver for the userUpdateRootPathLevel field.
+func (r *mutationResolver) UserUpdateRootPathLevel(ctx context.Context, id int, albumID int, level models.AlbumPermissionLevel) (*models.Album, error) {
+	db := r.DB(ctx)
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, err
+	}
+
+	if album.ParentAlbumID != nil {
+		return nil, errors.New("album is not a root album")
+	}
+
+	if err := models.PropagateAlbumLevel(db, albumID, id, level, nil); err != nil {
+		return nil, err
+	}
+
+	return &album, nil
 }
 
 // UserRemoveRootAlbum is the resolver for the userRemoveRootAlbum field.
@@ -252,7 +288,7 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 }
 
 // ChangeUserPreferences is the resolver for the changeUserPreferences field.
-func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string, searchResultLimit *int, showAlbumTree *bool, showHiddenAlbums *bool) (*models.UserPreferences, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
@@ -272,6 +308,9 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 
 	userPref.UserID = user.ID
 	userPref.Language = langTrans
+	userPref.SearchResultLimit = searchResultLimit
+	userPref.ShowAlbumTree = showAlbumTree
+	userPref.ShowHiddenAlbums = showHiddenAlbums
 
 	if err := db.Save(&userPref).Error; err != nil {
 		return nil, err

@@ -30,13 +30,71 @@ func TestAlbumPath(t *testing.T) {
 	user, err := models.RegisterUser(db, "user", nil, false)
 	assert.NoError(t, err)
 
-	db.Model(&user).Association("Albums").Append(album.ParentAlbum.ParentAlbum)
+	// Grant access on the whole chain, matching how a real grant on "One"
+	// would actually leave the database: PropagateAlbumLevel/the scanner's
+	// copy-on-create logic both cascade a grant down onto every existing
+	// descendant, so "Two" and "Three" get their own rows too, not just
+	// "One". (The original version of this test only appended the
+	// grandparent, relying on the old OwnsAlbum's ancestor-walk to infer
+	// access to its descendants - a shape that never occurs in production.)
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&album, album.ParentAlbum, album.ParentAlbum.ParentAlbum))
 
 	albumPath, err := actions.AlbumPath(db, user, &album)
 	assert.NoError(t, err)
 	assert.Len(t, albumPath, 2)
 	assert.Equal(t, "Two", albumPath[0].Title)
 	assert.Equal(t, "One", albumPath[1].Title)
+}
+
+// TestAlbumPathTruncatesAtInaccessibleAncestor covers a real production bug:
+// a subfolder shared directly (e.g. "PC-Medien", granted without its real
+// parent "Meike") sitting more than one level below the point where access
+// stops must still show its own accessible ancestors in the breadcrumb -
+// the old root-first, stop-on-first-miss loop discarded the whole path the
+// moment it saw the inaccessible root, hiding "PC-Medien" too.
+func TestAlbumPathTruncatesAtInaccessibleAncestor(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	leaf := models.Album{
+		Title: "Camera",
+		Path:  "/meike/pc_medien/camera",
+		ParentAlbum: &models.Album{
+			Title: "PC-Medien",
+			Path:  "/meike/pc_medien",
+			ParentAlbum: &models.Album{
+				Title: "Meike",
+				Path:  "/meike",
+			},
+		},
+	}
+	assert.NoError(t, db.Save(&leaf).Error)
+
+	user, err := models.RegisterUser(db, "album_path_user", nil, false)
+	assert.NoError(t, err)
+
+	// User has access to "Camera" and its immediate parent "PC-Medien" (as
+	// PropagateAlbumLevel/the scanner would leave it if "PC-Medien" was the
+	// actual share point), but not to "Meike", its real, inaccessible parent.
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&leaf, leaf.ParentAlbum))
+
+	albumPath, err := actions.AlbumPath(db, user, &leaf)
+	assert.NoError(t, err)
+	if assert.Len(t, albumPath, 1) {
+		assert.Equal(t, "PC-Medien", albumPath[0].Title)
+	}
+}
+
+func TestAlbumForbidden(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := models.Album{Title: "private", Path: "/photos/private"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	stranger, err := models.RegisterUser(db, "album_stranger", nil, false)
+	assert.NoError(t, err)
+
+	_, err = actions.Album(db, stranger, album.ID)
+	assert.Error(t, err)
 }
 
 func TestAlbumCover(t *testing.T) {
@@ -146,12 +204,21 @@ func TestAlbumCover(t *testing.T) {
 		return
 	}
 
-	if !assert.NoError(t, db.Model(&regularUser).Association("Albums").Append(&rootAlbum)) {
+	// Explicit Upload-level grants, not a plain association append (which
+	// would default to Read) - setting/resetting an album cover requires
+	// Upload access.
+	if !assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: regularUser.ID, AlbumID: rootAlbum.ID, Level: models.AlbumPermissionLevelUpload,
+	}).Error) {
 		return
 	}
 
-	if !assert.NoError(t, db.Model(&regularUser).Association("Albums").Append(&children)) {
-		return
+	for _, child := range children {
+		if !assert.NoError(t, db.Create(&models.UserAlbums{
+			UserID: regularUser.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelUpload,
+		}).Error) {
+			return
+		}
 	}
 
 	// Single test since we cannot rely on the tests being performed sequentially
@@ -231,7 +298,7 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Single root album, no children", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -260,7 +327,7 @@ func TestAlbumsSingleRootExpand(t *testing.T) {
 
 	t.Run("Single root album, multiple children", func(t *testing.T) {
 
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 3)
@@ -298,7 +365,7 @@ func TestNonRootAlbumPath(t *testing.T) {
 
 	// The child album is a "local root album" for the user, as it does not have access to the root album
 	t.Run("User should only see child album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -356,7 +423,7 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Admin should see all albums", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, admin, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, admin, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 2)
@@ -365,7 +432,7 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	})
 
 	t.Run("User 1 should only see child1 album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user1, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user1, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
@@ -373,10 +440,148 @@ func TestNonRootAlbumPathMultipleUsers(t *testing.T) {
 	})
 
 	t.Run("User 2 should only see child2 album", func(t *testing.T) {
-		returnedAlbums, err := actions.MyAlbums(db, user2, nil, nil, &boolTrue, &boolTrue, &boolFalse)
+		returnedAlbums, err := actions.MyAlbums(db, user2, nil, nil, &boolTrue, &boolTrue, &boolFalse, nil)
 		assert.NoError(t, err)
 
 		assert.Len(t, returnedAlbums, 1)
 		assert.Equal(t, "child2", returnedAlbums[0].Title)
+	})
+}
+
+func TestMyAlbumsExcludesHidden(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	user, err := models.RegisterUser(db, "hide_myalbums_user", nil, false)
+	assert.NoError(t, err)
+
+	visible := models.Album{Title: "visible", Path: "/photos/mya_visible"}
+	assert.NoError(t, db.Save(&visible).Error)
+	hidden := models.Album{Title: "hidden", Path: "/photos/mya_hidden"}
+	assert.NoError(t, db.Save(&hidden).Error)
+
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&visible, &hidden))
+
+	_, err = user.HideAlbum(db, hidden.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("hidden album is excluded by default", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "visible")
+		assert.NotContains(t, titles, "hidden")
+	})
+
+	t.Run("showHidden reveals it again", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, &boolTrue)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "visible")
+		assert.Contains(t, titles, "hidden")
+	})
+}
+
+// TestMyAlbumsExcludesHiddenDescendants covers a real bug: hiding a parent
+// album only wrote a hidden row for that exact album, so a child with no
+// hidden row of its own kept showing up in MyAlbums even though it's
+// unreachable by browsing once its parent is hidden.
+func TestMyAlbumsExcludesHiddenDescendants(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	user, err := models.RegisterUser(db, "hide_descendants_user", nil, false)
+	assert.NoError(t, err)
+
+	parent := models.Album{Title: "hidden_parent", Path: "/photos/hide_desc_parent"}
+	assert.NoError(t, db.Save(&parent).Error)
+	child := models.Album{Title: "unhidden_child", Path: "/photos/hide_desc_parent/child", ParentAlbumID: &parent.ID}
+	assert.NoError(t, db.Save(&child).Error)
+
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&parent, &child))
+
+	_, err = user.HideAlbum(db, parent.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("both the hidden parent and its unhidden child are excluded", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.NotContains(t, titles, "hidden_parent")
+		assert.NotContains(t, titles, "unhidden_child")
+	})
+
+	t.Run("showHidden reveals both again", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, nil, &boolTrue, nil, &boolTrue)
+		assert.NoError(t, err)
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Contains(t, titles, "hidden_parent")
+		assert.Contains(t, titles, "unhidden_child")
+	})
+}
+
+// TestMyAlbumsOnlyRootWithUnrelatedShare covers a real production bug: a
+// user with a single true root album ("papa") who also receives an
+// unrelated share of someone else's subfolder ("pc_media", whose real
+// parent "meike_root" isn't in the user's own album set) used to have that
+// share silently disappear - the single-root special case flattened
+// "papa" to its own children without noticing "pc_media" wasn't one of
+// them, so it never showed up anywhere in the onlyRoot listing.
+func TestMyAlbumsOnlyRootWithUnrelatedShare(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	boolTrue := true
+
+	papa := models.Album{Title: "papa", Path: "/photos/papa"}
+	assert.NoError(t, db.Save(&papa).Error)
+	papaYear := models.Album{Title: "papa_year", Path: "/photos/papa/1999", ParentAlbumID: &papa.ID}
+	assert.NoError(t, db.Save(&papaYear).Error)
+
+	meikeRoot := models.Album{Title: "meike_root", Path: "/photos/meike"}
+	assert.NoError(t, db.Save(&meikeRoot).Error)
+	pcMedia := models.Album{Title: "pc_media", Path: "/photos/meike/pc_media", ParentAlbumID: &meikeRoot.ID}
+	assert.NoError(t, db.Save(&pcMedia).Error)
+
+	user, err := models.RegisterUser(db, "regina", nil, false)
+	assert.NoError(t, err)
+
+	// User has the whole "papa" tree, plus "pc_media" specifically - but
+	// not "meike_root", its real parent.
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&papa, &papaYear, &pcMedia))
+
+	t.Run("papa and pc_media both show as their own top-level entries", func(t *testing.T) {
+		albums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.ElementsMatch(t, []string{"papa", "pc_media"}, titles)
+	})
+
+	t.Run("removing access to papa leaves pc_media showing as itself", func(t *testing.T) {
+		assert.NoError(t, db.Model(&user).Association("Albums").Delete(&papa, &papaYear))
+
+		user.Albums = nil // force MyAlbums to reload the user's albums
+		albums, err := actions.MyAlbums(db, user, nil, nil, &boolTrue, &boolTrue, nil, nil)
+		assert.NoError(t, err)
+
+		titles := make([]string, len(albums))
+		for i, a := range albums {
+			titles[i] = a.Title
+		}
+		assert.Equal(t, []string{"pc_media"}, titles)
 	})
 }

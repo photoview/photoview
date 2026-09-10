@@ -5,9 +5,10 @@ import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
 import { MessageState } from '../messages/Messages'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
-import React from 'react'
+import React, { useState } from 'react'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
+import { ReactComponent as ShareIcon } from './icons/shareNativeIcon.svg'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,
@@ -55,7 +56,7 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn) => async (url: string) => {
+const fetchMediaResponse = async (url: string): Promise<Response> => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
     location.origin
@@ -69,16 +70,43 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
     }
   }
 
-  const response = await fetch(imgUrl.href, {
+  return fetch(imgUrl.href, {
     credentials: 'include',
   })
+}
 
-  let blob = null
-  if (response.headers.has('content-length')) {
-    blob = await downloadMediaShowProgress(t)(response)
-  } else {
-    blob = await response.blob()
+export const fetchMediaBlob =
+  (t: TranslationFn) =>
+  async (url: string): Promise<Blob | null | undefined> => {
+    const response = await fetchMediaResponse(url)
+
+    // An error body (401/403/404) is still a readable body - without this it
+    // would be handed to the progress reader or saved as if it were media.
+    if (!response.ok) {
+      console.error(`Failed to fetch media: ${response.status}`)
+      return null
+    }
+
+    if (response.headers.has('content-length')) {
+      return downloadMediaShowProgress(t)(response)
+    }
+
+    return response.blob()
   }
+
+// Like fetchMediaBlob, but never shows the download-progress notification —
+// dismissing that notification cancels the fetch, which isn't appropriate
+// for the share flow.
+export const fetchMediaBlobQuiet = async (url: string): Promise<Blob> => {
+  const response = await fetchMediaResponse(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch media: ${response.status}`)
+  }
+  return response.blob()
+}
+
+const downloadMedia = (t: TranslationFn) => async (url: string) => {
+  const blob = await fetchMediaBlob(t)(url)
 
   if (blob == null) {
     console.log('Blob is null canceling')
@@ -246,6 +274,76 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   )
 }
 
+const canNativeShare = () =>
+  typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+const pickShareRow = (rows: SidebarDownloadTableRow[]) =>
+  rows.find(x => x.title == 'Web optimized video') ??
+  rows.find(x => x.title == 'Original') ??
+  rows.find(x => x.title == 'Large') ??
+  rows[0]
+
+type SidebarShareMediaButtonProps = {
+  media: MediaSidebarMedia
+  rows: SidebarDownloadTableRow[]
+}
+
+const SidebarShareMediaButton = ({
+  media,
+  rows,
+}: SidebarShareMediaButtonProps) => {
+  const { t } = useTranslation()
+  const [sharing, setSharing] = useState(false)
+
+  const row = pickShareRow(rows)
+
+  if (!canNativeShare() || row == null) return null
+
+  const share = async () => {
+    setSharing(true)
+    try {
+      const blob = await fetchMediaBlobQuiet(row.url)
+
+      const filename = row.url.match(/[^/]*$/)?.[0] ?? media.title ?? 'photo'
+      const file = new File([blob], filename, { type: blob.type })
+
+      // A browser exposing share() without canShare() gives no way to know
+      // it takes files, and passing some a file they can't handle rejects
+      // the whole share - treat a missing canShare as "no file support".
+      if (!navigator.canShare?.({ files: [file] })) {
+        // Fall back to sharing a link when the OS share sheet can't take
+        // this file directly (e.g. desktop browsers without file support).
+        await navigator.share({
+          title: media.title ?? undefined,
+          url: location.href,
+        })
+        return
+      }
+
+      await navigator.share({ files: [file], title: media.title ?? undefined })
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        console.error('Native share failed', err)
+      }
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  return (
+    <div className="pl-4 py-2">
+      <button
+        className="text-green-500 font-bold uppercase text-xs disabled:opacity-50"
+        disabled={sharing}
+        onClick={share}
+      >
+        <ShareIcon className="inline-block mr-2" />
+        <span>{t('sidebar.download.share', 'Share')}</span>
+      </button>
+    </div>
+  )
+}
+
 type SidebarMediaDownladProps = {
   media: MediaSidebarMedia
 }
@@ -288,6 +386,7 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
       </SidebarSectionTitle>
 
       <SidebarDownloadTable rows={downloadRows} />
+      <SidebarShareMediaButton media={media} rows={downloadRows} />
     </SidebarSection>
   )
 }

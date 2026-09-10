@@ -15,6 +15,44 @@
       "type": "文件类型"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_other": "",
+        "title": ""
+      },
+      "count_other": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "加入",
@@ -22,6 +60,7 @@
       "remove": "删除",
       "save": "储存"
     },
+    "close": "",
     "loading": {
       "album": "载入相册中",
       "default": "载入中...",
@@ -41,7 +80,8 @@
       "result_type": {
         "albums": "相册",
         "media": "媒体"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +172,13 @@
   "routes": {
     "page_not_found": "找不到网页"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "最多允许同时进行的扫描任务数目",
@@ -155,6 +202,13 @@
     },
     "scanner": {
       "description": "将扫描所有用户新添加及更新的媒体文件",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "扫描所有用户",
       "title": "扫描"
     },
@@ -165,6 +219,21 @@
       },
       "language_selector": {
         "placeholder": "选择语言"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -179,12 +248,14 @@
         },
         "title": "主题设置"
       },
-      "title": "用户选项"
+      "title": "用户选项",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "新增用户"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "删除 {{user}}",
         "description": "<0>确定删除 <1></1>?</0><p>此操作无法取消</p>",
@@ -199,6 +270,7 @@
         },
         "title": "更改密码"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "操作",
@@ -258,9 +330,43 @@
           "title": "已转换视频"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "重设封面照片",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "设置为封面图片",
-      "title_placeholder": "相册名称"
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "相册名称",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -271,6 +377,7 @@
         "mega_byte_other": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
@@ -323,6 +430,15 @@
           "lens": "镜头",
           "maker": "制造商"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

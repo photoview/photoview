@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
@@ -163,6 +164,8 @@ var database_models []interface{} = []interface{}{
 	&models.ShareToken{},
 	&models.UserMediaData{},
 	&models.UserAlbums{},
+	&models.UserAlbumGrant{},
+	&models.UserAlbumData{},
 	&models.UserPreferences{},
 
 	// Face detection
@@ -177,7 +180,23 @@ func MigrateDatabase(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(database_models...); err != nil {
-		log.Printf("Auto migration failed: %v\n", err)
+		return fmt.Errorf("auto migration failed: %w", err)
+	}
+
+	// Once SetupJoinTable registers UserAlbums as the join table for
+	// User.Albums, GORM's schema cache for that struct type is pinned to the
+	// relationship's own minimal schema (just the user_id/album_id key
+	// columns) for the remainder of the process - a plain AutoMigrate call
+	// (in either order relative to SetupJoinTable, and on every subsequent
+	// call once this has happened once in this process) silently ignores
+	// the Level/GrantedByUserID fields actually declared on the struct. This
+	// is process-wide (GORM's schema cache isn't scoped to *gorm.DB), so it
+	// also affects every later MigrateDatabase call in the same process
+	// (e.g. repeated test runs), not just this one. Ensuring these two
+	// columns exist is therefore done with raw SQL, bypassing GORM's
+	// struct-based schema resolution for this table entirely.
+	if err := ensureUserAlbumsColumns(db); err != nil {
+		return fmt.Errorf("ensure user_albums columns failed: %w", err)
 	}
 
 	// v2.1.0 - Replaced by Media.CreatedAt
@@ -196,12 +215,113 @@ func MigrateDatabase(db *gorm.DB) error {
 		log.Printf("Failed to run exif GPS correction migration: %v\n", err)
 	}
 
+	// Replaced by per-album UserAlbums.Level. Unlike the cosmetic/data-quality
+	// migrations above, a failure here must stop startup: the new level
+	// column defaults to READ, so continuing would silently downgrade any
+	// user who previously had can_upload=true until this migration
+	// eventually succeeds.
+	if err := migrations.MigrateCanUploadToAlbumLevel(db); err != nil {
+		return fmt.Errorf("run can_upload to album level migration: %w", err)
+	}
+
+	// Backfill self-sourced UserAlbumGrant rows for any UserAlbums row that
+	// predates grant provenance tracking, so PropagateAlbumLevel/
+	// RevokeAlbumLevel's source-scoped writes behave correctly the first
+	// time they touch a pre-existing grant. Must run after the can_upload
+	// migration above, since that migration corrects user_albums.level
+	// in place - backfilling before it would freeze the pre-correction level
+	// into the grant row, which a later recompute could then revert back to.
+	// This can't recover provenance for grants that were already silently
+	// clobbered before this migration existed - it only prevents new
+	// clobbers going forward.
+	if err := backfillUserAlbumGrants(db); err != nil {
+		return fmt.Errorf("backfill user_album_grants failed: %w", err)
+	}
+
 	// v2.5.0 - Remove Thumbnail Method for Downsampliing filters
 	if db.Migrator().HasColumn(&models.SiteInfo{}, "thumbnail_method") {
 		db.Migrator().DropColumn(&models.SiteInfo{}, "thumbnail_method")
 	}
 
 	return nil
+}
+
+// ensureUserAlbumsColumns adds the level/granted_by_user_id columns to
+// user_albums if they don't already exist, using raw SQL and each driver's
+// own column-introspection mechanism rather than GORM's struct-based
+// schema resolution (see the comment at its call site for why).
+func ensureUserAlbumsColumns(db *gorm.DB) error {
+	existing, err := existingColumns(db, "user_albums")
+	if err != nil {
+		return fmt.Errorf("list user_albums columns: %w", err)
+	}
+
+	if !existing["level"] {
+		if err := db.Exec("ALTER TABLE user_albums ADD COLUMN level VARCHAR(16) NOT NULL DEFAULT 'READ'").Error; err != nil {
+			return fmt.Errorf("add level column: %w", err)
+		}
+	}
+
+	if !existing["granted_by_user_id"] {
+		if err := db.Exec("ALTER TABLE user_albums ADD COLUMN granted_by_user_id BIGINT").Error; err != nil {
+			return fmt.Errorf("add granted_by_user_id column: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// backfillUserAlbumGrants inserts a self-sourced UserAlbumGrant row (source
+// = the album the grant already sits on) for every UserAlbums row that has
+// no UserAlbumGrant row yet. Idempotent: only touches (user, album) pairs
+// with zero existing grant rows, so it's safe to run on every startup.
+func backfillUserAlbumGrants(db *gorm.DB) error {
+	return db.Exec(`
+		INSERT INTO user_album_grants (user_id, album_id, source_album_id, level, granted_by_user_id)
+		SELECT ua.user_id, ua.album_id, ua.album_id, ua.level, ua.granted_by_user_id
+		FROM user_albums ua
+		WHERE NOT EXISTS (
+			SELECT 1 FROM user_album_grants uag
+			WHERE uag.user_id = ua.user_id AND uag.album_id = ua.album_id
+		)
+	`).Error
+}
+
+// existingColumns returns the set of column names that currently exist on
+// tableName, using whichever introspection mechanism the active driver
+// supports.
+func existingColumns(db *gorm.DB, tableName string) (map[string]bool, error) {
+	var names []string
+
+	if drivers.SQLITE.MatchDatabase(db) {
+		var rows []struct{ Name string }
+		if err := db.Raw(fmt.Sprintf("PRAGMA table_info(%s)", tableName)).Scan(&rows).Error; err != nil {
+			return nil, err
+		}
+		for _, r := range rows {
+			names = append(names, r.Name)
+		}
+	} else if drivers.POSTGRES.MatchDatabase(db) {
+		if err := db.Raw(
+			"SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = current_schema()",
+			tableName,
+		).Scan(&names).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := db.Raw(
+			"SELECT column_name FROM information_schema.columns WHERE table_name = ? AND table_schema = DATABASE()",
+			tableName,
+		).Scan(&names).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	set := make(map[string]bool, len(names))
+	for _, n := range names {
+		set[strings.ToLower(n)] = true
+	}
+	return set, nil
 }
 
 func ClearDatabase(db *gorm.DB) error {

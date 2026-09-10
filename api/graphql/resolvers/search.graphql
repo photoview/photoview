@@ -9,5 +9,5 @@ type SearchResult {
 
 extend type Query {
   "Perform a search query on the contents of the media library"
-  search(query: String!, limitMedia: Int, limitAlbums: Int): SearchResult!
+  search(query: String!, limitMedia: Int, limitAlbums: Int, showHidden: Boolean): SearchResult!
 }

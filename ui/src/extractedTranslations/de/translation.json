@@ -15,6 +15,47 @@
       "type": "Typ"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "{{count}} Datei in den Papierkorb verschieben? Ein Administrator kann sie wiederherstellen, aber sie verschwindet sofort aus der Bibliothek.",
+        "description_other": "{{count}} Dateien in den Papierkorb verschieben? Ein Administrator kann sie wiederherstellen, aber sie verschwinden sofort aus der Bibliothek.",
+        "title": "Dateien löschen"
+      },
+      "count_one": "{{count}} ausgewählt",
+      "count_other": "{{count}} ausgewählt",
+      "delete_complete_one": "{{count}} Datei gelöscht",
+      "delete_complete_other": "{{count}} Dateien gelöscht",
+      "delete_finished_with_errors": "{{success}} von {{total}} Dateien gelöscht",
+      "delete_selected": "Auswahl löschen",
+      "deselect_media": "",
+      "select": "Auswählen",
+      "select_all": "Alle auswählen",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "Lesen + Hochladen + Löschen",
+    "read": "Lesen",
+    "upload": "Lesen + Hochladen"
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "Noch keine Alben",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "Alben-Baum",
+    "mobile_open": "Alben-Baum durchsuchen",
+    "no_matches": "Keine passenden Alben",
+    "search_error": "",
+    "shared_with_me": "Für mich freigegeben",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": "Für mich freigegeben"
+  },
   "general": {
     "action": {
       "add": "Hinzufügen",
@@ -22,6 +63,7 @@
       "remove": "Entfernen",
       "save": "Speichern"
     },
+    "close": "Schließen",
     "loading": {
       "album": "Lade Album",
       "default": "Lade...",
@@ -41,7 +83,8 @@
       "result_type": {
         "albums": "Alben",
         "media": ""
-      }
+      },
+      "view_all_results": "Alle Ergebnisse anzeigen"
     }
   },
   "login_page": {
@@ -132,6 +175,13 @@
   "routes": {
     "page_not_found": "Seite nicht gefunden"
   },
+  "search_page": {
+    "albums_heading": "Alben",
+    "error": "Fehler beim Laden der Ergebnisse",
+    "heading": "Suchergebnisse für „{{query}}“",
+    "no_results": "Keine Ergebnisse gefunden",
+    "title": "Suchergebnisse für „{{query}}“"
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Die maximale erlaubte Anzahl an gleichzeitig laufenden Scanner Jobs",
@@ -155,6 +205,13 @@
     },
     "scanner": {
       "description": "Neue und aktualisierte Medien aller Benutzer scannen",
+      "queue_status": {
+        "cancel": "Abbrechen",
+        "cancel_all": "",
+        "queued": "Wartet",
+        "running": "Läuft",
+        "title": "Scan-Warteschlange"
+      },
       "scan_all_users": "Alle Benutzer scannen",
       "title": "Scanner"
     },
@@ -165,6 +222,21 @@
       },
       "language_selector": {
         "placeholder": "Sprache auswählen"
+      },
+      "search_result_limit": {
+        "description": "Maximale Anzahl an Alben und Medien pro Kategorie in den Suchergebnissen. 0 zeigt alle Ergebnisse.",
+        "title": "Anzahl der Suchergebnisse"
+      },
+      "show_album_tree": {
+        "checkbox_label": "Alben-Baum-Seitenleiste anzeigen",
+        "description": "Zeigt eine auf- und zuklappbare Baumansicht deiner Alben in einer Seitenleiste zur schnellen Navigation",
+        "title": "Alben-Baum-Seitenleiste"
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "Versteckte Alben anzeigen",
+        "description": "Zeigt von dir versteckte Alben abgeblendet an, damit du sie wieder einblenden kannst",
+        "title": "Versteckte Alben",
+        "unhide_all": "Alle Alben wieder einblenden"
       },
       "theme": {
         "auto": {
@@ -179,12 +251,14 @@
         },
         "title": "Darstellung Einstellungen"
       },
-      "title": "Persönliche Einstellungen"
+      "title": "Persönliche Einstellungen",
+      "title_with_username": "Persönliche Einstellungen ({{username}})"
     },
     "users": {
       "add_user": {
         "submit": "Benutzer hinzufügen"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Lösche {{user}}",
         "description": "<0>Du bist dabei, den Nutzer <1></1> endgültig zu löschen.</0><p>Diese Aktion kann nicht rückgängig gemacht werden. Bist du sicher?</p>",
@@ -199,6 +273,7 @@
         },
         "title": "Passwort zurücksetzen"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Aktion",
@@ -258,9 +333,43 @@
           "title": "Weboptimiert"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "„{{title}}“ und alles darin in den Papierkorb verschieben? Ein Administrator kann das wiederherstellen, aus der Bibliothek verschwindet es aber sofort.",
+          "title": "Ordner löschen"
+        },
+        "delete": "Diesen Ordner löschen",
+        "move": "Verschieben",
+        "rename": "",
+        "title": "Ordner verwalten"
+      },
+      "new_folder": {
+        "create": "Erstellen",
+        "placeholder": "Ordnername",
+        "title": "Neuer Ordner"
+      },
       "reset_cover": "Titelbild zurücksetzen",
+      "scan": {
+        "rescan": "Dieses Album und seine Unteralben neu einscannen",
+        "title": "Scanner"
+      },
       "set_cover": "Als Album Titelbild setzen",
-      "title_placeholder": ""
+      "sharing": {
+        "select_user": "Benutzer auswählen",
+        "share": "Teilen",
+        "title": "Geteilt mit"
+      },
+      "title_placeholder": "Albumtitel",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "Dateien auswählen",
+        "select_folder": "Ordner auswählen",
+        "title": "Hochladen",
+        "uploading": "Wird hochgeladen"
+      }
     },
     "download": {
       "filesize": {
@@ -275,6 +384,7 @@
         "tera_byte_one": "",
         "tera_byte_other": ""
       },
+      "share": "Teilen",
       "table_columns": {
         "dimensions": "Auflösung",
         "file_size": "Größe",
@@ -327,6 +437,15 @@
           "lens": "Objektiv",
           "maker": "Hersteller"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "\"{{name}}\" in den Papierkorb verschieben? Ein Administrator kann die Datei wiederherstellen, aber sie verschwindet sofort aus der Bibliothek.",
+          "title": "Datei löschen"
+        },
+        "delete": "Diese Datei löschen",
+        "rename": "Umbenennen",
+        "title": "Datei verwalten"
       }
     },
     "people": {

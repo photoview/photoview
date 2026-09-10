@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import styled from 'styled-components'
-import { useLazyQuery, gql } from '@apollo/client'
+import { useLazyQuery, useQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
+import { AlbumTreeSearchContext } from '../albumTree/AlbumTreeSearchContext'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -10,11 +11,28 @@ import {
   searchQuery_search_albums,
   searchQuery_search_media,
 } from './__generated__/searchQuery'
+import { searchbarUserPreferences } from './__generated__/searchbarUserPreferences'
 import classNames from 'classnames'
+import {
+  authToken,
+  readStoredSearchQuery,
+  writeStoredSearchQuery,
+} from '../../helpers/authentication'
+import useShowHiddenAlbums from '../../hooks/useShowHiddenAlbums'
 
-const SEARCH_QUERY = gql`
-  query searchQuery($query: String!) {
-    search(query: $query) {
+export const SEARCH_QUERY = gql`
+  query searchQuery(
+    $query: String!
+    $limitMedia: Int
+    $limitAlbums: Int
+    $showHidden: Boolean
+  ) {
+    search(
+      query: $query
+      limitMedia: $limitMedia
+      limitAlbums: $limitAlbums
+      showHidden: $showHidden
+    ) {
       query
       albums {
         id
@@ -39,14 +57,40 @@ const SEARCH_QUERY = gql`
   }
 `
 
+export const SEARCHBAR_USER_PREFERENCES_QUERY = gql`
+  query searchbarUserPreferences {
+    myUserPreferences {
+      id
+      searchResultLimit
+    }
+  }
+`
+
 const SearchWrapper = styled.div.attrs({
   className: 'w-full max-w-xs lg:relative',
 })``
 
 const SearchBar = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
-  const [query, setQuery] = useState('')
+  const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
+    SEARCHBAR_USER_PREFERENCES_QUERY,
+    { skip: !authToken() }
+  )
+  const showHidden = useShowHiddenAlbums()
+  const showHiddenRef = useRef(showHidden)
+  const searchResultLimit =
+    userPrefsData?.myUserPreferences.searchResultLimit ?? undefined
+  const searchResultLimitRef = useRef(searchResultLimit)
+
+  const { setQuery: setTreeQuery } = useContext(AlbumTreeSearchContext)
+
+  const [query, setQueryState] = useState(readStoredSearchQuery)
+  const setQuery = (value: string) => {
+    setQueryState(value)
+    writeStoredSearchQuery(value)
+  }
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const inputEl = useRef<HTMLInputElement>(null)
@@ -56,7 +100,14 @@ const SearchBar = () => {
   const debouncedFetch = useRef<null | DebouncedFn<QueryFn>>(null)
   useEffect(() => {
     debouncedFetch.current = debounce<QueryFn>(query => {
-      fetchSearches({ variables: { query } })
+      fetchSearches({
+        variables: {
+          query,
+          limitMedia: searchResultLimitRef.current,
+          limitAlbums: searchResultLimitRef.current,
+          showHidden: showHiddenRef.current,
+        },
+      })
       setFetched(true)
       setExpanded(true)
     }, 250)
@@ -66,10 +117,43 @@ const SearchBar = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const showHiddenJustChanged = showHiddenRef.current !== showHidden
+    showHiddenRef.current = showHidden
+
+    const limitJustChanged = searchResultLimitRef.current !== searchResultLimit
+    searchResultLimitRef.current = searchResultLimit
+
+    // Both the search-limit and show-hidden-albums preferences can still be
+    // in flight when the very first search fires (debounced 250ms after
+    // typing), and they resolve independently of each other. If either
+    // resolves - or is later changed in the settings while this searchbar
+    // stays mounted - the already-fired search stays stuck on its original
+    // values forever, since updating the refs alone doesn't rerun it: a
+    // saved "unlimited" (0) limit would silently show only 10 results, and
+    // enabling "show hidden albums" wouldn't reveal anything until the next
+    // keystroke. Re-issue the current search whenever either changes.
+    if (
+      (limitJustChanged || showHiddenJustChanged) &&
+      fetched &&
+      query.trim() !== ''
+    ) {
+      fetchSearches({
+        variables: {
+          query: query.trim(),
+          limitMedia: searchResultLimit,
+          limitAlbums: searchResultLimit,
+          showHidden,
+        },
+      })
+    }
+  }, [searchResultLimit, showHidden, fetched, query, fetchSearches])
+
   const fetchEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()
 
     setQuery(e.target.value)
+    setTreeQuery(e.target.value)
     if (e.target.value.trim() != '' && debouncedFetch.current) {
       debouncedFetch.current(e.target.value.trim())
     } else {
@@ -79,18 +163,30 @@ const SearchBar = () => {
 
   const location = useLocation()
   useEffect(() => {
+    // Collapse the dropdown on navigation, but keep the typed query intact
+    // so it's still there if the user navigates back to it (e.g. after
+    // clicking a result or "View all results"). The row selection has to go
+    // though: the collapsed dropdown keeps its keydown listeners mounted, so
+    // a still-selected row would swallow the next Enter and re-open that
+    // result instead of going to the full search page.
     setExpanded(false)
-    setQuery('')
+    setSelectedItem(null)
+    setTreeQuery(query)
   }, [location])
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 
   const searchData = fetchResult.data
-  let media = searchData?.search.media || []
-  let albums = searchData?.search.albums || []
-
-  albums = albums.slice(0, 5)
-  media = media.slice(0, 5)
+  // searchResultLimit governs the full search page and can be large or
+  // unlimited (0) - cap what the dropdown itself renders regardless, since
+  // each media row mounts a ProtectedImage thumbnail request. "View all
+  // results" below already routes to the uncapped list.
+  const DROPDOWN_RESULT_LIMIT = 5
+  const media = (searchData?.search.media || []).slice(0, DROPDOWN_RESULT_LIMIT)
+  const albums = (searchData?.search.albums || []).slice(
+    0,
+    DROPDOWN_RESULT_LIMIT
+  )
 
   const selectedItemId =
     selectedItem !== null
@@ -107,6 +203,10 @@ const SearchBar = () => {
 
     const blurEvent = () => {
       setExpanded(false)
+      // The rows keep their document keydown listeners while collapsed, so
+      // a selection left behind here would let Enter open that hidden
+      // result instead of doing whatever the focused element does.
+      setSelectedItem(null)
     }
 
     elem.addEventListener('focus', focusEvent)
@@ -137,6 +237,15 @@ const SearchBar = () => {
       } else if (event.key == 'Escape') {
         // setExpanded(false)
         inputEl.current?.blur()
+        // Not selectedItem: arrowing down an empty result list still sets it
+        // to 0, and that index resolves to no row at all - which would leave
+        // Enter doing nothing instead of opening the full search page.
+      } else if (event.key == 'Enter' && selectedItemId == null) {
+        const trimmed = query.trim()
+        if (trimmed !== '') {
+          navigate(`/search?q=${encodeURIComponent(trimmed)}`)
+          inputEl.current?.blur()
+        }
       }
     }
 
@@ -145,7 +254,7 @@ const SearchBar = () => {
     return () => {
       document.removeEventListener('keydown', keydownEvent)
     }
-  }, [searchData])
+  }, [searchData, selectedItem, selectedItemId, query, navigate, expanded])
 
   let results = null
   if (query.trim().length > 0 && fetched) {
@@ -254,6 +363,17 @@ const SearchResults = ({
       }}
     >
       {message}
+      {!loading && query.trim() !== '' && (
+        <div className="pt-3 pb-2 mb-1 text-center border-b dark:border-dark-border">
+          <NavLink
+            to={`/search?q=${encodeURIComponent(query.trim())}`}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            tabIndex={-1}
+          >
+            {t('header.search.view_all_results', 'View all results')}
+          </NavLink>
+        </div>
+      )}
       {albumElements.length > 0 && (
         <>
           <ResultTitle>
@@ -296,7 +416,7 @@ const SearchRow = ({
 
   useEffect(() => {
     const keydownEvent = (event: KeyboardEvent) => {
-      if (event.key == 'Enter') navigate(link)
+      if (event.key == 'Enter' && selected) navigate(link)
     }
 
     document.addEventListener('keydown', keydownEvent)

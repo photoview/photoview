@@ -2,6 +2,7 @@ package scanner_test
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -24,19 +25,19 @@ func TestNewRootPath(t *testing.T) {
 	}
 
 	t.Run("Insert valid root album", func(t *testing.T) {
-		album, err := scanner.NewRootAlbum(db, testDataPath, &user)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user, models.AlbumPermissionLevelRead)
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		assert.NotNil(t, album)
 		assert.Contains(t, album.Path, "/api/scanner/test_media")
-		assert.NotEmpty(t, album.Owners)
+		assert.EqualValues(t, 1, db.Model(&album).Association("Owners").Count())
 	})
 
 	t.Run("Insert duplicate root album", func(t *testing.T) {
 
-		_, err := scanner.NewRootAlbum(db, testDataPath, &user)
+		_, err := scanner.NewRootAlbum(db, testDataPath, &user, models.AlbumPermissionLevelRead)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "user already owns a path containing this path:")
@@ -44,7 +45,7 @@ func TestNewRootPath(t *testing.T) {
 
 	t.Run("Insert invalid root album", func(t *testing.T) {
 
-		_, err := scanner.NewRootAlbum(db, "./invalid_path", &user)
+		_, err := scanner.NewRootAlbum(db, "./invalid_path", &user, models.AlbumPermissionLevelRead)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "invalid root path")
@@ -60,7 +61,7 @@ func TestNewRootPath(t *testing.T) {
 			return
 		}
 
-		album, err := scanner.NewRootAlbum(db, testDataPath, &user2)
+		album, err := scanner.NewRootAlbum(db, testDataPath, &user2, models.AlbumPermissionLevelRead)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -80,10 +81,32 @@ func TestNewRootPath(t *testing.T) {
 		tmpFile.Close()
 		defer os.Remove(tmpFile.Name())
 
-		_, err = scanner.NewRootAlbum(db, tmpFile.Name(), &user)
+		_, err = scanner.NewRootAlbum(db, tmpFile.Name(), &user, models.AlbumPermissionLevelRead)
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "invalid root path")
 	})
+}
+
+// TestNewRootAlbumIsAtomic covers a real bug: creating the album row and
+// granting the owner access to it used to be two separate writes, so a
+// failure in the grant step (e.g. a foreign key violation) would leave an
+// orphaned album row nobody had any permission to see.
+func TestNewRootAlbumIsAtomic(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	// Never saved to the database, so the grant insert PropagateAlbumLevel
+	// performs violates the foreign key on user_albums.user_id.
+	phantomOwner := models.User{}
+	phantomOwner.ID = 999999
+
+	rootPath := t.TempDir()
+
+	_, err := scanner.NewRootAlbum(db, rootPath, &phantomOwner, models.AlbumPermissionLevelRead)
+	assert.Error(t, err)
+
+	var count int64
+	assert.NoError(t, db.Model(&models.Album{}).Where("path = ?", filepath.Clean(rootPath)).Count(&count).Error)
+	assert.Zero(t, count, "the album row must not survive when granting access to it fails")
 }
 
 func TestValidRootPath(t *testing.T) {

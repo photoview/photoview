@@ -367,3 +367,225 @@ func TestAlbumThumbnail(t *testing.T) {
 		assert.True(t, found, "One of the album's media should be selected")
 	})
 }
+
+func TestHiddenAlbumsClosure(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "hider", nil, false)
+	assert.NoError(t, err)
+
+	root := models.Album{Title: "root", Path: "/photos/hidden_root"}
+	assert.NoError(t, db.Save(&root).Error)
+	child := models.Album{Title: "child", Path: "/photos/hidden_root/child", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&child).Error)
+	grandchild := models.Album{Title: "grandchild", Path: "/photos/hidden_root/child/grandchild", ParentAlbumID: &child.ID}
+	assert.NoError(t, db.Save(&grandchild).Error)
+	sibling := models.Album{Title: "sibling", Path: "/photos/hidden_root/sibling", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&sibling).Error)
+
+	assert.NoError(t, db.Create(&models.UserAlbums{
+		UserID: user.ID, AlbumID: child.ID, Level: models.AlbumPermissionLevelRead,
+	}).Error)
+
+	t.Run("no hidden albums yields an empty closure", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.Empty(t, ids)
+	})
+
+	_, err = user.HideAlbum(db, child.ID, true)
+	assert.NoError(t, err)
+
+	t.Run("hiding an album includes it and its descendants, not its ancestors or siblings", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []int{child.ID, grandchild.ID}, ids)
+	})
+
+	_, err = user.HideAlbum(db, child.ID, false)
+	assert.NoError(t, err)
+
+	t.Run("unhiding empties the closure again", func(t *testing.T) {
+		ids, err := models.HiddenAlbumsClosure(db, user.ID)
+		assert.NoError(t, err)
+		assert.Empty(t, ids)
+	})
+}
+
+func TestPropagateAndRevokeAlbumLevel(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "provenance_user", nil, false)
+	assert.NoError(t, err)
+	granterA, err := models.RegisterUser(db, "provenance_granter_a", nil, false)
+	assert.NoError(t, err)
+	granterB, err := models.RegisterUser(db, "provenance_granter_b", nil, false)
+	assert.NoError(t, err)
+
+	root := models.Album{Title: "root", Path: "/photos/provenance_root"}
+	assert.NoError(t, db.Save(&root).Error)
+	child := models.Album{Title: "child", Path: "/photos/provenance_root/child", ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&child).Error)
+
+	t.Run("propagating a lower level from a second source does not clobber the first", func(t *testing.T) {
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelUpload, &granterA.ID))
+		assert.NoError(t, models.PropagateAlbumLevel(db, child.ID, user.ID, models.AlbumPermissionLevelRead, &granterB.ID))
+
+		grant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level, "the higher of the two sources should win")
+		}
+	})
+
+	t.Run("revoking one source leaves the other's access on the shared descendant intact", func(t *testing.T) {
+		assert.NoError(t, models.RevokeAlbumLevel(db, root.ID, user.ID))
+
+		rootGrant, err := user.EffectiveGrant(db, &root)
+		assert.NoError(t, err)
+		assert.Nil(t, rootGrant, "the revoked source's own access to root should be gone")
+
+		childGrant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		if assert.NotNil(t, childGrant, "the second source's grant on child must survive") {
+			assert.Equal(t, models.AlbumPermissionLevelRead, childGrant.Level)
+		}
+	})
+
+	t.Run("revoking the last remaining source removes access entirely", func(t *testing.T) {
+		assert.NoError(t, models.RevokeAlbumLevel(db, child.ID, user.ID))
+
+		grant, err := user.EffectiveGrant(db, &child)
+		assert.NoError(t, err)
+		assert.Nil(t, grant)
+	})
+
+	t.Run("re-propagating from the same source updates the level instead of adding a duplicate", func(t *testing.T) {
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelRead, &granterA.ID))
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelDelete, &granterA.ID))
+
+		grant, err := user.EffectiveGrant(db, &root)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelDelete, grant.Level)
+		}
+
+		var rowCount int64
+		assert.NoError(t, db.Model(&models.UserAlbumGrant{}).
+			Where("user_id = ? AND album_id = ? AND source_album_id = ?", user.ID, root.ID, root.ID).
+			Count(&rowCount).Error)
+		assert.EqualValues(t, 1, rowCount, "re-propagating from the same source must update the row in place, not duplicate it")
+
+		assert.NoError(t, models.RevokeAlbumLevel(db, root.ID, user.ID))
+	})
+
+	t.Run("revoking a source still removes a descendant's grant after it moved out of the subtree", func(t *testing.T) {
+		moved := models.Album{Title: "moved", Path: "/photos/provenance_root/moved", ParentAlbumID: &root.ID}
+		assert.NoError(t, db.Save(&moved).Error)
+
+		assert.NoError(t, models.PropagateAlbumLevel(db, root.ID, user.ID, models.AlbumPermissionLevelRead, &granterA.ID))
+
+		grant, err := user.EffectiveGrant(db, &moved)
+		assert.NoError(t, err)
+		assert.NotNil(t, grant, "moved should have inherited the grant while still under root")
+
+		// Simulate MoveAlbum reparenting it elsewhere - moved.GetChildren no
+		// longer reaches it from root, but its UserAlbumGrant row still
+		// carries source_album_id = root.ID.
+		elsewhere := models.Album{Title: "elsewhere", Path: "/photos/provenance_elsewhere"}
+		assert.NoError(t, db.Save(&elsewhere).Error)
+		moved.ParentAlbumID = &elsewhere.ID
+		assert.NoError(t, db.Save(&moved).Error)
+
+		assert.NoError(t, models.RevokeAlbumLevel(db, root.ID, user.ID))
+
+		grant, err = user.EffectiveGrant(db, &moved)
+		assert.NoError(t, err)
+		assert.Nil(t, grant, "revoking the source must still reach a descendant that moved out of the subtree")
+	})
+}
+
+func TestRecomputeGrantsAfterMove(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	oldParentOnlyUser, err := models.RegisterUser(db, "move_old_parent_user", nil, false)
+	assert.NoError(t, err)
+	newParentUser, err := models.RegisterUser(db, "move_new_parent_user", nil, false)
+	assert.NoError(t, err)
+	directUser, err := models.RegisterUser(db, "move_direct_user", nil, false)
+	assert.NoError(t, err)
+	granterA, err := models.RegisterUser(db, "move_granter_a", nil, false)
+	assert.NoError(t, err)
+	granterB, err := models.RegisterUser(db, "move_granter_b", nil, false)
+	assert.NoError(t, err)
+	granterC, err := models.RegisterUser(db, "move_granter_c", nil, false)
+	assert.NoError(t, err)
+
+	oldRoot := models.Album{Title: "move_old_root", Path: "/photos/move_old_root"}
+	assert.NoError(t, db.Save(&oldRoot).Error)
+	moved := models.Album{Title: "moved", Path: "/photos/move_old_root/moved", ParentAlbumID: &oldRoot.ID}
+	assert.NoError(t, db.Save(&moved).Error)
+	movedChild := models.Album{Title: "moved_child", Path: "/photos/move_old_root/moved/moved_child", ParentAlbumID: &moved.ID}
+	assert.NoError(t, db.Save(&movedChild).Error)
+
+	newRoot := models.Album{Title: "move_new_root", Path: "/photos/move_new_root"}
+	assert.NoError(t, db.Save(&newRoot).Error)
+
+	// oldParentOnlyUser only ever has access via oldRoot.
+	assert.NoError(t, models.PropagateAlbumLevel(db, oldRoot.ID, oldParentOnlyUser.ID, models.AlbumPermissionLevelRead, &granterA.ID))
+	// newParentUser has access via newRoot, granted before the move happens.
+	assert.NoError(t, models.PropagateAlbumLevel(db, newRoot.ID, newParentUser.ID, models.AlbumPermissionLevelUpload, &granterB.ID))
+	// directUser has an independent share sourced directly at the moved album itself.
+	assert.NoError(t, models.PropagateAlbumLevel(db, moved.ID, directUser.ID, models.AlbumPermissionLevelRead, &granterC.ID))
+
+	grant, err := oldParentOnlyUser.EffectiveGrant(db, &movedChild)
+	assert.NoError(t, err)
+	assert.NotNil(t, grant, "sanity check: old-parent grant should have reached the descendant before the move")
+
+	subtree, err := moved.GetChildren(db, nil)
+	assert.NoError(t, err)
+
+	// Simulate MoveAlbum reparenting `moved` under `newRoot`.
+	moved.ParentAlbumID = &newRoot.ID
+	assert.NoError(t, db.Save(&moved).Error)
+
+	assert.NoError(t, models.RecomputeGrantsAfterMove(db, subtree, newRoot.ID))
+
+	t.Run("old-parent-only recipients lose access to the moved subtree", func(t *testing.T) {
+		grant, err := oldParentOnlyUser.EffectiveGrant(db, &moved)
+		assert.NoError(t, err)
+		assert.Nil(t, grant)
+
+		grant, err = oldParentOnlyUser.EffectiveGrant(db, &movedChild)
+		assert.NoError(t, err)
+		assert.Nil(t, grant)
+	})
+
+	t.Run("new-parent recipients gain access to the moved subtree", func(t *testing.T) {
+		grant, err := newParentUser.EffectiveGrant(db, &moved)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level)
+		}
+
+		grant, err = newParentUser.EffectiveGrant(db, &movedChild)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelUpload, grant.Level)
+		}
+	})
+
+	t.Run("a direct grant sourced within the moved subtree remains effective", func(t *testing.T) {
+		grant, err := directUser.EffectiveGrant(db, &moved)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelRead, grant.Level)
+		}
+
+		grant, err = directUser.EffectiveGrant(db, &movedChild)
+		assert.NoError(t, err)
+		if assert.NotNil(t, grant) {
+			assert.Equal(t, models.AlbumPermissionLevelRead, grant.Level)
+		}
+	})
+}

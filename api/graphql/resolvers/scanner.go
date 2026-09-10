@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
@@ -49,6 +50,97 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		Success:  true,
 		Message:  &startMessage,
 	}, nil
+}
+
+// ScanAlbum is the resolver for the scanAlbum field.
+func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, fmt.Errorf("get album from database: %w", err)
+	}
+
+	canScan, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
+	if err != nil {
+		return nil, err
+	}
+	if !canScan {
+		return nil, auth.ErrUnauthorized
+	}
+
+	if err := addAlbumToQueue(&album); err != nil {
+		return nil, err
+	}
+
+	startMessage := "Scanner started"
+	return &models.ScannerResult{
+		Finished: false,
+		Success:  true,
+		Message:  &startMessage,
+	}, nil
+}
+
+// CancelScanJob is the resolver for the cancelScanJob field.
+func (r *mutationResolver) CancelScanJob(ctx context.Context, albumID int) (bool, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return false, fmt.Errorf("get album from database: %w", err)
+	}
+
+	canCancel, err := user.HasAlbumLevel(db, &album, models.AlbumPermissionLevelUpload)
+	if err != nil {
+		return false, err
+	}
+	if !canCancel {
+		return false, auth.ErrUnauthorized
+	}
+
+	return cancelScanJob(albumID), nil
+}
+
+// CancelAllScanJobs is the resolver for the cancelAllScanJobs field.
+func (r *mutationResolver) CancelAllScanJobs(ctx context.Context) (int, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return 0, auth.ErrUnauthorized
+	}
+
+	if user.Admin {
+		return cancelAllScanJobs(), nil
+	}
+
+	items := getScannerQueueStatus()
+
+	cancelled := 0
+	for _, item := range items {
+		canCancel, err := user.HasAlbumLevel(db, item.Album, models.AlbumPermissionLevelUpload)
+		if err != nil {
+			return cancelled, err
+		}
+		if !canCancel {
+			continue
+		}
+		if cancelScanJob(item.Album.ID) {
+			cancelled++
+		}
+	}
+
+	return cancelled, nil
 }
 
 // SetPeriodicScanInterval is the resolver for the setPeriodicScanInterval field.
@@ -105,4 +197,35 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 	scanner_queue.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
 
 	return siteInfo.ConcurrentWorkers, nil
+}
+
+// ScannerQueueStatus is the resolver for the scannerQueueStatus field.
+func (r *queryResolver) ScannerQueueStatus(ctx context.Context) ([]*models.ScannerQueueItem, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	items := getScannerQueueStatus()
+
+	if user.Admin {
+		result := make([]*models.ScannerQueueItem, len(items))
+		for i := range items {
+			result[i] = &items[i]
+		}
+		return result, nil
+	}
+
+	db := r.DB(ctx)
+	result := make([]*models.ScannerQueueItem, 0, len(items))
+	for i := range items {
+		canView, err := user.HasAlbumLevel(db, items[i].Album, models.AlbumPermissionLevelRead)
+		if err != nil {
+			return nil, err
+		}
+		if canView {
+			result = append(result, &items[i])
+		}
+	}
+	return result, nil
 }

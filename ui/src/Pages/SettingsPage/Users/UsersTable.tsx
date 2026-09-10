@@ -23,9 +23,16 @@ export const USERS_QUERY = gql`
       id
       username
       admin
+      canShare
       rootAlbums {
         id
         filePath
+        permissions {
+          user {
+            id
+          }
+          level
+        }
       }
     }
   }

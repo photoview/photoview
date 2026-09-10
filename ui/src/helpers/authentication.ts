@@ -11,6 +11,36 @@ const AUTH_TOKEN_COOKIE_NAME = 'auth-token'
 const SHARE_TOKEN_COOKIE_NAME = (shareToken: string) =>
   `share-token-pw-${shareToken}`
 
+// Session storage survives a header remount (each page wraps itself in its
+// own <Layout>) but must not survive an account switch on the same
+// browser tab, or the next account could inherit the previous one's typed
+// search query.
+const SEARCH_QUERY_STORAGE_KEY = 'searchbar.query'
+
+export function readStoredSearchQuery(): string {
+  try {
+    return sessionStorage.getItem(SEARCH_QUERY_STORAGE_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function writeStoredSearchQuery(query: string) {
+  try {
+    sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, query)
+  } catch {
+    // Ignore storage errors (e.g. private browsing with storage disabled)
+  }
+}
+
+function clearStoredSearchQuery() {
+  try {
+    sessionStorage.removeItem(SEARCH_QUERY_STORAGE_KEY)
+  } catch {
+    // Ignore storage errors (e.g. private browsing with storage disabled)
+  }
+}
+
 export function saveTokenCookie(token: string) {
   const options = {
     ...COOKIE_DEFAULT_OPTIONS,
@@ -22,6 +52,7 @@ export function saveTokenCookie(token: string) {
 
 export function clearTokenCookie() {
   Cookies.remove(AUTH_TOKEN_COOKIE_NAME)
+  clearStoredSearchQuery()
 }
 
 export function authToken() {

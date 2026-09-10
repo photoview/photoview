@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -23,19 +24,34 @@ const globalScannerProgress = "global-scanner-progress"
 // ScannerJob describes a job on the queue to be run by the scanner over a single album
 type ScannerJob struct {
 	ctx scanner_task.TaskContext
+	// cancel stops this job: an up_next job is simply dropped, an
+	// in_progress job finishes processing its current file and then exits
+	// early instead of continuing to the next one.
+	cancel context.CancelFunc
+	// id uniquely identifies this job, distinct from its album ID - a
+	// cancelled in_progress job stays on the queue until it exits on its
+	// own (see jobOnQueue), so a restart of the same album can be
+	// in_progress at the same time. Matching by id (not album ID) when a
+	// finished job removes itself from in_progress ensures it only ever
+	// removes its own entry.
+	id uint64
 	// album *models.Album
 	// cache *scanner_cache.AlbumScannerCache
 }
 
-func NewScannerJob(ctx scanner_task.TaskContext) ScannerJob {
+var nextScannerJobID uint64
+
+func NewScannerJob(ctx scanner_task.TaskContext, cancel context.CancelFunc) ScannerJob {
 	return ScannerJob{
-		ctx,
+		ctx:    ctx,
+		cancel: cancel,
+		id:     atomic.AddUint64(&nextScannerJobID, 1),
 	}
 }
 
 func (job *ScannerJob) Run(db *gorm.DB) {
 	err := scanner.ScanAlbum(job.ctx)
-	if err != nil {
+	if err != nil && !errors.Is(err, context.Canceled) {
 		scanner_utils.ScannerError(nil, "Failed to scan album: %v", err)
 	}
 }
@@ -151,16 +167,7 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 			nextJob.Run(queue.db)
 			log.Printf("Finished job %d/%d\n", jobNum, maxJobs)
 
-			// Delete finished job from queue
-			queue.mutex.Lock()
-			for i, x := range queue.in_progress {
-				if x == nextJob {
-					queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
-					queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
-					break
-				}
-			}
-			queue.mutex.Unlock()
+			queue.removeFinishedJob(nextJob)
 
 			queue.notify()
 		}()
@@ -188,6 +195,25 @@ func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 				Content: fmt.Sprintf("%d jobs in progress\n%d jobs waiting", inProgressLength, upNextLength),
 			})
 		})
+	}
+}
+
+// removeFinishedJob removes finished from in_progress, matching by its
+// unique id rather than its album ID - a cancelled in_progress job stays on
+// the queue until it exits on its own (see jobOnQueue), so a restart of the
+// same album can be in_progress at the same time. Matching by album ID
+// could remove the wrong entry, leaving a stale one behind that occupies a
+// worker slot and reports RUNNING forever.
+func (queue *ScannerQueue) removeFinishedJob(finished ScannerJob) {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	for i, x := range queue.in_progress {
+		if x.id == finished.id {
+			queue.in_progress[i] = queue.in_progress[len(queue.in_progress)-1]
+			queue.in_progress = queue.in_progress[0 : len(queue.in_progress)-1]
+			break
+		}
 	}
 }
 
@@ -229,9 +255,30 @@ func AddUserToQueue(user *models.User) error {
 
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
-		global_scanner_queue.addJob(&ScannerJob{
-			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, albumCache),
-		})
+		jobCtx, cancel := context.WithCancel(context.Background())
+		job := NewScannerJob(scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache), cancel)
+		global_scanner_queue.addJob(&job)
+	}
+	global_scanner_queue.mutex.Unlock()
+
+	return nil
+}
+
+// AddAlbumToQueue recursively finds the given album and its sub-albums and adds
+// them to the scanner queue, without touching the rest of the library.
+// Function does not block.
+func AddAlbumToQueue(album *models.Album) error {
+	albumCache := scanner_cache.MakeAlbumCache()
+	albums, album_errors := scanner.FindAlbumsForAlbum(global_scanner_queue.db, album, albumCache)
+	for _, err := range album_errors {
+		return errors.Wrapf(err, "find albums for album (album_id: %d)", album.ID)
+	}
+
+	global_scanner_queue.mutex.Lock()
+	for _, album := range albums {
+		jobCtx, cancel := context.WithCancel(context.Background())
+		job := NewScannerJob(scanner_task.NewTaskContext(jobCtx, global_scanner_queue.db, album, albumCache), cancel)
+		global_scanner_queue.addJob(&job)
 	}
 	global_scanner_queue.mutex.Unlock()
 
@@ -255,10 +302,120 @@ func (queue *ScannerQueue) jobOnQueue(job *ScannerJob) (bool, error) {
 	scannerJobs := append(queue.in_progress, queue.up_next...)
 
 	for _, scannerJob := range scannerJobs {
+		// A cancelled in_progress job stays in the slice until it finishes
+		// its current file and exits on its own (see CancelJob) - ignore it
+		// here so a restart isn't silently dropped while that natural exit
+		// is still pending, which could otherwise take as long as one more
+		// file (potentially a large video) to process.
+		if scannerJob.ctx.Err() != nil {
+			continue
+		}
 		if scannerJob.ctx.GetAlbum().ID == job.ctx.GetAlbum().ID {
 			return true, nil
 		}
 	}
 
 	return false, nil
+}
+
+// GetQueueStatus returns a snapshot of the jobs currently running or
+// waiting on this queue, one entry per album/sub-album - most useful for
+// surfacing "what's still left to scan" without waiting on the generic
+// broadcast notifications.
+func (queue *ScannerQueue) GetQueueStatus() []models.ScannerQueueItem {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	items := make([]models.ScannerQueueItem, 0, len(queue.in_progress)+len(queue.up_next))
+	for _, job := range queue.in_progress {
+		items = append(items, models.ScannerQueueItem{
+			Album:  job.ctx.GetAlbum(),
+			Status: models.ScannerJobStatusRunning,
+		})
+	}
+	for _, job := range queue.up_next {
+		items = append(items, models.ScannerQueueItem{
+			Album:  job.ctx.GetAlbum(),
+			Status: models.ScannerJobStatusQueued,
+		})
+	}
+	return items
+}
+
+// GetQueueStatus returns a snapshot of the global scanner queue's jobs.
+func GetQueueStatus() []models.ScannerQueueItem {
+	return global_scanner_queue.GetQueueStatus()
+}
+
+// CancelJob cancels a specific album's scanner job, whether queued or
+// currently running. A queued job is removed immediately; a running job is
+// signalled to stop and finishes processing its current file before exiting,
+// rather than being interrupted mid-file - it removes itself from
+// in_progress on that natural exit, same as any other completed job.
+// Returns false if no matching job was found.
+func (queue *ScannerQueue) CancelJob(albumID int) bool {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	for i, job := range queue.up_next {
+		if job.ctx.GetAlbum().ID == albumID {
+			job.cancel()
+			queue.up_next = append(queue.up_next[:i], queue.up_next[i+1:]...)
+			return true
+		}
+	}
+
+	for _, job := range queue.in_progress {
+		// An already-cancelled job lingers here until it exits on its own,
+		// and jobOnQueue lets a restart for the same album start meanwhile -
+		// so cancelling the first match could hit the dead one and leave the
+		// restart running.
+		if job.ctx.Err() != nil {
+			continue
+		}
+		if job.ctx.GetAlbum().ID == albumID {
+			job.cancel()
+			return true
+		}
+	}
+
+	return false
+}
+
+// CancelJob cancels a specific album's job on the global scanner queue.
+func CancelJob(albumID int) bool {
+	return global_scanner_queue.CancelJob(albumID)
+}
+
+// CancelAllJobs cancels every job currently on the queue, whether queued or
+// running, following the same semantics as CancelJob: queued jobs are
+// removed immediately, running jobs are signalled to stop and finish
+// processing their current file before exiting on their own. Returns the
+// number of jobs cancelled.
+func (queue *ScannerQueue) CancelAllJobs() int {
+	queue.mutex.Lock()
+	defer queue.mutex.Unlock()
+
+	cancelled := 0
+
+	for _, job := range queue.up_next {
+		job.cancel()
+		cancelled++
+	}
+	queue.up_next = queue.up_next[:0]
+
+	for _, job := range queue.in_progress {
+		if job.ctx.Err() != nil {
+			continue
+		}
+		job.cancel()
+		cancelled++
+	}
+
+	return cancelled
+}
+
+// CancelAllJobs cancels every job on the global scanner queue.
+func CancelAllJobs() int {
+	return global_scanner_queue.CancelAllJobs()
 }

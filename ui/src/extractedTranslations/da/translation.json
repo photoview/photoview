@@ -15,6 +15,47 @@
       "type": "Type"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "",
+        "description_other": "",
+        "title": ""
+      },
+      "count_one": "",
+      "count_other": "",
+      "delete_complete_one": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Tilføj",
@@ -22,6 +63,7 @@
       "remove": "Fjern",
       "save": "Gem"
     },
+    "close": "",
     "loading": {
       "album": "Loader album",
       "default": "Loader...",
@@ -41,7 +83,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Medie"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +175,13 @@
   "routes": {
     "page_not_found": "Side ikke fundet"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Det maksimale antal medier som må skannes samtidig",
@@ -155,6 +205,13 @@
     },
     "scanner": {
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Scan alle brugere",
       "title": "Scanner"
     },
@@ -165,6 +222,21 @@
       },
       "language_selector": {
         "placeholder": "Vælg sprog"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -179,12 +251,14 @@
         },
         "title": "Temaindstillinger"
       },
-      "title": "Brugerindstillinger"
+      "title": "Brugerindstillinger",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "Tilføj bruger"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Slet {user}",
         "description": "<0>Er du sikker på at du vil slette <1></1>?</0><p>Denne handling kan ikke fortrydes</p>",
@@ -199,6 +273,7 @@
         },
         "title": "Ændre adgangskode"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Handling",
@@ -258,9 +333,43 @@
           "title": "Konverterede videoer"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "Nulstil coverbillede",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Set som album coverbillede",
-      "title_placeholder": "Albumtitel"
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "Albumtitel",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -275,6 +384,7 @@
         "tera_byte_one": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Dimension",
         "file_size": "Størrelse",
@@ -327,6 +437,15 @@
           "lens": "Objektiv",
           "maker": "Mærke"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

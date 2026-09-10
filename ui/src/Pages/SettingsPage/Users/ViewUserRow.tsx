@@ -34,6 +34,11 @@ const ViewUserRow = ({
       <TableCell>{paths}</TableCell>
       <TableCell>
         <Checkbox label="Admin" disabled checked={user.admin} />
+        <Checkbox
+          label={t('settings.users.can_share', 'Can share')}
+          disabled
+          checked={user.canShare}
+        />
       </TableCell>
       <TableCell>
         <div className="flex gap-1">

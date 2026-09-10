@@ -6,6 +6,7 @@ import {
   HttpLink,
   ServerError,
   FieldMergeFunction,
+  DocumentNode,
 } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
@@ -44,29 +45,37 @@ const wsLink = new WebSocketLink({
       const token = authToken()
       if (token) {
         return {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         }
       }
       return {}
-    }
-  }
+    },
+  },
 })
+
+const isSubscriptionOperation = (query: DocumentNode) => {
+  const definition = getMainDefinition(query)
+  return (
+    definition.kind === 'OperationDefinition' &&
+    definition.operation === 'subscription'
+  )
+}
 
 const link = split(
   // split based on operation type
-  ({ query }) => {
-    const definition = getMainDefinition(query)
-    return (
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'subscription'
-    )
-  },
+  ({ query }) => isSubscriptionOperation(query),
   wsLink,
   httpLink
 )
 
-const linkError = onError(({ graphQLErrors, networkError }) => {
+const linkError = onError(({ graphQLErrors, networkError, operation }) => {
   const errorMessages = []
+
+  // The notification subscription reconnects on its own (e.g. after the
+  // server restarts) and can transiently see a stale/missing token mid
+  // reconnect - that's not a real auth failure for the user's own actions,
+  // so don't log them out over it.
+  const isSubscription = isSubscriptionOperation(operation.query)
 
   const formatPath = (path: readonly (string | number)[] | undefined) =>
     path?.join('::') ?? 'undefined'
@@ -94,7 +103,10 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
       })
     }
 
-    if (graphQLErrors.find(x => x.message == 'unauthorized')) {
+    if (
+      !isSubscription &&
+      graphQLErrors.find(x => x.message == 'unauthorized')
+    ) {
       console.log('Unauthorized, clearing token cookie')
       clearTokenCookie()
       // location.reload()
@@ -103,21 +115,33 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
 
   if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
-    clearTokenCookie()
+    // Only an actual authentication failure invalidates the token. A
+    // timeout, an offline client or a server-side 500 would otherwise log
+    // the user out over an outage that says nothing about their session.
+    const statusCode = (networkError as ServerError | undefined)?.statusCode
+    const loggingOut =
+      !isSubscription && (statusCode === 401 || statusCode === 403)
+
+    if (loggingOut) {
+      clearTokenCookie()
+    }
 
     const errors =
-      ((networkError as ServerError)?.result.errors as Error[]) || []
+      ((networkError as ServerError)?.result?.errors as Error[]) || []
+
+    const recoveryNote = loggingOut
+      ? ' You are being logged out in an attempt to recover.'
+      : ''
 
     if (errors.length == 1) {
       errorMessages.push({
         header: 'Server error',
-        content: `You are being logged out in an attempt to recover.\n${errors[0].message}`,
+        content: `${errors[0].message}${recoveryNote}`,
       })
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${graphQLErrors?.length || 0
-          } errors from the server. You are being logged out in an attempt to recover.`,
+        content: `Received ${errors.length} errors from the server.${recoveryNote}`,
       })
     }
   }
@@ -142,21 +166,21 @@ type PaginateCacheType = {
 
 // Modified version of Apollo's offsetLimitPagination()
 const paginateCache = (keyArgs: string[]) =>
-({
-  keyArgs,
-  merge(existing, incoming, { args, fieldName }) {
-    const merged = existing ? existing.slice(0) : []
-    if (args?.paginate) {
-      const { offset = 0 } = args.paginate as { offset: number }
-      for (let i = 0; i < incoming.length; ++i) {
-        merged[offset + i] = incoming[i]
+  ({
+    keyArgs,
+    merge(existing, incoming, { args, fieldName }) {
+      const merged = existing ? existing.slice(0) : []
+      if (args?.paginate) {
+        const { offset = 0 } = args.paginate as { offset: number }
+        for (let i = 0; i < incoming.length; ++i) {
+          merged[offset + i] = incoming[i]
+        }
+      } else {
+        throw new Error(`Paginate argument is missing for query: ${fieldName}`)
       }
-    } else {
-      throw new Error(`Paginate argument is missing for query: ${fieldName}`)
-    }
-    return merged
-  },
-} as PaginateCacheType)
+      return merged
+    },
+  } as PaginateCacheType)
 
 const memoryCache = new InMemoryCache({
   typePolicies: {

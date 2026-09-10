@@ -15,6 +15,44 @@
       "type": "種類"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_other": "",
+        "title": ""
+      },
+      "count_other": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "追加",
@@ -22,6 +60,7 @@
       "remove": "削除",
       "save": "保存"
     },
+    "close": "",
     "loading": {
       "album": "アルバムを読み込み中",
       "default": "読み込み中…",
@@ -41,7 +80,8 @@
       "result_type": {
         "albums": "アルバム",
         "media": "メディア"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +172,13 @@
   "routes": {
     "page_not_found": "ページが見つかりません"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "同時に実行できる自動スキャンの最大数",
@@ -155,6 +202,13 @@
     },
     "scanner": {
       "description": "すべてのユーザーに対して新しく追加または更新されたメディアをスキャンします",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "すべてのユーザーをスキャン",
       "title": "スキャン"
     },
@@ -165,6 +219,21 @@
       },
       "language_selector": {
         "placeholder": "言語を選択"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -179,12 +248,14 @@
         },
         "title": "テーマの設定"
       },
-      "title": "ユーザー設定"
+      "title": "ユーザー設定",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "ユーザーを追加"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "{{user}} を削除",
         "description": "<0><1></1> を削除してもよろしいですか？</0><p>この操作は元に戻せません</p>",
@@ -199,6 +270,7 @@
         },
         "title": "パスワードを変更"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "操作",
@@ -258,9 +330,43 @@
           "title": "変換済み動画"
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "カバー画像をリセット",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "カバー画像として設定",
-      "title_placeholder": "アルバムタイトル"
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "アルバムタイトル",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -275,6 +381,7 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
+      "share": "",
       "table_columns": {
         "dimensions": "解像度",
         "file_size": "サイズ",
@@ -327,6 +434,15 @@
           "lens": "レンズ名",
           "maker": "メーカー名"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {

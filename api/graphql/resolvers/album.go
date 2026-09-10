@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/photoview/photoview/api/dataloader"
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
@@ -51,10 +52,20 @@ func (r *albumResolver) Media(ctx context.Context, obj *models.Album, order *mod
 }
 
 // SubAlbums is the resolver for the subAlbums field.
-func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination) ([]*models.Album, error) {
+func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, order *models.Ordering, paginate *models.Pagination, showHidden *bool) ([]*models.Album, error) {
 	var albums []*models.Album
 
-	query := r.DB(ctx).Where("parent_album_id = ?", obj.ID)
+	db := r.DB(ctx)
+	query := db.Where("parent_album_id = ?", obj.ID)
+
+	if user := auth.UserFromContext(ctx); user != nil {
+		var err error
+		query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	query = models.FormatSQL(query, order, paginate)
 
 	if err := query.Find(&albums).Error; err != nil {
@@ -67,6 +78,83 @@ func (r *albumResolver) SubAlbums(ctx context.Context, obj *models.Album, order 
 // Owner is the resolver for the owner field.
 func (r *albumResolver) Owner(ctx context.Context, obj *models.Album) (*models.User, error) {
 	panic("not implemented")
+}
+
+// ViewerCanUpload is the resolver for the viewerCanUpload field.
+func (r *albumResolver) ViewerCanUpload(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+	if user.Admin {
+		return true, nil
+	}
+
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.Level.AtLeast(models.AlbumPermissionLevelUpload), nil
+}
+
+// ViewerCanDelete is the resolver for the viewerCanDelete field.
+func (r *albumResolver) ViewerCanDelete(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+	if user.Admin {
+		return true, nil
+	}
+
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.Level.AtLeast(models.AlbumPermissionLevelDelete), nil
+}
+
+// ViewerIsOwner is the resolver for the viewerIsOwner field.
+func (r *albumResolver) ViewerIsOwner(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+	if user.Admin {
+		return true, nil
+	}
+
+	grant, err := dataloader.For(ctx).AlbumGrant.Load(models.UserAlbumKey{UserID: user.ID, AlbumID: obj.ID})
+	if err != nil {
+		return false, err
+	}
+
+	return grant != nil && grant.GrantedByUserID == nil, nil
+}
+
+// ViewerCanShare is the resolver for the viewerCanShare field.
+func (r *albumResolver) ViewerCanShare(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+
+	return user.Admin || user.CanShare, nil
+}
+
+// ViewerHidden is the resolver for the viewerHidden field.
+func (r *albumResolver) ViewerHidden(ctx context.Context, obj *models.Album) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, nil
+	}
+
+	return dataloader.For(ctx).AlbumHidden.Load(models.UserAlbumKey{
+		UserID:  user.ID,
+		AlbumID: obj.ID,
+	})
 }
 
 // Thumbnail is the resolver for the thumbnail field.
@@ -95,6 +183,24 @@ func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*model
 	return shareTokens, nil
 }
 
+// Permissions is the resolver for the permissions field.
+func (r *albumResolver) Permissions(ctx context.Context, obj *models.Album) ([]*models.AlbumPermission, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, nil
+	}
+
+	isOwner, err := r.ViewerIsOwner(ctx, obj)
+	if err != nil {
+		return nil, err
+	}
+	if !isOwner {
+		return nil, nil
+	}
+
+	return actions.AlbumPermissions(r.DB(ctx), obj.ID, user.ID)
+}
+
 // Takes album_id, resets album.cover_id to 0 (null)
 func (r *mutationResolver) ResetAlbumCover(ctx context.Context, albumID int) (*models.Album, error) {
 	user := auth.UserFromContext(ctx)
@@ -115,14 +221,80 @@ func (r *mutationResolver) SetAlbumCover(ctx context.Context, coverID int) (*mod
 	return actions.SetAlbumCover(r.DB(ctx), user, coverID)
 }
 
-// MyAlbums is the resolver for the myAlbums field.
-func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool) ([]*models.Album, error) {
+// GrantAlbumAccess is the resolver for the grantAlbumAccess field.
+func (r *mutationResolver) GrantAlbumAccess(ctx context.Context, albumID int, userID int, level models.AlbumPermissionLevel) (*models.AlbumPermission, error) {
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	return actions.MyAlbums(r.DB(ctx), user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites)
+	return actions.GrantAlbumAccess(r.DB(ctx), user, albumID, userID, level)
+}
+
+// RevokeAlbumAccess is the resolver for the revokeAlbumAccess field.
+func (r *mutationResolver) RevokeAlbumAccess(ctx context.Context, albumID int, userID int) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	if err := actions.RevokeAlbumAccess(r.DB(ctx), user, albumID, userID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// HideAlbum is the resolver for the hideAlbum field.
+func (r *mutationResolver) HideAlbum(ctx context.Context, albumID int, hidden bool) (*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return user.HideAlbum(r.DB(ctx), albumID, hidden)
+}
+
+// UnhideAllAlbums is the resolver for the unhideAllAlbums field.
+func (r *mutationResolver) UnhideAllAlbums(ctx context.Context) (bool, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	if err := user.UnhideAllAlbums(r.DB(ctx)); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// ShareableUsers is the resolver for the shareableUsers field.
+func (r *queryResolver) ShareableUsers(ctx context.Context) ([]*models.User, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+	if !user.Admin && !user.CanShare {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var users []*models.User
+	if err := r.DB(ctx).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+// MyAlbums is the resolver for the myAlbums field.
+func (r *queryResolver) MyAlbums(ctx context.Context, order *models.Ordering, paginate *models.Pagination, onlyRoot *bool, showEmpty *bool, onlyWithFavorites *bool, showHidden *bool) ([]*models.Album, error) {
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	return actions.MyAlbums(r.DB(ctx), user, order, paginate, onlyRoot, showEmpty, onlyWithFavorites, showHidden)
 }
 
 // Album is the resolver for the album field.
@@ -159,6 +331,64 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 	}
 
 	return actions.Album(db, user, id)
+}
+
+// AlbumTreeChildren is the resolver for the albumTreeChildren field.
+func (r *queryResolver) AlbumTreeChildren(ctx context.Context, albumIds []int, showHidden *bool) ([]*models.AlbumTreeChildren, error) {
+	db := r.DB(ctx)
+
+	if len(albumIds) == 0 {
+		return []*models.AlbumTreeChildren{}, nil
+	}
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var albums []*models.Album
+	query := db.Where("parent_album_id IN (?)", albumIds)
+
+	// Unlike the subAlbums field resolver (only reachable via an Album
+	// object the caller was already authorized to load), this is a
+	// top-level query that takes raw album ids straight from the client -
+	// without this, a non-admin could pass another user's album id and
+	// read its children's titles/paths.
+	if !user.Admin {
+		query = query.Where("id IN (?)",
+			db.Table("user_albums").Select("album_id").Where("user_id = ?", user.ID))
+	}
+
+	var err error
+	query, err = actions.HiddenAlbumsFilter(showHidden, db, user, query)
+	if err != nil {
+		return nil, err
+	}
+
+	orderByTitle := "title"
+	query = models.FormatSQL(query, &models.Ordering{OrderBy: &orderByTitle}, nil)
+
+	if err := query.Find(&albums).Error; err != nil {
+		return nil, err
+	}
+
+	byParent := make(map[int][]*models.Album, len(albumIds))
+	for _, album := range albums {
+		if album.ParentAlbumID == nil {
+			continue
+		}
+		byParent[*album.ParentAlbumID] = append(byParent[*album.ParentAlbumID], album)
+	}
+
+	result := make([]*models.AlbumTreeChildren, len(albumIds))
+	for i, albumID := range albumIds {
+		result[i] = &models.AlbumTreeChildren{
+			AlbumID:  albumID,
+			Children: byParent[albumID],
+		}
+	}
+
+	return result, nil
 }
 
 // Album returns api.AlbumResolver implementation.

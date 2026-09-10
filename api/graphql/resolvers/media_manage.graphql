@@ -1,0 +1,32 @@
+extend type Media {
+  "Whether the currently logged in user may rename or delete this media"
+  viewerCanUpload: Boolean!
+}
+
+"The outcome of deleting one media file as part of a deleteMediaList call"
+type DeleteMediaResult {
+  mediaId: ID!
+  success: Boolean!
+  "Present only when success is false"
+  error: String
+}
+
+extend type Mutation {
+  "Rename a media file, on disk and in the library (and its sidecar file, if any). The caller must be an admin, or hold at least UPLOAD-level access on the media's album."
+  renameMedia(mediaId: ID!, newName: String!): Media! @isAuthorized
+
+  """
+  Move a media file (and its sidecar file, if any) to a hidden trash
+  folder next to its album, and remove it from the library. Does not
+  permanently delete the files - an administrator can still recover them
+  directly from the filesystem. The caller must be an admin, or hold at
+  least UPLOAD-level access on the media's album.
+  """
+  deleteMedia(mediaId: ID!): Boolean! @isAuthorized
+
+  """
+  Delete several media files at once, same rules as deleteMedia. Each
+  file is attempted independently - one failure doesn't stop the rest.
+  """
+  deleteMediaList(mediaIds: [ID!]!): [DeleteMediaResult!]! @isAuthorized
+}

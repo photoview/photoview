@@ -1,7 +1,9 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useState } from 'react'
 import classNames, { Argument as ClassNamesArg } from 'classnames'
 import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
 import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
+import { ReactComponent as EyeIcon } from './icons/eyeIcon.svg'
+import { ReactComponent as EyeOffIcon } from './icons/eyeOffIcon.svg'
 import styled from 'styled-components'
 import { tailwindClassNames } from '../../helpers/utils'
 
@@ -27,12 +29,17 @@ export const TextField = forwardRef(
       fullWidth,
       action,
       loading,
+      type,
       ...inputProps
     }: TextFieldProps,
     ref: React.ForwardedRef<HTMLInputElement>
   ) => {
     const disabled = !!inputProps.disabled
     sizeVariant = sizeVariant ?? 'default'
+
+    const isPassword = type === 'password'
+    const [revealed, setRevealed] = useState(false)
+    const effectiveType = isPassword && revealed ? 'text' : type
 
     let variant = 'bg-white border-gray-200 focus:border-blue-400'
     if (error)
@@ -61,10 +68,15 @@ export const TextField = forwardRef(
           'dark:bg-dark-input-bg dark:border-dark-input-border',
           variant,
           sizeVariant == 'big' ? 'py-2' : 'py-1',
-          { 'w-full': fullWidth },
+          {
+            'w-full': fullWidth,
+            'pr-8': (action || isPassword) && !(action && isPassword),
+            'pr-16': action && isPassword,
+          },
           className
         )}
         {...inputProps}
+        type={effectiveType}
         ref={ref}
       />
     )
@@ -79,7 +91,11 @@ export const TextField = forwardRef(
           />
         </div>
       )
-    } else if (action) {
+    } else if (action || isPassword) {
+      const iconClassName = classNames(
+        sizeVariant == 'big' && 'w-4 h-4 mt-1 mr-1'
+      )
+
       input = (
         <div
           className={classNames('relative inline-block', {
@@ -87,25 +103,40 @@ export const TextField = forwardRef(
           })}
         >
           {input}
-          <button
-            disabled={disabled}
-            aria-label="Submit"
-            className={classNames(
-              'absolute top-1/2 right-0 -translate-y-1/2 p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default'
+          <div className="absolute top-1/2 right-0 -translate-y-1/2 flex items-center">
+            {isPassword && (
+              <button
+                type="button"
+                disabled={disabled}
+                aria-label={revealed ? 'Hide password' : 'Show password'}
+                aria-pressed={revealed}
+                className="p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default"
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => setRevealed(r => !r)}
+              >
+                {revealed ? (
+                  <EyeOffIcon className={iconClassName} />
+                ) : (
+                  <EyeIcon className={iconClassName} />
+                )}
+              </button>
             )}
-            onClick={e => {
-              e.preventDefault()
-              e.stopPropagation()
-              action()
-              return false
-            }}
-          >
-            <ActionArrowIcon
-              className={classNames(
-                sizeVariant == 'big' && 'w-4 h-4 mt-1 mr-1'
-              )}
-            />
-          </button>
+            {action && (
+              <button
+                disabled={disabled}
+                aria-label="Submit"
+                className="p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default"
+                onClick={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  action()
+                  return false
+                }}
+              >
+                <ActionArrowIcon className={iconClassName} />
+              </button>
+            )}
+          </div>
         </div>
       )
     }

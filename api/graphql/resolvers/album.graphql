@@ -14,12 +14,30 @@ type Album {
   subAlbums(
     order: Ordering,
     paginate: Pagination
+    "Include albums the viewer has personally hidden"
+    showHidden: Boolean
   ): [Album!]!
 
   "The album which contains this album"
   parentAlbum: Album
+  """
+  ID of the album which contains this album, or null if this is a root album.
+  Unlike parentAlbum, this doesn't require the parent association to be
+  preloaded, so it's always accurate.
+  """
+  parentAlbumId: ID
   "The user who owns this album"
   owner: User!
+  "Whether the currently logged in user may create folders in, or upload media into, this album"
+  viewerCanUpload: Boolean!
+  "Whether the currently logged in user may delete or move this album"
+  viewerCanDelete: Boolean!
+  "Whether the currently logged in user is the owner of this album (an admin-configured grant, not received via another user's share)"
+  viewerIsOwner: Boolean!
+  "Whether the currently logged in user is allowed to share albums at all (see User.canShare) - sharing this specific album also requires viewerIsOwner"
+  viewerCanShare: Boolean!
+  "Whether the currently logged in user has personally hidden this album from their own navigation. Never affects other users."
+  viewerHidden: Boolean!
   "The path on the filesystem of the server, where this album is located"
   filePath: String!
   "An image in this album used for previewing this album"
@@ -29,9 +47,33 @@ type Album {
 
   "A list of share tokens pointing to this album, owned by the logged in user"
   shares: [ShareToken!]!
+
+  "Users with an explicit access grant directly on this album. Only populated for the album's owner (or an admin) - null otherwise."
+  permissions: [AlbumPermission!]
+}
+
+"An ordered tier of access on an album. DELETE implies UPLOAD implies READ."
+enum AlbumPermissionLevel {
+  READ
+  UPLOAD
+  DELETE
+}
+
+"A user who has been granted access to an album, and the level of that access."
+type AlbumPermission {
+  user: User!
+  level: AlbumPermissionLevel!
+}
+
+"One album id's worth of direct children, as returned by albumTreeChildren."
+type AlbumTreeChildren {
+  albumId: ID!
+  children: [Album!]!
 }
 
 extend type Query {
+  "Other users this account may pick as a share target. Username/id only. Caller must be an admin or hold User.canShare."
+  shareableUsers: [User!]! @isAuthorized
   "List of albums owned by the logged in user."
   myAlbums(
     order: Ordering,
@@ -42,6 +84,8 @@ extend type Query {
     showEmpty: Boolean
     "Show only albums having favorites"
     onlyWithFavorites: Boolean
+    "Include albums the viewer has personally hidden"
+    showHidden: Boolean
   ): [Album!]! @isAuthorized
 
   """
@@ -49,6 +93,13 @@ extend type Query {
   If valid tokenCredentials are provided, the album may be retrived without further authentication
   """
   album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
+
+  """
+  Direct children for every album in albumIds, in one round trip - used by
+  the album tree's search/filter view so a broad match doesn't fire one
+  subAlbums request per matched node and per ancestor.
+  """
+  albumTreeChildren(albumIds: [ID!]!, showHidden: Boolean): [AlbumTreeChildren!]! @isAuthorized
 }
 
 extend type Mutation {
@@ -57,4 +108,21 @@ extend type Mutation {
 
   "Assign a cover photo to an album"
   setAlbumCover(coverID: ID!): Album! @isAuthorized
+
+  """
+  Grant another user access to one of your own folders at the given level.
+  Only the folder's owner (the admin-granted holder, not someone who
+  received it via another share) may do this, and only up to their own
+  level.
+  """
+  grantAlbumAccess(albumId: ID!, userId: ID!, level: AlbumPermissionLevel!): AlbumPermission! @isAuthorized
+
+  "Revoke a share you previously created."
+  revokeAlbumAccess(albumId: ID!, userId: ID!): Boolean! @isAuthorized
+
+  "Hide or unhide an album from the logged-in user's own navigation. Purely personal - does not change any permission or other user's visibility."
+  hideAlbum(albumId: ID!, hidden: Boolean!): Album! @isAuthorized
+
+  "Show every album the logged-in user has previously hidden again."
+  unhideAllAlbums: Boolean! @isAuthorized
 }

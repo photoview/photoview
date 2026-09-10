@@ -10,6 +10,18 @@ import (
 	"time"
 )
 
+// A user who has been granted access to an album, and the level of that access.
+type AlbumPermission struct {
+	User  *User                `json:"user"`
+	Level AlbumPermissionLevel `json:"level"`
+}
+
+// One album id's worth of direct children, as returned by albumTreeChildren.
+type AlbumTreeChildren struct {
+	AlbumID  int      `json:"albumId"`
+	Children []*Album `json:"children"`
+}
+
 type AuthorizeResult struct {
 	Success bool `json:"success"`
 	// A textual status message describing the result, can be used to show an error message when `success` is false
@@ -23,6 +35,14 @@ type Coordinates struct {
 	Latitude float64 `json:"latitude"`
 	// GPS longitude in degrees
 	Longitude float64 `json:"longitude"`
+}
+
+// The outcome of deleting one media file as part of a deleteMediaList call
+type DeleteMediaResult struct {
+	MediaID int  `json:"mediaId"`
+	Success bool `json:"success"`
+	// Present only when success is false
+	Error *string `json:"error,omitempty"`
 }
 
 type MediaDownload struct {
@@ -70,6 +90,12 @@ type Pagination struct {
 type Query struct {
 }
 
+// A single album/sub-album currently running or queued in the scanner.
+type ScannerQueueItem struct {
+	Album  *Album           `json:"album"`
+	Status ScannerJobStatus `json:"status"`
+}
+
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`
@@ -106,6 +132,64 @@ type TimelineGroup struct {
 	MediaTotal int `json:"mediaTotal"`
 	// The day shared for all media in this timeline group
 	Date time.Time `json:"date"`
+}
+
+// An ordered tier of access on an album. DELETE implies UPLOAD implies READ.
+type AlbumPermissionLevel string
+
+const (
+	AlbumPermissionLevelRead   AlbumPermissionLevel = "READ"
+	AlbumPermissionLevelUpload AlbumPermissionLevel = "UPLOAD"
+	AlbumPermissionLevelDelete AlbumPermissionLevel = "DELETE"
+)
+
+var AllAlbumPermissionLevel = []AlbumPermissionLevel{
+	AlbumPermissionLevelRead,
+	AlbumPermissionLevelUpload,
+	AlbumPermissionLevelDelete,
+}
+
+func (e AlbumPermissionLevel) IsValid() bool {
+	switch e {
+	case AlbumPermissionLevelRead, AlbumPermissionLevelUpload, AlbumPermissionLevelDelete:
+		return true
+	}
+	return false
+}
+
+func (e AlbumPermissionLevel) String() string {
+	return string(e)
+}
+
+func (e *AlbumPermissionLevel) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AlbumPermissionLevel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AlbumPermissionLevel", str)
+	}
+	return nil
+}
+
+func (e AlbumPermissionLevel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AlbumPermissionLevel) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AlbumPermissionLevel) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 // Supported language translations of the user interface
@@ -310,6 +394,61 @@ func (e *OrderDirection) UnmarshalJSON(b []byte) error {
 }
 
 func (e OrderDirection) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ScannerJobStatus string
+
+const (
+	ScannerJobStatusRunning ScannerJobStatus = "RUNNING"
+	ScannerJobStatusQueued  ScannerJobStatus = "QUEUED"
+)
+
+var AllScannerJobStatus = []ScannerJobStatus{
+	ScannerJobStatusRunning,
+	ScannerJobStatusQueued,
+}
+
+func (e ScannerJobStatus) IsValid() bool {
+	switch e {
+	case ScannerJobStatusRunning, ScannerJobStatusQueued:
+		return true
+	}
+	return false
+}
+
+func (e ScannerJobStatus) String() string {
+	return string(e)
+}
+
+func (e *ScannerJobStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ScannerJobStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ScannerJobStatus", str)
+	}
+	return nil
+}
+
+func (e ScannerJobStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ScannerJobStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ScannerJobStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

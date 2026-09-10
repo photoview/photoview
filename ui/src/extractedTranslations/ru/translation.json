@@ -15,6 +15,53 @@
       "type": "Вид"
     }
   },
+  "album_gallery": {
+    "select": {
+      "confirm_delete": {
+        "description_one": "",
+        "description_few": "",
+        "description_many": "",
+        "description_other": "",
+        "title": ""
+      },
+      "count_one": "",
+      "count_few": "",
+      "count_many": "",
+      "count_other": "",
+      "delete_complete_one": "",
+      "delete_complete_few": "",
+      "delete_complete_many": "",
+      "delete_complete_other": "",
+      "delete_finished_with_errors": "",
+      "delete_selected": "",
+      "deselect_media": "",
+      "select": "",
+      "select_all": "",
+      "select_media": ""
+    }
+  },
+  "album_permission_level": {
+    "delete": "",
+    "read": "",
+    "upload": ""
+  },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "hide": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": "",
+    "shared_with_me": "",
+    "unhide": ""
+  },
+  "albums_page": {
+    "shared_with_me": ""
+  },
   "general": {
     "action": {
       "add": "Добавить",
@@ -22,6 +69,7 @@
       "remove": "Убрать",
       "save": "Сохранить"
     },
+    "close": "",
     "loading": {
       "album": "Загрузка альбома",
       "default": "Загрузка...",
@@ -41,7 +89,8 @@
       "result_type": {
         "albums": "Альбомы",
         "media": ""
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +181,13 @@
   "routes": {
     "page_not_found": "Страница не найдена"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Максимальное количество задач по сканированию разрешённых работать одновременно",
@@ -155,6 +211,13 @@
     },
     "scanner": {
       "description": "Сканирование всех пользователей на наличие обновлённых или новых медиа",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Сканировать всех пользователей",
       "title": "Сканер"
     },
@@ -165,6 +228,21 @@
       },
       "language_selector": {
         "placeholder": "Выбрать язык"
+      },
+      "search_result_limit": {
+        "description": "",
+        "title": ""
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
+      },
+      "show_hidden_albums": {
+        "checkbox_label": "",
+        "description": "",
+        "title": "",
+        "unhide_all": ""
       },
       "theme": {
         "auto": {
@@ -179,12 +257,14 @@
         },
         "title": ""
       },
-      "title": "Пользовательские настройки"
+      "title": "Пользовательские настройки",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
         "submit": "Добавить пользователя"
       },
+      "can_share": "",
       "confirm_delete_user": {
         "action": "Удалить {{user}}",
         "description": "<0>Вы уверены что хотите удалить <1></1>?</0><p>Это действие необратимо</p>",
@@ -199,6 +279,7 @@
         },
         "title": "Поменять пароль"
       },
+      "root_path_level": "",
       "table": {
         "column_names": {
           "action": "Действие",
@@ -258,9 +339,43 @@
           "title": ""
         }
       },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "move": "",
+        "rename": "",
+        "title": ""
+      },
+      "new_folder": {
+        "create": "",
+        "placeholder": "",
+        "title": ""
+      },
       "reset_cover": "",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "",
-      "title_placeholder": ""
+      "sharing": {
+        "select_user": "",
+        "share": "",
+        "title": ""
+      },
+      "title_placeholder": "",
+      "upload": {
+        "cancelled": "",
+        "complete": "",
+        "failed": "",
+        "finished_with_errors": "",
+        "select_files": "",
+        "select_folder": "",
+        "title": "",
+        "uploading": ""
+      }
     },
     "download": {
       "filesize": {
@@ -285,6 +400,7 @@
         "tera_byte_many": "",
         "tera_byte_other": ""
       },
+      "share": "",
       "table_columns": {
         "dimensions": "Габариты",
         "file_size": "Размер",
@@ -337,6 +453,15 @@
           "lens": "Линза",
           "maker": "Производитель"
         }
+      },
+      "manage": {
+        "confirm_delete": {
+          "description": "",
+          "title": ""
+        },
+        "delete": "",
+        "rename": "",
+        "title": ""
       }
     },
     "people": {
