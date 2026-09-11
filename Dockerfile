@@ -49,7 +49,7 @@ WORKDIR /dependencies
 RUN tar xfv /artifacts.tar.gz
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26-trixie AS api
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.27-trixie AS api
 ARG TARGETPLATFORM
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
