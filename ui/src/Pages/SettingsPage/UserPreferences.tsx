@@ -16,8 +16,9 @@ import {
   changeUserPreferencesVariables,
 } from './__generated__/changeUserPreferences'
 import { myUserPreferences } from './__generated__/myUserPreferences'
+import { changeTheme, getTheme, getSwipeNavigationDisabled, setSwipeNavigationDisabled } from '../../theme'
 import { TranslationFn } from '../../localization'
-import { changeTheme, getTheme } from '../../theme'
+import Checkbox from '../../primitives/form/Checkbox'
 
 const languagePreferences = [
   { key: 1, label: 'English', value: LanguageTranslation.English },
@@ -98,6 +99,7 @@ const UserPreferencesWrapper = styled.div`
 const UserPreferences = () => {
   const { t } = useTranslation()
   const [theme, setTheme] = useState(getTheme())
+  const [swipeDisabled, setSwipeDisabled] = useState(getSwipeNavigationDisabled())
 
   const changeStateTheme = (value: string) => {
     changeTheme(value)
@@ -173,6 +175,26 @@ const UserPreferences = () => {
         items={themePreferences(t)}
         setSelected={changeStateTheme}
         selected={theme}
+      />
+      <label htmlFor="user_pref_disable_swipe_field">
+        <InputLabelTitle>
+          {t('settings.user_preferences.swipe_navigation.title', 'Gallery swipe navigation')}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.swipe_navigation.description',
+            'Disable horizontal swipe gestures in gallery view to prevent accidental navigation while pinch-to-zooming on touch devices'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Checkbox
+        id="user_pref_disable_swipe_field"
+        label={t('settings.user_preferences.swipe_navigation.checkbox_label', 'Disable swipe navigation in gallery')}
+        checked={swipeDisabled}
+        onChange={(e) => {
+          setSwipeNavigationDisabled(e.currentTarget.checked)
+          setSwipeDisabled(e.currentTarget.checked)
+        }}
       />
     </UserPreferencesWrapper>
   )
