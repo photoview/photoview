@@ -98,7 +98,7 @@ const PresentNavigationOverlay = ({
   const handlers = useSwipeable({
     onSwipedLeft: () => dispatchMedia({ type: 'nextImage' }),
     onSwipedRight: () => dispatchMedia({ type: 'previousImage' }),
-    preventScrollOnSwipe: false,
+    preventScrollOnSwipe: true,
     trackMouse: false,
   })
 
