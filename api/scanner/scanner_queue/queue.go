@@ -148,16 +148,53 @@ func (queue *ScannerQueue) CloseBackgroundWorker() {
 	<-closeChan
 }
 
+// nextRunnableJob returns the index in up_next of the first job whose album is
+// not already being scanned, or -1 if every queued job would collide with one.
+//
+// The collision that matters is with a cancelled job: it stays in in_progress
+// until it finishes the file it is on, and a restart for the same album is
+// deliberately allowed onto the queue while that happens. Starting it right
+// away would leave two scans working the same album, and the same file, at
+// once. Leaving it queued costs at most the one file the old job still has to
+// finish - removeFinishedJob notifies the queue, which then picks it up.
+//
+// Queue must be locked prior to calling this function.
+func (queue *ScannerQueue) nextRunnableJob() int {
+	for i, job := range queue.up_next {
+		albumID := job.ctx.GetAlbum().ID
+
+		busy := false
+		for _, running := range queue.in_progress {
+			if running.ctx.GetAlbum().ID == albumID {
+				busy = true
+
+				break
+			}
+		}
+
+		if !busy {
+			return i
+		}
+	}
+
+	return -1
+}
+
 func (queue *ScannerQueue) processQueue(notifyThrottle *utils.Throttle) {
 	log.Println("Queue waiting for lock")
 	queue.mutex.Lock()
 	maxJobs := queue.settings.max_concurrent_tasks
 	log.Printf("Queue running: in_progress: %d, max_tasks: %d, queue_len: %d\n", len(queue.in_progress), maxJobs, len(queue.up_next))
 
-	for len(queue.in_progress) < maxJobs && len(queue.up_next) > 0 {
+	for len(queue.in_progress) < maxJobs {
+		next := queue.nextRunnableJob()
+		if next < 0 {
+			break
+		}
+
 		log.Println("Queue starting job")
-		nextJob := queue.up_next[0]
-		queue.up_next = queue.up_next[1:]
+		nextJob := queue.up_next[next]
+		queue.up_next = append(queue.up_next[:next], queue.up_next[next+1:]...)
 		queue.in_progress = append(queue.in_progress, nextJob)
 		jobNum := len(queue.in_progress)
 

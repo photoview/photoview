@@ -308,3 +308,37 @@ func TestScannerQueueOneLiveJobPerAlbum(t *testing.T) {
 		}
 	})
 }
+
+func TestScannerQueueHoldsRestartUntilCancelledJobExits(t *testing.T) {
+	cancelledJob := makeScannerJob(100)
+	cancelledJob.cancel()
+
+	restart := makeScannerJob(100)
+	other := makeScannerJob(200)
+
+	queue := ScannerQueue{
+		idle_chan:   make(chan bool, 1),
+		in_progress: []ScannerJob{cancelledJob},
+		up_next:     []ScannerJob{restart, other},
+		db:          nil,
+	}
+
+	// The restart is allowed onto the queue while the cancelled job winds down
+	// (see TestScannerQueueOneLiveJobPerAlbum), but starting it there would
+	// leave two scans working the same album - and the same file - at once.
+	if got := queue.nextRunnableJob(); got != 1 {
+		t.Errorf("Expected the other album to run first, got index %d", got)
+	}
+
+	queue.up_next = []ScannerJob{restart}
+	if got := queue.nextRunnableJob(); got != -1 {
+		t.Errorf("Expected the restart to stay queued, got index %d", got)
+	}
+
+	// Once the cancelled job is actually out, the restart is free to run -
+	// removeFinishedJob notifies the queue, which comes back through here.
+	queue.removeFinishedJob(cancelledJob)
+	if got := queue.nextRunnableJob(); got != 0 {
+		t.Errorf("Expected the restart to run once the album is free, got index %d", got)
+	}
+}
