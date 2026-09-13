@@ -186,3 +186,26 @@ test('a failed download whose link share is refused retries the link alone', asy
     expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
   )
 })
+
+test('a browser without canShare gets one share attempt per tap', async () => {
+  // No canShare at all: the link is the only thing this browser can take, so
+  // there is no file fallback left to try. Reaching for one anyway would open
+  // the sheet twice for a single tap.
+  const share = refuseUntilSecondAttempt()
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share },
+    configurable: true,
+    writable: true,
+  })
+
+  render(<SidebarShareMediaButton media={media} rows={rows} />)
+
+  await userEvent.click(screen.getByRole('button'))
+  const retryButton = await screen.findByRole('button', { name: /again/i })
+  expect(share).toHaveBeenCalledTimes(1)
+  expect(downloads).toBe(0)
+
+  await userEvent.click(retryButton)
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
+  expect(downloads).toBe(0)
+})

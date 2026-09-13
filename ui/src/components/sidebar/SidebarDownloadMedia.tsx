@@ -362,8 +362,24 @@ export const SidebarShareMediaButton = ({
       await navigator.share({ files: [file], title: media.title ?? undefined })
       clearRetryState()
     } catch (err) {
-      if ((err as Error)?.name === 'AbortError') {
+      const name = (err as Error)?.name
+
+      if (name === 'AbortError') {
         clearRetryState()
+        return
+      }
+
+      // The link branch has no file fallback to fall back to - it *is* the
+      // fallback. Letting it reach the one below would call share() a second
+      // time for the same tap, on an activation that is already spent.
+      if (!navigator.canShare || linkOnly.current) {
+        console.error('Link share failed', err)
+
+        if (name === 'NotAllowedError') {
+          linkOnly.current = true
+          setRetry(true)
+        }
+
         return
       }
 
@@ -375,7 +391,7 @@ export const SidebarShareMediaButton = ({
       // ready now, though, and the kept copy means a second tap opens the
       // sheet straight away. Asking for that tap only here keeps the common
       // case at one.
-      if ((err as Error)?.name === 'NotAllowedError' && preparedFile.current) {
+      if (name === 'NotAllowedError' && preparedFile.current) {
         setRetry(true)
 
         return
