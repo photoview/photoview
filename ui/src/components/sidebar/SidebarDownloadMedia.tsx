@@ -298,10 +298,25 @@ export const SidebarShareMediaButton = ({
   // A file already prepared for a share that the browser then refused. Keeping
   // it means the retry needs no download and so stays inside its activation.
   const preparedFile = useRef<{ url: string; file: File } | null>(null)
+  // Set when there is no file to keep because preparing it failed, and the
+  // link share that stood in for it lost the activation to that same failed
+  // download. Without this the next tap would spend its activation on the
+  // download all over again and end in nothing all over again.
+  const linkOnly = useRef(false)
 
   const row = pickShareRow(rows)
 
   if (!canNativeShare() || row == null) return null
+
+  // Every way out of a share - success, abort, or a fresh start - has to drop
+  // both halves of the retry state. Leaving one behind was how the earlier
+  // rounds' bugs looked: a stale flag quietly sending later taps down the
+  // wrong branch.
+  const clearRetryState = () => {
+    preparedFile.current = null
+    linkOnly.current = false
+    setRetry(false)
+  }
 
   const share = async () => {
     setSharing(true)
@@ -317,8 +332,9 @@ export const SidebarShareMediaButton = ({
       })
 
     try {
-      if (!navigator.canShare) {
+      if (!navigator.canShare || linkOnly.current) {
         await shareLink()
+        clearRetryState()
         return
       }
 
@@ -339,18 +355,15 @@ export const SidebarShareMediaButton = ({
 
       if (!navigator.canShare({ files: [file] })) {
         await shareLink()
-        preparedFile.current = null
-        setRetry(false)
+        clearRetryState()
         return
       }
 
       await navigator.share({ files: [file], title: media.title ?? undefined })
-      preparedFile.current = null
-      setRetry(false)
+      clearRetryState()
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') {
-        preparedFile.current = null
-        setRetry(false)
+        clearRetryState()
         return
       }
 
@@ -374,8 +387,23 @@ export const SidebarShareMediaButton = ({
       try {
         await shareLink()
       } catch (fallbackErr) {
-        if ((fallbackErr as Error)?.name !== 'AbortError') {
-          console.error('Link share failed too', fallbackErr)
+        const fallbackName = (fallbackErr as Error)?.name
+
+        if (fallbackName === 'AbortError') {
+          clearRetryState()
+          return
+        }
+
+        console.error('Link share failed too', fallbackErr)
+
+        // The same lost activation as above, one branch over: here the file
+        // could not be prepared at all, so there is nothing to keep and the
+        // link is all that is left. Remembering that much lets the next tap
+        // share it straight away instead of repeating the download that cost
+        // the activation in the first place.
+        if (fallbackName === 'NotAllowedError') {
+          linkOnly.current = true
+          setRetry(true)
         }
       }
     } finally {

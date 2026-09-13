@@ -152,3 +152,37 @@ test('a failed download still shares the link', async () => {
   // would only fail the same way.
   expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
 })
+
+test('a failed download whose link share is refused retries the link alone', async () => {
+  // The worst of both: the download fails, so there is no file to keep, and it
+  // was slow enough that the link share standing in for it has no activation
+  // left either. Without a memory of that, every further tap would pay for the
+  // same failing download before reaching the link again.
+  global.fetch = vi.fn(() => {
+    downloads += 1
+
+    return Promise.reject(new Error('the network went away'))
+  }) as unknown as typeof fetch
+
+  const share = renderWithShare(refuseUntilSecondAttempt(), true)
+
+  await userEvent.click(screen.getByRole('button'))
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
+  expect(downloads).toBe(1)
+
+  const retryButton = await screen.findByRole('button', { name: /again/i })
+
+  await userEvent.click(retryButton)
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
+
+  // The second tap went straight to the link, inside its own activation.
+  expect(downloads).toBe(1)
+  const payload = share.mock.calls[1][0] as Record<string, unknown>
+  expect(payload).not.toHaveProperty('files')
+  expect(payload.url).toBe(location.href)
+
+  // And the button drops the retry wording once the share went through.
+  await waitFor(() =>
+    expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
+  )
+})
