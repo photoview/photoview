@@ -10,7 +10,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
-	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
@@ -276,7 +275,22 @@ func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_c
 				continue
 			}
 
-			if (item.IsDir() || isDirSymlink) && directoryContainsPhotos(subalbumPath, albumCache, albumIgnore) {
+			if !item.IsDir() && !isDirSymlink {
+				continue
+			}
+
+			containsPhotos, err := directoryContainsPhotos(subalbumPath, albumCache, albumIgnore)
+			if err != nil {
+				// Not queueing it is the same outcome as an empty directory,
+				// so without this the walk would look complete and the
+				// cleanup would delete the album for a directory it simply
+				// could not open.
+				scanErrors = append(scanErrors, err)
+
+				continue
+			}
+
+			if containsPhotos {
 				scanQueue.PushBack(scanInfo{
 					path:   subalbumPath,
 					parent: album,
@@ -289,10 +303,15 @@ func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_c
 	return userAlbums, scanErrors
 }
 
-func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {
+// directoryContainsPhotos reports whether the directory, or anything below it,
+// holds media the scanner would import. A directory it could not read is not
+// the same answer as one without photos: the caller uses the error to record
+// that discovery was incomplete, because the cleanup that follows treats
+// everything it did not see as deleted.
+func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) (bool, error) {
 
 	if containsImage := cache.AlbumContainsPhotos(rootPath); containsImage != nil {
-		return *containsImage
+		return *containsImage, nil
 	}
 
 	scanQueue := list.New()
@@ -318,8 +337,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 
 		dirContent, err := os.ReadDir(dirPath)
 		if err != nil {
-			scanner_utils.ScannerError(nil, "Could not read directory (%s): %s\n", dirPath, err.Error())
-			return false
+			return false, errors.Wrapf(err, "read directory (%s)", dirPath)
 		}
 
 		for _, fileInfo := range dirContent {
@@ -341,7 +359,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 					}
 					log.Printf("Insert Album %s %s, contains photo is true", dirPath, rootPath)
 					cache.InsertAlbumPaths(dirPath, rootPath, true)
-					return true
+					return true, nil
 				}
 			}
 		}
@@ -352,5 +370,5 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 		log.Printf("Insert Album %s, contains photo is false", scanned_path)
 		cache.InsertAlbumPath(scanned_path, false)
 	}
-	return false
+	return false, nil
 }

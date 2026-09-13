@@ -113,3 +113,38 @@ func TestFindAlbumsForUserKeepsAlbumsWhenDiscoveryFails(t *testing.T) {
 	assert.NoError(t, db.Model(&models.Album{}).Where("id = ?", unreadable.ID).Count(&count).Error)
 	assert.Equal(t, int64(1), count, "an album must not be deleted just because the scan couldn't read it")
 }
+
+func TestFindAlbumsForAlbumKeepsSubAlbumsWhenOneCannotBeRead(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	test_utils.FilesystemTest(t)
+
+	rootPath := t.TempDir()
+	writeDummyPhoto(t, rootPath, "photo.jpg")
+	root := models.Album{Title: "root", Path: rootPath}
+	assert.NoError(t, db.Save(&root).Error)
+
+	unreadablePath := filepath.Join(rootPath, "unreadable")
+	assert.NoError(t, os.Mkdir(unreadablePath, 0o755))
+	writeDummyPhoto(t, unreadablePath, "photo.jpg")
+	unreadable := models.Album{Title: "unreadable", Path: unreadablePath, ParentAlbumID: &root.ID}
+	assert.NoError(t, db.Save(&unreadable).Error)
+
+	// The directory is there with media in it; the scan just cannot look
+	// inside. Reporting that as "no photos here" would leave the walk looking
+	// complete, and the cleanup would then delete an album that is still on
+	// disk.
+	assert.NoError(t, os.Chmod(unreadablePath, 0o000))
+	t.Cleanup(func() { os.Chmod(unreadablePath, 0o755) })
+
+	if _, err := os.ReadDir(unreadablePath); err == nil {
+		t.Skip("this process can read a 0o000 directory, so discovery cannot fail here")
+	}
+
+	_, scanErrors := scanner.FindAlbumsForAlbum(db, &root, scanner_cache.MakeAlbumCache())
+	assert.NotEmpty(t, scanErrors, "the unreadable sub-directory should be reported")
+
+	var count int64
+	assert.NoError(t, db.Model(&models.Album{}).Where("id = ?", unreadable.ID).Count(&count).Error)
+	assert.Equal(t, int64(1), count,
+		"a sub-album must not be deleted just because the scan couldn't read its directory")
+}
