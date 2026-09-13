@@ -21,6 +21,7 @@
     "empty": "No albums yet",
     "error": "Could not load albums",
     "expand": "Expand album",
+    "filter_truncated": "Showing the first {{limit}} matching albums",
     "label": "Album tree",
     "mobile_open": "Browse album tree",
     "no_matches": "No matching albums",

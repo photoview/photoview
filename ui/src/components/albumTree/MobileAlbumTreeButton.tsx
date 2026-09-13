@@ -20,7 +20,7 @@ const MobileAlbumTreeButton = () => {
     ALBUM_TREE_PREFERENCE_QUERY,
     { skip: !token }
   )
-  const showAlbumTree = data?.myUserPreferences.showAlbumTree ?? true
+  const showAlbumTree = data?.myUserPreferences.showAlbumTree ?? false
 
   if (!showAlbumTree) return null
 

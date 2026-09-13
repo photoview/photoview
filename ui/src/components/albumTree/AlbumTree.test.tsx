@@ -7,6 +7,7 @@ import AlbumTree, {
   ALBUM_TREE_ROOT_QUERY,
   ALBUM_TREE_SEARCH_QUERY,
   ALBUM_TREE_CHILDREN_QUERY,
+  TREE_FILTER_MATCH_LIMIT,
 } from './AlbumTree'
 import { ALBUM_TREE_SUB_ALBUMS_QUERY } from './AlbumTreeNode'
 import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
@@ -146,7 +147,7 @@ test('filtering fetches children via one batched request instead of per node', a
     {
       request: {
         query: ALBUM_TREE_SEARCH_QUERY,
-        variables: { query: 'child' },
+        variables: { query: 'child', limitAlbums: TREE_FILTER_MATCH_LIMIT },
       },
       result: {
         data: {
@@ -214,7 +215,7 @@ test('shows a message when the tree search fails, instead of rendering an empty 
     {
       request: {
         query: ALBUM_TREE_SEARCH_QUERY,
-        variables: { query: 'child' },
+        variables: { query: 'child', limitAlbums: TREE_FILTER_MATCH_LIMIT },
       },
       error: new Error('network error'),
     },

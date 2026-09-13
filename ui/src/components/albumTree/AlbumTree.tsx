@@ -47,9 +47,18 @@ export const ALBUM_TREE_ACTIVE_PATH_QUERY = gql`
   }
 `
 
+// The filter expands every match together with its ancestors, so both halves
+// of that work have to stay bounded. The expensive half is the ancestor path,
+// which the server resolves per matched album - on a library of a few thousand
+// albums an unbounded filter spends most of a second there alone. The node
+// limit then keeps the batch that follows below the server's own cap, which a
+// deep tree could otherwise cross and lose the whole filter view to an error.
+export const TREE_FILTER_MATCH_LIMIT = 100
+export const TREE_FILTER_NODE_LIMIT = 400
+
 export const ALBUM_TREE_SEARCH_QUERY = gql`
-  query albumTreeSearchQuery($query: String!) {
-    search(query: $query, limitAlbums: 0, limitMedia: 0) {
+  query albumTreeSearchQuery($query: String!, $limitAlbums: Int) {
+    search(query: $query, limitAlbums: $limitAlbums, limitMedia: 0) {
       albums {
         id
         path {
@@ -154,7 +163,10 @@ const AlbumTree = () => {
   useEffect(() => {
     if (debouncedSearchQuery !== '') {
       fetchTreeSearch({
-        variables: { query: debouncedSearchQuery },
+        variables: {
+          query: debouncedSearchQuery,
+          limitAlbums: TREE_FILTER_MATCH_LIMIT,
+        },
       })
     }
   }, [debouncedSearchQuery, fetchTreeSearch])
@@ -163,11 +175,20 @@ const AlbumTree = () => {
 
   let matchedIds: Set<string> | undefined
   let visibleIds: Set<string> | undefined
+  let filterTruncated = false
   if (isFiltering && treeSearchData) {
-    matchedIds = new Set(treeSearchData.search.albums.map(a => a.id))
+    const matches = treeSearchData.search.albums
+    filterTruncated = matches.length >= TREE_FILTER_MATCH_LIMIT
+
+    matchedIds = new Set(matches.map(a => a.id))
     visibleIds = new Set(matchedIds)
-    for (const album of treeSearchData.search.albums) {
+    for (const album of matches) {
       for (const ancestor of album.path) {
+        if (visibleIds.size >= TREE_FILTER_NODE_LIMIT) {
+          filterTruncated = true
+          break
+        }
+
         visibleIds.add(ancestor.id)
       }
     }
@@ -241,6 +262,15 @@ const AlbumTree = () => {
       {isFiltering && treeSearchLoading && !treeSearchData && (
         <div className="px-2 py-2 text-sm text-gray-400">
           {t('general.loading.default', 'Loading...')}
+        </div>
+      )}
+      {filterTruncated && !treeSearchError && (
+        <div className="px-2 py-2 text-sm text-gray-400">
+          {t(
+            'album_tree.filter_truncated',
+            'Showing the first {{limit}} matching albums',
+            { limit: TREE_FILTER_MATCH_LIMIT }
+          )}
         </div>
       )}
       {isFiltering && treeSearchError && (

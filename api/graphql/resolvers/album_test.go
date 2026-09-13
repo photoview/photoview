@@ -60,6 +60,41 @@ func TestAlbumTreeChildren(t *testing.T) {
 		}
 	})
 
+	t.Run("mixing own and foreign ids answers only for the own ones", func(t *testing.T) {
+		// The interesting attack is not a request for someone else's album on
+		// its own - it is one hidden among ids the caller is allowed to ask
+		// about, in the hope that the authorization is done once for the batch
+		// rather than per id.
+		result, err := r.AlbumTreeChildren(
+			auth.AddUserToContext(context.Background(), user),
+			[]int{ownedRoot.ID, foreignRoot.ID})
+		assert.NoError(t, err)
+
+		if assert.Len(t, result, 2) {
+			assert.Equal(t, ownedRoot.ID, result[0].AlbumID)
+			assert.Len(t, result[0].Children, 2)
+
+			// Same shape as an album that simply has no children: the reply
+			// says nothing about whether the album exists, so it cannot be
+			// used to probe for other users' folders either.
+			assert.Equal(t, foreignRoot.ID, result[1].AlbumID)
+			assert.Empty(t, result[1].Children)
+		}
+	})
+
+	t.Run("an id that does not exist looks the same as one without access", func(t *testing.T) {
+		missingID := foreignChild.ID + 1000
+
+		result, err := r.AlbumTreeChildren(
+			auth.AddUserToContext(context.Background(), user), []int{missingID})
+		assert.NoError(t, err)
+
+		if assert.Len(t, result, 1) {
+			assert.Equal(t, missingID, result[0].AlbumID)
+			assert.Empty(t, result[0].Children)
+		}
+	})
+
 	t.Run("an admin sees children of any album", func(t *testing.T) {
 		result, err := r.AlbumTreeChildren(auth.AddUserToContext(context.Background(), admin), []int{foreignRoot.ID})
 		assert.NoError(t, err)

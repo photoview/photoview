@@ -201,7 +201,7 @@ const UserPreferences = () => {
           'Show album tree sidebar'
         )}
         disabled={loadingPrefs}
-        checked={data?.myUserPreferences.showAlbumTree ?? true}
+        checked={data?.myUserPreferences.showAlbumTree ?? false}
         onChange={event =>
           changePrefs({ variables: { showAlbumTree: event.target.checked } })
         }

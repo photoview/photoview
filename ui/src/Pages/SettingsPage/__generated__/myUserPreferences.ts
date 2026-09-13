@@ -14,7 +14,7 @@ export interface myUserPreferences_myUserPreferences {
   id: string;
   language: LanguageTranslation | null;
   /**
-   * Whether to show the album tree next to the gallery. Defaults to on.
+   * Whether to show the album tree next to the gallery. Off unless the user turns it on.
    */
   showAlbumTree: boolean | null;
 }
