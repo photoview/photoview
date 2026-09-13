@@ -8,6 +8,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/face_detection"
+	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 	"github.com/stretchr/testify/assert"
@@ -102,4 +103,34 @@ func TestCleanupMedia(t *testing.T) {
 		assert.Equal(t, 2, countAllMedia())
 		assert.Equal(t, 4, countAllMediaURLs())
 	})
+}
+
+func TestDeleteOldUserAlbumsWithNothingLeftOnDisk(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	pass := "1234"
+	user, err := models.RegisterUser(db, "empty-scan-user", &pass, true)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	album := models.Album{
+		Title: "album that is gone",
+		Path:  t.TempDir(),
+	}
+	if !assert.NoError(t, db.Save(&album).Error) {
+		return
+	}
+	if !assert.NoError(t, db.Model(user).Association("Albums").Append(&album)) {
+		return
+	}
+
+	// A complete walk that found no albums at all means every album the user
+	// has is stale, so this must delete rather than bail out.
+	errs := cleanup_tasks.DeleteOldUserAlbums(db, []*models.Album{}, user)
+	assert.Empty(t, errs)
+
+	var remaining int64
+	assert.NoError(t, db.Model(&models.Album{}).Where("id = ?", album.ID).Count(&remaining).Error)
+	assert.EqualValues(t, 0, remaining)
 }

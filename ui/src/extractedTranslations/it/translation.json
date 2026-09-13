@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Reimposta la foto di copertina",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Imposta come foto di copertina",
       "title_placeholder": "Titolo album"
     },

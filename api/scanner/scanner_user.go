@@ -64,13 +64,13 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 
 	scanErrors := make([]error, 0)
 
-	type scanInfo struct {
-		path   string
-		parent *models.Album
-		ignore []string
-	}
-
 	scanQueue := list.New()
+
+	// A root directory that is confirmed gone is an intentional removal and
+	// its albums should still be cleaned up; anything else - an unreadable
+	// directory, an unmounted share - means we simply couldn't look, and
+	// acting on that would delete albums that are still there.
+	discoveryComplete := true
 
 	for _, album := range userRootAlbums {
 		// Check if user album directory exists on the file system
@@ -78,6 +78,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 			if os.IsNotExist(err) {
 				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
 			} else {
+				discoveryComplete = false
 				scanErrors = append(scanErrors, errors.Errorf("Could not read album directory for user '%s': %s\n", user.Username, album.Path))
 			}
 		} else {
@@ -89,6 +90,68 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		}
 	}
 
+	userAlbums, walkErrors := walkAlbumScanQueue(db, scanQueue, albumCache, user)
+	scanErrors = append(scanErrors, walkErrors...)
+	if len(walkErrors) > 0 {
+		discoveryComplete = false
+	}
+
+	// DeleteOldUserAlbums treats every album missing from userAlbums as
+	// stale, so a partial walk would take valid albums down with it.
+	if discoveryComplete {
+		deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
+		scanErrors = append(scanErrors, deleteErrors...)
+	} else {
+		scanErrors = append(scanErrors, errors.Errorf("Skipped cleanup of removed albums for user '%s': album discovery was incomplete\n", user.Username))
+	}
+
+	return userAlbums, scanErrors
+}
+
+// FindAlbumsForAlbum recursively (re)scans a single, already-existing album and
+// its sub-directories, discovering new sub-albums and removing the ones that
+// are gone from disk, without touching the rest of the library. The cleanup is
+// scoped to this subtree - which the walk covers in full - rather than to
+// everything its owner can reach, so it never mistakes an album outside it for
+// a deleted one.
+func FindAlbumsForAlbum(db *gorm.DB, album *models.Album, albumCache *scanner_cache.AlbumScannerCache) ([]*models.Album, []error) {
+	if _, err := os.Stat(album.Path); err != nil {
+		if os.IsNotExist(err) {
+			return nil, []error{errors.Errorf("Album directory does not exist '%s'\n", album.Path)}
+		}
+		return nil, []error{errors.Errorf("Could not read album directory: %s\n", album.Path)}
+	}
+
+	scanQueue := list.New()
+	scanQueue.PushBack(scanInfo{
+		path:   album.Path,
+		parent: nil,
+		ignore: nil,
+	})
+
+	albums, scanErrors := walkAlbumScanQueue(db, scanQueue, albumCache, nil)
+
+	// Same rule as FindAlbumsForUser: a walk that hit errors saw only part of
+	// the subtree, and everything it couldn't reach would look deleted.
+	if len(scanErrors) == 0 {
+		scanErrors = append(scanErrors, cleanup_tasks.DeleteStaleSubAlbums(db, album, albums)...)
+	}
+
+	return albums, scanErrors
+}
+
+type scanInfo struct {
+	path   string
+	parent *models.Album
+	ignore []string
+}
+
+// walkAlbumScanQueue drains scanQueue, turning every directory it reaches into
+// an album row and queueing its media-bearing sub-directories. user may be nil
+// when the walk isn't tied to one particular user's library, in which case new
+// albums simply inherit their parent's owners.
+func walkAlbumScanQueue(db *gorm.DB, scanQueue *list.List, albumCache *scanner_cache.AlbumScannerCache, user *models.User) ([]*models.Album, []error) {
+	scanErrors := make([]error, 0)
 	userAlbums := make([]*models.Album, 0)
 
 	for scanQueue.Front() != nil {
@@ -167,16 +230,20 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 			} else {
 				album = &albumResult[0]
 
-				// Add user as an owner of the album if not already
-				var userAlbumOwner []models.User
-				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
-					return err
-				}
-				if len(userAlbumOwner) == 0 {
-					newUser := models.User{}
-					newUser.ID = user.ID
-					if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+				// Add user as an owner of the album if not already. A walk
+				// without a user (a single-album rescan) has no ownership to
+				// add - the album already exists and its owners stand.
+				if user != nil {
+					var userAlbumOwner []models.User
+					if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
 						return err
+					}
+					if len(userAlbumOwner) == 0 {
+						newUser := models.User{}
+						newUser.ID = user.ID
+						if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+							return err
+						}
 					}
 				}
 
@@ -218,9 +285,6 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 			}
 		}
 	}
-
-	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
-	scanErrors = append(scanErrors, deleteErrors...)
 
 	return userAlbums, scanErrors
 }
