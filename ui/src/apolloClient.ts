@@ -6,6 +6,7 @@ import {
   HttpLink,
   ServerError,
   FieldMergeFunction,
+  DocumentNode,
 } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
@@ -52,21 +53,29 @@ const wsLink = new WebSocketLink({
   }
 })
 
+const isSubscriptionOperation = (query: DocumentNode) => {
+  const definition = getMainDefinition(query)
+  return (
+    definition.kind === 'OperationDefinition' &&
+    definition.operation === 'subscription'
+  )
+}
+
 const link = split(
   // split based on operation type
-  ({ query }) => {
-    const definition = getMainDefinition(query)
-    return (
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'subscription'
-    )
-  },
+  ({ query }) => isSubscriptionOperation(query),
   wsLink,
   httpLink
 )
 
-const linkError = onError(({ graphQLErrors, networkError }) => {
+const linkError = onError(({ graphQLErrors, networkError, operation }) => {
   const errorMessages = []
+
+  // The notification subscription reconnects on its own, e.g. after the
+  // server restarts, and can transiently see a stale or missing token while
+  // doing so. That says nothing about the user's own session, so it must not
+  // log them out.
+  const isSubscription = isSubscriptionOperation(operation.query)
 
   const formatPath = (path: readonly (string | number)[] | undefined) =>
     path?.join('::') ?? 'undefined'
@@ -94,7 +103,10 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
       })
     }
 
-    if (graphQLErrors.find(x => x.message == 'unauthorized')) {
+    if (
+      !isSubscription &&
+      graphQLErrors.find(x => x.message == 'unauthorized')
+    ) {
       console.log('Unauthorized, clearing token cookie')
       clearTokenCookie()
       // location.reload()
@@ -103,21 +115,43 @@ const linkError = onError(({ graphQLErrors, networkError }) => {
 
   if (networkError) {
     console.log(`[Network error]: ${JSON.stringify(networkError)}`)
-    clearTokenCookie()
 
+    // Only an actual authentication failure invalidates the token. A
+    // timeout, an offline client or a server-side 500 would otherwise log
+    // the user out over an outage that says nothing about their session.
+    const statusCode = (networkError as ServerError | undefined)?.statusCode
+    const loggingOut =
+      !isSubscription && (statusCode === 401 || statusCode === 403)
+
+    if (loggingOut) {
+      clearTokenCookie()
+    }
+
+    // A plain connection failure has no result at all, and reading through
+    // it used to throw from inside the error handler itself.
     const errors =
-      ((networkError as ServerError)?.result.errors as Error[]) || []
+      ((networkError as ServerError)?.result?.errors as Error[]) || []
+
+    const recoveryNote = loggingOut
+      ? ' You are being logged out in an attempt to recover.'
+      : ''
 
     if (errors.length == 1) {
       errorMessages.push({
         header: 'Server error',
-        content: `You are being logged out in an attempt to recover.\n${errors[0].message}`,
+        content: `${errors[0].message}${recoveryNote}`,
       })
     } else if (errors.length > 1) {
       errorMessages.push({
         header: 'Multiple server errors',
-        content: `Received ${graphQLErrors?.length || 0
-          } errors from the server. You are being logged out in an attempt to recover.`,
+        content: `Received ${errors.length} errors from the server.${recoveryNote}`,
+      })
+    } else {
+      // A connection that never reached the server carries no errors to
+      // report, which would otherwise leave the user with nothing at all.
+      errorMessages.push({
+        header: 'Network error',
+        content: `Could not reach the server.${recoveryNote}`,
       })
     }
   }
