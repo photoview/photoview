@@ -269,6 +269,8 @@
         "tera_byte_one": "{{count}} ТБ",
         "tera_byte_other": "{{count}} ТБ"
       },
+      "share": "",
+      "share_again": "",
       "table_columns": {
         "dimensions": "Габарити",
         "file_size": "Розмір",
