@@ -54,3 +54,31 @@ test('the reveal button sits next to the action button without replacing it', as
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
   expect(action).toHaveBeenCalled()
 })
+
+test('a revealed password can still be hidden while the field is loading', async () => {
+  const { rerender } = render(
+    <TextField type="password" defaultValue="hunter2" action={vi.fn()} />
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute('type', 'text')
+
+  // Submitting puts the field into its loading state. The spinner stands in
+  // for the action button, but the password is on screen and must stay
+  // hideable - the alternative is a secret the user cannot put away again.
+  rerender(
+    <TextField
+      type="password"
+      defaultValue="hunter2"
+      action={vi.fn()}
+      loading
+    />
+  )
+
+  expect(screen.getByLabelText('Loading')).toBeVisible()
+  await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute(
+    'type',
+    'password'
+  )
+})

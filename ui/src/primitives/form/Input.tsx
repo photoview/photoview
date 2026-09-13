@@ -56,6 +56,11 @@ export const TextField = forwardRef(
 
     if (disabled) variant = 'bg-gray-100'
 
+    // What sits inside the field on the right: the reveal button, and either
+    // the action button or the spinner that stands in for it while loading.
+    // The field's right padding has to leave room for however many there are.
+    const trailingControls = (isPassword ? 1 : 0) + (loading || action ? 1 : 0)
+
     let keyUpEvent = undefined
     if (action) {
       keyUpEvent = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -78,8 +83,8 @@ export const TextField = forwardRef(
           sizeVariant == 'big' ? 'py-2' : 'py-1',
           {
             'w-full': fullWidth,
-            'pr-8': (action || isPassword) && !(action && isPassword),
-            'pr-16': action && isPassword,
+            'pr-8': trailingControls == 1,
+            'pr-16': trailingControls > 1,
           },
           className
         )}
@@ -89,17 +94,7 @@ export const TextField = forwardRef(
       />
     )
 
-    if (loading) {
-      input = (
-        <div className="relative">
-          {input}
-          <LoadingSpinnerIcon
-            aria-label="Loading"
-            className="absolute right-[8px] top-[7px] animate-spin"
-          />
-        </div>
-      )
-    } else if (action || isPassword) {
+    if (loading || action || isPassword) {
       const iconClassName = classNames(
         sizeVariant == 'big' && 'w-4 h-4 mt-1 mr-1'
       )
@@ -129,20 +124,27 @@ export const TextField = forwardRef(
                 )}
               </button>
             )}
-            {action && (
-              <button
-                disabled={disabled}
-                aria-label="Submit"
-                className="p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default"
-                onClick={e => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  action()
-                  return false
-                }}
-              >
-                <ActionArrowIcon className={iconClassName} />
-              </button>
+            {loading ? (
+              <LoadingSpinnerIcon
+                aria-label="Loading"
+                className={classNames('mr-2 animate-spin', iconClassName)}
+              />
+            ) : (
+              action && (
+                <button
+                  disabled={disabled}
+                  aria-label="Submit"
+                  className="p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default"
+                  onClick={e => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    action()
+                    return false
+                  }}
+                >
+                  <ActionArrowIcon className={iconClassName} />
+                </button>
+              )
             )}
           </div>
         </div>
