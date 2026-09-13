@@ -8,6 +8,8 @@ import AlbumTree, {
   ALBUM_TREE_SEARCH_QUERY,
   ALBUM_TREE_CHILDREN_QUERY,
   TREE_FILTER_MATCH_LIMIT,
+  TREE_FILTER_NODE_LIMIT,
+  selectFilteredNodes,
 } from './AlbumTree'
 import { ALBUM_TREE_SUB_ALBUMS_QUERY } from './AlbumTreeNode'
 import { AlbumTreeSearchContext } from './AlbumTreeSearchContext'
@@ -234,4 +236,51 @@ test('shows a message when the tree search fails, instead of rendering an empty 
   )
 
   await screen.findByText('Could not load matching albums')
+})
+
+describe('selectFilteredNodes', () => {
+  const match = (id: string, path: string[]) => ({
+    __typename: 'Album' as const,
+    id,
+    path: path.map(p => ({ __typename: 'Album' as const, id: p })),
+  })
+
+  test('keeps every match reachable from its root', () => {
+    // Deep paths, so the budget runs out partway through. A match whose
+    // ancestors did not fit would be invisible: the tree is walked down from
+    // the roots, so it would render nothing for it - and if the root itself
+    // were the node that did not fit, nothing at all.
+    const deep = (n: number) =>
+      match(`match-${n}`, [`root-${n}`, `mid-${n}`, `near-${n}`])
+
+    const matches = Array.from({ length: TREE_FILTER_MATCH_LIMIT }, (_, i) =>
+      deep(i)
+    )
+
+    const { matchedIds, visibleIds, truncated } = selectFilteredNodes(matches)
+
+    expect(truncated).toBe(true)
+    expect(visibleIds.size).toBeLessThanOrEqual(TREE_FILTER_NODE_LIMIT)
+    expect(matchedIds.size).toBeGreaterThan(0)
+
+    for (const id of matchedIds) {
+      const album = matches.find(m => m.id === id)
+      for (const ancestor of album?.path ?? []) {
+        expect(
+          visibleIds.has(ancestor.id),
+          `${id} is kept but its ancestor ${ancestor.id} is not`
+        ).toBe(true)
+      }
+    }
+  })
+
+  test('keeps everything when it fits, and says so', () => {
+    const matches = [match('a', ['root']), match('b', ['root'])]
+
+    const { matchedIds, visibleIds, truncated } = selectFilteredNodes(matches)
+
+    expect(truncated).toBe(false)
+    expect(Array.from(matchedIds).sort()).toEqual(['a', 'b'])
+    expect(Array.from(visibleIds).sort()).toEqual(['a', 'b', 'root'])
+  })
 })

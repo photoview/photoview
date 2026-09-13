@@ -17,6 +17,7 @@ import {
 import {
   albumTreeSearchQuery,
   albumTreeSearchQueryVariables,
+  albumTreeSearchQuery_search_albums,
 } from './__generated__/albumTreeSearchQuery'
 import {
   albumTreeChildrenQuery,
@@ -80,6 +81,43 @@ export const ALBUM_TREE_CHILDREN_QUERY = gql`
     }
   }
 `
+
+/**
+ * Picks which nodes the filtered tree shows: every match it keeps, together
+ * with the complete chain of ancestors that leads to it.
+ *
+ * A match is only useful if the tree can be walked down to it from a root, so
+ * a match and its path are taken or dropped as one - filling the node budget
+ * with matches first would leave some of them stranded below a missing
+ * ancestor, and the tree would claim there were no matches at all while the
+ * search had plenty.
+ */
+export const selectFilteredNodes = (
+  matches: albumTreeSearchQuery_search_albums[]
+) => {
+  const matchedIds = new Set<string>()
+  let visibleIds = new Set<string>()
+  let truncated = matches.length >= TREE_FILTER_MATCH_LIMIT
+
+  for (const album of matches) {
+    const candidate = new Set(visibleIds)
+    candidate.add(album.id)
+    for (const ancestor of album.path) {
+      candidate.add(ancestor.id)
+    }
+
+    if (candidate.size > TREE_FILTER_NODE_LIMIT) {
+      truncated = true
+
+      continue
+    }
+
+    matchedIds.add(album.id)
+    visibleIds = candidate
+  }
+
+  return { matchedIds, visibleIds, truncated }
+}
 
 const AlbumTree = () => {
   const { t } = useTranslation()
@@ -177,21 +215,10 @@ const AlbumTree = () => {
   let visibleIds: Set<string> | undefined
   let filterTruncated = false
   if (isFiltering && treeSearchData) {
-    const matches = treeSearchData.search.albums
-    filterTruncated = matches.length >= TREE_FILTER_MATCH_LIMIT
-
-    matchedIds = new Set(matches.map(a => a.id))
-    visibleIds = new Set(matchedIds)
-    for (const album of matches) {
-      for (const ancestor of album.path) {
-        if (visibleIds.size >= TREE_FILTER_NODE_LIMIT) {
-          filterTruncated = true
-          break
-        }
-
-        visibleIds.add(ancestor.id)
-      }
-    }
+    const selection = selectFilteredNodes(treeSearchData.search.albums)
+    matchedIds = selection.matchedIds
+    visibleIds = selection.visibleIds
+    filterTruncated = selection.truncated
   }
 
   const [
