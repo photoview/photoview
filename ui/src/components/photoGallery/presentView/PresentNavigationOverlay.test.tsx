@@ -1,5 +1,6 @@
 import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 
 const hidden = (label: string) =>
@@ -57,4 +58,78 @@ test('a tap reveals the controls and repeated taps keep them visible', () => {
     vi.advanceTimersByTime(500)
   })
   expect(hidden('Next image')).toBe(true)
+})
+
+test('a horizontal swipe navigates between images', () => {
+  vi.useRealTimers()
+
+  const dispatchMedia = vi.fn()
+  render(<PresentNavigationOverlay dispatchMedia={dispatchMedia} />)
+
+  const surface = screen.getByTestId('present-overlay').firstElementChild
+  if (surface == null) throw new Error('swipe surface not found')
+
+  const swipe = (from: number, to: number) => {
+    fireEvent.touchStart(surface, {
+      touches: [{ clientX: from, clientY: 100 }],
+    })
+    fireEvent.touchMove(surface, { touches: [{ clientX: to, clientY: 100 }] })
+    fireEvent.touchEnd(surface, {
+      changedTouches: [{ clientX: to, clientY: 100 }],
+    })
+  }
+
+  swipe(300, 100)
+  swipe(100, 300)
+
+  expect(dispatchMedia).toHaveBeenNthCalledWith(1, { type: 'nextImage' })
+  expect(dispatchMedia).toHaveBeenNthCalledWith(2, { type: 'previousImage' })
+})
+
+test('the exit button leaves the viewer and steps back in history', async () => {
+  vi.useRealTimers()
+
+  const dispatchMedia = vi.fn()
+  const back = vi
+    .spyOn(window.history, 'back')
+    .mockImplementation(() => undefined)
+
+  render(<PresentNavigationOverlay dispatchMedia={dispatchMedia} />)
+
+  // Hidden controls take no clicks, so the first tap is the one that reveals
+  // them - the same two steps a touch user takes.
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Exit presentation mode'))
+
+  expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
+  expect(
+    back,
+    'leaving restores the URL the viewer came from'
+  ).toHaveBeenCalled()
+
+  back.mockRestore()
+})
+
+test('the exit button leaves history alone when the caller asks it to', async () => {
+  vi.useRealTimers()
+
+  const dispatchMedia = vi.fn()
+  const back = vi
+    .spyOn(window.history, 'back')
+    .mockImplementation(() => undefined)
+
+  render(
+    <PresentNavigationOverlay
+      dispatchMedia={dispatchMedia}
+      disableSaveCloseInHistory
+    />
+  )
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Exit presentation mode'))
+
+  expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
+  expect(back, 'this caller manages history itself').not.toHaveBeenCalled()
+
+  back.mockRestore()
 })
