@@ -2,12 +2,14 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestAlbumTreeChildren(t *testing.T) {
@@ -139,4 +141,53 @@ func TestAlbumTreeChildren(t *testing.T) {
 		_, err := r.AlbumTreeChildren(context.Background(), []int{ownedRoot.ID})
 		assert.Error(t, err)
 	})
+}
+
+func TestAuthorizedAlbumIDsIsOneQueryForAnyBatchSize(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	// A user linked only to the root owns everything below it, but none of the
+	// albums below has a user_albums row of its own - the case that used to
+	// cost up to two queries per id.
+	root := models.Album{Title: "root", Path: "/photos/batch"}
+	assert.NoError(t, db.Save(&root).Error)
+
+	requested := make([]int, 0, 120)
+
+	for i := 0; i < 60; i++ {
+		child := models.Album{Title: fmt.Sprintf("child_%02d", i), Path: fmt.Sprintf("/photos/batch/%02d", i), ParentAlbumID: &root.ID}
+		assert.NoError(t, db.Save(&child).Error)
+
+		grandchild := models.Album{Title: "leaf", Path: fmt.Sprintf("/photos/batch/%02d/leaf", i), ParentAlbumID: &child.ID}
+		assert.NoError(t, db.Save(&grandchild).Error)
+
+		requested = append(requested, child.ID, grandchild.ID)
+	}
+
+	user, err := models.RegisterUser(db, "batch_user", nil, false)
+	assert.NoError(t, err)
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(&root))
+
+	var statements int
+
+	count := func(*gorm.DB) { statements++ }
+	for _, chain := range []interface {
+		Register(name string, fn func(*gorm.DB)) error
+	}{db.Callback().Query().After("gorm:query"), db.Callback().Row().After("gorm:row"), db.Callback().Raw().After("gorm:raw")} {
+		assert.NoError(t, chain.Register("count_statements", count))
+	}
+
+	t.Cleanup(func() {
+		_ = db.Callback().Query().Remove("count_statements")
+		_ = db.Callback().Row().Remove("count_statements")
+		_ = db.Callback().Raw().Remove("count_statements")
+	})
+
+	r := &queryResolver{Resolver: &Resolver{database: db}}
+
+	authorized, err := r.authorizedAlbumIDs(context.Background(), user, requested)
+	assert.NoError(t, err)
+
+	assert.Equal(t, requested, authorized, "every inherited album is authorized, in the order asked for")
+	assert.Equal(t, 1, statements, "authorizing a batch must not cost a query per album")
 }
