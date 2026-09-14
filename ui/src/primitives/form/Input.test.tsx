@@ -39,10 +39,11 @@ test('a field that stops being a password comes back hidden', async () => {
   rerender(<TextField type="text" defaultValue="hunter2" />)
   rerender(<TextField type="password" defaultValue="hunter2" />)
 
-  expect(
-    screen.getByDisplayValue('hunter2'),
-    'the secret must not reappear unasked'
-  ).toHaveAttribute('type', 'password')
+  // The secret must not reappear unasked.
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute(
+    'type',
+    'password'
+  )
 })
 
 test('the reveal button sits next to the action button without replacing it', async () => {
@@ -81,4 +82,21 @@ test('a revealed password can still be hidden while the field is loading', async
     'type',
     'password'
   )
+})
+
+test('revealing and hiding the password keeps the focus in the field', async () => {
+  render(<TextField type="password" defaultValue="hunter2" />)
+
+  const input = screen.getByDisplayValue('hunter2')
+  input.focus()
+  expect(input).toHaveFocus()
+
+  // The toggle swallows mousedown so that clicking it does not blur the field
+  // mid-typing; without that, focus would move to the button and the user
+  // would have to click back into the field to carry on.
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+  expect(input).toHaveFocus()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
+  expect(input).toHaveFocus()
 })
