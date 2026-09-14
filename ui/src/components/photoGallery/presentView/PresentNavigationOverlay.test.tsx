@@ -102,10 +102,8 @@ test('the exit button leaves the viewer and steps back in history', async () => 
   await userEvent.click(screen.getByLabelText('Exit presentation mode'))
 
   expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
-  expect(
-    back,
-    'leaving restores the URL the viewer came from'
-  ).toHaveBeenCalled()
+  // Leaving restores the URL the viewer came from.
+  expect(back).toHaveBeenCalled()
 
   back.mockRestore()
 })
@@ -129,7 +127,8 @@ test('the exit button leaves history alone when the caller asks it to', async ()
   await userEvent.click(screen.getByLabelText('Exit presentation mode'))
 
   expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
-  expect(back, 'this caller manages history itself').not.toHaveBeenCalled()
+  // This caller manages history itself.
+  expect(back).not.toHaveBeenCalled()
 
   back.mockRestore()
 })

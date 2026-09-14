@@ -33,6 +33,7 @@ const renderWithSidebar = (media: MediaGalleryFields) => {
         updateSidebar,
         setPinned: vi.fn(),
         content,
+        pinned: false,
       }}
     >
       <PresentView activeMedia={media} dispatchMedia={vi.fn()} />
@@ -43,7 +44,7 @@ const renderWithSidebar = (media: MediaGalleryFields) => {
     content = nextContent
     view.rerender(
       <SidebarContext.Provider
-        value={{ updateSidebar, setPinned: vi.fn(), content }}
+        value={{ updateSidebar, setPinned: vi.fn(), content, pinned: false }}
       >
         <PresentView activeMedia={next} dispatchMedia={vi.fn()} />
       </SidebarContext.Provider>
@@ -102,7 +103,12 @@ test('arrow keys navigate and escape leaves the viewer', () => {
 
   render(
     <SidebarContext.Provider
-      value={{ updateSidebar: vi.fn(), setPinned: vi.fn(), content: null }}
+      value={{
+        updateSidebar: vi.fn(),
+        setPinned: vi.fn(),
+        content: null,
+        pinned: false,
+      }}
     >
       <PresentView
         activeMedia={makeMedia('1')}
@@ -131,7 +137,12 @@ test('escape without the history flag steps back instead', () => {
 
   render(
     <SidebarContext.Provider
-      value={{ updateSidebar: vi.fn(), setPinned: vi.fn(), content: null }}
+      value={{
+        updateSidebar: vi.fn(),
+        setPinned: vi.fn(),
+        content: null,
+        pinned: false,
+      }}
     >
       <PresentView activeMedia={makeMedia('1')} dispatchMedia={dispatchMedia} />
     </SidebarContext.Provider>
