@@ -8,6 +8,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/test_utils"
+	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
@@ -53,6 +54,8 @@ func createTestSiteInfo(db *gorm.DB, interval int) error {
 
 func TestGetPeriodicScanInterval(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
+	// An inherited value would turn the database-backed cases into override cases.
+	t.Setenv(utils.EnvPeriodicScanInterval.GetName(), "")
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
@@ -61,6 +64,32 @@ func TestGetPeriodicScanInterval(t *testing.T) {
 		assert.NoError(t, err, "Failed to retrieve periodic scan interval from database")
 		assert.Equal(t, 300*time.Second, duration,
 			"Periodic scan interval should be 300 seconds but got %v", duration)
+	})
+
+	t.Run("environment variable takes precedence over the database", func(t *testing.T) {
+		t.Setenv(utils.EnvPeriodicScanInterval.GetName(), "60")
+
+		duration, err := getPeriodicScanInterval(db)
+		assert.NoError(t, err, "Failed to retrieve periodic scan interval")
+		assert.Equal(t, time.Minute, duration,
+			"Interval should come from the environment but got %v", duration)
+	})
+
+	t.Run("zero in the environment disables periodic scanning", func(t *testing.T) {
+		t.Setenv(utils.EnvPeriodicScanInterval.GetName(), "0")
+
+		duration, err := getPeriodicScanInterval(db)
+		assert.NoError(t, err, "Failed to retrieve periodic scan interval")
+		assert.Zero(t, duration, "Interval should be disabled but got %v", duration)
+	})
+
+	t.Run("invalid environment value falls back to the database", func(t *testing.T) {
+		t.Setenv(utils.EnvPeriodicScanInterval.GetName(), "hourly")
+
+		duration, err := getPeriodicScanInterval(db)
+		assert.NoError(t, err, "Failed to retrieve periodic scan interval")
+		assert.Equal(t, 300*time.Second, duration,
+			"Interval should fall back to the database but got %v", duration)
 	})
 
 	t.Run("database error - no site info", func(t *testing.T) {
