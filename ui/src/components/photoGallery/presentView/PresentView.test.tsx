@@ -51,7 +51,7 @@ const renderWithSidebar = (media: MediaGalleryFields) => {
     )
   }
 
-  return { updateSidebar, rerender }
+  return { updateSidebar, rerender, unmount: view.unmount }
 }
 
 test('the info panel follows the image the viewer is on', async () => {
@@ -153,5 +153,51 @@ test('escape without the history flag steps back instead', () => {
   expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
   expect(back).toHaveBeenCalled()
 
+  back.mockRestore()
+})
+
+test('closing the viewer closes an info panel it opened', async () => {
+  const media = makeMedia('1')
+  const { updateSidebar, rerender, unmount } = renderWithSidebar(media)
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+  rerender(media, <div>sidebar</div>)
+
+  // Otherwise the panel stays behind over the gallery, still describing the
+  // last presented photo.
+  unmount()
+
+  expect(updateSidebar).toHaveBeenLastCalledWith(null)
+})
+
+test('closing the viewer leaves a sidebar the user opened beforehand alone', () => {
+  const media = makeMedia('1')
+  const { updateSidebar, rerender, unmount } = renderWithSidebar(media)
+
+  // A sidebar that was already open when presenting started is not the
+  // viewer's to close.
+  rerender(media, <div>sidebar opened from the gallery</div>)
+  unmount()
+
+  expect(updateSidebar).not.toHaveBeenCalled()
+})
+
+test('the exit button steps back in history when the caller did not opt out', async () => {
+  const back = vi
+    .spyOn(window.history, 'back')
+    .mockImplementation(() => undefined)
+
+  const { unmount } = renderWithSidebar(makeMedia('1'))
+
+  // The gallery and the timeline open the viewer with history.pushState, so
+  // leaving it has to pop that entry again - otherwise the browser's back
+  // button reopens the viewer. Escape always did this; the button did not.
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Exit presentation mode'))
+
+  expect(back).toHaveBeenCalled()
+
+  unmount()
   back.mockRestore()
 })

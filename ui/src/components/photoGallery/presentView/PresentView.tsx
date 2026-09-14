@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import PresentNavigationOverlay from './PresentNavigationOverlay'
 import PresentMedia from './PresentMedia'
@@ -26,6 +26,14 @@ const PreventScroll = createGlobalStyle`
   html, body {
     overflow: hidden !important;
   }
+
+  /* The media info panel is the shared sidebar, which normally sits at z-40 -
+     below this fullscreen view at z-100, so opening it from here changed its
+     state without ever showing it. Lifting it only while the viewer is mounted
+     leaves its stacking everywhere else exactly as it was. */
+  [data-sidebar] {
+    z-index: 110 !important;
+  }
 `
 
 type PresentViewProps = {
@@ -45,6 +53,26 @@ const PresentView = ({
 }: PresentViewProps) => {
   const { updateSidebar, content: sidebarContent } = useContext(SidebarContext)
   const [infoOpen, setInfoOpen] = useState(false)
+
+  // Read by the unmount cleanup below, which would otherwise only ever see the
+  // value infoOpen had on the first render.
+  const infoOpenRef = useRef(false)
+  useEffect(() => {
+    infoOpenRef.current = infoOpen
+  }, [infoOpen])
+
+  useEffect(
+    () => () => {
+      // Leaving the viewer with the info panel open would otherwise leave it
+      // behind over the gallery, still describing the last presented photo. A
+      // sidebar the user opened before presenting is theirs and stays open.
+      if (infoOpenRef.current) {
+        updateSidebar(null)
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   useEffect(() => {
     // The sidebar was closed some other way (e.g. its own close button),
@@ -99,7 +127,7 @@ const PresentView = ({
       <PreventScroll />
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}
-        disableSaveCloseInHistory
+        disableSaveCloseInHistory={disableSaveCloseInHistory}
         onInfoClick={() => {
           setInfoOpen(true)
           updateSidebar(<MediaSidebar media={activeMedia} />)
