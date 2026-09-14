@@ -11,7 +11,6 @@ import {
 } from './__generated__/albumTreeActivePathQuery'
 import {
   albumTreeRootQuery,
-  albumTreeRootQueryVariables,
   albumTreeRootQuery_myAlbums,
 } from './__generated__/albumTreeRootQuery'
 import {
@@ -122,10 +121,9 @@ export const selectFilteredNodes = (
 const AlbumTree = () => {
   const { t } = useTranslation()
   const { id: activeAlbumId } = useParams()
-  const { data, loading, error } = useQuery<
-    albumTreeRootQuery,
-    albumTreeRootQueryVariables
-  >(ALBUM_TREE_ROOT_QUERY)
+  const { data, loading, error } = useQuery<albumTreeRootQuery>(
+    ALBUM_TREE_ROOT_QUERY
+  )
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [justExpandedId, setJustExpandedId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLElement>(null)
@@ -164,12 +162,14 @@ const AlbumTree = () => {
   const { query: searchQuery } = useContext(AlbumTreeSearchContext)
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
 
-  const debouncedSetQuery = useRef<null | DebouncedFn<(query: string) => void>>(
-    null
-  )
+  // debounce is typed over (...args: unknown[]) => unknown, so the parameter
+  // is declared as unknown here rather than string.
+  const debouncedSetQuery = useRef<null | DebouncedFn<
+    (query: unknown) => void
+  >>(null)
   useEffect(() => {
-    debouncedSetQuery.current = debounce<(query: string) => void>(
-      query => setDebouncedSearchQuery(query),
+    debouncedSetQuery.current = debounce(
+      (query: unknown) => setDebouncedSearchQuery(String(query)),
       250
     )
     return () => debouncedSetQuery.current?.cancel()

@@ -266,10 +266,8 @@ describe('selectFilteredNodes', () => {
     for (const id of matchedIds) {
       const album = matches.find(m => m.id === id)
       for (const ancestor of album?.path ?? []) {
-        expect(
-          visibleIds.has(ancestor.id),
-          `${id} is kept but its ancestor ${ancestor.id} is not`
-        ).toBe(true)
+        // Every kept match must still have every one of its ancestors.
+        expect(visibleIds.has(ancestor.id)).toBe(true)
       }
     }
   })
