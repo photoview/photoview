@@ -1,6 +1,7 @@
 package actions_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -72,6 +73,27 @@ func TestAlbumPathTruncatesAtInaccessibleAncestor(t *testing.T) {
 	if assert.Len(t, albumPath, 1) {
 		assert.Equal(t, "Shared folder", albumPath[0].Title)
 	}
+}
+
+func TestAlbumPathFailsWhenTheQueryDoes(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := models.Album{Title: "Alone", Path: "/alone"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	user, err := models.RegisterUser(db, "path_query_user", nil, false)
+	assert.NoError(t, err)
+
+	// The recursive walk is the one query here that can fail on its own, and
+	// an error must not come back as an empty breadcrumb - that is
+	// indistinguishable from a root album and would quietly hide ancestors
+	// the user can see. A cancelled context is the cheapest way to make it
+	// fail without breaking the shared test database.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err = actions.AlbumPath(db.WithContext(ctx), user, &album)
+	assert.Error(t, err, "a failed path query must be reported, not swallowed")
 }
 
 func TestAlbumCover(t *testing.T) {
