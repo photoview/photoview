@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -95,6 +96,10 @@ func MediaProbeTimeout() time.Duration {
 	return 5 * time.Second
 }
 
+// maxScanIntervalSeconds is the largest number of seconds that fits in a time.Duration,
+// beyond which the multiplication below would wrap into a negative interval.
+const maxScanIntervalSeconds = int64(math.MaxInt64) / int64(time.Second)
+
 // PeriodicScanInterval returns the periodic scan interval configured through
 // PHOTOVIEW_PERIODIC_SCAN_INTERVAL, and whether it was set.
 // The value is interpreted as seconds; 0 disables periodic scanning.
@@ -107,8 +112,8 @@ func PeriodicScanInterval() (time.Duration, bool) {
 		return 0, false
 	}
 
-	seconds, err := strconv.Atoi(val)
-	if err != nil || seconds < 0 {
+	seconds, err := strconv.ParseInt(val, 10, 64)
+	if err != nil || seconds < 0 || seconds > maxScanIntervalSeconds {
 		log.Warn(nil, "Invalid PHOTOVIEW_PERIODIC_SCAN_INTERVAL value, falling back to the database setting", "value", val)
 		return 0, false
 	}

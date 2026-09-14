@@ -54,6 +54,8 @@ func createTestSiteInfo(db *gorm.DB, interval int) error {
 
 func TestGetPeriodicScanInterval(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
+	// An inherited value would turn the database-backed cases into override cases.
+	t.Setenv(utils.EnvPeriodicScanInterval.GetName(), "")
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		assert.NoError(t, createTestSiteInfo(db, 300), "Failed to create test site info with 300 second interval")
