@@ -100,3 +100,69 @@ test('revealing and hiding the password keeps the focus in the field', async () 
   await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
   expect(input).toHaveFocus()
 })
+
+test('a revealed password can still be hidden while the field is disabled', async () => {
+  const { rerender } = render(
+    <TextField type="password" defaultValue="hunter2" />
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+
+  // PasswordProtectedShare disables the field while its request runs. The
+  // password is on screen at that moment and must not get stuck there.
+  rerender(<TextField type="password" defaultValue="hunter2" disabled />)
+
+  await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute(
+    'type',
+    'password'
+  )
+
+  // A disabled field that is not revealed cannot be revealed, though.
+  expect(screen.getByRole('button', { name: 'Show password' })).toBeDisabled()
+})
+
+test('a password field keeps spellcheck and autocorrect away from its value', async () => {
+  render(<TextField type="password" defaultValue="hunter2" spellCheck />)
+
+  const input = screen.getByDisplayValue('hunter2')
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+
+  // Revealed, the value is a text field's contents - which enhanced
+  // spellcheck in Chrome and Edge sends off to be checked. Even a caller
+  // asking for spellcheck does not get it on a password field.
+  expect(input).toHaveAttribute('type', 'text')
+  expect(input).toHaveAttribute('spellcheck', 'false')
+  expect(input).toHaveAttribute('autocorrect', 'off')
+  expect(input).toHaveAttribute('autocapitalize', 'off')
+})
+
+test('submitting the form masks a revealed password before the browser sees it', async () => {
+  let typeAtSubmit: string | null = null
+
+  render(
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        typeAtSubmit = screen.getByDisplayValue('hunter2').getAttribute('type')
+      }}
+    >
+      <TextField type="password" defaultValue="hunter2" />
+      <button type="submit">Log in</button>
+    </form>
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute('type', 'text')
+
+  // Browsers may keep a submitted text field's value as an autocomplete
+  // suggestion, so the field has to be a password field again by the time
+  // the submission is processed - not after the next render.
+  await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
+
+  expect(typeAtSubmit).toBe('password')
+  expect(screen.getByDisplayValue('hunter2')).toHaveAttribute(
+    'type',
+    'password'
+  )
+})

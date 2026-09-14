@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import classNames, { Argument as ClassNamesArg } from 'classnames'
 import { ReactComponent as ActionArrowIcon } from './icons/textboxActionArrow.svg'
 import { ReactComponent as LoadingSpinnerIcon } from './icons/textboxLoadingSpinner.svg'
@@ -41,13 +41,48 @@ export const TextField = forwardRef(
     const [revealed, setRevealed] = useState(false)
     const effectiveType = isPassword && revealed ? 'text' : type
 
-    // A field that stops being a password one and later becomes one again
-    // would otherwise come back revealed, showing the secret unasked.
+    // `revealed` only has an effect while the field is a password field: it is
+    // what turns the password's type into text. Once the field stops being a
+    // password field it has nothing to reveal, so the flag is cleared then -
+    // otherwise a field that later becomes a password field again would
+    // arrive already revealed, showing the secret without anyone asking.
     useEffect(() => {
       if (!isPassword) {
         setRevealed(false)
       }
     }, [isPassword])
+
+    // The input's own ref, alongside the one a caller may have forwarded, so
+    // the submit handler below can reach the element and its form.
+    const inputRef = useRef<HTMLInputElement | null>(null)
+    const setInputRef = (element: HTMLInputElement | null) => {
+      inputRef.current = element
+      if (typeof ref === 'function') {
+        ref(element)
+      } else if (ref) {
+        ref.current = element
+      }
+    }
+
+    // A revealed password is a text input, and browsers may remember what was
+    // typed into a text input as an autocomplete suggestion once its form is
+    // submitted. Masking it again on submit keeps it out of that history. The
+    // type is set on the element directly, inside the event, because
+    // re-rendering from state would only happen after the browser has already
+    // looked at the field.
+    useEffect(() => {
+      const form = inputRef.current?.form
+      if (!isPassword || !revealed || !form) return
+
+      const mask = () => {
+        if (inputRef.current) inputRef.current.type = 'password'
+        setRevealed(false)
+      }
+
+      form.addEventListener('submit', mask)
+
+      return () => form.removeEventListener('submit', mask)
+    }, [isPassword, revealed])
 
     let variant = 'bg-white border-gray-200 focus:border-blue-400'
     if (error)
@@ -90,7 +125,16 @@ export const TextField = forwardRef(
         )}
         {...inputProps}
         type={effectiveType}
-        ref={ref}
+        // A revealed password is plain text as far as the browser is
+        // concerned, and enhanced spellcheck in Chrome and Edge sends the
+        // contents of text fields to Google and Microsoft. These are applied
+        // after the caller's props so they cannot be switched back on.
+        {...(isPassword && {
+          spellCheck: false,
+          autoCorrect: 'off',
+          autoCapitalize: 'off',
+        })}
+        ref={setInputRef}
       />
     )
 
@@ -110,7 +154,10 @@ export const TextField = forwardRef(
             {isPassword && (
               <button
                 type="button"
-                disabled={disabled}
+                // A disabled field cannot be revealed, but one that already
+                // is must still be hideable - PasswordProtectedShare disables
+                // the field while its request runs.
+                disabled={disabled && !revealed}
                 aria-label={revealed ? 'Hide password' : 'Show password'}
                 aria-pressed={revealed}
                 className="p-2 text-gray-600 disabled:text-gray-400 disabled:cursor-default"
