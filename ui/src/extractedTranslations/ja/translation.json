@@ -15,6 +15,18 @@
       "type": "種類"
     }
   },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "filter_truncated": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": ""
+  },
   "general": {
     "action": {
       "add": "追加",
@@ -22,6 +34,7 @@
       "remove": "削除",
       "save": "保存"
     },
+    "close": "",
     "loading": {
       "album": "アルバムを読み込み中",
       "default": "読み込み中…",
@@ -165,6 +178,11 @@
       },
       "language_selector": {
         "placeholder": "言語を選択"
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
       },
       "theme": {
         "auto": {
