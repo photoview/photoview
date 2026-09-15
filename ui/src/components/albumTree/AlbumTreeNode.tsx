@@ -29,7 +29,7 @@ type AlbumTreeNodeProps = {
   album: AlbumTreeNodeAlbum
   depth: number
   activeAlbumId?: string
-  expanded: Record<string, boolean>
+  expanded: ReadonlySet<string>
   toggleExpand: (id: string) => void
   // When set, the tree is filtered to a search: only render descendants whose
   // id is in `visibleIds` (matched albums and their ancestors), and treat
@@ -69,7 +69,7 @@ const AlbumTreeNode = ({
 }: AlbumTreeNodeProps) => {
   const { t } = useTranslation()
   const isFiltering = visibleIds != null
-  const isExpanded = isFiltering ? true : !!expanded[album.id]
+  const isExpanded = isFiltering ? true : expanded.has(album.id)
   const isActive = activeAlbumId === album.id
   const isMatch = !!matchedIds?.has(album.id)
   const ownRef = useRef<HTMLLIElement | null>(null)

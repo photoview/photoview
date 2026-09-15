@@ -124,7 +124,10 @@ const AlbumTree = () => {
   const { data, loading, error } = useQuery<albumTreeRootQuery>(
     ALBUM_TREE_ROOT_QUERY
   )
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  // A Set rather than an object keyed by id: the active album's id comes from
+  // the URL, and writing a URL-provided string as an object key is exactly
+  // how a path like /album/__proto__ would reach the prototype.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [justExpandedId, setJustExpandedId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLElement>(null)
 
@@ -144,18 +147,20 @@ const AlbumTree = () => {
 
     const ancestorIds = activePathData?.album.path.map(a => a.id) ?? []
 
-    setExpanded(prev => {
-      const next = { ...prev }
-      for (const id of [...ancestorIds, activeAlbumId]) {
-        next[id] = true
-      }
-      return next
-    })
+    setExpanded(prev => new Set([...prev, ...ancestorIds, activeAlbumId]))
   }, [activeAlbumId, activePathData])
 
   const toggleExpand = (id: string) => {
-    const nowExpanded = !expanded[id]
-    setExpanded(prev => ({ ...prev, [id]: nowExpanded }))
+    const nowExpanded = !expanded.has(id)
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (nowExpanded) {
+        next.add(id)
+      } else {
+        next.delete(id)
+      }
+      return next
+    })
     setJustExpandedId(nowExpanded ? id : null)
   }
 
