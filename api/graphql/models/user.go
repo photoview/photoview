@@ -46,7 +46,8 @@ type UserPreferences struct {
 	User     User `gorm:"constraint:OnDelete:CASCADE;"`
 	Language *LanguageTranslation
 	// ShowAlbumTree controls whether the navigation tree is shown beside the
-	// gallery. nil means "not chosen", which the UI treats as on.
+	// gallery. nil means "not chosen", which the UI treats as off: the tree is
+	// opt-in.
 	ShowAlbumTree *bool
 }
 
