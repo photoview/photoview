@@ -209,3 +209,54 @@ test('a browser without canShare gets one share attempt per tap', async () => {
   await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
   expect(downloads).toBe(0)
 })
+
+test('cancelling the share sheet ends the share without a retry or a fallback', async () => {
+  // The user closing the sheet is a decision, not a failure: nothing should be
+  // retried, and the link must not be offered in the file's place.
+  const aborted = Object.assign(new Error('share cancelled'), {
+    name: 'AbortError',
+  })
+  const share = renderWithShare(
+    vi.fn(() => Promise.reject(aborted)),
+    true
+  )
+
+  await userEvent.click(screen.getByRole('button'))
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
+
+  // Give a fallback a chance to fire if there were one.
+  await new Promise(resolve => setTimeout(resolve, 50))
+  expect(share).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
+})
+
+test('there is no share button where the browser cannot share', () => {
+  // A navigator without share(): spreading the real one would carry jsdom's
+  // share over, so the stand-in is built from the one property the component
+  // might otherwise read.
+  Object.defineProperty(global, 'navigator', {
+    value: { userAgent: originalNavigator.userAgent },
+    configurable: true,
+    writable: true,
+  })
+
+  const { container } = render(
+    <SidebarShareMediaButton media={media} rows={rows} />
+  )
+
+  expect(container).toBeEmptyDOMElement()
+})
+
+test('there is no share button for a media without downloads', () => {
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share: vi.fn(), canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  const { container } = render(
+    <SidebarShareMediaButton media={media} rows={[]} />
+  )
+
+  expect(container).toBeEmptyDOMElement()
+})
