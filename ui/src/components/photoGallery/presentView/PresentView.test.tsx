@@ -1,0 +1,216 @@
+import React from 'react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MediaType } from '../../../__generated__/globalTypes'
+import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
+import { SidebarContext } from '../../sidebar/Sidebar'
+import PresentView from './PresentView'
+
+const makeMedia = (id: string): MediaGalleryFields => ({
+  __typename: 'Media',
+  id,
+  type: MediaType.Photo,
+  highRes: null,
+  blurhash: null,
+  videoWeb: null,
+  favorite: false,
+  thumbnail: {
+    __typename: 'MediaURL',
+    url: `/photo-${id}.jpg`,
+    width: 300,
+    height: 200,
+  },
+})
+
+/** Renders PresentView with a stand-in sidebar whose content the test owns. */
+const renderWithSidebar = (media: MediaGalleryFields) => {
+  const updateSidebar = vi.fn()
+  const setPinned = vi.fn()
+  let content: React.ReactNode = null
+
+  const view = render(
+    <SidebarContext.Provider
+      value={{
+        updateSidebar,
+        setPinned,
+        content,
+        pinned: false,
+      }}
+    >
+      <PresentView activeMedia={media} dispatchMedia={vi.fn()} />
+    </SidebarContext.Provider>
+  )
+
+  const rerender = (next: MediaGalleryFields, nextContent: React.ReactNode) => {
+    content = nextContent
+    view.rerender(
+      <SidebarContext.Provider
+        value={{ updateSidebar, setPinned, content, pinned: false }}
+      >
+        <PresentView activeMedia={next} dispatchMedia={vi.fn()} />
+      </SidebarContext.Provider>
+    )
+  }
+
+  return { updateSidebar, setPinned, rerender, unmount: view.unmount }
+}
+
+test('the info panel follows the image the viewer is on', async () => {
+  // Stable objects: PresentView rebuilds the panel when the active media
+  // changes, and a fresh object with the same id is a change.
+  const first = makeMedia('1')
+  const second = makeMedia('2')
+
+  const { updateSidebar, rerender } = renderWithSidebar(first)
+
+  // The controls hide themselves until the viewer asks for them.
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+
+  expect(updateSidebar).toHaveBeenCalledTimes(1)
+
+  // The real sidebar keeps what it was handed, so the context now has content.
+  rerender(first, <div>sidebar</div>)
+  expect(updateSidebar).toHaveBeenCalledTimes(1)
+
+  // Navigating with the panel open has to rebuild it: it was made from the
+  // image that was active when it opened, and would otherwise keep showing
+  // that one while the viewer looks at another.
+  rerender(second, <div>sidebar</div>)
+  expect(updateSidebar).toHaveBeenCalledTimes(2)
+})
+
+test('an info panel closed elsewhere stays closed while navigating', async () => {
+  const first = makeMedia('1')
+  const second = makeMedia('2')
+
+  const { updateSidebar, rerender } = renderWithSidebar(first)
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+  rerender(first, <div>sidebar</div>)
+  expect(updateSidebar).toHaveBeenCalledTimes(1)
+
+  // The sidebar has its own close button. Once it is gone, moving to the next
+  // image must not bring it back.
+  rerender(first, null)
+  rerender(second, null)
+
+  expect(updateSidebar).toHaveBeenCalledTimes(1)
+})
+
+test('arrow keys navigate and escape leaves the viewer', () => {
+  const dispatchMedia = vi.fn()
+
+  render(
+    <SidebarContext.Provider
+      value={{
+        updateSidebar: vi.fn(),
+        setPinned: vi.fn(),
+        content: null,
+        pinned: false,
+      }}
+    >
+      <PresentView
+        activeMedia={makeMedia('1')}
+        dispatchMedia={dispatchMedia}
+        disableSaveCloseInHistory
+      />
+    </SidebarContext.Provider>
+  )
+
+  act(() => {
+    fireEvent.keyDown(document, { key: 'ArrowRight' })
+    fireEvent.keyDown(document, { key: 'ArrowLeft' })
+    fireEvent.keyDown(document, { key: 'Escape' })
+  })
+
+  expect(dispatchMedia).toHaveBeenNthCalledWith(1, { type: 'nextImage' })
+  expect(dispatchMedia).toHaveBeenNthCalledWith(2, { type: 'previousImage' })
+  expect(dispatchMedia).toHaveBeenNthCalledWith(3, { type: 'closePresentMode' })
+})
+
+test('escape without the history flag steps back instead', () => {
+  const dispatchMedia = vi.fn()
+  const back = vi
+    .spyOn(window.history, 'back')
+    .mockImplementation(() => undefined)
+
+  render(
+    <SidebarContext.Provider
+      value={{
+        updateSidebar: vi.fn(),
+        setPinned: vi.fn(),
+        content: null,
+        pinned: false,
+      }}
+    >
+      <PresentView activeMedia={makeMedia('1')} dispatchMedia={dispatchMedia} />
+    </SidebarContext.Provider>
+  )
+
+  fireEvent.keyDown(document, { key: 'Escape' })
+
+  expect(dispatchMedia).toHaveBeenCalledWith({ type: 'closePresentMode' })
+  expect(back).toHaveBeenCalled()
+
+  back.mockRestore()
+})
+
+test('closing the viewer closes an info panel it opened', async () => {
+  const media = makeMedia('1')
+  const { updateSidebar, rerender, unmount } = renderWithSidebar(media)
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+  rerender(media, <div>sidebar</div>)
+
+  // Otherwise the panel stays behind over the gallery, still describing the
+  // last presented photo.
+  unmount()
+
+  expect(updateSidebar).toHaveBeenLastCalledWith(null)
+})
+
+test('closing the viewer leaves a sidebar the user opened beforehand alone', () => {
+  const media = makeMedia('1')
+  const { updateSidebar, rerender, unmount } = renderWithSidebar(media)
+
+  // A sidebar that was already open when presenting started is not the
+  // viewer's to close.
+  rerender(media, <div>sidebar opened from the gallery</div>)
+  unmount()
+
+  expect(updateSidebar).not.toHaveBeenCalled()
+})
+
+test('the exit button steps back in history when the caller did not opt out', async () => {
+  const back = vi
+    .spyOn(window.history, 'back')
+    .mockImplementation(() => undefined)
+
+  const { unmount } = renderWithSidebar(makeMedia('1'))
+
+  // The gallery and the timeline open the viewer with history.pushState, so
+  // leaving it has to pop that entry again - otherwise the browser's back
+  // button reopens the viewer. Escape always did this; the button did not.
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Exit presentation mode'))
+
+  expect(back).toHaveBeenCalled()
+
+  unmount()
+  back.mockRestore()
+})
+
+test('the info panel opens pinned, so a wide screen shows it beside the photo', async () => {
+  const { setPinned } = renderWithSidebar(makeMedia('1'))
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+
+  // A pinned panel takes its own column on a wide screen, and the viewer
+  // narrows to the space left - so the photo and all of its controls stay in
+  // view instead of partly under the panel.
+  expect(setPinned).toHaveBeenCalledWith(true)
+})
