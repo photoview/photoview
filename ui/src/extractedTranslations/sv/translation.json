@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Album",
         "media": ""
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,15 @@
   "routes": {
     "page_not_found": "Sidan hittades inte"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_one": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Max antal skannerjobb som får köras sammtidigt",
@@ -166,6 +176,10 @@
       "language_selector": {
         "placeholder": "Välj språk"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": ""
@@ -179,7 +193,8 @@
         },
         "title": ""
       },
-      "title": "Användarinställningar"
+      "title": "Användarinställningar",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
