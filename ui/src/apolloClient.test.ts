@@ -64,13 +64,18 @@ const run = (
 
 const clearTokenCookie = vi.mocked(authentication.clearTokenCookie)
 let messagesAdded: number
+let headersAdded: string[]
 
 beforeEach(() => {
   clearTokenCookie.mockClear()
   messagesAdded = 0
+  headersAdded = []
   vi.spyOn(MessageState, 'set').mockImplementation(update => {
-    const added = (update as (messages: unknown[]) => unknown[])([])
+    const added = (
+      update as (messages: unknown[]) => { props: { header: string } }[]
+    )([])
     messagesAdded += added.length
+    headersAdded.push(...added.map(message => message.props.header))
   })
 })
 
@@ -86,7 +91,9 @@ describe('what logs the user out', () => {
     })
 
     expect(clearTokenCookie).toHaveBeenCalled()
-    expect(messagesAdded).toBe(2)
+    // One message for the error itself and one saying the session ended - not
+    // the same error twice, which is what a count alone would also accept.
+    expect(headersAdded).toEqual(['Something went wrong', 'Session ended'])
   })
 
   test('an HTTP 403 clears the session', async () => {
@@ -105,7 +112,7 @@ describe('what does not', () => {
     await run(QUERY, { error: httpError(500, [{ message: 'boom' }]) })
 
     expect(clearTokenCookie).not.toHaveBeenCalled()
-    expect(messagesAdded).toBe(1)
+    expect(headersAdded).toEqual(['Something went wrong'])
   })
 
   test('a connection that never reached the server keeps the session and does not throw', async () => {
@@ -114,7 +121,7 @@ describe('what does not', () => {
     await run(QUERY, { error: new TypeError('Failed to fetch') })
 
     expect(clearTokenCookie).not.toHaveBeenCalled()
-    expect(messagesAdded).toBe(1)
+    expect(headersAdded).toEqual(['Network error'])
   })
 
   test('a failing subscription keeps the session and leaves the message to its own hook', async () => {
