@@ -10,17 +10,34 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// MaxSearchResults is the most a single search returns per category, whatever
+// the caller asks for. A limit of 0 - "no limit" in the user's preference -
+// means this many, as does any negative or larger value.
+//
+// The UI never asks for more than 500, so for the app this changes nothing.
+// It is there for the API itself: the limit arguments are open to every
+// authenticated client, and without a ceiling an empty query with a limit of 0
+// would load and serialize a user's entire library in one request.
+var MaxSearchResults = 1000
+
+// boundedSearchLimit resolves a requested limit, nil falling back to fallback,
+// to one between 1 and MaxSearchResults.
+func boundedSearchLimit(requested *int, fallback int) int {
+	limit := fallback
+	if requested != nil {
+		limit = *requested
+	}
+
+	if limit <= 0 || limit > MaxSearchResults {
+		return MaxSearchResults
+	}
+
+	return limit
+}
+
 func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums *int) (*models.SearchResult, error) {
-	limitMediaInternal := 10
-	limitAlbumsInternal := 10
-
-	if limitMedia != nil {
-		limitMediaInternal = *limitMedia
-	}
-
-	if limitAlbums != nil {
-		limitAlbumsInternal = *limitAlbums
-	}
+	limitMediaInternal := boundedSearchLimit(limitMedia, 10)
+	limitAlbumsInternal := boundedSearchLimit(limitAlbums, 10)
 
 	wildQuery := "%" + strings.ToLower(query) + "%"
 
@@ -43,10 +60,7 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 				WithoutParentheses: true},
 		})
 
-	// A limit of 0 or less means no limit, i.e. every match is returned.
-	if limitMediaInternal > 0 {
-		mediaQuery = mediaQuery.Limit(limitMediaInternal)
-	}
+	mediaQuery = mediaQuery.Limit(limitMediaInternal)
 
 	if err := mediaQuery.Find(&media).Error; err != nil {
 		return nil, errors.Wrapf(err, "searching media")
@@ -67,9 +81,7 @@ func Search(db *gorm.DB, query string, userID int, limitMedia *int, limitAlbums 
 				WithoutParentheses: true},
 		})
 
-	if limitAlbumsInternal > 0 {
-		albumsQuery = albumsQuery.Limit(limitAlbumsInternal)
-	}
+	albumsQuery = albumsQuery.Limit(limitAlbumsInternal)
 
 	if err := albumsQuery.Find(&albums).Error; err != nil {
 		return nil, errors.Wrapf(err, "searching albums")

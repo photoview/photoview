@@ -166,3 +166,42 @@ func TestSearchAlbumsIsCaseInsensitive(t *testing.T) {
 		assert.Equal(t, "Summer", result.Albums[0].Title)
 	}
 }
+
+func TestSearchIsBoundedWhateverTheCallerAsksFor(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "bounded_search_user", nil, false)
+	assert.NoError(t, err)
+
+	for i := 0; i < 5; i++ {
+		album := models.Album{Title: fmt.Sprintf("bounded %d", i), Path: fmt.Sprintf("/bounded/%d", i)}
+		assert.NoError(t, db.Save(&album).Error)
+		assert.NoError(t, db.Model(&user).Association("Albums").Append(&album))
+
+		media := models.Media{Title: fmt.Sprintf("bounded_%d.jpg", i), Path: fmt.Sprintf("/bounded/%d/photo.jpg", i), AlbumID: album.ID}
+		assert.NoError(t, db.Save(&media).Error)
+	}
+
+	// Lowered for the test, so the ceiling can be crossed with a handful of rows.
+	previous := actions.MaxSearchResults
+	actions.MaxSearchResults = 3
+	t.Cleanup(func() { actions.MaxSearchResults = previous })
+
+	limit := func(n int) *int { return &n }
+
+	// The limit arguments are open to any authenticated API client. Neither
+	// "no limit" nor a negative nor an oversized value may take a search past
+	// the server's ceiling.
+	for _, requested := range []*int{limit(0), limit(-1), limit(100)} {
+		result, err := actions.Search(db, "bounded", user.ID, requested, requested)
+		assert.NoError(t, err)
+		assert.Len(t, result.Albums, 3, "albums for a requested limit of %d", *requested)
+		assert.Len(t, result.Media, 3, "media for a requested limit of %d", *requested)
+	}
+
+	// A limit inside the ceiling is still honoured as given.
+	result, err := actions.Search(db, "bounded", user.ID, limit(2), limit(2))
+	assert.NoError(t, err)
+	assert.Len(t, result.Albums, 2)
+	assert.Len(t, result.Media, 2)
+}

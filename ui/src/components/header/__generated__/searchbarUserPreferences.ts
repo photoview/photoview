@@ -11,7 +11,7 @@ export interface searchbarUserPreferences_myUserPreferences {
   __typename: "UserPreferences";
   id: string;
   /**
-   * How many results a search returns per category. 0 means no limit. Unset falls back to the server default.
+   * How many results a search returns per category. 0 means as many as the server allows (currently 1000). Unset falls back to the server default.
    */
   searchResultLimit: number | null;
 }
