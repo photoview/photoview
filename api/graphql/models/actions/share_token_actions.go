@@ -67,6 +67,7 @@ func AddAlbumShare(db *gorm.DB, user *models.User, albumID int, expire *time.Tim
 	var count int64
 	err := db.
 		Model(&models.Album{}).
+		Where("albums.id = ?", albumID).
 		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = albums.id AND user_albums.user_id = ?)",
 			user.ID).
 		Count(&count).Error
