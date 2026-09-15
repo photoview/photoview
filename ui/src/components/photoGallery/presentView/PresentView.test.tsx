@@ -25,13 +25,14 @@ const makeMedia = (id: string): MediaGalleryFields => ({
 /** Renders PresentView with a stand-in sidebar whose content the test owns. */
 const renderWithSidebar = (media: MediaGalleryFields) => {
   const updateSidebar = vi.fn()
+  const setPinned = vi.fn()
   let content: React.ReactNode = null
 
   const view = render(
     <SidebarContext.Provider
       value={{
         updateSidebar,
-        setPinned: vi.fn(),
+        setPinned,
         content,
         pinned: false,
       }}
@@ -44,14 +45,14 @@ const renderWithSidebar = (media: MediaGalleryFields) => {
     content = nextContent
     view.rerender(
       <SidebarContext.Provider
-        value={{ updateSidebar, setPinned: vi.fn(), content, pinned: false }}
+        value={{ updateSidebar, setPinned, content, pinned: false }}
       >
         <PresentView activeMedia={next} dispatchMedia={vi.fn()} />
       </SidebarContext.Provider>
     )
   }
 
-  return { updateSidebar, rerender, unmount: view.unmount }
+  return { updateSidebar, setPinned, rerender, unmount: view.unmount }
 }
 
 test('the info panel follows the image the viewer is on', async () => {
@@ -200,4 +201,16 @@ test('the exit button steps back in history when the caller did not opt out', as
 
   unmount()
   back.mockRestore()
+})
+
+test('the info panel opens pinned, so a wide screen shows it beside the photo', async () => {
+  const { setPinned } = renderWithSidebar(makeMedia('1'))
+
+  fireEvent.click(screen.getByTestId('present-overlay'))
+  await userEvent.click(screen.getByLabelText('Show media info'))
+
+  // A pinned panel takes its own column on a wide screen, and the viewer
+  // narrows to the space left - so the photo and all of its controls stay in
+  // view instead of partly under the panel.
+  expect(setPinned).toHaveBeenCalledWith(true)
 })

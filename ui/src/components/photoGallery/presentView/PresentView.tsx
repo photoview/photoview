@@ -7,7 +7,7 @@ import { MediaGalleryFields } from '../__generated__/MediaGalleryFields'
 import { SidebarContext } from '../../sidebar/Sidebar'
 import MediaSidebar from '../../sidebar/MediaSidebar/MediaSidebar'
 
-const StyledContainer = styled.div`
+const StyledContainer = styled.div<{ $besidePanel: boolean }>`
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -17,6 +17,14 @@ const StyledContainer = styled.div`
   left: 0;
   z-index: 100;
   overscroll-behavior: none;
+
+  /* With the info panel pinned, a wide screen gives the photo and its
+     controls the space beside the panel instead of hiding part of both under
+     it - the same as a pinned sidebar on the album and timeline pages. The
+     420px is the sidebar's width at this breakpoint (lg:w-[420px]). */
+  @media (min-width: 1024px) {
+    ${({ $besidePanel }) => ($besidePanel ? 'width: calc(100vw - 420px);' : '')}
+  }
 `
 
 // Locks scrolling on the page behind the fullscreen viewer. Scoped to
@@ -51,7 +59,12 @@ const PresentView = ({
   dispatchMedia,
   disableSaveCloseInHistory,
 }: PresentViewProps) => {
-  const { updateSidebar, content: sidebarContent } = useContext(SidebarContext)
+  const {
+    updateSidebar,
+    setPinned,
+    pinned,
+    content: sidebarContent,
+  } = useContext(SidebarContext)
   const [infoOpen, setInfoOpen] = useState(false)
 
   // Read by the unmount cleanup below, which would otherwise only ever see the
@@ -123,7 +136,10 @@ const PresentView = ({
   })
 
   return (
-    <StyledContainer className={className}>
+    <StyledContainer
+      className={className}
+      $besidePanel={infoOpen && pinned && sidebarContent != null}
+    >
       <PreventScroll />
       <PresentNavigationOverlay
         dispatchMedia={dispatchMedia}
@@ -131,6 +147,11 @@ const PresentView = ({
         onInfoClick={() => {
           setInfoOpen(true)
           updateSidebar(<MediaSidebar media={activeMedia} />)
+          // Pinned, so a wide screen lays the panel out beside the photo.
+          // Unpinning it drops back to the panel overlaying the photo, and on
+          // a phone, where pinning has no layout of its own, it overlays
+          // either way.
+          setPinned(true)
         }}
       >
         <PresentMedia media={activeMedia} imageLoaded={imageLoaded} />
