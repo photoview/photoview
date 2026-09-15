@@ -115,14 +115,17 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	for i, media := range albumMedia {
 		// Cancellation is checked between files, never mid-file, so an
 		// encode in flight always finishes cleanly instead of leaving a
-		// half-written cache entry behind.
+		// half-written cache entry behind. The check alone was not enough:
+		// the file's own task pipeline and database transaction ran under the
+		// job's context, so a cancel arriving mid-file still stopped them part
+		// way. The file now runs under a context the cancel does not reach.
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
 		mediaData := media_encoding.NewEncodeMediaData(media)
 
-		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
+		if err := scanMedia(ctx.WithoutCancel(), media, &mediaData, i, len(albumMedia)); err != nil {
 			scanner_utils.ScannerError(ctx, "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
 		}
 	}
@@ -150,10 +153,16 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		return nil, err
 	}
 
+	jobCtx := ctx
+
 	for _, item := range dirContent {
-		if err := ctx.Err(); err != nil {
+		// Cancellation is honoured between files only; each file is looked at
+		// under a context the cancel does not reach (see WithoutCancel).
+		if err := jobCtx.Err(); err != nil {
 			return nil, err
 		}
+
+		ctx := jobCtx.WithoutCancel()
 
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 		log.Info(ctx, "Check the media", "media_path", mediaPath)
