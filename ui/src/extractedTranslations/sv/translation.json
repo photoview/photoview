@@ -275,6 +275,8 @@
         "tera_byte_one": "",
         "tera_byte_other": ""
       },
+      "share": "",
+      "share_again": "",
       "table_columns": {
         "dimensions": "Mått",
         "file_size": "Storlek",
