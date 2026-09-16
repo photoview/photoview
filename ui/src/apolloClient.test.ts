@@ -124,6 +124,19 @@ describe('what does not', () => {
     expect(headersAdded).toEqual(['Network error'])
   })
 
+  test('a subscription rejected as unauthorized keeps the session', async () => {
+    // A reconnecting subscription can be told it is unauthorized while the
+    // user's own session is perfectly valid. Only the network-error path was
+    // covered here, so removing the guard on this one would have gone
+    // unnoticed.
+    await run(SUBSCRIPTION, {
+      result: { errors: [new GraphQLError('unauthorized')] },
+    })
+
+    expect(clearTokenCookie).not.toHaveBeenCalled()
+    expect(headersAdded).toEqual([])
+  })
+
   test('a failing subscription keeps the session and leaves the message to its own hook', async () => {
     // The notification subscription reports its errors itself. A second
     // message from here showed each one twice, again on every reconnect.
