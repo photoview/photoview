@@ -2,6 +2,7 @@ package scanner_queue
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"log"
 	"sync"
@@ -223,9 +224,6 @@ func AddAllToQueue() error {
 func AddUserToQueue(user *models.User) error {
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForUser(global_scanner_queue.db, user, albumCache)
-	for _, err := range album_errors {
-		return errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
-	}
 
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
@@ -235,7 +233,12 @@ func AddUserToQueue(user *models.User) error {
 	}
 	global_scanner_queue.mutex.Unlock()
 
-	return nil
+	wrappedErrors := make([]error, len(album_errors))
+	for i, err := range album_errors {
+		wrappedErrors[i] = errors.Wrapf(err, "find albums for user (user_id: %d)", user.ID)
+	}
+
+	return stderrors.Join(wrappedErrors...)
 }
 
 // Queue should be locked prior to calling this function
