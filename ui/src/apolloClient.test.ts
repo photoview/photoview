@@ -141,6 +141,7 @@ describe('what does not', () => {
     // The notification subscription reports its errors itself. A second
     // message from here showed each one twice, again on every reconnect.
     await run(SUBSCRIPTION, { error: httpError(401) })
+    await run(SUBSCRIPTION, { error: httpError(403) })
     await run(SUBSCRIPTION, { error: new TypeError('socket closed') })
 
     expect(clearTokenCookie).not.toHaveBeenCalled()
