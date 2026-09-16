@@ -345,6 +345,7 @@ func TestScanWithOnlyDiscoveryErrorsQueuesNoAlbums(t *testing.T) {
 		t.Fatal("initialize scanner queue error:", err)
 	}
 	discoveryErr := scanner_queue.AddUserToQueue(user)
+	scanner_queue.CloseScannerQueue()
 
 	select {
 	case got := <-notifications:
@@ -355,7 +356,6 @@ func TestScanWithOnlyDiscoveryErrorsQueuesNoAlbums(t *testing.T) {
 		t.Errorf("deregister notification listener error: %v", err)
 	}
 	listenerRegistered = false
-	scanner_queue.CloseScannerQueue()
 
 	if discoveryErr == nil {
 		t.Fatal("expected album discovery error")
