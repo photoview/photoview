@@ -68,11 +68,22 @@ func TestSearch(t *testing.T) {
 		expectedAlbumCount int
 	}
 
+	noLimit := 0
+
 	searchTests := []SearchTest{
 		{
 			query:              "image",
 			userID:             user.ID,
 			expectedMediaCount: 4,
+			expectedAlbumCount: 0,
+		},
+		{
+			// The same query as below, but uncapped: 0 means "no limit"
+			// rather than "no results".
+			query:              "g",
+			userID:             user.ID,
+			limitMedia:         &noLimit,
+			expectedMediaCount: 14,
 			expectedAlbumCount: 0,
 		},
 		{
@@ -99,4 +110,98 @@ func TestSearch(t *testing.T) {
 			assert.Len(t, result.Media, test.expectedMediaCount)
 		})
 	}
+}
+
+func TestSearchAlbumOrder(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "album_order_user", nil, true)
+	assert.NoError(t, err)
+
+	albumTitles := []string{
+		"gallery_2024-01",
+		"gallery_2023-12",
+		"gallery_2024-02",
+	}
+
+	for _, title := range albumTitles {
+		album := models.Album{
+			Title: title,
+			Path:  fmt.Sprintf("/media/%s", title),
+		}
+		assert.NoError(t, db.Create(&album).Error)
+		assert.NoError(t, db.Model(&album).Association("Owners").Append(user))
+	}
+
+	result, err := actions.Search(db, "gallery", user.ID, nil, nil)
+	assert.NoError(t, err)
+
+	var titles []string
+	for _, album := range result.Albums {
+		titles = append(titles, album.Title)
+	}
+
+	// Matches are ordered alphabetically descending by title, so albums named
+	// after a year or year-month come back newest first - and, more
+	// importantly, in a defined order at all.
+	assert.Equal(t, []string{"gallery_2024-02", "gallery_2024-01", "gallery_2023-12"}, titles)
+}
+
+func TestSearchAlbumsIsCaseInsensitive(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "album_case_user", nil, true)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "Summer", Path: "/media/Summer"}
+	assert.NoError(t, db.Create(&album).Error)
+	assert.NoError(t, db.Model(&album).Association("Owners").Append(user))
+
+	// The needle is lowercased before it reaches the query, so without
+	// LOWER() on the column this finds nothing on PostgreSQL, whose LIKE is
+	// case-sensitive.
+	result, err := actions.Search(db, "summer", user.ID, nil, nil)
+	assert.NoError(t, err)
+	if assert.Len(t, result.Albums, 1) {
+		assert.Equal(t, "Summer", result.Albums[0].Title)
+	}
+}
+
+func TestSearchIsBoundedWhateverTheCallerAsksFor(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	user, err := models.RegisterUser(db, "bounded_search_user", nil, false)
+	assert.NoError(t, err)
+
+	for i := 0; i < 5; i++ {
+		album := models.Album{Title: fmt.Sprintf("bounded %d", i), Path: fmt.Sprintf("/bounded/%d", i)}
+		assert.NoError(t, db.Save(&album).Error)
+		assert.NoError(t, db.Model(&user).Association("Albums").Append(&album))
+
+		media := models.Media{Title: fmt.Sprintf("bounded_%d.jpg", i), Path: fmt.Sprintf("/bounded/%d/photo.jpg", i), AlbumID: album.ID}
+		assert.NoError(t, db.Save(&media).Error)
+	}
+
+	// Lowered for the test, so the ceiling can be crossed with a handful of rows.
+	previous := actions.MaxSearchResults
+	actions.MaxSearchResults = 3
+	t.Cleanup(func() { actions.MaxSearchResults = previous })
+
+	limit := func(n int) *int { return &n }
+
+	// The limit arguments are open to any authenticated API client. Neither
+	// "no limit" nor a negative nor an oversized value may take a search past
+	// the server's ceiling.
+	for _, requested := range []*int{limit(0), limit(-1), limit(100)} {
+		result, err := actions.Search(db, "bounded", user.ID, requested, requested)
+		assert.NoError(t, err)
+		assert.Len(t, result.Albums, 3, "albums for a requested limit of %d", *requested)
+		assert.Len(t, result.Media, 3, "media for a requested limit of %d", *requested)
+	}
+
+	// A limit inside the ceiling is still honoured as given.
+	result, err := actions.Search(db, "bounded", user.ID, limit(2), limit(2))
+	assert.NoError(t, err)
+	assert.Len(t, result.Albums, 2)
+	assert.Len(t, result.Media, 2)
 }

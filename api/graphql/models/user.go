@@ -45,6 +45,9 @@ type UserPreferences struct {
 	UserID   int  `gorm:"not null;index"`
 	User     User `gorm:"constraint:OnDelete:CASCADE;"`
 	Language *LanguageTranslation
+	// SearchResultLimit caps how many media and how many albums a search
+	// returns. 0 means no limit; nil leaves the server default in place.
+	SearchResultLimit *int
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {
