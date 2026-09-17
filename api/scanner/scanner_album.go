@@ -106,10 +106,15 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	ctx = newCtx
 
 	// Scan for photos
-	albumMedia, err := findMediaForAlbum(ctx)
+	albumMedia, unscannedPaths, err := findMediaForAlbum(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "find media for album (%s): %s", ctx.GetAlbum().Path, err)
 	}
+
+	// The after-scan cleanup deletes every media row missing from albumMedia.
+	// A file that failed to scan is missing for a reason other than being gone
+	// from disk, so tell the cleanup to keep it.
+	ctx = ctx.WithUnscannedMediaPaths(unscannedPaths)
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
@@ -127,13 +132,16 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	return nil
 }
 
-func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
+// findMediaForAlbum returns the media found in the album's directory, and the
+// paths of media files that are on disk but could not be scanned.
+func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, []string, error) {
 
 	albumMedia := make([]*models.Media, 0)
+	unscannedPaths := make([]string, 0)
 
 	dirContent, err := os.ReadDir(ctx.GetAlbum().Path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, item := range dirContent {
@@ -149,11 +157,11 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 		if !item.IsDir() && !isDirSymlink && ctx.GetCache().IsPathMedia(mediaPath) {
 			itemInfo, err := item.Info()
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			skip, err := scanner_tasks.Tasks.MediaFound(ctx, itemInfo, mediaPath)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if skip {
 				continue
@@ -176,13 +184,14 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
 			if err != nil {
 				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
+				unscannedPaths = append(unscannedPaths, mediaPath)
 				continue
 			}
 		}
 
 	}
 
-	return albumMedia, nil
+	return albumMedia, unscannedPaths, nil
 }
 
 func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
