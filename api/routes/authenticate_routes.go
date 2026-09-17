@@ -125,11 +125,13 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 	if shareToken.AlbumID != nil && *albumID != *shareToken.AlbumID {
 		// Check child albums
 
+		// UNION rather than UNION ALL: it drops rows already found, which is what
+		// ends the recursion if parent links ever form a cycle.
 		var count int
 		err := db.Raw(`
 				WITH recursive child_albums AS (
 					SELECT * FROM albums WHERE parent_album_id = ?
-					UNION ALL
+					UNION
 					SELECT child.* FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id
 				)
 				SELECT COUNT(id) FROM child_albums WHERE id = ?

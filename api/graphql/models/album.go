@@ -43,10 +43,12 @@ func GetChildrenFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumIDs
 		query = filter(query)
 	}
 
+	// UNION rather than UNION ALL: it drops rows already found, which is what
+	// ends the recursion if parent links ever form a cycle.
 	err = db.Raw(`
 	WITH recursive sub_albums AS (
 		SELECT * FROM albums AS root WHERE id IN (?)
-		UNION ALL
+		UNION
 		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
 	)
 
@@ -67,10 +69,12 @@ func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID i
 		query = filter(query)
 	}
 
+	// UNION rather than UNION ALL: it drops rows already found, which is what
+	// ends the recursion if parent links ever form a cycle.
 	err = db.Raw(`
 	WITH recursive super_albums AS (
 		SELECT * FROM albums AS leaf WHERE id = ?
-		UNION ALL
+		UNION
 		SELECT parent.* from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id
 	)
 
@@ -90,10 +94,12 @@ func (a *Album) Thumbnail(db *gorm.DB) (*Media, error) {
 		return &media, nil
 	}
 
+	// UNION rather than UNION ALL: it drops rows already found, which is what
+	// ends the recursion if parent links ever form a cycle.
 	query := `
 		WITH RECURSIVE sub_albums AS (
 			SELECT id FROM albums WHERE id = ?
-			UNION ALL
+			UNION
 			SELECT children.id FROM albums AS children
 			INNER JOIN sub_albums ON children.parent_album_id = sub_albums.id
 		)
