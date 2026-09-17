@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
@@ -42,6 +43,42 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 	}
 
 	scanner_queue.AddUserToQueue(&user)
+
+	startMessage := "Scanner started"
+	return &models.ScannerResult{
+		Finished: false,
+		Success:  true,
+		Message:  &startMessage,
+	}, nil
+}
+
+// ScanAlbum is the resolver for the scanAlbum field.
+func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, fmt.Errorf("get album from database: %w", err)
+	}
+
+	if !user.Admin {
+		ownsAlbum, err := user.OwnsAlbum(db, &album)
+		if err != nil {
+			return nil, err
+		}
+		if !ownsAlbum {
+			return nil, auth.ErrUnauthorized
+		}
+	}
+
+	if err := addAlbumToQueue(&album); err != nil {
+		return nil, err
+	}
 
 	startMessage := "Scanner started"
 	return &models.ScannerResult{
