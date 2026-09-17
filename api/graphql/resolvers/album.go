@@ -161,6 +161,66 @@ func (r *queryResolver) Album(ctx context.Context, id int, tokenCredentials *mod
 	return actions.Album(db, user, id)
 }
 
+// AlbumTreeChildren is the resolver for the albumTreeChildren field.
+func (r *queryResolver) AlbumTreeChildren(ctx context.Context, albumIds []int) ([]*models.AlbumTreeChildren, error) {
+	db := r.DB(ctx)
+
+	if len(albumIds) == 0 {
+		return []*models.AlbumTreeChildren{}, nil
+	}
+
+	if len(albumIds) > maxAlbumTreeChildrenIDs {
+		return nil, fmt.Errorf("too many albums requested at once (%d, limit %d)", len(albumIds), maxAlbumTreeChildrenIDs)
+	}
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	// Unlike the subAlbums field resolver, which is only reachable through an
+	// album the caller was already authorized to load, this takes raw ids
+	// straight from the client - so the parents are authorized here, and
+	// their children then follow as they do for subAlbums.
+	authorizedIDs, err := r.authorizedAlbumIDs(ctx, user, albumIds)
+	if err != nil {
+		return nil, err
+	}
+
+	byParent := make(map[int][]*models.Album, len(authorizedIDs))
+
+	if len(authorizedIDs) > 0 {
+		var albums []*models.Album
+
+		orderByTitle := "title"
+		query := models.FormatSQL(
+			db.Where("parent_album_id IN (?)", authorizedIDs),
+			&models.Ordering{OrderBy: &orderByTitle}, nil)
+
+		if err := query.Find(&albums).Error; err != nil {
+			return nil, err
+		}
+
+		for _, album := range albums {
+			if album.ParentAlbumID == nil {
+				continue
+			}
+
+			byParent[*album.ParentAlbumID] = append(byParent[*album.ParentAlbumID], album)
+		}
+	}
+
+	result := make([]*models.AlbumTreeChildren, len(albumIds))
+	for i, albumID := range albumIds {
+		result[i] = &models.AlbumTreeChildren{
+			AlbumID:  albumID,
+			Children: byParent[albumID],
+		}
+	}
+
+	return result, nil
+}
+
 // Album returns api.AlbumResolver implementation.
 func (r *Resolver) Album() api.AlbumResolver { return &albumResolver{r} }
 
