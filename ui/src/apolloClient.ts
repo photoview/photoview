@@ -9,6 +9,7 @@ import {
   DocumentNode,
 } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
+import i18n from 'i18next'
 import { onError } from '@apollo/client/link/error'
 import { WebSocketLink } from '@apollo/client/link/ws'
 
@@ -93,15 +94,30 @@ export const linkError = onError(
 
       if (graphQLErrors.length == 1) {
         errorMessages.push({
-          header: 'Something went wrong',
-          content: `Server error: ${graphQLErrors[0].message} at (${formatPath(
-            graphQLErrors[0].path
-          )})`,
+          header: i18n.t(
+            'notification.error.graphql.header',
+            'Something went wrong'
+          ),
+          content: i18n.t(
+            'notification.error.graphql.content',
+            'Server error: {{message}} at ({{path}})',
+            {
+              message: graphQLErrors[0].message,
+              path: formatPath(graphQLErrors[0].path),
+            }
+          ),
         })
       } else if (graphQLErrors.length > 1) {
         errorMessages.push({
-          header: 'Multiple things went wrong',
-          content: `Received ${graphQLErrors.length} errors from the server. See the console for more information`,
+          header: i18n.t(
+            'notification.error.graphql.multiple_header',
+            'Multiple things went wrong'
+          ),
+          content: i18n.t(
+            'notification.error.graphql.multiple_content',
+            'Received {{errorCount}} errors from the server. See the console for more information',
+            { errorCount: graphQLErrors.length }
+          ),
         })
       }
 
@@ -135,7 +151,10 @@ export const linkError = onError(
         ((networkError as ServerError)?.result?.errors as Error[]) || []
 
       const recoveryNote = loggingOut
-        ? ' You are being logged out in an attempt to recover.'
+        ? ` ${i18n.t(
+            'notification.error.logout_note',
+            'You are being logged out in an attempt to recover.'
+          )}`
         : ''
 
       // Apollo hands a response's own `errors` to this handler twice: as
@@ -146,26 +165,42 @@ export const linkError = onError(
       if (alreadyReported) {
         if (loggingOut) {
           errorMessages.push({
-            header: 'Session ended',
-            content: `The server no longer accepts this session.${recoveryNote}`,
+            header: i18n.t(
+              'notification.error.session.header',
+              'Session ended'
+            ),
+            content: `${i18n.t(
+              'notification.error.session.content',
+              'The server no longer accepts this session.'
+            )}${recoveryNote}`,
           })
         }
       } else if (errors.length == 1) {
         errorMessages.push({
-          header: 'Server error',
+          header: i18n.t('notification.error.server.header', 'Server error'),
           content: `${errors[0].message}${recoveryNote}`,
         })
       } else if (errors.length > 1) {
         errorMessages.push({
-          header: 'Multiple server errors',
-          content: `Received ${errors.length} errors from the server.${recoveryNote}`,
+          header: i18n.t(
+            'notification.error.server.multiple_header',
+            'Multiple server errors'
+          ),
+          content: `${i18n.t(
+            'notification.error.server.multiple_content',
+            'Received {{errorCount}} errors from the server.',
+            { errorCount: errors.length }
+          )}${recoveryNote}`,
         })
       } else {
         // A connection that never reached the server carries no errors to
         // report, which would otherwise leave the user with nothing at all.
         errorMessages.push({
-          header: 'Network error',
-          content: `Could not reach the server.${recoveryNote}`,
+          header: i18n.t('notification.error.network.header', 'Network error'),
+          content: `${i18n.t(
+            'notification.error.network.content',
+            'Could not reach the server.'
+          )}${recoveryNote}`,
         })
       }
     }

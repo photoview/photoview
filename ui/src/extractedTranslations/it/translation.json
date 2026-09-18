@@ -65,6 +65,30 @@
   "meta": {
     "description": "Galleria fotografica semplice e user-friendly per il tuo server"
   },
+  "notification": {
+    "error": {
+      "graphql": {
+        "content": "",
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "logout_note": "",
+      "network": {
+        "content": "",
+        "header": ""
+      },
+      "server": {
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "session": {
+        "content": "",
+        "header": ""
+      }
+    }
+  },
   "people_page": {
     "action_label": {
       "change_label": "Cambia etichetta",
