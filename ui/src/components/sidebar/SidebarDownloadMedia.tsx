@@ -218,6 +218,17 @@ const downloadBlob = (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(objectUrl)
 }
 
+// A media url can carry a query string or a fragment - a share token, for
+// example - and neither belongs in a filename or a file type. The URL parser
+// drops both, and takes relative and absolute urls alike.
+const filenameFromUrl = (url: string) => {
+  try {
+    return new URL(url, location.origin).pathname.split('/').pop() || undefined
+  } catch {
+    return undefined
+  }
+}
+
 type SidebarDownloadTableRow = {
   title: string
   url: string
@@ -233,12 +244,8 @@ type SidebarDownloadTableProps = {
 const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   const { t } = useTranslation()
 
-  const extractExtension = (url: string) => {
-    const urlMatch = url.split(/[#?]/)
-    if (urlMatch == null) return
-
-    return urlMatch[0].split('.').pop()?.trim().toLowerCase()
-  }
+  const extractExtension = (url: string) =>
+    filenameFromUrl(url)?.split('.').pop()?.trim().toLowerCase()
 
   const download = downloadMedia(t)
   const bytes = formatBytes(t)
@@ -342,7 +349,7 @@ export const SidebarShareMediaButton = ({
       if (preparedFile.current?.url !== row.url) {
         const blob = await fetchMediaBlobQuiet(row.url)
 
-        const filename = row.url.match(/[^/]*$/)?.[0] ?? media.title ?? 'photo'
+        const filename = filenameFromUrl(row.url) ?? media.title ?? 'photo'
         file = new File([blob], filename, { type: blob.type })
       }
       if (file == null) return

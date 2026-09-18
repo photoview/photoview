@@ -260,3 +260,29 @@ test('there is no share button for a media without downloads', () => {
 
   expect(container).toBeEmptyDOMElement()
 })
+
+test('the shared file is named after the url path, without a query string', async () => {
+  // A media url can arrive with a share token attached. The filename the share
+  // sheet shows must not carry it, and neither must the file's extension.
+  const share = vi.fn(() => Promise.resolve())
+
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share, canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  render(
+    <SidebarShareMediaButton
+      media={media}
+      rows={[{ ...rows[0], url: 'photo/holiday.jpg?token=abc#preview' }]}
+    />
+  )
+
+  await userEvent.click(screen.getByText('Share'))
+
+  await waitFor(() => expect(share).toHaveBeenCalled())
+
+  const [[shared]] = share.mock.calls as unknown as [[{ files: File[] }]]
+  expect(shared.files[0].name).toBe('holiday.jpg')
+})
