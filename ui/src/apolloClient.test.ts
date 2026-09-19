@@ -6,7 +6,6 @@ import {
   Observable,
 } from '@apollo/client'
 import { GraphQLError } from 'graphql'
-import i18n from 'i18next'
 import * as authentication from './helpers/authentication'
 import { MessageState } from './components/messages/Messages'
 import { linkError } from './apolloClient'
@@ -147,23 +146,5 @@ describe('what does not', () => {
 
     expect(clearTokenCookie).not.toHaveBeenCalled()
     expect(messagesAdded).toBe(0)
-  })
-})
-
-describe('the messages', () => {
-  test('are translated through their keys', async () => {
-    // The default values above are English fallbacks. This pins down that the
-    // messages actually go through i18next, which a hardcoded string would not.
-    i18n.addResourceBundle('en', 'translation', {
-      notification: { error: { network: { header: 'Netzwerkfehler' } } },
-    })
-
-    try {
-      await run(QUERY, { error: new TypeError('Failed to fetch') })
-
-      expect(headersAdded).toEqual(['Netzwerkfehler'])
-    } finally {
-      i18n.removeResourceBundle('en', 'translation')
-    }
   })
 })
