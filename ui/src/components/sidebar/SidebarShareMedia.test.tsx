@@ -286,3 +286,55 @@ test('the shared file is named after the url path, without a query string', asyn
   const [[shared]] = share.mock.calls as unknown as [[{ files: File[] }]]
   expect(shared.files[0].name).toBe('holiday.jpg')
 })
+
+test('a browser that shares links but not files gets one share attempt per tap', async () => {
+  // canShare() says no to the file, so the link is shared instead - and when
+  // that fails for a reason other than a lost activation, there is nothing
+  // left to try. Sharing it twice would spend an activation that is gone.
+  const share = vi.fn(() => Promise.reject(new Error('the sheet went away')))
+
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share, canShare: () => false },
+    configurable: true,
+    writable: true,
+  })
+
+  render(<SidebarShareMediaButton media={media} rows={rows} />)
+
+  await userEvent.click(screen.getByText('Share'))
+
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
+  expect(share).toHaveBeenCalledTimes(1)
+})
+
+test('a link shared as the fallback leaves no retry state behind', async () => {
+  // The file share fails for a reason that is not a lost activation, so the
+  // link stands in for it and succeeds. That is a finished share: the next tap
+  // has to start from scratch rather than reuse the file kept for a retry.
+  let attempts = 0
+  const share = vi.fn(() => {
+    attempts += 1
+    // The file share is the first call of each tap, the link share the second.
+    return attempts === 1
+      ? Promise.reject(new Error('the sheet refused the file'))
+      : Promise.resolve()
+  })
+
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share, canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  render(<SidebarShareMediaButton media={media} rows={rows} />)
+
+  await userEvent.click(screen.getByText('Share'))
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
+
+  // No retry asked for, and the second tap prepares the file again.
+  expect(screen.getByText('Share')).toBeInTheDocument()
+  expect(downloads).toBe(1)
+
+  await userEvent.click(screen.getByText('Share'))
+  await waitFor(() => expect(downloads).toBe(2))
+})

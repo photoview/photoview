@@ -327,6 +327,11 @@ export const SidebarShareMediaButton = ({
 
   const share = async () => {
     setSharing(true)
+    // Set once this tap has already handed the link to the share sheet. The
+    // link is the last resort, so a failure after it has nothing left to try:
+    // without this the catch below would share it a second time, on an
+    // activation the first attempt has already spent.
+    let linkShared = false
     // Sharing a link is the fallback whenever the OS share sheet can't take
     // the file itself (desktop browsers without file support). Decide that
     // before downloading anything: a browser exposing share() without
@@ -361,6 +366,7 @@ export const SidebarShareMediaButton = ({
       preparedFile.current = { url: row.url, file }
 
       if (!navigator.canShare({ files: [file] })) {
+        linkShared = true
         await shareLink()
         clearRetryState()
         return
@@ -379,7 +385,7 @@ export const SidebarShareMediaButton = ({
       // The link branch has no file fallback to fall back to - it *is* the
       // fallback. Letting it reach the one below would call share() a second
       // time for the same tap, on an activation that is already spent.
-      if (!navigator.canShare || linkOnly.current) {
+      if (!navigator.canShare || linkOnly.current || linkShared) {
         console.error('Link share failed', err)
 
         if (name === 'NotAllowedError') {
@@ -409,6 +415,7 @@ export const SidebarShareMediaButton = ({
       // ending in nothing.
       try {
         await shareLink()
+        clearRetryState()
       } catch (fallbackErr) {
         const fallbackName = (fallbackErr as Error)?.name
 
