@@ -271,6 +271,8 @@
         "mega_byte_other": "",
         "tera_byte_other": ""
       },
+      "share": "",
+      "share_again": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",

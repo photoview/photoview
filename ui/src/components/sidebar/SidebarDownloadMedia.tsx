@@ -5,9 +5,10 @@ import { authToken } from '../../helpers/authentication'
 import { TranslationFn } from '../../localization'
 import { MessageState } from '../messages/Messages'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
+import { ReactComponent as ShareIcon } from './icons/shareNativeIcon.svg'
 import {
   sidebarDownloadQuery,
   sidebarDownloadQueryVariables,
@@ -55,7 +56,7 @@ const formatBytes = (t: TranslationFn) => (bytes: number) => {
   }
 }
 
-const downloadMedia = (t: TranslationFn) => async (url: string) => {
+const fetchMediaResponse = async (url: string): Promise<Response> => {
   const imgUrl = new URL(
     `${import.meta.env.BASE_URL}${url}`.replace(/\/\//g, '/'),
     location.origin
@@ -69,16 +70,43 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
     }
   }
 
-  const response = await fetch(imgUrl.href, {
+  return fetch(imgUrl.href, {
     credentials: 'include',
   })
+}
 
-  let blob = null
-  if (response.headers.has('content-length')) {
-    blob = await downloadMediaShowProgress(t)(response)
-  } else {
-    blob = await response.blob()
+export const fetchMediaBlob =
+  (t: TranslationFn) =>
+  async (url: string): Promise<Blob | null | undefined> => {
+    const response = await fetchMediaResponse(url)
+
+    // An error body (401/403/404) is still a readable body - without this it
+    // would be handed to the progress reader or saved as if it were media.
+    if (!response.ok) {
+      console.error(`Failed to fetch media: ${response.status}`)
+      return null
+    }
+
+    if (response.headers.has('content-length')) {
+      return downloadMediaShowProgress(t)(response)
+    }
+
+    return response.blob()
   }
+
+// Like fetchMediaBlob, but never shows the download-progress notification —
+// dismissing that notification cancels the fetch, which isn't appropriate
+// for the share flow.
+export const fetchMediaBlobQuiet = async (url: string): Promise<Blob> => {
+  const response = await fetchMediaResponse(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch media: ${response.status}`)
+  }
+  return response.blob()
+}
+
+const downloadMedia = (t: TranslationFn) => async (url: string) => {
+  const blob = await fetchMediaBlob(t)(url)
 
   if (blob == null) {
     console.log('Blob is null canceling')
@@ -190,6 +218,17 @@ const downloadBlob = (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(objectUrl)
 }
 
+// A media url can carry a query string or a fragment - a share token, for
+// example - and neither belongs in a filename or a file type. The URL parser
+// drops both, and takes relative and absolute urls alike.
+const filenameFromUrl = (url: string) => {
+  try {
+    return new URL(url, location.origin).pathname.split('/').pop() || undefined
+  } catch {
+    return undefined
+  }
+}
+
 type SidebarDownloadTableRow = {
   title: string
   url: string
@@ -205,12 +244,8 @@ type SidebarDownloadTableProps = {
 const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
   const { t } = useTranslation()
 
-  const extractExtension = (url: string) => {
-    const urlMatch = url.split(/[#?]/)
-    if (urlMatch == null) return
-
-    return urlMatch[0].split('.').pop()?.trim().toLowerCase()
-  }
+  const extractExtension = (url: string) =>
+    filenameFromUrl(url)?.split('.').pop()?.trim().toLowerCase()
 
   const download = downloadMedia(t)
   const bytes = formatBytes(t)
@@ -243,6 +278,184 @@ const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
       </SidebarTable.Head>
       <tbody>{downloadRows}</tbody>
     </SidebarTable.Table>
+  )
+}
+
+const canNativeShare = () =>
+  typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+const pickShareRow = (rows: SidebarDownloadTableRow[]) =>
+  rows.find(x => x.title == 'Web optimized video') ??
+  rows.find(x => x.title == 'Original') ??
+  rows.find(x => x.title == 'Large') ??
+  rows[0]
+
+type SidebarShareMediaButtonProps = {
+  media: MediaSidebarMedia
+  rows: SidebarDownloadTableRow[]
+}
+
+export const SidebarShareMediaButton = ({
+  media,
+  rows,
+}: SidebarShareMediaButtonProps) => {
+  const { t } = useTranslation()
+  const [sharing, setSharing] = useState(false)
+  const [retry, setRetry] = useState(false)
+  // A file already prepared for a share that the browser then refused. Keeping
+  // it means the retry needs no download and so stays inside its activation.
+  const preparedFile = useRef<{ url: string; file: File } | null>(null)
+  // Set when there is no file to keep because preparing it failed, and the
+  // link share that stood in for it lost the activation to that same failed
+  // download. Without this the next tap would spend its activation on the
+  // download all over again and end in nothing all over again.
+  const linkOnly = useRef(false)
+
+  const row = pickShareRow(rows)
+
+  if (!canNativeShare() || row == null) return null
+
+  // Every way out of a share - success, abort, or a fresh start - has to drop
+  // both halves of the retry state. Leaving one behind was how the earlier
+  // rounds' bugs looked: a stale flag quietly sending later taps down the
+  // wrong branch.
+  const clearRetryState = () => {
+    preparedFile.current = null
+    linkOnly.current = false
+    setRetry(false)
+  }
+
+  const share = async () => {
+    setSharing(true)
+    // Set once this tap has already handed the link to the share sheet. The
+    // link is the last resort, so a failure after it has nothing left to try:
+    // without this the catch below would share it a second time, on an
+    // activation the first attempt has already spent.
+    let linkShared = false
+    // Sharing a link is the fallback whenever the OS share sheet can't take
+    // the file itself (desktop browsers without file support). Decide that
+    // before downloading anything: a browser exposing share() without
+    // canShare() gives no way to know it takes files, and a large or failing
+    // download would otherwise delay a share it was never needed for.
+    const shareLink = () =>
+      navigator.share({
+        title: media.title ?? undefined,
+        url: location.href,
+      })
+
+    try {
+      if (!navigator.canShare || linkOnly.current) {
+        await shareLink()
+        clearRetryState()
+        return
+      }
+
+      let file = preparedFile.current?.file
+      if (preparedFile.current?.url !== row.url) {
+        const blob = await fetchMediaBlobQuiet(row.url)
+
+        const filename = filenameFromUrl(row.url) ?? media.title ?? 'photo'
+        file = new File([blob], filename, { type: blob.type })
+      }
+      if (file == null) return
+
+      // Kept before the canShare check rather than after it: the link fallback
+      // below shares the download that may have cost us the activation, so it
+      // can fail the same way. Holding the file from here on means the retry
+      // skips that download whichever of the two branches it lands in.
+      preparedFile.current = { url: row.url, file }
+
+      if (!navigator.canShare({ files: [file] })) {
+        linkShared = true
+        await shareLink()
+        clearRetryState()
+        return
+      }
+
+      await navigator.share({ files: [file], title: media.title ?? undefined })
+      clearRetryState()
+    } catch (err) {
+      const name = (err as Error)?.name
+
+      if (name === 'AbortError') {
+        clearRetryState()
+        return
+      }
+
+      // The link branch has no file fallback to fall back to - it *is* the
+      // fallback. Letting it reach the one below would call share() a second
+      // time for the same tap, on an activation that is already spent.
+      if (!navigator.canShare || linkOnly.current || linkShared) {
+        console.error('Link share failed', err)
+
+        if (name === 'NotAllowedError') {
+          linkOnly.current = true
+          setRetry(true)
+        }
+
+        return
+      }
+
+      console.error('Native share failed', err)
+
+      // A download slow enough to outlast the user activation leaves the share
+      // sheet refusing to open, and the link fallback below has no activation
+      // left either - so the tap would end in nothing at all. The file is
+      // ready now, though, and the kept copy means a second tap opens the
+      // sheet straight away. Asking for that tap only here keeps the common
+      // case at one.
+      if (name === 'NotAllowedError' && preparedFile.current) {
+        setRetry(true)
+
+        return
+      }
+
+      // The file couldn't be prepared or the sheet refused it for some other
+      // reason, but the link is still shareable, so try that rather than
+      // ending in nothing.
+      try {
+        await shareLink()
+        clearRetryState()
+      } catch (fallbackErr) {
+        const fallbackName = (fallbackErr as Error)?.name
+
+        if (fallbackName === 'AbortError') {
+          clearRetryState()
+          return
+        }
+
+        console.error('Link share failed too', fallbackErr)
+
+        // The same lost activation as above, one branch over: here the file
+        // could not be prepared at all, so there is nothing to keep and the
+        // link is all that is left. Remembering that much lets the next tap
+        // share it straight away instead of repeating the download that cost
+        // the activation in the first place.
+        if (fallbackName === 'NotAllowedError') {
+          linkOnly.current = true
+          setRetry(true)
+        }
+      }
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  return (
+    <div className="pl-4 py-2">
+      <button
+        className="text-green-500 font-bold uppercase text-xs disabled:opacity-50"
+        disabled={sharing}
+        onClick={share}
+      >
+        <ShareIcon className="inline-block mr-2" />
+        <span>
+          {retry
+            ? t('sidebar.download.share_again', 'Tap share again')
+            : t('sidebar.download.share', 'Share')}
+        </span>
+      </button>
+    </div>
   )
 }
 
@@ -288,6 +501,7 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
       </SidebarSectionTitle>
 
       <SidebarDownloadTable rows={downloadRows} />
+      <SidebarShareMediaButton media={media} rows={downloadRows} />
     </SidebarSection>
   )
 }
