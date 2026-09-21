@@ -105,12 +105,12 @@ const (
 
 type MediaURL struct {
 	Model
-	MediaID     int          `gorm:"not null;index"`
+	MediaID     int          `gorm:"not null;index;uniqueIndex:idx_media_url_media_purpose"`
 	Media       *Media       `gorm:"constraint:OnDelete:CASCADE;"`
 	MediaName   string       `gorm:"not null;index"`
 	Width       int          `gorm:"not null"`
 	Height      int          `gorm:"not null"`
-	Purpose     MediaPurpose `gorm:"not null;index"`
+	Purpose     MediaPurpose `gorm:"not null;index;uniqueIndex:idx_media_url_media_purpose"`
 	ContentType string       `gorm:"not null"`
 	FileSize    int64        `gorm:"not null"`
 }

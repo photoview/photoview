@@ -17,7 +17,7 @@ import (
 )
 
 var processSingleMediaFn = func(ctx context.Context, db *gorm.DB, media *models.Media) error {
-	return scanner.ProcessSingleMedia(ctx, db, media)
+	return scanner.ProcessMedia(ctx, db, media)
 }
 
 func handleVideoRequest(
