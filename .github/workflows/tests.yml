@@ -161,3 +161,18 @@ jobs:
           if-no-files-found: warn
           compression-level: 9
           overwrite: true
+
+      - name: Check extracted translations
+        if: ${{ !cancelled() }}
+        run: |
+          docker run --name i18n photoview/ui npm run extractTranslations -- --fail-on-warnings
+          docker cp i18n:/app/ui/src/extractedTranslations/. ./ui/src/extractedTranslations/
+          if [[ -n "$(git status --porcelain -- ui/src/extractedTranslations)" ]]; then
+            # shellcheck disable=SC2016
+            echo '--- FAIL: The extracted translations are out of sync with the UI code. Please run `npm run extractTranslations` under `./ui` and commit the result to this branch.'
+            echo 'These are the changes:'
+            git status --porcelain -- ui/src/extractedTranslations
+            git diff -- ui/src/extractedTranslations
+            exit 1
+          fi
+          echo '--- PASS: The extracted translations are in sync with the UI code.'
