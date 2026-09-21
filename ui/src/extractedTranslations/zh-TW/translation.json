@@ -263,6 +263,11 @@
       "title_placeholder": "相簿標題"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "{{count}} 位元組",
         "byte_other": "{{count}} 位元組",
@@ -275,13 +280,12 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
         "file_type": "類型",
-        "name": "名稱"
+        "name": "名稱",
+        "send": ""
       },
       "title": "下載"
     },

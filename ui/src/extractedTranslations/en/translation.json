@@ -263,6 +263,11 @@
       "title_placeholder": "Album title"
     },
     "download": {
+      "actions": {
+        "download": "Download {{name}}",
+        "send": "Send {{name}} to another app",
+        "send_again": "Tap again to send {{name}} to another app"
+      },
       "filesize": {
         "byte_one": "{{count}} Byte",
         "byte_other": "{{count}} Bytes",
@@ -275,13 +280,12 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
-      "share": "Share",
-      "share_again": "Tap share again",
       "table_columns": {
         "dimensions": "Dimensions",
         "file_size": "Size",
         "file_type": "Type",
-        "name": "Name"
+        "name": "Name",
+        "send": "Send"
       },
       "title": "Download"
     },

@@ -263,6 +263,11 @@
       "title_placeholder": "相簿名稱"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_other": "",
         "giga_byte_other": "",
@@ -270,13 +275,12 @@
         "mega_byte_other": "",
         "tera_byte_other": ""
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "尺寸",
         "file_size": "大小",
         "file_type": "類型",
-        "name": "名稱"
+        "name": "名稱",
+        "send": ""
       },
       "title": "下載"
     },

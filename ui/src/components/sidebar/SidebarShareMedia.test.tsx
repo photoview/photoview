@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SidebarShareMediaButton } from './SidebarDownloadMedia'
+import { SidebarDownloadTable } from './SidebarDownloadMedia'
 import { MediaSidebarMedia } from './MediaSidebar/MediaSidebar'
 
 const media = {
@@ -79,10 +79,12 @@ const renderWithShare = (
     writable: true,
   })
 
-  render(<SidebarShareMediaButton media={media} rows={rows} />)
+  render(<SidebarDownloadTable media={media} rows={rows} />)
 
   return share
 }
+
+const sendButton = () => screen.getByRole('button', { name: /send/i })
 
 const setup = (canShareFiles: boolean) =>
   renderWithShare(refuseUntilSecondAttempt(), canShareFiles)
@@ -90,7 +92,7 @@ const setup = (canShareFiles: boolean) =>
 test('a refused file share can be retried without downloading again', async () => {
   const share = setup(true)
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
   expect(downloads).toBe(1)
 
@@ -113,7 +115,7 @@ test('a refused link fallback can be retried too', async () => {
   // first, so it can lose the activation in the same way.
   const share = setup(false)
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
   expect(downloads).toBe(1)
 
@@ -138,7 +140,7 @@ test('a failed download still shares the link', async () => {
     true
   )
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
   expect(downloads).toBe(1)
 
@@ -150,7 +152,7 @@ test('a failed download still shares the link', async () => {
 
   // Nothing was held back, so the button is not asking for a second tap that
   // would only fail the same way.
-  expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
+  expect(sendButton()).not.toHaveAccessibleName(/again/i)
 })
 
 test('a failed download whose link share is refused retries the link alone', async () => {
@@ -166,7 +168,7 @@ test('a failed download whose link share is refused retries the link alone', asy
 
   const share = renderWithShare(refuseUntilSecondAttempt(), true)
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
   expect(downloads).toBe(1)
 
@@ -182,9 +184,7 @@ test('a failed download whose link share is refused retries the link alone', asy
   expect(payload.url).toBe(location.href)
 
   // And the button drops the retry wording once the share went through.
-  await waitFor(() =>
-    expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
-  )
+  await waitFor(() => expect(sendButton()).not.toHaveAccessibleName(/again/i))
 })
 
 test('a browser without canShare gets one share attempt per tap', async () => {
@@ -198,9 +198,9 @@ test('a browser without canShare gets one share attempt per tap', async () => {
     writable: true,
   })
 
-  render(<SidebarShareMediaButton media={media} rows={rows} />)
+  render(<SidebarDownloadTable media={media} rows={rows} />)
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   const retryButton = await screen.findByRole('button', { name: /again/i })
   expect(share).toHaveBeenCalledTimes(1)
   expect(downloads).toBe(0)
@@ -221,16 +221,16 @@ test('cancelling the share sheet ends the share without a retry or a fallback', 
     true
   )
 
-  await userEvent.click(screen.getByRole('button'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
 
   // Give a fallback a chance to fire if there were one.
   await new Promise(resolve => setTimeout(resolve, 50))
   expect(share).toHaveBeenCalledTimes(1)
-  expect(screen.getByRole('button')).not.toHaveAccessibleName(/again/i)
+  expect(sendButton()).not.toHaveAccessibleName(/again/i)
 })
 
-test('there is no share button where the browser cannot share', () => {
+test('there is no send column where the browser cannot share', () => {
   // A navigator without share(): spreading the real one would carry jsdom's
   // share over, so the stand-in is built from the one property the component
   // might otherwise read.
@@ -240,25 +240,137 @@ test('there is no share button where the browser cannot share', () => {
     writable: true,
   })
 
-  const { container } = render(
-    <SidebarShareMediaButton media={media} rows={rows} />
-  )
+  render(<SidebarDownloadTable media={media} rows={rows} />)
 
-  expect(container).toBeEmptyDOMElement()
+  expect(screen.queryByRole('button', { name: /send/i })).toBeNull()
+  // The column goes with the button, header included, so the table keeps as
+  // many columns in its header as in its rows.
+  expect(screen.getAllByRole('columnheader')).toHaveLength(4)
+  expect(screen.getAllByRole('cell')).toHaveLength(4)
+  expect(
+    screen.getByRole('button', { name: 'Download Original' })
+  ).toBeInTheDocument()
 })
 
-test('there is no share button for a media without downloads', () => {
+test('the send column has a cell in every row and a header of its own', () => {
   Object.defineProperty(global, 'navigator', {
     value: { ...originalNavigator, share: vi.fn(), canShare: () => true },
     configurable: true,
     writable: true,
   })
 
-  const { container } = render(
-    <SidebarShareMediaButton media={media} rows={[]} />
+  render(
+    <SidebarDownloadTable
+      media={media}
+      rows={[rows[0], { ...rows[0], title: 'Small', url: 'photo/small.jpg' }]}
+    />
   )
 
-  expect(container).toBeEmptyDOMElement()
+  expect(screen.getAllByRole('columnheader')).toHaveLength(5)
+  expect(screen.getAllByRole('cell')).toHaveLength(10)
+  expect(screen.getAllByRole('button', { name: /send/i })).toHaveLength(2)
+})
+
+test('there is nothing to send for a media without downloads', () => {
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share: vi.fn(), canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  render(<SidebarDownloadTable media={media} rows={[]} />)
+
+  expect(screen.queryByRole('button')).toBeNull()
+})
+
+test('each row sends its own variant, not a picked one', async () => {
+  // Photoview offers every variant for download on purpose; which one to send
+  // is the user's choice, so the tapped row is the one that gets shared.
+  const share = vi.fn(() => Promise.resolve())
+  const requested: string[] = []
+  global.fetch = vi.fn((url: string) => {
+    requested.push(url)
+
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      blob: () => Promise.resolve(new Blob(['x'], { type: 'image/jpeg' })),
+    })
+  }) as unknown as typeof fetch
+
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share, canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  render(
+    <SidebarDownloadTable
+      media={media}
+      rows={[rows[0], { ...rows[0], title: 'Small', url: 'photo/small.jpg' }]}
+    />
+  )
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Send Small to another app' })
+  )
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
+
+  expect(requested).toHaveLength(1)
+  expect(requested[0]).toMatch(/photo\/small\.jpg$/)
+  const [[shared]] = share.mock.calls as unknown as [[{ files: File[] }]]
+  expect(shared.files[0].name).toBe('small.jpg')
+})
+
+test('a second tap is asked for below the table, naming the variant', async () => {
+  setup(true)
+
+  expect(screen.getByRole('status')).toBeEmptyDOMElement()
+
+  await userEvent.click(sendButton())
+
+  await waitFor(() =>
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Tap again to send Original to another app'
+    )
+  )
+
+  await userEvent.click(sendButton())
+  await waitFor(() => expect(screen.getByRole('status')).toBeEmptyDOMElement())
+})
+
+test('the name downloads its variant, and the row itself is not a button', async () => {
+  const requested: string[] = []
+  global.fetch = vi.fn((url: string) => {
+    requested.push(url)
+
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      blob: () => Promise.resolve(new Blob(['x'], { type: 'image/jpeg' })),
+    })
+  }) as unknown as typeof fetch
+  const createObjectURL = vi.fn(() => 'blob:photo')
+  window.URL.createObjectURL = createObjectURL
+  window.URL.revokeObjectURL = vi.fn()
+
+  render(
+    <SidebarDownloadTable
+      media={media}
+      rows={[rows[0], { ...rows[0], title: 'Small', url: 'photo/small.jpg' }]}
+    />
+  )
+
+  for (const row of screen.getAllByRole('row')) {
+    expect(row).not.toHaveAttribute('tabindex')
+  }
+
+  await userEvent.click(screen.getByRole('button', { name: 'Download Small' }))
+  await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1))
+
+  expect(requested).toHaveLength(1)
+  expect(requested[0]).toMatch(/photo\/small\.jpg$/)
 })
 
 test('the shared file is named after the url path, without a query string', async () => {
@@ -273,13 +385,13 @@ test('the shared file is named after the url path, without a query string', asyn
   })
 
   render(
-    <SidebarShareMediaButton
+    <SidebarDownloadTable
       media={media}
       rows={[{ ...rows[0], url: 'photo/holiday.jpg?token=abc#preview' }]}
     />
   )
 
-  await userEvent.click(screen.getByText('Share'))
+  await userEvent.click(sendButton())
 
   await waitFor(() => expect(share).toHaveBeenCalled())
 
@@ -299,9 +411,9 @@ test('a browser that shares links but not files gets one share attempt per tap',
     writable: true,
   })
 
-  render(<SidebarShareMediaButton media={media} rows={rows} />)
+  render(<SidebarDownloadTable media={media} rows={rows} />)
 
-  await userEvent.click(screen.getByText('Share'))
+  await userEvent.click(sendButton())
 
   await waitFor(() => expect(share).toHaveBeenCalledTimes(1))
   expect(share).toHaveBeenCalledTimes(1)
@@ -326,15 +438,15 @@ test('a link shared as the fallback leaves no retry state behind', async () => {
     writable: true,
   })
 
-  render(<SidebarShareMediaButton media={media} rows={rows} />)
+  render(<SidebarDownloadTable media={media} rows={rows} />)
 
-  await userEvent.click(screen.getByText('Share'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
 
   // No retry asked for, and the second tap prepares the file again.
-  expect(screen.getByText('Share')).toBeInTheDocument()
+  expect(sendButton()).not.toHaveAccessibleName(/again/i)
   expect(downloads).toBe(1)
 
-  await userEvent.click(screen.getByText('Share'))
+  await userEvent.click(sendButton())
   await waitFor(() => expect(downloads).toBe(2))
 })

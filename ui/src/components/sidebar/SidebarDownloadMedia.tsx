@@ -113,14 +113,13 @@ const downloadMedia = (t: TranslationFn) => async (url: string) => {
     return
   }
 
-  const filenameMatch = url.match(/[^/]*$/)
+  const filename = filenameFromUrl(url)
 
-  if (filenameMatch == null) {
+  if (filename == null) {
     console.error('Could not extract filename', url)
     return
   }
 
-  const filename = filenameMatch[0]
   downloadBlob(blob, filename)
 }
 
@@ -237,71 +236,18 @@ type SidebarDownloadTableRow = {
   fileSize: number
 }
 
-type SidebarDownloadTableProps = {
-  rows: SidebarDownloadTableRow[]
-}
-
-const SidebarDownloadTable = ({ rows }: SidebarDownloadTableProps) => {
-  const { t } = useTranslation()
-
-  const extractExtension = (url: string) =>
-    filenameFromUrl(url)?.split('.').pop()?.trim().toLowerCase()
-
-  const download = downloadMedia(t)
-  const bytes = formatBytes(t)
-  const downloadRows = rows.map(x => (
-    <SidebarTable.Row key={x.url} onClick={() => download(x.url)} tabIndex={0}>
-      <td className="pl-4 py-2">{`${x.title}`}</td>
-      <td className="py-2">{`${x.width} x ${x.height}`}</td>
-      <td className="py-2">{`${bytes(x.fileSize)}`}</td>
-      <td className="pr-4 py-2">{extractExtension(x.url)}</td>
-    </SidebarTable.Row>
-  ))
-
-  return (
-    <SidebarTable.Table>
-      <SidebarTable.Head>
-        <SidebarTable.HeadRow>
-          <th className="w-2/6 pl-4 py-2">
-            {t('sidebar.download.table_columns.name', 'Name')}
-          </th>
-          <th className="w-2/6 py-2">
-            {t('sidebar.download.table_columns.dimensions', 'Dimensions')}
-          </th>
-          <th className="w-1/6 py-2">
-            {t('sidebar.download.table_columns.file_size', 'Size')}
-          </th>
-          <th className="w-1/6 pr-4 py-2">
-            {t('sidebar.download.table_columns.file_type', 'Type')}
-          </th>
-        </SidebarTable.HeadRow>
-      </SidebarTable.Head>
-      <tbody>{downloadRows}</tbody>
-    </SidebarTable.Table>
-  )
-}
-
 const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
-const pickShareRow = (rows: SidebarDownloadTableRow[]) =>
-  rows.find(x => x.title == 'Web optimized video') ??
-  rows.find(x => x.title == 'Original') ??
-  rows.find(x => x.title == 'Large') ??
-  rows[0]
-
-type SidebarShareMediaButtonProps = {
-  media: MediaSidebarMedia
-  rows: SidebarDownloadTableRow[]
-}
-
-export const SidebarShareMediaButton = ({
-  media,
-  rows,
-}: SidebarShareMediaButtonProps) => {
-  const { t } = useTranslation()
-  const [sharing, setSharing] = useState(false)
-  const [retry, setRetry] = useState(false)
+// Sends one download variant to another app through the OS share sheet. A
+// single instance serves the whole table: the retry state belongs to the
+// media rather than to a row, because the link fallback shares the same page
+// whichever variant was tapped.
+const useNativeShare = (media: MediaSidebarMedia) => {
+  // The row being shared right now, and the row whose share asks for a second
+  // tap. Urls rather than flags, so each row's button can tell it is the one.
+  const [sharingUrl, setSharingUrl] = useState<string | null>(null)
+  const [retryUrl, setRetryUrl] = useState<string | null>(null)
   // A file already prepared for a share that the browser then refused. Keeping
   // it means the retry needs no download and so stays inside its activation.
   const preparedFile = useRef<{ url: string; file: File } | null>(null)
@@ -311,10 +257,6 @@ export const SidebarShareMediaButton = ({
   // download all over again and end in nothing all over again.
   const linkOnly = useRef(false)
 
-  const row = pickShareRow(rows)
-
-  if (!canNativeShare() || row == null) return null
-
   // Every way out of a share - success, abort, or a fresh start - has to drop
   // both halves of the retry state. Leaving one behind was how the earlier
   // rounds' bugs looked: a stale flag quietly sending later taps down the
@@ -322,11 +264,12 @@ export const SidebarShareMediaButton = ({
   const clearRetryState = () => {
     preparedFile.current = null
     linkOnly.current = false
-    setRetry(false)
+    setRetryUrl(null)
   }
 
-  const share = async () => {
-    setSharing(true)
+  const share = async (row: SidebarDownloadTableRow) => {
+    setSharingUrl(row.url)
+    const setRetry = () => setRetryUrl(row.url)
     // Set once this tap has already handed the link to the share sheet. The
     // link is the last resort, so a failure after it has nothing left to try:
     // without this the catch below would share it a second time, on an
@@ -390,7 +333,7 @@ export const SidebarShareMediaButton = ({
 
         if (name === 'NotAllowedError') {
           linkOnly.current = true
-          setRetry(true)
+          setRetry()
         }
 
         return
@@ -405,7 +348,7 @@ export const SidebarShareMediaButton = ({
       // sheet straight away. Asking for that tap only here keeps the common
       // case at one.
       if (name === 'NotAllowedError' && preparedFile.current) {
-        setRetry(true)
+        setRetry()
 
         return
       }
@@ -433,29 +376,138 @@ export const SidebarShareMediaButton = ({
         // the activation in the first place.
         if (fallbackName === 'NotAllowedError') {
           linkOnly.current = true
-          setRetry(true)
+          setRetry()
         }
       }
     } finally {
-      setSharing(false)
+      setSharingUrl(null)
     }
   }
 
+  return { share, sharingUrl, retryUrl }
+}
+
+type SidebarDownloadTableProps = {
+  media: MediaSidebarMedia
+  rows: SidebarDownloadTableRow[]
+}
+
+export const SidebarDownloadTable = ({
+  media,
+  rows,
+}: SidebarDownloadTableProps) => {
+  const { t } = useTranslation()
+  const { share, sharingUrl, retryUrl } = useNativeShare(media)
+
+  // One answer for the whole table: the send column is on every row or on
+  // none, so no row can end up wider than the header.
+  const sendColumn = canNativeShare()
+
+  const extractExtension = (url: string) =>
+    filenameFromUrl(url)?.split('.').pop()?.trim().toLowerCase()
+
+  const download = downloadMedia(t)
+  const bytes = formatBytes(t)
+
+  const sendAgainLabel = (row: SidebarDownloadTableRow) =>
+    t(
+      'sidebar.download.actions.send_again',
+      'Tap again to send {{name}} to another app',
+      { name: row.title }
+    )
+  const retryRow = rows.find(x => x.url === retryUrl)
+
+  const downloadRows = rows.map(x => {
+    const downloadLabel = t(
+      'sidebar.download.actions.download',
+      'Download {{name}}',
+      { name: x.title }
+    )
+    const sendLabel =
+      x.url === retryUrl
+        ? sendAgainLabel(x)
+        : t('sidebar.download.actions.send', 'Send {{name}} to another app', {
+            name: x.title,
+          })
+
+    return (
+      <SidebarTable.Row key={x.url}>
+        <td className="p-0 break-words">
+          <SidebarTable.RowButton
+            aria-label={downloadLabel}
+            title={downloadLabel}
+            onClick={() => download(x.url)}
+          >
+            {x.title}
+          </SidebarTable.RowButton>
+        </td>
+        <td className="py-2 break-words">{`${x.width} x ${x.height}`}</td>
+        <td className="py-2 break-words">{`${bytes(x.fileSize)}`}</td>
+        <td className={`py-2 break-words ${sendColumn ? 'pr-1' : 'pr-4'}`}>
+          {extractExtension(x.url)}
+        </td>
+        {sendColumn && (
+          <td className="pr-2 py-1 text-right">
+            <button
+              type="button"
+              aria-label={sendLabel}
+              title={sendLabel}
+              disabled={sharingUrl != null}
+              onClick={() => share(x)}
+              className={`p-2.5 rounded text-green-500 hover:bg-gray-50 dark:hover:bg-[#3c4759] focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 ${
+                x.url === retryUrl ? 'ring-2 ring-green-500' : ''
+              }`}
+            >
+              <ShareIcon className="block" aria-hidden="true" />
+            </button>
+          </td>
+        )}
+      </SidebarTable.Row>
+    )
+  })
+
   return (
-    <div className="pl-4 py-2">
-      <button
-        className="text-green-500 font-bold uppercase text-xs disabled:opacity-50"
-        disabled={sharing}
-        onClick={share}
+    <>
+      <SidebarTable.Table>
+        <SidebarTable.Head>
+          <SidebarTable.HeadRow>
+            <th className="pl-4 py-2">
+              {t('sidebar.download.table_columns.name', 'Name')}
+            </th>
+            <th className="w-1/4 py-2">
+              {t('sidebar.download.table_columns.dimensions', 'Dimensions')}
+            </th>
+            <th className="w-1/6 py-2">
+              {t('sidebar.download.table_columns.file_size', 'Size')}
+            </th>
+            <th className={`w-1/6 py-2 ${sendColumn ? 'pr-1' : 'pr-4'}`}>
+              {t('sidebar.download.table_columns.file_type', 'Type')}
+            </th>
+            {sendColumn && (
+              <th className="w-12 py-2">
+                <span className="sr-only">
+                  {t('sidebar.download.table_columns.send', 'Send')}
+                </span>
+              </th>
+            )}
+          </SidebarTable.HeadRow>
+        </SidebarTable.Head>
+        <tbody>{downloadRows}</tbody>
+      </SidebarTable.Table>
+      {/* The only visible word that the first tap did anything: a slow
+          download can cost the share sheet its activation, and then a second
+          tap is needed. Below the table, so no column has to make room. */}
+      <p
+        role="status"
+        className={
+          retryRow
+            ? 'px-4 py-2 text-sm text-gray-800 dark:text-gray-400'
+            : undefined
+        }
       >
-        <ShareIcon className="inline-block mr-2" />
-        <span>
-          {retry
-            ? t('sidebar.download.share_again', 'Tap share again')
-            : t('sidebar.download.share', 'Share')}
-        </span>
-      </button>
-    </div>
+        {retryRow && sendAgainLabel(retryRow)}
+      </p>
+    </>
   )
 }
 
@@ -500,8 +552,7 @@ const SidebarMediaDownload = ({ media }: SidebarMediaDownladProps) => {
         {t('sidebar.download.title', 'Download')}
       </SidebarSectionTitle>
 
-      <SidebarDownloadTable rows={downloadRows} />
-      <SidebarShareMediaButton media={media} rows={downloadRows} />
+      <SidebarDownloadTable media={media} rows={downloadRows} />
     </SidebarSection>
   )
 }

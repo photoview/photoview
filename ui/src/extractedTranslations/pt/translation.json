@@ -263,6 +263,11 @@
       "title_placeholder": "Título do Álbum"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_many": "",
@@ -280,13 +285,12 @@
         "tera_byte_many": "",
         "tera_byte_other": ""
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "Dimensões",
         "file_size": "Tamanho",
         "file_type": "Tipo",
-        "name": "Nome"
+        "name": "Nome",
+        "send": ""
       },
       "title": "Descarregar"
     },

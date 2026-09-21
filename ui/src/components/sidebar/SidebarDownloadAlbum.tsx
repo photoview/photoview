@@ -49,18 +49,30 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
     },
   ]
 
-  const downloadRows = downloads.map(x => (
-    <SidebarTable.Row
-      key={x.purpose}
-      onClick={() =>
-        (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
-      }
-      tabIndex={0}
-    >
-      <td className="pl-4 py-2">{`${x.title}`}</td>
-      <td className="pr-4 py-2 text-sm text-gray-800 dark:text-gray-400 italic">{`${x.description}`}</td>
-    </SidebarTable.Row>
-  ))
+  const downloadRows = downloads.map(x => {
+    const downloadLabel = t(
+      'sidebar.download.actions.download',
+      'Download {{name}}',
+      { name: x.title }
+    )
+
+    return (
+      <SidebarTable.Row key={x.purpose}>
+        <td className="p-0">
+          <SidebarTable.RowButton
+            aria-label={downloadLabel}
+            title={downloadLabel}
+            onClick={() =>
+              (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
+            }
+          >
+            {x.title}
+          </SidebarTable.RowButton>
+        </td>
+        <td className="pr-4 py-2 text-sm text-gray-800 dark:text-gray-400 italic">{`${x.description}`}</td>
+      </SidebarTable.Row>
+    )
+  })
 
   return (
     <SidebarSection>

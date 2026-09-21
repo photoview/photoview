@@ -263,6 +263,11 @@
       "title_placeholder": "アルバムタイトル"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "{{count}} バイト",
         "byte_other": "{{count}} バイト",
@@ -275,13 +280,12 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "解像度",
         "file_size": "サイズ",
         "file_type": "種類",
-        "name": "名前"
+        "name": "名前",
+        "send": ""
       },
       "title": "ダウンロード"
     },

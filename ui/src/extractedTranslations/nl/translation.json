@@ -263,6 +263,11 @@
       "title_placeholder": "Albumtitel"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "{{count}} Byte",
         "byte_other": "{{count}} Bytes",
@@ -275,13 +280,12 @@
         "tera_byte_one": "{{count}} TB",
         "tera_byte_other": "{{count}} TB"
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "Afmetingen",
         "file_size": "Grootte",
         "file_type": "Type",
-        "name": "Naam"
+        "name": "Naam",
+        "send": ""
       },
       "title": "Downloaden"
     },

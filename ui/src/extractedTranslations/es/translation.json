@@ -263,6 +263,11 @@
       "title_placeholder": ""
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_many": "",
@@ -280,13 +285,12 @@
         "tera_byte_many": "",
         "tera_byte_other": ""
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "Dimensiones",
         "file_size": "Tamaño",
         "file_type": "Tipo",
-        "name": "Nombre"
+        "name": "Nombre",
+        "send": ""
       },
       "title": "Descargar"
     },

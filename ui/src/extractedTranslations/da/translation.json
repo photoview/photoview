@@ -263,6 +263,11 @@
       "title_placeholder": "Albumtitel"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_other": "",
@@ -275,13 +280,12 @@
         "tera_byte_one": "",
         "tera_byte_other": ""
       },
-      "share": "",
-      "share_again": "",
       "table_columns": {
         "dimensions": "Dimension",
         "file_size": "Størrelse",
         "file_type": "Type",
-        "name": "Navn"
+        "name": "Navn",
+        "send": ""
       },
       "title": "Download"
     },
