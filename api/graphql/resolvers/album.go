@@ -87,12 +87,7 @@ func (r *albumResolver) Path(ctx context.Context, obj *models.Album) ([]*models.
 
 // Shares is the resolver for the shares field.
 func (r *albumResolver) Shares(ctx context.Context, obj *models.Album) ([]*models.ShareToken, error) {
-	var shareTokens []*models.ShareToken
-	if err := r.DB(ctx).Where("album_id = ?", obj.ID).Find(&shareTokens).Error; err != nil {
-		return nil, err
-	}
-
-	return shareTokens, nil
+	return actions.ListAlbumShares(r.DB(ctx), auth.UserFromContext(ctx), obj.ID)
 }
 
 // Takes album_id, resets album.cover_id to 0 (null)
