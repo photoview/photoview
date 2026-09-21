@@ -1,34 +1,35 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { FetchResult } from '@apollo/client'
 import { MockedProvider, MockedResponse } from '@apollo/client/testing'
 import { SidebarAlbumScan, SCAN_ALBUM_MUTATION } from './SidebarAlbumScan'
 
-const scanMock = (
-  albumId: string,
-  outcome: Pick<MockedResponse, 'result' | 'error'>
-): MockedResponse & { called: () => number } => {
+type Outcome = { result: FetchResult } | { error: Error }
+
+const scanMock = (albumId: string, outcome: Outcome) => {
   let calls = 0
 
-  return {
+  const mock: MockedResponse = {
     request: { query: SCAN_ALBUM_MUTATION, variables: { albumId } },
     // Long enough to look at the button while the request is out.
     delay: 100,
-    ...(outcome.error
-      ? { error: outcome.error }
-      : {
-          result: () => {
-            calls += 1
-
-            return outcome.result as { data: unknown }
-          },
-        }),
-    // Apollo mocks are single-use, so two taps need two entries.
-    called: () => calls,
   }
+  if ('error' in outcome) {
+    mock.error = outcome.error
+  } else {
+    mock.result = () => {
+      calls += 1
+
+      return outcome.result
+    }
+  }
+
+  // Apollo mocks are single-use, so two taps need two entries.
+  return Object.assign(mock, { called: () => calls })
 }
 
-const success = {
+const success: Outcome = {
   result: {
     data: { scanAlbum: { success: true, __typename: 'ScannerResult' } },
   },
