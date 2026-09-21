@@ -100,11 +100,6 @@ describe('what logs the user out', () => {
     await run(QUERY, { error: httpError(403) })
     expect(clearTokenCookie).toHaveBeenCalled()
   })
-
-  test('a GraphQL unauthorized error clears the session', async () => {
-    await run(QUERY, { result: { errors: [new GraphQLError('unauthorized')] } })
-    expect(clearTokenCookie).toHaveBeenCalled()
-  })
 })
 
 describe('what does not', () => {
@@ -122,6 +117,17 @@ describe('what does not', () => {
 
     expect(clearTokenCookie).not.toHaveBeenCalled()
     expect(headersAdded).toEqual(['Network error'])
+  })
+
+  test('a GraphQL unauthorized error keeps the session and is reported', async () => {
+    // The API answers a bad token with a 401 before any resolver runs, so a
+    // GraphQL `unauthorized` never means the session is gone. It does come
+    // back, with a 200, when a logged-in user asks to share an album or a
+    // media they do not own - and that used to log them out.
+    await run(QUERY, { result: { errors: [new GraphQLError('unauthorized')] } })
+
+    expect(clearTokenCookie).not.toHaveBeenCalled()
+    expect(headersAdded).toEqual(['Something went wrong'])
   })
 
   test('a subscription rejected as unauthorized keeps the session', async () => {

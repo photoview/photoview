@@ -120,15 +120,6 @@ export const linkError = onError(
           ),
         })
       }
-
-      if (
-        !isSubscription &&
-        graphQLErrors.find(x => x.message == 'unauthorized')
-      ) {
-        console.log('Unauthorized, clearing token cookie')
-        clearTokenCookie()
-        // location.reload()
-      }
     }
 
     if (networkError) {
@@ -137,6 +128,13 @@ export const linkError = onError(
       // Only an actual authentication failure invalidates the token. A
       // timeout, an offline client or a server-side 500 would otherwise log
       // the user out over an outage that says nothing about their session.
+      //
+      // The status is the whole signal. The API turns an unknown or expired
+      // token away with a 401 before any resolver runs. A GraphQL
+      // `unauthorized` arrives with a 200 and means either that no token was
+      // sent, so there is nothing to clear, or that this user may not touch
+      // that object - sharing an album they do not own - which is no reason
+      // to end their session.
       const statusCode = (networkError as ServerError | undefined)?.statusCode
       const loggingOut =
         !isSubscription && (statusCode === 401 || statusCode === 403)
