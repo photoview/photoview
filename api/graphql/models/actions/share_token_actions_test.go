@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/test_utils"
@@ -130,5 +131,22 @@ func TestShareToken(t *testing.T) {
 		share, err = actions.SetShareTokenLabel(db, user, albumShare.Value, &blankLabel)
 		assert.NoError(t, err)
 		assert.Nil(t, share.Label)
+	})
+
+	t.Run("Add album share rejects a non-owner with albums of their own", func(t *testing.T) {
+		otherPassword := "5678"
+		otherUser, err := models.RegisterUser(db, "other-user", &otherPassword, false)
+		assert.NoError(t, err)
+
+		otherAlbum := models.Album{
+			Title: "other-users-own-album",
+			Path:  "/photos-other",
+		}
+		assert.NoError(t, db.Save(&otherAlbum).Error)
+		assert.NoError(t, db.Model(&otherUser).Association("Albums").Append(&otherAlbum))
+
+		share, err := actions.AddAlbumShare(db, otherUser, rootAlbum.ID, &expireTime, nil, &shareLabel)
+		assert.Nil(t, share)
+		assert.ErrorIs(t, err, auth.ErrUnauthorized)
 	})
 }
