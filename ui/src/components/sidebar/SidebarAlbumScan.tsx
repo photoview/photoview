@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import { scanAlbum, scanAlbumVariables } from './__generated__/scanAlbum'
 
-const SCAN_ALBUM_MUTATION = gql`
+export const SCAN_ALBUM_MUTATION = gql`
   mutation scanAlbum($albumId: ID!) {
     scanAlbum(albumId: $albumId) {
       success

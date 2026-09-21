@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -68,5 +69,36 @@ func TestScanAlbumAuthorization(t *testing.T) {
 	t.Run("an unauthenticated request is refused", func(t *testing.T) {
 		_, err := r.ScanAlbum(context.Background(), album.ID)
 		assert.Error(t, err)
+	})
+}
+
+func TestScanAlbumReportsFailures(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	admin, err := models.RegisterUser(db, "scan_fail_admin", nil, true)
+	assert.NoError(t, err)
+	ctx := auth.AddUserToContext(context.Background(), admin)
+
+	r := &mutationResolver{Resolver: &Resolver{database: db}}
+
+	t.Run("an album that does not exist", func(t *testing.T) {
+		result, err := r.ScanAlbum(ctx, 987654)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("a queue that cannot take the album", func(t *testing.T) {
+		// A directory that cannot be walked must come back as an error, not
+		// as a "Scanner started" the user would wait on for nothing.
+		origAddAlbumToQueue := addAlbumToQueue
+		addAlbumToQueue = func(*models.Album) error { return errors.New("album directory does not exist") }
+		t.Cleanup(func() { addAlbumToQueue = origAddAlbumToQueue })
+
+		album := models.Album{Title: "scan_fail_album", Path: "/photos/scan_fail_album"}
+		assert.NoError(t, db.Save(&album).Error)
+
+		result, err := r.ScanAlbum(ctx, album.ID)
+		assert.ErrorContains(t, err, "album directory does not exist")
+		assert.Nil(t, result)
 	})
 }
