@@ -177,8 +177,10 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 			return nil, err
 		}
 
-		if *shareToken.MediaID == id {
-			return shareToken.Media, nil
+		if shareToken.Media != nil {
+			if *shareToken.MediaID == id {
+				return shareToken.Media, nil
+			}
 		}
 	}
 
