@@ -1,6 +1,7 @@
 package actions_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -37,6 +38,62 @@ func TestAlbumPath(t *testing.T) {
 	assert.Len(t, albumPath, 2)
 	assert.Equal(t, "Two", albumPath[0].Title)
 	assert.Equal(t, "One", albumPath[1].Title)
+}
+
+// TestAlbumPathTruncatesAtInaccessibleAncestor covers a folder the user can
+// reach whose own parent they cannot - the shape a directly shared subfolder
+// leaves behind. Its accessible ancestors still belong in the breadcrumb;
+// stopping at the root end instead threw the whole path away the moment the
+// top of the tree turned out to be someone else's.
+func TestAlbumPathTruncatesAtInaccessibleAncestor(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	leaf := models.Album{
+		Title: "Camera",
+		Path:  "/someone/shared_folder/camera",
+		ParentAlbum: &models.Album{
+			Title: "Shared folder",
+			Path:  "/someone/shared_folder",
+			ParentAlbum: &models.Album{
+				Title: "Someone else",
+				Path:  "/someone",
+			},
+		},
+	}
+	assert.NoError(t, db.Save(&leaf).Error)
+
+	user, err := models.RegisterUser(db, "album_path_user", nil, false)
+	assert.NoError(t, err)
+
+	// Access starts at "Shared folder", not at its parent.
+	assert.NoError(t, db.Model(&user).Association("Albums").Append(leaf.ParentAlbum))
+
+	albumPath, err := actions.AlbumPath(db, user, &leaf)
+	assert.NoError(t, err)
+	if assert.Len(t, albumPath, 1) {
+		assert.Equal(t, "Shared folder", albumPath[0].Title)
+	}
+}
+
+func TestAlbumPathFailsWhenTheQueryDoes(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := models.Album{Title: "Alone", Path: "/alone"}
+	assert.NoError(t, db.Save(&album).Error)
+
+	user, err := models.RegisterUser(db, "path_query_user", nil, false)
+	assert.NoError(t, err)
+
+	// The recursive walk is the one query here that can fail on its own, and
+	// an error must not come back as an empty breadcrumb - that is
+	// indistinguishable from a root album and would quietly hide ancestors
+	// the user can see. A cancelled context is the cheapest way to make it
+	// fail without breaking the shared test database.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err = actions.AlbumPath(db.WithContext(ctx), user, &album)
+	assert.Error(t, err, "a failed path query must be reported, not swallowed")
 }
 
 func TestAlbumCover(t *testing.T) {

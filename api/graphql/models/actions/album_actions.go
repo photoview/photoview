@@ -101,39 +101,60 @@ func Album(db *gorm.DB, user *models.User, id int) (*models.Album, error) {
 	return &album, nil
 }
 
-func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
-	var albumPath []*models.Album
+// albumAncestors returns the ancestors of an album, closest first.
+//
+// A recursive CTE gives no ordering guarantee, so the order comes from the
+// paths: an album's path is its parent's path plus its own directory name, so
+// an ancestor's path is a strict prefix of its descendant's and the closest
+// ancestor has the longest one. Sorting on that needs no extra column in the
+// recursion, which keeps its rows identical from lap to lap - and that is
+// what lets UNION end a cyclic parent chain by deduplicating the repeats,
+// with no depth limit.
+func albumAncestors(db *gorm.DB, albumID int) ([]*models.Album, error) {
+	var ancestors []*models.Album
 
 	err := db.Raw(`
 		WITH recursive path_albums AS (
 			SELECT * FROM albums anchor WHERE anchor.id = ?
 			UNION
-			SELECT parent.* FROM path_albums child JOIN albums parent ON parent.id = child.parent_album_id
+			SELECT parent.* FROM path_albums child
+				JOIN albums parent ON parent.id = child.parent_album_id
 		)
-		SELECT * FROM path_albums WHERE id != ?
-	`, album.ID, album.ID).Scan(&albumPath).Error
+		SELECT * FROM path_albums WHERE id != ? ORDER BY LENGTH(path) DESC
+	`, albumID, albumID).Scan(&ancestors).Error
 
-	// Make sure to only return albums this user owns
-	for i := len(albumPath) - 1; i >= 0; i-- {
-		album := albumPath[i]
+	return ancestors, err
+}
 
-		owns, err := user.OwnsAlbum(db, album)
+func AlbumPath(db *gorm.DB, user *models.User, album *models.Album) ([]*models.Album, error) {
+	// The truncation below depends on seeing the closest ancestor first.
+	albumPath, err := albumAncestors(db, album.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// albumPath runs closest-ancestor-first, root-last. Walk outward from
+	// the album and stop at the first ancestor the user doesn't own:
+	// everything from there to the root is dropped, while the closer
+	// ancestors they do own are kept. Truncating from the root end instead
+	// would throw away the whole breadcrumb as soon as the top of the tree
+	// happens to be someone else's.
+	visibleUpTo := len(albumPath)
+
+	for i, ancestor := range albumPath {
+		owns, err := user.OwnsAlbum(db, ancestor)
 		if err != nil {
 			return nil, err
 		}
 
 		if !owns {
-			albumPath = albumPath[i+1:]
+			visibleUpTo = i
+
 			break
 		}
-
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return albumPath, nil
+	return albumPath[:visibleUpTo], nil
 }
 
 func SetAlbumCover(db *gorm.DB, user *models.User, mediaID int) (*models.Album, error) {
