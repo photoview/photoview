@@ -1,5 +1,6 @@
 import { notificationSubscription } from './__generated__/notificationSubscription'
 import { useEffect } from 'react'
+import i18n from 'i18next'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { NotificationType } from '../../__generated__/globalTypes'
@@ -50,7 +51,7 @@ export const withSubscriptionError = (
     key: SUBSCRIPTION_ERROR_KEY,
     type: NotificationType.Message,
     props: {
-      header: 'Network error',
+      header: i18n.t('notification.error.network.header', 'Network error'),
       content: error.message,
       negative: true,
     },
