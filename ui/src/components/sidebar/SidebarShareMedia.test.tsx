@@ -450,3 +450,51 @@ test('a link shared as the fallback leaves no retry state behind', async () => {
   await userEvent.click(sendButton())
   await waitFor(() => expect(downloads).toBe(2))
 })
+
+test('a row sent to the link only does not send the other rows there too', async () => {
+  // Row A's download fails and its link share loses the activation, so A's
+  // next tap is meant to go straight to the link. Row B's file is a different
+  // download, though - it must still be tried.
+  const requested: string[] = []
+  global.fetch = vi.fn((url: string) => {
+    requested.push(url)
+    if (url.endsWith('holiday.jpg')) {
+      return Promise.reject(new Error('the network went away'))
+    }
+
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      blob: () => Promise.resolve(new Blob(['x'], { type: 'image/jpeg' })),
+    })
+  }) as unknown as typeof fetch
+
+  const share = refuseUntilSecondAttempt()
+  Object.defineProperty(global, 'navigator', {
+    value: { ...originalNavigator, share, canShare: () => true },
+    configurable: true,
+    writable: true,
+  })
+
+  render(
+    <SidebarDownloadTable
+      media={media}
+      rows={[rows[0], { ...rows[0], title: 'Small', url: 'photo/small.jpg' }]}
+    />
+  )
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Send Original to another app' })
+  )
+  await screen.findByRole('button', { name: /again to send Original/i })
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Send Small to another app' })
+  )
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(2))
+
+  expect(requested.filter(url => url.endsWith('small.jpg'))).toHaveLength(1)
+  const calls = share.mock.calls as unknown as { files?: File[] }[][]
+  const payload = calls[1][0]
+  expect(payload.files?.[0].name).toBe('small.jpg')
+})

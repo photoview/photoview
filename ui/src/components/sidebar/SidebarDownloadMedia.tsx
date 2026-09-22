@@ -240,9 +240,9 @@ const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
 // Sends one download variant to another app through the OS share sheet. A
-// single instance serves the whole table: the retry state belongs to the
-// media rather than to a row, because the link fallback shares the same page
-// whichever variant was tapped.
+// single instance serves the whole table, and its retry state names the row it
+// belongs to, so a failure on one variant never changes what a tap on another
+// one does.
 const useNativeShare = (media: MediaSidebarMedia) => {
   // The row being shared right now, and the row whose share asks for a second
   // tap. Urls rather than flags, so each row's button can tell it is the one.
@@ -251,11 +251,13 @@ const useNativeShare = (media: MediaSidebarMedia) => {
   // A file already prepared for a share that the browser then refused. Keeping
   // it means the retry needs no download and so stays inside its activation.
   const preparedFile = useRef<{ url: string; file: File } | null>(null)
-  // Set when there is no file to keep because preparing it failed, and the
-  // link share that stood in for it lost the activation to that same failed
-  // download. Without this the next tap would spend its activation on the
-  // download all over again and end in nothing all over again.
-  const linkOnly = useRef(false)
+  // The row whose next tap goes straight to the link: there is no file to
+  // keep because preparing it failed, and the link share that stood in for it
+  // lost the activation to that same failed download. Without this the next
+  // tap would spend its activation on the download all over again and end in
+  // nothing all over again. It names one row because another row's file is a
+  // different download, which may well work.
+  const linkOnly = useRef<string | null>(null)
 
   // Every way out of a share - success, abort, or a fresh start - has to drop
   // both halves of the retry state. Leaving one behind was how the earlier
@@ -263,7 +265,7 @@ const useNativeShare = (media: MediaSidebarMedia) => {
   // wrong branch.
   const clearRetryState = () => {
     preparedFile.current = null
-    linkOnly.current = false
+    linkOnly.current = null
     setRetryUrl(null)
   }
 
@@ -287,7 +289,7 @@ const useNativeShare = (media: MediaSidebarMedia) => {
       })
 
     try {
-      if (!navigator.canShare || linkOnly.current) {
+      if (!navigator.canShare || linkOnly.current === row.url) {
         await shareLink()
         clearRetryState()
         return
@@ -328,11 +330,11 @@ const useNativeShare = (media: MediaSidebarMedia) => {
       // The link branch has no file fallback to fall back to - it *is* the
       // fallback. Letting it reach the one below would call share() a second
       // time for the same tap, on an activation that is already spent.
-      if (!navigator.canShare || linkOnly.current || linkShared) {
+      if (!navigator.canShare || linkOnly.current === row.url || linkShared) {
         console.error('Link share failed', err)
 
         if (name === 'NotAllowedError') {
-          linkOnly.current = true
+          linkOnly.current = row.url
           setRetry()
         }
 
@@ -375,7 +377,7 @@ const useNativeShare = (media: MediaSidebarMedia) => {
         // share it straight away instead of repeating the download that cost
         // the activation in the first place.
         if (fallbackName === 'NotAllowedError') {
-          linkOnly.current = true
+          linkOnly.current = row.url
           setRetry()
         }
       }
