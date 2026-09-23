@@ -177,15 +177,14 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 			return nil, err
 		}
 
-		// Album share tokens carry no media ID, so they cannot authorize a media
-		// query. Reading MediaID for one of those dereferences a nil pointer, so
-		// reject the credential instead of reading a field that does not apply to it.
-		if shareToken.MediaID == nil {
-			return nil, auth.ErrUnauthorized
-		}
-
-		if *shareToken.MediaID == id {
-			return shareToken.Media, nil
+		// Album share tokens carry no media ID, so `MediaID` is nil for them and
+		// reading it dereferences a nil pointer. Guard on `Media` instead, the same
+		// way `queryResolver.Album` guards on `Album`, and let a caller that also
+		// holds a session fall through to the user path below.
+		if shareToken.Media != nil {
+			if *shareToken.MediaID == id {
+				return shareToken.Media, nil
+			}
 		}
 	}
 

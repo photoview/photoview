@@ -173,25 +173,25 @@ func TestMediaQueryAcceptsOwnerSession(t *testing.T) {
 	assert.Equal(t, fixtures.media.ID, media.ID)
 }
 
-// The credential is rejected on its type alone, so it is not silently ignored when a
-// valid session is also present: the caller is told the credential does not apply and
-// can retry without it.
-func TestMediaQueryRejectsAlbumShareTokenForLoggedInOwner(t *testing.T) {
+// An album share token carries no media ID, so it is not read as one: the guard
+// mirrors `queryResolver.Album`'s check on `Album`. A caller that also holds a valid
+// session falls through to the user path with the inapplicable credential left in
+// place, rather than being refused for supplying both.
+func TestMediaQueryFallsThroughAlbumShareTokenToOwnerSession(t *testing.T) {
 	fixtures := setupMediaTokenFixtures(t)
 
 	ctx := auth.AddUserToContext(context.Background(), fixtures.user)
-	token := tokenCredentials(fixtures.albumToken)
 
-	media, err := fixtures.resolver.Media(ctx, fixtures.media.ID, token)
-
-	assert.ErrorIs(t, err, auth.ErrUnauthorized)
-	assert.Nil(t, media)
-
-	// The same request without the inapplicable credential still resolves.
-	media, err = fixtures.resolver.Media(ctx, fixtures.media.ID, nil)
+	media, err := fixtures.resolver.Media(ctx, fixtures.media.ID, tokenCredentials(fixtures.albumToken))
 	require.NoError(t, err)
 	require.NotNil(t, media)
 	assert.Equal(t, fixtures.media.ID, media.ID)
+
+	// The session does not own the other media, so the fall-through is still refused:
+	// the user-path lookup matches nothing, and the caller gets an error, not a media.
+	refused, err := fixtures.resolver.Media(ctx, fixtures.otherMedia.ID, tokenCredentials(fixtures.albumToken))
+	assert.Error(t, err)
+	assert.Nil(t, refused)
 }
 
 // A media token that outlives its media row must not be dereferenced into a panic
