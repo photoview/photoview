@@ -45,6 +45,10 @@ type UserPreferences struct {
 	UserID   int  `gorm:"not null;index"`
 	User     User `gorm:"constraint:OnDelete:CASCADE;"`
 	Language *LanguageTranslation
+	// ShowAlbumTree controls whether the navigation tree is shown beside the
+	// gallery. nil means "not chosen", which the UI treats as off: the tree is
+	// opt-in.
+	ShowAlbumTree *bool
 }
 
 func (u *UserPreferences) BeforeSave(tx *gorm.DB) error {

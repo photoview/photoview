@@ -15,6 +15,18 @@
       "type": "Type"
     }
   },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "filter_truncated": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": ""
+  },
   "general": {
     "action": {
       "add": "Toevoegen",
@@ -22,6 +34,7 @@
       "remove": "Verwijderen",
       "save": "Opslaan"
     },
+    "close": "",
     "loading": {
       "album": "Album laden",
       "default": "Laden...",
@@ -165,6 +178,11 @@
       },
       "language_selector": {
         "placeholder": "Selecteer taal"
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
       },
       "theme": {
         "auto": {
