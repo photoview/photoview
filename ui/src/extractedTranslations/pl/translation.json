@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Albumy",
         "media": "Multimedia"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,17 @@
   "routes": {
     "page_not_found": "Nie znaleziono strony"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_one": "",
+    "truncated_few": "",
+    "truncated_many": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Maksymalna liczba zadań skanera, które mogą być uruchomione jednocześnie",
@@ -166,6 +178,10 @@
       "language_selector": {
         "placeholder": "Wybierz język"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "Taki jak system"
@@ -179,7 +195,8 @@
         },
         "title": "Motyw"
       },
-      "title": "Preferencje użytkownika"
+      "title": "Preferencje użytkownika",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
