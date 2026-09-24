@@ -263,6 +263,11 @@
       "title_placeholder": "Titolo album"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_many": "",
@@ -284,7 +289,8 @@
         "dimensions": "Dimensioni",
         "file_size": "Peso",
         "file_type": "Formato",
-        "name": "Nome"
+        "name": "Nome",
+        "send": ""
       },
       "title": "Download"
     },

@@ -263,6 +263,11 @@
       "title_placeholder": "Albumtitel"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_other": "",
@@ -279,7 +284,8 @@
         "dimensions": "Dimension",
         "file_size": "Størrelse",
         "file_type": "Type",
-        "name": "Navn"
+        "name": "Navn",
+        "send": ""
       },
       "title": "Download"
     },

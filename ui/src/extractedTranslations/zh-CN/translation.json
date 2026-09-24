@@ -263,6 +263,11 @@
       "title_placeholder": "相册名称"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "{{count}} 字节",
         "byte_other": "{{count}} 字节",
@@ -275,7 +280,8 @@
         "dimensions": "尺寸",
         "file_size": "大小",
         "file_type": "格式",
-        "name": "名称"
+        "name": "名称",
+        "send": ""
       },
       "title": "下载"
     },
