@@ -1,5 +1,6 @@
 import { notificationSubscription } from './__generated__/notificationSubscription'
 import { useEffect } from 'react'
+import i18n from 'i18next'
 import { useSubscription, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { NotificationType } from '../../__generated__/globalTypes'
@@ -35,6 +36,28 @@ export interface Message {
   }
 }
 
+// One key for every error of this subscription. A server that stays down
+// fails the reconnecting stream again on every attempt, and each failure
+// replacing the previous one keeps that to a single message.
+const SUBSCRIPTION_ERROR_KEY = 'notification-subscription-error'
+
+// Exported for its tests.
+export const withSubscriptionError = (
+  messages: Message[],
+  error: Error
+): Message[] => [
+  ...messages.filter(m => m.key != SUBSCRIPTION_ERROR_KEY),
+  {
+    key: SUBSCRIPTION_ERROR_KEY,
+    type: NotificationType.Message,
+    props: {
+      header: i18n.t('notification.error.network.header', 'Network error'),
+      content: error.message,
+      negative: true,
+    },
+  },
+]
+
 type SubscriptionHookProps = {
   messages: Message[]
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
@@ -54,18 +77,7 @@ const SubscriptionsHook = ({
 
   useEffect(() => {
     if (error) {
-      setMessages(state => [
-        ...state,
-        {
-          key: Math.random().toString(26),
-          type: NotificationType.Message,
-          props: {
-            header: 'Network error',
-            content: error.message,
-            negative: true,
-          },
-        },
-      ])
+      setMessages(state => withSubscriptionError(state, error))
     }
 
     if (!data) return
