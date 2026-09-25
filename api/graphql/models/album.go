@@ -37,7 +37,10 @@ func (a *Album) GetChildren(db *gorm.DB, filter func(*gorm.DB) *gorm.DB) (childr
 }
 
 func GetChildrenFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumIDs []int) (children []*Album, err error) {
-	query := db.Model(&Album{}).Table("sub_albums")
+	query := db.Model(&Album{}).
+		Table("albums").
+		Select("albums.*").
+		Joins("JOIN sub_albums ON sub_albums.id = albums.id")
 
 	if filter != nil {
 		query = filter(query)
@@ -45,11 +48,15 @@ func GetChildrenFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumIDs
 
 	// UNION rather than UNION ALL: it drops rows already found, which is what
 	// ends the recursion if parent links ever form a cycle.
+	//
+	// Only ids travel through the recursion, and the albums are joined in
+	// afterwards. The walk then compares one column per row instead of a whole
+	// album, which is where the duplicate check of UNION does its work.
 	err = db.Raw(`
 	WITH recursive sub_albums AS (
-		SELECT * FROM albums AS root WHERE id IN (?)
+		SELECT id FROM albums WHERE id IN (?)
 		UNION
-		SELECT child.* FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
+		SELECT child.id FROM albums AS child JOIN sub_albums ON child.parent_album_id = sub_albums.id
 	)
 
 	?
@@ -63,7 +70,10 @@ func (a *Album) GetParents(db *gorm.DB, filter func(*gorm.DB) *gorm.DB) (parents
 }
 
 func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID int) (parents []*Album, err error) {
-	query := db.Model(&Album{}).Table("super_albums")
+	query := db.Model(&Album{}).
+		Table("albums").
+		Select("albums.*").
+		Joins("JOIN super_albums ON super_albums.id = albums.id")
 
 	if filter != nil {
 		query = filter(query)
@@ -71,11 +81,14 @@ func GetParentsFromAlbums(db *gorm.DB, filter func(*gorm.DB) *gorm.DB, albumID i
 
 	// UNION rather than UNION ALL: it drops rows already found, which is what
 	// ends the recursion if parent links ever form a cycle.
+	//
+	// The walk carries only the two ids it needs; the albums are joined in
+	// afterwards. See GetChildrenFromAlbums.
 	err = db.Raw(`
 	WITH recursive super_albums AS (
-		SELECT * FROM albums AS leaf WHERE id = ?
+		SELECT id, parent_album_id FROM albums WHERE id = ?
 		UNION
-		SELECT parent.* from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id
+		SELECT parent.id, parent.parent_album_id from albums AS parent JOIN super_albums ON parent.id = super_albums.parent_album_id
 	)
 
 	?

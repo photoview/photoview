@@ -130,9 +130,9 @@ func shareTokenFromRequest(db *gorm.DB, r *http.Request, mediaID *int, albumID *
 		var count int
 		err := db.Raw(`
 				WITH recursive child_albums AS (
-					SELECT * FROM albums WHERE parent_album_id = ?
+					SELECT id FROM albums WHERE parent_album_id = ?
 					UNION
-					SELECT child.* FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id
+					SELECT child.id FROM albums child JOIN child_albums parent ON parent.id = child.parent_album_id
 				)
 				SELECT COUNT(id) FROM child_albums WHERE id = ?
 			`, *shareToken.AlbumID, albumID).Find(&count).Error
