@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
@@ -132,6 +133,67 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 	return nil
 }
 
+// mediaScanAttempts is how often one file's database transaction is tried
+// before the file counts as unscanned. Most failures a healthy database
+// produces here are transient - a lock timeout, a dropped connection, a
+// deadlock between the scanner's workers - and a second attempt costs
+// nothing when it succeeds. Only a failure that survives all attempts falls
+// through to the caller, which then keeps the media row rather than treating
+// the file as gone.
+const mediaScanAttempts = 3
+
+// mediaScanRetryDelay is the wait before the next attempt, multiplied by the
+// attempt number, so the database gets a moment to recover rather than being
+// hit again immediately.
+const mediaScanRetryDelay = 100 * time.Millisecond
+
+// scanMediaFile runs one file's scan in a database transaction, retrying a
+// failed transaction a few times. The media is returned only after the
+// transaction has actually committed: a commit that fails after the callback
+// returned would otherwise count the media twice on the next attempt.
+func scanMediaFile(ctx scanner_task.TaskContext, mediaPath string) (*models.Media, error) {
+	var lastErr error
+
+	for attempt := 1; attempt <= mediaScanAttempts; attempt++ {
+		var scanned *models.Media
+
+		lastErr = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+			media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+			if err != nil {
+				return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
+			}
+
+			if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+				return err
+			}
+
+			scanned = media
+
+			return nil
+		})
+
+		if lastErr == nil {
+			return scanned, nil
+		}
+
+		if attempt == mediaScanAttempts {
+			break
+		}
+
+		log.Warn(ctx, "Media scan transaction failed, retrying",
+			"media_path", mediaPath, "attempt", attempt, "error", lastErr)
+
+		// A cancelled scan must not sit out its retries.
+		select {
+		case <-ctx.Done():
+			return nil, lastErr
+		case <-time.After(time.Duration(attempt) * mediaScanRetryDelay):
+		}
+	}
+
+	return nil, lastErr
+}
+
 // findMediaForAlbum returns the media found in the album's directory, and the
 // paths of media files that are on disk but could not be scanned.
 func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, []string, error) {
@@ -167,26 +229,14 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, []string,
 				continue
 			}
 
-			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
-				if err != nil {
-					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
-				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
-					return err
-				}
-
-				albumMedia = append(albumMedia, media)
-
-				return nil
-			})
-
+			media, err := scanMediaFile(ctx, mediaPath)
 			if err != nil {
 				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				unscannedPaths = append(unscannedPaths, mediaPath)
 				continue
 			}
+
+			albumMedia = append(albumMedia, media)
 		}
 
 	}
