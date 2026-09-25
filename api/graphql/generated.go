@@ -49,6 +49,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Album struct {
+		CreatedAt   func(childComplexity int) int
 		FilePath    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Media       func(childComplexity int, order *models.Ordering, paginate *models.Pagination, onlyFavorites *bool) int
@@ -458,6 +459,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Album.Title(childComplexity), true
+	case "Album.createdAt":
+		if e.ComplexityRoot.Album.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Album.CreatedAt(childComplexity), true
 
 	case "AuthorizeResult.status":
 		if e.ComplexityRoot.AuthorizeResult.Status == nil {
@@ -1691,6 +1698,8 @@ func (ec *executionContext) childFields_Album(ctx context.Context, field graphql
 		return ec.fieldContext_Album_path(ctx, field)
 	case "shares":
 		return ec.fieldContext_Album_shares(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Album_createdAt(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
 }
@@ -3354,6 +3363,29 @@ func (ec *executionContext) fieldContext_Album_shares(_ context.Context, field g
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Album_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Album) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Album_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Album_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Album", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
 func (ec *executionContext) _AuthorizeResult_success(ctx context.Context, field graphql.CollectedField, obj *models.AuthorizeResult) (ret graphql.Marshaler) {
