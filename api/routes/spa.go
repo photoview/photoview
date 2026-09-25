@@ -11,6 +11,33 @@ import (
 	"github.com/photoview/photoview/api/log"
 )
 
+// staticAssetExtensions lists file extensions considered "static asset" requests.
+// Missing files with these extensions return 404 instead of falling back to
+// index.html. This mirrors the `path_regexp staticAsset` matcher used in
+// ui/Caddyfile's `@missingStaticAsset` block, so both the Go SPA handler and
+// Caddy behave consistently.
+var staticAssetExtensions = []string{
+	".js", ".mjs", ".css",
+	".html", ".htm",
+	".md", ".map", ".json", ".webmanifest",
+	".png", ".svg", ".ico",
+	".jpg", ".jpeg", ".gif", ".webp", ".avif",
+	".woff", ".woff2", ".ttf", ".eot",
+	".txt", ".xml", ".wasm",
+}
+
+// isStaticAssetExtension reports whether ext (as returned by filepath.Ext)
+// belongs to the known set of static asset extensions.
+func isStaticAssetExtension(ext string) bool {
+	ext = strings.ToLower(ext)
+	for _, knownExt := range staticAssetExtensions {
+		if ext == knownExt {
+			return true
+		}
+	}
+	return false
+}
+
 // SpaHandler implements the http.Handler interface, so we can use it
 // to respond to HTTP requests. The path to the static directory and
 // path to the index file within that static directory are used to
@@ -97,6 +124,16 @@ func (h SpaHandler) serveOriginal(w http.ResponseWriter, r *http.Request, fullPa
 	// Check whether a file exists at the given path
 	_, err := os.Stat(fullPath)
 	if os.IsNotExist(err) {
+		// Missing requests for known static asset extensions (JS/CSS/HTML/images/
+		// fonts/etc.) should return 404 so the browser doesn't receive index.html
+		// for them. Everything else (including extension-less paths, and paths
+		// with dots that aren't recognized static extensions) is treated as an
+		// SPA route and served index.html.
+		if isStaticAssetExtension(filepath.Ext(relPath)) {
+			http.NotFound(w, r)
+			return
+		}
+
 		// File does not exist, serve index.html (SPA routing)
 		h.serveIndexHTML(w, r)
 		return

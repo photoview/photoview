@@ -147,6 +147,16 @@ func TestSpaHandler_ServeHTTP(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
+
+	t.Run("missing file-like request returns 404 instead of index.html", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/assets/missing-chunk.js", nil)
+		rec := httptest.NewRecorder()
+
+		handler.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+		assert.NotContains(t, rec.Body.String(), "<!DOCTYPE html>")
+	})
 }
 
 func TestSpaHandler_PrecompressedFiles(t *testing.T) {
