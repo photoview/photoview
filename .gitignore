@@ -21,6 +21,7 @@ node_modules/
 
 # testing
 /ui/coverage
+/ui/junit-report.xml
 /api/coverage*
 /api/test-*-report.xml
 *.cov
