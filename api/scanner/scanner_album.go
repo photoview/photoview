@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
+	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
@@ -147,6 +149,17 @@ const mediaScanAttempts = 3
 // hit again immediately.
 const mediaScanRetryDelay = 100 * time.Millisecond
 
+// worthRetrying reports whether a second attempt could end differently. A
+// file whose media type cannot be determined, or one that has gone or cannot
+// be read, fails the same way every time: waiting for it only slows the scan
+// down. Everything else - a lock timeout, a dropped connection, a deadlock
+// between the scanner's workers - is worth another attempt.
+func worthRetrying(err error) bool {
+	return !errors.Is(err, media_type.ErrUnknownType) &&
+		!errors.Is(err, fs.ErrNotExist) &&
+		!errors.Is(err, fs.ErrPermission)
+}
+
 // scanMediaFile runs one file's scan in a database transaction, retrying a
 // failed transaction a few times. The media is returned only after the
 // transaction has actually committed: a commit that fails after the callback
@@ -176,7 +189,7 @@ func scanMediaFile(ctx scanner_task.TaskContext, mediaPath string) (*models.Medi
 			return scanned, nil
 		}
 
-		if attempt == mediaScanAttempts {
+		if attempt == mediaScanAttempts || !worthRetrying(lastErr) {
 			break
 		}
 

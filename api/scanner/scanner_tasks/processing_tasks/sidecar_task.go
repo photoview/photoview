@@ -28,7 +28,7 @@ func (t SidecarTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models
 
 	mediaType := ctx.GetCache().GetMediaType(media.Path)
 	if mediaType == media_type.TypeUnknown {
-		return fmt.Errorf("scan for sidecar file %s failed: media type is %s", media.Path, mediaType)
+		return fmt.Errorf("scan for sidecar file %s failed: media type is %s: %w", media.Path, mediaType, media_type.ErrUnknownType)
 	}
 
 	if mediaType.IsWebCompatible() {
