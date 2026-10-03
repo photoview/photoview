@@ -120,6 +120,7 @@ const InitialSetupPage = () => {
                 ? 'Please enter a password'
                 : undefined
             }
+            type="password"
           />
           <TextField
             wrapperClassName="my-4"
