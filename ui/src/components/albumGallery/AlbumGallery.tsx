@@ -46,6 +46,12 @@ type AlbumGalleryProps = {
   showFilter?: boolean
   setOnlyFavorites?(favorites: boolean): void
   setOrdering?: SetOrderingFn
+  /**
+   * Rendered on the same row as the filter, at its far end. The album page
+   * uses it for the mobile album tree button; the share page passes nothing,
+   * so a shared album's layout is unchanged.
+   */
+  filterAction?: React.ReactNode
   ordering?: MediaOrdering
   onlyFavorites?: boolean
   onFavorite?(): void
@@ -60,6 +66,7 @@ const AlbumGallery = React.forwardRef(
       showFilter = false,
       setOnlyFavorites,
       setOrdering,
+      filterAction,
       ordering,
       onlyFavorites = false,
     }: AlbumGalleryProps,
@@ -101,14 +108,25 @@ const AlbumGallery = React.forwardRef(
 
     return (
       <div ref={ref}>
-        {showFilter && (
-          <AlbumFilter
-            onlyFavorites={onlyFavorites}
-            setOnlyFavorites={setOnlyFavorites}
-            setOrdering={setOrdering}
-            ordering={ordering}
-          />
-        )}
+        {showFilter &&
+          (filterAction ? (
+            <div className="flex items-end justify-between gap-4 flex-wrap">
+              <AlbumFilter
+                onlyFavorites={onlyFavorites}
+                setOnlyFavorites={setOnlyFavorites}
+                setOrdering={setOrdering}
+                ordering={ordering}
+              />
+              {filterAction}
+            </div>
+          ) : (
+            <AlbumFilter
+              onlyFavorites={onlyFavorites}
+              setOnlyFavorites={setOnlyFavorites}
+              setOrdering={setOrdering}
+              ordering={ordering}
+            />
+          ))}
         <AlbumTitle album={album} disableLink />
         {subAlbumElement}
         <MediaGallery

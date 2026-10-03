@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { LanguageTranslation } from '../../__generated__/globalTypes'
+import Checkbox from '../../primitives/form/Checkbox'
 import Dropdown from '../../primitives/form/Dropdown'
 import { Button } from '../../primitives/form/Input'
 import {
@@ -59,10 +60,14 @@ const themePreferences = (t: TranslationFn) => [
 ]
 
 const CHANGE_USER_PREFERENCES = gql`
-  mutation changeUserPreferences($language: String) {
-    changeUserPreferences(language: $language) {
+  mutation changeUserPreferences($language: String, $showAlbumTree: Boolean) {
+    changeUserPreferences(
+      language: $language
+      showAlbumTree: $showAlbumTree
+    ) {
       id
       language
+      showAlbumTree
     }
   }
 `
@@ -72,6 +77,7 @@ const MY_USER_PREFERENCES = gql`
     myUserPreferences {
       id
       language
+      showAlbumTree
     }
   }
 `
@@ -173,6 +179,32 @@ const UserPreferences = () => {
         items={themePreferences(t)}
         setSelected={changeStateTheme}
         selected={theme}
+      />
+      <label htmlFor="user_pref_show_album_tree_field">
+        <InputLabelTitle>
+          {t(
+            'settings.user_preferences.show_album_tree.title',
+            'Album tree sidebar'
+          )}
+        </InputLabelTitle>
+        <InputLabelDescription>
+          {t(
+            'settings.user_preferences.show_album_tree.description',
+            'Show a collapsible tree of your albums beside the gallery, for jumping between folders without going back up first'
+          )}
+        </InputLabelDescription>
+      </label>
+      <Checkbox
+        id="user_pref_show_album_tree_field"
+        label={t(
+          'settings.user_preferences.show_album_tree.checkbox_label',
+          'Show album tree sidebar'
+        )}
+        disabled={loadingPrefs}
+        checked={data?.myUserPreferences.showAlbumTree ?? false}
+        onChange={event =>
+          changePrefs({ variables: { showAlbumTree: event.target.checked } })
+        }
       />
     </UserPreferencesWrapper>
   )

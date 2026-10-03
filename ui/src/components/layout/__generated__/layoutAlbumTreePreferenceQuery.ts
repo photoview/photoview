@@ -3,25 +3,22 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { LanguageTranslation } from "./../../../__generated__/globalTypes";
-
 // ====================================================
-// GraphQL query operation: myUserPreferences
+// GraphQL query operation: layoutAlbumTreePreferenceQuery
 // ====================================================
 
-export interface myUserPreferences_myUserPreferences {
+export interface layoutAlbumTreePreferenceQuery_myUserPreferences {
   __typename: "UserPreferences";
   id: string;
-  language: LanguageTranslation | null;
   /**
    * Whether to show the album tree next to the gallery. Off unless the user turns it on.
    */
   showAlbumTree: boolean | null;
 }
 
-export interface myUserPreferences {
+export interface layoutAlbumTreePreferenceQuery {
   /**
    * User preferences for the logged in user
    */
-  myUserPreferences: myUserPreferences_myUserPreferences;
+  myUserPreferences: layoutAlbumTreePreferenceQuery_myUserPreferences;
 }

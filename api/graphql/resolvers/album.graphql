@@ -31,6 +31,12 @@ type Album {
   shares: [ShareToken!]!
 }
 
+"One album id's worth of direct children, as returned by albumTreeChildren."
+type AlbumTreeChildren {
+  albumId: ID!
+  children: [Album!]!
+}
+
 extend type Query {
   "List of albums owned by the logged in user."
   myAlbums(
@@ -49,6 +55,13 @@ extend type Query {
   If valid tokenCredentials are provided, the album may be retrived without further authentication
   """
   album(id: ID!, tokenCredentials: ShareTokenCredentials): Album!
+
+  """
+  Direct children for every album in albumIds, in one round trip - used by
+  the album tree's filter view so a broad match doesn't fire one subAlbums
+  request per matched node and per ancestor.
+  """
+  albumTreeChildren(albumIds: [ID!]!): [AlbumTreeChildren!]! @isAuthorized
 }
 
 extend type Mutation {
