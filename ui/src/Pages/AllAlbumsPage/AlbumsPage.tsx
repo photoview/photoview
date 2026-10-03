@@ -53,6 +53,10 @@ const AlbumsPage = () => {
         value: 'title' as const,
         label: t('album_filter.sorting_options.title', 'Title'),
       },
+      {
+        value: 'title_natural' as const,
+        label: t('album_filter.sorting_options.title_natural', 'Title (numeric)'),
+      },
     ],
     [t]
   )
