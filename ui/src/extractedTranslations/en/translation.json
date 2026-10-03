@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Reset cover photo",
+      "scan": {
+        "rescan": "Rescan this album and its sub-albums",
+        "title": "Scanner"
+      },
       "set_cover": "Set as album cover photo",
       "title_placeholder": "Album title"
     },

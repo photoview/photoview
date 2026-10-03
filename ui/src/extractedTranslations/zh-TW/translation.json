@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "重設封面相片",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "設為封面相片",
       "title_placeholder": "相簿標題"
     },

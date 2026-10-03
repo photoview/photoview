@@ -13,6 +13,13 @@ extend type Mutation {
   scanUser(userId: ID!): ScannerResult! @isAdmin
 
   """
+  Recursively scan a single album and its sub-albums for new media, without
+  scanning the rest of the library. Sub-albums whose directories no longer
+  exist are removed. Caller must be an admin or own the album.
+  """
+  scanAlbum(albumId: ID!): ScannerResult! @isAuthorized
+
+  """
   Set how often, in seconds, the server should automatically scan for new media,
   a value of 0 will disable periodic scans
   """
