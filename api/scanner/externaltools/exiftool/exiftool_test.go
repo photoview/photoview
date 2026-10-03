@@ -1,6 +1,9 @@
 package exiftool
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -32,6 +35,57 @@ func TestExiftool(t *testing.T) {
 
 	if err := instance.Close(); err != nil {
 		t.Errorf("close instance error: %v", err)
+	}
+}
+
+func TestExiftoolRejectsLineBreaksBeforeWriting(t *testing.T) {
+	tests := []struct {
+		name string
+		arg  string
+	}{
+		{name: "line feed", arg: "photo.jpg\n-if\n1"},
+		{name: "carriage return", arg: "photo.jpg\r-if\r1"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var command bytes.Buffer
+			instance := &Exiftool{stdinBuf: bufio.NewWriter(&command)}
+
+			err := instance.rawSendCommand("-n", tc.arg)
+			if err != errArgumentContainsLineBreak {
+				t.Fatalf("rawSendCommand() error = %v, want %v", err, errArgumentContainsLineBreak)
+			}
+
+			if err := instance.stdinBuf.Flush(); err != nil {
+				t.Fatalf("flush buffered command: %v", err)
+			}
+			if command.Len() != 0 {
+				t.Fatalf("rawSendCommand() wrote %q before rejecting the argument", command.String())
+			}
+		})
+	}
+}
+
+func TestExiftoolRemainsUsableAfterRejectingArgumentInjection(t *testing.T) {
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	var value struct{ MIMEType }
+	malformedFile := "./test_data/no_exif.jpg\n-if\n1"
+	if err := instance.QueryJSONTagsByNumber(malformedFile, &value); !errors.Is(err, errArgumentContainsLineBreak) {
+		t.Fatalf("QueryJSONTagsByNumber(%q) error = %v, want %v", malformedFile, err, errArgumentContainsLineBreak)
+	}
+
+	file := "./test_data/no_exif.jpg"
+	if err := instance.QueryJSONTagsByNumber(file, &value); err != nil {
+		t.Fatalf("QueryJSONTagsByNumber(%q) after rejection: %v", file, err)
+	}
+	if got, want := value.MIMEType.MIMEType, "image/jpeg"; got == nil || *got != want {
+		t.Fatalf("MIMEType(%q) = %v, want %q", file, got, want)
 	}
 }
 

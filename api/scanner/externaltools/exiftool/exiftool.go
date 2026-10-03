@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 	"sync"
 )
 
@@ -29,6 +30,8 @@ type Exiftool struct {
 
 const marker = "{ready}\n"
 const bufferSize = 10240
+
+var errArgumentContainsLineBreak = errors.New("exiftool arguments cannot contain line breaks")
 
 // New returns a new instance of Exiftool.
 func New() (*Exiftool, error) {
@@ -120,6 +123,14 @@ func (e *Exiftool) Close() (err error) {
 }
 
 func (e *Exiftool) rawSendCommand(args ...string) error {
+	// The -@ protocol treats each line as a separate argument. Validate the
+	// complete command first so rejection cannot leave partial input buffered.
+	for _, arg := range args {
+		if strings.ContainsAny(arg, "\r\n") {
+			return errArgumentContainsLineBreak
+		}
+	}
+
 	e.stdout.Reset()
 	e.stderr.Reset()
 
