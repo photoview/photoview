@@ -17,6 +17,7 @@ const getAlbumsQuery = gql`
     ) {
       id
       title
+      createdAt
       thumbnail {
         id
         thumbnail {
