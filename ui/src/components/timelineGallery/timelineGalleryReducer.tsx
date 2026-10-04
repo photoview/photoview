@@ -199,8 +199,8 @@ function convertMediaToTimelineGroups(
 
   const sameDay = (a: string, b: string) => {
     return (
-      a.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00') ==
-      b.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00')
+      a.replace(/\d{2}:\d{2}:\d{2}(?:\.\d+)?/, '00:00:00') ==
+      b.replace(/\d{2}:\d{2}:\d{2}(?:\.\d+)?/, '00:00:00')
     )
   }
 
@@ -219,7 +219,10 @@ function convertMediaToTimelineGroups(
       albums.push(nextAlbum)
 
       timelineGroups.push({
-        date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+        date: albums[0].media[0].date.replace(
+          /\d{2}:\d{2}:\d{2}(?:\.\d+)?/,
+          '00:00:00'
+        ),
         albums: albums,
       })
       albums = []
@@ -250,7 +253,10 @@ function convertMediaToTimelineGroups(
     albums.push(nextAlbum)
 
     timelineGroups.push({
-      date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+      date: albums[0].media[0].date.replace(
+        /\d{2}:\d{2}:\d{2}(?:\.\d+)?/,
+        '00:00:00'
+      ),
       albums: albums,
     })
   }

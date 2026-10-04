@@ -1,4 +1,5 @@
 import { MediaType } from '../../__generated__/globalTypes'
+import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import {
   timelineGalleryReducer,
   TimelineGalleryState,
@@ -198,6 +199,57 @@ describe('timeline gallery reducer', () => {
         },
       ],
     })
+  })
+
+  test('stacks same-day photos that have fractional timestamps', () => {
+    const album = { __typename: 'Album' as const, id: '1', title: 'day' }
+    const photo = (id: string, date: string): myTimeline_myTimeline => ({
+      __typename: 'Media',
+      id,
+      title: id,
+      type: MediaType.Photo,
+      blurhash: null,
+      thumbnail: null,
+      highRes: null,
+      videoWeb: null,
+      favorite: false,
+      album,
+      date,
+    })
+
+    const groupsFor = (timeline: myTimeline_myTimeline[]) =>
+      timelineGalleryReducer(defaultEmptyState, {
+        type: 'replaceTimelineGroups',
+        timeline,
+      }).timelineGroups
+
+    const bothFractional = groupsFor([
+      photo('a', '2022-07-09T23:10:17.232037+03:00'),
+      photo('b', '2022-07-09T23:10:17.918273+03:00'),
+    ])
+    expect(bothFractional).toMatchObject([
+      {
+        date: '2022-07-09T00:00:00+03:00',
+        albums: [{ id: '1', media: [{ id: 'a' }, { id: 'b' }] }],
+      },
+    ])
+
+    const oneFractional = groupsFor([
+      photo('c', '2022-07-09T23:10:17.232037+03:00'),
+      photo('d', '2022-07-09T23:10:17+03:00'),
+    ])
+    expect(oneFractional).toMatchObject([
+      {
+        date: '2022-07-09T00:00:00+03:00',
+        albums: [{ media: [{ id: 'c' }, { id: 'd' }] }],
+      },
+    ])
+
+    const acrossMidnight = groupsFor([
+      photo('e', '2022-07-09T23:59:59.9+03:00'),
+      photo('f', '2022-07-10T00:00:00.1+03:00'),
+    ])
+    expect(acrossMidnight).toHaveLength(2)
   })
 
   test('select image', () => {
