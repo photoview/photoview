@@ -8,6 +8,7 @@ require (
 	github.com/buckket/go-blurhash v1.1.0
 	github.com/coder/websocket v1.8.15
 	github.com/go-sql-driver/mysql v1.10.1
+	github.com/felixge/httpsnoop v1.0.4
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
@@ -32,6 +33,8 @@ require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
