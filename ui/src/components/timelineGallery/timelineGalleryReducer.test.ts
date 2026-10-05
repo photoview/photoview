@@ -1,3 +1,4 @@
+import { Settings } from 'luxon'
 import { MediaType } from '../../__generated__/globalTypes'
 import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import {
@@ -18,9 +19,17 @@ describe('timeline gallery reducer', () => {
     timelineGroups: [],
   }
 
-  const defaultState = timelineGalleryReducer(defaultEmptyState, {
-    type: 'replaceTimelineGroups',
-    timeline: timelineData,
+  const originalZone = Settings.defaultZone
+  let defaultState: TimelineGalleryState
+  beforeEach(() => {
+    Settings.defaultZone = 'America/New_York'
+    defaultState = timelineGalleryReducer(defaultEmptyState, {
+      type: 'replaceTimelineGroups',
+      timeline: timelineData,
+    })
+  })
+  afterEach(() => {
+    Settings.defaultZone = originalZone
   })
 
   test('replace timeline groups', () => {
@@ -33,7 +42,7 @@ describe('timeline gallery reducer', () => {
       },
       timelineGroups: [
         {
-          date: '2020-12-13T00:00:00Z',
+          date: '2020-12-13T00:00:00',
           albums: [
             {
               id: '522',
@@ -70,7 +79,7 @@ describe('timeline gallery reducer', () => {
           ],
         },
         {
-          date: '2020-11-25T00:00:00Z',
+          date: '2020-11-25T00:00:00',
           albums: [
             {
               id: '523',
@@ -165,7 +174,7 @@ describe('timeline gallery reducer', () => {
           ],
         },
         {
-          date: '2020-11-09T00:00:00Z',
+          date: '2020-11-09T00:00:00',
           albums: [
             {
               id: '522',
@@ -201,7 +210,7 @@ describe('timeline gallery reducer', () => {
     })
   })
 
-  test('stacks same-day photos that have fractional timestamps', () => {
+  test('groups fractional timestamps by the viewer local day', () => {
     const album = { __typename: 'Album' as const, id: '1', title: 'day' }
     const photo = (id: string, date: string): myTimeline_myTimeline => ({
       __typename: 'Media',
@@ -229,27 +238,30 @@ describe('timeline gallery reducer', () => {
     ])
     expect(bothFractional).toMatchObject([
       {
-        date: '2022-07-09T00:00:00+03:00',
+        date: '2022-07-09T00:00:00',
         albums: [{ id: '1', media: [{ id: 'a' }, { id: 'b' }] }],
       },
     ])
 
     const oneFractional = groupsFor([
       photo('c', '2022-07-09T23:10:17.232037+03:00'),
-      photo('d', '2022-07-09T23:10:17+03:00'),
+      photo('d', '2022-07-10T01:10:17+05:00'),
     ])
     expect(oneFractional).toMatchObject([
       {
-        date: '2022-07-09T00:00:00+03:00',
+        date: '2022-07-09T00:00:00',
         albums: [{ media: [{ id: 'c' }, { id: 'd' }] }],
       },
     ])
 
     const acrossMidnight = groupsFor([
-      photo('e', '2022-07-09T23:59:59.9+03:00'),
-      photo('f', '2022-07-10T00:00:00.1+03:00'),
+      photo('e', '2022-07-10T03:59:59.9Z'),
+      photo('f', '2022-07-10T04:00:00.1Z'),
     ])
-    expect(acrossMidnight).toHaveLength(2)
+    expect(acrossMidnight.map(group => group.date)).toEqual([
+      '2022-07-09T00:00:00',
+      '2022-07-10T00:00:00',
+    ])
   })
 
   test('select image', () => {
