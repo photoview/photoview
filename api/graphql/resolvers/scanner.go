@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
@@ -56,6 +57,65 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		Success:  scanErr == nil,
 		Message:  &startMessage,
 	}, nil
+}
+
+// CancelScanJob is the resolver for the cancelScanJob field.
+func (r *mutationResolver) CancelScanJob(ctx context.Context, albumID int) (bool, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return false, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return false, fmt.Errorf("get album from database: %w", err)
+	}
+
+	if !user.Admin {
+		ownsAlbum, err := user.OwnsAlbum(db, &album)
+		if err != nil {
+			return false, err
+		}
+		if !ownsAlbum {
+			return false, auth.ErrUnauthorized
+		}
+	}
+
+	return cancelScanJob(albumID), nil
+}
+
+// CancelAllScanJobs is the resolver for the cancelAllScanJobs field.
+func (r *mutationResolver) CancelAllScanJobs(ctx context.Context) (int, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return 0, auth.ErrUnauthorized
+	}
+
+	if user.Admin {
+		return cancelAllScanJobs(), nil
+	}
+
+	// A non-admin cancels only what they could have started themselves, so
+	// this walks the queue rather than clearing it wholesale.
+	cancelled := 0
+	for _, item := range getScannerQueueStatus() {
+		ownsAlbum, err := user.OwnsAlbum(db, item.Album)
+		if err != nil {
+			return cancelled, err
+		}
+		if !ownsAlbum {
+			continue
+		}
+		if cancelScanJob(item.Album.ID) {
+			cancelled++
+		}
+	}
+
+	return cancelled, nil
 }
 
 // SetPeriodicScanInterval is the resolver for the setPeriodicScanInterval field.
@@ -112,4 +172,35 @@ func (r *mutationResolver) SetScannerConcurrentWorkers(ctx context.Context, work
 	scanner_queue.ChangeScannerConcurrentWorkers(siteInfo.ConcurrentWorkers)
 
 	return siteInfo.ConcurrentWorkers, nil
+}
+
+// ScannerQueueStatus is the resolver for the scannerQueueStatus field.
+func (r *queryResolver) ScannerQueueStatus(ctx context.Context) ([]*models.ScannerQueueItem, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	items := getScannerQueueStatus()
+
+	visible := make([]*models.ScannerQueueItem, 0, len(items))
+	for i := range items {
+		item := items[i]
+
+		if !user.Admin {
+			ownsAlbum, err := user.OwnsAlbum(db, item.Album)
+			if err != nil {
+				return nil, err
+			}
+			if !ownsAlbum {
+				continue
+			}
+		}
+
+		visible = append(visible, &item)
+	}
+
+	return visible, nil
 }
