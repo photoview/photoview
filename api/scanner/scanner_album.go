@@ -159,17 +159,20 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 				continue
 			}
 
+			var media *models.Media
+			var isNewMedia bool
+
+			// Only the lookup/insert of the media row belongs in a transaction.
+			// The follow-up tasks are run afterwards, outside of it: they read
+			// EXIF through the external `exiftool` process, and keeping a
+			// database transaction open across such a call stretches its
+			// lifetime to the duration of a subprocess round trip.
 			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+				var err error
+				media, isNewMedia, err = ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
 				if err != nil {
 					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
 				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
-					return err
-				}
-
-				albumMedia = append(albumMedia, media)
 
 				return nil
 			})
@@ -178,6 +181,13 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
 			}
+
+			if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
+				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
+				continue
+			}
+
+			albumMedia = append(albumMedia, media)
 		}
 
 	}
