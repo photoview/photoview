@@ -247,9 +247,6 @@ func AddUserToQueue(user *models.User) error {
 func AddAlbumToQueue(album *models.Album) error {
 	albumCache := scanner_cache.MakeAlbumCache()
 	albums, album_errors := scanner.FindAlbumsForAlbum(global_scanner_queue.db, album, albumCache)
-	for _, err := range album_errors {
-		return errors.Wrapf(err, "find albums for album (album_id: %d)", album.ID)
-	}
 
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
@@ -259,7 +256,17 @@ func AddAlbumToQueue(album *models.Album) error {
 	}
 	global_scanner_queue.mutex.Unlock()
 
-	return nil
+	// Like AddUserToQueue since #1469: a sub-album that cannot be read does
+	// not keep the ones that can be read out of the queue. The errors are
+	// reported rather than dropped, and ScanAlbum turns them into a partial
+	// success. Discovery that hit an error also leaves the cleanup out, so a
+	// sub-album missed here keeps its media.
+	wrappedErrors := make([]error, len(album_errors))
+	for i, err := range album_errors {
+		wrappedErrors[i] = errors.Wrapf(err, "find albums for album (album_id: %d)", album.ID)
+	}
+
+	return stderrors.Join(wrappedErrors...)
 }
 
 // Queue should be locked prior to calling this function

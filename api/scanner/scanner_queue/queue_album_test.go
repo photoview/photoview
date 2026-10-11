@@ -80,3 +80,38 @@ func TestAddAlbumToQueueReportsAMissingDirectory(t *testing.T) {
 	assert.Error(t, AddAlbumToQueue(&gone))
 	assert.Empty(t, queuedPaths(), "nothing is queued for an album that cannot be walked")
 }
+
+// TestAddAlbumToQueueQueuesWhatItCouldRead mirrors what #1469 established for
+// AddUserToQueue: one sub-album the scanner cannot read must not keep the
+// readable ones out of the queue. The error is still reported, and the caller
+// turns it into a partial success.
+func TestAddAlbumToQueueQueuesWhatItCouldRead(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+	test_utils.FilesystemTest(t)
+	useTestQueue(t, db)
+
+	rootPath := t.TempDir()
+	writePhoto(t, rootPath)
+	readablePath := filepath.Join(rootPath, "readable")
+	writePhoto(t, readablePath)
+
+	unreadablePath := filepath.Join(rootPath, "unreadable")
+	writePhoto(t, unreadablePath)
+
+	root := models.Album{Title: "root", Path: rootPath}
+	require.NoError(t, db.Save(&root).Error)
+
+	require.NoError(t, os.Chmod(unreadablePath, 0o000))
+	t.Cleanup(func() { _ = os.Chmod(unreadablePath, 0o755) })
+
+	if _, err := os.ReadDir(unreadablePath); err == nil {
+		t.Skip("this process can read a 0o000 directory, so discovery cannot fail here")
+	}
+
+	err := AddAlbumToQueue(&root)
+
+	assert.Error(t, err, "the unreadable sub-album has to be reported")
+	assert.Contains(t, queuedPaths(), readablePath,
+		"an album the scanner could read belongs on the queue even when another one failed")
+	assert.Contains(t, queuedPaths(), rootPath)
+}

@@ -87,9 +87,10 @@ func TestScanAlbumReportsFailures(t *testing.T) {
 		assert.Nil(t, result)
 	})
 
-	t.Run("a queue that cannot take the album", func(t *testing.T) {
-		// A directory that cannot be walked must come back as an error, not
-		// as a "Scanner started" the user would wait on for nothing.
+	t.Run("a sub-album that could not be queued", func(t *testing.T) {
+		// Albums the scanner could read are queued, so the scan did start -
+		// but the failure has to reach the user instead of a clean
+		// "Scanner started". Same reading as ScanUser since #1469.
 		origAddAlbumToQueue := addAlbumToQueue
 		addAlbumToQueue = func(*models.Album) error { return errors.New("album directory does not exist") }
 		t.Cleanup(func() { addAlbumToQueue = origAddAlbumToQueue })
@@ -98,7 +99,10 @@ func TestScanAlbumReportsFailures(t *testing.T) {
 		assert.NoError(t, db.Save(&album).Error)
 
 		result, err := r.ScanAlbum(ctx, album.ID)
-		assert.ErrorContains(t, err, "album directory does not exist")
-		assert.Nil(t, result)
+		assert.NoError(t, err)
+		if assert.NotNil(t, result) {
+			assert.False(t, result.Success, "a failed sub-album is not a clean start")
+			assert.Contains(t, *result.Message, "album directory does not exist")
+		}
 	})
 }

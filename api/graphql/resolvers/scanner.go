@@ -83,14 +83,19 @@ func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.
 		}
 	}
 
-	if err := addAlbumToQueue(&album); err != nil {
-		return nil, err
+	scanErr := addAlbumToQueue(&album)
+
+	// Same reading as ScanUser: the albums that could be read are queued, so
+	// the scan has started even when a sub-album failed. Report the failures
+	// instead of answering with a clean start.
+	startMessage := "Scanner started"
+	if scanErr != nil {
+		startMessage = fmt.Sprintf("Scanner started, some albums could not be queued: %v", scanErr)
 	}
 
-	startMessage := "Scanner started"
 	return &models.ScannerResult{
 		Finished: false,
-		Success:  true,
+		Success:  scanErr == nil,
 		Message:  &startMessage,
 	}, nil
 }
