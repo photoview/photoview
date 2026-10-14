@@ -1,0 +1,25 @@
+{
+  "test_id": "b4e143b6-e238-4df3-99ff-70afc653e5e9",
+  "project_id": "01KM2CDFXKKHWDD2TSG94JGVGJ",
+  "folder_id": "01KM2CDFYCGAVS50DA3YHM6GMA",
+  "org_id": "3063150",
+  "session_name": "albums",
+  "commit_id": "af070360-6e76-403e-ac3a-aa621560934a",
+  "testcase_id": "01M4X2F2JM4JTC1B0E26NYK4XT",
+  "executions": [
+    {
+      "execution_id": "f1e7fd38-2bcb-4b0c-a684-9787d5af674e",
+      "run_kind": "author",
+      "status": "passed",
+      "valid": true,
+      "at": "2026-10-14T11:26:59.871Z"
+    },
+    {
+      "execution_id": "04de28d1-447c-4f12-a5a5-ba8832d5b5c4",
+      "run_kind": "replay",
+      "status": "passed",
+      "valid": true,
+      "at": "2026-10-14T11:29:37.325Z"
+    }
+  ]
+}
