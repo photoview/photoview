@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -44,6 +45,7 @@ const (
 	EnvDisableVideoEncoding      EnvironmentVariable = "PHOTOVIEW_DISABLE_VIDEO_ENCODING"
 	EnvDisableRawProcessing      EnvironmentVariable = "PHOTOVIEW_DISABLE_RAW_PROCESSING"
 	EnvVideoHardwareAcceleration EnvironmentVariable = "PHOTOVIEW_VIDEO_HARDWARE_ACCELERATION"
+	EnvPeriodicScanInterval      EnvironmentVariable = "PHOTOVIEW_PERIODIC_SCAN_INTERVAL"
 )
 
 // GetName returns the name of the environment variable itself
@@ -92,6 +94,31 @@ func MediaProbeTimeout() time.Duration {
 		log.Warn(nil, "Invalid PHOTOVIEW_MEDIA_PROBE_TIMEOUT value, using default 5s", "value", val)
 	}
 	return 5 * time.Second
+}
+
+// maxScanIntervalSeconds is the largest number of seconds that fits in a time.Duration,
+// beyond which the multiplication below would wrap into a negative interval.
+const maxScanIntervalSeconds = int64(math.MaxInt64) / int64(time.Second)
+
+// PeriodicScanInterval returns the periodic scan interval configured through
+// PHOTOVIEW_PERIODIC_SCAN_INTERVAL, and whether it was set.
+// The value is interpreted as seconds; 0 disables periodic scanning.
+// When set, it takes precedence over the interval stored in the database,
+// so the schedule can be described in a deployment manifest rather than
+// changed through the UI.
+func PeriodicScanInterval() (time.Duration, bool) {
+	val := EnvPeriodicScanInterval.GetValue()
+	if val == "" {
+		return 0, false
+	}
+
+	seconds, err := strconv.ParseInt(val, 10, 64)
+	if err != nil || seconds < 0 || seconds > maxScanIntervalSeconds {
+		log.Warn(nil, "Invalid PHOTOVIEW_PERIODIC_SCAN_INTERVAL value, falling back to the database setting", "value", val)
+		return 0, false
+	}
+
+	return time.Duration(seconds) * time.Second, true
 }
 
 // UIPath returns the value from where the static UI files are located if SERVE_UI=1
